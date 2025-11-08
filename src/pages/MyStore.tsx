@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload, Loader2, Store, CreditCard, MessageCircle, Copy, Share2, Check } from "lucide-react";
+import { ArrowLeft, Upload, Loader2, Store, CreditCard, MessageCircle, Copy, Share2, Check, ExternalLink } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
@@ -549,10 +549,31 @@ const MyStore = () => {
                   Share Your Store
                 </CardTitle>
                 <CardDescription>
-                  Share your store link with customers
+                  Preview and share your store link with customers
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Preview Button */}
+                <div className="p-4 bg-muted/50 rounded-lg border">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-medium mb-1">Preview Your Storefront</p>
+                      <p className="text-sm text-muted-foreground">
+                        See your store exactly as customers will see it
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="default"
+                      onClick={() => window.open(`/shop/${shop.shop_slug}`, "_blank")}
+                      className="gap-2 flex-shrink-0"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Preview Store
+                    </Button>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Your Store URL</Label>
                   <div className="flex gap-2">
