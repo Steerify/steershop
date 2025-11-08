@@ -34,11 +34,10 @@ const Shops = () => {
 
   const fetchShops = async () => {
     try {
-      // First, get all active shops
+      // Get all active shops using secure public view
       const { data: shopsData, error: shopsError } = await supabase
-        .from("shops")
+        .from("shops_public")
         .select("*")
-        .eq("is_active", true)
         .order("created_at", { ascending: false });
 
       if (shopsError) throw shopsError;

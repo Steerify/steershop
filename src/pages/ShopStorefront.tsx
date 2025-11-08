@@ -50,12 +50,11 @@ const ShopStorefront = () => {
 
   const loadShopData = async () => {
     try {
-      // Fetch shop by slug
+      // Fetch shop by slug using secure public view
       const { data: shopData, error: shopError } = await supabase
-        .from("shops")
+        .from("shops_public")
         .select("*")
         .eq("shop_slug", slug)
-        .eq("is_active", true)
         .single();
 
       if (shopError) throw shopError;
