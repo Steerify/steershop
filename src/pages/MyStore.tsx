@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload, Loader2, Store, CreditCard, MessageCircle } from "lucide-react";
+import { ArrowLeft, Upload, Loader2, Store, CreditCard, MessageCircle, Copy, Share2, Check } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
@@ -40,6 +40,7 @@ const MyStore = () => {
   const [shop, setShop] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const [formData, setFormData] = useState({
     shop_name: "",
     shop_slug: "",
@@ -219,6 +220,47 @@ const MyStore = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const getStoreUrl = () => {
+    if (!shop?.shop_slug) return "";
+    return `${window.location.origin}/shop/${shop.shop_slug}`;
+  };
+
+  const handleCopyUrl = async () => {
+    const url = getStoreUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      setIsCopied(true);
+      toast({
+        title: "Copied!",
+        description: "Store URL copied to clipboard",
+      });
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy URL",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShareToWhatsApp = () => {
+    const url = getStoreUrl();
+    const text = encodeURIComponent(`Check out my store: ${shop?.shop_name}! Visit: ${url}`);
+    window.open(`https://wa.me/?text=${text}`, "_blank");
+  };
+
+  const handleShareToTwitter = () => {
+    const url = getStoreUrl();
+    const text = encodeURIComponent(`Check out my store: ${shop?.shop_name}!`);
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`, "_blank");
+  };
+
+  const handleShareToFacebook = () => {
+    const url = getStoreUrl();
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank");
   };
 
   if (isLoading) {
@@ -497,6 +539,83 @@ const MyStore = () => {
               </form>
             </CardContent>
           </Card>
+
+          {/* Store URL Sharing Card - Only show when shop exists and is active */}
+          {shop && shop.is_active && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Share2 className="w-5 h-5" />
+                  Share Your Store
+                </CardTitle>
+                <CardDescription>
+                  Share your store link with customers
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Your Store URL</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={getStoreUrl()}
+                      readOnly
+                      className="font-mono text-sm"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={handleCopyUrl}
+                      className="flex-shrink-0"
+                    >
+                      {isCopied ? (
+                        <Check className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Share to Social Networks</Label>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleShareToWhatsApp}
+                      className="gap-2"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      WhatsApp
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleShareToTwitter}
+                      className="gap-2"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                      </svg>
+                      Twitter / X
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleShareToFacebook}
+                      className="gap-2"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      </svg>
+                      Facebook
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
