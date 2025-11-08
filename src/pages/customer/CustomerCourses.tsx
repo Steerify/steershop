@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Award, BookOpen, CheckCircle2, Lock } from "lucide-react";
+import DOMPurify from "dompurify";
 
 interface Course {
   id: string;
@@ -355,10 +356,7 @@ const CustomerCourses = () => {
                   className="w-full h-64 object-cover rounded-lg"
                 />
               )}
-              <div
-                className="prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: selectedCourse.content }}
-              />
+              <SanitizedContent content={selectedCourse.content} />
               <div className="flex gap-4 pt-4 border-t">
                 <Button
                   onClick={() => {
@@ -385,6 +383,28 @@ const CustomerCourses = () => {
         </div>
       )}
     </SidebarProvider>
+  );
+};
+
+// Sanitized content component to prevent XSS attacks
+const SanitizedContent = ({ content }: { content: string }) => {
+  const sanitizedContent = useMemo(() => {
+    return DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre', 'span', 'div'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'target', 'rel'],
+      ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+      ALLOW_DATA_ATTR: false,
+      ADD_ATTR: ['target'],
+      FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
+      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'onfocus', 'onblur']
+    });
+  }, [content]);
+
+  return (
+    <div
+      className="prose prose-sm max-w-none"
+      dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+    />
   );
 };
 

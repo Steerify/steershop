@@ -9,7 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Check, X } from "lucide-react";
+import { Plus, Edit, Trash2, Check, X, AlertCircle } from "lucide-react";
+import DOMPurify from "dompurify";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function AdminCourses() {
   const [courses, setCourses] = useState<any[]>([]);
@@ -47,8 +49,19 @@ export default function AdminCourses() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Sanitize HTML content before saving to prevent XSS attacks
+    const sanitizedContent = DOMPurify.sanitize(formData.content, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre', 'span', 'div'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'target', 'rel'],
+      ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+      ALLOW_DATA_ATTR: false,
+      FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
+      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'onfocus', 'onblur']
+    });
+
     const courseData = {
       ...formData,
+      content: sanitizedContent,
       reward_points: parseInt(formData.reward_points) || 0,
     };
 
@@ -181,6 +194,12 @@ export default function AdminCourses() {
 
                 <div>
                   <Label htmlFor="content">Course Content (HTML supported)</Label>
+                  <Alert className="mb-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-xs">
+                      HTML content is automatically sanitized for security. Allowed tags: p, br, strong, em, u, headings, lists, links, images. Scripts and event handlers are removed.
+                    </AlertDescription>
+                  </Alert>
                   <Textarea
                     id="content"
                     value={formData.content}
