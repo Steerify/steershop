@@ -1,0 +1,175 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { CustomerSidebar } from "@/components/CustomerSidebar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, ShoppingCart, Package } from "lucide-react";
+import { format } from "date-fns";
+
+const CustomerOrders = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [orders, setOrders] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadOrders();
+  }, []);
+
+  const loadOrders = async () => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        navigate("/auth/login");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("orders")
+        .select(`
+          *,
+          order_items (
+            *,
+            products (
+              name,
+              image_url,
+              shops (
+                shop_name
+              )
+            )
+          )
+        `)
+        .eq("customer_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setOrders(data || []);
+    } catch (error: any) {
+      console.error("Error loading orders:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load orders",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "border-yellow-500/20 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400";
+      case "awaiting_approval":
+        return "border-orange-500/20 bg-orange-500/10 text-orange-600 dark:text-orange-400";
+      case "confirmed":
+        return "border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400";
+      case "processing":
+        return "border-purple-500/20 bg-purple-500/10 text-purple-600 dark:text-purple-400";
+      case "out_for_delivery":
+        return "border-indigo-500/20 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400";
+      case "delivered":
+        return "border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400";
+      case "cancelled":
+        return "border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400";
+      default:
+        return "border-border bg-muted/50 text-muted-foreground";
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <CustomerSidebar />
+        
+        <div className="flex-1">
+          <header className="h-16 border-b bg-card flex items-center px-6">
+            <SidebarTrigger className="mr-4" />
+            <h1 className="text-2xl font-bold">My Orders</h1>
+          </header>
+
+          <main className="p-6">
+            {orders.length === 0 ? (
+              <Card>
+                <CardContent className="py-16 text-center">
+                  <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-xl font-semibold mb-2">No orders yet</h3>
+                  <p className="text-muted-foreground">Start shopping to see your orders here</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {orders.map((order) => (
+                  <Card key={order.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="flex items-center gap-2 mb-2">
+                            Order #{order.id.slice(0, 8)}
+                            <Badge variant="outline" className={getStatusColor(order.status)}>
+                              {order.status.replace(/_/g, ' ')}
+                            </Badge>
+                          </CardTitle>
+                          <CardDescription>
+                            Placed on {format(new Date(order.created_at), "MMM dd, yyyy")}
+                          </CardDescription>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-primary">
+                            ₦{parseFloat(order.total_amount).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="border rounded-lg divide-y">
+                        {order.order_items?.map((item: any) => (
+                          <div key={item.id} className="p-4 flex items-center gap-4">
+                            {item.products?.image_url && (
+                              <img
+                                src={item.products.image_url}
+                                alt={item.products.name}
+                                className="w-16 h-16 object-cover rounded"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <p className="font-semibold">{item.products?.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {item.products?.shops?.shop_name}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Quantity: {item.quantity} × ₦{parseFloat(item.price).toLocaleString()}
+                              </p>
+                            </div>
+                            <p className="font-semibold">
+                              ₦{(item.quantity * parseFloat(item.price)).toLocaleString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+};
+
+export default CustomerOrders;
