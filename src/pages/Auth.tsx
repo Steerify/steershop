@@ -8,19 +8,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Store, Loader2 } from "lucide-react";
+import { Store, Loader2, Mail } from "lucide-react";
 import { z } from "zod";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  fullName: z.string().min(2, "Full name is required"),
+  fullName: z.string().trim().min(2, "Full name is required").max(100, "Full name must be less than 100 characters"),
   role: z.enum(["shop_owner", "customer"])
 });
 
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(1, "Password is required")
+const emailSchema = z.object({
+  email: z.string().email("Invalid email address")
+});
+
+const otpSchema = z.object({
+  otp: z.string().length(6, "OTP must be 6 digits")
 });
 
 const Auth = () => {
@@ -30,16 +33,24 @@ const Auth = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
+  // OTP verification state
+  const [showOtpVerification, setShowOtpVerification] = useState(false);
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isSignupFlow, setIsSignupFlow] = useState(false);
+  const [pendingSignupData, setPendingSignupData] = useState<{
+    fullName: string;
+    role: "shop_owner" | "customer";
+  } | null>(null);
+  
   const [signupData, setSignupData] = useState({
     email: "",
-    password: "",
     fullName: "",
     role: "shop_owner" as "shop_owner" | "customer"
   });
 
   const [loginData, setLoginData] = useState({
-    email: "",
-    password: ""
+    email: ""
   });
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -49,9 +60,9 @@ const Auth = () => {
     try {
       const validated = signupSchema.parse(signupData);
       
-      const { data, error } = await supabase.auth.signUp({
+      // Send OTP to email
+      const { error } = await supabase.auth.signInWithOtp({
         email: validated.email,
-        password: validated.password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
@@ -63,12 +74,19 @@ const Auth = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Account created!",
-        description: "Welcome to SteerSolo. Redirecting to your dashboard...",
+      // Store signup data for later use after OTP verification
+      setPendingSignupData({
+        fullName: validated.fullName,
+        role: validated.role
       });
+      setOtpEmail(validated.email);
+      setIsSignupFlow(true);
+      setShowOtpVerification(true);
 
-      navigate(validated.role === "shop_owner" ? "/dashboard" : "/customer_dashboard");
+      toast({
+        title: "Verification code sent",
+        description: "Please check your email for the 6-digit code",
+      });
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast({
@@ -93,16 +111,63 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      const validated = loginSchema.parse(loginData);
+      const validated = emailSchema.parse(loginData);
       
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Send OTP to email
+      const { error } = await supabase.auth.signInWithOtp({
         email: validated.email,
-        password: validated.password
+        options: {
+          shouldCreateUser: false
+        }
       });
 
       if (error) throw error;
 
-      // Fetch user role from user_roles table (authoritative source)
+      setOtpEmail(validated.email);
+      setIsSignupFlow(false);
+      setShowOtpVerification(true);
+
+      toast({
+        title: "Verification code sent",
+        description: "Please check your email for the 6-digit code",
+      });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Login failed",
+          description: error.message || "Invalid email or user not found",
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      otpSchema.parse({ otp });
+
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: otpEmail,
+        token: otp,
+        type: 'email'
+      });
+
+      if (error) throw error;
+
+      if (!data.user) throw new Error("Verification failed");
+
+      // Fetch user role from user_roles table
       const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
@@ -110,8 +175,8 @@ const Auth = () => {
         .single();
 
       toast({
-        title: "Welcome back!",
-        description: "Successfully logged in",
+        title: isSignupFlow ? "Account created!" : "Welcome back!",
+        description: isSignupFlow ? "Welcome to SteerSolo" : "Successfully logged in",
       });
 
       // Navigate based on role
@@ -131,8 +196,8 @@ const Auth = () => {
         });
       } else {
         toast({
-          title: "Login failed",
-          description: error.message || "Invalid credentials",
+          title: "Verification failed",
+          description: error.message || "Invalid or expired code",
           variant: "destructive"
         });
       }
@@ -140,6 +205,120 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+
+  const handleResendOtp = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: otpEmail,
+        options: isSignupFlow && pendingSignupData ? {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: pendingSignupData.fullName,
+            role: pendingSignupData.role
+          }
+        } : {
+          shouldCreateUser: false
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Code resent",
+        description: "Please check your email for a new verification code",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to resend code",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Show OTP verification screen
+  if (showOtpVerification) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center">
+                <Mail className="w-10 h-10 text-primary-foreground" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl font-bold">Verify Your Email</CardTitle>
+            <CardDescription>
+              We sent a 6-digit code to<br />
+              <span className="font-semibold text-foreground">{otpEmail}</span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleVerifyOtp} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="otp" className="text-center block">Enter verification code</Label>
+                <div className="flex justify-center">
+                  <InputOTP
+                    maxLength={6}
+                    value={otp}
+                    onChange={setOtp}
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+              </div>
+
+              <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading || otp.length !== 6}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  "Verify & Continue"
+                )}
+              </Button>
+
+              <div className="text-center space-y-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleResendOtp}
+                  disabled={isLoading}
+                  className="text-sm"
+                >
+                  Resend code
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={() => {
+                    setShowOtpVerification(false);
+                    setOtp("");
+                    setOtpEmail("");
+                    setPendingSignupData(null);
+                  }}
+                  className="text-sm"
+                >
+                  Back to {isSignupFlow ? "signup" : "login"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 flex items-center justify-center p-4">
@@ -173,25 +352,17 @@ const Auth = () => {
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={loginData.password}
-                    onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                    required
-                  />
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  We'll send a verification code to your email
+                </p>
                 <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Logging in...
+                      Sending code...
                     </>
                   ) : (
-                    "Login"
+                    "Continue with Email"
                   )}
                 </Button>
               </form>
@@ -221,17 +392,6 @@ const Auth = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="At least 6 characters"
-                    value={signupData.password}
-                    onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
                   <Label>I want to:</Label>
                   <RadioGroup
                     value={signupData.role}
@@ -253,14 +413,17 @@ const Auth = () => {
                     </div>
                   </RadioGroup>
                 </div>
+                <p className="text-sm text-muted-foreground">
+                  We'll send a verification code to your email
+                </p>
                 <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating account...
+                      Sending code...
                     </>
                   ) : (
-                    "Create Account"
+                    "Continue with Email"
                   )}
                 </Button>
               </form>
