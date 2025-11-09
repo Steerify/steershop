@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload, Loader2, Store, CreditCard, MessageCircle, Copy, Share2, Check, ExternalLink } from "lucide-react";
+import { ArrowLeft, Upload, Loader2, Store, CreditCard, MessageCircle, Copy, Share2, Check, ExternalLink, Download, QrCode } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
@@ -261,6 +262,39 @@ const MyStore = () => {
   const handleShareToFacebook = () => {
     const url = getStoreUrl();
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank");
+  };
+
+  const handleDownloadQRCode = () => {
+    const svg = document.getElementById("store-qr-code");
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.drawImage(img, 0, 0);
+      
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${shop?.shop_slug || "store"}-qr-code.png`;
+        link.click();
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Downloaded!",
+          description: "QR code saved successfully",
+        });
+      });
+    };
+
+    img.src = "data:image/svg+xml;base64," + btoa(svgData);
   };
 
   if (isLoading) {
@@ -632,6 +666,43 @@ const MyStore = () => {
                       </svg>
                       Facebook
                     </Button>
+                  </div>
+                </div>
+
+                {/* QR Code Section */}
+                <div className="p-4 bg-muted/50 rounded-lg border">
+                  <div className="flex flex-col md:flex-row items-center gap-6">
+                    <div className="flex-shrink-0">
+                      <div className="bg-white p-4 rounded-lg shadow-sm">
+                        <QRCodeSVG
+                          id="store-qr-code"
+                          value={getStoreUrl()}
+                          size={160}
+                          level="H"
+                          includeMargin={true}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <QrCode className="w-5 h-5" />
+                          <p className="font-medium">QR Code for Your Store</p>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Download and print this QR code to display in your physical location. Customers can scan it to visit your store instantly.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleDownloadQRCode}
+                        className="gap-2"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download QR Code
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
