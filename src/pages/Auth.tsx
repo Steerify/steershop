@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -150,8 +150,8 @@ const Auth = () => {
     }
   };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleVerifyOtp = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     setIsLoading(true);
 
     try {
@@ -205,6 +205,13 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+
+  // Auto-submit when all 6 digits are entered
+  useEffect(() => {
+    if (showOtpVerification && otp.length === 6 && !isLoading) {
+      handleVerifyOtp();
+    }
+  }, [otp, showOtpVerification]);
 
   const handleResendOtp = async () => {
     setIsLoading(true);
@@ -265,6 +272,7 @@ const Auth = () => {
                     maxLength={6}
                     value={otp}
                     onChange={setOtp}
+                    autoFocus
                   >
                     <InputOTPGroup>
                       <InputOTPSlot index={0} />
@@ -276,6 +284,9 @@ const Auth = () => {
                     </InputOTPGroup>
                   </InputOTP>
                 </div>
+                <p className="text-xs text-center text-muted-foreground">
+                  Code will be verified automatically when complete
+                </p>
               </div>
 
               <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading || otp.length !== 6}>
