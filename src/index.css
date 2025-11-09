@@ -106,3 +106,36 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Print styles for flyer */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  
+  #flyer-template,
+  #flyer-template * {
+    visibility: visible;
+  }
+  
+  #flyer-template {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 1.5cm;
+  }
+  
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  .print\:border-0 {
+    border: 0 !important;
+  }
+}

@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Upload, Loader2, Store, CreditCard, MessageCircle, Copy, Share2, Check, ExternalLink, Download, QrCode } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { StoreFlyerTemplate } from "@/components/StoreFlyerTemplate";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
@@ -693,15 +694,18 @@ const MyStore = () => {
                           Download and print this QR code to display in your physical location. Customers can scan it to visit your store instantly.
                         </p>
                       </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleDownloadQRCode}
-                        className="gap-2"
-                      >
-                        <Download className="w-4 h-4" />
-                        Download QR Code
-                      </Button>
+                      <div className="flex gap-2 flex-wrap">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleDownloadQRCode}
+                          className="gap-2"
+                        >
+                          <Download className="w-4 h-4" />
+                          Download QR Code
+                        </Button>
+                        <StoreFlyerTemplate shop={shop} />
+                      </div>
                     </div>
                   </div>
                 </div>
