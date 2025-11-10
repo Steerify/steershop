@@ -22,10 +22,13 @@ const Dashboard = () => {
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalSales, setTotalSales] = useState(0);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [activeOffer, setActiveOffer] = useState<any>(null);
+  const [subscriptionPrice, setSubscriptionPrice] = useState(1000);
 
   useEffect(() => {
     checkAuth();
     verifyPaymentOnReturn();
+    loadActiveOffer();
   }, []);
 
   useEffect(() => {
@@ -83,6 +86,40 @@ const Dashboard = () => {
       setChartData(dailyData);
     } catch (error) {
       console.error("Error loading analytics:", error);
+    }
+  };
+
+  const loadActiveOffer = async () => {
+    try {
+      const now = new Date().toISOString();
+      const { data: offer } = await supabase
+        .from("special_offers")
+        .select("*")
+        .eq("target_audience", "shop_owners")
+        .eq("is_active", true)
+        .eq("applies_to_subscription", true)
+        .or(`valid_until.is.null,valid_until.gte.${now}`)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (offer) {
+        setActiveOffer(offer);
+        
+        // Calculate subscription price
+        let finalPrice = 1000; // Default ₦1,000
+        
+        if (offer.subscription_price) {
+          finalPrice = offer.subscription_price / 100; // Convert from kobo to naira
+        } else if (offer.discount_percentage) {
+          const originalPrice = (offer.original_price || 100000) / 100;
+          finalPrice = originalPrice * (1 - offer.discount_percentage / 100);
+        }
+        
+        setSubscriptionPrice(Math.round(finalPrice));
+      }
+    } catch (error) {
+      console.error("Error loading active offer:", error);
     }
   };
 
@@ -252,31 +289,38 @@ const checkAuth = async () => {
             </div>
           </div>
 
-          {/* Special Offer Card - Moved here for better layout */}
-          <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold mb-2">Special Shop Owner Offer! 🎁</h3>
-                  <p className="opacity-90">
-                    Get your first month at 50% off. Use code: <strong>FIRSTMONTH50</strong>
-                  </p>
-                  <p className="text-sm opacity-80 mt-1">
-                    Valid until {format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), "MMM dd, yyyy")}
-                  </p>
+          {/* Special Offer Card */}
+          {activeOffer && (
+            <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold mb-2">{activeOffer.title}</h3>
+                    <p className="opacity-90">{activeOffer.description}</p>
+                    {activeOffer.code && (
+                      <p className="opacity-90 mt-1">
+                        Use code: <strong>{activeOffer.code}</strong>
+                      </p>
+                    )}
+                    {activeOffer.valid_until && (
+                      <p className="text-sm opacity-80 mt-1">
+                        Valid until {format(new Date(activeOffer.valid_until), "MMM dd, yyyy")}
+                      </p>
+                    )}
+                  </div>
+                  <Button 
+                    variant="secondary" 
+                    onClick={handleSubscribe}
+                    disabled={isLoading}
+                    className="whitespace-nowrap"
+                  >
+                    {isLoading ? "Processing..." : activeOffer.button_text || "Claim Offer"}
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
                 </div>
-                <Button 
-                  variant="secondary" 
-                  onClick={handleSubscribe}
-                  disabled={isLoading}
-                  className="whitespace-nowrap"
-                >
-                  {isLoading ? "Processing..." : "Claim Offer"}
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Subscription Notice */}
@@ -290,8 +334,8 @@ const checkAuth = async () => {
               </CardTitle>
               <CardDescription>
                 {subscriptionStatus === 'trial' 
-                  ? `You have ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left in your free trial. Subscribe now for only ₦1,000/month to continue selling after your trial ends.`
-                  : 'Your trial has expired. Subscribe for ₦1,000/month to reactivate your store and continue selling.'
+                  ? `You have ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left in your free trial. Subscribe now for only ₦${subscriptionPrice.toLocaleString()}/month to continue selling after your trial ends.`
+                  : `Your trial has expired. Subscribe for ₦${subscriptionPrice.toLocaleString()}/month to reactivate your store and continue selling.`
                 }
               </CardDescription>
             </CardHeader>
@@ -302,7 +346,7 @@ const checkAuth = async () => {
                   onClick={handleSubscribe}
                   disabled={isLoading}
                 >
-                  {isLoading ? "Processing..." : "Subscribe Now - ₦1,000/month"}
+                  {isLoading ? "Processing..." : `Subscribe Now - ₦${subscriptionPrice.toLocaleString()}/month`}
                 </Button>
                 {subscriptionStatus === 'trial' && (
                   <p className="text-sm text-muted-foreground">

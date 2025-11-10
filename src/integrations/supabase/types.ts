@@ -651,6 +651,7 @@ export type Database = {
       }
       special_offers: {
         Row: {
+          applies_to_subscription: boolean | null
           button_link: string
           button_text: string
           code: string | null
@@ -659,12 +660,15 @@ export type Database = {
           discount_percentage: number | null
           id: string
           is_active: boolean
+          original_price: number | null
+          subscription_price: number | null
           target_audience: string
           title: string
           updated_at: string
           valid_until: string | null
         }
         Insert: {
+          applies_to_subscription?: boolean | null
           button_link?: string
           button_text?: string
           code?: string | null
@@ -673,12 +677,15 @@ export type Database = {
           discount_percentage?: number | null
           id?: string
           is_active?: boolean
+          original_price?: number | null
+          subscription_price?: number | null
           target_audience?: string
           title: string
           updated_at?: string
           valid_until?: string | null
         }
         Update: {
+          applies_to_subscription?: boolean | null
           button_link?: string
           button_text?: string
           code?: string | null
@@ -687,6 +694,8 @@ export type Database = {
           discount_percentage?: number | null
           id?: string
           is_active?: boolean
+          original_price?: number | null
+          subscription_price?: number | null
           target_audience?: string
           title?: string
           updated_at?: string

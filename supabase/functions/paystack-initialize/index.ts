@@ -38,6 +38,41 @@ serve(async (req) => {
       throw new Error('Profile not found');
     }
 
+    // Get active subscription offer for shop owners
+    const { data: activeOffer } = await supabase
+      .from('special_offers')
+      .select('*')
+      .eq('target_audience', 'shop_owners')
+      .eq('is_active', true)
+      .eq('applies_to_subscription', true)
+      .or(`valid_until.is.null,valid_until.gte.${new Date().toISOString()}`)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    // Calculate subscription amount based on active offer
+    let subscriptionAmount = 100000; // Default: ₦1,000 in kobo
+    let offerCode = null;
+
+    if (activeOffer) {
+      if (activeOffer.subscription_price) {
+        // Use explicit subscription price from offer
+        subscriptionAmount = activeOffer.subscription_price;
+      } else if (activeOffer.discount_percentage) {
+        // Calculate price based on discount percentage
+        const discount = (activeOffer.original_price || 100000) * (activeOffer.discount_percentage / 100);
+        subscriptionAmount = Math.round((activeOffer.original_price || 100000) - discount);
+      }
+      offerCode = activeOffer.code;
+    }
+
+    console.log('Subscription pricing:', {
+      original: 100000,
+      final: subscriptionAmount,
+      offer_applied: !!activeOffer,
+      offer_code: offerCode,
+    });
+
     // Initialize Paystack transaction
     const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
@@ -47,11 +82,13 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         email: profile.email,
-        amount: 100000, // ₦1,000 in kobo (Paystack uses smallest currency unit)
+        amount: subscriptionAmount,
         currency: 'NGN',
         metadata: {
           user_id: user.id,
           subscription_type: 'monthly',
+          offer_code: offerCode,
+          original_amount: 100000,
         },
         callback_url: `${req.headers.get('origin')}/dashboard`,
       }),
@@ -71,7 +108,8 @@ serve(async (req) => {
       user_id: user.id,
       email: profile.email,
       reference: paystackData.data.reference,
-      amount: 100000,
+      amount: subscriptionAmount,
+      offer_code: offerCode,
     });
 
     return new Response(
