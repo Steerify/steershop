@@ -45,24 +45,22 @@ const Dashboard = () => {
 
       if (!shopData) return;
 
-      // Get orders data for the last 30 days
+      // Get revenue transactions for the last 30 days
       const thirtyDaysAgo = subMonths(new Date(), 1);
       
-      const { data: orders } = await supabase
-        .from("orders")
-        .select("total_amount, created_at, status")
+      const { data: revenueData } = await supabase
+        .from("revenue_transactions")
+        .select("amount, created_at")
         .eq("shop_id", shopData.id)
-        .gte("created_at", thirtyDaysAgo.toISOString());
+        .gte("created_at", thirtyDaysAgo.toISOString())
+        .order("created_at", { ascending: true });
 
-      if (!orders) return;
+      if (!revenueData) return;
 
-      // Calculate total revenue and sales
-      const revenue = orders
-        .filter(order => order.status === 'delivered' || order.status === 'confirmed')
-        .reduce((sum, order) => sum + Number(order.total_amount), 0);
-      
+      // Calculate total revenue from confirmed payments
+      const revenue = revenueData.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
       setTotalRevenue(revenue);
-      setTotalSales(orders.length);
+      setTotalSales(revenueData.length);
 
       // Prepare chart data - last 7 days
       const last7Days = eachDayOfInterval({
@@ -71,15 +69,14 @@ const Dashboard = () => {
       });
 
       const dailyData = last7Days.map(day => {
-        const dayOrders = orders.filter(order => 
-          format(new Date(order.created_at), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd') &&
-          (order.status === 'delivered' || order.status === 'confirmed')
+        const dayRevenue = revenueData.filter(transaction => 
+          format(new Date(transaction.created_at), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')
         );
         
         return {
           date: format(day, 'MMM dd'),
-          revenue: dailyData.reduce((sum, order) => sum + Number(order.total_amount), 0),
-          sales: dayOrders.length
+          revenue: dayRevenue.reduce((sum, transaction) => sum + Number(transaction.amount), 0),
+          sales: dayRevenue.length
         };
       });
 
