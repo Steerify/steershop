@@ -64,13 +64,14 @@ const Shops = () => {
         const ownerProfile = profilesData?.find(profile => profile.id === shop.owner_id);
         
         if (!ownerProfile) {
-          console.log('No profile found for shop:', shop.shop_name);
+          console.log('❌ No profile found for shop:', shop.shop_name, 'Owner ID:', shop.owner_id);
           return false;
         }
 
         const subscriptionInfo = calculateSubscriptionStatus(ownerProfile);
-        console.log('Shop:', shop.shop_name, 'Status:', subscriptionInfo.status, 'Days:', subscriptionInfo.daysRemaining);
-        return subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial';
+        const isActive = subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial';
+        console.log('🏪 Shop:', shop.shop_name, '| Status:', subscriptionInfo.status, '| Days:', subscriptionInfo.daysRemaining, '| Visible:', isActive, '| Subscribed:', ownerProfile.is_subscribed, '| Expires:', ownerProfile.subscription_expires_at);
+        return isActive;
       });
 
       setShops(activeShops);
