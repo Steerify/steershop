@@ -7,6 +7,7 @@ import { Search, Store, Package } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Shop {
   id: string;
@@ -35,6 +36,43 @@ interface ProductResult {
   shop_slug: string;
   shop_logo: string | null;
 }
+
+const ShopCardSkeleton = () => (
+  <Card className="h-full">
+    <CardHeader>
+      <Skeleton className="w-16 h-16 rounded-xl mb-4" />
+      <Skeleton className="h-6 w-3/4 mb-2" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-2/3" />
+    </CardHeader>
+    <CardContent>
+      <Skeleton className="h-4 w-24" />
+    </CardContent>
+  </Card>
+);
+
+const ProductCardSkeleton = () => (
+  <Card className="h-full">
+    <CardHeader>
+      <Skeleton className="w-full h-48 rounded-lg mb-4" />
+      <Skeleton className="h-5 w-3/4 mb-2" />
+      <div className="flex items-center gap-2 mt-2">
+        <Skeleton className="w-6 h-6 rounded-full" />
+        <Skeleton className="h-4 w-24" />
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <Skeleton className="h-8 w-32 mb-1" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+        <Skeleton className="h-6 w-16 rounded-full" />
+      </div>
+    </CardContent>
+  </Card>
+);
+
 
 const Shops = () => {
   const [shops, setShops] = useState<Shop[]>([]);
@@ -307,11 +345,10 @@ const Shops = () => {
             {searchQuery && <h2 className="text-2xl font-bold mb-6">Shops ({filteredShops.length})</h2>}
             
             {isLoading ? (
-              <div className="text-center py-12">
-                <div className="flex justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
-                <p className="text-muted-foreground mt-4">Loading shops...</p>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <ShopCardSkeleton key={index} />
+                ))}
               </div>
             ) : filteredShops.length === 0 ? (
               <div className="text-center py-12">
