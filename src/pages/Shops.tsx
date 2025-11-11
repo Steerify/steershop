@@ -41,26 +41,45 @@ const Shops = () => {
   const [productResults, setProductResults] = useState<ProductResult[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
-    fetchShops();
+    fetchShops(0, true);
   }, []);
 
-  const fetchShops = async () => {
+  const fetchShops = async (currentPage: number = 0, reset: boolean = false) => {
     try {
-      // Get all active shops using secure public view
+      if (reset) {
+        setIsLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const ITEMS_PER_PAGE = 12;
+      const from = currentPage * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
+      // Get paginated active shops using secure public view
       const { data: shopsData, error: shopsError } = await supabase
         .from("shops_public")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
       if (shopsError) throw shopsError;
 
       if (!shopsData || shopsData.length === 0) {
-        setShops([]);
-        setIsLoading(false);
+        setHasMore(false);
+        if (reset) {
+          setShops([]);
+        }
         return;
       }
+
+      // Check if there are more items
+      setHasMore(shopsData.length === ITEMS_PER_PAGE);
 
       // Get the owner IDs from the shops
       const ownerIds = shopsData.map(shop => shop.owner_id);
@@ -88,12 +107,16 @@ const Shops = () => {
         return isActive;
       });
 
-      setShops(activeShops);
+      setShops(prev => reset ? activeShops : [...prev, ...activeShops]);
+      setPage(currentPage);
     } catch (error) {
       console.error("Error fetching shops:", error);
-      setShops([]);
+      if (reset) {
+        setShops([]);
+      }
     } finally {
       setIsLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -165,6 +188,34 @@ const Shops = () => {
   const filteredShops = shops.filter((shop) =>
     shop.shop_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const loadMore = () => {
+    if (!loadingMore && hasMore) {
+      fetchShops(page + 1, false);
+    }
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !searchQuery) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const sentinel = document.getElementById('scroll-sentinel');
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => {
+      if (sentinel) {
+        observer.unobserve(sentinel);
+      }
+    };
+  }, [hasMore, loadingMore, searchQuery, page]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -309,8 +360,20 @@ const Shops = () => {
             </div>
             )}
 
+            {/* Infinite scroll sentinel */}
+            {!searchQuery && (
+              <div id="scroll-sentinel" className="h-20 flex items-center justify-center">
+                {loadingMore && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    <span>Loading more shops...</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Show total count when there are shops */}
-            {filteredShops.length > 0 && (
+            {filteredShops.length > 0 && searchQuery && (
               <div className="text-center mt-8">
                 <p className="text-muted-foreground">
                   Showing {filteredShops.length} of {shops.length} active shops
