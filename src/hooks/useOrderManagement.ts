@@ -23,9 +23,12 @@ export const useOrderManagement = () => {
       // Add timestamps based on status
       const timestampFields = {
         confirmed: 'confirmed_at',
-        cancelled: 'cancelled_at',
-        in_progress: 'in_progress_at',
-        completed: 'completed_at'
+        paid_awaiting_delivery: 'confirmed_at',
+        processing: 'processing_at',
+        out_for_delivery: 'out_for_delivery_at',
+        delivered: 'delivered_at',
+        completed: 'completed_at',
+        cancelled: 'cancelled_at'
       };
 
       if (timestampFields[updates.status as keyof typeof timestampFields]) {
@@ -65,14 +68,15 @@ export const useOrderManagement = () => {
     });
   };
 
-// Update the getOrderStatusFlow function
 const getOrderStatusFlow = (currentStatus: string) => {
   const flows: Record<string, string[]> = {
     awaiting_approval: ["confirmed", "cancelled"],
     pending: ["confirmed", "cancelled"],
-    confirmed: ["in_progress", "cancelled"],
-    paid_awaiting_delivery: ["in_progress", "cancelled"], // Added this
-    in_progress: ["completed", "cancelled"],
+    confirmed: ["processing", "cancelled"],
+    paid_awaiting_delivery: ["processing", "cancelled"],
+    processing: ["out_for_delivery", "cancelled"],
+    out_for_delivery: ["delivered", "cancelled"],
+    delivered: ["completed"],
     completed: [],
     cancelled: []
   };

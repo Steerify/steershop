@@ -476,11 +476,12 @@ const Orders = () => {
                           </Button>
                         </>
                       )}
-                      {order.status === "confirmed" && (
+                      {(order.status === "confirmed" || order.status === "paid_awaiting_delivery") && (
                         <>
                           <Button
                             onClick={() => updateOrderStatus(order.id, "processing")}
                             disabled={updatingOrderId === order.id}
+                            className="bg-purple-600 hover:bg-purple-700"
                           >
                             {updatingOrderId === order.id ? (
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -507,6 +508,7 @@ const Orders = () => {
                           <Button
                             onClick={() => updateOrderStatus(order.id, "out_for_delivery")}
                             disabled={updatingOrderId === order.id}
+                            className="bg-indigo-600 hover:bg-indigo-700"
                           >
                             {updatingOrderId === order.id ? (
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -556,23 +558,25 @@ const Orders = () => {
                           </Button>
                         </>
                       )}
-                      {order.status === "paid_awaiting_delivery" && (
+
+                      {order.status === "delivered" && (
                         <Button
-                          onClick={() => updateOrderStatus(order.id, "processing")}
+                          onClick={() => updateOrderStatus(order.id, "completed")}
                           disabled={updatingOrderId === order.id}
+                          className="bg-purple-600 hover:bg-purple-700"
                         >
                           {updatingOrderId === order.id ? (
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           ) : (
-                            <Package className="w-4 h-4 mr-2" />
+                            <CheckCircle className="w-4 h-4 mr-2" />
                           )}
-                          Start Processing
+                          Complete Order
                         </Button>
                       )}
                       
                       
 
-                      {(order.status === "awaiting_approval" || order.status === "confirmed" || order.status === "processing") && (
+                      {(order.status === "awaiting_approval" || order.status === "confirmed" || order.status === "paid_awaiting_delivery" || order.status === "processing" || order.status === "out_for_delivery") && (
                         <Button
                           variant="destructive"
                           onClick={() => updateOrderStatus(order.id, "cancelled")}
