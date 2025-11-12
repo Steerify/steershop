@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Store, Package } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Badge } from "@/components/ui/badge";
 
 interface Shop {
@@ -17,12 +16,6 @@ interface Shop {
   owner_id: string;
 }
 
-interface Profile {
-  id: string;
-  is_subscribed: boolean;
-  subscription_expires_at: string | null;
-  created_at: string;
-}
 
 interface ProductResult {
   id: string;
@@ -48,56 +41,15 @@ const Shops = () => {
 
   const fetchShops = async () => {
     try {
-      // Get all active shops using secure public view
-      const { data: shopsData, error: shopsError } = await supabase
+      // Get all active shops with valid subscriptions using secure public view
+      // The view already filters by is_active and subscription status
+      const { data, error } = await supabase
         .from("shops_public")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (shopsError) throw shopsError;
-
-      if (!shopsData || shopsData.length === 0) {
-        setShops([]);
-        setIsLoading(false);
-        return;
-      }
-
-      // Get the owner IDs from the shops
-      const ownerIds = shopsData.map(shop => shop.owner_id);
-
-      // Fetch profiles with subscription status
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, is_subscribed, subscription_expires_at, created_at")
-        .in("id", ownerIds);
-
-      if (profilesError) throw profilesError;
-
-      // Filter shops to only include those with active subscriptions or valid trials
-      const activeShops = shopsData.filter(shop => {
-        const ownerProfile = profilesData?.find(profile => profile.id === shop.owner_id);
-        
-        if (!ownerProfile) {
-          console.log('❌ No profile found for shop:', shop.shop_name, 'Owner ID:', shop.owner_id);
-          return false;
-        }
-
-        const now = new Date();
-        const expiryDate = ownerProfile.subscription_expires_at ? new Date(ownerProfile.subscription_expires_at) : null;
-        
-        console.log('🔍 DEBUG - Shop:', shop.shop_name);
-        console.log('  Current Date:', now.toISOString());
-        console.log('  Expiry Date:', expiryDate?.toISOString());
-        console.log('  Is Subscribed:', ownerProfile.is_subscribed);
-        console.log('  Profile Data:', ownerProfile);
-
-        const subscriptionInfo = calculateSubscriptionStatus(ownerProfile);
-        const isActive = subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial';
-        console.log('  Status:', subscriptionInfo.status, '| Days:', subscriptionInfo.daysRemaining, '| Visible:', isActive);
-        return isActive;
-      });
-
-      setShops(activeShops);
+      if (error) throw error;
+      setShops(data || []);
     } catch (error) {
       console.error("Error fetching shops:", error);
       setShops([]);
