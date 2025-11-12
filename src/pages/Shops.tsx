@@ -82,9 +82,18 @@ const Shops = () => {
           return false;
         }
 
+        const now = new Date();
+        const expiryDate = ownerProfile.subscription_expires_at ? new Date(ownerProfile.subscription_expires_at) : null;
+        
+        console.log('🔍 DEBUG - Shop:', shop.shop_name);
+        console.log('  Current Date:', now.toISOString());
+        console.log('  Expiry Date:', expiryDate?.toISOString());
+        console.log('  Is Subscribed:', ownerProfile.is_subscribed);
+        console.log('  Profile Data:', ownerProfile);
+
         const subscriptionInfo = calculateSubscriptionStatus(ownerProfile);
         const isActive = subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial';
-        console.log('🏪 Shop:', shop.shop_name, '| Status:', subscriptionInfo.status, '| Days:', subscriptionInfo.daysRemaining, '| Visible:', isActive, '| Subscribed:', ownerProfile.is_subscribed, '| Expires:', ownerProfile.subscription_expires_at);
+        console.log('  Status:', subscriptionInfo.status, '| Days:', subscriptionInfo.daysRemaining, '| Visible:', isActive);
         return isActive;
       });
 
