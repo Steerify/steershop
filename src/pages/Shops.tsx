@@ -7,6 +7,7 @@ import { Search, Store, Package } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Shop {
   id: string;
@@ -36,31 +37,87 @@ interface ProductResult {
   shop_logo: string | null;
 }
 
+const ShopCardSkeleton = () => (
+  <Card className="h-full">
+    <CardHeader>
+      <Skeleton className="w-16 h-16 rounded-xl mb-4" />
+      <Skeleton className="h-6 w-3/4 mb-2" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-2/3" />
+    </CardHeader>
+    <CardContent>
+      <Skeleton className="h-4 w-24" />
+    </CardContent>
+  </Card>
+);
+
+const ProductCardSkeleton = () => (
+  <Card className="h-full">
+    <CardHeader>
+      <Skeleton className="w-full h-48 rounded-lg mb-4" />
+      <Skeleton className="h-5 w-3/4 mb-2" />
+      <div className="flex items-center gap-2 mt-2">
+        <Skeleton className="w-6 h-6 rounded-full" />
+        <Skeleton className="h-4 w-24" />
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <Skeleton className="h-8 w-32 mb-1" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+        <Skeleton className="h-6 w-16 rounded-full" />
+      </div>
+    </CardContent>
+  </Card>
+);
+
+
 const Shops = () => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [productResults, setProductResults] = useState<ProductResult[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
-    fetchShops();
+    fetchShops(0, true);
   }, []);
 
-  const fetchShops = async () => {
+  const fetchShops = async (currentPage: number = 0, reset: boolean = false) => {
     try {
-      // Get all active shops using secure public view
+      if (reset) {
+        setIsLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const ITEMS_PER_PAGE = 12;
+      const from = currentPage * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
+      // Get paginated active shops using secure public view
       const { data: shopsData, error: shopsError } = await supabase
         .from("shops_public")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
       if (shopsError) throw shopsError;
 
       if (!shopsData || shopsData.length === 0) {
-        setShops([]);
-        setIsLoading(false);
+        setHasMore(false);
+        if (reset) {
+          setShops([]);
+        }
         return;
       }
+
+      // Check if there are more items
+      setHasMore(shopsData.length === ITEMS_PER_PAGE);
 
       // Get the owner IDs from the shops
       const ownerIds = shopsData.map(shop => shop.owner_id);
@@ -88,12 +145,16 @@ const Shops = () => {
         return isActive;
       });
 
-      setShops(activeShops);
+      setShops(prev => reset ? activeShops : [...prev, ...activeShops]);
+      setPage(currentPage);
     } catch (error) {
       console.error("Error fetching shops:", error);
-      setShops([]);
+      if (reset) {
+        setShops([]);
+      }
     } finally {
       setIsLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -165,6 +226,34 @@ const Shops = () => {
   const filteredShops = shops.filter((shop) =>
     shop.shop_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const loadMore = () => {
+    if (!loadingMore && hasMore) {
+      fetchShops(page + 1, false);
+    }
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !searchQuery) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const sentinel = document.getElementById('scroll-sentinel');
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => {
+      if (sentinel) {
+        observer.unobserve(sentinel);
+      }
+    };
+  }, [hasMore, loadingMore, searchQuery, page]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -256,11 +345,10 @@ const Shops = () => {
             {searchQuery && <h2 className="text-2xl font-bold mb-6">Shops ({filteredShops.length})</h2>}
             
             {isLoading ? (
-              <div className="text-center py-12">
-                <div className="flex justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
-                <p className="text-muted-foreground mt-4">Loading shops...</p>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <ShopCardSkeleton key={index} />
+                ))}
               </div>
             ) : filteredShops.length === 0 ? (
               <div className="text-center py-12">
@@ -309,8 +397,20 @@ const Shops = () => {
             </div>
             )}
 
+            {/* Infinite scroll sentinel */}
+            {!searchQuery && (
+              <div id="scroll-sentinel" className="h-20 flex items-center justify-center">
+                {loadingMore && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    <span>Loading more shops...</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Show total count when there are shops */}
-            {filteredShops.length > 0 && (
+            {filteredShops.length > 0 && searchQuery && (
               <div className="text-center mt-8">
                 <p className="text-muted-foreground">
                   Showing {filteredShops.length} of {shops.length} active shops
