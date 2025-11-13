@@ -796,6 +796,7 @@ export type Database = {
         Args: { shop_id_param: string }
         Returns: boolean
       }
+      shop_is_active: { Args: { shop_id_param: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "shop_owner" | "customer"
