@@ -792,6 +792,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      shop_has_valid_subscription: {
+        Args: { shop_id_param: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "shop_owner" | "customer"
