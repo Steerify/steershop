@@ -792,6 +792,11 @@ export type Database = {
         }
         Returns: boolean
       }
+      order_exists: { Args: { order_id_param: string }; Returns: boolean }
+      product_available: {
+        Args: { product_id_param: string; quantity_param: number }
+        Returns: boolean
+      }
       shop_has_valid_subscription: {
         Args: { shop_id_param: string }
         Returns: boolean
