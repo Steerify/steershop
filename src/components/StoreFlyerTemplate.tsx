@@ -104,268 +104,485 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
   const backgroundInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // Check mobile device
+  // Canvas dimensions for different screen sizes
+  const canvasDimensions = {
+    desktop: { width: 500, height: 700 },
+    mobile: { width: 300, height: 500 }
+  };
+
+  const currentCanvas = isMobile ? canvasDimensions.mobile : canvasDimensions.desktop;
+
+  // Check mobile device and adjust elements on resize
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
+      // Adjust elements for mobile if needed
+      if (mobile) {
+        setElements(prev => prev.map(el => ({
+          ...el,
+          x: Math.min(el.x, canvasDimensions.mobile.width - el.width),
+          y: Math.min(el.y, canvasDimensions.mobile.height - el.height)
+        })));
+      }
+    };
+    
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Initialize with the professional template layout
+  // Initialize with responsive template layout
   useEffect(() => {
-    const initialElements: PosterElement[] = [
-      // Header Section
-      {
-        id: '1',
-        type: 'text',
-        content: shop.shop_name,
-        x: 50,
-        y: 50,
-        width: 400,
-        height: 60,
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#1f2937',
-        opacity: 1,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
-        zIndex: 2
-      },
-      {
-        id: '2',
-        type: 'text',
-        content: shop.description || 'Welcome to our store! Special offers available!',
-        x: 50,
-        y: 120,
-        width: 400,
-        height: 40,
-        fontSize: 16,
-        color: '#6b7280',
-        opacity: 1,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
-        zIndex: 2
-      },
-      
-      // Left Column - QR Code Section
-      {
-        id: '3',
-        type: 'qr',
-        content: storeUrl,
-        x: 50,
-        y: 200,
-        width: 180,
-        height: 180,
-        opacity: 1,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
-        zIndex: 2
-      },
-      {
-        id: '4',
-        type: 'text',
-        content: 'Scan to Visit Our Store',
-        x: 50,
-        y: 390,
-        width: 180,
-        height: 30,
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#3b82f6',
-        opacity: 1,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
-        zIndex: 2
-      },
-      {
-        id: '5',
-        type: 'text',
-        content: 'Shop online anytime, anywhere',
-        x: 50,
-        y: 420,
-        width: 180,
-        height: 20,
-        fontSize: 12,
-        color: '#666666',
-        opacity: 1,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
-        zIndex: 2
-      },
+    const getMobileLayout = () => {
+      if (isMobile) {
+        return [
+          // Header Section - Mobile
+          {
+            id: '1',
+            type: 'text',
+            content: shop.shop_name,
+            x: 20,
+            y: 20,
+            width: 260,
+            height: 50,
+            fontSize: 24,
+            fontWeight: 'bold',
+            color: '#1f2937',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '2',
+            type: 'text',
+            content: shop.description || 'Welcome to our store!',
+            x: 20,
+            y: 75,
+            width: 260,
+            height: 35,
+            fontSize: 12,
+            color: '#6b7280',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          
+          // QR Code Section - Centered for mobile
+          {
+            id: '3',
+            type: 'qr',
+            content: storeUrl,
+            x: 90,
+            y: 120,
+            width: 120,
+            height: 120,
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '4',
+            type: 'text',
+            content: 'Scan to Visit',
+            x: 90,
+            y: 250,
+            width: 120,
+            height: 25,
+            fontSize: 12,
+            fontWeight: 'bold',
+            color: '#3b82f6',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          
+          // Contact Info - Stacked for mobile
+          {
+            id: '5',
+            type: 'text',
+            content: 'Contact Us',
+            x: 20,
+            y: 290,
+            width: 260,
+            height: 30,
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: '#1f2937',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '6',
+            type: 'text',
+            content: `WhatsApp: ${shop.whatsapp_number}`,
+            x: 20,
+            y: 325,
+            width: 260,
+            height: 20,
+            fontSize: 12,
+            color: '#1f2937',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '7',
+            type: 'text',
+            content: 'Website:',
+            x: 20,
+            y: 350,
+            width: 260,
+            height: 15,
+            fontSize: 10,
+            color: '#6b7280',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '8',
+            type: 'text',
+            content: storeUrl,
+            x: 20,
+            y: 365,
+            width: 260,
+            height: 30,
+            fontSize: 9,
+            color: '#1f2937',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          
+          // Call to Action
+          {
+            id: '9',
+            type: 'text',
+            content: 'Shop Now & Get Special Offers!',
+            x: 20,
+            y: 405,
+            width: 260,
+            height: 30,
+            fontSize: 14,
+            fontWeight: 'bold',
+            color: '#1f2937',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '10',
+            type: 'text',
+            content: 'Scan QR code to visit store',
+            x: 20,
+            y: 435,
+            width: 260,
+            height: 20,
+            fontSize: 11,
+            color: '#666666',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          
+          // Footer
+          {
+            id: '11',
+            type: 'text',
+            content: `Thank you for choosing ${shop.shop_name}`,
+            x: 20,
+            y: 465,
+            width: 260,
+            height: 20,
+            fontSize: 10,
+            color: '#666666',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          }
+        ];
+      } else {
+        return [
+          // Header Section - Desktop
+          {
+            id: '1',
+            type: 'text',
+            content: shop.shop_name,
+            x: 50,
+            y: 50,
+            width: 400,
+            height: 60,
+            fontSize: 32,
+            fontWeight: 'bold',
+            color: '#1f2937',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '2',
+            type: 'text',
+            content: shop.description || 'Welcome to our store! Special offers available!',
+            x: 50,
+            y: 120,
+            width: 400,
+            height: 40,
+            fontSize: 16,
+            color: '#6b7280',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          
+          // Left Column - QR Code Section
+          {
+            id: '3',
+            type: 'qr',
+            content: storeUrl,
+            x: 50,
+            y: 200,
+            width: 180,
+            height: 180,
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '4',
+            type: 'text',
+            content: 'Scan to Visit Our Store',
+            x: 50,
+            y: 390,
+            width: 180,
+            height: 30,
+            fontSize: 14,
+            fontWeight: 'bold',
+            color: '#3b82f6',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '5',
+            type: 'text',
+            content: 'Shop online anytime, anywhere',
+            x: 50,
+            y: 420,
+            width: 180,
+            height: 20,
+            fontSize: 12,
+            color: '#666666',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
 
-      // Right Column - Contact Info Section
-      {
-        id: '6',
-        type: 'text',
-        content: 'Get in Touch',
-        x: 270,
-        y: 200,
-        width: 200,
-        height: 40,
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#1f2937',
-        opacity: 1,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
-        zIndex: 2
-      },
-      {
-        id: '7',
-        type: 'text',
-        content: 'WhatsApp',
-        x: 270,
-        y: 250,
-        width: 100,
-        height: 20,
-        fontSize: 12,
-        fontWeight: 'semibold',
-        color: '#6b7280',
-        opacity: 1,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
-        zIndex: 2
-      },
-      {
-        id: '8',
-        type: 'text',
-        content: shop.whatsapp_number,
-        x: 270,
-        y: 270,
-        width: 200,
-        height: 30,
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#1f2937',
-        opacity: 1,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
-        zIndex: 2
-      },
-      {
-        id: '9',
-        type: 'text',
-        content: 'Online Store',
-        x: 270,
-        y: 320,
-        width: 100,
-        height: 20,
-        fontSize: 12,
-        fontWeight: 'semibold',
-        color: '#6b7280',
-        opacity: 1,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
-        zIndex: 2
-      },
-      {
-        id: '10',
-        type: 'text',
-        content: storeUrl,
-        x: 270,
-        y: 340,
-        width: 200,
-        height: 40,
-        fontSize: 10,
-        color: '#1f2937',
-        opacity: 1,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
-        zIndex: 2
-      },
-      {
-        id: '11',
-        type: 'text',
-        content: 'Browse our products, place orders, and get updates on new arrivals!',
-        x: 270,
-        y: 400,
-        width: 200,
-        height: 40,
-        fontSize: 12,
-        fontWeight: 'semibold',
-        color: '#1f2937',
-        opacity: 1,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
-        zIndex: 2
-      },
+          // Right Column - Contact Info Section
+          {
+            id: '6',
+            type: 'text',
+            content: 'Get in Touch',
+            x: 270,
+            y: 200,
+            width: 200,
+            height: 40,
+            fontSize: 20,
+            fontWeight: 'bold',
+            color: '#1f2937',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '7',
+            type: 'text',
+            content: 'WhatsApp',
+            x: 270,
+            y: 250,
+            width: 100,
+            height: 20,
+            fontSize: 12,
+            fontWeight: 'semibold',
+            color: '#6b7280',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '8',
+            type: 'text',
+            content: shop.whatsapp_number,
+            x: 270,
+            y: 270,
+            width: 200,
+            height: 30,
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: '#1f2937',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '9',
+            type: 'text',
+            content: 'Online Store',
+            x: 270,
+            y: 320,
+            width: 100,
+            height: 20,
+            fontSize: 12,
+            fontWeight: 'semibold',
+            color: '#6b7280',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '10',
+            type: 'text',
+            content: storeUrl,
+            x: 270,
+            y: 340,
+            width: 200,
+            height: 40,
+            fontSize: 10,
+            color: '#1f2937',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '11',
+            type: 'text',
+            content: 'Browse our products, place orders, and get updates on new arrivals!',
+            x: 270,
+            y: 400,
+            width: 200,
+            height: 40,
+            fontSize: 12,
+            fontWeight: 'semibold',
+            color: '#1f2937',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
 
-      // Call to Action Banner
-      {
-        id: '12',
-        type: 'text',
-        content: 'Shop Now & Get Special Offers!',
-        x: 50,
-        y: 480,
-        width: 400,
-        height: 40,
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#1f2937',
-        opacity: 1,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
-        zIndex: 2
-      },
-      {
-        id: '13',
-        type: 'text',
-        content: 'Scan the QR code or visit our website to explore our full catalog',
-        x: 50,
-        y: 520,
-        width: 400,
-        height: 30,
-        fontSize: 14,
-        color: '#666666',
-        opacity: 1,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
-        zIndex: 2
-      },
+          // Call to Action Banner
+          {
+            id: '12',
+            type: 'text',
+            content: 'Shop Now & Get Special Offers!',
+            x: 50,
+            y: 480,
+            width: 400,
+            height: 40,
+            fontSize: 20,
+            fontWeight: 'bold',
+            color: '#1f2937',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
+          {
+            id: '13',
+            type: 'text',
+            content: 'Scan the QR code or visit our website to explore our full catalog',
+            x: 50,
+            y: 520,
+            width: 400,
+            height: 30,
+            fontSize: 14,
+            color: '#666666',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          },
 
-      // Footer
-      {
-        id: '14',
-        type: 'text',
-        content: `Thank you for choosing ${shop.shop_name}`,
-        x: 50,
-        y: 580,
-        width: 400,
-        height: 30,
-        fontSize: 14,
-        color: '#666666',
-        opacity: 1,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
-        zIndex: 2
+          // Footer
+          {
+            id: '14',
+            type: 'text',
+            content: `Thank you for choosing ${shop.shop_name}`,
+            x: 50,
+            y: 580,
+            width: 400,
+            height: 30,
+            fontSize: 14,
+            color: '#666666',
+            opacity: 1,
+            rotation: 0,
+            flipX: false,
+            flipY: false,
+            zIndex: 2
+          }
+        ];
       }
-    ];
+    };
+
+    const initialElements = getMobileLayout();
 
     // Add logo if available
     if (shop.logo_url) {
       initialElements.push({
-        id: '15',
+        id: 'logo',
         type: 'image',
         content: shop.logo_url,
-        x: 400,
-        y: 50,
-        width: 80,
-        height: 80,
+        x: isMobile ? 220 : 400,
+        y: isMobile ? 20 : 50,
+        width: isMobile ? 60 : 80,
+        height: isMobile ? 60 : 80,
         opacity: 1,
         rotation: 0,
         flipX: false,
@@ -376,13 +593,13 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
 
     // Add decorative border
     initialElements.push({
-      id: '16',
+      id: 'border',
       type: 'shape',
       content: 'rectangle',
-      x: 30,
-      y: 30,
-      width: 440,
-      height: 640,
+      x: isMobile ? 10 : 30,
+      y: isMobile ? 10 : 30,
+      width: isMobile ? 280 : 440,
+      height: isMobile ? 480 : 640,
       backgroundColor: 'transparent',
       opacity: 1,
       rotation: 0,
@@ -392,7 +609,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
     });
 
     setElements(initialElements);
-  }, [shop, storeUrl]);
+  }, [shop, storeUrl, isMobile]);
 
   // Handle file upload
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'element' | 'background') => {
@@ -615,11 +832,11 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
       id: Date.now().toString(),
       type,
       content: content || (type === 'text' ? 'New Text' : ''),
-      x: 100,
-      y: 100,
-      width: type === 'text' ? 120 : 100,
-      height: type === 'text' ? 40 : 100,
-      fontSize: type === 'text' ? 16 : undefined,
+      x: 50,
+      y: 50,
+      width: type === 'text' ? (isMobile ? 200 : 120) : (isMobile ? 80 : 100),
+      height: type === 'text' ? (isMobile ? 30 : 40) : (isMobile ? 80 : 100),
+      fontSize: type === 'text' ? (isMobile ? 12 : 16) : undefined,
       color: type === 'text' ? '#1f2937' : '#000000',
       backgroundColor: type === 'shape' ? '#3b82f6' : undefined,
       opacity: 1,
@@ -631,8 +848,8 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
 
     if (type === 'qr') {
       newElement.content = storeUrl;
-      newElement.width = 120;
-      newElement.height = 120;
+      newElement.width = isMobile ? 100 : 120;
+      newElement.height = isMobile ? 100 : 120;
     }
 
     setElements(prev => [...prev, newElement]);
@@ -644,13 +861,13 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
       id: Date.now().toString(),
       type: 'product',
       content: product.name,
-      x: 100,
-      y: 100,
-      width: 120,
-      height: 160,
+      x: 50,
+      y: 50,
+      width: isMobile ? 100 : 120,
+      height: isMobile ? 140 : 160,
       productId: product.id,
       color: '#1f2937',
-      fontSize: 12,
+      fontSize: isMobile ? 10 : 12,
       opacity: 1,
       rotation: 0,
       flipX: false,
@@ -696,7 +913,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
     updateElement(id, { zIndex: Math.min(0, ...elements.map(el => el.zIndex)) - 1 });
   };
 
-  // Drag and drop
+  // Drag and drop with responsive boundaries
   const handleMouseDown = (e: React.MouseEvent, elementId: string) => {
     e.stopPropagation();
     setSelectedElement(elementId);
@@ -718,8 +935,8 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
     const newY = e.clientY - dragOffset.y;
 
     updateElement(selectedElement, {
-      x: Math.max(0, Math.min(500, newX)),
-      y: Math.max(0, Math.min(700, newY))
+      x: Math.max(0, Math.min(currentCanvas.width - (elements.find(el => el.id === selectedElement)?.width || 0), newX)),
+      y: Math.max(0, Math.min(currentCanvas.height - (elements.find(el => el.id === selectedElement)?.height || 0), newY))
     });
   };
 
@@ -784,11 +1001,13 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
               color: element.color,
               display: 'flex',
               alignItems: 'center',
-              padding: '8px',
+              padding: isMobile ? '4px' : '8px',
               backgroundColor: 'rgba(255,255,255,0.95)',
-              borderRadius: '8px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              backdropFilter: 'blur(4px)'
+              borderRadius: '6px',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+              backdropFilter: 'blur(4px)',
+              wordWrap: 'break-word',
+              overflow: 'hidden'
             }}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
           >
@@ -802,7 +1021,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
             key={element.id}
             style={baseStyle}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
-            className="flex items-center justify-center overflow-hidden bg-white rounded-lg shadow-md"
+            className="flex items-center justify-center overflow-hidden bg-white rounded-lg shadow-sm"
           >
             <img 
               src={element.content} 
@@ -822,11 +1041,11 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
             key={element.id}
             style={baseStyle}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
-            className="flex items-center justify-center bg-white p-3 rounded-lg shadow-md"
+            className="flex items-center justify-center bg-white p-2 rounded-lg shadow-sm"
           >
             <QRCodeSVG
               value={element.content}
-              size={Math.min(element.width, element.height) - 24}
+              size={Math.min(element.width, element.height) - (isMobile ? 16 : 24)}
               level="H"
               includeMargin={true}
             />
@@ -840,13 +1059,13 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
             key={element.id}
             style={baseStyle}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
-            className="flex flex-col items-center p-3 bg-white rounded-xl shadow-md border border-gray-100"
+            className="flex flex-col items-center p-2 bg-white rounded-lg shadow-sm border border-gray-100"
           >
             {product?.image_url && (
               <img 
                 src={product.image_url} 
                 alt={product.name}
-                className="w-full h-3/4 object-cover mb-2 rounded-lg"
+                className="w-full h-3/4 object-cover mb-1 rounded"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjZjNmNGY2Ii8+CjxwYXRoIGQ9Ik0xOCAxNUwxMiA5TDYgMTUiIHN0cm9rZT0iIzljYTNmZiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+';
@@ -854,8 +1073,8 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
               />
             )}
             <div className="text-center w-full" style={{ color: element.color, fontSize: element.fontSize }}>
-              <div className="font-semibold truncate text-sm">{product?.name}</div>
-              <div className="text-green-600 font-bold">₦{product?.price.toLocaleString()}</div>
+              <div className="font-semibold truncate text-xs">{product?.name}</div>
+              <div className="text-green-600 font-bold text-xs">₦{product?.price.toLocaleString()}</div>
             </div>
           </div>
         );
@@ -892,11 +1111,11 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
   const MobileToolbar = () => (
     <div className="md:hidden fixed bottom-4 left-4 right-4 bg-background border rounded-xl shadow-lg p-3 z-50 backdrop-blur-sm">
       <div className="flex justify-between items-center">
-        <Button variant="outline" size="sm" onClick={() => setZoom(z => Math.max(0.5, z - 0.1))}>
+        <Button variant="outline" size="sm" onClick={() => setZoom(z => Math.max(0.3, z - 0.1))}>
           <ZoomOut className="w-4 h-4" />
         </Button>
         <span className="text-sm font-medium">{Math.round(zoom * 100)}%</span>
-        <Button variant="outline" size="sm" onClick={() => setZoom(z => Math.min(2, z + 0.1))}>
+        <Button variant="outline" size="sm" onClick={() => setZoom(z => Math.min(1.5, z + 0.1))}>
           <ZoomIn className="w-4 h-4" />
         </Button>
         <Button variant="outline" size="sm" onClick={handlePrint}>
@@ -923,27 +1142,28 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
             <Sparkles className="w-5 h-5 text-blue-600" />
             Design Your Store Flyer
             <span className="text-sm font-normal text-muted-foreground ml-2">
-              Professional marketing flyer with QR code and contact information
+              {isMobile ? 'Mobile-optimized view' : 'Professional marketing flyer'}
             </span>
           </DialogTitle>
         </DialogHeader>
         
         <div className="flex flex-col md:flex-row h-full overflow-hidden">
-          {/* Sidebar */}
+          {/* Sidebar - Hidden on mobile when not active */}
           <div className={`${isMobile && activeTab === 'canvas' ? 'hidden' : 'w-full md:w-80'} space-y-4 overflow-y-auto p-4 border-r`}>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid grid-cols-3 w-full bg-muted/50 p-1 rounded-lg">
-                <TabsTrigger value="design" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <TabsTrigger value="design" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm">
                   Design
                 </TabsTrigger>
-                <TabsTrigger value="elements" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <TabsTrigger value="elements" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm">
                   Elements
                 </TabsTrigger>
-                <TabsTrigger value="products" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <TabsTrigger value="products" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm">
                   Products
                 </TabsTrigger>
               </TabsList>
 
+              {/* Design Tab Content */}
               <TabsContent value="design" className="space-y-4 mt-4">
                 <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-purple-50">
                   <CardContent className="p-4 space-y-4">
@@ -1013,7 +1233,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                           <Button
                             variant="outline"
                             onClick={() => backgroundInputRef.current?.click()}
-                            className="w-full gap-2 border-dashed"
+                            className="w-full gap-2 border-dashed text-xs h-9"
                           >
                             <ImageIcon className="w-4 h-4" />
                             Upload Background
@@ -1021,7 +1241,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                           {backgroundImage && (
                             <div className="flex gap-2">
                               <Select value={backgroundSize} onValueChange={(value: any) => setBackgroundSize(value)}>
-                                <SelectTrigger className="text-xs">
+                                <SelectTrigger className="text-xs h-9">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1034,7 +1254,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                                 variant="outline"
                                 size="sm"
                                 onClick={removeBackgroundImage}
-                                className="text-red-600 hover:text-red-700"
+                                className="text-red-600 hover:text-red-700 h-9"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -1071,7 +1291,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                         <Button
                           variant="outline"
                           onClick={() => fileInputRef.current?.click()}
-                          className="w-full gap-2 border-dashed"
+                          className="w-full gap-2 border-dashed text-xs h-9"
                         >
                           <Upload className="w-4 h-4" />
                           Add Image
@@ -1088,7 +1308,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                         <Button
                           variant="outline"
                           onClick={saveTemplate}
-                          className="w-full gap-2"
+                          className="w-full gap-2 text-xs h-9"
                         >
                           <Save className="w-4 h-4" />
                           Save Current as Template
@@ -1114,6 +1334,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                 </Card>
               </TabsContent>
 
+              {/* Elements Tab Content */}
               <TabsContent value="elements" className="space-y-4 mt-4">
                 <Card className="border-0 shadow-sm">
                   <CardContent className="p-4 space-y-4">
@@ -1123,34 +1344,34 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                         <Button 
                           variant="outline" 
                           onClick={() => addElement('text')} 
-                          className="h-16 flex-col gap-1 hover:bg-blue-50 hover:border-blue-200 transition-colors"
+                          className="h-16 flex-col gap-1 hover:bg-blue-50 hover:border-blue-200 transition-colors text-xs"
                         >
                           <Type className="w-5 h-5 text-blue-600" />
-                          <span className="text-xs">Text</span>
+                          <span>Text</span>
                         </Button>
                         <Button 
                           variant="outline" 
                           onClick={() => addElement('image')} 
-                          className="h-16 flex-col gap-1 hover:bg-green-50 hover:border-green-200 transition-colors"
+                          className="h-16 flex-col gap-1 hover:bg-green-50 hover:border-green-200 transition-colors text-xs"
                         >
                           <Image className="w-5 h-5 text-green-600" />
-                          <span className="text-xs">Image</span>
+                          <span>Image</span>
                         </Button>
                         <Button 
                           variant="outline" 
                           onClick={() => addElement('qr')} 
-                          className="h-16 flex-col gap-1 hover:bg-purple-50 hover:border-purple-200 transition-colors"
+                          className="h-16 flex-col gap-1 hover:bg-purple-50 hover:border-purple-200 transition-colors text-xs"
                         >
                           <Layout className="w-5 h-5 text-purple-600" />
-                          <span className="text-xs">QR Code</span>
+                          <span>QR Code</span>
                         </Button>
                         <Button 
                           variant="outline" 
                           onClick={() => addElement('shape', 'rectangle')} 
-                          className="h-16 flex-col gap-1 hover:bg-orange-50 hover:border-orange-200 transition-colors"
+                          className="h-16 flex-col gap-1 hover:bg-orange-50 hover:border-orange-200 transition-colors text-xs"
                         >
                           <Palette className="w-5 h-5 text-orange-600" />
-                          <span className="text-xs">Shape</span>
+                          <span>Shape</span>
                         </Button>
                       </div>
                     </div>
@@ -1164,7 +1385,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                             variant="outline"
                             size="sm"
                             onClick={() => addElement('shape', shape.id)}
-                            className="h-10 text-sm gap-2 justify-start"
+                            className="h-10 text-xs gap-2 justify-start"
                           >
                             <span className="text-lg">{shape.icon}</span>
                             {shape.name}
@@ -1203,6 +1424,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                         </div>
                       </div>
 
+                      {/* Element editing controls remain the same but with responsive sizing */}
                       {selectedElementData.type === 'text' && (
                         <>
                           <div className="space-y-2">
@@ -1407,6 +1629,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                 )}
               </TabsContent>
 
+              {/* Products Tab Content */}
               <TabsContent value="products" className="space-y-4 mt-4">
                 <Card className="border-0 shadow-sm">
                   <CardContent className="p-4">
@@ -1456,9 +1679,14 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
           <div className="flex-1 flex flex-col p-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
               <div>
-                <h3 className="font-semibold text-lg">Professional Flyer Template</h3>
+                <h3 className="font-semibold text-lg">
+                  {isMobile ? 'Mobile Flyer Template' : 'Professional Flyer Template'}
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  Pre-designed layout with QR code and contact information
+                  {isMobile 
+                    ? 'Optimized for mobile viewing and printing'
+                    : 'Pre-designed layout with QR code and contact information'
+                  }
                 </p>
               </div>
               <div className="flex gap-2 flex-wrap">
@@ -1466,8 +1694,8 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => setZoom(z => Math.max(0.5, z - 0.1))}
-                    disabled={zoom <= 0.5}
+                    onClick={() => setZoom(z => Math.max(isMobile ? 0.3 : 0.5, z - 0.1))}
+                    disabled={zoom <= (isMobile ? 0.3 : 0.5)}
                     className="h-8 w-8"
                   >
                     <ZoomOut className="w-3 h-3" />
@@ -1476,31 +1704,31 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => setZoom(z => Math.min(2, z + 0.1))}
-                    disabled={zoom >= 2}
+                    onClick={() => setZoom(z => Math.min(isMobile ? 1.5 : 2, z + 0.1))}
+                    disabled={zoom >= (isMobile ? 1.5 : 2)}
                     className="h-8 w-8"
                   >
                     <ZoomIn className="w-3 h-3" />
                   </Button>
                 </div>
-                <Button onClick={handleDownload} variant="outline" className="gap-2 h-9">
+                <Button onClick={handleDownload} variant="outline" className="gap-2 h-9 text-xs">
                   <Download className="w-4 h-4" />
                   Download
                 </Button>
-                <Button onClick={handlePrint} className="gap-2 h-9 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                <Button onClick={handlePrint} className="gap-2 h-9 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-xs">
                   <Printer className="w-4 h-4" />
                   Print Flyer
                 </Button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-6 flex items-center justify-center">
+            <div className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-4 flex items-center justify-center">
               <div
                 ref={canvasRef}
                 className="relative bg-white border-2 border-gray-200 rounded-xl shadow-lg"
                 style={{
-                  width: isMobile ? '300px' : '500px',
-                  height: isMobile ? '500px' : '700px',
+                  width: `${currentCanvas.width}px`,
+                  height: `${currentCanvas.height}px`,
                   backgroundColor,
                   backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
                   backgroundSize,
@@ -1527,9 +1755,14 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                       <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Sparkles className="w-8 h-8 text-blue-600" />
                       </div>
-                      <h4 className="font-semibold mb-2">Professional Flyer Template</h4>
+                      <h4 className="font-semibold mb-2">
+                        {isMobile ? 'Mobile Flyer Template' : 'Professional Flyer Template'}
+                      </h4>
                       <p className="text-sm text-muted-foreground max-w-xs">
-                        Pre-designed layout with QR code, contact info, and call-to-action
+                        {isMobile
+                          ? 'Optimized layout for mobile devices'
+                          : 'Pre-designed layout with QR code, contact info, and call-to-action'
+                        }
                       </p>
                     </div>
                   </div>
