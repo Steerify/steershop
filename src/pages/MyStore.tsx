@@ -40,7 +40,6 @@ const MyStore = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [shop, setShop] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]); // Add products state
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -66,7 +65,7 @@ const MyStore = () => {
   const loadShop = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-
+      
       if (!user) {
         navigate("/auth/login");
         return;
@@ -91,15 +90,6 @@ const MyStore = () => {
           bank_account_number: shopData.bank_account_number || "",
           paystack_public_key: shopData.paystack_public_key || "",
         });
-
-        // Load products for this shop
-        const { data: productsData } = await supabase
-          .from("products")
-          .select("*")
-          .eq("shop_id", shopData.id)
-          .order("created_at", { ascending: false });
-
-        setProducts(productsData || []);
       }
     } catch (error) {
       console.error("Error loading shop:", error);
@@ -288,7 +278,7 @@ const MyStore = () => {
       canvas.width = img.width;
       canvas.height = img.height;
       ctx?.drawImage(img, 0, 0);
-
+      
       canvas.toBlob((blob) => {
         if (!blob) return;
         const url = URL.createObjectURL(blob);
@@ -297,7 +287,7 @@ const MyStore = () => {
         link.download = `${shop?.shop_slug || "store"}-qr-code.png`;
         link.click();
         URL.revokeObjectURL(url);
-
+        
         toast({
           title: "Downloaded!",
           description: "QR code saved successfully",
@@ -479,10 +469,10 @@ const MyStore = () => {
                     <CreditCard className="w-5 h-5" />
                     <Label>Payment Method *</Label>
                   </div>
-
+                  
                   <RadioGroup
                     value={formData.payment_method}
-                    onValueChange={(value: "bank_transfer" | "paystack") =>
+                    onValueChange={(value: "bank_transfer" | "paystack") => 
                       setFormData({ ...formData, payment_method: value })
                     }
                   >
@@ -662,7 +652,7 @@ const MyStore = () => {
                       className="gap-2"
                     >
                       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                       </svg>
                       Twitter / X
                     </Button>
@@ -673,7 +663,7 @@ const MyStore = () => {
                       className="gap-2"
                     >
                       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                       </svg>
                       Facebook
                     </Button>
@@ -714,11 +704,8 @@ const MyStore = () => {
                           <Download className="w-4 h-4" />
                           Download QR Code
                         </Button>
-                        <StoreFlyerTemplate
-                          shop={shop}
-                          products={products} // Now products is defined
-                        />                      
-                        </div>
+                        <StoreFlyerTemplate shop={shop} />
+                      </div>
                     </div>
                   </div>
                 </div>
