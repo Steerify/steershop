@@ -115,98 +115,27 @@ const SHAPES = [
   { id: 'line', name: 'Line', icon: Minus },
 ];
 
-// FIXED: Complete template definitions
 const TEMPLATES = [
   {
     id: 'modern',
     name: 'Modern Minimal',
     description: 'Clean and professional design',
     backgroundColor: '#ffffff',
-    elements: [
-      {
-        id: 'template-1',
-        type: 'text',
-        content: 'Your Shop Name',
-        x: 50,
-        y: 50,
-        width: 400,
-        height: 60,
-        rotation: 0,
-        fontSize: 32,
-        fontWeight: 'bold',
-        fontFamily: 'inter',
-        textAlign: 'center',
-        color: '#000000',
-        opacity: 1,
-        zIndex: 2,
-        isVisible: true
-      },
-      {
-        id: 'template-2',
-        type: 'qr',
-        content: 'https://example.com/shop',
-        x: 50,
-        y: 200,
-        width: 150,
-        height: 150,
-        rotation: 0,
-        opacity: 1,
-        zIndex: 3,
-        isVisible: true
-      }
-    ]
+    elements: []
   },
   {
     id: 'vibrant',
     name: 'Vibrant Colorful',
     description: 'Eye-catching colorful design',
     backgroundColor: '#fef3c7',
-    elements: [
-      {
-        id: 'template-3',
-        type: 'text',
-        content: 'Special Offers!',
-        x: 50,
-        y: 50,
-        width: 400,
-        height: 60,
-        rotation: 0,
-        fontSize: 28,
-        fontWeight: 'bold',
-        fontFamily: 'inter',
-        textAlign: 'center',
-        color: '#dc2626',
-        opacity: 1,
-        zIndex: 2,
-        isVisible: true
-      }
-    ]
+    elements: []
   },
   {
     id: 'professional',
     name: 'Professional',
     description: 'Corporate and business style',
     backgroundColor: '#f8fafc',
-    elements: [
-      {
-        id: 'template-4',
-        type: 'text',
-        content: 'Business Solutions',
-        x: 50,
-        y: 50,
-        width: 400,
-        height: 60,
-        rotation: 0,
-        fontSize: 24,
-        fontWeight: 'bold',
-        fontFamily: 'serif',
-        textAlign: 'center',
-        color: '#1e293b',
-        opacity: 1,
-        zIndex: 2,
-        isVisible: true
-      }
-    ]
+    elements: []
   }
 ];
 
@@ -256,31 +185,6 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
       setHistoryIndex(historyIndex + 1);
       setElements(history[historyIndex + 1].elements);
     }
-  };
-
-  // FIXED: Apply template function
-  const applyTemplate = (template: any) => {
-    // Update background
-    setBackgroundColor(template.backgroundColor);
-    setBackgroundImage(null);
-    
-    // Create new elements with proper IDs and shop-specific content
-    const newElements = template.elements.map((element: any) => ({
-      ...element,
-      id: Date.now().toString() + Math.random(), // Ensure unique IDs
-      content: element.type === 'text' && element.content.includes('Shop') 
-        ? shop.shop_name 
-        : element.type === 'qr' 
-        ? storeUrl 
-        : element.content,
-      zIndex: element.zIndex || 1
-    }));
-
-    setElements(newElements);
-    saveToHistory(newElements);
-    
-    // Show success message
-    console.log(`Applied ${template.name} template`);
   };
 
   // Initialize with template
