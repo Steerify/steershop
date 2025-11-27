@@ -6,7 +6,9 @@ import {
   ShoppingCart, Copy, RotateCcw, ZoomIn, ZoomOut, Grid, Layers, Download,
   MousePointer, Square, Circle, Triangle, AlignLeft, AlignCenter, AlignRight,
   Bold, Italic, Underline, Link, Ungroup, Group, FlipHorizontal, FlipVertical,
-  Save, Upload, Eye, EyeOff, ChevronUp, ChevronDown, Wand2, Sparkles
+  Save, Upload, Eye, EyeOff, ChevronUp, ChevronDown, Wand2, Sparkles,
+  Crop, DownloadCloud, Background, Eraser, Scissors, Contrast,
+  Minus, Lock, Unlock, X, Check
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -38,7 +40,7 @@ interface StoreFlyerTemplateProps {
 
 interface PosterElement {
   id: string;
-  type: 'text' | 'image' | 'qr' | 'product' | 'shape';
+  type: 'text' | 'image' | 'qr' | 'product' | 'shape' | 'background';
   content: string;
   x: number;
   y: number;
@@ -46,7 +48,9 @@ interface PosterElement {
   height: number;
   rotation: number;
   fontSize?: number;
-  fontWeight?: string;
+  fontWeight?: 'normal' | 'bold' | 'lighter' | 'bolder' | number;
+  fontStyle?: 'normal' | 'italic';
+  textDecoration?: 'none' | 'underline';
   fontFamily?: string;
   textAlign?: 'left' | 'center' | 'right';
   color?: string;
@@ -65,6 +69,19 @@ interface PosterElement {
     blur: number;
     color: string;
   };
+  // Image specific properties
+  crop?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  filter?: {
+    brightness: number;
+    contrast: number;
+    saturation: number;
+  };
+  removeBackground?: boolean;
 }
 
 interface HistoryState {
@@ -130,6 +147,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
   const [activeTab, setActiveTab] = useState('elements');
   const [pattern, setPattern] = useState('none');
   const [backgroundColor, setBackgroundColor] = useState('#ffffff');
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -137,6 +155,10 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isMultiselect, setIsMultiselect] = useState(false);
+  const [isCropping, setIsCropping] = useState<string | null>(null);
+  const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 100, height: 100 });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const backgroundFileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Save state to history
@@ -179,11 +201,13 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
         rotation: 0,
         fontSize: 32,
         fontWeight: 'bold',
+        fontStyle: 'normal',
+        textDecoration: 'none',
         fontFamily: 'inter',
         textAlign: 'center',
         color: '#000000',
         opacity: 1,
-        zIndex: 1,
+        zIndex: 2,
         isVisible: true
       },
       {
@@ -199,7 +223,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
         fontFamily: 'inter',
         color: '#666666',
         opacity: 1,
-        zIndex: 2,
+        zIndex: 3,
         isVisible: true
       },
       {
@@ -212,23 +236,6 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
         height: 180,
         rotation: 0,
         opacity: 1,
-        zIndex: 3,
-        isVisible: true
-      },
-      {
-        id: '4',
-        type: 'text',
-        content: 'Scan to Visit Our Store',
-        x: 50,
-        y: 390,
-        width: 180,
-        height: 30,
-        rotation: 0,
-        fontSize: 14,
-        fontWeight: 'bold',
-        fontFamily: 'inter',
-        color: '#3b82f6',
-        opacity: 1,
         zIndex: 4,
         isVisible: true
       }
@@ -236,7 +243,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
 
     if (shop.logo_url) {
       initialElements.push({
-        id: '5',
+        id: '4',
         type: 'image',
         content: shop.logo_url,
         x: 400,
@@ -246,13 +253,82 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
         rotation: 0,
         opacity: 1,
         zIndex: 5,
-        isVisible: true
+        isVisible: true,
+        filter: {
+          brightness: 100,
+          contrast: 100,
+          saturation: 100
+        }
       });
     }
 
     setElements(initialElements);
     saveToHistory(initialElements);
   }, [shop, storeUrl, saveToHistory]);
+
+  // Handle image upload
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageUrl = e.target?.result as string;
+      addElement('image', imageUrl);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Handle background image upload
+  const handleBackgroundImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageUrl = e.target?.result as string;
+      setBackgroundImage(imageUrl);
+      
+      // Add background element
+      const backgroundElement: PosterElement = {
+        id: 'background-' + Date.now(),
+        type: 'background',
+        content: imageUrl,
+        x: 0,
+        y: 0,
+        width: 500,
+        height: 700,
+        rotation: 0,
+        opacity: 1,
+        zIndex: 0,
+        isVisible: true,
+        isLocked: true
+      };
+
+      const newElements = [backgroundElement, ...elements.filter(el => el.type !== 'background')];
+      setElements(newElements);
+      saveToHistory(newElements);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset file input
+    if (backgroundFileInputRef.current) {
+      backgroundFileInputRef.current.value = '';
+    }
+  };
+
+  // Remove background image
+  const removeBackgroundImage = () => {
+    setBackgroundImage(null);
+    const newElements = elements.filter(el => el.type !== 'background');
+    setElements(newElements);
+    saveToHistory(newElements);
+  };
 
   const handlePrint = () => {
     const printContent = document.getElementById('flyer-print-content');
@@ -380,6 +456,9 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
       height: type === 'text' ? 40 : 100,
       rotation: 0,
       fontSize: type === 'text' ? 16 : undefined,
+      fontWeight: 'normal',
+      fontStyle: 'normal',
+      textDecoration: 'none',
       fontFamily: 'inter',
       textAlign: 'left',
       color: '#000000',
@@ -391,7 +470,12 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
       zIndex: Math.max(...elements.map(el => el.zIndex), 0) + 1,
       isLocked: false,
       isVisible: true,
-      shadow: { x: 0, y: 0, blur: 0, color: '#000000' }
+      shadow: { x: 0, y: 0, blur: 0, color: '#000000' },
+      filter: type === 'image' ? {
+        brightness: 100,
+        contrast: 100,
+        saturation: 100
+      } : undefined
     };
 
     if (type === 'qr') {
@@ -455,11 +539,21 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
     saveToHistory(newElements);
   };
 
+  // FIXED: Proper delete functionality
   const deleteElement = (id: string) => {
     const newElements = elements.filter(el => el.id !== id);
     setElements(newElements);
-    setSelectedElement(null);
-    setSelectedElements(new Set());
+    
+    // Update selection
+    if (selectedElement === id) {
+      setSelectedElement(null);
+    }
+    if (selectedElements.has(id)) {
+      const newSelected = new Set(selectedElements);
+      newSelected.delete(id);
+      setSelectedElements(newSelected);
+    }
+    
     saveToHistory(newElements);
   };
 
@@ -490,7 +584,48 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
     saveToHistory(newElements);
   };
 
+  // Image cropping functionality
+  const startCropping = (elementId: string) => {
+    setIsCropping(elementId);
+    const element = elements.find(el => el.id === elementId);
+    if (element?.crop) {
+      setCropArea(element.crop);
+    } else {
+      setCropArea({ x: 0, y: 0, width: 100, height: 100 });
+    }
+  };
+
+  const applyCrop = () => {
+    if (!isCropping) return;
+    
+    updateElement(isCropping, { crop: cropArea });
+    setIsCropping(null);
+  };
+
+  const cancelCrop = () => {
+    setIsCropping(null);
+  };
+
+  // Remove background from image (simulated)
+  const removeImageBackground = (elementId: string) => {
+    updateElement(elementId, { removeBackground: true });
+  };
+
+  // Reset image filters
+  const resetImageFilters = (elementId: string) => {
+    updateElement(elementId, { 
+      filter: {
+        brightness: 100,
+        contrast: 100,
+        saturation: 100
+      },
+      removeBackground: false
+    });
+  };
+
   const handleMouseDown = (e: React.MouseEvent, elementId: string) => {
+    if (isCropping) return; // Don't allow dragging while cropping
+    
     e.stopPropagation();
     
     if (isMultiselect && e.ctrlKey) {
@@ -516,7 +651,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
     setIsDragging(true);
     
     const element = elements.find(el => el.id === elementId);
-    if (element) {
+    if (element && !element.isLocked) {
       setDragOffset({
         x: e.clientX - element.x,
         y: e.clientY - element.y
@@ -525,7 +660,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || selectedElements.size === 0) return;
+    if (!isDragging || selectedElements.size === 0 || isCropping) return;
 
     const deltaX = e.clientX - dragOffset.x;
     const deltaY = e.clientY - dragOffset.y;
@@ -579,13 +714,6 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
     updateMultipleElements(selected, { x: newX });
   };
 
-  const flipElement = (direction: 'horizontal' | 'vertical') => {
-    if (selectedElement) {
-      const newRotation = direction === 'horizontal' ? 180 : 0; // Simplified flip
-      updateElement(selectedElement, { rotation: newRotation });
-    }
-  };
-
   const toggleVisibility = (id: string) => {
     const element = elements.find(el => el.id === id);
     if (element) {
@@ -598,31 +726,6 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
     if (element) {
       updateElement(id, { isLocked: !element.isLocked });
     }
-  };
-
-  const groupElements = () => {
-    if (selectedElements.size < 2) return;
-    
-    // Create a group (for simplicity, we'll just adjust positions)
-    const selected = Array.from(selectedElements);
-    const groupX = Math.min(...selected.map(id => elements.find(el => el.id === id)?.x || 0));
-    const groupY = Math.min(...selected.map(id => elements.find(el => el.id === id)?.y || 0));
-    
-    // In a real implementation, you'd create a group object
-    // For now, we'll just log it
-    console.log('Grouping elements:', selected);
-  };
-
-  const applyTemplate = (template: any) => {
-    setBackgroundColor(template.backgroundColor);
-    // In a real implementation, you'd set the template elements
-  };
-
-  const exportAsImage = () => {
-    // Implementation for exporting canvas as image
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    // ... export logic
   };
 
   const selectedElementData = elements.find(el => el.id === selectedElement);
@@ -646,6 +749,39 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
     }
   };
 
+  const getImageStyle = (element: PosterElement) => {
+    if (element.type !== 'image') return {};
+    
+    const style: React.CSSProperties = {};
+    
+    // Apply crop if exists
+    if (element.crop) {
+      const crop = element.crop;
+      style.objectPosition = `${-crop.x}% ${-crop.y}%`;
+      style.objectFit = 'none';
+      style.width = `${100 / (crop.width / 100)}%`;
+      style.height = `${100 / (crop.height / 100)}%`;
+      style.transform = `translate(${crop.x}%, ${crop.y}%) scale(${100 / crop.width})`;
+    }
+
+    // Apply filters
+    if (element.filter) {
+      const filter = element.filter;
+      style.filter = `
+        brightness(${filter.brightness}%)
+        contrast(${filter.contrast}%)
+        saturate(${filter.saturation}%)
+      `;
+    }
+
+    // Simulate background removal (in real app, you'd use an AI service)
+    if (element.removeBackground) {
+      style.mixBlendMode = 'multiply';
+    }
+
+    return style;
+  };
+
   const renderElement = (element: PosterElement) => {
     if (!element.isVisible) return null;
 
@@ -661,6 +797,8 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
       cursor: element.isLocked ? 'not-allowed' : 'move',
       fontSize: element.fontSize,
       fontWeight: element.fontWeight,
+      fontStyle: element.fontStyle,
+      textDecoration: element.textDecoration,
       fontFamily: FONT_FAMILIES.find(f => f.id === element.fontFamily)?.value || 'inherit',
       textAlign: element.textAlign,
       color: element.color,
@@ -697,6 +835,29 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
               src={element.content} 
               alt="Poster element"
               className="w-full h-full object-contain"
+              style={getImageStyle(element)}
+            />
+          </div>
+        );
+      
+      case 'background':
+        return (
+          <div
+            key={element.id}
+            style={{
+              ...style,
+              width: '100%',
+              height: '100%',
+              left: 0,
+              top: 0
+            }}
+            className="overflow-hidden"
+          >
+            <img 
+              src={element.content} 
+              alt="Background"
+              className="w-full h-full object-cover"
+              style={getImageStyle(element)}
             />
           </div>
         );
@@ -854,6 +1015,26 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
               </TabsContent>
 
               <TabsContent value="elements" className="p-4 space-y-4">
+                {/* Image Upload */}
+                <div className="space-y-2">
+                  <Label>Upload Image</Label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                  <Button 
+                    variant="outline" 
+                    className="w-full gap-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="w-4 h-4" />
+                    Upload Image
+                  </Button>
+                </div>
+
                 <div className="grid grid-cols-2 gap-2">
                   <Button variant="outline" onClick={() => addElement('text')} className="h-16 flex-col">
                     <Type className="w-4 h-4 mb-1" />
@@ -893,6 +1074,37 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
               </TabsContent>
 
               <TabsContent value="design" className="p-4 space-y-4">
+                {/* Background Image */}
+                <div className="space-y-2">
+                  <Label>Background Image</Label>
+                  <input
+                    ref={backgroundFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBackgroundImageUpload}
+                    className="hidden"
+                  />
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 gap-2"
+                      onClick={() => backgroundFileInputRef.current?.click()}
+                    >
+                      <Background className="w-4 h-4" />
+                      Set Background
+                    </Button>
+                    {backgroundImage && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={removeBackgroundImage}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Background Color</Label>
                   <div className="flex gap-2">
@@ -982,25 +1194,31 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
               <div className="flex items-center gap-2">
                 {selectedElements.size > 0 && (
                   <>
+                    {/* DELETE BUTTON - FIXED */}
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => deleteSelectedElements()}>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={deleteSelectedElements}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Delete Selected</p>
+                          <p>Delete Selected ({selectedElements.size})</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
 
-                    {selectedElements.size === 1 && (
+                    {selectedElements.size === 1 && selectedElementData && (
                       <>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button variant="outline" size="sm" onClick={() => duplicateElement(Array.from(selectedElements)[0])}>
+                              <Button variant="outline" size="sm" onClick={() => duplicateElement(selectedElement)}>
                                 <Copy className="w-4 h-4" />
                               </Button>
                             </TooltipTrigger>
@@ -1013,12 +1231,17 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button variant="outline" size="sm" onClick={() => toggleLock(Array.from(selectedElements)[0])}>
-                                <Lock className="w-4 h-4" />
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => toggleLock(selectedElement)}
+                                className={selectedElementData.isLocked ? "bg-blue-50" : ""}
+                              >
+                                {selectedElementData.isLocked ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Lock/Unlock</p>
+                              <p>{selectedElementData.isLocked ? 'Unlock' : 'Lock'}</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -1026,82 +1249,204 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button variant="outline" size="sm" onClick={() => toggleVisibility(Array.from(selectedElements)[0])}>
-                                <Eye className="w-4 h-4" />
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => toggleVisibility(selectedElement)}
+                                className={!selectedElementData.isVisible ? "bg-gray-50" : ""}
+                              >
+                                {selectedElementData.isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Show/Hide</p>
+                              <p>{selectedElementData.isVisible ? 'Hide' : 'Show'}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        {/* IMAGE SPECIFIC TOOLS */}
+                        {selectedElementData.type === 'image' && (
+                          <>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => startCropping(selectedElement)}
+                                    className={isCropping ? "bg-green-50" : ""}
+                                  >
+                                    <Crop className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Crop Image</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => removeImageBackground(selectedElement)}
+                                    className={selectedElementData.removeBackground ? "bg-purple-50" : ""}
+                                  >
+                                    <Eraser className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Remove Background</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => resetImageFilters(selectedElement)}
+                                  >
+                                    <RotateCcw className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Reset Filters</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </>
+                        )}
+
+                        {/* TEXT SPECIFIC TOOLS */}
+                        {selectedElementData.type === 'text' && (
+                          <>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => updateElement(selectedElement, { fontWeight: selectedElementData.fontWeight === 'bold' ? 'normal' : 'bold' })}
+                                    className={selectedElementData.fontWeight === 'bold' ? "bg-blue-50" : ""}
+                                  >
+                                    <Bold className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Bold</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => updateElement(selectedElement, { fontStyle: selectedElementData.fontStyle === 'italic' ? 'normal' : 'italic' })}
+                                    className={selectedElementData.fontStyle === 'italic' ? "bg-blue-50" : ""}
+                                  >
+                                    <Italic className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Italic</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => updateElement(selectedElement, { textDecoration: selectedElementData.textDecoration === 'underline' ? 'none' : 'underline' })}
+                                    className={selectedElementData.textDecoration === 'underline' ? "bg-blue-50" : ""}
+                                  >
+                                    <Underline className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Underline</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </>
+                        )}
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="outline" size="sm" onClick={() => bringToFront(selectedElement)}>
+                                <ChevronUp className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Bring to Front</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="outline" size="sm" onClick={() => sendToBack(selectedElement)}>
+                                <ChevronDown className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Send to Back</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="outline" size="sm" onClick={() => alignElements('left')}>
+                                <AlignLeft className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Align Left</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="outline" size="sm" onClick={() => alignElements('center')}>
+                                <AlignCenter className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Align Center</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="outline" size="sm" onClick={() => alignElements('right')}>
+                                <AlignRight className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Align Right</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                       </>
                     )}
-
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => bringToFront(Array.from(selectedElements)[0])}>
-                            <ChevronUp className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Bring to Front</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => sendToBack(Array.from(selectedElements)[0])}>
-                            <ChevronDown className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Send to Back</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => alignElements('left')}>
-                            <AlignLeft className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Align Left</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => alignElements('center')}>
-                            <AlignCenter className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Align Center</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => alignElements('right')}>
-                            <AlignRight className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Align Right</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
                   </>
                 )}
               </div>
@@ -1139,6 +1484,69 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                 {/* Elements */}
                 {elements.sort((a, b) => a.zIndex - b.zIndex).map(renderElement)}
                 
+                {/* Crop Overlay */}
+                {isCropping && selectedElementData?.type === 'image' && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <div className="bg-white p-4 rounded-lg max-w-md">
+                      <h4 className="font-semibold mb-4">Crop Image</h4>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>X Position</Label>
+                            <Slider
+                              value={[cropArea.x]}
+                              onValueChange={([value]) => setCropArea(prev => ({ ...prev, x: value }))}
+                              max={100}
+                              step={1}
+                            />
+                          </div>
+                          <div>
+                            <Label>Y Position</Label>
+                            <Slider
+                              value={[cropArea.y]}
+                              onValueChange={([value]) => setCropArea(prev => ({ ...prev, y: value }))}
+                              max={100}
+                              step={1}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Width</Label>
+                            <Slider
+                              value={[cropArea.width]}
+                              onValueChange={([value]) => setCropArea(prev => ({ ...prev, width: value }))}
+                              max={100}
+                              min={10}
+                              step={1}
+                            />
+                          </div>
+                          <div>
+                            <Label>Height</Label>
+                            <Slider
+                              value={[cropArea.height]}
+                              onValueChange={([value]) => setCropArea(prev => ({ ...prev, height: value }))}
+                              max={100}
+                              min={10}
+                              step={1}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button onClick={applyCrop} className="flex-1">
+                            <Check className="w-4 h-4 mr-2" />
+                            Apply Crop
+                          </Button>
+                          <Button variant="outline" onClick={cancelCrop}>
+                            <X className="w-4 h-4 mr-2" />
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Empty State */}
                 {elements.length === 0 && (
                   <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
@@ -1163,11 +1571,29 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                     <Button variant="outline" size="sm" onClick={() => duplicateElement(selectedElementData.id)}>
                       <Copy className="w-4 h-4" />
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => toggleLock(selectedElementData.id)}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => toggleLock(selectedElementData.id)}
+                      className={selectedElementData.isLocked ? "bg-blue-50" : ""}
+                    >
                       {selectedElementData.isLocked ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => toggleVisibility(selectedElementData.id)}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => toggleVisibility(selectedElementData.id)}
+                      className={!selectedElementData.isVisible ? "bg-gray-50" : ""}
+                    >
                       {selectedElementData.isVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => deleteElement(selectedElementData.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
@@ -1240,24 +1666,97 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Font Weight</Label>
+                      <Label>Text Style</Label>
                       <div className="flex gap-2">
-                        <Button
-                          variant={selectedElementData.fontWeight === 'normal' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => updateElement(selectedElementData.id, { fontWeight: 'normal' })}
-                        >
-                          Normal
-                        </Button>
                         <Button
                           variant={selectedElementData.fontWeight === 'bold' ? 'default' : 'outline'}
                           size="sm"
-                          onClick={() => updateElement(selectedElementData.id, { fontWeight: 'bold' })}
+                          onClick={() => updateElement(selectedElementData.id, { fontWeight: selectedElementData.fontWeight === 'bold' ? 'normal' : 'bold' })}
                         >
                           <Bold className="w-4 h-4" />
                         </Button>
+                        <Button
+                          variant={selectedElementData.fontStyle === 'italic' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => updateElement(selectedElementData.id, { fontStyle: selectedElementData.fontStyle === 'italic' ? 'normal' : 'italic' })}
+                        >
+                          <Italic className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant={selectedElementData.textDecoration === 'underline' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => updateElement(selectedElementData.id, { textDecoration: selectedElementData.textDecoration === 'underline' ? 'none' : 'underline' })}
+                        >
+                          <Underline className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
+                  </>
+                )}
+
+                {selectedElementData.type === 'image' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Image Tools</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => startCropping(selectedElementData.id)}
+                          className={isCropping ? "bg-green-50" : ""}
+                        >
+                          <Crop className="w-4 h-4" />
+                          Crop
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => removeImageBackground(selectedElementData.id)}
+                          className={selectedElementData.removeBackground ? "bg-purple-50" : ""}
+                        >
+                          <Eraser className="w-4 h-4" />
+                          Remove BG
+                        </Button>
+                      </div>
+                    </div>
+
+                    {selectedElementData.filter && (
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Brightness</Label>
+                          <Slider
+                            value={[selectedElementData.filter.brightness]}
+                            onValueChange={([value]) => updateElement(selectedElementData.id, { 
+                              filter: { ...selectedElementData.filter!, brightness: value }
+                            })}
+                            max={200}
+                            step={1}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Contrast</Label>
+                          <Slider
+                            value={[selectedElementData.filter.contrast]}
+                            onValueChange={([value]) => updateElement(selectedElementData.id, { 
+                              filter: { ...selectedElementData.filter!, contrast: value }
+                            })}
+                            max={200}
+                            step={1}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Saturation</Label>
+                          <Slider
+                            value={[selectedElementData.filter.saturation]}
+                            onValueChange={([value]) => updateElement(selectedElementData.id, { 
+                              filter: { ...selectedElementData.filter!, saturation: value }
+                            })}
+                            max={200}
+                            step={1}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
 
@@ -1394,6 +1893,8 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                 height: element.height + 'px',
                 fontSize: element.fontSize + 'px',
                 fontWeight: element.fontWeight,
+                fontStyle: element.fontStyle,
+                textDecoration: element.textDecoration,
                 fontFamily: FONT_FAMILIES.find(f => f.id === element.fontFamily)?.value || 'inherit',
                 textAlign: element.textAlign,
                 color: element.color,
@@ -1409,7 +1910,13 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                 case 'image':
                   return (
                     <div key={element.id} style={style} className="print-element print-image">
-                      <img src={element.content} alt="Poster element" />
+                      <img src={element.content} alt="Poster element" style={getImageStyle(element)} />
+                    </div>
+                  );
+                case 'background':
+                  return (
+                    <div key={element.id} style={{...style, width: '100%', height: '100%', left: 0, top: 0}} className="print-element print-image">
+                      <img src={element.content} alt="Background" className="w-full h-full object-cover" />
                     </div>
                   );
                 case 'qr':
@@ -1428,22 +1935,3 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
     </Dialog>
   );
 };
-
-// Missing icon components
-const Minus = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-  </svg>
-);
-
-const Lock = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-  </svg>
-);
-
-const Unlock = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-  </svg>
-);
