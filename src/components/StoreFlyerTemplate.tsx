@@ -6,7 +6,7 @@ import {
   Palette, ShoppingCart, Download, ZoomIn, ZoomOut, 
   Bold, Italic, AlignLeft, AlignCenter, AlignRight, Upload,
   Save, Copy, FlipHorizontal, FlipVertical, RotateCw, Layers,
-  ImageIcon, Star
+  ImageIcon
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -85,7 +85,6 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
   const [zoom, setZoom] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
-  const [hasEdited, setHasEdited] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -98,355 +97,77 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Initialize with professional flyer structure
+  // Initialize with basic elements
   useEffect(() => {
-    const createDefaultFlyer = () => {
-      const defaultElements: PosterElement[] = [
-        // Header with shop name
-        {
-          id: 'header',
-          type: 'text',
-          content: shop.shop_name,
-          x: 50,
-          y: 40,
-          width: 400,
-          height: 60,
-          fontSize: 32,
-          fontWeight: 'bold',
-          color: '#1e293b',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 10
-        },
-        
-        // Tagline
-        {
-          id: 'tagline',
-          type: 'text',
-          content: shop.description || 'Quality Products & Excellent Service',
-          x: 50,
-          y: 100,
-          width: 400,
-          height: 40,
-          fontSize: 16,
-          color: '#64748b',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 9
-        },
+    const initialElements: PosterElement[] = [
+      {
+        id: '1',
+        type: 'text',
+        content: shop.shop_name,
+        x: 50,
+        y: 50,
+        width: 300,
+        height: 60,
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#000000',
+        opacity: 1,
+        rotation: 0,
+        flipX: false,
+        flipY: false,
+        zIndex: 1
+      },
+      {
+        id: '2',
+        type: 'text',
+        content: shop.description || 'Welcome to our store!',
+        x: 50,
+        y: 120,
+        width: 300,
+        height: 40,
+        fontSize: 16,
+        color: '#666666',
+        opacity: 1,
+        rotation: 0,
+        flipX: false,
+        flipY: false,
+        zIndex: 1
+      },
+      {
+        id: '3',
+        type: 'qr',
+        content: storeUrl,
+        x: 50,
+        y: 180,
+        width: 150,
+        height: 150,
+        opacity: 1,
+        rotation: 0,
+        flipX: false,
+        flipY: false,
+        zIndex: 1
+      },
+    ];
 
-        // Decorative shape - top accent
-        {
-          id: 'accent-shape',
-          type: 'shape',
-          content: 'rectangle',
-          x: 0,
-          y: 0,
-          width: 500,
-          height: 30,
-          backgroundColor: '#3b82f6',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 1
-        },
-
-        // Left section - QR Code
-        {
-          id: 'qr-container',
-          type: 'shape',
-          content: 'rectangle',
-          x: 50,
-          y: 160,
-          width: 180,
-          height: 220,
-          backgroundColor: '#f8fafc',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 2
-        },
-        {
-          id: 'qr-code',
-          type: 'qr',
-          content: storeUrl,
-          x: 70,
-          y: 180,
-          width: 140,
-          height: 140,
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 3
-        },
-        {
-          id: 'qr-text-1',
-          type: 'text',
-          content: 'Scan to Visit',
-          x: 70,
-          y: 330,
-          width: 140,
-          height: 25,
-          fontSize: 14,
-          fontWeight: 'bold',
-          color: '#1e293b',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 4
-        },
-        {
-          id: 'qr-text-2',
-          type: 'text',
-          content: 'Our Online Store',
-          x: 70,
-          y: 350,
-          width: 140,
-          height: 25,
-          fontSize: 14,
-          color: '#64748b',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 4
-        },
-
-        // Right section - Contact Info
-        {
-          id: 'contact-container',
-          type: 'shape',
-          content: 'rectangle',
-          x: 270,
-          y: 160,
-          width: 180,
-          height: 220,
-          backgroundColor: '#f8fafc',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 2
-        },
-        {
-          id: 'contact-title',
-          type: 'text',
-          content: 'Get In Touch',
-          x: 290,
-          y: 180,
-          width: 140,
-          height: 30,
-          fontSize: 18,
-          fontWeight: 'bold',
-          color: '#1e293b',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 4
-        },
-        {
-          id: 'whatsapp-label',
-          type: 'text',
-          content: 'WhatsApp Us:',
-          x: 290,
-          y: 220,
-          width: 140,
-          height: 20,
-          fontSize: 12,
-          color: '#64748b',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 4
-        },
-        {
-          id: 'whatsapp-number',
-          type: 'text',
-          content: shop.whatsapp_number,
-          x: 290,
-          y: 240,
-          width: 140,
-          height: 25,
-          fontSize: 14,
-          fontWeight: 'bold',
-          color: '#059669',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 4
-        },
-        {
-          id: 'website-label',
-          type: 'text',
-          content: 'Visit Online:',
-          x: 290,
-          y: 280,
-          width: 140,
-          height: 20,
-          fontSize: 12,
-          color: '#64748b',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 4
-        },
-        {
-          id: 'website-url',
-          type: 'text',
-          content: storeUrl.replace('https://', ''),
-          x: 290,
-          y: 300,
-          width: 140,
-          height: 40,
-          fontSize: 10,
-          color: '#3b82f6',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 4
-        },
-
-        // Bottom section - Call to Action
-        {
-          id: 'cta-container',
-          type: 'shape',
-          content: 'rectangle',
-          x: 50,
-          y: 400,
-          width: 400,
-          height: 80,
-          backgroundColor: '#1e293b',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 2
-        },
-        {
-          id: 'cta-text-1',
-          type: 'text',
-          content: 'SPECIAL OFFER',
-          x: 150,
-          y: 415,
-          width: 200,
-          height: 25,
-          fontSize: 16,
-          fontWeight: 'bold',
-          color: '#ffffff',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 4
-        },
-        {
-          id: 'cta-text-2',
-          type: 'text',
-          content: 'Visit Now & Get 10% Off Your First Order!',
-          x: 100,
-          y: 440,
-          width: 300,
-          height: 25,
-          fontSize: 14,
-          color: '#fbbf24',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 4
-        },
-
-        // Footer
-        {
-          id: 'footer',
-          type: 'text',
-          content: `Thank you for choosing ${shop.shop_name} • We appreciate your business!`,
-          x: 50,
-          y: 500,
-          width: 400,
-          height: 30,
-          fontSize: 12,
-          color: '#64748b',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 5
-        }
-      ];
-
-      // Add logo if available
-      if (shop.logo_url) {
-        defaultElements.push({
-          id: 'logo',
-          type: 'image',
-          content: shop.logo_url,
-          x: 400,
-          y: 40,
-          width: 60,
-          height: 60,
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 11
-        });
-      }
-
-      // Add a featured product if available
-      if (products.length > 0) {
-        const featuredProduct = products[0];
-        defaultElements.push({
-          id: 'featured-product',
-          type: 'product',
-          content: featuredProduct.name,
-          x: 180,
-          y: 120,
-          width: 140,
-          height: 40,
-          fontSize: 12,
-          color: '#dc2626',
-          opacity: 1,
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-          zIndex: 6,
-          productId: featuredProduct.id
-        });
-      }
-
-      return defaultElements;
-    };
-
-    if (!hasEdited) {
-      setElements(createDefaultFlyer());
+    if (shop.logo_url) {
+      initialElements.push({
+        id: '4',
+        type: 'image',
+        content: shop.logo_url,
+        x: 200,
+        y: 50,
+        width: 80,
+        height: 80,
+        opacity: 1,
+        rotation: 0,
+        flipX: false,
+        flipY: false,
+        zIndex: 1
+      });
     }
-  }, [shop, storeUrl, products, hasEdited]);
 
-  // Mark as edited when user makes changes
-  useEffect(() => {
-    if (elements.length > 0 && !hasEdited) {
-      // Check if user has modified the default layout
-      const defaultIds = ['header', 'tagline', 'qr-code', 'contact-title', 'cta-container'];
-      const hasUserElements = elements.some(el => !defaultIds.includes(el.id));
-      if (hasUserElements) {
-        setHasEdited(true);
-      }
-    }
-  }, [elements, hasEdited]);
+    setElements(initialElements);
+  }, [shop, storeUrl]);
 
   // Handle file upload
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'element' | 'background') => {
@@ -466,7 +187,6 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
         setBackgroundImage(result);
       } else {
         addElement('image', result);
-        setHasEdited(true);
       }
     };
     reader.onerror = () => {
@@ -481,14 +201,6 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
   // Remove background image
   const removeBackgroundImage = () => {
     setBackgroundImage(null);
-  };
-
-  // Reset to default template
-  const resetToDefault = () => {
-    setHasEdited(false);
-    setBackgroundColor('#ffffff');
-    setBackgroundImage(null);
-    setSelectedElement(null);
   };
 
   // Print functionality
@@ -605,7 +317,6 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
     setBackgroundImage(template.backgroundImage);
     setBackgroundSize(template.backgroundSize);
     setElements(template.elements);
-    setHasEdited(true);
   };
 
   // Element management
@@ -636,7 +347,6 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
 
     setElements(prev => [...prev, newElement]);
     setSelectedElement(newElement.id);
-    setHasEdited(true);
   };
 
   const addProduct = (product: any) => {
@@ -659,20 +369,17 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
     
     setElements(prev => [...prev, newElement]);
     setSelectedElement(newElement.id);
-    setHasEdited(true);
   };
 
   const updateElement = (id: string, updates: Partial<PosterElement>) => {
     setElements(prev => prev.map(el => 
       el.id === id ? { ...el, ...updates } : el
     ));
-    setHasEdited(true);
   };
 
   const deleteElement = (id: string) => {
     setElements(prev => prev.filter(el => el.id !== id));
     setSelectedElement(null);
-    setHasEdited(true);
   };
 
   const duplicateElement = (id: string) => {
@@ -687,7 +394,6 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
       };
       setElements(prev => [...prev, newElement]);
       setSelectedElement(newElement.id);
-      setHasEdited(true);
     }
   };
 
@@ -712,7 +418,6 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
         y: e.clientY - element.y
       });
     }
-    setHasEdited(true);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -763,7 +468,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
               display: 'flex',
               alignItems: 'center',
               padding: '8px',
-              backgroundColor: element.id.includes('container') ? 'transparent' : 'rgba(255,255,255,0.9)',
+              backgroundColor: 'rgba(255,255,255,0.9)',
               borderRadius: '4px'
             }}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
@@ -885,15 +590,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
       </DialogTrigger>
       <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-2 md:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Design Your Store Flyer</span>
-            {hasEdited && (
-              <Button variant="outline" size="sm" onClick={resetToDefault} className="gap-2">
-                <Star className="w-4 h-4" />
-                Reset to Default
-              </Button>
-            )}
-          </DialogTitle>
+          <DialogTitle>Design Your Store Flyer</DialogTitle>
         </DialogHeader>
         
         <div className="flex flex-col md:flex-row gap-4 h-full overflow-hidden">
@@ -909,14 +606,6 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
               <TabsContent value="design" className="space-y-4">
                 <Card>
                   <CardContent className="p-4 space-y-3">
-                    {!hasEdited && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                        <p className="text-sm text-blue-800">
-                          <strong>Professional template loaded!</strong> Start customizing or add your own elements.
-                        </p>
-                      </div>
-                    )}
-
                     <div className="space-y-2">
                       <Label>Background Color</Label>
                       <div className="flex gap-2">
