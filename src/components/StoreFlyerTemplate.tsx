@@ -67,52 +67,190 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // Initialize with basic elements
+  // Initialize with the original professional template layout
   useEffect(() => {
     const initialElements: PosterElement[] = [
+      // Header Section
       {
         id: '1',
         type: 'text',
         content: shop.shop_name,
         x: 50,
         y: 50,
-        width: 200,
-        height: 40,
-        fontSize: 24,
+        width: 400,
+        height: 60,
+        fontSize: 32,
         fontWeight: 'bold',
         color: '#000000'
       },
       {
         id: '2',
+        type: 'text',
+        content: shop.description || 'Welcome to our store!',
+        x: 50,
+        y: 120,
+        width: 400,
+        height: 40,
+        fontSize: 16,
+        color: '#666666'
+      },
+      
+      // Left Column - QR Code
+      {
+        id: '3',
         type: 'qr',
         content: storeUrl,
         x: 50,
-        y: 300,
-        width: 150,
-        height: 150
+        y: 200,
+        width: 180,
+        height: 180
       },
       {
-        id: '3',
+        id: '4',
         type: 'text',
         content: 'Scan to Visit Our Store',
         x: 50,
-        y: 460,
-        width: 150,
+        y: 390,
+        width: 180,
+        height: 30,
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#3b82f6'
+      },
+      {
+        id: '5',
+        type: 'text',
+        content: 'Shop online anytime, anywhere',
+        x: 50,
+        y: 420,
+        width: 180,
         height: 20,
         fontSize: 12,
+        color: '#666666'
+      },
+
+      // Right Column - Contact Info
+      {
+        id: '6',
+        type: 'text',
+        content: 'Get in Touch',
+        x: 270,
+        y: 200,
+        width: 200,
+        height: 40,
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#000000'
+      },
+      {
+        id: '7',
+        type: 'text',
+        content: 'WhatsApp',
+        x: 270,
+        y: 250,
+        width: 100,
+        height: 20,
+        fontSize: 12,
+        fontWeight: 'semibold',
+        color: '#6b7280'
+      },
+      {
+        id: '8',
+        type: 'text',
+        content: shop.whatsapp_number,
+        x: 270,
+        y: 270,
+        width: 200,
+        height: 30,
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#000000'
+      },
+      {
+        id: '9',
+        type: 'text',
+        content: 'Online Store',
+        x: 270,
+        y: 320,
+        width: 100,
+        height: 20,
+        fontSize: 12,
+        fontWeight: 'semibold',
+        color: '#6b7280'
+      },
+      {
+        id: '10',
+        type: 'text',
+        content: storeUrl,
+        x: 270,
+        y: 340,
+        width: 200,
+        height: 40,
+        fontSize: 10,
+        color: '#000000'
+      },
+      {
+        id: '11',
+        type: 'text',
+        content: 'Browse our products, place orders, and get updates on new arrivals!',
+        x: 270,
+        y: 400,
+        width: 200,
+        height: 40,
+        fontSize: 12,
+        fontWeight: 'semibold',
+        color: '#000000'
+      },
+
+      // Call to Action Banner
+      {
+        id: '12',
+        type: 'text',
+        content: 'Shop Now & Get Special Offers!',
+        x: 50,
+        y: 480,
+        width: 400,
+        height: 40,
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#000000'
+      },
+      {
+        id: '13',
+        type: 'text',
+        content: 'Scan the QR code or visit our website to explore our full catalog',
+        x: 50,
+        y: 520,
+        width: 400,
+        height: 30,
+        fontSize: 14,
+        color: '#666666'
+      },
+
+      // Footer
+      {
+        id: '14',
+        type: 'text',
+        content: `Thank you for choosing ${shop.shop_name}`,
+        x: 50,
+        y: 580,
+        width: 400,
+        height: 30,
+        fontSize: 14,
         color: '#666666'
       }
     ];
 
+    // Add logo if available
     if (shop.logo_url) {
       initialElements.push({
-        id: '4',
+        id: '15',
         type: 'image',
         content: shop.logo_url,
-        x: 250,
+        x: 400,
         y: 50,
-        width: 100,
-        height: 100
+        width: 80,
+        height: 80
       });
     }
 
@@ -120,79 +258,149 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
   }, [shop, storeUrl]);
 
   const handlePrint = () => {
-    const printContent = document.getElementById('flyer-template');
+    const printContent = document.getElementById('flyer-print-content');
+    if (!printContent) return;
+
     const printWindow = window.open('', '_blank');
-    
-    if (printWindow && printContent) {
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>${shop.shop_name} - Flyer</title>
-            <style>
-              @media print {
-                @page {
-                  size: A4;
-                  margin: 0;
-                }
-                body {
-                  margin: 0;
-                  padding: 0;
-                  -webkit-print-color-adjust: exact;
-                  print-color-adjust: exact;
-                }
-                .flyer-container {
-                  width: 210mm;
-                  height: 297mm;
-                  margin: 0;
-                  padding: 20mm;
-                  box-sizing: border-box;
-                  background: white;
-                  position: relative;
-                }
-                .no-break {
-                  page-break-inside: avoid;
-                  break-inside: avoid;
-                }
-                * {
-                  -webkit-print-color-adjust: exact;
-                  print-color-adjust: exact;
-                }
+    if (!printWindow) {
+      // Fallback to browser print
+      window.print();
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${shop.shop_name} - Marketing Flyer</title>
+          <meta charset="UTF-8">
+          <style>
+            @media print {
+              @page {
+                size: A4;
+                margin: 0;
               }
-              
               body {
                 margin: 0;
                 padding: 0;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                background: white !important;
               }
-              
               .flyer-container {
-                width: 210mm;
-                min-height: 297mm;
-                background: white;
-                margin: 0 auto;
-                padding: 20mm;
+                width: 210mm !important;
+                height: 297mm !important;
+                margin: 0 !important;
+                padding: 15mm !important;
                 box-sizing: border-box;
-                border: 1px solid #ccc;
+                background: white !important;
+                position: relative;
+                page-break-inside: avoid;
+                break-inside: avoid;
               }
-            </style>
-          </head>
-          <body>
-            ${printContent.innerHTML}
-          </body>
-        </html>
-      `);
-      
-      printWindow.document.close();
+              * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+            }
+            
+            body {
+              margin: 0;
+              padding: 0;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              background: white;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+            }
+            
+            .flyer-container {
+              width: 210mm;
+              min-height: 297mm;
+              background: white;
+              margin: 0 auto;
+              padding: 15mm;
+              box-sizing: border-box;
+              border: 1px solid #ccc;
+              position: relative;
+            }
+            
+            .print-element {
+              position: absolute;
+              box-sizing: border-box;
+            }
+            
+            .print-text {
+              display: flex;
+              align-items: center;
+              word-wrap: break-word;
+              overflow-wrap: break-word;
+            }
+            
+            .print-image {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              overflow: hidden;
+            }
+            
+            .print-image img {
+              max-width: 100%;
+              max-height: 100%;
+              object-fit: contain;
+            }
+            
+            .print-qr {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: white;
+              padding: 8px;
+            }
+            
+            .print-product {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              padding: 8px;
+              background: white;
+              border-radius: 8px;
+              border: 1px solid #e5e7eb;
+            }
+            
+            .print-product img {
+              max-width: 100%;
+              max-height: 100%;
+              object-fit: cover;
+            }
+          </style>
+        </head>
+        <body>
+          ${printContent.innerHTML}
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    
+    // Wait for images to load
+    setTimeout(() => {
       printWindow.focus();
+      printWindow.print();
       
+      // Close window after printing
+      printWindow.onafterprint = () => {
+        printWindow.close();
+      };
+      
+      // Fallback close for browsers that don't support onafterprint
       setTimeout(() => {
-        printWindow.print();
-        printWindow.onafterprint = () => printWindow.close();
-      }, 500);
-    } else {
-      window.print();
-    }
+        if (!printWindow.closed) {
+          printWindow.close();
+        }
+      }, 1000);
+    }, 500);
   };
 
   const addElement = (type: PosterElement['type'], content?: string) => {
@@ -327,7 +535,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
             key={element.id}
             style={style}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
-            className="flex items-center justify-center p-2"
+            className="flex items-center justify-center p-2 hover:shadow-lg transition-shadow"
           >
             {element.content}
           </div>
@@ -339,7 +547,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
             key={element.id}
             style={style}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
-            className="flex items-center justify-center overflow-hidden"
+            className="flex items-center justify-center overflow-hidden hover:shadow-lg transition-shadow"
           >
             <img 
               src={element.content} 
@@ -355,7 +563,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
             key={element.id}
             style={style}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
-            className="flex items-center justify-center bg-white p-2"
+            className="flex items-center justify-center bg-white p-2 hover:shadow-lg transition-shadow"
           >
             <QRCodeSVG
               value={element.content}
@@ -373,13 +581,13 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
             key={element.id}
             style={style}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
-            className="flex flex-col items-center p-2 bg-white rounded-lg shadow-sm border"
+            className="flex flex-col items-center p-2 bg-white rounded-lg shadow-sm border hover:shadow-lg transition-shadow"
           >
             {product?.image_url && (
               <img 
                 src={product.image_url} 
                 alt={product.name}
-                className="w-16 h-16 object-cover mb-2"
+                className="w-16 h-16 object-cover mb-2 rounded"
               />
             )}
             <div className="text-center" style={{ color: element.color, fontSize: element.fontSize }}>
@@ -392,8 +600,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
       case 'shape':
         const shapeStyle: React.CSSProperties = {
           ...style,
-          borderRadius: element.content === 'circle' ? '50%' : 
-                       element.content === 'triangle' ? '0' : '4px',
+          borderRadius: element.content === 'circle' ? '50%' : '4px',
           clipPath: element.content === 'triangle' ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : undefined
         };
         return (
@@ -401,8 +608,77 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
             key={element.id}
             style={shapeStyle}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
+            className="hover:shadow-lg transition-shadow"
           />
         );
+      
+      default:
+        return null;
+    }
+  };
+
+  // Render print version of elements
+  const renderPrintElement = (element: PosterElement) => {
+    const style: React.CSSProperties = {
+      position: 'absolute',
+      left: element.x + 'px',
+      top: element.y + 'px',
+      width: element.width + 'px',
+      height: element.height + 'px',
+      fontSize: element.fontSize + 'px',
+      fontWeight: element.fontWeight,
+      color: element.color,
+      backgroundColor: element.backgroundColor,
+    };
+
+    switch (element.type) {
+      case 'text':
+        return (
+          <div key={element.id} style={style} className="print-element print-text">
+            {element.content}
+          </div>
+        );
+      
+      case 'image':
+        return (
+          <div key={element.id} style={style} className="print-element print-image">
+            <img src={element.content} alt="Poster element" />
+          </div>
+        );
+      
+      case 'qr':
+        return (
+          <div key={element.id} style={style} className="print-element print-qr">
+            <QRCodeSVG
+              value={element.content}
+              size={element.width - 16}
+              level="H"
+              includeMargin={true}
+            />
+          </div>
+        );
+      
+      case 'product':
+        const product = products.find(p => p.id === element.productId);
+        return (
+          <div key={element.id} style={style} className="print-element print-product">
+            {product?.image_url && (
+              <img src={product.image_url} alt={product.name} />
+            )}
+            <div style={{ color: element.color, fontSize: element.fontSize + 'px' }}>
+              <div style={{ fontWeight: 'bold' }}>{product?.name}</div>
+              <div>₦{product?.price.toLocaleString()}</div>
+            </div>
+          </div>
+        );
+      
+      case 'shape':
+        const shapeStyle: React.CSSProperties = {
+          ...style,
+          borderRadius: element.content === 'circle' ? '50%' : '4px',
+          clipPath: element.content === 'triangle' ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : undefined
+        };
+        return <div key={element.id} style={shapeStyle} className="print-element" />;
       
       default:
         return null;
@@ -655,6 +931,19 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Hidden print content */}
+        <div id="flyer-print-content" style={{ display: 'none' }}>
+          <div 
+            className="flyer-container"
+            style={{
+              backgroundColor: backgroundColor,
+              ...getPatternStyle()
+            }}
+          >
+            {elements.map(renderPrintElement)}
           </div>
         </div>
       </DialogContent>
