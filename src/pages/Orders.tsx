@@ -31,11 +31,9 @@ const Orders = () => {
     }
 
     try {
-      // Clean the phone number
       const cleaned = order.customer_phone.replace(/[^\d+]/g, '');
       const phoneNumber = cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
 
-      // Create detailed order message
       const orderSummary = order.order_items?.map((item: any) => 
         `• ${item.products?.name || 'Unknown Product'} x ${item.quantity} - ₦${(item.quantity * parseFloat(item.price || 0)).toLocaleString()}`
       ).join('%0A') || 'No items';
@@ -48,13 +46,10 @@ const Orders = () => {
         `Order ID: ${order.id?.slice(0, 8) || 'N/A'}%0A%0A` +
         `Please let me know if you have any questions about your order!`;
 
-      // Create both deep link and web link
       const deepLink = `whatsapp://send?phone=${phoneNumber.replace('+', '')}&text=${message}`;
       const webLink = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${message}`;
 
-      // Try to open the deep link with fallback
       const fallbackTimer = setTimeout(() => {
-        console.log('Opening web WhatsApp as fallback');
         window.open(webLink, '_blank', 'noopener,noreferrer');
       }, 1000);
 
@@ -67,7 +62,6 @@ const Orders = () => {
         clearTimeout(fallbackTimer);
       });
       
-      // Add event listener to detect if deep link failed
       window.addEventListener('blur', function onBlur() {
         clearTimeout(fallbackTimer);
         window.removeEventListener('blur', onBlur);
@@ -75,7 +69,6 @@ const Orders = () => {
       
       link.click();
       
-      // Clean up fallback timer after 2 seconds
       setTimeout(() => {
         clearTimeout(fallbackTimer);
       }, 2000);
@@ -92,7 +85,6 @@ const Orders = () => {
     }
   };
 
-  // Function to open simple WhatsApp message
   const openSimpleWhatsApp = (phoneNumber: string, message: string) => {
     try {
       const cleaned = phoneNumber.replace(/[^\d+]/g, '');
@@ -157,7 +149,7 @@ const Orders = () => {
         return;
       }
 
-      console.log('Current user:', user);
+      console.log('Current user ID for RLS:', user.id);
 
       const { data: shopData, error: shopError } = await supabase
         .from("shops")
@@ -202,6 +194,34 @@ const Orders = () => {
   const loadOrders = async (shopId: string) => {
     try {
       console.log('Loading orders for shop:', shopId);
+      
+      // First, test a simple query to check RLS
+      const { data: testData, error: testError } = await supabase
+        .from("orders")
+        .select("id, status")
+        .eq("shop_id", shopId)
+        .limit(1);
+
+      if (testError) {
+        console.error('RLS Test Error:', {
+          message: testError.message,
+          details: testError.details,
+          hint: testError.hint,
+          code: testError.code
+        });
+        
+        if (testError.code === '42501') {
+          toast({
+            title: "Permission Error",
+            description: "You don't have permission to view orders. RLS policies may be missing.",
+            variant: "destructive",
+          });
+        }
+        throw testError;
+      }
+
+      console.log('RLS test passed, loading full orders...');
+
       const { data: ordersData, error } = await supabase
         .from("orders")
         .select(`
@@ -229,9 +249,13 @@ const Orders = () => {
 
       console.log('Orders loaded:', ordersData?.length);
       setOrders(ordersData || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in loadOrders:', error);
-      throw error;
+      toast({
+        title: "Failed to load orders",
+        description: error.message || "Please check your RLS policies",
+        variant: "destructive",
+      });
     }
   };
 
@@ -246,7 +270,6 @@ const Orders = () => {
         updated_at: new Date().toISOString()
       };
 
-      // If cancelling, add cancellation info
       if (status === "cancelled") {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -261,7 +284,6 @@ const Orders = () => {
         }
       }
 
-      // If delivering, add delivery timestamp
       if (status === "delivered") {
         updateData.delivered_at = new Date().toISOString();
       }
@@ -275,8 +297,15 @@ const Orders = () => {
         .select();
 
       if (error) {
-        console.error('Supabase update error:', error);
-        throw new Error(`Database update failed: ${error.message}`);
+        console.error('Update error:', error);
+        if (error.code === '42501') {
+          toast({
+            title: "Update Permission Denied",
+            description: "You don't have permission to update this order. Check RLS update policies.",
+            variant: "destructive",
+          });
+        }
+        throw error;
       }
 
       console.log('Update successful:', data);
@@ -286,7 +315,6 @@ const Orders = () => {
         description: `Order status updated to ${status.replace(/_/g, ' ')}`,
       });
 
-      // Reload orders to reflect changes
       await loadOrders(shop.id);
       
     } catch (error: any) {
@@ -431,7 +459,6 @@ const Orders = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {/* Order Items */}
                     <div className="border rounded-lg divide-y">
                       {order.order_items?.map((item: any) => (
                         <div key={item.id} className="p-4 flex items-center gap-4">
@@ -455,7 +482,6 @@ const Orders = () => {
                       ))}
                     </div>
 
-                    {/* Status Actions */}
                     <div className="flex gap-2 flex-wrap">
                       {order.status === "awaiting_approval" && (
                         <>
@@ -574,8 +600,6 @@ const Orders = () => {
                         </Button>
                       )}
                       
-                      
-
                       {(order.status === "awaiting_approval" || order.status === "confirmed" || order.status === "paid_awaiting_delivery" || order.status === "processing" || order.status === "out_for_delivery") && (
                         <Button
                           variant="destructive"
