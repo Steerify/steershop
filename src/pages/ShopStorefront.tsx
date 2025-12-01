@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Store, ShoppingCart, Star, Package } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import CheckoutDialog from "@/components/CheckoutDialog";
+import { ProductRating } from "@/components/ProductRating";
+import { ProductReviewForm } from "@/components/ProductReviewForm";
 
 interface Shop {
   id: string;
@@ -28,6 +30,8 @@ interface Product {
   stock_quantity: number;
   is_available: boolean;
   image_url: string | null;
+  average_rating: number;
+  total_reviews: number;
 }
 
 interface CartItem {
@@ -276,31 +280,37 @@ const ShopStorefront = () => {
                 )}
                 <CardHeader>
                   <CardTitle className="text-lg">{product.name}</CardTitle>
-                  {product.description && (
-                    <CardDescription className="line-clamp-2">
-                      {product.description}
-                    </CardDescription>
-                  )}
+                  <CardDescription className="line-clamp-2">
+                    {product.description}
+                  </CardDescription>
+                  <ProductRating 
+                    rating={product.average_rating || 0} 
+                    totalReviews={product.total_reviews || 0}
+                  />
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold">₦{product.price.toLocaleString()}</span>
-                      <Badge variant={product.stock_quantity > 0 ? "default" : "destructive"}>
-                        {product.stock_quantity > 0 ? `${product.stock_quantity} in stock` : "Out of stock"}
-                      </Badge>
-                    </div>
-                    
-                    <Button
-                      className="w-full"
-                      onClick={() => addToCart(product)}
-                      disabled={product.stock_quantity === 0}
-                    >
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Add to Cart
-                    </Button>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl font-bold">₦{product.price.toLocaleString()}</span>
+                    <Badge variant={product.stock_quantity > 0 ? "default" : "destructive"}>
+                      {product.stock_quantity > 0 ? `${product.stock_quantity} in stock` : "Out of stock"}
+                    </Badge>
                   </div>
                 </CardContent>
+                <CardFooter className="flex flex-col gap-2">
+                  <Button
+                    className="w-full"
+                    onClick={() => addToCart(product)}
+                    disabled={product.stock_quantity === 0}
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Add to Cart
+                  </Button>
+                  <ProductReviewForm 
+                    productId={product.id}
+                    productName={product.name}
+                    onReviewSubmitted={loadShopData}
+                  />
+                </CardFooter>
               </Card>
             ))}
           </div>

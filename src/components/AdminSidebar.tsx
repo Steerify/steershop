@@ -20,7 +20,8 @@ import {
   Gift,
   Shield,
   GraduationCap,
-  Award
+  Award,
+  MessageSquare
 } from "lucide-react";
 
 const menuItems = [
@@ -32,6 +33,7 @@ const menuItems = [
   { title: "Courses", url: "/admin/courses", icon: GraduationCap },
   { title: "Rewards", url: "/admin/prizes", icon: Award },
   { title: "Special Offers", url: "/admin/offers", icon: Gift },
+  { title: "Feedback", url: "/admin/feedback", icon: MessageSquare },
 ];
 
 export function AdminSidebar() {
