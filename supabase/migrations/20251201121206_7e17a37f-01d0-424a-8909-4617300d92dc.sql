@@ -62,3 +62,17 @@ WITH CHECK (
   public.order_exists(order_id) 
   AND public.product_available(product_id, quantity)
 );
+
+CREATE OR REPLACE FUNCTION public.shop_is_active(shop_id_param uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM shops
+    WHERE id = shop_id_param 
+    AND is_active = true
+  );
+$$;
