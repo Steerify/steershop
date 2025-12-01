@@ -233,6 +233,45 @@ export type Database = {
           },
         ]
       }
+      platform_feedback: {
+        Row: {
+          created_at: string
+          customer_email: string
+          customer_name: string
+          feedback_type: string
+          id: string
+          message: string
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          feedback_type?: string
+          id?: string
+          message: string
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          feedback_type?: string
+          id?: string
+          message?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       prize_claims: {
         Row: {
           claimed_at: string
@@ -306,8 +345,60 @@ export type Database = {
           },
         ]
       }
+      product_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_id: string | null
+          customer_name: string | null
+          id: string
+          order_id: string | null
+          product_id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          id?: string
+          order_id?: string | null
+          product_id: string
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          id?: string
+          order_id?: string | null
+          product_id?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
+          average_rating: number | null
           created_at: string
           description: string | null
           id: string
@@ -317,9 +408,11 @@ export type Database = {
           price: number
           shop_id: string
           stock_quantity: number
+          total_reviews: number | null
           updated_at: string
         }
         Insert: {
+          average_rating?: number | null
           created_at?: string
           description?: string | null
           id?: string
@@ -329,9 +422,11 @@ export type Database = {
           price: number
           shop_id: string
           stock_quantity?: number
+          total_reviews?: number | null
           updated_at?: string
         }
         Update: {
+          average_rating?: number | null
           created_at?: string
           description?: string | null
           id?: string
@@ -341,6 +436,7 @@ export type Database = {
           price?: number
           shop_id?: string
           stock_quantity?: number
+          total_reviews?: number | null
           updated_at?: string
         }
         Relationships: [

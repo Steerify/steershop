@@ -25,6 +25,8 @@ import AdminCourses from "./pages/admin/AdminCourses";
 import AdminPrizes from "./pages/admin/AdminPrizes";
 import CustomerCourses from "./pages/customer/CustomerCourses";
 import CustomerRewards from "./pages/customer/CustomerRewards";
+import Feedback from "./pages/Feedback";
+import AdminFeedback from "./pages/admin/AdminFeedback";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +58,8 @@ const App = () => (
           <Route path="/admin/courses" element={<AdminCourses />} />
           <Route path="/admin/prizes" element={<AdminPrizes />} />
           <Route path="/admin/offers" element={<AdminOffers />} />
+          <Route path="/feedback" element={<Feedback />} />
+          <Route path="/admin/feedback" element={<AdminFeedback />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
