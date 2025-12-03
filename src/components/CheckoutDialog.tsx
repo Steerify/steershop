@@ -147,8 +147,8 @@ const openWhatsAppWithOrderDetails = (
   let paymentSection = '';
 
   if (orderDetails.paymentMethod === 'delivery_before') {
-    baseMessage = `🛒 *ORDER REQUEST - PAY ON DELIVERY* 🛒%0A%0AHello ${orderDetails.shopName},%0A%0AI would like to place an order with payment on delivery. Please review and confirm if you can fulfill this order:`;
-    paymentSection = `*💰 PAYMENT METHOD:*%0APay on Delivery%0A*📋 STATUS:*%0AAwaiting Your Confirmation%0A`;
+    baseMessage = `🛒 *ORDER REQUEST - DELIVERY/SERVICE BEFORE PAYMENT* 🛒%0A%0AHello ${orderDetails.shopName},%0A%0AI would like to receive the product/service FIRST and pay afterwards. Please review and confirm if you can fulfill this order:`;
+    paymentSection = `*💰 PAYMENT METHOD:*%0ADelivery/Service Before Payment%0A*📋 PAYMENT STATUS:*%0A⚠️ UNPAID - Customer will pay after receiving order%0A`;
   } else {
     baseMessage = `🎉 *PAYMENT SUCCESSFUL* 🎉%0A%0AHello ${orderDetails.shopName},%0A%0AI have successfully completed my order and payment. Here are the complete details:`;
     paymentSection = `*💰 PAYMENT DETAILS:*%0ATotal Amount: ₦${orderDetails.totalAmount.toLocaleString()}%0APayment Reference: ${orderDetails.paymentReference || 'N/A'}%0A`;
@@ -399,7 +399,7 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
         .from("orders")
         .update({ 
           status: "awaiting_approval",
-          payment_status: "on_delivery"
+          payment_status: "unpaid"
         })
         .eq("id", orderId);
 
@@ -493,7 +493,7 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
           delivery_address: formData.delivery_address,
           total_amount: totalAmount,
           status: paymentChoice === "delivery_before" ? "awaiting_approval" : "pending",
-          payment_status: paymentChoice === "pay_before" ? "pending" : "on_delivery",
+          payment_status: paymentChoice === "pay_before" ? "pending" : "unpaid",
         });
 
       if (orderError) {

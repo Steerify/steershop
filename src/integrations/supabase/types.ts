@@ -859,11 +859,47 @@ export type Database = {
           is_active: boolean | null
           logo_url: string | null
           owner_id: string | null
+          payment_method: string | null
+          paystack_public_key: string | null
           shop_name: string | null
           shop_slug: string | null
           total_reviews: number | null
           updated_at: string | null
           whatsapp_number: string | null
+        }
+        Insert: {
+          average_rating?: number | null
+          banner_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          owner_id?: string | null
+          payment_method?: string | null
+          paystack_public_key?: string | null
+          shop_name?: string | null
+          shop_slug?: string | null
+          total_reviews?: number | null
+          updated_at?: string | null
+          whatsapp_number?: string | null
+        }
+        Update: {
+          average_rating?: number | null
+          banner_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          owner_id?: string | null
+          payment_method?: string | null
+          paystack_public_key?: string | null
+          shop_name?: string | null
+          shop_slug?: string | null
+          total_reviews?: number | null
+          updated_at?: string | null
+          whatsapp_number?: string | null
         }
         Relationships: [
           {
