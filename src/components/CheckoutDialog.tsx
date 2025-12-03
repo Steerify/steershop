@@ -477,10 +477,14 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
       // Get current user if logged in
       const { data: { user } } = await supabase.auth.getUser();
 
-      // Create order
-      const { data: orderData, error: orderError } = await supabase
+      // Generate order ID client-side to avoid SELECT RLS issues
+      const orderId = crypto.randomUUID();
+
+      // Create order without .select() to avoid RLS SELECT restriction
+      const { error: orderError } = await supabase
         .from("orders")
         .insert({
+          id: orderId,
           shop_id: shop.id,
           customer_id: user?.id || null,
           customer_name: formData.customer_name,
@@ -490,9 +494,7 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
           total_amount: totalAmount,
           status: paymentChoice === "delivery_before" ? "awaiting_approval" : "pending",
           payment_status: paymentChoice === "pay_before" ? "pending" : "on_delivery",
-        })
-        .select()
-        .single();
+        });
 
       if (orderError) {
         console.error('Order creation error:', orderError);
@@ -501,7 +503,7 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
 
       // Create order items
       const orderItems = cart.map((item) => ({
-        order_id: orderData.id,
+        order_id: orderId,
         product_id: item.product.id,
         quantity: item.quantity,
         price: item.product.price,
@@ -513,19 +515,19 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
 
       if (itemsError) throw itemsError;
 
-      setCurrentOrderId(orderData.id);
+      setCurrentOrderId(orderId);
       setOrderCreated(true);
 
-      console.log('Order created successfully:', orderData.id);
+      console.log('Order created successfully:', orderId);
 
       // Handle payment choice
       if (paymentChoice === "delivery_before") {
-        await handleDeliveryBeforeService(orderData.id);
+        await handleDeliveryBeforeService(orderId);
       } else {
         // Handle payment before service
         if (shop.payment_method === "paystack") {
           console.log('Initiating Paystack payment...');
-          await handlePaystackPayment(orderData.id, formData.customer_email);
+          await handlePaystackPayment(orderId, formData.customer_email);
         } else {
           // Show bank transfer details with WhatsApp option
           toast({
@@ -538,7 +540,7 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
                 onClick={() => {
                   const message = encodeURIComponent(
                     `Hello! I've placed an order and need bank transfer details.%0A%0A` +
-                    `Order ID: ${orderData.id}%0A` +
+                    `Order ID: ${orderId}%0A` +
                     `Amount: ₦${totalAmount.toLocaleString()}%0A` +
                     `Name: ${formData.customer_name}`
                   );
