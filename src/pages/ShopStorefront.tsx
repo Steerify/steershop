@@ -20,6 +20,9 @@ interface Shop {
   banner_url: string | null;
   average_rating: number;
   total_reviews: number;
+  payment_method?: string;
+  paystack_public_key?: string;
+  whatsapp_number?: string;
 }
 
 interface Product {
