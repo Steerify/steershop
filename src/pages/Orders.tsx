@@ -454,6 +454,11 @@ const Orders = () => {
                       <p className="text-sm text-muted-foreground">
                         {order.created_at ? format(new Date(order.created_at), "MMM dd, yyyy • h:mm a") : 'Date unavailable'}
                       </p>
+                      {order.paid_at && (
+                        <p className="text-xs text-green-600 dark:text-green-400">
+                          Paid: {format(new Date(order.paid_at), "MMM dd • h:mm a")}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </CardHeader>

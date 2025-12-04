@@ -125,6 +125,11 @@ const CustomerOrders = () => {
                           </CardTitle>
                           <CardDescription>
                             Placed on {format(new Date(order.created_at), "MMM dd, yyyy")}
+                            {order.paid_at && (
+                              <span className="block text-green-600 dark:text-green-400 mt-1">
+                                Paid on {format(new Date(order.paid_at), "MMM dd, yyyy 'at' h:mm a")}
+                              </span>
+                            )}
                           </CardDescription>
                         </div>
                         <div className="text-right">
