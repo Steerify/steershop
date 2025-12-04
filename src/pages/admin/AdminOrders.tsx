@@ -78,6 +78,7 @@ export default function AdminOrders() {
                 <TableHead>Amount</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Payment</TableHead>
+                <TableHead>Paid At</TableHead>
                 <TableHead>Date</TableHead>
               </TableRow>
             </TableHeader>
@@ -97,6 +98,9 @@ export default function AdminOrders() {
                     <Badge variant={order.payment_status === "paid" ? "default" : "secondary"}>
                       {order.payment_status}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {order.paid_at ? format(new Date(order.paid_at), "MMM dd, h:mm a") : "-"}
                   </TableCell>
                   <TableCell>{format(new Date(order.created_at), "MMM dd, yyyy")}</TableCell>
                 </TableRow>
