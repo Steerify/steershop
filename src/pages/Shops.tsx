@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Store, Package } from "lucide-react";
+import { Search, Store, Package, Sparkles } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -99,7 +101,6 @@ const Shops = () => {
       const from = currentPage * ITEMS_PER_PAGE;
       const to = from + ITEMS_PER_PAGE - 1;
 
-      // Get paginated active shops using secure public view
       const { data: shopsData, error: shopsError } = await supabase
         .from("shops_public")
         .select("*")
@@ -116,13 +117,10 @@ const Shops = () => {
         return;
       }
 
-      // Check if there are more items
       setHasMore(shopsData.length === ITEMS_PER_PAGE);
 
-      // Get the owner IDs from the shops
       const ownerIds = shopsData.map(shop => shop.owner_id);
 
-      // Fetch profiles with subscription status
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
         .select("id, is_subscribed, subscription_expires_at, created_at")
@@ -130,19 +128,15 @@ const Shops = () => {
 
       if (profilesError) throw profilesError;
 
-      // Filter shops to only include those with active subscriptions or valid trials
       const activeShops = shopsData.filter(shop => {
         const ownerProfile = profilesData?.find(profile => profile.id === shop.owner_id);
         
         if (!ownerProfile) {
-          console.log('❌ No profile found for shop:', shop.shop_name, 'Owner ID:', shop.owner_id);
           return false;
         }
 
         const subscriptionInfo = calculateSubscriptionStatus(ownerProfile);
-        const isActive = subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial';
-        console.log('🏪 Shop:', shop.shop_name, '| Status:', subscriptionInfo.status, '| Days:', subscriptionInfo.daysRemaining, '| Visible:', isActive, '| Subscribed:', ownerProfile.is_subscribed, '| Expires:', ownerProfile.subscription_expires_at);
-        return isActive;
+        return subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial';
       });
 
       setShops(prev => reset ? activeShops : [...prev, ...activeShops]);
@@ -168,7 +162,6 @@ const Shops = () => {
 
   const searchProducts = async () => {
     try {
-      // Search for products matching the query
       const { data: productsData, error: productsError } = await supabase
         .from("products")
         .select(`
@@ -191,7 +184,6 @@ const Shops = () => {
         return;
       }
 
-      // Get shop details for these products
       const shopIds = [...new Set(productsData.map(p => p.shop_id))];
       const { data: shopsData, error: shopsError } = await supabase
         .from("shops_public")
@@ -200,7 +192,6 @@ const Shops = () => {
 
       if (shopsError) throw shopsError;
 
-      // Map products with shop info
       const results: ProductResult[] = productsData.map(product => {
         const shop = shopsData?.find(s => s.id === product.shop_id);
         return {
@@ -256,53 +247,73 @@ const Shops = () => {
   }, [hasMore, loadingMore, searchQuery, page]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
-      <div className="container mx-auto px-4 pt-32 pb-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-5xl font-bold mb-4">Explore Shops</h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Discover amazing products from talented Nigerian entrepreneurs
+      {/* Hero Section */}
+      <section className="relative pt-28 pb-12 overflow-hidden">
+        <AdirePattern variant="geometric" className="text-primary" opacity={0.5} />
+        <div className="absolute inset-0 bg-gradient-to-b from-accent/5 via-transparent to-transparent" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 border border-accent/20 rounded-full mb-6">
+              <Sparkles className="w-4 h-4 text-accent" />
+              <span className="text-accent font-semibold text-sm">Discover Nigerian Businesses</span>
+            </div>
+            
+            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
+              Explore <span className="gradient-text">Amazing Shops</span>
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+              Discover unique products from talented Nigerian entrepreneurs
             </p>
-          </div>
 
-          <div className="mb-8">
+            {/* Search */}
             <div className="relative max-w-md mx-auto">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 placeholder="Search shops or products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-12 h-12 text-base bg-card/80 backdrop-blur-sm border-border/50 focus:border-accent shadow-lg"
               />
             </div>
           </div>
+        </div>
+      </section>
 
+      {/* Main Content */}
+      <div className="flex-1 container mx-auto px-4 pb-20">
+        <div className="max-w-6xl mx-auto">
           {/* Product Results */}
           {searchQuery && productResults.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold mb-6">Product Results ({productResults.length})</h2>
+            <div className="mb-12 animate-fade-up">
+              <h2 className="font-display text-2xl font-bold mb-6">
+                Product Results <span className="text-accent">({productResults.length})</span>
+              </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {productResults.map((product) => (
+                {productResults.map((product, index) => (
                   <Link key={product.id} to={`/shop/${product.shop_slug}`}>
-                    <Card className="h-full hover:shadow-lg transition-all hover:border-accent cursor-pointer group">
+                    <Card 
+                      className="h-full card-african hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer group bg-card/80 backdrop-blur-sm"
+                      style={{ animationDelay: `${index * 0.05}s` }}
+                    >
                       <CardHeader>
                         {product.image_url ? (
                           <div className="w-full h-48 mb-4 overflow-hidden rounded-lg">
                             <img 
                               src={product.image_url} 
                               alt={product.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                           </div>
                         ) : (
-                          <div className="w-full h-48 mb-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg flex items-center justify-center">
+                          <div className="w-full h-48 mb-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg flex items-center justify-center adire-pattern">
                             <Package className="w-16 h-16 text-muted-foreground" />
                           </div>
                         )}
-                        <CardTitle className="group-hover:text-accent transition-colors text-lg">
+                        <CardTitle className="group-hover:text-accent transition-colors text-lg font-display">
                           {product.name}
                         </CardTitle>
                         <CardDescription>
@@ -314,7 +325,9 @@ const Shops = () => {
                                 className="w-6 h-6 rounded-full object-cover"
                               />
                             ) : (
-                              <Store className="w-4 h-4" />
+                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                                <Store className="w-3 h-3 text-primary-foreground" />
+                              </div>
                             )}
                             <span>{product.shop_name}</span>
                           </div>
@@ -323,12 +336,12 @@ const Shops = () => {
                       <CardContent>
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-2xl font-bold text-primary">₦{product.price.toLocaleString()}</p>
+                            <p className="text-2xl font-bold gradient-text">₦{product.price.toLocaleString()}</p>
                             <p className="text-sm text-muted-foreground mt-1">
                               {product.stock_quantity} in stock
                             </p>
                           </div>
-                          <Badge variant="secondary">
+                          <Badge className="bg-accent/10 text-accent border-accent/20 hover:bg-accent/20">
                             Available
                           </Badge>
                         </div>
@@ -342,7 +355,7 @@ const Shops = () => {
 
           {/* Shops Section */}
           <div>
-            {searchQuery && <h2 className="text-2xl font-bold mb-6">Shops ({filteredShops.length})</h2>}
+            {searchQuery && <h2 className="font-display text-2xl font-bold mb-6">Shops <span className="text-accent">({filteredShops.length})</span></h2>}
             
             {isLoading ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -351,75 +364,74 @@ const Shops = () => {
                 ))}
               </div>
             ) : filteredShops.length === 0 ? (
-              <div className="text-center py-12">
-                <Store className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                <p className="text-xl text-muted-foreground">
-                  {searchQuery ? "No shops found matching your search" : "No active shops available"}
+              <div className="text-center py-16">
+                <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
+                  <Store className="w-10 h-10 text-muted-foreground" />
+                </div>
+                <h3 className="font-display text-xl font-semibold mb-2">
+                  {searchQuery ? "No shops found" : "No active shops"}
+                </h3>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  {searchQuery 
+                    ? "Try a different search term" 
+                    : "Shops appear here when their owners have active subscriptions"}
                 </p>
-                {!searchQuery && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Shops appear here when their owners have active subscriptions or are in trial period
-                  </p>
-                )}
               </div>
             ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredShops.map((shop) => (
-                <Link key={shop.id} to={`/shop/${shop.shop_slug}`}>
-                  <Card className="h-full hover:shadow-lg transition-all hover:border-accent cursor-pointer group">
-                    <CardHeader>
-                      <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                        {shop.logo_url ? (
-                          <img 
-                            src={shop.logo_url} 
-                            alt={shop.shop_name}
-                            className="w-full h-full object-cover rounded-xl"
-                          />
-                        ) : (
-                          <Store className="w-8 h-8 text-primary-foreground" />
-                        )}
-                      </div>
-                      <CardTitle className="group-hover:text-accent transition-colors">
-                        {shop.shop_name}
-                      </CardTitle>
-                      <CardDescription className="line-clamp-2">
-                        {shop.description || "Visit this shop to see their products"}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-sm text-accent font-medium group-hover:translate-x-1 transition-transform">
-                        Visit Store →
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredShops.map((shop, index) => (
+                  <Link key={shop.id} to={`/shop/${shop.shop_slug}`}>
+                    <Card 
+                      className="h-full card-african hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer group bg-card/80 backdrop-blur-sm animate-fade-up"
+                      style={{ animationDelay: `${index * 0.05}s` }}
+                    >
+                      <CardHeader>
+                        <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-lg overflow-hidden">
+                          {shop.logo_url ? (
+                            <img 
+                              src={shop.logo_url} 
+                              alt={shop.shop_name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Store className="w-8 h-8 text-primary-foreground" />
+                          )}
+                        </div>
+                        <CardTitle className="group-hover:text-accent transition-colors font-display">
+                          {shop.shop_name}
+                        </CardTitle>
+                        <CardDescription className="line-clamp-2">
+                          {shop.description || "Visit this shop to see their products"}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-sm text-accent font-medium group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                          Visit Store 
+                          <span className="group-hover:translate-x-1 transition-transform">→</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
             )}
 
             {/* Infinite scroll sentinel */}
             {!searchQuery && (
               <div id="scroll-sentinel" className="h-20 flex items-center justify-center">
                 {loadingMore && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                  <div className="flex items-center gap-3 text-muted-foreground">
+                    <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
                     <span>Loading more shops...</span>
                   </div>
                 )}
               </div>
             )}
-
-            {/* Show total count when there are shops */}
-            {filteredShops.length > 0 && searchQuery && (
-              <div className="text-center mt-8">
-                <p className="text-muted-foreground">
-                  Showing {filteredShops.length} of {shops.length} active shops
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };
