@@ -5,8 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+import { AdirePattern, AdireAccent } from "@/components/patterns/AdirePattern";
 import CheckoutDialog from "@/components/CheckoutDialog";
 import { ProductRating } from "@/components/ProductRating";
 import { ProductReviewForm } from "@/components/ProductReviewForm";
@@ -57,7 +59,6 @@ const ShopStorefront = () => {
 
   const loadShopData = async () => {
     try {
-      // Fetch shop by slug using secure public view
       const { data: shopData, error: shopError } = await supabase
         .from("shops_public")
         .select("*")
@@ -76,7 +77,6 @@ const ShopStorefront = () => {
 
       setShop(shopData);
 
-      // Fetch products for this shop
       const { data: productsData, error: productsError } = await supabase
         .from("products")
         .select("*")
@@ -152,7 +152,8 @@ const ShopStorefront = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="container mx-auto px-4 pt-32 flex items-center justify-center">
+        <div className="container mx-auto px-4 pt-32 flex flex-col items-center justify-center">
+          <div className="w-10 h-10 border-2 border-accent border-t-transparent rounded-full animate-spin mb-4" />
           <p className="text-muted-foreground">Loading shop...</p>
         </div>
       </div>
@@ -161,84 +162,93 @@ const ShopStorefront = () => {
 
   if (!shop) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
-        <div className="container mx-auto px-4 pt-32 text-center">
-          <Store className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Shop Not Found</h1>
+        <div className="flex-1 container mx-auto px-4 pt-32 text-center">
+          <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
+            <Store className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h1 className="font-display text-2xl font-bold mb-2">Shop Not Found</h1>
           <p className="text-muted-foreground mb-6">This shop doesn't exist or is not available</p>
           <Link to="/shops">
-            <Button>
+            <Button className="bg-gradient-to-r from-accent to-primary">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Shops
             </Button>
           </Link>
         </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
       {/* Shop Header */}
-      <div className="relative">
+      <div className="relative pt-20">
         {shop.banner_url ? (
           <div 
-            className="h-64 bg-cover bg-center"
+            className="h-48 md:h-64 bg-cover bg-center"
             style={{ backgroundImage: `url(${shop.banner_url})` }}
           >
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/80" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
           </div>
         ) : (
-          <div className="h-64 bg-gradient-to-br from-primary/20 to-accent/20" />
+          <div className="h-48 md:h-64 bg-gradient-to-br from-primary/20 via-accent/10 to-background relative overflow-hidden">
+            <AdirePattern variant="geometric" className="text-primary" opacity={0.3} />
+          </div>
         )}
         
         <div className="container mx-auto px-4">
-          <div className="relative -mt-16 pb-8">
-            <Card className="p-6">
-              <div className="flex flex-col md:flex-row gap-6 items-start">
-                <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center flex-shrink-0">
+          <div className="relative -mt-16 md:-mt-20 pb-8">
+            <Card className="card-african p-4 md:p-6 shadow-xl bg-card/95 backdrop-blur-sm">
+              <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">
+                <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden">
                   {shop.logo_url ? (
                     <img 
                       src={shop.logo_url} 
                       alt={shop.shop_name}
-                      className="w-full h-full object-cover rounded-xl"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
-                    <Store className="w-12 h-12 text-primary-foreground" />
+                    <Store className="w-10 h-10 md:w-12 md:h-12 text-primary-foreground" />
                   )}
                 </div>
                 
-                <div className="flex-1">
-                  <div className="flex items-start justify-between gap-4 mb-2">
-                    <h1 className="text-3xl font-bold">{shop.shop_name}</h1>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-2">
+                    <div>
+                      <h1 className="font-display text-2xl md:text-3xl font-bold">{shop.shop_name}</h1>
+                      {shop.description && (
+                        <p className="text-muted-foreground mt-2 line-clamp-2">{shop.description}</p>
+                      )}
+                    </div>
                     {getTotalItems() > 0 && (
-                      <Button onClick={() => setIsCheckoutOpen(true)}>
+                      <Button 
+                        onClick={() => setIsCheckoutOpen(true)}
+                        className="bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/25 w-full md:w-auto"
+                      >
                         <ShoppingCart className="w-4 h-4 mr-2" />
                         Cart ({getTotalItems()})
                       </Button>
                     )}
                   </div>
                   
-                  {shop.description && (
-                    <p className="text-muted-foreground mb-4">{shop.description}</p>
-                  )}
-                  
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-3 mt-4">
                     {shop.total_reviews > 0 && (
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-semibold">{shop.average_rating.toFixed(1)}</span>
-                        </div>
+                      <div className="flex items-center gap-2 px-3 py-1 bg-gold/10 rounded-full">
+                        <Star className="w-4 h-4 fill-gold text-gold" />
+                        <span className="font-semibold text-sm">{shop.average_rating.toFixed(1)}</span>
                         <span className="text-sm text-muted-foreground">
                           ({shop.total_reviews} reviews)
                         </span>
                       </div>
                     )}
-                    <Badge variant="outline">{products.length} Products</Badge>
+                    <Badge variant="outline" className="bg-accent/5 border-accent/20 text-accent">
+                      {products.length} Products
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -248,41 +258,54 @@ const ShopStorefront = () => {
       </div>
 
       {/* Products Section */}
-      <div className="container mx-auto px-4 pb-20">
-        <div className="mb-8">
+      <div className="flex-1 container mx-auto px-4 pb-20">
+        <div className="mb-6">
           <Link to="/shops">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="hover:bg-muted">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to All Shops
             </Button>
           </Link>
         </div>
 
-        <h2 className="text-2xl font-bold mb-6">Products</h2>
+        <div className="flex items-center gap-3 mb-8">
+          <Sparkles className="w-5 h-5 text-accent" />
+          <h2 className="font-display text-2xl font-bold">Products</h2>
+        </div>
 
         {products.length === 0 ? (
-          <Card>
+          <Card className="card-african">
             <CardContent className="py-16 text-center">
-              <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold mb-2">No Products Available</h3>
+              <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
+                <Package className="w-10 h-10 text-muted-foreground" />
+              </div>
+              <h3 className="font-display text-xl font-semibold mb-2">No Products Available</h3>
               <p className="text-muted-foreground">This shop hasn't added any products yet</p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <Card key={product.id} className="overflow-hidden">
-                {product.image_url && (
+            {products.map((product, index) => (
+              <Card 
+                key={product.id} 
+                className="card-african overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 animate-fade-up"
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                {product.image_url ? (
                   <div className="aspect-square overflow-hidden bg-muted">
                     <img
                       src={product.image_url}
                       alt={product.name}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
+                ) : (
+                  <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center adire-pattern">
+                    <Package className="w-16 h-16 text-muted-foreground" />
+                  </div>
                 )}
-                <CardHeader>
-                  <CardTitle className="text-lg">{product.name}</CardTitle>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-display line-clamp-1">{product.name}</CardTitle>
                   <CardDescription className="line-clamp-2">
                     {product.description}
                   </CardDescription>
@@ -291,17 +314,20 @@ const ShopStorefront = () => {
                     totalReviews={product.total_reviews || 0}
                   />
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pb-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">₦{product.price.toLocaleString()}</span>
-                    <Badge variant={product.stock_quantity > 0 ? "default" : "destructive"}>
-                      {product.stock_quantity > 0 ? `${product.stock_quantity} in stock` : "Out of stock"}
+                    <span className="text-2xl font-bold gradient-text">₦{product.price.toLocaleString()}</span>
+                    <Badge 
+                      variant={product.stock_quantity > 0 ? "default" : "destructive"}
+                      className={product.stock_quantity > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
+                    >
+                      {product.stock_quantity > 0 ? `${product.stock_quantity} left` : "Out of stock"}
                     </Badge>
                   </div>
                 </CardContent>
-                <CardFooter className="flex flex-col gap-2">
+                <CardFooter className="flex flex-col gap-2 pt-0">
                   <Button
-                    className="w-full"
+                    className="w-full bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-md"
                     onClick={() => addToCart(product)}
                     disabled={product.stock_quantity === 0}
                   >
@@ -319,6 +345,8 @@ const ShopStorefront = () => {
           </div>
         )}
       </div>
+
+      <Footer />
 
       {/* Checkout Dialog */}
       {shop && (
