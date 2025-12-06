@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireAccent } from "@/components/patterns/AdirePattern";
@@ -291,28 +291,21 @@ const ShopStorefront = () => {
                 className="card-african overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 animate-fade-up"
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
-                <Link to={`/shop/${slug}/product/${product.id}`}>
-                  {product.image_url ? (
-                    <div className="aspect-square overflow-hidden bg-muted relative">
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                        <Eye className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center adire-pattern">
-                      <Package className="w-16 h-16 text-muted-foreground" />
-                    </div>
-                  )}
-                </Link>
+                {product.image_url ? (
+                  <div className="aspect-square overflow-hidden bg-muted">
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                ) : (
+                  <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center adire-pattern">
+                    <Package className="w-16 h-16 text-muted-foreground" />
+                  </div>
+                )}
                 <CardHeader className="pb-3">
-                  <Link to={`/shop/${slug}/product/${product.id}`}>
-                    <CardTitle className="text-lg font-display line-clamp-1 hover:text-accent transition-colors">{product.name}</CardTitle>
-                  </Link>
+                  <CardTitle className="text-lg font-display line-clamp-1">{product.name}</CardTitle>
                   <CardDescription className="line-clamp-2">
                     {product.description}
                   </CardDescription>
@@ -333,24 +326,14 @@ const ShopStorefront = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2 pt-0">
-                  <div className="flex gap-2 w-full">
-                    <Button
-                      className="flex-1 bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-md"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        addToCart(product);
-                      }}
-                      disabled={product.stock_quantity === 0}
-                    >
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Add to Cart
-                    </Button>
-                    <Link to={`/shop/${slug}/product/${product.id}`}>
-                      <Button variant="outline" size="icon">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    </Link>
-                  </div>
+                  <Button
+                    className="w-full bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-md"
+                    onClick={() => addToCart(product)}
+                    disabled={product.stock_quantity === 0}
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Add to Cart
+                  </Button>
                   <ProductReviewForm 
                     productId={product.id}
                     productName={product.name}

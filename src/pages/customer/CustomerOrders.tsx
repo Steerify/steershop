@@ -6,9 +6,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { CustomerSidebar } from "@/components/CustomerSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShoppingCart } from "lucide-react";
+import { Loader2, ShoppingCart, Package } from "lucide-react";
 import { format } from "date-fns";
-import { OrderReviewPrompt } from "@/components/OrderReviewPrompt";
 
 const CustomerOrders = () => {
   const navigate = useNavigate();
@@ -36,7 +35,6 @@ const CustomerOrders = () => {
           order_items (
             *,
             products (
-              id,
               name,
               image_url,
               shops (
@@ -115,71 +113,60 @@ const CustomerOrders = () => {
             ) : (
               <div className="space-y-4">
                 {orders.map((order) => (
-                  <div key={order.id}>
-                    {/* Review Prompt for delivered/completed orders */}
-                    {(order.status === "delivered" || order.status === "completed") && order.order_items && (
-                      <OrderReviewPrompt
-                        orderId={order.id}
-                        orderItems={order.order_items}
-                        onReviewsSubmitted={loadOrders}
-                      />
-                    )}
-                    
-                    <Card className="hover:shadow-lg transition-shadow">
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="flex items-center gap-2 mb-2">
-                              Order #{order.id.slice(0, 8)}
-                              <Badge variant="outline" className={getStatusColor(order.status)}>
-                                {order.status.replace(/_/g, ' ')}
-                              </Badge>
-                            </CardTitle>
-                            <CardDescription>
-                              Placed on {format(new Date(order.created_at), "MMM dd, yyyy")}
-                              {order.paid_at && (
-                                <span className="block text-green-600 dark:text-green-400 mt-1">
-                                  Paid on {format(new Date(order.paid_at), "MMM dd, yyyy 'at' h:mm a")}
-                                </span>
-                              )}
-                            </CardDescription>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-2xl font-bold text-primary">
-                              ₦{parseFloat(order.total_amount).toLocaleString()}
-                            </p>
-                          </div>
+                  <Card key={order.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="flex items-center gap-2 mb-2">
+                            Order #{order.id.slice(0, 8)}
+                            <Badge variant="outline" className={getStatusColor(order.status)}>
+                              {order.status.replace(/_/g, ' ')}
+                            </Badge>
+                          </CardTitle>
+                          <CardDescription>
+                            Placed on {format(new Date(order.created_at), "MMM dd, yyyy")}
+                            {order.paid_at && (
+                              <span className="block text-green-600 dark:text-green-400 mt-1">
+                                Paid on {format(new Date(order.paid_at), "MMM dd, yyyy 'at' h:mm a")}
+                              </span>
+                            )}
+                          </CardDescription>
                         </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="border rounded-lg divide-y">
-                          {order.order_items?.map((item: any) => (
-                            <div key={item.id} className="p-4 flex items-center gap-4">
-                              {item.products?.image_url && (
-                                <img
-                                  src={item.products.image_url}
-                                  alt={item.products.name}
-                                  className="w-16 h-16 object-cover rounded"
-                                />
-                              )}
-                              <div className="flex-1">
-                                <p className="font-semibold">{item.products?.name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {item.products?.shops?.shop_name}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  Quantity: {item.quantity} × ₦{parseFloat(item.price).toLocaleString()}
-                                </p>
-                              </div>
-                              <p className="font-semibold">
-                                ₦{(item.quantity * parseFloat(item.price)).toLocaleString()}
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-primary">
+                            ₦{parseFloat(order.total_amount).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="border rounded-lg divide-y">
+                        {order.order_items?.map((item: any) => (
+                          <div key={item.id} className="p-4 flex items-center gap-4">
+                            {item.products?.image_url && (
+                              <img
+                                src={item.products.image_url}
+                                alt={item.products.name}
+                                className="w-16 h-16 object-cover rounded"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <p className="font-semibold">{item.products?.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {item.products?.shops?.shop_name}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Quantity: {item.quantity} × ₦{parseFloat(item.price).toLocaleString()}
                               </p>
                             </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+                            <p className="font-semibold">
+                              ₦{(item.quantity * parseFloat(item.price)).toLocaleString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             )}

@@ -9,7 +9,6 @@ import ResetPassword from "./pages/ResetPassword";
 import Shops from "./pages/Shops";
 import AboutPage from "./pages/AboutPage";
 import ShopStorefront from "./pages/ShopStorefront";
-import ProductDetails from "./pages/ProductDetails";
 import Dashboard from "./pages/Dashboard";
 import MyStore from "./pages/MyStore";
 import Products from "./pages/Products";
@@ -45,7 +44,6 @@ const App = () => (
           <Route path="/auth/reset-password" element={<ResetPassword />} />
           <Route path="/shops" element={<Shops />} />
           <Route path="/shop/:slug" element={<ShopStorefront />} />
-          <Route path="/shop/:slug/product/:productId" element={<ProductDetails />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/my-store" element={<MyStore />} />
           <Route path="/products" element={<Products />} />
