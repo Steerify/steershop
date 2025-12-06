@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -75,7 +75,6 @@ const ProductCardSkeleton = () => (
   </Card>
 );
 
-
 const Shops = () => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [productResults, setProductResults] = useState<ProductResult[]>([]);
@@ -84,12 +83,10 @@ const Shops = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchShops(0, true);
-  }, []);
-
-  const fetchShops = async (currentPage: number = 0, reset: boolean = false) => {
+  const fetchShops = useCallback(async (currentPage: number = 0, reset: boolean = false) => {
     try {
       if (reset) {
         setIsLoading(true);
@@ -139,8 +136,20 @@ const Shops = () => {
         return subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial';
       });
 
-      setShops(prev => reset ? activeShops : [...prev, ...activeShops]);
-      setPage(currentPage);
+      setShops(prev => {
+        if (reset) return activeShops;
+        
+        // Prevent duplicates
+        const existingIds = new Set(prev.map(shop => shop.id));
+        const newShops = activeShops.filter(shop => !existingIds.has(shop.id));
+        return [...prev, ...newShops];
+      });
+      
+      if (!reset) {
+        setPage(prevPage => prevPage + 1);
+      } else {
+        setPage(0);
+      }
     } catch (error) {
       console.error("Error fetching shops:", error);
       if (reset) {
@@ -150,7 +159,11 @@ const Shops = () => {
       setIsLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchShops(0, true);
+  }, [fetchShops]);
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -218,33 +231,43 @@ const Shops = () => {
     shop.shop_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const loadMore = () => {
-    if (!loadingMore && hasMore) {
-      fetchShops(page + 1, false);
-    }
-  };
-
   useEffect(() => {
+    // Disable infinite scroll when searching
+    if (searchQuery) {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+      return;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore && !searchQuery) {
-          loadMore();
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          fetchShops(page + 1, false);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1, rootMargin: "100px" }
     );
 
-    const sentinel = document.getElementById('scroll-sentinel');
-    if (sentinel) {
-      observer.observe(sentinel);
+    observerRef.current = observer;
+
+    if (sentinelRef.current) {
+      observer.observe(sentinelRef.current);
     }
 
     return () => {
-      if (sentinel) {
-        observer.unobserve(sentinel);
+      if (observerRef.current) {
+        observerRef.current.disconnect();
       }
     };
-  }, [hasMore, loadingMore, searchQuery, page]);
+  }, [hasMore, loadingMore, searchQuery, page, fetchShops]);
+
+  // Reset infinite scroll when search is cleared
+  useEffect(() => {
+    if (!searchQuery && shops.length === 0 && !isLoading) {
+      fetchShops(0, true);
+    }
+  }, [searchQuery, shops.length, isLoading, fetchShops]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -378,54 +401,68 @@ const Shops = () => {
                 </p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredShops.map((shop, index) => (
-                  <Link key={shop.id} to={`/shop/${shop.shop_slug}`}>
-                    <Card 
-                      className="h-full card-african hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer group bg-card/80 backdrop-blur-sm animate-fade-up"
-                      style={{ animationDelay: `${index * 0.05}s` }}
-                    >
-                      <CardHeader>
-                        <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-lg overflow-hidden">
-                          {shop.logo_url ? (
-                            <img 
-                              src={shop.logo_url} 
-                              alt={shop.shop_name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Store className="w-8 h-8 text-primary-foreground" />
-                          )}
-                        </div>
-                        <CardTitle className="group-hover:text-accent transition-colors font-display">
-                          {shop.shop_name}
-                        </CardTitle>
-                        <CardDescription className="line-clamp-2">
-                          {shop.description || "Visit this shop to see their products"}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-sm text-accent font-medium group-hover:translate-x-1 transition-transform flex items-center gap-1">
-                          Visit Store 
-                          <span className="group-hover:translate-x-1 transition-transform">→</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            )}
+              <>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredShops.map((shop, index) => (
+                    <Link key={shop.id} to={`/shop/${shop.shop_slug}`}>
+                      <Card 
+                        className="h-full card-african hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer group bg-card/80 backdrop-blur-sm animate-fade-up"
+                        style={{ animationDelay: `${index * 0.05}s` }}
+                      >
+                        <CardHeader>
+                          <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-lg overflow-hidden">
+                            {shop.logo_url ? (
+                              <img 
+                                src={shop.logo_url} 
+                                alt={shop.shop_name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <Store className="w-8 h-8 text-primary-foreground" />
+                            )}
+                          </div>
+                          <CardTitle className="group-hover:text-accent transition-colors font-display">
+                            {shop.shop_name}
+                          </CardTitle>
+                          <CardDescription className="line-clamp-2">
+                            {shop.description || "Visit this shop to see their products"}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-sm text-accent font-medium group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                            Visit Store 
+                            <span className="group-hover:translate-x-1 transition-transform">→</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
 
-            {/* Infinite scroll sentinel */}
-            {!searchQuery && (
-              <div id="scroll-sentinel" className="h-20 flex items-center justify-center">
-                {loadingMore && (
-                  <div className="flex items-center gap-3 text-muted-foreground">
-                    <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                    <span>Loading more shops...</span>
+                {/* Infinite scroll sentinel - Only show when not searching */}
+                {!searchQuery && hasMore && (
+                  <div 
+                    ref={sentinelRef} 
+                    className="h-20 flex items-center justify-center"
+                  >
+                    {loadingMore && (
+                      <div className="flex items-center gap-3 text-muted-foreground">
+                        <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                        <span>Loading more shops...</span>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+
+                {/* Show "No more shops" message when there are no more to load */}
+                {!searchQuery && !hasMore && shops.length > 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">
+                      You've seen all shops for now! Check back later for new additions.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
