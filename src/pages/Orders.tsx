@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, ShoppingCart, Package, Clock, CheckCircle, XCircle, MessageCircle, ThumbsUp, Truck } from "lucide-react";
+import { ArrowLeft, Loader2, ShoppingCart, Package, Clock, CheckCircle, XCircle, MessageCircle, ThumbsUp, Truck, Banknote } from "lucide-react";
 import { format } from "date-fns";
 import OrderApprovalDialog from "@/components/OrderApprovalDialog";
 
@@ -329,6 +329,57 @@ const Orders = () => {
     }
   };
 
+  const markAsPaid = async (order: any) => {
+    setUpdatingOrderId(order.id);
+    
+    try {
+      // Update order payment status
+      const { error: updateError } = await supabase
+        .from("orders")
+        .update({
+          payment_status: "paid",
+          paid_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", order.id);
+
+      if (updateError) throw updateError;
+
+      // Record revenue transaction
+      const { error: revenueError } = await supabase
+        .from("revenue_transactions")
+        .insert({
+          shop_id: shop.id,
+          order_id: order.id,
+          amount: parseFloat(order.total_amount),
+          currency: 'NGN',
+          payment_reference: `MANUAL_${order.id}_${Date.now()}`,
+          payment_method: 'manual',
+          transaction_type: 'order_payment',
+        });
+
+      if (revenueError) {
+        console.error('Revenue recording error:', revenueError);
+      }
+
+      toast({
+        title: "Payment Recorded! 💰",
+        description: "Order marked as paid and revenue recorded.",
+      });
+
+      await loadOrders(shop.id);
+    } catch (error: any) {
+      console.error('Mark as paid error:', error);
+      toast({
+        title: "Failed",
+        description: error.message || "Could not mark order as paid",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
   const handleReviewOrder = (order: any) => {
     if (!order || !order.id) {
       toast({
@@ -505,6 +556,21 @@ const Orders = () => {
                             <MessageCircle className="w-4 h-4 mr-2" />
                             Contact Customer
                           </Button>
+                          {order.payment_status !== "paid" && (
+                            <Button
+                              onClick={() => markAsPaid(order)}
+                              disabled={updatingOrderId === order.id}
+                              variant="outline"
+                              className="border-green-500 text-green-600 hover:bg-green-50"
+                            >
+                              {updatingOrderId === order.id ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              ) : (
+                                <Banknote className="w-4 h-4 mr-2" />
+                              )}
+                              Mark as Paid
+                            </Button>
+                          )}
                         </>
                       )}
                       {(order.status === "confirmed" || order.status === "paid_awaiting_delivery") && (

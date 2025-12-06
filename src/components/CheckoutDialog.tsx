@@ -274,7 +274,7 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
         console.log('Paystack payment successful callback:', response);
         
         try {
-          // Verify the payment with your backend
+          // Update order status
           const { error: updateError } = await supabase
             .from("orders")
             .update({
@@ -288,6 +288,24 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
           if (updateError) {
             console.error('Supabase update error:', updateError);
             throw updateError;
+          }
+
+          // Record revenue transaction
+          const { error: revenueError } = await supabase
+            .from("revenue_transactions")
+            .insert({
+              shop_id: shop.id,
+              order_id: orderId,
+              amount: totalAmount,
+              currency: 'NGN',
+              payment_reference: response.reference,
+              payment_method: 'paystack',
+              transaction_type: 'order_payment',
+            });
+
+          if (revenueError) {
+            console.error('Revenue recording error:', revenueError);
+            // Don't throw - order is still successful even if revenue tracking fails
           }
 
           console.log('Order successfully updated after payment');
