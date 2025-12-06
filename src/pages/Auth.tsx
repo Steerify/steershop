@@ -191,7 +191,7 @@ const Auth = () => {
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       const redirectTo = isLocalhost 
         ? `${window.location.origin}/auth/callback`
-        : `https://steershop.lovable.app/auth/callback`;
+        : `https://steersolo.lovable.app/auth/callback`;
       
       console.log('Redirect URL:', redirectTo);
 
