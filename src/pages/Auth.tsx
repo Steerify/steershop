@@ -32,7 +32,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
-
+  
   const [signupData, setSignupData] = useState({
     email: "",
     password: "",
@@ -51,7 +51,7 @@ const Auth = () => {
 
     try {
       const validated = signupSchema.parse(signupData);
-
+      
       const { data, error } = await supabase.auth.signUp({
         email: validated.email,
         password: validated.password,
@@ -97,7 +97,7 @@ const Auth = () => {
 
     try {
       const validated = loginSchema.parse(loginData);
-
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: validated.email,
         password: validated.password
@@ -150,7 +150,7 @@ const Auth = () => {
 
     try {
       const emailValidation = z.string().email("Invalid email address").parse(forgotEmail);
-
+      
       const { error } = await supabase.auth.resetPasswordForEmail(emailValidation, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       });
@@ -182,20 +182,17 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleSignIn = async (role?: "shop_owner" | "customer") => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
       console.log('Initiating Google OAuth...');
-
-      // Save the role choice to session storage if provided
-      if (role) {
-        sessionStorage.setItem('oauth_role', role);
-        console.log('Saved role to session:', role);
-      }
-
-      // Always use the Supabase callback URL for OAuth
-      const redirectTo = `https://hwkoqnrtinbgyjjjcgmp.supabase.co/auth/v1/callback`;
-
+      
+      // Use the correct redirect URL based on environment
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const redirectTo = isLocalhost 
+        ? `${window.location.origin}/auth/callback`
+        : `https://steersolo.lovable.app/auth/callback`;
+      
       console.log('Redirect URL:', redirectTo);
 
       const { error } = await supabase.auth.signInWithOAuth({
@@ -213,7 +210,9 @@ const Auth = () => {
         console.error('Google OAuth error:', error);
         throw error;
       }
-
+      
+      // The page will redirect, so we don't need to set isLoading to false here
+      
     } catch (error: any) {
       console.error('Google Sign-in Failed:', error);
       toast({
@@ -225,12 +224,12 @@ const Auth = () => {
     }
   };
 
-  const GoogleButton = ({ role }: { role?: "shop_owner" | "customer" }) => (
+  const GoogleButton = () => (
     <Button
       type="button"
       variant="outline"
       className="w-full"
-      onClick={() => handleGoogleSignIn(role)}
+      onClick={handleGoogleSignIn}
       disabled={isLoading}
     >
       <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -378,7 +377,7 @@ const Auth = () => {
               </TabsContent>
 
               <TabsContent value="signup">
-                <GoogleButton role={signupData.role} />
+                <GoogleButton />
                 <OrDivider />
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
@@ -417,7 +416,7 @@ const Auth = () => {
                     <Label>I want to:</Label>
                     <RadioGroup
                       value={signupData.role}
-                      onValueChange={(value: "shop_owner" | "customer") =>
+                      onValueChange={(value: "shop_owner" | "customer") => 
                         setSignupData({ ...signupData, role: value })
                       }
                     >
