@@ -183,46 +183,41 @@ const Auth = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    try {
-      console.log('Initiating Google OAuth...');
-      
-      // Use the correct redirect URL based on environment
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const redirectTo = isLocalhost 
-        ? `${window.location.origin}/auth/callback`
-        : `https://steersolo.lovable.app/auth/callback`;
-      
-      console.log('Redirect URL:', redirectTo);
+  setIsLoading(true);
+  try {
+    console.log('Initiating Google OAuth...');
+    
+    // Always use the Supabase callback URL for OAuth
+    const redirectTo = `https://hwkoqnrtinbgyjjjcgmp.supabase.co/auth/v1/callback`;
+    
+    console.log('Redirect URL:', redirectTo);
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectTo,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectTo,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
         }
-      });
-
-      if (error) {
-        console.error('Google OAuth error:', error);
-        throw error;
       }
-      
-      // The page will redirect, so we don't need to set isLoading to false here
-      
-    } catch (error: any) {
-      console.error('Google Sign-in Failed:', error);
-      toast({
-        title: "Google Sign-in Failed",
-        description: error.message || "Please check your OAuth configuration",
-        variant: "destructive"
-      });
-      setIsLoading(false);
+    });
+
+    if (error) {
+      console.error('Google OAuth error:', error);
+      throw error;
     }
-  };
+    
+  } catch (error: any) {
+    console.error('Google Sign-in Failed:', error);
+    toast({
+      title: "Google Sign-in Failed",
+      description: error.message || "Please check your OAuth configuration",
+      variant: "destructive"
+    });
+    setIsLoading(false);
+  }
+};
 
   const GoogleButton = () => (
     <Button
