@@ -11,6 +11,13 @@ const Callback = () => {
       try {
         console.log('Processing OAuth callback...');
         
+        // Get the role from session storage
+        const savedRole = sessionStorage.getItem('oauth_role') as "shop_owner" | "customer" | null;
+        console.log('Retrieved role from session:', savedRole);
+        
+        // Clear the session storage
+        sessionStorage.removeItem('oauth_role');
+        
         // This will parse the OAuth tokens from the URL
         const { data: { session }, error } = await supabase.auth.getSession();
         
@@ -23,12 +30,15 @@ const Callback = () => {
         console.log('Session data:', session);
 
         if (session) {
+          // Use saved role or default to "customer"
+          const userRole = savedRole || "customer";
+          
           // Create or update user role
           const { error: roleError } = await supabase
             .from("user_roles")
             .upsert({
               user_id: session.user.id,
-              role: "customer", // Default role for OAuth users
+              role: userRole,
               updated_at: new Date().toISOString()
             }, {
               onConflict: 'user_id'
@@ -65,8 +75,11 @@ const Callback = () => {
             }
           }
 
-          // Redirect based on role (default to customer dashboard)
-          navigate("/customer_dashboard");
+        if (userRole === "shop_owner") {
+            navigate("/dashboard");
+          } else {
+            navigate("/customer_dashboard");
+          }
         } else {
           navigate("/auth?tab=login");
         }
@@ -78,6 +91,9 @@ const Callback = () => {
 
     handleCallback();
   }, [navigate]);
+
+  // ... rest of the component
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center">

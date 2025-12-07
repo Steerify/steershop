@@ -32,7 +32,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
-  
+
   const [signupData, setSignupData] = useState({
     email: "",
     password: "",
@@ -51,7 +51,7 @@ const Auth = () => {
 
     try {
       const validated = signupSchema.parse(signupData);
-      
+
       const { data, error } = await supabase.auth.signUp({
         email: validated.email,
         password: validated.password,
@@ -97,7 +97,7 @@ const Auth = () => {
 
     try {
       const validated = loginSchema.parse(loginData);
-      
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: validated.email,
         password: validated.password
@@ -150,7 +150,7 @@ const Auth = () => {
 
     try {
       const emailValidation = z.string().email("Invalid email address").parse(forgotEmail);
-      
+
       const { error } = await supabase.auth.resetPasswordForEmail(emailValidation, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       });
@@ -182,49 +182,55 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-  setIsLoading(true);
-  try {
-    console.log('Initiating Google OAuth...');
-    
-    // Always use the Supabase callback URL for OAuth
-    const redirectTo = `https://hwkoqnrtinbgyjjjcgmp.supabase.co/auth/v1/callback`;
-    
-    console.log('Redirect URL:', redirectTo);
+  const handleGoogleSignIn = async (role?: "shop_owner" | "customer") => {
+    setIsLoading(true);
+    try {
+      console.log('Initiating Google OAuth...');
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectTo,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-        }
+      // Save the role choice to session storage if provided
+      if (role) {
+        sessionStorage.setItem('oauth_role', role);
+        console.log('Saved role to session:', role);
       }
-    });
 
-    if (error) {
-      console.error('Google OAuth error:', error);
-      throw error;
+      // Always use the Supabase callback URL for OAuth
+      const redirectTo = `https://hwkoqnrtinbgyjjjcgmp.supabase.co/auth/v1/callback`;
+
+      console.log('Redirect URL:', redirectTo);
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      });
+
+      if (error) {
+        console.error('Google OAuth error:', error);
+        throw error;
+      }
+
+    } catch (error: any) {
+      console.error('Google Sign-in Failed:', error);
+      toast({
+        title: "Google Sign-in Failed",
+        description: error.message || "Please check your OAuth configuration",
+        variant: "destructive"
+      });
+      setIsLoading(false);
     }
-    
-  } catch (error: any) {
-    console.error('Google Sign-in Failed:', error);
-    toast({
-      title: "Google Sign-in Failed",
-      description: error.message || "Please check your OAuth configuration",
-      variant: "destructive"
-    });
-    setIsLoading(false);
-  }
-};
+  };
 
-  const GoogleButton = () => (
+  const GoogleButton = ({ role }: { role?: "shop_owner" | "customer" }) => (
     <Button
       type="button"
       variant="outline"
       className="w-full"
-      onClick={handleGoogleSignIn}
+      onClick={() => handleGoogleSignIn(role)}
       disabled={isLoading}
     >
       <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -372,7 +378,7 @@ const Auth = () => {
               </TabsContent>
 
               <TabsContent value="signup">
-                <GoogleButton />
+                <GoogleButton role={signupData.role} />
                 <OrDivider />
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
@@ -411,7 +417,7 @@ const Auth = () => {
                     <Label>I want to:</Label>
                     <RadioGroup
                       value={signupData.role}
-                      onValueChange={(value: "shop_owner" | "customer") => 
+                      onValueChange={(value: "shop_owner" | "customer") =>
                         setSignupData({ ...signupData, role: value })
                       }
                     >
