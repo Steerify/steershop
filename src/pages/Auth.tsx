@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Store, Loader2, Mail, ArrowLeft } from "lucide-react";
+import { Store, Loader2, Mail, ArrowLeft, AlertCircle } from "lucide-react";
 import { z } from "zod";
 
 const signupSchema = z.object({
@@ -32,7 +33,8 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
-  
+  const [showGoogleAlert, setShowGoogleAlert] = useState(true);
+
   const [signupData, setSignupData] = useState({
     email: "",
     password: "",
@@ -51,7 +53,7 @@ const Auth = () => {
 
     try {
       const validated = signupSchema.parse(signupData);
-      
+
       const { data, error } = await supabase.auth.signUp({
         email: validated.email,
         password: validated.password,
@@ -97,7 +99,7 @@ const Auth = () => {
 
     try {
       const validated = loginSchema.parse(loginData);
-      
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: validated.email,
         password: validated.password
@@ -150,7 +152,7 @@ const Auth = () => {
 
     try {
       const emailValidation = z.string().email("Invalid email address").parse(forgotEmail);
-      
+
       const { error } = await supabase.auth.resetPasswordForEmail(emailValidation, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       });
@@ -182,17 +184,20 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = async (role?: "shop_owner" | "customer") => {
     setIsLoading(true);
     try {
       console.log('Initiating Google OAuth...');
-      
-      // Use the correct redirect URL based on environment
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const redirectTo = isLocalhost 
-        ? `${window.location.origin}/auth/callback`
-        : `https://steersolo.lovable.app/auth/callback`;
-      
+
+      // Save the role choice to session storage if provided
+      if (role) {
+        sessionStorage.setItem('oauth_role', role);
+        console.log('Saved role to session:', role);
+      }
+
+      // Always use the Supabase callback URL for OAuth
+      const redirectTo = `https://hwkoqnrtinbgyjjjcgmp.supabase.co/auth/v1/callback`;
+
       console.log('Redirect URL:', redirectTo);
 
       const { error } = await supabase.auth.signInWithOAuth({
@@ -210,26 +215,24 @@ const Auth = () => {
         console.error('Google OAuth error:', error);
         throw error;
       }
-      
-      // The page will redirect, so we don't need to set isLoading to false here
-      
+
     } catch (error: any) {
       console.error('Google Sign-in Failed:', error);
       toast({
-        title: "Google Sign-in Failed",
-        description: error.message || "Please check your OAuth configuration",
+        title: "Google Sign-in Currently Unavailable",
+        description: "We're working on fixing Google authentication. Please use email signup for now.",
         variant: "destructive"
       });
       setIsLoading(false);
     }
   };
 
-  const GoogleButton = () => (
+  const GoogleButton = ({ role }: { role?: "shop_owner" | "customer" }) => (
     <Button
       type="button"
       variant="outline"
       className="w-full"
-      onClick={handleGoogleSignIn}
+      onClick={() => handleGoogleSignIn(role)}
       disabled={isLoading}
     >
       <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -321,132 +324,169 @@ const Auth = () => {
               </form>
             </div>
           ) : (
-            <Tabs defaultValue={defaultTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="login">
-                <GoogleButton />
-                <OrDivider />
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="you@example.com"
-                      value={loginData.email}
-                      onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="login-password">Password</Label>
-                      <Button
-                        type="button"
-                        variant="link"
-                        className="px-0 text-xs text-muted-foreground"
-                        onClick={() => setShowForgotPassword(true)}
-                      >
-                        Forgot password?
-                      </Button>
-                    </div>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={loginData.password}
-                      onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Logging in...
-                      </>
-                    ) : (
-                      "Login"
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="signup">
-                <GoogleButton />
-                <OrDivider />
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
-                    <Input
-                      id="signup-name"
-                      placeholder="John Doe"
-                      value={signupData.fullName}
-                      onChange={(e) => setSignupData({ ...signupData, fullName: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="you@example.com"
-                      value={signupData.email}
-                      onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="At least 6 characters"
-                      value={signupData.password}
-                      onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>I want to:</Label>
-                    <RadioGroup
-                      value={signupData.role}
-                      onValueChange={(value: "shop_owner" | "customer") => 
-                        setSignupData({ ...signupData, role: value })
-                      }
+            <>
+              {/* Google Auth Notice */}
+              {showGoogleAlert && (
+                <Alert className="mb-4 bg-yellow-50 border-yellow-200">
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  <AlertDescription className="text-yellow-700">
+                    <p className="font-medium">Google Authentication is being fixed</p>
+                    <p className="text-sm mt-1">
+                      We're working on resolving Google sign-in issues. Please use email signup for now.
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2 text-yellow-700 hover:text-yellow-800 hover:bg-yellow-100"
+                      onClick={() => setShowGoogleAlert(false)}
                     >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="shop_owner" id="shop_owner" />
-                        <Label htmlFor="shop_owner" className="font-normal">
-                          Create and manage my own shop
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="customer" id="customer" />
-                        <Label htmlFor="customer" className="font-normal">
-                          Browse and shop from stores
-                        </Label>
-                      </div>
-                    </RadioGroup>
+                      Dismiss
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <Tabs defaultValue={defaultTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="login">Login</TabsTrigger>
+                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="login">
+                  <div className="relative opacity-70">
+                    <GoogleButton />
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-md">
+                      <span className="text-sm font-medium text-muted-foreground bg-card px-3 py-1 rounded-full">
+                        Coming Soon
+                      </span>
+                    </div>
                   </div>
-                  <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      "Create Account"
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+                  <OrDivider />
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-email">Email</Label>
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={loginData.email}
+                        onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="login-password">Password</Label>
+                        <Button
+                          type="button"
+                          variant="link"
+                          className="px-0 text-xs text-muted-foreground"
+                          onClick={() => setShowForgotPassword(true)}
+                        >
+                          Forgot password?
+                        </Button>
+                      </div>
+                      <Input
+                        id="login-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={loginData.password}
+                        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Logging in...
+                        </>
+                      ) : (
+                        "Login"
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="signup">
+                  <div className="relative opacity-70">
+                    <GoogleButton role={signupData.role} />
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-md">
+                      <span className="text-sm font-medium text-muted-foreground bg-card px-3 py-1 rounded-full">
+                        Coming Soon
+                      </span>
+                    </div>
+                  </div>
+                  <OrDivider />
+                  <form onSubmit={handleSignup} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-name">Full Name</Label>
+                      <Input
+                        id="signup-name"
+                        placeholder="John Doe"
+                        value={signupData.fullName}
+                        onChange={(e) => setSignupData({ ...signupData, fullName: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Email</Label>
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={signupData.email}
+                        onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Password</Label>
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        placeholder="At least 6 characters"
+                        value={signupData.password}
+                        onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>I want to:</Label>
+                      <RadioGroup
+                        value={signupData.role}
+                        onValueChange={(value: "shop_owner" | "customer") =>
+                          setSignupData({ ...signupData, role: value })
+                        }
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="shop_owner" id="shop_owner" />
+                          <Label htmlFor="shop_owner" className="font-normal">
+                            Create and manage my own shop
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="customer" id="customer" />
+                          <Label htmlFor="customer" className="font-normal">
+                            Browse and shop from stores
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating account...
+                        </>
+                      ) : (
+                        "Create Account"
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            </>
           )}
         </CardContent>
       </Card>
