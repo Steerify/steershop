@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Upload } from "lucide-react";
 import { z } from "zod";
 import { Switch } from "@/components/ui/switch";
+import { AdirePattern } from "@/components/patterns/AdirePattern";
 
 const productSchema = z.object({
   name: z.string().trim().min(2, "Product name must be at least 2 characters").max(200, "Product name must be less than 200 characters"),
@@ -231,40 +232,46 @@ const Products = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
+      <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
+      
+      <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="mb-6">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
         </div>
 
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Products</h1>
+            <h1 className="text-4xl font-heading font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Products
+            </h1>
             <p className="text-muted-foreground">Manage your product catalog</p>
           </div>
-          <Button onClick={() => handleOpenDialog()}>
+          <Button onClick={() => handleOpenDialog()} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
             <Plus className="w-4 h-4 mr-2" />
             Add Product
           </Button>
         </div>
 
         {products.length === 0 ? (
-          <Card>
+          <Card className="border-primary/10">
             <CardContent className="py-16 text-center">
-              <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold mb-2">No products yet</h3>
-              <p className="text-muted-foreground mb-4">Start by adding your first product</p>
-              <Button onClick={() => handleOpenDialog()}>
+              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl flex items-center justify-center">
+                <Package className="w-10 h-10 text-primary" />
+              </div>
+              <h3 className="text-xl font-heading font-semibold mb-2">No products yet</h3>
+              <p className="text-muted-foreground mb-6">Start by adding your first product</p>
+              <Button onClick={() => handleOpenDialog()} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Product
               </Button>
@@ -273,19 +280,30 @@ const Products = () => {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => (
-              <Card key={product.id} className="overflow-hidden">
-                {product.image_url && (
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-48 object-cover"
-                  />
+              <Card key={product.id} className="overflow-hidden group hover:shadow-xl hover:shadow-primary/10 transition-all border-primary/10 hover:border-primary/30">
+                {product.image_url ? (
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {!product.is_available && (
+                      <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+                        <span className="text-destructive font-semibold">Unavailable</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="h-48 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                    <Package className="w-12 h-12 text-muted-foreground" />
+                  </div>
                 )}
                 <CardHeader>
-                  <CardTitle className="flex items-start justify-between gap-2">
-                    <span>{product.name}</span>
+                  <CardTitle className="flex items-start justify-between gap-2 font-heading">
+                    <span className="line-clamp-1">{product.name}</span>
                     {!product.is_available && (
-                      <span className="text-xs bg-destructive text-destructive-foreground px-2 py-1 rounded">
+                      <span className="text-xs bg-destructive text-destructive-foreground px-2 py-1 rounded shrink-0">
                         Unavailable
                       </span>
                     )}
@@ -298,11 +316,11 @@ const Products = () => {
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Price:</span>
-                      <span className="font-semibold">₦{product.price.toLocaleString()}</span>
+                      <span className="font-semibold text-primary">₦{product.price.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Stock:</span>
-                      <span className={product.stock_quantity === 0 ? "text-destructive font-semibold" : ""}>
+                      <span className={product.stock_quantity === 0 ? "text-destructive font-semibold" : "text-foreground"}>
                         {product.stock_quantity} units
                       </span>
                     </div>
@@ -310,7 +328,7 @@ const Products = () => {
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      className="flex-1"
+                      className="flex-1 border-primary/30 hover:bg-primary/10 hover:text-primary"
                       onClick={() => handleOpenDialog(product)}
                     >
                       <Edit className="w-4 h-4 mr-2" />
@@ -330,9 +348,9 @@ const Products = () => {
         )}
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-primary/20">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className="font-heading">
                 {editingProduct ? "Edit Product" : "Add Product"}
               </DialogTitle>
               <DialogDescription>
@@ -347,7 +365,7 @@ const Products = () => {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Amazing Product"
-                  className={errors.name ? "border-destructive" : ""}
+                  className={`border-primary/20 focus:border-primary ${errors.name ? "border-destructive" : ""}`}
                 />
                 {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
               </div>
@@ -360,7 +378,7 @@ const Products = () => {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Describe your product..."
                   rows={4}
-                  className={errors.description ? "border-destructive" : ""}
+                  className={`border-primary/20 focus:border-primary ${errors.description ? "border-destructive" : ""}`}
                 />
                 {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
               </div>
@@ -375,7 +393,7 @@ const Products = () => {
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     placeholder="1000"
-                    className={errors.price ? "border-destructive" : ""}
+                    className={`border-primary/20 focus:border-primary ${errors.price ? "border-destructive" : ""}`}
                   />
                   {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
                 </div>
@@ -388,7 +406,7 @@ const Products = () => {
                     value={formData.stock_quantity}
                     onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
                     placeholder="100"
-                    className={errors.stock_quantity ? "border-destructive" : ""}
+                    className={`border-primary/20 focus:border-primary ${errors.stock_quantity ? "border-destructive" : ""}`}
                   />
                   {errors.stock_quantity && <p className="text-sm text-destructive">{errors.stock_quantity}</p>}
                 </div>
@@ -396,7 +414,7 @@ const Products = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="image">Product Image</Label>
-                <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
+                <div className="border-2 border-dashed border-primary/20 rounded-lg p-6 text-center hover:border-primary/40 transition-colors cursor-pointer">
                   <input
                     id="image"
                     type="file"
@@ -412,7 +430,9 @@ const Products = () => {
                         className="w-full max-h-64 object-contain rounded-lg mb-2"
                       />
                     ) : (
-                      <Upload className="w-12 h-12 mx-auto mb-2 text-muted-foreground" />
+                      <div className="py-8">
+                        <Upload className="w-12 h-12 mx-auto mb-2 text-muted-foreground" />
+                      </div>
                     )}
                     <p className="text-sm text-muted-foreground">
                       {imageFile ? imageFile.name : "Click to upload image"}
@@ -421,7 +441,7 @@ const Products = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-primary/10">
                 <Label htmlFor="available" className="cursor-pointer">
                   Product Available for Sale
                 </Label>
@@ -432,8 +452,8 @@ const Products = () => {
                 />
               </div>
 
-              <div className="flex gap-4">
-                <Button type="submit" disabled={isSaving} className="flex-1">
+              <div className="flex gap-4 pt-4">
+                <Button type="submit" disabled={isSaving} className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90">
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -443,7 +463,7 @@ const Products = () => {
                     editingProduct ? "Update Product" : "Create Product"
                   )}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="border-primary/30">
                   Cancel
                 </Button>
               </div>

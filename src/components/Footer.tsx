@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Mail, Heart } from "lucide-react";
 import { AdirePattern, AdireAccent } from "./patterns/AdirePattern";
+import logo from "@/assets/steersolo-logo.jpg";
 
 export const Footer = () => {
   return (
@@ -15,35 +16,40 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="md:col-span-1">
-            <h3 className="font-display text-2xl font-bold mb-4">SteerSolo</h3>
+            <Link to="/" className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg ring-2 ring-gold/30">
+                <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+              </div>
+              <span className="font-heading text-2xl font-bold text-gold">SteerSolo</span>
+            </Link>
             <p className="text-primary-foreground/80 text-sm leading-relaxed">
               Empowering Nigerian solo entrepreneurs to build, grow, and thrive in the digital economy.
             </p>
             <div className="flex items-center gap-4 mt-6">
               <a 
                 href="#" 
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"
                 aria-label="Facebook"
               >
                 <Facebook className="w-5 h-5" />
               </a>
               <a 
                 href="#" 
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"
                 aria-label="Twitter"
               >
                 <Twitter className="w-5 h-5" />
               </a>
               <a 
                 href="#" 
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"
                 aria-label="Instagram"
               >
                 <Instagram className="w-5 h-5" />
               </a>
               <a 
                 href="mailto:hello@steersolo.com" 
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"
                 aria-label="Email"
               >
                 <Mail className="w-5 h-5" />
@@ -53,25 +59,25 @@ export const Footer = () => {
           
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold text-lg mb-4">Quick Links</h4>
+            <h4 className="font-heading font-semibold text-lg mb-4 text-gold">Quick Links</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="/shops" className="text-primary-foreground/80 hover:text-white transition-colors text-sm">
+                <Link to="/shops" className="text-primary-foreground/80 hover:text-gold transition-colors text-sm">
                   Browse Shops
                 </Link>
               </li>
               <li>
-                <Link to="/auth" className="text-primary-foreground/80 hover:text-white transition-colors text-sm">
+                <Link to="/auth/login?tab=signup" className="text-primary-foreground/80 hover:text-gold transition-colors text-sm">
                   Start Selling
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-primary-foreground/80 hover:text-white transition-colors text-sm">
+                <Link to="/about" className="text-primary-foreground/80 hover:text-gold transition-colors text-sm">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/feedback" className="text-primary-foreground/80 hover:text-white transition-colors text-sm">
+                <Link to="/feedback" className="text-primary-foreground/80 hover:text-gold transition-colors text-sm">
                   Contact
                 </Link>
               </li>
@@ -80,20 +86,20 @@ export const Footer = () => {
           
           {/* Support */}
           <div>
-            <h4 className="font-semibold text-lg mb-4">Support</h4>
+            <h4 className="font-heading font-semibold text-lg mb-4 text-gold">Support</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="/feedback" className="text-primary-foreground/80 hover:text-white transition-colors text-sm">
+                <Link to="/feedback" className="text-primary-foreground/80 hover:text-gold transition-colors text-sm">
                   Help Center
                 </Link>
               </li>
               <li>
-                <Link to="/feedback" className="text-primary-foreground/80 hover:text-white transition-colors text-sm">
+                <Link to="/feedback" className="text-primary-foreground/80 hover:text-gold transition-colors text-sm">
                   FAQs
                 </Link>
               </li>
               <li>
-                <Link to="/feedback" className="text-primary-foreground/80 hover:text-white transition-colors text-sm">
+                <Link to="/feedback" className="text-primary-foreground/80 hover:text-gold transition-colors text-sm">
                   Report Issue
                 </Link>
               </li>
@@ -102,15 +108,15 @@ export const Footer = () => {
           
           {/* Legal */}
           <div>
-            <h4 className="font-semibold text-lg mb-4">Legal</h4>
+            <h4 className="font-heading font-semibold text-lg mb-4 text-gold">Legal</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="/about" className="text-primary-foreground/80 hover:text-white transition-colors text-sm">
+                <Link to="/about" className="text-primary-foreground/80 hover:text-gold transition-colors text-sm">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-primary-foreground/80 hover:text-white transition-colors text-sm">
+                <Link to="/about" className="text-primary-foreground/80 hover:text-gold transition-colors text-sm">
                   Privacy Policy
                 </Link>
               </li>
