@@ -113,7 +113,7 @@ const initializePaystackPayment = (config: {
   }
 };
 
-// Enhanced WhatsApp opening function with better fallback handling
+// Function to open WhatsApp with detailed order information
 const openWhatsAppWithOrderDetails = (
   shopWhatsappNumber: string,
   orderDetails: {
@@ -171,33 +171,24 @@ const openWhatsAppWithOrderDetails = (
   const deepLink = `whatsapp://send?phone=${phoneNumber.replace('+', '')}&text=${fullMessage}`;
   const webLink = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${fullMessage}`;
 
-  // Try to open deep link (for mobile devices with WhatsApp app)
+  // Try to open the deep link with fallback
+  const fallbackTimer = setTimeout(() => {
+    window.open(webLink, '_blank');
+  }, 1000);
+
   const link = document.createElement('a');
   link.href = deepLink;
   link.target = '_blank';
-  link.rel = 'noopener noreferrer';
   
-  // Add to document and click
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  // Set up fallback to web version
-  const fallbackTimer = setTimeout(() => {
-    window.open(webLink, '_blank', 'noopener,noreferrer');
-  }, 2000); // 2 seconds fallback
-
-  // Clear timer if deep link worked
-  window.addEventListener('blur', function onBlur() {
+  link.addEventListener('click', () => {
     clearTimeout(fallbackTimer);
-    window.removeEventListener('blur', onBlur);
   });
   
-  // Also clear timer after 3 seconds
   setTimeout(() => {
     clearTimeout(fallbackTimer);
-  }, 3000);
+  }, 500);
   
+  link.click();
   return true;
 };
 
@@ -235,6 +226,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     }
   };
 
+  // In the handlePaystackPayment function, update the payment status:
 const handlePaystackPayment = async (orderId: string, customerEmail: string) => {
   console.log('Starting Paystack payment process for order:', orderId);
   
@@ -318,17 +310,38 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
 
           console.log('Order successfully updated after payment');
 
-          // Show success message briefly
+          // Show success message
           toast({
             title: "Payment Successful! 🎉",
-            description: "Opening WhatsApp to contact the seller...",
-            duration: 3000,
+            description: "Your order has been confirmed and payment received.",
+            action: (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  openWhatsAppWithOrderDetails(shop.whatsapp_number || '', {
+                    orderId: orderId,
+                    customerName: formData.customer_name,
+                    customerEmail: formData.customer_email,
+                    customerPhone: formData.customer_phone,
+                    deliveryAddress: formData.delivery_address,
+                    cart: cart,
+                    totalAmount: totalAmount,
+                    paymentReference: response.reference,
+                    shopName: shop.shop_name,
+                    paymentMethod: "pay_before"
+                  });
+                }}
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Contact Seller
+              </Button>
+            ),
+            duration: 10000,
           });
 
-          // Clear cart
+          // Clear cart and reset form
           cart.forEach((item) => onUpdateQuantity(item.product.id, 0));
-          
-          // Reset form state
           setFormData({
             customer_name: "",
             customer_email: "",
@@ -338,61 +351,15 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
           setOrderCreated(false);
           setCurrentOrderId(null);
           
-          // Close dialog
+          // Close dialog only after successful payment processing
           onClose();
-          
-          // Wait a moment then automatically open WhatsApp
-          setTimeout(() => {
-            const whatsappOpened = openWhatsAppWithOrderDetails(shop.whatsapp_number || '', {
-              orderId: orderId,
-              customerName: formData.customer_name,
-              customerEmail: formData.customer_email,
-              customerPhone: formData.customer_phone,
-              deliveryAddress: formData.delivery_address,
-              cart: cart,
-              totalAmount: totalAmount,
-              paymentReference: response.reference,
-              shopName: shop.shop_name,
-              paymentMethod: "pay_before"
-            });
-            
-            if (!whatsappOpened) {
-              // Fallback if WhatsApp fails to open
-              toast({
-                title: "Payment Complete!",
-                description: "Your order has been confirmed. Please contact the seller manually via WhatsApp.",
-                action: shop.whatsapp_number ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const message = encodeURIComponent(
-                        `Payment Complete - Order #${orderId}%0A%0A` +
-                        `Hello, I just completed payment for my order. Here are the details:%0A` +
-                        `Order ID: ${orderId}%0A` +
-                        `Payment Reference: ${response.reference}%0A` +
-                        `Amount: ₦${totalAmount.toLocaleString()}%0A` +
-                        `Customer: ${formData.customer_name}`
-                      );
-                      const whatsappUrl = `https://wa.me/${shop.whatsapp_number.replace(/[^0-9]/g, '')}?text=${message}`;
-                      window.open(whatsappUrl, '_blank');
-                    }}
-                  >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Contact Seller
-                  </Button>
-                ) : undefined,
-                duration: 8000,
-              });
-            }
-          }, 1500); // 1.5 second delay before opening WhatsApp
 
         } catch (error: any) {
           console.error("Error updating order after payment:", error);
           
-          // Show error but still try to open WhatsApp
+          // Show detailed error message
           toast({
-            title: "Payment Successful - Order Update Issue",
+            title: "Payment Verification Failed",
             description: `Payment was successful but we encountered an issue updating your order. Please contact support with reference: ${response.reference}`,
             variant: "destructive",
             action: shop.whatsapp_number ? (
@@ -416,22 +383,6 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
               </Button>
             ) : undefined,
           });
-          
-          // Still try to open WhatsApp for customer support
-          setTimeout(() => {
-            openWhatsAppWithOrderDetails(shop.whatsapp_number || '', {
-              orderId: orderId,
-              customerName: formData.customer_name,
-              customerEmail: formData.customer_email,
-              customerPhone: formData.customer_phone,
-              deliveryAddress: formData.delivery_address,
-              cart: cart,
-              totalAmount: totalAmount,
-              paymentReference: response.reference,
-              shopName: shop.shop_name,
-              paymentMethod: "pay_before"
-            });
-          }, 2000);
         }
       },
       onClose: () => {
@@ -457,7 +408,7 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
       variant: "destructive",
     });
   }
-};
+};;
 
   const handleDeliveryBeforeService = async (orderId: string) => {
     try {
