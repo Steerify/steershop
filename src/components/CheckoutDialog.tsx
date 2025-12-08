@@ -40,6 +40,12 @@ interface CheckoutDialogProps {
   totalAmount: number;
 }
 
+declare global {
+  interface Window {
+    PaystackPop: any;
+  }
+}
+
 const checkoutSchema = z.object({
   customer_name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name too long"),
   customer_email: z.string().trim().email("Invalid email address").max(255, "Email too long"),
@@ -226,189 +232,183 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     }
   };
 
-  // In the handlePaystackPayment function, update the payment status:
-const handlePaystackPayment = async (orderId: string, customerEmail: string) => {
-  console.log('Starting Paystack payment process for order:', orderId);
-  
-  // Don't close dialog yet - wait for payment initialization
-  setIsInitializingPayment(true);
-
-  try {
-    // Validate Paystack configuration
-    if (!shop.paystack_public_key?.trim()) {
-      throw new Error("Shop Paystack configuration is missing. Please contact the shop owner.");
-    }
-
-    if (!customerEmail?.trim()) {
-      throw new Error("Email is required for Paystack payment");
-    }
-
-    // Load Paystack script
-    console.log('Loading Paystack script...');
-    const scriptLoaded = await loadPaystackScript();
+  const handlePaystackPayment = async (orderId: string, customerEmail: string) => {
+    console.log('Starting Paystack payment process for order:', orderId);
     
-    if (!scriptLoaded) {
-      throw new Error("Failed to load payment processor. Please check your internet connection and try again.");
-    }
+    // Don't close dialog yet - wait for payment initialization
+    setIsInitializingPayment(true);
 
-    // Wait for script to fully initialize
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      // Validate Paystack configuration
+      if (!shop.paystack_public_key?.trim()) {
+        throw new Error("Shop Paystack configuration is missing. Please contact the shop owner.");
+      }
 
-    if (typeof window.PaystackPop === 'undefined') {
-      throw new Error("Payment system not ready. Please try again.");
-    }
+      if (!customerEmail?.trim()) {
+        throw new Error("Email is required for Paystack payment");
+      }
 
-    console.log('Initializing Paystack payment...');
-    
-    // Generate a unique reference
-    const paymentReference = `ORDER_${orderId}_${Date.now()}`;
-    
-    // Initialize Paystack payment
-    const paymentSuccess = initializePaystackPayment({
-      key: shop.paystack_public_key,
-      email: customerEmail,
-      amount: totalAmount,
-      currency: 'NGN',
-      ref: paymentReference,
-      callback: async (response: any) => {
-        console.log('Paystack payment successful callback:', response);
-        
-        try {
-          // Update order status
-          const { error: updateError } = await supabase
-            .from("orders")
-            .update({
-              payment_status: "paid",
-              status: "paid_awaiting_delivery",
-              payment_reference: response.reference,
-              paid_at: new Date().toISOString()
-            })
-            .eq("id", orderId);
+      // Load Paystack script
+      console.log('Loading Paystack script...');
+      const scriptLoaded = await loadPaystackScript();
+      
+      if (!scriptLoaded) {
+        throw new Error("Failed to load payment processor. Please check your internet connection and try again.");
+      }
 
-          if (updateError) {
-            console.error('Supabase update error:', updateError);
-            throw updateError;
-          }
+      // Wait for script to fully initialize
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-          // Record revenue transaction
-          const { error: revenueError } = await supabase
-            .from("revenue_transactions")
-            .insert({
-              shop_id: shop.id,
-              order_id: orderId,
-              amount: totalAmount,
-              currency: 'NGN',
-              payment_reference: response.reference,
-              payment_method: 'paystack',
-              transaction_type: 'order_payment',
+      if (typeof window.PaystackPop === 'undefined') {
+        throw new Error("Payment system not ready. Please try again.");
+      }
+
+      console.log('Initializing Paystack payment...');
+      
+      // Generate a unique reference
+      const paymentReference = `ORDER_${orderId}_${Date.now()}`;
+      
+      // Initialize Paystack payment
+      const paymentSuccess = initializePaystackPayment({
+        key: shop.paystack_public_key,
+        email: customerEmail,
+        amount: totalAmount,
+        currency: 'NGN',
+        ref: paymentReference,
+        callback: async (response: any) => {
+          console.log('Paystack payment successful callback:', response);
+          
+          try {
+            // Update order status
+            const { error: updateError } = await supabase
+              .from("orders")
+              .update({
+                payment_status: "paid",
+                status: "paid_awaiting_delivery",
+                payment_reference: response.reference,
+                paid_at: new Date().toISOString()
+              })
+              .eq("id", orderId);
+
+            if (updateError) {
+              console.error('Supabase update error:', updateError);
+              throw updateError;
+            }
+
+            // Record revenue transaction
+            const { error: revenueError } = await supabase
+              .from("revenue_transactions")
+              .insert({
+                shop_id: shop.id,
+                order_id: orderId,
+                amount: totalAmount,
+                currency: 'NGN',
+                payment_reference: response.reference,
+                payment_method: 'paystack',
+                transaction_type: 'order_payment',
+              });
+
+            if (revenueError) {
+              console.error('Revenue recording error:', revenueError);
+              // Don't throw - order is still successful even if revenue tracking fails
+            }
+
+            console.log('Order successfully updated after payment');
+
+            // Show success message
+            toast({
+              title: "Payment Successful! 🎉",
+              description: "Your order has been confirmed and payment received. Opening WhatsApp...",
+              duration: 5000,
             });
 
-          if (revenueError) {
-            console.error('Revenue recording error:', revenueError);
-            // Don't throw - order is still successful even if revenue tracking fails
+            // Automatically open WhatsApp with order details
+            if (shop.whatsapp_number) {
+              setTimeout(() => {
+                openWhatsAppWithOrderDetails(shop.whatsapp_number, {
+                  orderId: orderId,
+                  customerName: formData.customer_name,
+                  customerEmail: formData.customer_email,
+                  customerPhone: formData.customer_phone,
+                  deliveryAddress: formData.delivery_address,
+                  cart: cart,
+                  totalAmount: totalAmount,
+                  paymentReference: response.reference,
+                  shopName: shop.shop_name,
+                  paymentMethod: "pay_before"
+                });
+              }, 2000); // 2 second delay to show toast first
+            }
+
+            // Clear cart and reset form
+            cart.forEach((item) => onUpdateQuantity(item.product.id, 0));
+            setFormData({
+              customer_name: "",
+              customer_email: "",
+              customer_phone: "",
+              delivery_address: "",
+            });
+            setOrderCreated(false);
+            setCurrentOrderId(null);
+            
+            // Close dialog only after successful payment processing
+            onClose();
+
+          } catch (error: any) {
+            console.error("Error updating order after payment:", error);
+            
+            // Show detailed error message
+            toast({
+              title: "Payment Verification Failed",
+              description: `Payment was successful but we encountered an issue updating your order. Please contact support with reference: ${response.reference}`,
+              variant: "destructive",
+              action: shop.whatsapp_number ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const message = encodeURIComponent(
+                      `Payment Verification Issue%0A%0A` +
+                      `Order ID: ${orderId}%0A` +
+                      `Payment Reference: ${response.reference}%0A` +
+                      `Amount: ₦${totalAmount.toLocaleString()}%0A` +
+                      `Issue: Payment successful but order update failed`
+                    );
+                    const whatsappUrl = `https://wa.me/${shop.whatsapp_number.replace(/[^0-9]/g, '')}?text=${message}`;
+                    window.open(whatsappUrl, '_blank');
+                  }}
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Get Help
+                </Button>
+              ) : undefined,
+            });
           }
-
-          console.log('Order successfully updated after payment');
-
-          // Show success message
+        },
+        onClose: () => {
+          console.log('Paystack payment window closed');
+          setIsInitializingPayment(false);
           toast({
-            title: "Payment Successful! 🎉",
-            description: "Your order has been confirmed and payment received.",
-            action: (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  openWhatsAppWithOrderDetails(shop.whatsapp_number || '', {
-                    orderId: orderId,
-                    customerName: formData.customer_name,
-                    customerEmail: formData.customer_email,
-                    customerPhone: formData.customer_phone,
-                    deliveryAddress: formData.delivery_address,
-                    cart: cart,
-                    totalAmount: totalAmount,
-                    paymentReference: response.reference,
-                    shopName: shop.shop_name,
-                    paymentMethod: "pay_before"
-                  });
-                }}
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Contact Seller
-              </Button>
-            ),
-            duration: 10000,
-          });
-
-          // Clear cart and reset form
-          cart.forEach((item) => onUpdateQuantity(item.product.id, 0));
-          setFormData({
-            customer_name: "",
-            customer_email: "",
-            customer_phone: "",
-            delivery_address: "",
-          });
-          setOrderCreated(false);
-          setCurrentOrderId(null);
-          
-          // Close dialog only after successful payment processing
-          onClose();
-
-        } catch (error: any) {
-          console.error("Error updating order after payment:", error);
-          
-          // Show detailed error message
-          toast({
-            title: "Payment Verification Failed",
-            description: `Payment was successful but we encountered an issue updating your order. Please contact support with reference: ${response.reference}`,
-            variant: "destructive",
-            action: shop.whatsapp_number ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const message = encodeURIComponent(
-                    `Payment Verification Issue%0A%0A` +
-                    `Order ID: ${orderId}%0A` +
-                    `Payment Reference: ${response.reference}%0A` +
-                    `Amount: ₦${totalAmount.toLocaleString()}%0A` +
-                    `Issue: Payment successful but order update failed`
-                  );
-                  const whatsappUrl = `https://wa.me/${shop.whatsapp_number.replace(/[^0-9]/g, '')}?text=${message}`;
-                  window.open(whatsappUrl, '_blank');
-                }}
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Get Help
-              </Button>
-            ) : undefined,
+            title: "Payment Cancelled",
+            description: "You can complete the payment later. Your order has been saved.",
           });
         }
-      },
-      onClose: () => {
-        console.log('Paystack payment window closed');
-        setIsInitializingPayment(false);
-        toast({
-          title: "Payment Cancelled",
-          description: "You can complete the payment later. Your order has been saved.",
-        });
+      });
+
+      if (!paymentSuccess) {
+        throw new Error("Failed to initialize payment gateway. Please try again.");
       }
-    });
 
-    if (!paymentSuccess) {
-      throw new Error("Failed to initialize payment gateway. Please try again.");
+    } catch (error: any) {
+      console.error("Paystack payment initialization error:", error);
+      setIsInitializingPayment(false);
+      toast({
+        title: "Payment Failed",
+        description: error.message || "Please try again or use bank transfer",
+        variant: "destructive",
+      });
     }
-
-  } catch (error: any) {
-    console.error("Paystack payment initialization error:", error);
-    setIsInitializingPayment(false);
-    toast({
-      title: "Payment Failed",
-      description: error.message || "Please try again or use bank transfer",
-      variant: "destructive",
-    });
-  }
-};;
+  };
 
   const handleDeliveryBeforeService = async (orderId: string) => {
     try {
