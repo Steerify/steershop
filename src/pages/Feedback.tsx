@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Send, MessageSquare } from "lucide-react";
+import { ArrowLeft, Send } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +15,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { AdirePattern, AdireDivider } from "@/components/patterns/AdirePattern";
 
 const Feedback = () => {
   const [name, setName] = useState("");
@@ -78,123 +76,101 @@ const Feedback = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="flex-1 pt-24 pb-12">
-        <div className="container max-w-2xl mx-auto px-4">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition-colors mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </Link>
+      <div className="container max-w-2xl mx-auto px-4 py-8">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
+        </Link>
 
-          <div className="relative bg-card border-2 border-border/50 rounded-2xl overflow-hidden shadow-xl">
-            {/* Header Pattern */}
-            <div className="relative h-32 bg-gradient-to-r from-primary to-accent overflow-hidden">
-              <AdirePattern variant="circles" className="absolute inset-0 opacity-20" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-14 h-14 bg-white/20 rounded-full mb-2">
-                    <MessageSquare className="w-7 h-7 text-white" />
-                  </div>
-                  <h1 className="text-2xl font-heading font-bold text-white">SteerSolo Feedback</h1>
-                </div>
+        <div className="bg-card border rounded-lg p-6 md:p-8">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold mb-2">SteerSolo Feedback</h1>
+            <p className="text-muted-foreground">
+              We value your feedback! Share complaints, suggestions, or upgrade requests.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="name">Your Name *</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="john@example.com"
+                  required
+                />
               </div>
             </div>
-            
-            <div className="p-6 md:p-8">
-              <p className="text-muted-foreground text-center mb-6">
-                We value your feedback! Share complaints, suggestions, or upgrade requests.
-              </p>
 
-              <AdireDivider className="mb-6" />
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid gap-6 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Your Name *</Label>
-                    <Input
-                      id="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="John Doe"
-                      required
-                      className="border-2 focus:border-accent transition-colors"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="john@example.com"
-                      required
-                      className="border-2 focus:border-accent transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="feedbackType">Feedback Type *</Label>
-                  <Select value={feedbackType} onValueChange={setFeedbackType}>
-                    <SelectTrigger id="feedbackType" className="border-2 focus:border-accent">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="complaint">Complaint</SelectItem>
-                      <SelectItem value="upgrade_request">Upgrade Request</SelectItem>
-                      <SelectItem value="suggestion">Suggestion</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Subject *</Label>
-                  <Input
-                    id="subject"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    placeholder="Brief description of your feedback"
-                    required
-                    className="border-2 focus:border-accent transition-colors"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="message">Message *</Label>
-                  <Textarea
-                    id="message"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Provide detailed information about your feedback..."
-                    rows={6}
-                    required
-                    className="border-2 focus:border-accent transition-colors resize-none"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground font-semibold h-11"
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  {isSubmitting ? "Submitting..." : "Submit Feedback"}
-                </Button>
-              </form>
+            <div className="space-y-2">
+              <Label htmlFor="feedbackType">Feedback Type *</Label>
+              <Select value={feedbackType} onValueChange={setFeedbackType}>
+                <SelectTrigger id="feedbackType">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="complaint">Complaint</SelectItem>
+                  <SelectItem value="upgrade_request">Upgrade Request</SelectItem>
+                  <SelectItem value="suggestion">Suggestion</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="subject">Subject *</Label>
+              <Input
+                id="subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Brief description of your feedback"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="message">Message *</Label>
+              <Textarea
+                id="message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Provide detailed information about your feedback..."
+                rows={6}
+                required
+              />
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full sm:w-auto"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              {isSubmitting ? "Submitting..." : "Submit Feedback"}
+            </Button>
+          </form>
         </div>
-      </main>
-      
-      <Footer />
+      </div>
     </div>
   );
 };

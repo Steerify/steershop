@@ -5,10 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowRight, Store, Zap, Shield, TrendingUp, Users, ShoppingBag, Star, MessageCircle, Sparkles } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireDivider } from "@/components/patterns/AdirePattern";
 import heroImage from "@/assets/hero-image.jpg";
-import steersoloLogo from "@/assets/steersolo-logo.png";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 

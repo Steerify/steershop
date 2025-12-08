@@ -1,62 +1,11 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { User, Menu, X, LogOut } from "lucide-react";
+import { Store, User, Menu, X } from "lucide-react";
 import { AdireAccent } from "./patterns/AdirePattern";
-import steersoloLogo from "@/assets/steersolo-logo.png";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      
-      if (user) {
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .single();
-        setUserRole(roleData?.role || null);
-      }
-    };
-
-    checkUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
-      if (!session?.user) {
-        setUserRole(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setUserRole(null);
-    toast({
-      title: "Logged out",
-      description: "Come back soon!",
-    });
-    navigate("/");
-  };
-
-  const getDashboardLink = () => {
-    if (userRole === "admin") return "/admin";
-    if (userRole === "shop_owner") return "/dashboard";
-    return "/customer_dashboard";
-  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
@@ -66,11 +15,9 @@ const Navbar = () => {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group">
-              <img 
-                src={steersoloLogo} 
-                alt="SteerSolo" 
-                className="w-11 h-11 object-contain group-hover:scale-105 transition-transform"
-              />
+              <div className="w-11 h-11 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-accent/25 transition-all duration-300 group-hover:scale-105">
+                <Store className="w-6 h-6 text-primary-foreground" />
+              </div>
               <span className="text-2xl font-display font-bold gradient-text">
                 SteerSolo
               </span>
@@ -100,33 +47,17 @@ const Navbar = () => {
 
             {/* Desktop Auth Buttons */}
             <div className="hidden md:flex items-center gap-3">
-              {user ? (
-                <>
-                  <Link to={getDashboardLink()}>
-                    <Button variant="ghost" size="sm" className="font-medium">
-                      <User className="w-4 h-4 mr-2" />
-                      Dashboard
-                    </Button>
-                  </Link>
-                  <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-destructive">
-                    <LogOut className="w-4 h-4" />
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link to="/auth?tab=login">
-                    <Button variant="ghost" size="sm" className="font-medium">
-                      <User className="w-4 h-4 mr-2" />
-                      Login
-                    </Button>
-                  </Link>
-                  <Link to="/auth?tab=signup">
-                    <Button size="sm" className="bg-gradient-to-r from-accent to-primary hover:opacity-90 transition-opacity font-medium shadow-lg shadow-accent/20">
-                      Get Started
-                    </Button>
-                  </Link>
-                </>
-              )}
+              <Link to="/auth/login">
+                <Button variant="ghost" size="sm" className="font-medium">
+                  <User className="w-4 h-4 mr-2" />
+                  Login
+                </Button>
+              </Link>
+              <Link to="/auth/signup">
+                <Button size="sm" className="bg-gradient-to-r from-accent to-primary hover:opacity-90 transition-opacity font-medium shadow-lg shadow-accent/20">
+                  Get Started
+                </Button>
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}
@@ -178,41 +109,17 @@ const Navbar = () => {
           </Link>
           
           <div className="pt-4 border-t border-border space-y-3">
-            {user ? (
-              <>
-                <Link to={getDashboardLink()} className="block" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full">
-                    <User className="w-4 h-4 mr-2" />
-                    Dashboard
-                  </Button>
-                </Link>
-                <Button 
-                  variant="ghost" 
-                  className="w-full text-destructive hover:bg-destructive/10"
-                  onClick={() => {
-                    handleLogout();
-                    setIsMobileMenuOpen(false);
-                  }}
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </Button>
-              </>
-            ) : (
-              <>
-                <Link to="/auth?tab=login" className="block" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full">
-                    <User className="w-4 h-4 mr-2" />
-                    Login
-                  </Button>
-                </Link>
-                <Link to="/auth?tab=signup" className="block" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button className="w-full bg-gradient-to-r from-accent to-primary">
-                    Get Started
-                  </Button>
-                </Link>
-              </>
-            )}
+            <Link to="/auth/login" className="block" onClick={() => setIsMobileMenuOpen(false)}>
+              <Button variant="outline" className="w-full">
+                <User className="w-4 h-4 mr-2" />
+                Login
+              </Button>
+            </Link>
+            <Link to="/auth/signup" className="block" onClick={() => setIsMobileMenuOpen(false)}>
+              <Button className="w-full bg-gradient-to-r from-accent to-primary">
+                Get Started
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

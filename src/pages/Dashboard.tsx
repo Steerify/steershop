@@ -6,12 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Store, Package, ShoppingCart, LogOut, Clock, CheckCircle, AlertCircle, ArrowRight, TrendingUp, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { format, eachDayOfInterval, subMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths } from "date-fns";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { AdirePattern } from "@/components/patterns/AdirePattern";
-import steersoloLogo from "@/assets/steersolo-logo.png";
+
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -40,6 +39,7 @@ const Dashboard = () => {
 
   const loadAnalytics = async () => {
     try {
+      // Get shop data
       const { data: shopData } = await supabase
         .from("shops")
         .select("id")
@@ -48,6 +48,7 @@ const Dashboard = () => {
 
       if (!shopData) return;
 
+      // Get revenue transactions for the last 30 days
       const thirtyDaysAgo = subMonths(new Date(), 1);
       
       const { data: revenueData } = await supabase
@@ -59,10 +60,12 @@ const Dashboard = () => {
 
       if (!revenueData) return;
 
+      // Calculate total revenue from confirmed payments
       const revenue = revenueData.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
       setTotalRevenue(revenue);
       setTotalSales(revenueData.length);
 
+      // Prepare chart data - last 7 days
       const last7Days = eachDayOfInterval({
         start: subMonths(new Date(), 0).setDate(new Date().getDate() - 6),
         end: new Date()
@@ -103,10 +106,11 @@ const Dashboard = () => {
       if (offer) {
         setActiveOffer(offer);
         
-        let finalPrice = 1000;
+        // Calculate subscription price
+        let finalPrice = 1000; // Default ₦1,000
         
         if (offer.subscription_price) {
-          finalPrice = offer.subscription_price / 100;
+          finalPrice = offer.subscription_price / 100; // Convert from kobo to naira
         } else if (offer.discount_percentage) {
           const originalPrice = (offer.original_price || 100000) / 100;
           finalPrice = originalPrice * (1 - offer.discount_percentage / 100);
@@ -119,74 +123,80 @@ const Dashboard = () => {
     }
   };
 
-  const verifyPaymentOnReturn = async () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const reference = urlParams.get('reference');
-    
-    if (reference) {
-      try {
-        const { data, error } = await supabase.functions.invoke('paystack-verify', {
-          body: { reference },
-          headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          },
-        });
 
-        if (error) throw error;
-
-        if (data.success) {
-          toast({
-            title: "Payment Successful! 🎉",
-            description: "Your subscription has been activated.",
-          });
-          
-          checkAuth();
-          window.history.replaceState({}, '', '/dashboard');
-        }
-      } catch (error: any) {
-        console.error('Payment verification error:', error);
-      }
-    }
-  };
-
-  const checkAuth = async () => {
+const verifyPaymentOnReturn = async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const reference = urlParams.get('reference');
+  
+  if (reference) {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        navigate("/auth/login");
-        return;
+      const { data, error } = await supabase.functions.invoke('paystack-verify', {
+        body: { reference },
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "Payment Successful! 🎉",
+          description: "Your subscription has been activated.",
+        });
+        
+        // Refresh profile data
+        checkAuth();
+        
+        // Clean URL
+        window.history.replaceState({}, '', '/dashboard');
       }
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single();
-
-      if (roleData?.role !== "shop_owner") {
-        navigate("/customer/dashboard");
-        return;
-      }
-
-      setProfile(profileData);
-      
-      const subscriptionInfo = calculateSubscriptionStatus(profileData);
-      setDaysRemaining(subscriptionInfo.daysRemaining);
-      setSubscriptionStatus(subscriptionInfo.status);
-      
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setIsLoading(false);
+    } catch (error: any) {
+      console.error('Payment verification error:', error);
     }
-  };
+  }
+};
+
+const checkAuth = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      navigate("/auth/login");
+      return;
+    }
+
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    // Check role from user_roles table (authoritative source)
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .single();
+
+    if (roleData?.role !== "shop_owner") {
+      navigate("/customer/dashboard");
+      return;
+    }
+
+    setProfile(profileData);
+    
+    // Use the new utility function
+    const subscriptionInfo = calculateSubscriptionStatus(profileData);
+    setDaysRemaining(subscriptionInfo.daysRemaining);
+    setSubscriptionStatus(subscriptionInfo.status);
+    
+  } catch (error) {
+    console.error("Error:", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleSubscribe = async () => {
     try {
@@ -199,6 +209,7 @@ const Dashboard = () => {
 
       if (error) throw error;
 
+      // Redirect to Paystack payment page
       window.location.href = data.authorization_url;
     } catch (error: any) {
       console.error('Error initializing payment:', error);
@@ -222,29 +233,24 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <img src={steersoloLogo} alt="SteerSolo" className="w-16 h-16 mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="h-1 bg-gradient-to-r from-primary via-accent to-primary" />
+      <nav className="bg-card border-b border-border">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src={steersoloLogo} alt="SteerSolo" className="w-10 h-10 object-contain" />
-              <span className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                SteerSolo
-              </span>
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                <Store className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <span className="text-2xl font-bold">SteerSolo</span>
             </div>
-            <Button variant="ghost" onClick={handleLogout} className="text-muted-foreground hover:text-destructive">
+            <Button variant="ghost" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </Button>
@@ -252,12 +258,12 @@ const Dashboard = () => {
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-12">
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-6">
             <div>
-              <h1 className="text-4xl font-heading font-bold mb-2">Dashboard</h1>
+              <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
               <p className="text-muted-foreground">Welcome back, {profile?.full_name}!</p>
             </div>
 
@@ -285,12 +291,11 @@ const Dashboard = () => {
 
           {/* Special Offer Card */}
           {activeOffer && (
-            <Card className="relative overflow-hidden bg-gradient-to-r from-primary to-accent text-primary-foreground border-0">
-              <AdirePattern variant="circles" className="absolute inset-0 opacity-10" />
-              <CardContent className="p-6 relative z-10">
+            <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
+              <CardContent className="p-6">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex-1">
-                    <h3 className="text-xl font-heading font-bold mb-2">{activeOffer.title}</h3>
+                    <h3 className="text-xl font-bold mb-2">{activeOffer.title}</h3>
                     <p className="opacity-90">{activeOffer.description}</p>
                     {activeOffer.code && (
                       <p className="opacity-90 mt-1">
@@ -307,7 +312,7 @@ const Dashboard = () => {
                     variant="secondary" 
                     onClick={handleSubscribe}
                     disabled={isLoading}
-                    className="whitespace-nowrap font-semibold"
+                    className="whitespace-nowrap"
                   >
                     {isLoading ? "Processing..." : activeOffer.button_text || "Claim Offer"}
                     <ArrowRight className="ml-2 w-4 h-4" />
@@ -320,9 +325,9 @@ const Dashboard = () => {
 
         {/* Subscription Notice */}
         {(subscriptionStatus === 'trial' || subscriptionStatus === 'expired') && (
-          <Card className="mb-8 border-2 border-accent/50 bg-accent/5">
+          <Card className="mb-8 border-2 border-accent">
             <CardHeader>
-              <CardTitle className="font-heading">
+              <CardTitle>
                 {subscriptionStatus === 'trial' 
                   ? '🎉 Upgrade Your Store' 
                   : '⚠️ Subscription Required'}
@@ -337,7 +342,7 @@ const Dashboard = () => {
             <CardContent>
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <Button 
-                  className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
+                  className="bg-accent hover:bg-accent/90"
                   onClick={handleSubscribe}
                   disabled={isLoading}
                 >
@@ -355,37 +360,39 @@ const Dashboard = () => {
 
         {/* Analytics Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-heading font-bold mb-4">Sales Analytics</h2>
+          <h2 className="text-2xl font-bold mb-4">Sales Analytics</h2>
           
           <div className="grid md:grid-cols-2 gap-6 mb-6">
-            <Card className="border-2 border-border/50 hover:border-accent/30 transition-colors">
+            {/* Total Revenue Card */}
+            <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Revenue
                 </CardTitle>
-                <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-accent" />
+                <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-4 h-4 text-accent" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-heading font-bold">₦{totalRevenue.toLocaleString()}</div>
+                <div className="text-3xl font-bold">₦{totalRevenue.toLocaleString()}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   From completed orders
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-2 border-border/50 hover:border-accent/30 transition-colors">
+            {/* Total Sales Card */}
+            <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Sales
                 </CardTitle>
-                <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-accent" />
+                <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-accent" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-heading font-bold">{totalSales}</div>
+                <div className="text-3xl font-bold">{totalSales}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Orders in the last 30 days
                 </p>
@@ -394,9 +401,9 @@ const Dashboard = () => {
           </div>
 
           {/* Revenue Chart */}
-          <Card className="border-2 border-border/50">
+          <Card>
             <CardHeader>
-              <CardTitle className="font-heading">Revenue Trend (Last 7 Days)</CardTitle>
+              <CardTitle>Revenue Trend (Last 7 Days)</CardTitle>
               <CardDescription>Daily revenue from completed orders</CardDescription>
             </CardHeader>
             <CardContent>
@@ -437,14 +444,14 @@ const Dashboard = () => {
         {/* Quick Actions Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card 
-            className="border-2 border-border/50 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 transition-all cursor-pointer group"
+            className="hover:shadow-lg transition-all cursor-pointer group"
             onClick={() => navigate("/my-store")}
           >
             <CardHeader>
-              <div className="w-14 h-14 bg-gradient-to-br from-accent/20 to-primary/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Store className="w-7 h-7 text-accent" />
+              <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
+                <Store className="w-6 h-6 text-accent" />
               </div>
-              <CardTitle className="font-heading">My Store</CardTitle>
+              <CardTitle>My Store</CardTitle>
               <CardDescription>
                 Setup and customize your storefront
               </CardDescription>
@@ -452,14 +459,14 @@ const Dashboard = () => {
           </Card>
 
           <Card 
-            className="border-2 border-border/50 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 transition-all cursor-pointer group"
+            className="hover:shadow-lg transition-all cursor-pointer group"
             onClick={() => navigate("/products")}
           >
             <CardHeader>
-              <div className="w-14 h-14 bg-gradient-to-br from-accent/20 to-primary/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Package className="w-7 h-7 text-accent" />
+              <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
+                <Package className="w-6 h-6 text-accent" />
               </div>
-              <CardTitle className="font-heading">Products</CardTitle>
+              <CardTitle>Products</CardTitle>
               <CardDescription>
                 Manage your product catalog
               </CardDescription>
@@ -467,14 +474,14 @@ const Dashboard = () => {
           </Card>
 
           <Card 
-            className="border-2 border-border/50 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 transition-all cursor-pointer group"
+            className="hover:shadow-lg transition-all cursor-pointer group"
             onClick={() => navigate("/orders")}
           >
             <CardHeader>
-              <div className="w-14 h-14 bg-gradient-to-br from-accent/20 to-primary/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <ShoppingCart className="w-7 h-7 text-accent" />
+              <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
+                <ShoppingCart className="w-6 h-6 text-accent" />
               </div>
-              <CardTitle className="font-heading">Orders</CardTitle>
+              <CardTitle>Orders</CardTitle>
               <CardDescription>
                 View and manage customer orders
               </CardDescription>

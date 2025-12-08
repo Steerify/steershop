@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Mail, Heart } from "lucide-react";
 import { AdirePattern, AdireAccent } from "./patterns/AdirePattern";
-import steersoloLogo from "@/assets/steersolo-logo.png";
 
-const Footer = () => {
+export const Footer = () => {
   return (
     <footer className="relative bg-primary text-primary-foreground overflow-hidden">
       {/* Adire Pattern Overlay */}
@@ -134,5 +133,3 @@ const Footer = () => {
     </footer>
   );
 };
-
-export default Footer;

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Store, Package, Sparkles } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { Footer } from "@/components/Footer";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Badge } from "@/components/ui/badge";

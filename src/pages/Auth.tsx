@@ -9,10 +9,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, ArrowLeft } from "lucide-react";
+import { Store, Loader2, Mail, ArrowLeft } from "lucide-react";
 import { z } from "zod";
-import { AdirePattern, AdireDivider } from "@/components/patterns/AdirePattern";
-import steersoloLogo from "@/assets/steersolo-logo.png";
 
 const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -34,7 +32,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
-
+  
   const [signupData, setSignupData] = useState({
     email: "",
     password: "",
@@ -53,7 +51,7 @@ const Auth = () => {
 
     try {
       const validated = signupSchema.parse(signupData);
-
+      
       const { data, error } = await supabase.auth.signUp({
         email: validated.email,
         password: validated.password,
@@ -99,7 +97,7 @@ const Auth = () => {
 
     try {
       const validated = loginSchema.parse(loginData);
-
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: validated.email,
         password: validated.password
@@ -152,7 +150,7 @@ const Auth = () => {
 
     try {
       const emailValidation = z.string().email("Invalid email address").parse(forgotEmail);
-
+      
       const { error } = await supabase.auth.resetPasswordForEmail(emailValidation, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       });
@@ -184,20 +182,17 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleSignIn = async (role?: "shop_owner" | "customer") => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
       console.log('Initiating Google OAuth...');
-
-      // Save the role choice to session storage if provided
-      if (role) {
-        sessionStorage.setItem('oauth_role', role);
-        console.log('Saved role to session:', role);
-      }
-
-      // Use the callback page as the redirect target
-      const redirectTo = `${window.location.origin}/auth/callback`;
-
+      
+      // Use the correct redirect URL based on environment
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const redirectTo = isLocalhost 
+        ? `${window.location.origin}/auth/callback`
+        : `https://steersolo.lovable.app/auth/callback`;
+      
       console.log('Redirect URL:', redirectTo);
 
       const { error } = await supabase.auth.signInWithOAuth({
@@ -215,27 +210,29 @@ const Auth = () => {
         console.error('Google OAuth error:', error);
         throw error;
       }
-
+      
+      // The page will redirect, so we don't need to set isLoading to false here
+      
     } catch (error: any) {
       console.error('Google Sign-in Failed:', error);
       toast({
-        title: "Google Sign-in Error",
-        description: error.message || "Please try again or use email signup.",
+        title: "Google Sign-in Failed",
+        description: error.message || "Please check your OAuth configuration",
         variant: "destructive"
       });
       setIsLoading(false);
     }
   };
 
-  const GoogleButton = ({ role }: { role?: "shop_owner" | "customer" }) => (
+  const GoogleButton = () => (
     <Button
       type="button"
       variant="outline"
-      className="w-full bg-card hover:bg-accent/10 border-2 border-border hover:border-accent transition-all duration-300"
-      onClick={() => handleGoogleSignIn(role)}
+      className="w-full"
+      onClick={handleGoogleSignIn}
       disabled={isLoading}
     >
-      <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
+      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
         <path
           d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
           fill="#4285F4"
@@ -258,54 +255,34 @@ const Auth = () => {
   );
 
   const OrDivider = () => (
-    <div className="relative my-6">
-      <Separator className="bg-border/50" />
-      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-4 text-sm text-muted-foreground font-medium">
+    <div className="relative my-4">
+      <Separator />
+      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
         or
       </span>
     </div>
   );
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
-      <AdirePattern variant="dots" className="absolute inset-0 opacity-30" />
-      
-      {/* Decorative Elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-
-      <Card className="w-full max-w-md relative z-10 border-2 border-border/50 shadow-2xl backdrop-blur-sm bg-card/95 animate-fade-up">
-        <CardHeader className="text-center pb-2">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="relative">
-              <img 
-                src={steersoloLogo} 
-                alt="SteerSolo" 
-                className="w-20 h-20 object-contain animate-float"
-              />
-              <div className="absolute inset-0 bg-accent/20 rounded-full blur-xl -z-10" />
+            <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center">
+              <Store className="w-10 h-10 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Welcome to SteerSolo
-          </CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Your business journey starts here
-          </CardDescription>
+          <CardTitle className="text-3xl font-bold">Welcome to SteerSolo</CardTitle>
+          <CardDescription>Your business journey starts here</CardDescription>
         </CardHeader>
-        
-        <AdireDivider className="mx-6 my-2" />
-        
-        <CardContent className="pt-4">
+        <CardContent>
           {showForgotPassword ? (
             <div className="space-y-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowForgotPassword(false)}
-                className="mb-2 hover:bg-accent/10"
+                className="mb-2"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to login
@@ -326,10 +303,9 @@ const Auth = () => {
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
                     required
-                    className="border-2 focus:border-accent transition-colors"
                   />
                 </div>
-                <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold" disabled={isLoading}>
+                <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -346,16 +322,12 @@ const Auth = () => {
             </div>
           ) : (
             <Tabs defaultValue={defaultTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1">
-                <TabsTrigger value="login" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground font-semibold">
-                  Login
-                </TabsTrigger>
-                <TabsTrigger value="signup" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground font-semibold">
-                  Sign Up
-                </TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="login" className="mt-6">
+              <TabsContent value="login">
                 <GoogleButton />
                 <OrDivider />
                 <form onSubmit={handleLogin} className="space-y-4">
@@ -368,7 +340,6 @@ const Auth = () => {
                       value={loginData.email}
                       onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                       required
-                      className="border-2 focus:border-accent transition-colors"
                     />
                   </div>
                   <div className="space-y-2">
@@ -377,7 +348,7 @@ const Auth = () => {
                       <Button
                         type="button"
                         variant="link"
-                        className="px-0 text-xs text-accent hover:text-accent/80"
+                        className="px-0 text-xs text-muted-foreground"
                         onClick={() => setShowForgotPassword(true)}
                       >
                         Forgot password?
@@ -390,10 +361,9 @@ const Auth = () => {
                       value={loginData.password}
                       onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                       required
-                      className="border-2 focus:border-accent transition-colors"
                     />
                   </div>
-                  <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold h-11" disabled={isLoading}>
+                  <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -406,8 +376,8 @@ const Auth = () => {
                 </form>
               </TabsContent>
 
-              <TabsContent value="signup" className="mt-6">
-                <GoogleButton role={signupData.role} />
+              <TabsContent value="signup">
+                <GoogleButton />
                 <OrDivider />
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
@@ -418,7 +388,6 @@ const Auth = () => {
                       value={signupData.fullName}
                       onChange={(e) => setSignupData({ ...signupData, fullName: e.target.value })}
                       required
-                      className="border-2 focus:border-accent transition-colors"
                     />
                   </div>
                   <div className="space-y-2">
@@ -430,7 +399,6 @@ const Auth = () => {
                       value={signupData.email}
                       onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
                       required
-                      className="border-2 focus:border-accent transition-colors"
                     />
                   </div>
                   <div className="space-y-2">
@@ -442,33 +410,31 @@ const Auth = () => {
                       value={signupData.password}
                       onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
                       required
-                      className="border-2 focus:border-accent transition-colors"
                     />
                   </div>
-                  <div className="space-y-3 p-4 bg-muted/30 rounded-lg border border-border/50">
-                    <Label className="text-sm font-semibold">I want to:</Label>
+                  <div className="space-y-2">
+                    <Label>I want to:</Label>
                     <RadioGroup
                       value={signupData.role}
-                      onValueChange={(value: "shop_owner" | "customer") =>
+                      onValueChange={(value: "shop_owner" | "customer") => 
                         setSignupData({ ...signupData, role: value })
                       }
-                      className="space-y-2"
                     >
-                      <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-accent/10 transition-colors cursor-pointer">
-                        <RadioGroupItem value="shop_owner" id="shop_owner" className="border-accent text-accent" />
-                        <Label htmlFor="shop_owner" className="font-normal cursor-pointer flex-1">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="shop_owner" id="shop_owner" />
+                        <Label htmlFor="shop_owner" className="font-normal">
                           Create and manage my own shop
                         </Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-accent/10 transition-colors cursor-pointer">
-                        <RadioGroupItem value="customer" id="customer" className="border-accent text-accent" />
-                        <Label htmlFor="customer" className="font-normal cursor-pointer flex-1">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="customer" id="customer" />
+                        <Label htmlFor="customer" className="font-normal">
                           Browse and shop from stores
                         </Label>
                       </div>
                     </RadioGroup>
                   </div>
-                  <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold h-11" disabled={isLoading}>
+                  <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

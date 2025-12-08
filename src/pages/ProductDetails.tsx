@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { Footer } from "@/components/Footer";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { ProductRating } from "@/components/ProductRating";
 import { ProductReviewForm } from "@/components/ProductReviewForm";
