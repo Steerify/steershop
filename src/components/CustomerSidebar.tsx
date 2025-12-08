@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import logo from "@/assets/steersolo-logo.jpg";
 
 const items = [
   { title: "Dashboard", url: "/customer_dashboard", icon: Home },
@@ -26,6 +27,7 @@ export function CustomerSidebar() {
   const { state } = useSidebar();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const collapsed = state === "collapsed";
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -36,20 +38,40 @@ export function CustomerSidebar() {
         variant: "destructive",
       });
     } else {
+      toast({
+        title: "Logged out",
+        description: "See you next time!",
+      });
       navigate("/");
     }
   };
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-accent/10 text-accent font-medium" : "hover:bg-muted/50";
+    isActive ? "bg-primary/10 text-primary font-medium border-l-2 border-primary" : "hover:bg-muted/50";
 
   return (
-    <Sidebar className={state === "collapsed" ? "w-14" : "w-60"} collapsible="icon">
-      <SidebarTrigger className="m-2 self-end" />
+    <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
+      <SidebarContent className="bg-card border-r border-border flex flex-col h-full">
+        {/* Header with Logo */}
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-primary/20">
+              <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+            </div>
+            {!collapsed && (
+              <span className="font-heading font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                SteerSolo
+              </span>
+            )}
+          </div>
+        </div>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Customer Portal</SidebarGroupLabel>
+        <SidebarTrigger className="m-2 self-end" />
+
+        <SidebarGroup className="flex-1">
+          <SidebarGroupLabel className="text-muted-foreground font-medium">
+            {!collapsed && "Customer Portal"}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -57,15 +79,15 @@ export function CustomerSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
                       <item.icon className="mr-2 h-4 w-4" />
-                      {state !== "collapsed" && <span>{item.title}</span>}
+                      {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout}>
+                <SidebarMenuButton onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
-                  {state !== "collapsed" && <span>Logout</span>}
+                  {!collapsed && <span>Logout</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
