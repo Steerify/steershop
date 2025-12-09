@@ -1,12 +1,11 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input"; // Make sure you have an Input component
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireAccent } from "@/components/patterns/AdirePattern";
@@ -50,54 +49,13 @@ const ShopStorefront = () => {
   const { toast } = useToast();
   const [shop, setShop] = useState<Shop | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadShopData();
   }, [slug]);
-
-  useEffect(() => {
-    // Filter products based on search query
-    if (searchQuery.trim() === "") {
-      setFilteredProducts(products);
-    } else {
-      const filtered = products.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.price.toString().includes(searchQuery)
-      );
-      setFilteredProducts(filtered);
-    }
-  }, [searchQuery, products]);
-
-  // Close search when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsSearchExpanded(false);
-        if (searchQuery === "") {
-          setSearchQuery("");
-        }
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [searchQuery]);
-
-  // Focus input when expanded
-  useEffect(() => {
-    if (isSearchExpanded && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isSearchExpanded]);
 
   const loadShopData = async () => {
     try {
@@ -127,9 +85,7 @@ const ShopStorefront = () => {
         .order("created_at", { ascending: false });
 
       if (productsError) throw productsError;
-      const productsList = productsData || [];
-      setProducts(productsList);
-      setFilteredProducts(productsList);
+      setProducts(productsData || []);
     } catch (error: any) {
       console.error("Error loading shop:", error);
       toast({
@@ -145,7 +101,7 @@ const ShopStorefront = () => {
   const addToCart = (product: Product) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.product.id === product.id);
-      
+
       if (existingItem) {
         if (existingItem.quantity >= product.stock_quantity) {
           toast({
@@ -192,18 +148,6 @@ const ShopStorefront = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
-  const clearSearch = () => {
-    setSearchQuery("");
-    setIsSearchExpanded(false);
-  };
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      setIsSearchExpanded(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -245,7 +189,7 @@ const ShopStorefront = () => {
       {/* Shop Header */}
       <div className="relative pt-20">
         {shop.banner_url ? (
-          <div 
+          <div
             className="h-48 md:h-64 bg-cover bg-center"
             style={{ backgroundImage: `url(${shop.banner_url})` }}
           >
@@ -256,15 +200,15 @@ const ShopStorefront = () => {
             <AdirePattern variant="geometric" className="text-primary" opacity={0.3} />
           </div>
         )}
-        
+
         <div className="container mx-auto px-4">
           <div className="relative -mt-16 md:-mt-20 pb-8">
             <Card className="card-african p-4 md:p-6 shadow-xl bg-card/95 backdrop-blur-sm">
               <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">
                 <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden">
                   {shop.logo_url ? (
-                    <img 
-                      src={shop.logo_url} 
+                    <img
+                      src={shop.logo_url}
                       alt={shop.shop_name}
                       className="w-full h-full object-cover"
                     />
@@ -272,7 +216,7 @@ const ShopStorefront = () => {
                     <Store className="w-10 h-10 md:w-12 md:h-12 text-primary-foreground" />
                   )}
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-2">
                     <div>
@@ -282,7 +226,7 @@ const ShopStorefront = () => {
                       )}
                     </div>
                     {getTotalItems() > 0 && (
-                      <Button 
+                      <Button
                         onClick={() => setIsCheckoutOpen(true)}
                         className="bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/25 w-full md:w-auto"
                       >
@@ -291,7 +235,7 @@ const ShopStorefront = () => {
                       </Button>
                     )}
                   </div>
-                  
+
                   <div className="flex flex-wrap items-center gap-3 mt-4">
                     {shop.total_reviews > 0 && (
                       <div className="flex items-center gap-2 px-3 py-1 bg-gold/10 rounded-full">
@@ -315,113 +259,35 @@ const ShopStorefront = () => {
 
       {/* Products Section */}
       <div className="flex-1 container mx-auto px-4 pb-20">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div className="flex items-center gap-2">
-            <Link to="/shops">
-              <Button variant="ghost" size="sm" className="hover:bg-muted">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to All Shops
-              </Button>
-            </Link>
-            <div className="h-6 w-px bg-border" />
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-accent" />
-              <h2 className="font-display text-2xl font-bold">Products</h2>
-            </div>
-          </div>
-
-          {/* Search Component */}
-          <div ref={searchRef} className="relative">
-            <form onSubmit={handleSearchSubmit} className="flex items-center">
-              <div className={`
-                relative transition-all duration-300 ease-in-out
-                ${isSearchExpanded ? 'w-48 sm:w-64' : 'w-10'}
-                overflow-hidden
-              `}>
-                <div 
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 cursor-pointer"
-                  onMouseEnter={() => setIsSearchExpanded(true)}
-                  onClick={() => setIsSearchExpanded(true)}
-                >
-                  <Search className={`
-                    w-5 h-5 transition-colors duration-200
-                    ${isSearchExpanded ? 'text-accent' : 'text-muted-foreground hover:text-accent'}
-                  `} />
-                </div>
-                
-                <Input
-                  ref={inputRef}
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`
-                    pl-10 pr-8 h-10 transition-all duration-300
-                    bg-card border-accent/20 focus:border-accent
-                    ${isSearchExpanded ? 'opacity-100 w-full' : 'opacity-0 w-0'}
-                  `}
-                  onBlur={() => {
-                    if (searchQuery === "") {
-                      setIsSearchExpanded(false);
-                    }
-                  }}
-                />
-                
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={clearSearch}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10"
-                  >
-                    <X className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
-                  </button>
-                )}
-              </div>
-              
-              {searchQuery && (
-                <span className="ml-2 text-sm text-muted-foreground hidden sm:inline">
-                  {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found
-                </span>
-              )}
-            </form>
-          </div>
+        <div className="mb-6">
+          <Link to="/shops">
+            <Button variant="ghost" size="sm" className="hover:bg-muted">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to All Shops
+            </Button>
+          </Link>
         </div>
 
-        {filteredProducts.length === 0 ? (
+        <div className="flex items-center gap-3 mb-8">
+          <Sparkles className="w-5 h-5 text-accent" />
+          <h2 className="font-display text-2xl font-bold">Products</h2>
+        </div>
+
+        {products.length === 0 ? (
           <Card className="card-african">
             <CardContent className="py-16 text-center">
               <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
-                {searchQuery ? (
-                  <Search className="w-10 h-10 text-muted-foreground" />
-                ) : (
-                  <Package className="w-10 h-10 text-muted-foreground" />
-                )}
+                <Package className="w-10 h-10 text-muted-foreground" />
               </div>
-              <h3 className="font-display text-xl font-semibold mb-2">
-                {searchQuery ? "No Products Found" : "No Products Available"}
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                {searchQuery 
-                  ? `No products found for "${searchQuery}"`
-                  : "This shop hasn't added any products yet"
-                }
-              </p>
-              {searchQuery && (
-                <Button 
-                  variant="outline" 
-                  onClick={clearSearch}
-                  className="mt-2"
-                >
-                  Clear Search
-                </Button>
-              )}
+              <h3 className="font-display text-xl font-semibold mb-2">No Products Available</h3>
+              <p className="text-muted-foreground">This shop hasn't added any products yet</p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product, index) => (
-              <Card 
-                key={product.id} 
+            {products.map((product, index) => (
+              <Card
+                key={product.id}
                 className="card-african overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 animate-fade-up"
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
@@ -450,15 +316,15 @@ const ShopStorefront = () => {
                   <CardDescription className="line-clamp-2">
                     {product.description}
                   </CardDescription>
-                  <ProductRating 
-                    rating={product.average_rating || 0} 
+                  <ProductRating
+                    rating={product.average_rating || 0}
                     totalReviews={product.total_reviews || 0}
                   />
                 </CardHeader>
                 <CardContent className="pb-3">
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-bold gradient-text">₦{product.price.toLocaleString()}</span>
-                    <Badge 
+                    <Badge
                       variant={product.stock_quantity > 0 ? "default" : "destructive"}
                       className={product.stock_quantity > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
                     >
@@ -485,7 +351,7 @@ const ShopStorefront = () => {
                       </Button>
                     </Link>
                   </div>
-                  <ProductReviewForm 
+                  <ProductReviewForm
                     productId={product.id}
                     productName={product.name}
                     onReviewSubmitted={loadShopData}
