@@ -1,12 +1,11 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X, Filter } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireAccent } from "@/components/patterns/AdirePattern";
@@ -50,29 +49,13 @@ const ShopStorefront = () => {
   const { toast } = useToast();
   const [shop, setShop] = useState<Shop | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "price" | "rating">("name");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadShopData();
   }, [slug]);
-
-  useEffect(() => {
-    if (isSearchOpen && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [isSearchOpen]);
-
-  useEffect(() => {
-    filterAndSortProducts();
-  }, [searchQuery, sortBy, sortOrder, products]);
 
   const loadShopData = async () => {
     try {
@@ -103,7 +86,6 @@ const ShopStorefront = () => {
 
       if (productsError) throw productsError;
       setProducts(productsData || []);
-      setFilteredProducts(productsData || []);
     } catch (error: any) {
       console.error("Error loading shop:", error);
       toast({
@@ -116,50 +98,10 @@ const ShopStorefront = () => {
     }
   };
 
-  const filterAndSortProducts = () => {
-    let filtered = [...products];
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(query) ||
-        product.description?.toLowerCase().includes(query)
-      );
-    }
-
-    // Sort products
-    filtered.sort((a, b) => {
-      let aValue: any, bValue: any;
-
-      switch (sortBy) {
-        case "price":
-          aValue = a.price;
-          bValue = b.price;
-          break;
-        case "rating":
-          aValue = a.average_rating;
-          bValue = b.average_rating;
-          break;
-        default:
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
-      }
-
-      if (sortOrder === "asc") {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
-
-    setFilteredProducts(filtered);
-  };
-
   const addToCart = (product: Product) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.product.id === product.id);
-      
+
       if (existingItem) {
         if (existingItem.quantity >= product.stock_quantity) {
           toast({
@@ -206,22 +148,6 @@ const ShopStorefront = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
-  const toggleSearch = () => {
-    setIsSearchOpen(!isSearchOpen);
-    if (isSearchOpen) {
-      setSearchQuery("");
-    }
-  };
-
-  const handleSortChange = (type: "name" | "price" | "rating") => {
-    if (sortBy === type) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(type);
-      setSortOrder("asc");
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -263,7 +189,7 @@ const ShopStorefront = () => {
       {/* Shop Header */}
       <div className="relative pt-20">
         {shop.banner_url ? (
-          <div 
+          <div
             className="h-48 md:h-64 bg-cover bg-center"
             style={{ backgroundImage: `url(${shop.banner_url})` }}
           >
@@ -274,15 +200,15 @@ const ShopStorefront = () => {
             <AdirePattern variant="geometric" className="text-primary" opacity={0.3} />
           </div>
         )}
-        
+
         <div className="container mx-auto px-4">
           <div className="relative -mt-16 md:-mt-20 pb-8">
             <Card className="card-african p-4 md:p-6 shadow-xl bg-card/95 backdrop-blur-sm">
               <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">
                 <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden">
                   {shop.logo_url ? (
-                    <img 
-                      src={shop.logo_url} 
+                    <img
+                      src={shop.logo_url}
                       alt={shop.shop_name}
                       className="w-full h-full object-cover"
                     />
@@ -290,7 +216,7 @@ const ShopStorefront = () => {
                     <Store className="w-10 h-10 md:w-12 md:h-12 text-primary-foreground" />
                   )}
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-2">
                     <div>
@@ -299,31 +225,17 @@ const ShopStorefront = () => {
                         <p className="text-muted-foreground mt-2 line-clamp-2">{shop.description}</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      {getTotalItems() > 0 && (
-                        <Button 
-                          onClick={() => setIsCheckoutOpen(true)}
-                          className="bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/25"
-                        >
-                          <ShoppingCart className="w-4 h-4 mr-2" />
-                          Cart ({getTotalItems()})
-                        </Button>
-                      )}
+                    {getTotalItems() > 0 && (
                       <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={toggleSearch}
-                        className="rounded-full border-accent/20 hover:bg-accent/5 hover:border-accent/40"
+                        onClick={() => setIsCheckoutOpen(true)}
+                        className="bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/25 w-full md:w-auto"
                       >
-                        {isSearchOpen ? (
-                          <X className="w-4 h-4 text-accent" />
-                        ) : (
-                          <Search className="w-4 h-4 text-accent" />
-                        )}
+                        <ShoppingCart className="w-4 h-4 mr-2" />
+                        Cart ({getTotalItems()})
                       </Button>
-                    </div>
+                    )}
                   </div>
-                  
+
                   <div className="flex flex-wrap items-center gap-3 mt-4">
                     {shop.total_reviews > 0 && (
                       <div className="flex items-center gap-2 px-3 py-1 bg-gold/10 rounded-full">
@@ -339,35 +251,6 @@ const ShopStorefront = () => {
                     </Badge>
                   </div>
                 </div>
-              </div>
-
-              {/* Search Bar - Animated Dropdown */}
-              <div className={`mt-4 transition-all duration-300 ease-in-out overflow-hidden ${
-                isSearchOpen ? "max-h-32 opacity-100" : "max-h-0 opacity-0"
-              }`}>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    ref={searchInputRef}
-                    placeholder="Search products by name or description..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-10 py-6 border-accent/30 focus:border-accent bg-background/50"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-                {searchQuery && filteredProducts.length > 0 && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Found {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
-                  </p>
-                )}
               </div>
             </Card>
           </div>
@@ -385,89 +268,26 @@ const ShopStorefront = () => {
           </Link>
         </div>
 
-        {/* Sort and Filter Controls */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-accent" />
-            <h2 className="font-display text-2xl font-bold">Products</h2>
-            {searchQuery && (
-              <Badge variant="secondary" className="animate-fade-in">
-                Search: "{searchQuery}"
-              </Badge>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground mr-2">Sort by:</span>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={sortBy === "name" ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleSortChange("name")}
-                className={`gap-2 ${sortBy === "name" ? "bg-accent" : ""}`}
-              >
-                Name
-                {sortBy === "name" && (
-                  <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
-                )}
-              </Button>
-              <Button
-                variant={sortBy === "price" ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleSortChange("price")}
-                className={`gap-2 ${sortBy === "price" ? "bg-accent" : ""}`}
-              >
-                Price
-                {sortBy === "price" && (
-                  <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
-                )}
-              </Button>
-              <Button
-                variant={sortBy === "rating" ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleSortChange("rating")}
-                className={`gap-2 ${sortBy === "rating" ? "bg-accent" : ""}`}
-              >
-                Rating
-                {sortBy === "rating" && (
-                  <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
-                )}
-              </Button>
-            </div>
-          </div>
+        <div className="flex items-center gap-3 mb-8">
+          <Sparkles className="w-5 h-5 text-accent" />
+          <h2 className="font-display text-2xl font-bold">Products</h2>
         </div>
 
-        {filteredProducts.length === 0 ? (
+        {products.length === 0 ? (
           <Card className="card-african">
             <CardContent className="py-16 text-center">
               <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
                 <Package className="w-10 h-10 text-muted-foreground" />
               </div>
-              <h3 className="font-display text-xl font-semibold mb-2">
-                {searchQuery ? "No Matching Products" : "No Products Available"}
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                {searchQuery 
-                  ? `No products found matching "${searchQuery}"`
-                  : "This shop hasn't added any products yet"
-                }
-              </p>
-              {searchQuery && (
-                <Button
-                  variant="outline"
-                  onClick={() => setSearchQuery("")}
-                  className="mt-2"
-                >
-                  Clear Search
-                </Button>
-              )}
+              <h3 className="font-display text-xl font-semibold mb-2">No Products Available</h3>
+              <p className="text-muted-foreground">This shop hasn't added any products yet</p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product, index) => (
-              <Card 
-                key={product.id} 
+            {products.map((product, index) => (
+              <Card
+                key={product.id}
                 className="card-african overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 animate-fade-up"
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
@@ -496,15 +316,15 @@ const ShopStorefront = () => {
                   <CardDescription className="line-clamp-2">
                     {product.description}
                   </CardDescription>
-                  <ProductRating 
-                    rating={product.average_rating || 0} 
+                  <ProductRating
+                    rating={product.average_rating || 0}
                     totalReviews={product.total_reviews || 0}
                   />
                 </CardHeader>
                 <CardContent className="pb-3">
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-bold gradient-text">₦{product.price.toLocaleString()}</span>
-                    <Badge 
+                    <Badge
                       variant={product.stock_quantity > 0 ? "default" : "destructive"}
                       className={product.stock_quantity > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
                     >
@@ -531,7 +351,7 @@ const ShopStorefront = () => {
                       </Button>
                     </Link>
                   </div>
-                  <ProductReviewForm 
+                  <ProductReviewForm
                     productId={product.id}
                     productName={product.name}
                     onReviewSubmitted={loadShopData}
