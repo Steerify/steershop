@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X, Filter } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireAccent } from "@/components/patterns/AdirePattern";
@@ -49,13 +50,29 @@ const ShopStorefront = () => {
   const { toast } = useToast();
   const [shop, setShop] = useState<Shop | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "price" | "rating">("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadShopData();
   }, [slug]);
+
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchOpen]);
+
+  useEffect(() => {
+    filterAndSortProducts();
+  }, [searchQuery, sortBy, sortOrder, products]);
 
   const loadShopData = async () => {
     try {
@@ -86,6 +103,7 @@ const ShopStorefront = () => {
 
       if (productsError) throw productsError;
       setProducts(productsData || []);
+      setFilteredProducts(productsData || []);
     } catch (error: any) {
       console.error("Error loading shop:", error);
       toast({
@@ -96,6 +114,46 @@ const ShopStorefront = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const filterAndSortProducts = () => {
+    let filtered = [...products];
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(query) ||
+        product.description?.toLowerCase().includes(query)
+      );
+    }
+
+    // Sort products
+    filtered.sort((a, b) => {
+      let aValue: any, bValue: any;
+
+      switch (sortBy) {
+        case "price":
+          aValue = a.price;
+          bValue = b.price;
+          break;
+        case "rating":
+          aValue = a.average_rating;
+          bValue = b.average_rating;
+          break;
+        default:
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+      }
+
+      if (sortOrder === "asc") {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    setFilteredProducts(filtered);
   };
 
   const addToCart = (product: Product) => {
@@ -146,6 +204,22 @@ const ShopStorefront = () => {
 
   const getTotalItems = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const toggleSearch = () => {
+    setIsSearchOpen(!isSearchOpen);
+    if (isSearchOpen) {
+      setSearchQuery("");
+    }
+  };
+
+  const handleSortChange = (type: "name" | "price" | "rating") => {
+    if (sortBy === type) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(type);
+      setSortOrder("asc");
+    }
   };
 
   if (isLoading) {
@@ -225,15 +299,29 @@ const ShopStorefront = () => {
                         <p className="text-muted-foreground mt-2 line-clamp-2">{shop.description}</p>
                       )}
                     </div>
-                    {getTotalItems() > 0 && (
-                      <Button 
-                        onClick={() => setIsCheckoutOpen(true)}
-                        className="bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/25 w-full md:w-auto"
+                    <div className="flex items-center gap-2">
+                      {getTotalItems() > 0 && (
+                        <Button 
+                          onClick={() => setIsCheckoutOpen(true)}
+                          className="bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/25"
+                        >
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          Cart ({getTotalItems()})
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={toggleSearch}
+                        className="rounded-full border-accent/20 hover:bg-accent/5 hover:border-accent/40"
                       >
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        Cart ({getTotalItems()})
+                        {isSearchOpen ? (
+                          <X className="w-4 h-4 text-accent" />
+                        ) : (
+                          <Search className="w-4 h-4 text-accent" />
+                        )}
                       </Button>
-                    )}
+                    </div>
                   </div>
                   
                   <div className="flex flex-wrap items-center gap-3 mt-4">
@@ -252,6 +340,35 @@ const ShopStorefront = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Search Bar - Animated Dropdown */}
+              <div className={`mt-4 transition-all duration-300 ease-in-out overflow-hidden ${
+                isSearchOpen ? "max-h-32 opacity-100" : "max-h-0 opacity-0"
+              }`}>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    ref={searchInputRef}
+                    placeholder="Search products by name or description..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-10 py-6 border-accent/30 focus:border-accent bg-background/50"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                {searchQuery && filteredProducts.length > 0 && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Found {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
+                  </p>
+                )}
+              </div>
             </Card>
           </div>
         </div>
@@ -268,24 +385,87 @@ const ShopStorefront = () => {
           </Link>
         </div>
 
-        <div className="flex items-center gap-3 mb-8">
-          <Sparkles className="w-5 h-5 text-accent" />
-          <h2 className="font-display text-2xl font-bold">Products</h2>
+        {/* Sort and Filter Controls */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-accent" />
+            <h2 className="font-display text-2xl font-bold">Products</h2>
+            {searchQuery && (
+              <Badge variant="secondary" className="animate-fade-in">
+                Search: "{searchQuery}"
+              </Badge>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground mr-2">Sort by:</span>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={sortBy === "name" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleSortChange("name")}
+                className={`gap-2 ${sortBy === "name" ? "bg-accent" : ""}`}
+              >
+                Name
+                {sortBy === "name" && (
+                  <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
+                )}
+              </Button>
+              <Button
+                variant={sortBy === "price" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleSortChange("price")}
+                className={`gap-2 ${sortBy === "price" ? "bg-accent" : ""}`}
+              >
+                Price
+                {sortBy === "price" && (
+                  <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
+                )}
+              </Button>
+              <Button
+                variant={sortBy === "rating" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleSortChange("rating")}
+                className={`gap-2 ${sortBy === "rating" ? "bg-accent" : ""}`}
+              >
+                Rating
+                {sortBy === "rating" && (
+                  <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
 
-        {products.length === 0 ? (
+        {filteredProducts.length === 0 ? (
           <Card className="card-african">
             <CardContent className="py-16 text-center">
               <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
                 <Package className="w-10 h-10 text-muted-foreground" />
               </div>
-              <h3 className="font-display text-xl font-semibold mb-2">No Products Available</h3>
-              <p className="text-muted-foreground">This shop hasn't added any products yet</p>
+              <h3 className="font-display text-xl font-semibold mb-2">
+                {searchQuery ? "No Matching Products" : "No Products Available"}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {searchQuery 
+                  ? `No products found matching "${searchQuery}"`
+                  : "This shop hasn't added any products yet"
+                }
+              </p>
+              {searchQuery && (
+                <Button
+                  variant="outline"
+                  onClick={() => setSearchQuery("")}
+                  className="mt-2"
+                >
+                  Clear Search
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product, index) => (
+            {filteredProducts.map((product, index) => (
               <Card 
                 key={product.id} 
                 className="card-african overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 animate-fade-up"
