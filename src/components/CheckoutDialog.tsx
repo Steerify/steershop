@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Minus, Plus, ShoppingCart, Trash2, CreditCard, MessageCircle, Copy, Check } from "lucide-react";
+import { Loader2, Minus, Plus, ShoppingCart, Trash2, CreditCard, MessageCircle, Copy, Check, Upload, Camera, User } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { z } from "zod";
 
@@ -51,21 +51,14 @@ const checkoutSchema = z.object({
 const loadPaystackScript = (): Promise<boolean> => {
   return new Promise((resolve) => {
     if (typeof window.PaystackPop !== 'undefined') {
-      console.log('Paystack script already loaded');
       resolve(true);
       return;
     }
 
     const script = document.createElement('script');
     script.src = 'https://js.paystack.co/v1/inline.js';
-    script.onload = () => {
-      console.log('Paystack script loaded successfully');
-      resolve(true);
-    };
-    script.onerror = () => {
-      console.error('Failed to load Paystack script');
-      resolve(false);
-    };
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
     document.head.appendChild(script);
   });
 };
@@ -88,17 +81,15 @@ const initializePaystackPayment = (config: {
     const handler = window.PaystackPop.setup({
       key: config.key,
       email: config.email,
-      amount: config.amount * 100, // Convert to kobo
+      amount: config.amount * 100,
       currency: config.currency || 'NGN',
       ref: config.ref || `PS_${Math.floor((Math.random() * 1000000000) + 1)}`,
       callback: (response: any) => {
-        console.log('Paystack callback:', response);
         if (config.callback) {
           config.callback(response);
         }
       },
       onClose: () => {
-        console.log('Paystack payment closed');
         if (config.onClose) {
           config.onClose();
         }
@@ -113,7 +104,7 @@ const initializePaystackPayment = (config: {
   }
 };
 
-// Function to open WhatsApp with detailed order information
+// Enhanced WhatsApp function with deep link and web link fallback
 const openWhatsAppWithOrderDetails = (
   shopWhatsappNumber: string,
   orderDetails: {
@@ -127,6 +118,7 @@ const openWhatsAppWithOrderDetails = (
     paymentReference?: string;
     shopName: string;
     paymentMethod: string;
+    requiresProof?: boolean;
   }
 ) => {
   if (!shopWhatsappNumber) {
@@ -134,61 +126,98 @@ const openWhatsAppWithOrderDetails = (
     return false;
   }
 
-  // Clean the phone number
-  const cleaned = shopWhatsappNumber.replace(/[^\d+]/g, '');
-  const phoneNumber = cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
+  // Clean the phone number - remove all non-digits except leading +
+  let cleaned = shopWhatsappNumber.replace(/[^\d+]/g, '');
+  // Ensure it has country code
+  if (!cleaned.startsWith('+')) {
+    cleaned = cleaned.startsWith('234') ? `+${cleaned}` : `+234${cleaned.replace(/^0+/, '')}`;
+  }
+  const phoneNumber = cleaned;
 
   // Create detailed order summary
   const orderSummary = orderDetails.cart.map(item => 
     `• ${item.product.name} x ${item.quantity} - ₦${(item.product.price * item.quantity).toLocaleString()}`
   ).join('%0A');
 
-  let baseMessage = '';
-  let paymentSection = '';
+  let message = '';
 
-  if (orderDetails.paymentMethod === 'delivery_before') {
-    baseMessage = `🛒 *ORDER REQUEST - DELIVERY/SERVICE BEFORE PAYMENT* 🛒%0A%0AHello ${orderDetails.shopName},%0A%0AI would like to receive the product/service FIRST and pay afterwards. Please review and confirm if you can fulfill this order:`;
-    paymentSection = `*💰 PAYMENT METHOD:*%0ADelivery/Service Before Payment%0A*📋 PAYMENT STATUS:*%0A⚠️ UNPAID - Customer will pay after receiving order%0A`;
+  if (orderDetails.requiresProof) {
+    // Bank transfer proof submission message
+    message = `🧾 *PAYMENT PROOF SUBMISSION*%0A%0A` +
+      `Hello ${orderDetails.shopName},%0A%0A` +
+      `I have made a bank transfer payment for my order. Please find my payment proof attached.%0A%0A` +
+      `*📋 ORDER DETAILS:*%0A` +
+      `Order ID: ${orderDetails.orderId}%0A` +
+      `Amount Paid: ₦${orderDetails.totalAmount.toLocaleString()}%0A%0A` +
+      `*📦 ORDER ITEMS:*%0A` +
+      `${orderSummary}%0A%0A` +
+      `*👤 CUSTOMER INFO:*%0A` +
+      `Name: ${orderDetails.customerName}%0A` +
+      `Phone: ${orderDetails.customerPhone}%0A` +
+      `Email: ${orderDetails.customerEmail}%0A` +
+      `Delivery Address: ${orderDetails.deliveryAddress}%0A%0A` +
+      `⚠️ *PLEASE ATTACH YOUR PAYMENT SCREENSHOT TO THIS MESSAGE*`;
+  } else if (orderDetails.paymentMethod === 'delivery_before') {
+    // Pay after service message
+    message = `📦 *ORDER REQUEST - PAY ON DELIVERY*%0A%0A` +
+      `Hello ${orderDetails.shopName},%0A%0A` +
+      `I would like to place an order and pay upon delivery. Please confirm if you can fulfill this order:%0A%0A` +
+      `*📦 ORDER ITEMS:*%0A` +
+      `${orderSummary}%0A%0A` +
+      `*💰 TOTAL AMOUNT:*%0A` +
+      `₦${orderDetails.totalAmount.toLocaleString()}%0A%0A` +
+      `*📋 PAYMENT STATUS:*%0A` +
+      `⚠️ UNPAID - Will pay on delivery%0A%0A` +
+      `*👤 CUSTOMER INFO:*%0A` +
+      `Name: ${orderDetails.customerName}%0A` +
+      `Phone: ${orderDetails.customerPhone}%0A` +
+      `Email: ${orderDetails.customerEmail}%0A` +
+      `Delivery Address: ${orderDetails.deliveryAddress}%0A%0A` +
+      `Order ID: ${orderDetails.orderId}%0A%0A` +
+      `Please confirm availability and delivery timeline.`;
   } else {
-    baseMessage = `🎉 *PAYMENT SUCCESSFUL* 🎉%0A%0AHello ${orderDetails.shopName},%0A%0AI have successfully completed my order and payment. Here are the complete details:`;
-    paymentSection = `*💰 PAYMENT DETAILS:*%0ATotal Amount: ₦${orderDetails.totalAmount.toLocaleString()}%0APayment Reference: ${orderDetails.paymentReference || 'N/A'}%0A`;
+    // Paystack payment success message
+    message = `🎉 *PAYMENT SUCCESSFUL*%0A%0A` +
+      `Hello ${orderDetails.shopName},%0A%0A` +
+      `I have completed my order and payment. Here are the details:%0A%0A` +
+      `*📦 ORDER ITEMS:*%0A` +
+      `${orderSummary}%0A%0A` +
+      `*💰 PAYMENT DETAILS:*%0A` +
+      `Total: ₦${orderDetails.totalAmount.toLocaleString()}%0A` +
+      `Reference: ${orderDetails.paymentReference || 'N/A'}%0A` +
+      `Status: ✅ PAID%0A%0A` +
+      `*👤 CUSTOMER INFO:*%0A` +
+      `Name: ${orderDetails.customerName}%0A` +
+      `Phone: ${orderDetails.customerPhone}%0A` +
+      `Email: ${orderDetails.customerEmail}%0A` +
+      `Delivery Address: ${orderDetails.deliveryAddress}%0A%0A` +
+      `Order ID: ${orderDetails.orderId}%0A%0A` +
+      `Please confirm delivery timeline.`;
   }
 
-  const fullMessage = `${baseMessage}%0A%0A` +
-    `*📦 ORDER SUMMARY:*%0A` +
-    `${orderSummary}%0A%0A` +
-    `*💰 TOTAL AMOUNT:*%0A₦${orderDetails.totalAmount.toLocaleString()}%0A%0A` +
-    `${paymentSection}` +
-    `Order ID: ${orderDetails.orderId}%0A%0A` +
-    `*👤 CUSTOMER DETAILS:*%0A` +
-    `Name: ${orderDetails.customerName}%0A` +
-    `Email: ${orderDetails.customerEmail}%0A` +
-    `Phone: ${orderDetails.customerPhone}%0A` +
-    `Delivery Address: ${orderDetails.deliveryAddress}%0A%0A` +
-    `Please confirm if you can fulfill this order and provide delivery timeline.`;
+  // Create deep link and web link
+  const deepLink = `whatsapp://send?phone=${phoneNumber.replace('+', '')}&text=${message}`;
+  const webLink = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${message}`;
 
-  // Create both deep link and web link
-  const deepLink = `whatsapp://send?phone=${phoneNumber.replace('+', '')}&text=${fullMessage}`;
-  const webLink = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${fullMessage}`;
+  // Detect mobile vs desktop
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  // Try to open the deep link with fallback
-  const fallbackTimer = setTimeout(() => {
+  if (isMobile) {
+    // Try deep link first with fallback
+    const start = Date.now();
+    window.location.href = deepLink;
+
+    // Fallback to web link if deep link doesn't work
+    setTimeout(() => {
+      if (Date.now() - start < 2000) {
+        window.open(webLink, '_blank');
+      }
+    }, 1500);
+  } else {
+    // Desktop: use web link directly
     window.open(webLink, '_blank');
-  }, 1000);
+  }
 
-  const link = document.createElement('a');
-  link.href = deepLink;
-  link.target = '_blank';
-  
-  link.addEventListener('click', () => {
-    clearTimeout(fallbackTimer);
-  });
-  
-  setTimeout(() => {
-    clearTimeout(fallbackTimer);
-  }, 500);
-  
-  link.click();
   return true;
 };
 
@@ -207,6 +236,52 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   const [orderCreated, setOrderCreated] = useState(false);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
   const [isInitializingPayment, setIsInitializingPayment] = useState(false);
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  const [proofSent, setProofSent] = useState(false);
+
+  // Auto-fill customer info for logged-in users
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!isOpen) return;
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, email, phone')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (profile) {
+            setFormData(prev => ({
+              ...prev,
+              customer_name: profile.full_name || prev.customer_name,
+              customer_email: profile.email || prev.customer_email,
+              customer_phone: profile.phone || prev.customer_phone,
+            }));
+            setIsUserLoggedIn(true);
+          }
+        } else {
+          setIsUserLoggedIn(false);
+        }
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+      }
+    };
+
+    loadUserProfile();
+  }, [isOpen]);
+
+  // Reset states when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      setOrderCreated(false);
+      setCurrentOrderId(null);
+      setProofSent(false);
+      setIsInitializingPayment(false);
+    }
+  }, [isOpen]);
 
   const copyToClipboard = async (text: string, field: string) => {
     try {
@@ -226,193 +301,133 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     }
   };
 
-  // In the handlePaystackPayment function, update the payment status:
-const handlePaystackPayment = async (orderId: string, customerEmail: string) => {
-  console.log('Starting Paystack payment process for order:', orderId);
-  
-  // Don't close dialog yet - wait for payment initialization
-  setIsInitializingPayment(true);
+  const handlePaystackPayment = async (orderId: string, customerEmail: string) => {
+    setIsInitializingPayment(true);
 
-  try {
-    // Validate Paystack configuration
-    if (!shop.paystack_public_key?.trim()) {
-      throw new Error("Shop Paystack configuration is missing. Please contact the shop owner.");
-    }
+    try {
+      if (!shop.paystack_public_key?.trim()) {
+        throw new Error("Shop Paystack configuration is missing. Please contact the shop owner.");
+      }
 
-    if (!customerEmail?.trim()) {
-      throw new Error("Email is required for Paystack payment");
-    }
+      if (!customerEmail?.trim()) {
+        throw new Error("Email is required for Paystack payment");
+      }
 
-    // Load Paystack script
-    console.log('Loading Paystack script...');
-    const scriptLoaded = await loadPaystackScript();
-    
-    if (!scriptLoaded) {
-      throw new Error("Failed to load payment processor. Please check your internet connection and try again.");
-    }
+      const scriptLoaded = await loadPaystackScript();
+      
+      if (!scriptLoaded) {
+        throw new Error("Failed to load payment processor. Please check your internet connection.");
+      }
 
-    // Wait for script to fully initialize
-    await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-    if (typeof window.PaystackPop === 'undefined') {
-      throw new Error("Payment system not ready. Please try again.");
-    }
+      if (typeof window.PaystackPop === 'undefined') {
+        throw new Error("Payment system not ready. Please try again.");
+      }
 
-    console.log('Initializing Paystack payment...');
-    
-    // Generate a unique reference
-    const paymentReference = `ORDER_${orderId}_${Date.now()}`;
-    
-    // Initialize Paystack payment
-    const paymentSuccess = initializePaystackPayment({
-      key: shop.paystack_public_key,
-      email: customerEmail,
-      amount: totalAmount,
-      currency: 'NGN',
-      ref: paymentReference,
-      callback: async (response: any) => {
-        console.log('Paystack payment successful callback:', response);
-        
-        try {
-          // Update order status
-          const { error: updateError } = await supabase
-            .from("orders")
-            .update({
-              payment_status: "paid",
-              status: "paid_awaiting_delivery",
-              payment_reference: response.reference,
-              paid_at: new Date().toISOString()
-            })
-            .eq("id", orderId);
+      const paymentReference = `ORDER_${orderId}_${Date.now()}`;
+      
+      const paymentSuccess = initializePaystackPayment({
+        key: shop.paystack_public_key,
+        email: customerEmail,
+        amount: totalAmount,
+        currency: 'NGN',
+        ref: paymentReference,
+        callback: async (response: any) => {
+          try {
+            const { error: updateError } = await supabase
+              .from("orders")
+              .update({
+                payment_status: "paid",
+                status: "paid_awaiting_delivery",
+                payment_reference: response.reference,
+                paid_at: new Date().toISOString()
+              })
+              .eq("id", orderId);
 
-          if (updateError) {
-            console.error('Supabase update error:', updateError);
-            throw updateError;
-          }
+            if (updateError) throw updateError;
 
-          // Record revenue transaction
-          const { error: revenueError } = await supabase
-            .from("revenue_transactions")
-            .insert({
-              shop_id: shop.id,
-              order_id: orderId,
-              amount: totalAmount,
-              currency: 'NGN',
-              payment_reference: response.reference,
-              payment_method: 'paystack',
-              transaction_type: 'order_payment',
+            // Record revenue transaction
+            await supabase
+              .from("revenue_transactions")
+              .insert({
+                shop_id: shop.id,
+                order_id: orderId,
+                amount: totalAmount,
+                currency: 'NGN',
+                payment_reference: response.reference,
+                payment_method: 'paystack',
+                transaction_type: 'order_payment',
+              });
+
+            toast({
+              title: "Payment Successful! 🎉",
+              description: "Your order has been confirmed and payment received.",
+              action: (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    openWhatsAppWithOrderDetails(shop.whatsapp_number || '', {
+                      orderId,
+                      customerName: formData.customer_name,
+                      customerEmail: formData.customer_email,
+                      customerPhone: formData.customer_phone,
+                      deliveryAddress: formData.delivery_address,
+                      cart,
+                      totalAmount,
+                      paymentReference: response.reference,
+                      shopName: shop.shop_name,
+                      paymentMethod: "pay_before"
+                    });
+                  }}
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Contact Seller
+                </Button>
+              ),
+              duration: 10000,
             });
 
-          if (revenueError) {
-            console.error('Revenue recording error:', revenueError);
-            // Don't throw - order is still successful even if revenue tracking fails
+            cart.forEach((item) => onUpdateQuantity(item.product.id, 0));
+            resetForm();
+            onClose();
+
+          } catch (error: any) {
+            console.error("Error updating order after payment:", error);
+            toast({
+              title: "Payment Verification Failed",
+              description: `Payment was successful but we encountered an issue. Contact support with reference: ${response.reference}`,
+              variant: "destructive",
+            });
           }
-
-          console.log('Order successfully updated after payment');
-
-          // Show success message
+        },
+        onClose: () => {
+          setIsInitializingPayment(false);
           toast({
-            title: "Payment Successful! 🎉",
-            description: "Your order has been confirmed and payment received.",
-            action: (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  openWhatsAppWithOrderDetails(shop.whatsapp_number || '', {
-                    orderId: orderId,
-                    customerName: formData.customer_name,
-                    customerEmail: formData.customer_email,
-                    customerPhone: formData.customer_phone,
-                    deliveryAddress: formData.delivery_address,
-                    cart: cart,
-                    totalAmount: totalAmount,
-                    paymentReference: response.reference,
-                    shopName: shop.shop_name,
-                    paymentMethod: "pay_before"
-                  });
-                }}
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Contact Seller
-              </Button>
-            ),
-            duration: 10000,
-          });
-
-          // Clear cart and reset form
-          cart.forEach((item) => onUpdateQuantity(item.product.id, 0));
-          setFormData({
-            customer_name: "",
-            customer_email: "",
-            customer_phone: "",
-            delivery_address: "",
-          });
-          setOrderCreated(false);
-          setCurrentOrderId(null);
-          
-          // Close dialog only after successful payment processing
-          onClose();
-
-        } catch (error: any) {
-          console.error("Error updating order after payment:", error);
-          
-          // Show detailed error message
-          toast({
-            title: "Payment Verification Failed",
-            description: `Payment was successful but we encountered an issue updating your order. Please contact support with reference: ${response.reference}`,
-            variant: "destructive",
-            action: shop.whatsapp_number ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const message = encodeURIComponent(
-                    `Payment Verification Issue%0A%0A` +
-                    `Order ID: ${orderId}%0A` +
-                    `Payment Reference: ${response.reference}%0A` +
-                    `Amount: ₦${totalAmount.toLocaleString()}%0A` +
-                    `Issue: Payment successful but order update failed`
-                  );
-                  const whatsappUrl = `https://wa.me/${shop.whatsapp_number.replace(/[^0-9]/g, '')}?text=${message}`;
-                  window.open(whatsappUrl, '_blank');
-                }}
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Get Help
-              </Button>
-            ) : undefined,
+            title: "Payment Cancelled",
+            description: "You can complete the payment later. Your order has been saved.",
           });
         }
-      },
-      onClose: () => {
-        console.log('Paystack payment window closed');
-        setIsInitializingPayment(false);
-        toast({
-          title: "Payment Cancelled",
-          description: "You can complete the payment later. Your order has been saved.",
-        });
+      });
+
+      if (!paymentSuccess) {
+        throw new Error("Failed to initialize payment gateway. Please try again.");
       }
-    });
 
-    if (!paymentSuccess) {
-      throw new Error("Failed to initialize payment gateway. Please try again.");
+    } catch (error: any) {
+      console.error("Paystack payment initialization error:", error);
+      setIsInitializingPayment(false);
+      toast({
+        title: "Payment Failed",
+        description: error.message || "Please try again or use bank transfer",
+        variant: "destructive",
+      });
     }
-
-  } catch (error: any) {
-    console.error("Paystack payment initialization error:", error);
-    setIsInitializingPayment(false);
-    toast({
-      title: "Payment Failed",
-      description: error.message || "Please try again or use bank transfer",
-      variant: "destructive",
-    });
-  }
-};;
+  };
 
   const handleDeliveryBeforeService = async (orderId: string) => {
     try {
-      // Update order status to indicate it's awaiting shop approval
       const { error: updateError } = await supabase
         .from("orders")
         .update({ 
@@ -423,15 +438,14 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
 
       if (updateError) throw updateError;
 
-      // Open WhatsApp with negotiation message
       const whatsappOpened = openWhatsAppWithOrderDetails(shop.whatsapp_number || '', {
-        orderId: orderId,
+        orderId,
         customerName: formData.customer_name,
         customerEmail: formData.customer_email,
         customerPhone: formData.customer_phone,
         deliveryAddress: formData.delivery_address,
-        cart: cart,
-        totalAmount: totalAmount,
+        cart,
+        totalAmount,
         shopName: shop.shop_name,
         paymentMethod: "delivery_before"
       });
@@ -439,37 +453,34 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
       if (whatsappOpened) {
         toast({
           title: "Order Request Sent! 📦",
-          description: "We've opened WhatsApp for you to discuss the order. The seller will review and confirm your request.",
+          description: "WhatsApp opened for you to discuss with the seller.",
           duration: 6000,
-        });
-      } else {
-        toast({
-          title: "Order Request Submitted!",
-          description: "Your order request has been sent. The seller will review and contact you to confirm.",
-          variant: "default",
         });
       }
 
-      // Clear cart and close dialog
       cart.forEach((item) => onUpdateQuantity(item.product.id, 0));
-      setFormData({
-        customer_name: "",
-        customer_email: "",
-        customer_phone: "",
-        delivery_address: "",
-      });
-      setOrderCreated(false);
-      setCurrentOrderId(null);
+      resetForm();
       onClose();
 
     } catch (error: any) {
       console.error("Error in delivery before service:", error);
       toast({
         title: "Order Request Submitted!",
-        description: "Your order request has been saved. The seller will contact you to confirm.",
-        variant: "default",
+        description: "Your order request has been saved. The seller will contact you.",
       });
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      customer_name: "",
+      customer_email: "",
+      customer_phone: "",
+      delivery_address: "",
+    });
+    setOrderCreated(false);
+    setCurrentOrderId(null);
+    setProofSent(false);
   };
 
   const handleCheckout = async (e: React.FormEvent) => {
@@ -492,13 +503,10 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
     setIsProcessing(true);
 
     try {
-      // Get current user if logged in
       const { data: { user } } = await supabase.auth.getUser();
 
-      // Generate order ID client-side to avoid SELECT RLS issues
       const orderId = crypto.randomUUID();
 
-      // Create order without .select() to avoid RLS SELECT restriction
       const { error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -519,7 +527,6 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
         throw orderError;
       }
 
-      // Create order items
       const orderItems = cart.map((item) => ({
         order_id: orderId,
         product_id: item.product.id,
@@ -536,43 +543,15 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
       setCurrentOrderId(orderId);
       setOrderCreated(true);
 
-      console.log('Order created successfully:', orderId);
-
       // Handle payment choice
       if (paymentChoice === "delivery_before") {
         await handleDeliveryBeforeService(orderId);
       } else {
         // Handle payment before service
         if (shop.payment_method === "paystack") {
-          console.log('Initiating Paystack payment...');
           await handlePaystackPayment(orderId, formData.customer_email);
-        } else {
-          // Show bank transfer details with WhatsApp option
-          toast({
-            title: "Order Placed Successfully!",
-            description: "Please complete your bank transfer and contact the seller.",
-            action: shop.whatsapp_number ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const message = encodeURIComponent(
-                    `Hello! I've placed an order and need bank transfer details.%0A%0A` +
-                    `Order ID: ${orderId}%0A` +
-                    `Amount: ₦${totalAmount.toLocaleString()}%0A` +
-                    `Name: ${formData.customer_name}`
-                  );
-                  const whatsappUrl = `https://wa.me/${shop.whatsapp_number.replace(/[^0-9]/g, '')}?text=${message}`;
-                  window.open(whatsappUrl, '_blank');
-                }}
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Get Bank Details
-              </Button>
-            ) : undefined,
-            duration: 8000,
-          });
         }
+        // For bank transfer, the UI will show bank details and require proof
       }
       
     } catch (error: any) {
@@ -587,22 +566,42 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
     }
   };
 
-  const handleCompleteOrder = () => {
-    // Clear cart and close dialog
-    cart.forEach((item) => onUpdateQuantity(item.product.id, 0));
-    setFormData({
-      customer_name: "",
-      customer_email: "",
-      customer_phone: "",
-      delivery_address: "",
+  const handleSendProofViaWhatsApp = () => {
+    if (!currentOrderId) return;
+
+    openWhatsAppWithOrderDetails(shop.whatsapp_number || '', {
+      orderId: currentOrderId,
+      customerName: formData.customer_name,
+      customerEmail: formData.customer_email,
+      customerPhone: formData.customer_phone,
+      deliveryAddress: formData.delivery_address,
+      cart,
+      totalAmount,
+      shopName: shop.shop_name,
+      paymentMethod: "pay_before",
+      requiresProof: true
     });
-    setOrderCreated(false);
-    setCurrentOrderId(null);
+
+    setProofSent(true);
+  };
+
+  const handleCompleteOrder = () => {
+    if (!proofSent && paymentChoice === "pay_before" && shop.payment_method === "bank_transfer") {
+      toast({
+        title: "Please send payment proof first",
+        description: "You must send your payment proof via WhatsApp before completing the order.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    cart.forEach((item) => onUpdateQuantity(item.product.id, 0));
+    resetForm();
     onClose();
     
     toast({
-      title: "Order Completed",
-      description: "Thank you for your order!",
+      title: "Order Submitted",
+      description: "Thank you! The shop owner will verify your payment and process your order.",
     });
   };
 
@@ -616,10 +615,10 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
           </DialogTitle>
           <DialogDescription>
             {orderCreated && paymentChoice === "pay_before" && shop.payment_method === "bank_transfer" 
-              ? "Please complete your bank transfer using the details below"
+              ? "Make payment and send proof via WhatsApp"
               : isInitializingPayment
               ? "Initializing payment gateway..."
-              : "Complete your order and the shop owner will contact you"}
+              : "Complete your order"}
           </DialogDescription>
         </DialogHeader>
 
@@ -676,6 +675,16 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
 
           {!orderCreated ? (
             <form onSubmit={handleCheckout} className="space-y-4">
+              {/* Auto-fill indicator for logged-in users */}
+              {isUserLoggedIn && (
+                <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-2">
+                  <User className="w-4 h-4 text-primary" />
+                  <span className="text-sm text-primary font-medium">
+                    Logged in - your info has been auto-filled
+                  </span>
+                </div>
+              )}
+
               {/* Form fields */}
               <div className="space-y-2">
                 <Label htmlFor="customer_name">Full Name *</Label>
@@ -773,16 +782,16 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
                 </RadioGroup>
               </div>
 
-              {/* Show payment details for "Pay Before" */}
+              {/* Show bank details preview for "Pay Before" with bank transfer */}
               {paymentChoice === "pay_before" && shop.payment_method === "bank_transfer" && (
                 <div className="p-4 bg-muted rounded-lg space-y-2">
-                  <h4 className="font-semibold">Bank Transfer Details</h4>
+                  <h4 className="font-semibold">Bank Transfer Details (Preview)</h4>
                   <div className="text-sm space-y-1">
                     <p><span className="font-medium">Account Name:</span> {shop.bank_account_name}</p>
                     <p><span className="font-medium">Bank:</span> {shop.bank_name}</p>
                     <p><span className="font-medium">Account Number:</span> {shop.bank_account_number}</p>
                     <p className="text-muted-foreground text-xs mt-2">
-                      Please transfer ₦{totalAmount.toLocaleString()} and the shop owner will confirm your payment.
+                      After placing the order, you'll need to transfer and send proof via WhatsApp.
                     </p>
                   </div>
                 </div>
@@ -821,12 +830,12 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
               <p className="text-muted-foreground">Initializing payment gateway...</p>
             </div>
           ) : (
-            /* Bank Transfer Completion Section */
+            /* Bank Transfer Payment + Proof Section */
             <div className="space-y-4">
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <h4 className="font-semibold text-green-800 mb-2">Order Created Successfully!</h4>
-                <p className="text-sm text-green-700">
-                  Your order has been placed. Please complete your bank transfer using the details below.
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-950/20 dark:border-green-900">
+                <h4 className="font-semibold text-green-800 dark:text-green-400 mb-2">Order Created Successfully!</h4>
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  Please complete your bank transfer and send proof via WhatsApp.
                 </p>
               </div>
 
@@ -895,45 +904,64 @@ const handlePaystackPayment = async (orderId: string, customerEmail: string) => 
                   </div>
                 </div>
 
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                  <p className="text-sm text-amber-800">
-                    <strong>Important:</strong> After transferring ₦{totalAmount.toLocaleString()}, 
-                    please send proof of payment to the shop owner via WhatsApp. Your order will be 
-                    confirmed once payment is verified.
-                  </p>
+                {/* Step-by-step instructions */}
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/20 dark:border-amber-900">
+                  <h5 className="font-semibold text-amber-800 dark:text-amber-400 mb-2 flex items-center gap-2">
+                    <Camera className="w-4 h-4" />
+                    Important Steps
+                  </h5>
+                  <ol className="text-sm text-amber-700 dark:text-amber-300 space-y-1 list-decimal list-inside">
+                    <li>Transfer ₦{totalAmount.toLocaleString()} to the account above</li>
+                    <li>Take a screenshot of your payment confirmation</li>
+                    <li>Click "Send Payment Proof" below to open WhatsApp</li>
+                    <li>Attach your screenshot to the WhatsApp message</li>
+                  </ol>
                 </div>
 
+                {/* Payment Proof Button - Required before completing */}
                 {shop.whatsapp_number && (
                   <Button
                     type="button"
-                    className="w-full"
-                    onClick={() => {
-                      openWhatsAppWithOrderDetails(shop.whatsapp_number, {
-                        orderId: currentOrderId!,
-                        customerName: formData.customer_name,
-                        customerEmail: formData.customer_email,
-                        customerPhone: formData.customer_phone,
-                        deliveryAddress: formData.delivery_address,
-                        cart: cart,
-                        totalAmount: totalAmount,
-                        shopName: shop.shop_name,
-                        paymentMethod: "pay_before"
-                      });
-                    }}
+                    className={`w-full ${proofSent ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                    onClick={handleSendProofViaWhatsApp}
                   >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Send Proof via WhatsApp
+                    {proofSent ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        WhatsApp Opened - Attach Your Screenshot
+                      </>
+                    ) : (
+                      <>
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Send Payment Proof via WhatsApp
+                      </>
+                    )}
                   </Button>
                 )}
 
+                {/* Complete Order Button - Only enabled after proof sent */}
                 <Button
                   type="button"
-                  variant="outline"
+                  variant={proofSent ? "default" : "outline"}
                   className="w-full"
                   onClick={handleCompleteOrder}
+                  disabled={!proofSent}
                 >
-                  I've Completed the Transfer
+                  {proofSent ? (
+                    "Complete Order"
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Send proof first to complete order
+                    </>
+                  )}
                 </Button>
+
+                {!proofSent && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    You must send payment proof via WhatsApp before completing the order
+                  </p>
+                )}
               </div>
             </div>
           )}
