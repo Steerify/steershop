@@ -6,12 +6,15 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { CustomerSidebar } from "@/components/CustomerSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ShoppingBag, Package, Clock, CheckCircle2, Award, GraduationCap } from "lucide-react";
+import { Loader2, ShoppingBag, Package, Clock, CheckCircle2, Award, GraduationCap, ArrowRight } from "lucide-react";
+import { AdirePattern } from "@/components/patterns/AdirePattern";
+import logo from "@/assets/steersolo-logo.jpg";
 
 const CustomerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [userName, setUserName] = useState("");
   const [stats, setStats] = useState({
     totalOrders: 0,
     pendingOrders: 0,
@@ -34,6 +37,15 @@ const CustomerDashboard = () => {
         navigate("/auth/login");
         return;
       }
+
+      // Get user profile for name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+
+      setUserName(profile?.full_name || "Customer");
 
       const { data: orders, error } = await supabase
         .from("orders")
@@ -83,88 +95,122 @@ const CustomerDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-xl overflow-hidden">
+            <img src={logo} alt="Loading" className="w-full h-full object-cover" />
+          </div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
+        <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
         <CustomerSidebar />
         
-        <div className="flex-1">
-          <header className="h-16 border-b bg-card flex items-center px-6">
+        <div className="flex-1 relative z-10">
+          <header className="h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center px-6">
+            <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-primary via-accent to-primary" />
             <SidebarTrigger className="mr-4" />
-            <h1 className="text-2xl font-bold">Dashboard</h1>
+            <h1 className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Dashboard
+            </h1>
           </header>
 
           <main className="p-6 space-y-6">
+            {/* Welcome Section */}
+            <div className="mb-2">
+              <h2 className="text-3xl font-heading font-bold mb-1">
+                Welcome back, {userName}!
+              </h2>
+              <p className="text-muted-foreground">Here's an overview of your activity</p>
+            </div>
+
             {/* Stats Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
+              <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-                  <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
+                  <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <ShoppingBag className="h-5 w-5 text-primary" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalOrders}</div>
+                  <div className="text-3xl font-heading font-bold">{stats.totalOrders}</div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                  <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.completedOrders}</div>
+                  <div className="text-3xl font-heading font-bold text-green-600">{stats.completedOrders}</div>
                 </CardContent>
               </Card>
 
-              <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => navigate("/customer/rewards")}>
+              <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/rewards")}>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Reward Points</CardTitle>
-                  <Award className="h-4 w-4 text-primary" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Reward Points</CardTitle>
+                  <div className="w-10 h-10 bg-gradient-to-br from-gold/20 to-amber-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Award className="h-5 w-5 text-gold" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-primary">{totalPoints}</div>
+                  <div className="text-3xl font-heading font-bold text-gold">{totalPoints}</div>
                 </CardContent>
               </Card>
 
-              <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => navigate("/customer/courses")}>
+              <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/courses")}>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Courses Completed</CardTitle>
-                  <GraduationCap className="h-4 w-4 text-primary" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Courses Completed</CardTitle>
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <GraduationCap className="h-5 w-5 text-purple-500" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-primary">{coursesCompleted}</div>
+                  <div className="text-3xl font-heading font-bold text-purple-600">{coursesCompleted}</div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Recent Orders */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Orders</CardTitle>
+            <Card className="border-primary/10">
+              <CardHeader className="border-b border-border/50">
+                <CardTitle className="font-heading">Recent Orders</CardTitle>
                 <CardDescription>Your latest order activity</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 {recentOrders.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No orders yet</p>
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center">
+                      <ShoppingBag className="w-8 h-8 text-primary" />
+                    </div>
+                    <p className="text-muted-foreground mb-4">No orders yet</p>
+                    <Button onClick={() => navigate("/shops")} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                      Start Shopping
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {recentOrders.map((order) => (
-                      <div key={order.id} className="flex items-center justify-between border-b pb-4 last:border-0">
+                      <div key={order.id} className="flex items-center justify-between p-4 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors">
                         <div>
-                          <p className="font-medium">Order #{order.id.slice(0, 8)}</p>
+                          <p className="font-semibold">Order #{order.id.slice(0, 8)}</p>
                           <p className="text-sm text-muted-foreground">
                             {new Date(order.created_at).toLocaleDateString()}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold">₦{parseFloat(order.total_amount).toLocaleString()}</p>
+                          <p className="font-heading font-bold text-primary">₦{parseFloat(order.total_amount).toLocaleString()}</p>
                           <p className="text-sm text-muted-foreground capitalize">
                             {order.status.replace(/_/g, ' ')}
                           </p>
@@ -177,10 +223,11 @@ const CustomerDashboard = () => {
                 {recentOrders.length > 0 && (
                   <Button 
                     variant="outline" 
-                    className="w-full mt-4"
+                    className="w-full mt-4 hover:bg-primary/10"
                     onClick={() => navigate("/customer/orders")}
                   >
                     View All Orders
+                    <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 )}
               </CardContent>
