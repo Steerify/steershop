@@ -6,9 +6,12 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { CustomerSidebar } from "@/components/CustomerSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShoppingCart } from "lucide-react";
+import { Loader2, ShoppingCart, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { OrderReviewPrompt } from "@/components/OrderReviewPrompt";
+import { AdirePattern } from "@/components/patterns/AdirePattern";
+import logo from "@/assets/steersolo-logo.jpg";
 
 const CustomerOrders = () => {
   const navigate = useNavigate();
@@ -77,6 +80,8 @@ const CustomerOrders = () => {
         return "border-indigo-500/20 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400";
       case "delivered":
         return "border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400";
+      case "completed":
+        return "border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400";
       case "cancelled":
         return "border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400";
       default:
@@ -86,30 +91,45 @@ const CustomerOrders = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-xl overflow-hidden">
+            <img src={logo} alt="Loading" className="w-full h-full object-cover" />
+          </div>
+          <p className="text-muted-foreground">Loading orders...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
+        <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
         <CustomerSidebar />
         
-        <div className="flex-1">
-          <header className="h-16 border-b bg-card flex items-center px-6">
+        <div className="flex-1 relative z-10">
+          <header className="h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center px-6">
+            <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-primary via-accent to-primary" />
             <SidebarTrigger className="mr-4" />
-            <h1 className="text-2xl font-bold">My Orders</h1>
+            <h1 className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              My Orders
+            </h1>
           </header>
 
           <main className="p-6">
             {orders.length === 0 ? (
-              <Card>
+              <Card className="border-primary/10">
                 <CardContent className="py-16 text-center">
-                  <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-xl font-semibold mb-2">No orders yet</h3>
-                  <p className="text-muted-foreground">Start shopping to see your orders here</p>
+                  <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center">
+                    <ShoppingCart className="w-10 h-10 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-heading font-semibold mb-2">No orders yet</h3>
+                  <p className="text-muted-foreground mb-6">Start shopping to see your orders here</p>
+                  <Button onClick={() => navigate("/shops")} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                    Browse Shops
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
@@ -125,11 +145,11 @@ const CustomerOrders = () => {
                       />
                     )}
                     
-                    <Card className="hover:shadow-lg transition-shadow">
-                      <CardHeader>
+                    <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all">
+                      <CardHeader className="border-b border-border/50">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <CardTitle className="flex items-center gap-2 mb-2">
+                            <CardTitle className="flex items-center gap-2 mb-2 font-heading">
                               Order #{order.id.slice(0, 8)}
                               <Badge variant="outline" className={getStatusColor(order.status)}>
                                 {order.status.replace(/_/g, ' ')}
@@ -145,21 +165,21 @@ const CustomerOrders = () => {
                             </CardDescription>
                           </div>
                           <div className="text-right">
-                            <p className="text-2xl font-bold text-primary">
+                            <p className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                               ₦{parseFloat(order.total_amount).toLocaleString()}
                             </p>
                           </div>
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <div className="border rounded-lg divide-y">
+                      <CardContent className="pt-4">
+                        <div className="border border-border/50 rounded-lg divide-y divide-border/50">
                           {order.order_items?.map((item: any) => (
-                            <div key={item.id} className="p-4 flex items-center gap-4">
+                            <div key={item.id} className="p-4 flex items-center gap-4 hover:bg-muted/30 transition-colors">
                               {item.products?.image_url && (
                                 <img
                                   src={item.products.image_url}
                                   alt={item.products.name}
-                                  className="w-16 h-16 object-cover rounded"
+                                  className="w-16 h-16 object-cover rounded-lg shadow-sm"
                                 />
                               )}
                               <div className="flex-1">
@@ -171,7 +191,7 @@ const CustomerOrders = () => {
                                   Quantity: {item.quantity} × ₦{parseFloat(item.price).toLocaleString()}
                                 </p>
                               </div>
-                              <p className="font-semibold">
+                              <p className="font-semibold text-primary">
                                 ₦{(item.quantity * parseFloat(item.price)).toLocaleString()}
                               </p>
                             </div>

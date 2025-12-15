@@ -7,10 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, ArrowLeft, Wrench } from "lucide-react";
+import { Loader2, Mail, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
@@ -185,15 +184,41 @@ const Auth = () => {
     }
   };
 
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: "Google Sign-in Failed",
+        description: error.message || "Please try again or use email login",
+        variant: "destructive"
+      });
+      setIsGoogleLoading(false);
+    }
+  };
+
   const GoogleButton = () => (
-    <div className="relative">
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full opacity-60 cursor-not-allowed border-border/50"
-        disabled
-      >
-        <svg className="mr-2 h-4 w-4 opacity-50" viewBox="0 0 24 24">
+    <Button
+      type="button"
+      variant="outline"
+      className="w-full border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all"
+      onClick={handleGoogleSignIn}
+      disabled={isGoogleLoading}
+    >
+      {isGoogleLoading ? (
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      ) : (
+        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
           <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
             fill="#4285F4"
@@ -211,16 +236,9 @@ const Auth = () => {
             fill="#EA4335"
           />
         </svg>
-        Continue with Google
-      </Button>
-      <Badge 
-        variant="secondary" 
-        className="absolute -top-2 -right-2 bg-gold/20 text-gold border-gold/30 text-[10px] px-2"
-      >
-        <Wrench className="w-3 h-3 mr-1" />
-        Coming Soon
-      </Badge>
-    </div>
+      )}
+      Continue with Google
+    </Button>
   );
 
   const OrDivider = () => (
@@ -259,13 +277,6 @@ const Auth = () => {
         </CardHeader>
         
         <CardContent>
-          {/* Google Maintenance Notice */}
-          <div className="mb-4 p-3 rounded-lg bg-gold/10 border border-gold/20">
-            <p className="text-xs text-gold flex items-center gap-2">
-              <Wrench className="w-4 h-4" />
-              Google Sign-in is under maintenance. Please use email login.
-            </p>
-          </div>
 
           {showForgotPassword ? (
             <div className="space-y-4">
