@@ -8,16 +8,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Upload } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Upload, Clock, Briefcase, CalendarCheck } from "lucide-react";
 import { z } from "zod";
 import { Switch } from "@/components/ui/switch";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 const productSchema = z.object({
-  name: z.string().trim().min(2, "Product name must be at least 2 characters").max(200, "Product name must be less than 200 characters"),
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(200, "Name must be less than 200 characters"),
   description: z.string().trim().max(1000, "Description must be less than 1000 characters").optional(),
   price: z.number().min(0.01, "Price must be greater than 0").max(10000000, "Price is too high"),
-  stock_quantity: z.number().int().min(0, "Stock cannot be negative"),
+  stock_quantity: z.number().int().min(0, "Stock/slots cannot be negative"),
 });
 
 const Products = () => {
@@ -30,12 +32,16 @@ const Products = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [activeTab, setActiveTab] = useState<"all" | "products" | "services">("all");
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
     stock_quantity: "",
     is_available: true,
+    type: "product" as "product" | "service",
+    duration_minutes: "",
+    booking_required: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -90,6 +96,9 @@ const Products = () => {
       price: "",
       stock_quantity: "",
       is_available: true,
+      type: "product",
+      duration_minutes: "",
+      booking_required: false,
     });
     setImageFile(null);
     setEditingProduct(null);
@@ -105,6 +114,9 @@ const Products = () => {
         price: product.price.toString(),
         stock_quantity: product.stock_quantity.toString(),
         is_available: product.is_available,
+        type: product.type || "product",
+        duration_minutes: product.duration_minutes?.toString() || "",
+        booking_required: product.booking_required || false,
       });
     } else {
       resetForm();
@@ -167,6 +179,9 @@ const Products = () => {
         is_available: formData.is_available,
         image_url: imageUrl,
         shop_id: shop.id,
+        type: formData.type,
+        duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : null,
+        booking_required: formData.booking_required,
       };
 
       if (editingProduct) {
@@ -186,14 +201,16 @@ const Products = () => {
 
       toast({
         title: "Success",
-        description: editingProduct ? "Product updated" : "Product created",
+        description: editingProduct 
+          ? `${formData.type === 'service' ? 'Service' : 'Product'} updated` 
+          : `${formData.type === 'service' ? 'Service' : 'Product'} created`,
       });
 
       setIsDialogOpen(false);
       resetForm();
       loadShopAndProducts();
     } catch (error: any) {
-      console.error("Error saving product:", error);
+      console.error("Error saving:", error);
       toast({
         title: "Error",
         description: error.message,
@@ -204,8 +221,9 @@ const Products = () => {
     }
   };
 
-  const handleDelete = async (productId: string) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
+  const handleDelete = async (productId: string, type: string) => {
+    const itemType = type === 'service' ? 'service' : 'product';
+    if (!confirm(`Are you sure you want to delete this ${itemType}?`)) return;
 
     try {
       const { error } = await supabase
@@ -217,7 +235,7 @@ const Products = () => {
 
       toast({
         title: "Success",
-        description: "Product deleted",
+        description: `${itemType.charAt(0).toUpperCase() + itemType.slice(1)} deleted`,
       });
 
       loadShopAndProducts();
@@ -229,6 +247,16 @@ const Products = () => {
       });
     }
   };
+
+  const filteredProducts = products.filter(product => {
+    if (activeTab === "all") return true;
+    if (activeTab === "products") return product.type !== "service";
+    if (activeTab === "services") return product.type === "service";
+    return true;
+  });
+
+  const productsCount = products.filter(p => p.type !== "service").length;
+  const servicesCount = products.filter(p => p.type === "service").length;
 
   if (isLoading) {
     return (
@@ -253,33 +281,63 @@ const Products = () => {
         <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-4xl font-heading font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Products
+              Products & Services
             </h1>
-            <p className="text-muted-foreground">Manage your product catalog</p>
+            <p className="text-muted-foreground">Manage your catalog - sell products or offer services</p>
           </div>
           <Button onClick={() => handleOpenDialog()} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
             <Plus className="w-4 h-4 mr-2" />
-            Add Product
+            Add New
           </Button>
         </div>
 
-        {products.length === 0 ? (
+        {/* Tabs for filtering */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mb-6">
+          <TabsList className="bg-card border border-primary/10">
+            <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              All ({products.length})
+            </TabsTrigger>
+            <TabsTrigger value="products" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Package className="w-4 h-4 mr-2" />
+              Products ({productsCount})
+            </TabsTrigger>
+            <TabsTrigger value="services" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+              <Briefcase className="w-4 h-4 mr-2" />
+              Services ({servicesCount})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {filteredProducts.length === 0 ? (
           <Card className="border-primary/10">
             <CardContent className="py-16 text-center">
               <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl flex items-center justify-center">
-                <Package className="w-10 h-10 text-primary" />
+                {activeTab === "services" ? (
+                  <Briefcase className="w-10 h-10 text-accent" />
+                ) : (
+                  <Package className="w-10 h-10 text-primary" />
+                )}
               </div>
-              <h3 className="text-xl font-heading font-semibold mb-2">No products yet</h3>
-              <p className="text-muted-foreground mb-6">Start by adding your first product</p>
+              <h3 className="text-xl font-heading font-semibold mb-2">
+                {activeTab === "services" ? "No services yet" : activeTab === "products" ? "No products yet" : "No items yet"}
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                {activeTab === "services" 
+                  ? "Start by adding your first service" 
+                  : activeTab === "products" 
+                  ? "Start by adding your first product"
+                  : "Start by adding your first product or service"
+                }
+              </p>
               <Button onClick={() => handleOpenDialog()} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
                 <Plus className="w-4 h-4 mr-2" />
-                Add Product
+                Add {activeTab === "services" ? "Service" : activeTab === "products" ? "Product" : "Item"}
               </Button>
             </CardContent>
           </Card>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <Card key={product.id} className="overflow-hidden group hover:shadow-xl hover:shadow-primary/10 transition-all border-primary/10 hover:border-primary/30">
                 {product.image_url ? (
                   <div className="relative h-48 overflow-hidden">
@@ -293,10 +351,33 @@ const Products = () => {
                         <span className="text-destructive font-semibold">Unavailable</span>
                       </div>
                     )}
+                    {/* Type badge */}
+                    <div className="absolute top-2 left-2">
+                      <Badge variant={product.type === "service" ? "secondary" : "default"} className={product.type === "service" ? "bg-accent text-accent-foreground" : ""}>
+                        {product.type === "service" ? (
+                          <><Briefcase className="w-3 h-3 mr-1" /> Service</>
+                        ) : (
+                          <><Package className="w-3 h-3 mr-1" /> Product</>
+                        )}
+                      </Badge>
+                    </div>
                   </div>
                 ) : (
-                  <div className="h-48 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-                    <Package className="w-12 h-12 text-muted-foreground" />
+                  <div className="h-48 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center relative">
+                    {product.type === "service" ? (
+                      <Briefcase className="w-12 h-12 text-accent" />
+                    ) : (
+                      <Package className="w-12 h-12 text-muted-foreground" />
+                    )}
+                    <div className="absolute top-2 left-2">
+                      <Badge variant={product.type === "service" ? "secondary" : "default"} className={product.type === "service" ? "bg-accent text-accent-foreground" : ""}>
+                        {product.type === "service" ? (
+                          <><Briefcase className="w-3 h-3 mr-1" /> Service</>
+                        ) : (
+                          <><Package className="w-3 h-3 mr-1" /> Product</>
+                        )}
+                      </Badge>
+                    </div>
                   </div>
                 )}
                 <CardHeader>
@@ -318,12 +399,41 @@ const Products = () => {
                       <span className="text-muted-foreground">Price:</span>
                       <span className="font-semibold text-primary">₦{product.price.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Stock:</span>
-                      <span className={product.stock_quantity === 0 ? "text-destructive font-semibold" : "text-foreground"}>
-                        {product.stock_quantity} units
-                      </span>
-                    </div>
+                    {product.type === "service" ? (
+                      <>
+                        {product.duration_minutes && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Duration:</span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              {product.duration_minutes} mins
+                            </span>
+                          </div>
+                        )}
+                        {product.booking_required && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Booking:</span>
+                            <span className="flex items-center gap-1 text-accent">
+                              <CalendarCheck className="w-4 h-4" />
+                              Required
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Available Slots:</span>
+                          <span className={product.stock_quantity === 0 ? "text-destructive font-semibold" : "text-foreground"}>
+                            {product.stock_quantity}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Stock:</span>
+                        <span className={product.stock_quantity === 0 ? "text-destructive font-semibold" : "text-foreground"}>
+                          {product.stock_quantity} units
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -336,7 +446,7 @@ const Products = () => {
                     </Button>
                     <Button
                       variant="destructive"
-                      onClick={() => handleDelete(product.id)}
+                      onClick={() => handleDelete(product.id, product.type)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -351,20 +461,55 @@ const Products = () => {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-primary/20">
             <DialogHeader>
               <DialogTitle className="font-heading">
-                {editingProduct ? "Edit Product" : "Add Product"}
+                {editingProduct ? `Edit ${formData.type === 'service' ? 'Service' : 'Product'}` : 'Add New Item'}
               </DialogTitle>
               <DialogDescription>
-                {editingProduct ? "Update product details" : "Create a new product"}
+                {editingProduct ? "Update details" : "Create a new product or service"}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Type Selection */}
+              {!editingProduct && (
+                <div className="space-y-2">
+                  <Label>Type</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, type: "product" })}
+                      className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
+                        formData.type === "product" 
+                          ? "border-primary bg-primary/10 text-primary" 
+                          : "border-muted hover:border-primary/30"
+                      }`}
+                    >
+                      <Package className="w-8 h-8" />
+                      <span className="font-medium">Product</span>
+                      <span className="text-xs text-muted-foreground">Physical or digital items</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, type: "service" })}
+                      className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
+                        formData.type === "service" 
+                          ? "border-accent bg-accent/10 text-accent" 
+                          : "border-muted hover:border-accent/30"
+                      }`}
+                    >
+                      <Briefcase className="w-8 h-8" />
+                      <span className="font-medium">Service</span>
+                      <span className="text-xs text-muted-foreground">Time-based offerings</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
-                <Label htmlFor="name">Product Name *</Label>
+                <Label htmlFor="name">{formData.type === 'service' ? 'Service' : 'Product'} Name *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Amazing Product"
+                  placeholder={formData.type === 'service' ? "Hair Styling Session" : "Amazing Product"}
                   className={`border-primary/20 focus:border-primary ${errors.name ? "border-destructive" : ""}`}
                 />
                 {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
@@ -376,7 +521,7 @@ const Products = () => {
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Describe your product..."
+                  placeholder={formData.type === 'service' ? "Describe your service..." : "Describe your product..."}
                   rows={4}
                   className={`border-primary/20 focus:border-primary ${errors.description ? "border-destructive" : ""}`}
                 />
@@ -399,21 +544,54 @@ const Products = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="stock">Stock Quantity *</Label>
+                  <Label htmlFor="stock">
+                    {formData.type === 'service' ? 'Available Slots' : 'Stock Quantity'} *
+                  </Label>
                   <Input
                     id="stock"
                     type="number"
                     value={formData.stock_quantity}
                     onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
-                    placeholder="100"
+                    placeholder={formData.type === 'service' ? "10" : "100"}
                     className={`border-primary/20 focus:border-primary ${errors.stock_quantity ? "border-destructive" : ""}`}
                   />
                   {errors.stock_quantity && <p className="text-sm text-destructive">{errors.stock_quantity}</p>}
                 </div>
               </div>
 
+              {/* Service-specific fields */}
+              {formData.type === 'service' && (
+                <div className="grid md:grid-cols-2 gap-4 p-4 bg-accent/5 rounded-lg border border-accent/20">
+                  <div className="space-y-2">
+                    <Label htmlFor="duration" className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-accent" />
+                      Duration (minutes)
+                    </Label>
+                    <Input
+                      id="duration"
+                      type="number"
+                      value={formData.duration_minutes}
+                      onChange={(e) => setFormData({ ...formData, duration_minutes: e.target.value })}
+                      placeholder="60"
+                      className="border-accent/20 focus:border-accent"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-background rounded-lg border border-accent/10">
+                    <Label htmlFor="booking" className="cursor-pointer flex items-center gap-2">
+                      <CalendarCheck className="w-4 h-4 text-accent" />
+                      Booking Required
+                    </Label>
+                    <Switch
+                      id="booking"
+                      checked={formData.booking_required}
+                      onCheckedChange={(checked) => setFormData({ ...formData, booking_required: checked })}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
-                <Label htmlFor="image">Product Image</Label>
+                <Label htmlFor="image">Image</Label>
                 <div className="border-2 border-dashed border-primary/20 rounded-lg p-6 text-center hover:border-primary/40 transition-colors cursor-pointer">
                   <input
                     id="image"
@@ -443,7 +621,7 @@ const Products = () => {
 
               <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-primary/10">
                 <Label htmlFor="available" className="cursor-pointer">
-                  Product Available for Sale
+                  {formData.type === 'service' ? 'Service' : 'Product'} Available
                 </Label>
                 <Switch
                   id="available"
@@ -460,10 +638,10 @@ const Products = () => {
                       Saving...
                     </>
                   ) : (
-                    editingProduct ? "Update Product" : "Create Product"
+                    editingProduct ? "Update" : "Create"
                   )}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="border-primary/30">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
               </div>

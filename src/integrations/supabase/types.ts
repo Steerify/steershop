@@ -165,48 +165,69 @@ export type Database = {
       }
       orders: {
         Row: {
+          cancelled_at: string | null
+          cancelled_by: string | null
+          completed_at: string | null
+          confirmed_at: string | null
           created_at: string
           customer_email: string | null
           customer_id: string | null
           customer_name: string | null
           customer_phone: string | null
+          delivered_at: string | null
           delivery_address: string | null
           id: string
+          out_for_delivery_at: string | null
           paid_at: string | null
           payment_reference: string | null
           payment_status: string | null
+          processing_at: string | null
           shop_id: string
           status: string
           total_amount: number
           updated_at: string
         }
         Insert: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          completed_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           customer_email?: string | null
           customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          delivered_at?: string | null
           delivery_address?: string | null
           id?: string
+          out_for_delivery_at?: string | null
           paid_at?: string | null
           payment_reference?: string | null
           payment_status?: string | null
+          processing_at?: string | null
           shop_id: string
           status?: string
           total_amount: number
           updated_at?: string
         }
         Update: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          completed_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           customer_email?: string | null
           customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          delivered_at?: string | null
           delivery_address?: string | null
           id?: string
+          out_for_delivery_at?: string | null
           paid_at?: string | null
           payment_reference?: string | null
           payment_status?: string | null
+          processing_at?: string | null
           shop_id?: string
           status?: string
           total_amount?: number
@@ -402,8 +423,10 @@ export type Database = {
       products: {
         Row: {
           average_rating: number | null
+          booking_required: boolean | null
           created_at: string
           description: string | null
+          duration_minutes: number | null
           id: string
           image_url: string | null
           is_available: boolean
@@ -412,12 +435,15 @@ export type Database = {
           shop_id: string
           stock_quantity: number
           total_reviews: number | null
+          type: string | null
           updated_at: string
         }
         Insert: {
           average_rating?: number | null
+          booking_required?: boolean | null
           created_at?: string
           description?: string | null
+          duration_minutes?: number | null
           id?: string
           image_url?: string | null
           is_available?: boolean
@@ -426,12 +452,15 @@ export type Database = {
           shop_id: string
           stock_quantity?: number
           total_reviews?: number | null
+          type?: string | null
           updated_at?: string
         }
         Update: {
           average_rating?: number | null
+          booking_required?: boolean | null
           created_at?: string
           description?: string | null
+          duration_minutes?: number | null
           id?: string
           image_url?: string | null
           is_available?: boolean
@@ -440,6 +469,7 @@ export type Database = {
           shop_id?: string
           stock_quantity?: number
           total_reviews?: number | null
+          type?: string | null
           updated_at?: string
         }
         Relationships: [
