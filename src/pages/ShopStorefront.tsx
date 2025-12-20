@@ -4,15 +4,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X, Briefcase, Clock, Calendar } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireAccent } from "@/components/patterns/AdirePattern";
 import CheckoutDialog from "@/components/CheckoutDialog";
+import { BookingDialog } from "@/components/BookingDialog";
 import { ProductRating } from "@/components/ProductRating";
 import { ProductReviewForm } from "@/components/ProductReviewForm";
+import Joyride, { CallBackProps, STATUS } from "react-joyride";
+import { useTour } from "@/hooks/useTour";
+import { TourTooltip } from "@/components/tours/TourTooltip";
+import { storefrontTourSteps } from "@/components/tours/tourSteps";
+import { TourButton } from "@/components/tours/TourButton";
 
 interface Shop {
   id: string;
@@ -38,6 +45,9 @@ interface Product {
   image_url: string | null;
   average_rating: number;
   total_reviews: number;
+  type: 'product' | 'service';
+  duration_minutes: number | null;
+  booking_required: boolean;
 }
 
 interface CartItem {
@@ -56,25 +66,53 @@ const ShopStorefront = () => {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<'all' | 'product' | 'service'>('all');
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<Product | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Tour state
+  const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('storefront');
+
+  const handleTourCallback = (data: CallBackProps) => {
+    const { status } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
+      endTour(status === STATUS.FINISHED);
+    }
+  };
 
   useEffect(() => {
     loadShopData();
   }, [slug]);
 
   useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredProducts(products);
-    } else {
-      const filtered = products.filter(product =>
+    let filtered = products;
+    
+    // Filter by type
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(p => p.type === typeFilter);
+    }
+    
+    // Filter by search
+    if (searchQuery.trim() !== "") {
+      filtered = filtered.filter(product =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.price.toString().includes(searchQuery)
       );
-      setFilteredProducts(filtered);
     }
-  }, [searchQuery, products]);
+    
+    setFilteredProducts(filtered);
+  }, [searchQuery, products, typeFilter]);
+
+  const handleBookService = (service: Product) => {
+    setSelectedService(service);
+    setIsBookingOpen(true);
+  };
+
+  const productCount = products.filter(p => p.type === 'product').length;
+  const serviceCount = products.filter(p => p.type === 'service').length;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -125,7 +163,11 @@ const ShopStorefront = () => {
         .order("created_at", { ascending: false });
 
       if (productsError) throw productsError;
-      const productsList = productsData || [];
+      const productsList = (productsData || []).map(p => ({
+        ...p,
+        type: (p.type || 'product') as 'product' | 'service',
+        booking_required: p.booking_required ?? false
+      }));
       setProducts(productsList);
       setFilteredProducts(productsList);
     } catch (error: any) {
@@ -314,9 +356,18 @@ const ShopStorefront = () => {
                         </span>
                       </div>
                     )}
-                    <Badge variant="outline" className="bg-accent/5 border-accent/20 text-accent">
-                      {products.length} Products
-                    </Badge>
+                    {productCount > 0 && (
+                      <Badge variant="outline" className="bg-accent/5 border-accent/20 text-accent">
+                        <Package className="w-3 h-3 mr-1" />
+                        {productCount} Products
+                      </Badge>
+                    )}
+                    {serviceCount > 0 && (
+                      <Badge variant="outline" className="bg-purple-500/10 border-purple-500/20 text-purple-600">
+                        <Briefcase className="w-3 h-3 mr-1" />
+                        {serviceCount} Services
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
@@ -580,6 +631,38 @@ const ShopStorefront = () => {
           totalAmount={getTotalAmount()}
         />
       )}
+
+      {/* Booking Dialog */}
+      {selectedService && shop && (
+        <BookingDialog
+          isOpen={isBookingOpen}
+          onClose={() => {
+            setIsBookingOpen(false);
+            setSelectedService(null);
+          }}
+          service={selectedService}
+          shopId={shop.id}
+          shopName={shop.shop_name}
+          whatsappNumber={shop.whatsapp_number}
+        />
+      )}
+
+      {/* Guided Tour */}
+      <Joyride
+        steps={storefrontTourSteps}
+        run={isRunning}
+        continuous
+        showSkipButton
+        showProgress
+        callback={handleTourCallback}
+        tooltipComponent={TourTooltip}
+        styles={{
+          options: {
+            zIndex: 10000,
+            arrowColor: 'hsl(var(--card))',
+          }
+        }}
+      />
     </div>
   );
 };
