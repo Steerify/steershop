@@ -6,9 +6,14 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { CustomerSidebar } from "@/components/CustomerSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ShoppingBag, Package, Clock, CheckCircle2, Award, GraduationCap, ArrowRight } from "lucide-react";
+import { ShoppingBag, Package, Clock, CheckCircle2, Award, GraduationCap, ArrowRight } from "lucide-react";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
+import Joyride, { CallBackProps, STATUS } from "react-joyride";
+import { useTour } from "@/hooks/useTour";
+import { TourTooltip } from "@/components/tours/TourTooltip";
+import { customerDashboardTourSteps } from "@/components/tours/tourSteps";
+import { TourButton } from "@/components/tours/TourButton";
 
 const CustomerDashboard = () => {
   const navigate = useNavigate();
@@ -24,6 +29,16 @@ const CustomerDashboard = () => {
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [totalPoints, setTotalPoints] = useState(0);
   const [coursesCompleted, setCoursesCompleted] = useState(0);
+
+  // Tour state
+  const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('customer-dashboard');
+
+  const handleTourCallback = (data: CallBackProps) => {
+    const { status } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
+      endTour(status === STATUS.FINISHED);
+    }
+  };
 
   useEffect(() => {
     loadDashboardData();
@@ -113,12 +128,19 @@ const CustomerDashboard = () => {
         <CustomerSidebar />
         
         <div className="flex-1 relative z-10">
-          <header className="h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center px-6">
+          <header className="h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center justify-between px-6">
             <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-primary via-accent to-primary" />
-            <SidebarTrigger className="mr-4" />
-            <h1 className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Dashboard
-            </h1>
+            <div className="flex items-center">
+              <SidebarTrigger className="mr-4" />
+              <h1 className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Dashboard
+              </h1>
+            </div>
+            <TourButton 
+              onStartTour={startTour} 
+              hasSeenTour={hasSeenTour} 
+              onResetTour={resetTour}
+            />
           </header>
 
           <main className="p-6 space-y-6">
@@ -131,7 +153,7 @@ const CustomerDashboard = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" data-tour="stats-grid">
               <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
@@ -156,7 +178,7 @@ const CustomerDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/rewards")}>
+              <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/rewards")} data-tour="reward-points">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Reward Points</CardTitle>
                   <div className="w-10 h-10 bg-gradient-to-br from-gold/20 to-amber-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -168,7 +190,7 @@ const CustomerDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/courses")}>
+              <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/courses")} data-tour="courses-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Courses Completed</CardTitle>
                   <div className="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -182,7 +204,7 @@ const CustomerDashboard = () => {
             </div>
 
             {/* Recent Orders */}
-            <Card className="border-primary/10">
+            <Card className="border-primary/10" data-tour="recent-orders">
               <CardHeader className="border-b border-border/50">
                 <CardTitle className="font-heading">Recent Orders</CardTitle>
                 <CardDescription>Your latest order activity</CardDescription>
@@ -235,6 +257,23 @@ const CustomerDashboard = () => {
           </main>
         </div>
       </div>
+
+      {/* Guided Tour */}
+      <Joyride
+        steps={customerDashboardTourSteps}
+        run={isRunning}
+        continuous
+        showSkipButton
+        showProgress
+        callback={handleTourCallback}
+        tooltipComponent={TourTooltip}
+        styles={{
+          options: {
+            zIndex: 10000,
+            arrowColor: 'hsl(var(--card))',
+          }
+        }}
+      />
     </SidebarProvider>
   );
 };

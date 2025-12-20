@@ -14,6 +14,11 @@ import { Switch } from "@/components/ui/switch";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import Joyride, { CallBackProps, STATUS } from "react-joyride";
+import { useTour } from "@/hooks/useTour";
+import { TourTooltip } from "@/components/tours/TourTooltip";
+import { productsTourSteps } from "@/components/tours/tourSteps";
+import { TourButton } from "@/components/tours/TourButton";
 
 const productSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters").max(200, "Name must be less than 200 characters"),
@@ -44,6 +49,16 @@ const Products = () => {
     booking_required: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Tour state
+  const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('products');
+
+  const handleTourCallback = (data: CallBackProps) => {
+    const { status } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
+      endTour(status === STATUS.FINISHED);
+    }
+  };
 
   useEffect(() => {
     loadShopAndProducts();
@@ -271,11 +286,16 @@ const Products = () => {
       <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
       
       <div className="container mx-auto px-4 py-8 relative z-10">
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
+          <TourButton 
+            onStartTour={startTour} 
+            hasSeenTour={hasSeenTour} 
+            onResetTour={resetTour}
+          />
         </div>
 
         <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -285,14 +305,14 @@ const Products = () => {
             </h1>
             <p className="text-muted-foreground">Manage your catalog - sell products or offer services</p>
           </div>
-          <Button onClick={() => handleOpenDialog()} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+          <Button onClick={() => handleOpenDialog()} className="bg-gradient-to-r from-primary to-accent hover:opacity-90" data-tour="add-item-btn">
             <Plus className="w-4 h-4 mr-2" />
             Add New
           </Button>
         </div>
 
         {/* Tabs for filtering */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mb-6">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mb-6" data-tour="type-filter">
           <TabsList className="bg-card border border-primary/10">
             <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               All ({products.length})
@@ -337,8 +357,8 @@ const Products = () => {
           </Card>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProducts.map((product) => (
-              <Card key={product.id} className="overflow-hidden group hover:shadow-xl hover:shadow-primary/10 transition-all border-primary/10 hover:border-primary/30">
+            {filteredProducts.map((product, index) => (
+              <Card key={product.id} className="overflow-hidden group hover:shadow-xl hover:shadow-primary/10 transition-all border-primary/10 hover:border-primary/30" data-tour={index === 0 ? "product-card" : undefined}>
                 {product.image_url ? (
                   <div className="relative h-48 overflow-hidden">
                     <img
@@ -445,7 +465,8 @@ const Products = () => {
                       Edit
                     </Button>
                     <Button
-                      variant="destructive"
+                      variant="outline"
+                      className="border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => handleDelete(product.id, product.type)}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -456,199 +477,211 @@ const Products = () => {
             ))}
           </div>
         )}
-
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-primary/20">
-            <DialogHeader>
-              <DialogTitle className="font-heading">
-                {editingProduct ? `Edit ${formData.type === 'service' ? 'Service' : 'Product'}` : 'Add New Item'}
-              </DialogTitle>
-              <DialogDescription>
-                {editingProduct ? "Update details" : "Create a new product or service"}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Type Selection */}
-              {!editingProduct && (
-                <div className="space-y-2">
-                  <Label>Type</Label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, type: "product" })}
-                      className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
-                        formData.type === "product" 
-                          ? "border-primary bg-primary/10 text-primary" 
-                          : "border-muted hover:border-primary/30"
-                      }`}
-                    >
-                      <Package className="w-8 h-8" />
-                      <span className="font-medium">Product</span>
-                      <span className="text-xs text-muted-foreground">Physical or digital items</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, type: "service" })}
-                      className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
-                        formData.type === "service" 
-                          ? "border-accent bg-accent/10 text-accent" 
-                          : "border-muted hover:border-accent/30"
-                      }`}
-                    >
-                      <Briefcase className="w-8 h-8" />
-                      <span className="font-medium">Service</span>
-                      <span className="text-xs text-muted-foreground">Time-based offerings</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="name">{formData.type === 'service' ? 'Service' : 'Product'} Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder={formData.type === 'service' ? "Hair Styling Session" : "Amazing Product"}
-                  className={`border-primary/20 focus:border-primary ${errors.name ? "border-destructive" : ""}`}
-                />
-                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder={formData.type === 'service' ? "Describe your service..." : "Describe your product..."}
-                  rows={4}
-                  className={`border-primary/20 focus:border-primary ${errors.description ? "border-destructive" : ""}`}
-                />
-                {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price">Price (₦) *</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    placeholder="1000"
-                    className={`border-primary/20 focus:border-primary ${errors.price ? "border-destructive" : ""}`}
-                  />
-                  {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="stock">
-                    {formData.type === 'service' ? 'Available Slots' : 'Stock Quantity'} *
-                  </Label>
-                  <Input
-                    id="stock"
-                    type="number"
-                    value={formData.stock_quantity}
-                    onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
-                    placeholder={formData.type === 'service' ? "10" : "100"}
-                    className={`border-primary/20 focus:border-primary ${errors.stock_quantity ? "border-destructive" : ""}`}
-                  />
-                  {errors.stock_quantity && <p className="text-sm text-destructive">{errors.stock_quantity}</p>}
-                </div>
-              </div>
-
-              {/* Service-specific fields */}
-              {formData.type === 'service' && (
-                <div className="grid md:grid-cols-2 gap-4 p-4 bg-accent/5 rounded-lg border border-accent/20">
-                  <div className="space-y-2">
-                    <Label htmlFor="duration" className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-accent" />
-                      Duration (minutes)
-                    </Label>
-                    <Input
-                      id="duration"
-                      type="number"
-                      value={formData.duration_minutes}
-                      onChange={(e) => setFormData({ ...formData, duration_minutes: e.target.value })}
-                      placeholder="60"
-                      className="border-accent/20 focus:border-accent"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-background rounded-lg border border-accent/10">
-                    <Label htmlFor="booking" className="cursor-pointer flex items-center gap-2">
-                      <CalendarCheck className="w-4 h-4 text-accent" />
-                      Booking Required
-                    </Label>
-                    <Switch
-                      id="booking"
-                      checked={formData.booking_required}
-                      onCheckedChange={(checked) => setFormData({ ...formData, booking_required: checked })}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="image">Image</Label>
-                <div className="border-2 border-dashed border-primary/20 rounded-lg p-6 text-center hover:border-primary/40 transition-colors cursor-pointer">
-                  <input
-                    id="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                    className="hidden"
-                  />
-                  <label htmlFor="image" className="cursor-pointer">
-                    {imageFile || editingProduct?.image_url ? (
-                      <img
-                        src={imageFile ? URL.createObjectURL(imageFile) : editingProduct.image_url}
-                        alt="Preview"
-                        className="w-full max-h-64 object-contain rounded-lg mb-2"
-                      />
-                    ) : (
-                      <div className="py-8">
-                        <Upload className="w-12 h-12 mx-auto mb-2 text-muted-foreground" />
-                      </div>
-                    )}
-                    <p className="text-sm text-muted-foreground">
-                      {imageFile ? imageFile.name : "Click to upload image"}
-                    </p>
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-primary/10">
-                <Label htmlFor="available" className="cursor-pointer">
-                  {formData.type === 'service' ? 'Service' : 'Product'} Available
-                </Label>
-                <Switch
-                  id="available"
-                  checked={formData.is_available}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_available: checked })}
-                />
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <Button type="submit" disabled={isSaving} className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90">
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    editingProduct ? "Update" : "Create"
-                  )}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
       </div>
+
+      {/* Add/Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading">
+              {editingProduct ? `Edit ${formData.type === 'service' ? 'Service' : 'Product'}` : "Add New Item"}
+            </DialogTitle>
+            <DialogDescription>
+              {editingProduct ? "Update the details below" : "Fill in the details to add a new product or service"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Type Toggle */}
+            <div className="flex items-center justify-center gap-4 p-4 bg-muted/50 rounded-lg" data-tour="item-type-toggle">
+              <Label className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg transition-all ${formData.type === 'product' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
+                <input 
+                  type="radio" 
+                  name="type" 
+                  value="product" 
+                  checked={formData.type === 'product'}
+                  onChange={() => setFormData({ ...formData, type: 'product', booking_required: false })}
+                  className="sr-only"
+                />
+                <Package className="w-4 h-4" />
+                Product
+              </Label>
+              <Label className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg transition-all ${formData.type === 'service' ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'}`}>
+                <input 
+                  type="radio" 
+                  name="type" 
+                  value="service" 
+                  checked={formData.type === 'service'}
+                  onChange={() => setFormData({ ...formData, type: 'service' })}
+                  className="sr-only"
+                />
+                <Briefcase className="w-4 h-4" />
+                Service
+              </Label>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="name">{formData.type === 'service' ? 'Service' : 'Product'} Name *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder={formData.type === 'service' ? "e.g., Hair Braiding" : "e.g., Handmade Bag"}
+                className={errors.name ? "border-destructive" : ""}
+              />
+              {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Describe your item..."
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price">Price (₦) *</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="0.00"
+                  className={errors.price ? "border-destructive" : ""}
+                />
+                {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="stock_quantity">
+                  {formData.type === 'service' ? 'Available Slots' : 'Stock Quantity'} *
+                </Label>
+                <Input
+                  id="stock_quantity"
+                  type="number"
+                  value={formData.stock_quantity}
+                  onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
+                  placeholder="0"
+                  className={errors.stock_quantity ? "border-destructive" : ""}
+                />
+                {errors.stock_quantity && <p className="text-sm text-destructive">{errors.stock_quantity}</p>}
+              </div>
+            </div>
+
+            {/* Service-specific fields */}
+            {formData.type === 'service' && (
+              <div className="space-y-4 p-4 bg-accent/5 rounded-lg border border-accent/20">
+                <div className="space-y-2">
+                  <Label htmlFor="duration_minutes">Duration (minutes)</Label>
+                  <Input
+                    id="duration_minutes"
+                    type="number"
+                    value={formData.duration_minutes}
+                    onChange={(e) => setFormData({ ...formData, duration_minutes: e.target.value })}
+                    placeholder="e.g., 60"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="booking_required">Requires Booking</Label>
+                    <p className="text-sm text-muted-foreground">Customers must book an appointment</p>
+                  </div>
+                  <Switch
+                    id="booking_required"
+                    checked={formData.booking_required}
+                    onCheckedChange={(checked) => setFormData({ ...formData, booking_required: checked })}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="image">Image</Label>
+              <div className="border-2 border-dashed border-primary/20 rounded-lg p-4 text-center hover:border-primary/50 transition-colors cursor-pointer">
+                <input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  className="hidden"
+                />
+                <label htmlFor="image" className="cursor-pointer">
+                  {imageFile || editingProduct?.image_url ? (
+                    <img
+                      src={imageFile ? URL.createObjectURL(imageFile) : editingProduct.image_url}
+                      alt="Preview"
+                      className="w-32 h-32 object-cover mx-auto rounded-lg mb-2"
+                    />
+                  ) : (
+                    <Upload className="w-10 h-10 mx-auto mb-2 text-muted-foreground" />
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    {imageFile ? imageFile.name : "Click to upload image"}
+                  </p>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="is_available">Available for purchase</Label>
+              <Switch
+                id="is_available"
+                checked={formData.is_available}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_available: checked })}
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  resetForm();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  editingProduct ? "Update" : "Create"
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Guided Tour */}
+      <Joyride
+        steps={productsTourSteps}
+        run={isRunning}
+        continuous
+        showSkipButton
+        showProgress
+        callback={handleTourCallback}
+        tooltipComponent={TourTooltip}
+        styles={{
+          options: {
+            zIndex: 10000,
+            arrowColor: 'hsl(var(--card))',
+          }
+        }}
+      />
     </div>
   );
 };

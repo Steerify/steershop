@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Store, Package, ShoppingCart, LogOut, Clock, CheckCircle, AlertCircle, ArrowRight, TrendingUp, DollarSign } from "lucide-react";
+import { Store, Package, ShoppingCart, LogOut, Clock, CheckCircle, AlertCircle, ArrowRight, TrendingUp, DollarSign, CalendarCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths } from "date-fns";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
@@ -12,6 +12,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
+import Joyride, { CallBackProps, STATUS } from "react-joyride";
+import { useTour } from "@/hooks/useTour";
+import { TourTooltip } from "@/components/tours/TourTooltip";
+import { dashboardTourSteps } from "@/components/tours/tourSteps";
+import { TourButton } from "@/components/tours/TourButton";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -25,6 +30,16 @@ const Dashboard = () => {
   const [chartData, setChartData] = useState<any[]>([]);
   const [activeOffer, setActiveOffer] = useState<any>(null);
   const [subscriptionPrice, setSubscriptionPrice] = useState(1000);
+
+  // Tour state
+  const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
+
+  const handleTourCallback = (data: CallBackProps) => {
+    const { status } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
+      endTour(status === STATUS.FINISHED);
+    }
+  };
 
   useEffect(() => {
     checkAuth();
@@ -251,10 +266,17 @@ const Dashboard = () => {
                 SteerSolo
               </span>
             </div>
-            <Button variant="ghost" onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive">
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
+            <div className="flex items-center gap-3">
+              <TourButton 
+                onStartTour={startTour} 
+                hasSeenTour={hasSeenTour} 
+                onResetTour={resetTour}
+              />
+              <Button variant="ghost" onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive">
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </nav>
@@ -270,7 +292,7 @@ const Dashboard = () => {
               <p className="text-muted-foreground">Welcome back, {profile?.full_name}!</p>
             </div>
 
-            <div>
+            <div data-tour="subscription-status">
               {subscriptionStatus === 'trial' && daysRemaining > 0 && (
                 <Badge variant="outline" className="text-lg py-2 px-4 border-gold text-gold bg-gold/10">
                   <Clock className="w-4 h-4 mr-2" />
@@ -365,12 +387,12 @@ const Dashboard = () => {
         )}
 
         {/* Analytics Section */}
-        <div className="mb-8">
+        <div className="mb-8" data-tour="sales-analytics">
           <h2 className="text-2xl font-heading font-bold mb-4">Sales Analytics</h2>
           
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             {/* Total Revenue Card */}
-            <Card className="group hover:shadow-lg hover:shadow-primary/10 transition-all border-primary/10">
+            <Card className="group hover:shadow-lg hover:shadow-primary/10 transition-all border-primary/10" data-tour="revenue-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Revenue
@@ -390,7 +412,7 @@ const Dashboard = () => {
             </Card>
 
             {/* Total Sales Card */}
-            <Card className="group hover:shadow-lg hover:shadow-accent/10 transition-all border-accent/10">
+            <Card className="group hover:shadow-lg hover:shadow-accent/10 transition-all border-accent/10" data-tour="sales-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Sales
@@ -409,7 +431,7 @@ const Dashboard = () => {
           </div>
 
           {/* Revenue Chart */}
-          <Card className="border-primary/10">
+          <Card className="border-primary/10" data-tour="revenue-chart">
             <CardHeader>
               <CardTitle className="font-heading">Revenue Trend (Last 7 Days)</CardTitle>
               <CardDescription>Daily revenue from completed orders</CardDescription>
@@ -450,10 +472,11 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" data-tour="quick-actions">
           <Card 
             className="group hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer border-primary/10 hover:border-primary/30"
             onClick={() => navigate("/my-store")}
+            data-tour="my-store-action"
           >
             <CardHeader>
               <div className="w-14 h-14 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -469,6 +492,7 @@ const Dashboard = () => {
           <Card 
             className="group hover:shadow-xl hover:shadow-accent/10 transition-all cursor-pointer border-accent/10 hover:border-accent/30"
             onClick={() => navigate("/products")}
+            data-tour="products-action"
           >
             <CardHeader>
               <div className="w-14 h-14 bg-gradient-to-br from-accent/20 to-primary/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -484,6 +508,7 @@ const Dashboard = () => {
           <Card 
             className="group hover:shadow-xl hover:shadow-gold/10 transition-all cursor-pointer border-gold/10 hover:border-gold/30"
             onClick={() => navigate("/orders")}
+            data-tour="orders-action"
           >
             <CardHeader>
               <div className="w-14 h-14 bg-gradient-to-br from-gold/20 to-primary/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -495,8 +520,41 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
           </Card>
+
+          <Card 
+            className="group hover:shadow-xl hover:shadow-purple-500/10 transition-all cursor-pointer border-purple-500/10 hover:border-purple-500/30"
+            onClick={() => navigate("/bookings")}
+            data-tour="bookings-action"
+          >
+            <CardHeader>
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-500/20 to-accent/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <CalendarCheck className="w-7 h-7 text-purple-500" />
+              </div>
+              <CardTitle className="font-heading group-hover:text-purple-500 transition-colors">Bookings</CardTitle>
+              <CardDescription>
+                Manage service appointments
+              </CardDescription>
+            </CardHeader>
+          </Card>
         </div>
       </div>
+
+      {/* Guided Tour */}
+      <Joyride
+        steps={dashboardTourSteps}
+        run={isRunning}
+        continuous
+        showSkipButton
+        showProgress
+        callback={handleTourCallback}
+        tooltipComponent={TourTooltip}
+        styles={{
+          options: {
+            zIndex: 10000,
+            arrowColor: 'hsl(var(--card))',
+          }
+        }}
+      />
     </div>
   );
 };
