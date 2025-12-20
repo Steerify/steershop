@@ -14,6 +14,98 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          booking_date: string
+          booking_time: string
+          cancelled_at: string | null
+          completed_at: string | null
+          confirmed_at: string | null
+          created_at: string
+          customer_email: string
+          customer_id: string | null
+          customer_name: string
+          customer_phone: string
+          duration_minutes: number | null
+          id: string
+          notes: string | null
+          order_id: string | null
+          service_id: string
+          shop_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          booking_date: string
+          booking_time: string
+          cancelled_at?: string | null
+          completed_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          customer_email: string
+          customer_id?: string | null
+          customer_name: string
+          customer_phone: string
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          service_id: string
+          shop_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          booking_date?: string
+          booking_time?: string
+          cancelled_at?: string | null
+          completed_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          customer_email?: string
+          customer_id?: string | null
+          customer_name?: string
+          customer_phone?: string
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          service_id?: string
+          shop_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_enrollments: {
         Row: {
           completed_at: string | null
