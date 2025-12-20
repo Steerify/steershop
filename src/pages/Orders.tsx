@@ -50,7 +50,7 @@ const Orders = () => {
       const cleaned = order.customer_phone.replace(/[^\d+]/g, '');
       const phoneNumber = cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
 
-      const orderSummary = order.order_items?.map((item: any) => 
+      const orderSummary = order.order_items?.map((item: any) =>
         `• ${item.products?.name || 'Unknown Product'} x ${item.quantity} - ₦${(item.quantity * parseFloat(item.price || 0)).toLocaleString()}`
       ).join('%0A') || 'No items';
 
@@ -73,22 +73,22 @@ const Orders = () => {
       link.href = deepLink;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
-      
+
       link.addEventListener('click', () => {
         clearTimeout(fallbackTimer);
       });
-      
+
       window.addEventListener('blur', function onBlur() {
         clearTimeout(fallbackTimer);
         window.removeEventListener('blur', onBlur);
       });
-      
+
       link.click();
-      
+
       setTimeout(() => {
         clearTimeout(fallbackTimer);
       }, 2000);
-      
+
       return true;
     } catch (error) {
       console.error('Error opening WhatsApp:', error);
@@ -118,22 +118,22 @@ const Orders = () => {
       link.href = deepLink;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
-      
+
       link.addEventListener('click', () => {
         clearTimeout(fallbackTimer);
       });
-      
+
       window.addEventListener('blur', function onBlur() {
         clearTimeout(fallbackTimer);
         window.removeEventListener('blur', onBlur);
       });
-      
+
       link.click();
-      
+
       setTimeout(() => {
         clearTimeout(fallbackTimer);
       }, 2000);
-      
+
       return true;
     } catch (error) {
       console.error('Error opening WhatsApp:', error);
@@ -148,7 +148,7 @@ const Orders = () => {
   const loadUserAndOrders = async () => {
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
+
       if (userError) {
         console.error('Auth error:', userError);
         toast({
@@ -159,7 +159,7 @@ const Orders = () => {
         navigate("/auth/login");
         return;
       }
-      
+
       if (!user) {
         navigate("/auth/login");
         return;
@@ -245,9 +245,9 @@ const Orders = () => {
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     setUpdatingOrderId(orderId);
-    
+
     try {
-      const updateData: any = { 
+      const updateData: any = {
         status,
         updated_at: new Date().toISOString()
       };
@@ -283,7 +283,7 @@ const Orders = () => {
       });
 
       await loadOrders(shop.id);
-      
+
     } catch (error: any) {
       console.error('Update order error:', error);
       toast({
@@ -298,7 +298,7 @@ const Orders = () => {
 
   const markAsPaid = async (order: any) => {
     setUpdatingOrderId(order.id);
-    
+
     try {
       const { error: updateError } = await supabase
         .from("orders")
@@ -425,7 +425,7 @@ const Orders = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
       <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
-      
+
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="mb-6 flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10">
@@ -437,9 +437,9 @@ const Orders = () => {
               <CalendarCheck className="w-4 h-4 mr-2" />
               View Bookings
             </Button>
-            <TourButton 
-              onStartTour={startTour} 
-              hasSeenTour={hasSeenTour} 
+            <TourButton
+              onStartTour={startTour}
+              hasSeenTour={hasSeenTour}
               onResetTour={resetTour}
             />
           </div>
@@ -631,7 +631,6 @@ const Orders = () => {
           isOpen={isApprovalDialogOpen}
           onClose={handleCloseApprovalDialog}
           onStatusUpdate={() => loadOrders(shop.id)}
-        />
         />
       )}
 
