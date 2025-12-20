@@ -15,6 +15,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
+import Joyride, { CallBackProps, STATUS } from "react-joyride";
+import { useTour } from "@/hooks/useTour";
+import { TourTooltip } from "@/components/tours/TourTooltip";
+import { myStoreTourSteps } from "@/components/tours/tourSteps";
+import { TourButton } from "@/components/tours/TourButton";
 
 const shopSchema = z.object({
   shop_name: z.string().trim().min(2, "Store name must be at least 2 characters").max(100, "Store name must be less than 100 characters"),
@@ -70,6 +75,16 @@ const MyStore = () => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Tour state
+  const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('my-store');
+
+  const handleTourCallback = (data: CallBackProps) => {
+    const { status } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
+      endTour(status === STATUS.FINISHED);
+    }
+  };
 
   useEffect(() => {
     loadShop();
@@ -357,11 +372,16 @@ const MyStore = () => {
       <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
       
       <div className="container mx-auto px-4 py-8 relative z-10">
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
+          <TourButton 
+            onStartTour={startTour} 
+            hasSeenTour={hasSeenTour} 
+            onResetTour={resetTour}
+          />
         </div>
 
         <div className="max-w-3xl mx-auto">
@@ -388,7 +408,7 @@ const MyStore = () => {
             </CardHeader>
             <CardContent className="pt-6">
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
+                <div className="space-y-2" data-tour="store-name">
                   <Label htmlFor="shop_name">Store Name *</Label>
                   <Input
                     id="shop_name"
@@ -402,7 +422,7 @@ const MyStore = () => {
                   )}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2" data-tour="store-url">
                   <Label htmlFor="shop_slug">Store URL *</Label>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">steersolo.com/shop/</span>
@@ -438,7 +458,7 @@ const MyStore = () => {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
+                  <div className="space-y-2" data-tour="store-logo">
                     <Label htmlFor="logo">Store Logo</Label>
                     <div className="border-2 border-dashed border-primary/20 rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer group">
                       <input
@@ -465,7 +485,7 @@ const MyStore = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2" data-tour="store-banner">
                     <Label htmlFor="banner">Store Banner</Label>
                     <div className="border-2 border-dashed border-primary/20 rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer group">
                       <input
@@ -480,7 +500,7 @@ const MyStore = () => {
                           <img
                             src={bannerFile ? URL.createObjectURL(bannerFile) : shop.banner_url}
                             alt="Banner preview"
-                            className="w-full h-32 object-cover rounded-lg mb-2 group-hover:scale-105 transition-transform"
+                            className="w-full h-32 object-cover mx-auto rounded-lg mb-2 group-hover:scale-105 transition-transform"
                           />
                         ) : (
                           <Upload className="w-12 h-12 mx-auto mb-2 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -493,138 +513,104 @@ const MyStore = () => {
                   </div>
                 </div>
 
-                {/* WhatsApp Contact */}
-                <div className="space-y-2">
-                  <Label htmlFor="whatsapp_number" className="flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4 text-green-500" />
-                    WhatsApp Number *
-                  </Label>
-                  <Input
-                    id="whatsapp_number"
-                    type="tel"
-                    value={formData.whatsapp_number}
-                    onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
-                    placeholder="+234 800 000 0000"
-                    className={`border-primary/20 focus:border-primary ${errors.whatsapp_number ? "border-destructive" : ""}`}
-                  />
+                <div className="space-y-2" data-tour="whatsapp-number">
+                  <Label htmlFor="whatsapp_number">WhatsApp Number *</Label>
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="w-5 h-5 text-green-500" />
+                    <Input
+                      id="whatsapp_number"
+                      value={formData.whatsapp_number}
+                      onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
+                      placeholder="+234 xxx xxx xxxx"
+                      className={`border-primary/20 focus:border-primary ${errors.whatsapp_number ? "border-destructive" : ""}`}
+                    />
+                  </div>
                   {errors.whatsapp_number && (
                     <p className="text-sm text-destructive">{errors.whatsapp_number}</p>
                   )}
-                  <p className="text-xs text-muted-foreground">
-                    Customers will use this to contact you directly
-                  </p>
                 </div>
 
-                {/* Payment Settings - Updated with Checkboxes */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 bg-gradient-to-br from-accent/20 to-primary/20 rounded-xl flex items-center justify-center">
-                      <CreditCard className="w-5 h-5 text-accent" />
-                    </div>
-                    <div>
-                      <Label className="text-base font-semibold">Payment Methods *</Label>
-                      <p className="text-xs text-muted-foreground">Enable the payment methods you want to offer</p>
-                    </div>
-                  </div>
-
+                {/* Payment Methods */}
+                <div className="space-y-4" data-tour="payment-methods">
+                  <Label className="text-lg font-heading">Payment Methods</Label>
+                  
                   <div className="space-y-4">
-                    {/* Bank Transfer Option */}
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-colors">
-                        <Checkbox
-                          id="enable_bank_transfer"
-                          checked={formData.enable_bank_transfer}
-                          onCheckedChange={(checked) =>
-                            setFormData({ ...formData, enable_bank_transfer: checked as boolean })
-                          }
-                        />
-                        <Label htmlFor="enable_bank_transfer" className="font-normal cursor-pointer flex-1">
-                          <span className="font-medium">Bank Transfer (Manual)</span>
-                          <p className="text-xs text-muted-foreground">Customers pay via bank transfer, you verify manually</p>
+                    <div className="flex items-start space-x-3 p-4 border border-primary/20 rounded-lg">
+                      <Checkbox
+                        id="enable_bank_transfer"
+                        checked={formData.enable_bank_transfer}
+                        onCheckedChange={(checked) => setFormData({ ...formData, enable_bank_transfer: !!checked })}
+                      />
+                      <div className="flex-1">
+                        <Label htmlFor="enable_bank_transfer" className="font-semibold cursor-pointer">
+                          Bank Transfer
                         </Label>
-                      </div>
-
-                      {formData.enable_bank_transfer && (
-                        <div className="space-y-4 p-4 bg-muted/50 rounded-lg border border-border/50 ml-6">
-                          <div className="space-y-2">
-                            <Label htmlFor="bank_account_name">Account Name *</Label>
+                        <p className="text-sm text-muted-foreground">Accept direct bank transfers</p>
+                        
+                        {formData.enable_bank_transfer && (
+                          <div className="mt-4 space-y-3">
                             <Input
-                              id="bank_account_name"
-                              value={formData.bank_account_name}
-                              onChange={(e) => setFormData({ ...formData, bank_account_name: e.target.value })}
-                              placeholder="John Doe"
-                              className={errors.bank_account_name ? "border-destructive" : ""}
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="bank_name">Bank Name *</Label>
-                            <Input
-                              id="bank_name"
+                              placeholder="Bank Name"
                               value={formData.bank_name}
                               onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-                              placeholder="Access Bank"
-                              className={errors.bank_name ? "border-destructive" : ""}
+                              className="border-primary/20"
                             />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="bank_account_number">Account Number *</Label>
                             <Input
-                              id="bank_account_number"
+                              placeholder="Account Name"
+                              value={formData.bank_account_name}
+                              onChange={(e) => setFormData({ ...formData, bank_account_name: e.target.value })}
+                              className="border-primary/20"
+                            />
+                            <Input
+                              placeholder="Account Number"
                               value={formData.bank_account_number}
                               onChange={(e) => setFormData({ ...formData, bank_account_number: e.target.value })}
-                              placeholder="0123456789"
-                              className={errors.bank_account_number ? "border-destructive" : ""}
+                              className="border-primary/20"
                             />
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
 
-                    {/* Paystack Option */}
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-colors">
-                        <Checkbox
-                          id="enable_paystack"
-                          checked={formData.enable_paystack}
-                          onCheckedChange={(checked) =>
-                            setFormData({ ...formData, enable_paystack: checked as boolean })
-                          }
-                        />
-                        <Label htmlFor="enable_paystack" className="font-normal cursor-pointer flex-1">
-                          <span className="font-medium">Paystack (Automatic)</span>
-                          <p className="text-xs text-muted-foreground">Accept card payments automatically via Paystack</p>
+                    <div className="flex items-start space-x-3 p-4 border border-primary/20 rounded-lg">
+                      <Checkbox
+                        id="enable_paystack"
+                        checked={formData.enable_paystack}
+                        onCheckedChange={(checked) => setFormData({ ...formData, enable_paystack: !!checked })}
+                      />
+                      <div className="flex-1">
+                        <Label htmlFor="enable_paystack" className="font-semibold cursor-pointer">
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="w-4 h-4 text-blue-500" />
+                            Paystack
+                          </div>
                         </Label>
-                      </div>
-
-                      {formData.enable_paystack && (
-                        <div className="space-y-4 p-4 bg-muted/50 rounded-lg border border-border/50 ml-6">
-                          <div className="space-y-2">
-                            <Label htmlFor="paystack_public_key">Paystack Public Key *</Label>
+                        <p className="text-sm text-muted-foreground">Accept card payments via Paystack</p>
+                        
+                        {formData.enable_paystack && (
+                          <div className="mt-4">
                             <Input
-                              id="paystack_public_key"
+                              placeholder="Paystack Public Key (pk_live_...)"
                               value={formData.paystack_public_key}
                               onChange={(e) => setFormData({ ...formData, paystack_public_key: e.target.value })}
-                              placeholder="pk_test_..."
-                              className={errors.paystack_public_key ? "border-destructive" : ""}
+                              className="border-primary/20"
                             />
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-muted-foreground mt-1">
                               Get your public key from your Paystack dashboard
                             </p>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
-
-                  {(!formData.enable_paystack && !formData.enable_bank_transfer) && (
-                    <p className="text-sm text-destructive">Please enable at least one payment method</p>
-                  )}
                 </div>
 
-                <div className="flex gap-4">
-                  <Button type="submit" disabled={isSaving} className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                <div className="flex gap-4 pt-4">
+                  <Button
+                    type="submit"
+                    className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                    disabled={isSaving}
+                  >
                     {isSaving ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -634,6 +620,7 @@ const MyStore = () => {
                       shop ? "Update Store" : "Create Store"
                     )}
                   </Button>
+                  
                   {shop && (
                     <Button
                       type="button"
@@ -648,108 +635,133 @@ const MyStore = () => {
             </CardContent>
           </Card>
 
-          {/* Store URL Sharing Card - Only show when shop exists and is active */}
+          {/* Share Store Card */}
           {shop && shop.is_active && (
-            <Card className="mt-6 border-primary/10 shadow-lg">
+            <Card className="mt-6 border-primary/10 shadow-lg" data-tour="store-sharing">
               <CardHeader className="border-b border-border/50">
                 <CardTitle className="flex items-center gap-2 font-heading">
-                  <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center">
-                    <Share2 className="w-5 h-5 text-primary" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-accent/20 to-primary/20 rounded-xl flex items-center justify-center">
+                    <Share2 className="w-5 h-5 text-accent" />
                   </div>
                   Share Your Store
                 </CardTitle>
                 <CardDescription>
-                  Preview and share your store link with customers
+                  Get your store URL and share it with customers
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-6 space-y-4">
+              <CardContent className="pt-6 space-y-6">
                 {/* Store URL */}
-                <div className="space-y-2">
-                  <Label>Store URL</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={getStoreUrl()}
-                      readOnly
-                      className="font-mono text-sm bg-muted/50"
-                    />
-                    <Button variant="outline" onClick={handleCopyUrl} className="hover:bg-primary/10">
-                      {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    </Button>
-                    <Button variant="outline" onClick={() => window.open(getStoreUrl(), "_blank")} className="hover:bg-primary/10">
-                      <ExternalLink className="w-4 h-4" />
-                    </Button>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={getStoreUrl()}
+                    readOnly
+                    className="flex-1 bg-muted border-primary/20"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopyUrl}
+                    className="border-primary/30 hover:bg-primary/10"
+                  >
+                    {isCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => window.open(getStoreUrl(), "_blank")}
+                    className="border-primary/30 hover:bg-primary/10"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
                 </div>
 
                 {/* Social Share Buttons */}
-                <div className="space-y-2">
-                  <Label>Share on Social Media</Label>
-                  <div className="flex gap-2 flex-wrap">
-                    <Button variant="outline" onClick={handleShareToWhatsApp} className="gap-2 hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50">
-                      <MessageCircle className="w-4 h-4" />
-                      WhatsApp
-                    </Button>
-                    <Button variant="outline" onClick={handleShareToTwitter} className="gap-2 hover:bg-blue-500/10 hover:text-blue-500 hover:border-blue-500/50">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                      </svg>
-                      X (Twitter)
-                    </Button>
-                    <Button variant="outline" onClick={handleShareToFacebook} className="gap-2 hover:bg-blue-600/10 hover:text-blue-600 hover:border-blue-600/50">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                      </svg>
-                      Facebook
-                    </Button>
-                  </div>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={handleShareToWhatsApp}
+                    className="border-green-500/30 text-green-600 hover:bg-green-500/10"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    WhatsApp
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleShareToTwitter}
+                    className="border-blue-400/30 text-blue-500 hover:bg-blue-500/10"
+                  >
+                    Share on X
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleShareToFacebook}
+                    className="border-blue-600/30 text-blue-600 hover:bg-blue-600/10"
+                  >
+                    Facebook
+                  </Button>
                 </div>
 
-                {/* QR Code Section */}
-                <div className="space-y-4">
-                  <Label>QR Code</Label>
-                  <Tabs defaultValue="qr" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 bg-muted/50">
-                      <TabsTrigger value="qr">QR Code</TabsTrigger>
-                      <TabsTrigger value="flyer">Printable Flyer</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="qr" className="mt-4">
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="p-4 bg-white rounded-lg shadow-md">
-                          <QRCodeSVG
-                            id="store-qr-code"
-                            value={getStoreUrl()}
-                            size={200}
-                            level="H"
-                            includeMargin
-                          />
-                        </div>
-                        <Button onClick={handleDownloadQRCode} variant="outline" className="gap-2 hover:bg-primary/10">
-                          <Download className="w-4 h-4" />
-                          Download QR Code
-                        </Button>
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="flyer" className="mt-4">
-                      <StoreFlyerTemplate
-                        shop={{
-                          shop_name: shop?.shop_name || "",
-                          shop_slug: shop?.shop_slug || "",
-                          description: shop?.description,
-                          logo_url: shop?.logo_url,
-                          whatsapp_number: shop?.whatsapp_number || "",
-                        }}
-                        products={products}
+                {/* QR Code / Flyer Tabs */}
+                <Tabs defaultValue="qr" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 bg-muted">
+                    <TabsTrigger value="qr">
+                      <QrCode className="w-4 h-4 mr-2" />
+                      QR Code
+                    </TabsTrigger>
+                    <TabsTrigger value="flyer">
+                      <Download className="w-4 h-4 mr-2" />
+                      Store Flyer
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="qr" className="mt-4">
+                    <div className="flex flex-col items-center gap-4 p-6 bg-card rounded-lg border border-primary/10">
+                      <QRCodeSVG
+                        id="store-qr-code"
+                        value={getStoreUrl()}
+                        size={200}
+                        level="H"
+                        includeMargin
+                        className="rounded-lg"
                       />
-                    </TabsContent>
-                  </Tabs>
-                </div>
+                      <Button
+                        onClick={handleDownloadQRCode}
+                        className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download QR Code
+                      </Button>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="flyer" className="mt-4">
+                    <StoreFlyerTemplate
+                      shop={shop}
+                      products={products.slice(0, 4)}
+                    />
+                    />
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           )}
         </div>
       </div>
+
+      {/* Guided Tour */}
+      <Joyride
+        steps={myStoreTourSteps}
+        run={isRunning}
+        continuous
+        showSkipButton
+        showProgress
+        callback={handleTourCallback}
+        tooltipComponent={TourTooltip}
+        styles={{
+          options: {
+            zIndex: 10000,
+            arrowColor: 'hsl(var(--card))',
+          }
+        }}
+      />
     </div>
   );
 };

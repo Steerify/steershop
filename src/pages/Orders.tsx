@@ -5,11 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, ShoppingCart, Package, Clock, CheckCircle, XCircle, MessageCircle, ThumbsUp, Truck, Banknote } from "lucide-react";
+import { ArrowLeft, Loader2, ShoppingCart, Package, Clock, CheckCircle, XCircle, MessageCircle, ThumbsUp, Truck, Banknote, CalendarCheck } from "lucide-react";
 import { format } from "date-fns";
 import OrderApprovalDialog from "@/components/OrderApprovalDialog";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
+import Joyride, { CallBackProps, STATUS } from "react-joyride";
+import { useTour } from "@/hooks/useTour";
+import { TourTooltip } from "@/components/tours/TourTooltip";
+import { ordersTourSteps } from "@/components/tours/tourSteps";
+import { TourButton } from "@/components/tours/TourButton";
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -20,6 +25,16 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+
+  // Tour state
+  const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('orders');
+
+  const handleTourCallback = (data: CallBackProps) => {
+    const { status } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
+      endTour(status === STATUS.FINISHED);
+    }
+  };
 
   const openWhatsAppWithOrder = (order: any) => {
     if (!order.customer_phone) {
@@ -412,11 +427,22 @@ const Orders = () => {
       <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
       
       <div className="container mx-auto px-4 py-8 relative z-10">
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={() => navigate("/bookings")} className="border-purple-500/30 text-purple-600 hover:bg-purple-500/10">
+              <CalendarCheck className="w-4 h-4 mr-2" />
+              View Bookings
+            </Button>
+            <TourButton 
+              onStartTour={startTour} 
+              hasSeenTour={hasSeenTour} 
+              onResetTour={resetTour}
+            />
+          </div>
         </div>
 
         <div className="mb-8">
@@ -438,14 +464,14 @@ const Orders = () => {
           </Card>
         ) : (
           <div className="space-y-4">
-            {orders.map((order) => (
-              <Card key={order.id} className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group">
+            {orders.map((order, index) => (
+              <Card key={order.id} className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group" data-tour={index === 0 ? "order-card" : undefined}>
                 <CardHeader className="border-b border-border/50">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="flex items-center gap-2 mb-2 font-heading">
                         Order #{order.id?.slice(0, 8) || 'N/A'}
-                        <Badge variant="outline" className={getStatusColor(order.status)}>
+                        <Badge variant="outline" className={getStatusColor(order.status)} data-tour={index === 0 ? "order-status" : undefined}>
                           {getStatusIcon(order.status)}
                           <span className="ml-2 capitalize">{order.status?.replace(/_/g, ' ') || 'unknown'}</span>
                         </Badge>
@@ -489,7 +515,7 @@ const Orders = () => {
                           <div className="flex-1">
                             <p className="font-semibold">{item.products?.name || 'Unknown Product'}</p>
                             <p className="text-sm text-muted-foreground">
-                              Quantity: {item.quantity} × ₦{parseFloat(item.price || 0).toLocaleString()}
+                              Qty: {item.quantity} × ₦{parseFloat(item.price || 0).toLocaleString()}
                             </p>
                           </div>
                           <p className="font-semibold text-primary">
@@ -499,155 +525,94 @@ const Orders = () => {
                       ))}
                     </div>
 
-                    <div className="flex gap-2 flex-wrap">
+                    {/* Order Actions */}
+                    <div className="flex flex-wrap gap-2" data-tour={index === 0 ? "order-actions" : undefined}>
                       {order.status === "awaiting_approval" && (
-                        <>
-                          <Button
-                            onClick={() => handleReviewOrder(order)}
-                            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:opacity-90"
-                          >
-                            <ThumbsUp className="w-4 h-4 mr-2" />
-                            Review Order
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => openWhatsAppWithOrder(order)}
-                            disabled={!order.customer_phone}
-                            className="hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
-                          >
-                            <MessageCircle className="w-4 h-4 mr-2" />
-                            Contact Customer
-                          </Button>
-                          {order.payment_status !== "paid" && (
-                            <Button
-                              onClick={() => markAsPaid(order)}
-                              disabled={updatingOrderId === order.id}
-                              variant="outline"
-                              className="border-green-500/50 text-green-600 hover:bg-green-500/10"
-                            >
-                              {updatingOrderId === order.id ? (
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              ) : (
-                                <Banknote className="w-4 h-4 mr-2" />
-                              )}
-                              Mark as Paid
-                            </Button>
-                          )}
-                        </>
-                      )}
-                      {(order.status === "confirmed" || order.status === "paid_awaiting_delivery") && (
-                        <>
-                          <Button
-                            onClick={() => updateOrderStatus(order.id, "processing")}
-                            disabled={updatingOrderId === order.id}
-                            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:opacity-90"
-                          >
-                            {updatingOrderId === order.id ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <Package className="w-4 h-4 mr-2" />
-                            )}
-                            Start Processing
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => openSimpleWhatsApp(
-                              order.customer_phone,
-                              `Hello ${order.customer_name}, your order #${order.id?.slice(0, 8)} has been confirmed and we're preparing it for delivery!`
-                            )}
-                            disabled={!order.customer_phone}
-                            className="hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
-                          >
-                            <MessageCircle className="w-4 h-4 mr-2" />
-                            Send Update
-                          </Button>
-                        </>
-                      )}
-                      {order.status === "processing" && (
-                        <>
-                          <Button
-                            onClick={() => updateOrderStatus(order.id, "out_for_delivery")}
-                            disabled={updatingOrderId === order.id}
-                            className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:opacity-90"
-                          >
-                            {updatingOrderId === order.id ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <Truck className="w-4 h-4 mr-2" />
-                            )}
-                            Out for Delivery
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => openSimpleWhatsApp(
-                              order.customer_phone,
-                              `Hello ${order.customer_name}, your order #${order.id?.slice(0, 8)} is being processed and will be ready for delivery soon!`
-                            )}
-                            disabled={!order.customer_phone}
-                            className="hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
-                          >
-                            <MessageCircle className="w-4 h-4 mr-2" />
-                            Processing Update
-                          </Button>
-                        </>
-                      )}
-                      
-                      {order.status === "out_for_delivery" && (
-                        <>
-                          <Button
-                            onClick={() => updateOrderStatus(order.id, "delivered")}
-                            disabled={updatingOrderId === order.id}
-                            className="bg-gradient-to-r from-green-500 to-green-600 hover:opacity-90"
-                          >
-                            {updatingOrderId === order.id ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <CheckCircle className="w-4 h-4 mr-2" />
-                            )}
-                            Mark as Delivered
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => openSimpleWhatsApp(
-                              order.customer_phone,
-                              `Hello ${order.customer_name}, your order #${order.id?.slice(0, 8)} is out for delivery and should arrive soon!`
-                            )}
-                            disabled={!order.customer_phone}
-                            className="hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
-                          >
-                            <MessageCircle className="w-4 h-4 mr-2" />
-                            Delivery Update
-                          </Button>
-                        </>
-                      )}
-
-                      {order.status === "delivered" && (
                         <Button
-                          onClick={() => updateOrderStatus(order.id, "completed")}
-                          disabled={updatingOrderId === order.id}
-                          className="bg-gradient-to-r from-purple-500 to-purple-600 hover:opacity-90"
+                          size="sm"
+                          onClick={() => handleReviewOrder(order)}
+                          className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
                         >
-                          {updatingOrderId === order.id ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : (
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                          )}
-                          Complete Order
+                          <ThumbsUp className="w-4 h-4 mr-2" />
+                          Review Order
                         </Button>
                       )}
-                      
-                      {(order.status === "awaiting_approval" || order.status === "confirmed" || order.status === "paid_awaiting_delivery" || order.status === "processing" || order.status === "out_for_delivery") && (
+
+                      {order.status === "confirmed" && (
                         <Button
-                          variant="destructive"
-                          onClick={() => updateOrderStatus(order.id, "cancelled")}
+                          size="sm"
+                          onClick={() => updateOrderStatus(order.id, "processing")}
                           disabled={updatingOrderId === order.id}
                         >
                           {updatingOrderId === order.id ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
                           ) : (
-                            <XCircle className="w-4 h-4 mr-2" />
+                            <Package className="w-4 h-4 mr-2" />
                           )}
-                          Cancel Order
+                          Start Processing
+                        </Button>
+                      )}
+
+                      {order.status === "processing" && (
+                        <Button
+                          size="sm"
+                          onClick={() => updateOrderStatus(order.id, "out_for_delivery")}
+                          disabled={updatingOrderId === order.id}
+                        >
+                          <Truck className="w-4 h-4 mr-2" />
+                          Out for Delivery
+                        </Button>
+                      )}
+
+                      {order.status === "out_for_delivery" && (
+                        <Button
+                          size="sm"
+                          onClick={() => updateOrderStatus(order.id, "delivered")}
+                          disabled={updatingOrderId === order.id}
+                          className="bg-green-500 hover:bg-green-600"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Mark Delivered
+                        </Button>
+                      )}
+
+                      {order.payment_status !== "paid" && order.status !== "cancelled" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => markAsPaid(order)}
+                          disabled={updatingOrderId === order.id}
+                          className="border-green-500/30 text-green-600 hover:bg-green-500/10"
+                          data-tour={index === 0 ? "mark-paid" : undefined}
+                        >
+                          <Banknote className="w-4 h-4 mr-2" />
+                          Mark as Paid
+                        </Button>
+                      )}
+
+                      {order.status !== "cancelled" && order.status !== "delivered" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateOrderStatus(order.id, "cancelled")}
+                          disabled={updatingOrderId === order.id}
+                          className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Cancel
+                        </Button>
+                      )}
+
+                      {order.customer_phone && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openWhatsAppWithOrder(order)}
+                          className="border-green-500/30 text-green-600 hover:bg-green-500/10"
+                          data-tour={index === 0 ? "whatsapp-btn" : undefined}
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          WhatsApp
                         </Button>
                       )}
                     </div>
@@ -657,14 +622,35 @@ const Orders = () => {
             ))}
           </div>
         )}
+      </div>
 
+      {/* Order Approval Dialog */}
+      {selectedOrder && (
         <OrderApprovalDialog
+          order={selectedOrder}
           isOpen={isApprovalDialogOpen}
           onClose={handleCloseApprovalDialog}
-          order={selectedOrder}
           onStatusUpdate={() => loadOrders(shop.id)}
         />
-      </div>
+        />
+      )}
+
+      {/* Guided Tour */}
+      <Joyride
+        steps={ordersTourSteps}
+        run={isRunning}
+        continuous
+        showSkipButton
+        showProgress
+        callback={handleTourCallback}
+        tooltipComponent={TourTooltip}
+        styles={{
+          options: {
+            zIndex: 10000,
+            arrowColor: 'hsl(var(--card))',
+          }
+        }}
+      />
     </div>
   );
 };

@@ -297,7 +297,7 @@ const ShopStorefront = () => {
       <Navbar />
 
       {/* Shop Header */}
-      <div className="relative pt-20">
+      <div className="relative pt-20" data-tour="shop-header">
         {shop.banner_url ? (
           <div 
             className="h-48 md:h-64 bg-cover bg-center"
@@ -335,15 +335,23 @@ const ShopStorefront = () => {
                         <p className="text-muted-foreground mt-2 line-clamp-2">{shop.description}</p>
                       )}
                     </div>
-                    {getTotalItems() > 0 && (
-                      <Button 
-                        onClick={() => setIsCheckoutOpen(true)}
-                        className="bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/25 w-full md:w-auto"
-                      >
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        Cart ({getTotalItems()})
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <TourButton 
+                        onStartTour={startTour} 
+                        hasSeenTour={hasSeenTour} 
+                        onResetTour={resetTour}
+                      />
+                      {getTotalItems() > 0 && (
+                        <Button 
+                          onClick={() => setIsCheckoutOpen(true)}
+                          className="bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/25"
+                          data-tour="cart-button"
+                        >
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          Cart ({getTotalItems()})
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="flex flex-wrap items-center gap-3 mt-4">
@@ -378,108 +386,92 @@ const ShopStorefront = () => {
 
       {/* Products Section */}
       <div className="flex-1 container mx-auto px-4 pb-20">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div className="flex items-center gap-2">
-            <Link to="/shops">
-              <Button variant="ghost" size="sm" className="hover:bg-muted">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to All Shops
-              </Button>
-            </Link>
-            <div className="h-6 w-px bg-border hidden sm:block" />
+        <div className="flex flex-col gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-accent" />
-              <h2 className="font-display text-2xl font-bold">Products</h2>
+              <Link to="/shops">
+                <Button variant="ghost" size="sm" className="hover:bg-muted">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to All Shops
+                </Button>
+              </Link>
+              <div className="h-6 w-px bg-border hidden sm:block" />
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-accent" />
+                <h2 className="font-display text-2xl font-bold">Catalog</h2>
+              </div>
+            </div>
+
+            {/* Search Component */}
+            <div ref={searchRef} className="relative" data-tour="search-products">
+              <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+                <div className="relative flex items-center">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-full bg-card border border-accent/20 hover:bg-accent/10 hover:border-accent/40 transition-all duration-300"
+                    onClick={toggleSearch}
+                    onMouseEnter={() => !isSearchExpanded && setIsSearchExpanded(true)}
+                  >
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+
+                  <div className={`
+                    relative transition-all duration-300 ease-in-out overflow-hidden
+                    ${isSearchExpanded ? 'w-48 sm:w-64 ml-2 opacity-100' : 'w-0 ml-0 opacity-0'}
+                  `}>
+                    <Input
+                      ref={inputRef}
+                      type="text"
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-10 bg-card border-accent/20 focus:border-accent pl-3 pr-8"
+                      onBlur={() => {
+                        if (searchQuery === "" && isSearchExpanded) {
+                          setTimeout(() => setIsSearchExpanded(false), 200);
+                        }
+                      }}
+                    />
+                    
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={clearSearch}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10"
+                      >
+                        <X className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </form>
             </div>
           </div>
 
-          {/* Search Component - Fixed Version */}
-          <div ref={searchRef} className="relative">
-            <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
-              <div className="relative flex items-center">
-                {/* Always visible search icon button */}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 rounded-full bg-card border border-accent/20 hover:bg-accent/10 hover:border-accent/40 transition-all duration-300"
-                  onClick={toggleSearch}
-                  onMouseEnter={() => !isSearchExpanded && setIsSearchExpanded(true)}
-                >
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                </Button>
-
-                {/* Expandable input field */}
-                <div className={`
-                  relative transition-all duration-300 ease-in-out overflow-hidden
-                  ${isSearchExpanded ? 'w-48 sm:w-64 ml-2 opacity-100' : 'w-0 ml-0 opacity-0'}
-                `}>
-                  <Input
-                    ref={inputRef}
-                    type="text"
-                    placeholder="Search products..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="h-10 bg-card border-accent/20 focus:border-accent pl-3 pr-8"
-                    onBlur={() => {
-                      if (searchQuery === "" && isSearchExpanded) {
-                        setTimeout(() => setIsSearchExpanded(false), 200);
-                      }
-                    }}
-                  />
-                  
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={clearSearch}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 z-10"
-                    >
-                      <X className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
-                    </button>
-                  )}
-                </div>
-              </div>
-              
-              {searchQuery && (
-                <div className="hidden sm:flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    {filteredProducts.length} found
-                  </span>
-                  {filteredProducts.length === 0 && searchQuery && (
-                    <Button 
-                      type="button"
-                      variant="ghost" 
-                      size="sm"
-                      onClick={clearSearch}
-                      className="h-8"
-                    >
-                      Clear
-                    </Button>
-                  )}
-                </div>
-              )}
-            </form>
-
-            {/* Mobile search info */}
-            {searchQuery && (
-              <div className="sm:hidden mt-2 text-center">
-                <span className="text-sm text-muted-foreground">
-                  {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
-                </span>
-                {filteredProducts.length === 0 && searchQuery && (
-                  <Button 
-                    type="button"
-                    variant="ghost" 
-                    size="sm"
-                    onClick={clearSearch}
-                    className="h-8 ml-2"
-                  >
-                    Clear
-                  </Button>
+          {/* Filter Tabs */}
+          {(productCount > 0 || serviceCount > 0) && (
+            <Tabs value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)} data-tour="product-filters">
+              <TabsList className="bg-card border border-primary/10">
+                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  All ({products.length})
+                </TabsTrigger>
+                {productCount > 0 && (
+                  <TabsTrigger value="product" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                    <Package className="w-4 h-4 mr-2" />
+                    Products ({productCount})
+                  </TabsTrigger>
                 )}
-              </div>
-            )}
-          </div>
+                {serviceCount > 0 && (
+                  <TabsTrigger value="service" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    <Briefcase className="w-4 h-4 mr-2" />
+                    Services ({serviceCount})
+                  </TabsTrigger>
+                )}
+              </TabsList>
+            </Tabs>
+          )}
         </div>
 
         {filteredProducts.length === 0 ? (
@@ -544,24 +536,42 @@ const ShopStorefront = () => {
                   key={product.id} 
                   className="card-african overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 animate-fade-up"
                   style={{ animationDelay: `${index * 0.05}s` }}
+                  data-tour={index === 0 ? "product-card" : undefined}
                 >
                   <Link to={`/shop/${slug}/product/${product.id}`}>
-                    {product.image_url ? (
-                      <div className="aspect-square overflow-hidden bg-muted relative">
+                    <div className="aspect-square overflow-hidden bg-muted relative">
+                      {product.image_url ? (
                         <img
                           src={product.image_url}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                          <Eye className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                          {product.type === 'service' ? (
+                            <Briefcase className="w-16 h-16 text-accent" />
+                          ) : (
+                            <Package className="w-16 h-16 text-muted-foreground" />
+                          )}
                         </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                        <Eye className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
-                    ) : (
-                      <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center adire-pattern">
-                        <Package className="w-16 h-16 text-muted-foreground" />
+                      {/* Type Badge */}
+                      <div className="absolute top-2 left-2">
+                        <Badge 
+                          variant={product.type === "service" ? "secondary" : "default"} 
+                          className={product.type === "service" ? "bg-purple-500/90 text-white" : "bg-primary/90"}
+                        >
+                          {product.type === "service" ? (
+                            <><Briefcase className="w-3 h-3 mr-1" /> Service</>
+                          ) : (
+                            <><Package className="w-3 h-3 mr-1" /> Product</>
+                          )}
+                        </Badge>
                       </div>
-                    )}
+                    </div>
                   </Link>
                   <CardHeader className="pb-3">
                     <Link to={`/shop/${slug}/product/${product.id}`}>
@@ -578,27 +588,50 @@ const ShopStorefront = () => {
                   <CardContent className="pb-3">
                     <div className="flex items-center justify-between">
                       <span className="text-2xl font-bold gradient-text">₦{product.price.toLocaleString()}</span>
-                      <Badge 
-                        variant={product.stock_quantity > 0 ? "default" : "destructive"}
-                        className={product.stock_quantity > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
-                      >
-                        {product.stock_quantity > 0 ? `${product.stock_quantity} left` : "Out of stock"}
-                      </Badge>
+                      {product.type === 'service' ? (
+                        product.duration_minutes && (
+                          <Badge variant="outline" className="bg-purple-500/10 border-purple-500/20 text-purple-600">
+                            <Clock className="w-3 h-3 mr-1" />
+                            {product.duration_minutes} mins
+                          </Badge>
+                        )
+                      ) : (
+                        <Badge 
+                          variant={product.stock_quantity > 0 ? "default" : "destructive"}
+                          className={product.stock_quantity > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
+                        >
+                          {product.stock_quantity > 0 ? `${product.stock_quantity} left` : "Out of stock"}
+                        </Badge>
+                      )}
                     </div>
                   </CardContent>
                   <CardFooter className="flex flex-col gap-2 pt-0">
                     <div className="flex gap-2 w-full">
-                      <Button
-                        className="flex-1 bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-md"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          addToCart(product);
-                        }}
-                        disabled={product.stock_quantity === 0}
-                      >
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        Add to Cart
-                      </Button>
+                      {product.type === 'service' && product.booking_required ? (
+                        <Button
+                          className="flex-1 bg-purple-600 hover:bg-purple-700 shadow-md"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleBookService(product);
+                          }}
+                          disabled={product.stock_quantity === 0}
+                        >
+                          <Calendar className="w-4 h-4 mr-2" />
+                          Book Now
+                        </Button>
+                      ) : (
+                        <Button
+                          className="flex-1 bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-md"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            addToCart(product);
+                          }}
+                          disabled={product.stock_quantity === 0}
+                        >
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          Add to Cart
+                        </Button>
+                      )}
                       <Link to={`/shop/${slug}/product/${product.id}`}>
                         <Button variant="outline" size="icon">
                           <Eye className="w-4 h-4" />
