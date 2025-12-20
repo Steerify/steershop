@@ -737,7 +737,6 @@ const MyStore = () => {
                       shop={shop}
                       products={products.slice(0, 4)}
                     />
-                    />
                   </TabsContent>
                 </Tabs>
               </CardContent>
