@@ -227,7 +227,7 @@ const CustomerExperience = ({ offer }: { offer?: any }) => {
                 </Link>
                 <Link to="/auth/signup">
                   <Button size="lg" variant="outline" className="text-base md:text-lg px-6 md:px-8 hover:bg-muted">
-                    Create Account
+                    Create Your Store
                   </Button>
                 </Link>
               </div>
