@@ -31,6 +31,7 @@ import CustomerCourses from "./pages/customer/CustomerCourses";
 import CustomerRewards from "./pages/customer/CustomerRewards";
 import Feedback from "./pages/Feedback";
 import AdminFeedback from "./pages/admin/AdminFeedback";
+import DemoStoreFront from "./pages/DemoStoreFront"
 
 const queryClient = new QueryClient();
 
@@ -44,7 +45,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/auth/:type" element={<Auth />} />
-          <Route path="/auth/callback" element={<Callback />} /> 
+          <Route path="/auth/callback" element={<Callback />} />
           <Route path="/auth/reset-password" element={<ResetPassword />} />
           <Route path="/shops" element={<Shops />} />
           <Route path="/shop/:slug" element={<ShopStorefront />} />
@@ -54,6 +55,7 @@ const App = () => (
           <Route path="/products" element={<Products />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/bookings" element={<Bookings />} />
+          <Route path="/demo" element={<DemoStoreFront />} />
           <Route path="/customer_dashboard" element={<CustomerDashboard />} />
           <Route path="/customer/dashboard" element={<CustomerDashboard />} />
           <Route path="/customer/orders" element={<CustomerOrders />} />
