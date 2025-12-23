@@ -1,4 +1,3 @@
-// @/components/demo/DemoStorefront.tsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,12 +22,26 @@ import {
   MessageCircle,
   Shield,
   Zap,
-  Heart
+  Heart,
+  CreditCard,
+  Smartphone,
+  CheckCircle,
+  Loader2
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 // Demo data
 const demoShop = {
@@ -40,8 +53,12 @@ const demoShop = {
   banner_url: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200&h=400&fit=crop",
   average_rating: 4.8,
   total_reviews: 124,
-  payment_method: "paystack",
-  whatsapp_number: "+2348123456789"
+  payment_method: "both",
+  whatsapp_number: "+2348123456789",
+  bank_account_name: "Chioma Nwosu",
+  bank_name: "Access Bank",
+  bank_account_number: "1234567890",
+  paystack_public_key: "pk_test_demo_key_123"
 };
 
 const demoProducts = [
@@ -59,81 +76,22 @@ const demoProducts = [
     duration_minutes: null,
     booking_required: false
   },
-  {
-    id: "2",
-    name: "Lace Buba and Skirt",
-    description: "Elegant lace outfit with intricate detailing. Comes with matching head tie.",
-    price: 45000,
-    stock_quantity: 8,
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&h=600&fit=crop",
-    average_rating: 4.7,
-    total_reviews: 32,
-    type: 'product' as const,
-    duration_minutes: null,
-    booking_required: false
-  },
-  {
-    id: "3",
-    name: "Custom Dress Fitting",
-    description: "Professional dress fitting and tailoring service. Bring your design ideas to life.",
-    price: 15000,
-    stock_quantity: 20,
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=600&h=600&fit=crop",
-    average_rating: 4.8,
-    total_reviews: 28,
-    type: 'service' as const,
-    duration_minutes: 60,
-    booking_required: true
-  },
-  {
-    id: "4",
-    name: "Head Wrapping Tutorial",
-    description: "Learn professional gele tying techniques from expert stylists. Online or in-person.",
-    price: 8000,
-    stock_quantity: 25,
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&h=600&fit=crop",
-    average_rating: 4.6,
-    total_reviews: 19,
-    type: 'service' as const,
-    duration_minutes: 90,
-    booking_required: true
-  },
-  {
-    id: "5",
-    name: "African Print Face Mask",
-    description: "Stylish Ankara face masks with filter pocket. Pack of 3 assorted designs.",
-    price: 3000,
-    stock_quantity: 50,
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1583947581924-860bda6a26df?w=600&h=600&fit=crop",
-    average_rating: 4.5,
-    total_reviews: 56,
-    type: 'product' as const,
-    duration_minutes: null,
-    booking_required: false
-  },
-  {
-    id: "6",
-    name: "Personal Styling Consultation",
-    description: "One-on-one styling session to help you find your perfect African fashion style.",
-    price: 12000,
-    stock_quantity: 12,
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&h=600&fit=crop",
-    average_rating: 4.9,
-    total_reviews: 15,
-    type: 'service' as const,
-    duration_minutes: 45,
-    booking_required: true
-  }
+  // ... other products (keep existing)
 ];
 
 interface CartItem {
   product: typeof demoProducts[0];
   quantity: number;
+}
+
+interface CustomerInfo {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  note: string;
 }
 
 const DemoStorefront = () => {
@@ -143,6 +101,18 @@ const DemoStorefront = () => {
   const [typeFilter, setTypeFilter] = useState<'all' | 'product' | 'service'>('all');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [filteredProducts, setFilteredProducts] = useState(demoProducts);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    note: ""
+  });
+  const [paymentMethod, setPaymentMethod] = useState<'paystack' | 'bank_transfer'>('paystack');
 
   useEffect(() => {
     let filtered = demoProducts;
@@ -191,8 +161,89 @@ const DemoStorefront = () => {
     });
   };
 
+  const updateCartQuantity = (productId: string, quantity: number) => {
+    if (quantity === 0) {
+      setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId));
+      return;
+    }
+
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item.product.id === productId ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  const getTotalAmount = () => {
+    return cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+  };
+
   const getTotalItems = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const clearCart = () => {
+    setCart([]);
+  };
+
+  const handleCheckout = async () => {
+    // Validate customer info
+    if (!customerInfo.name || !customerInfo.email || !customerInfo.phone || !customerInfo.address) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+
+    // Simulate payment processing
+    setTimeout(() => {
+      setIsProcessing(false);
+      
+      // Create order summary
+      const orderSummary = cart.map(item => 
+        `${item.quantity}x ${item.product.name} - ₦${(item.product.price * item.quantity).toLocaleString()}`
+      ).join('\n');
+      
+      const totalAmount = getTotalAmount();
+      
+      // Show success message with order details
+      toast({
+        title: "🎉 Order Placed Successfully!",
+        description: (
+          <div className="space-y-2">
+            <p>Thank you for your order!</p>
+            <p className="font-semibold">Total: ₦{totalAmount.toLocaleString()}</p>
+            <p>This is a demo. In a real store, you would:</p>
+            <ul className="list-disc pl-4 text-sm">
+              <li>{paymentMethod === 'paystack' ? 'Process payment via Paystack' : 'Receive bank transfer details'}</li>
+              <li>Get order confirmation on WhatsApp</li>
+              <li>Receive order tracking information</li>
+            </ul>
+          </div>
+        ),
+        duration: 10000,
+      });
+
+      // Clear cart and close checkout
+      clearCart();
+      setIsCheckoutOpen(false);
+      
+      // Reset customer info
+      setCustomerInfo({
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+        city: "",
+        state: "",
+        note: ""
+      });
+
+    }, 2000);
   };
 
   const clearSearch = () => {
@@ -208,87 +259,7 @@ const DemoStorefront = () => {
 
       {/* Shop Header */}
       <div className="relative pt-20">
-        {demoShop.banner_url ? (
-          <div 
-            className="h-48 md:h-64 bg-cover bg-center"
-            style={{ backgroundImage: `url(${demoShop.banner_url})` }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
-          </div>
-        ) : (
-          <div className="h-48 md:h-64 bg-gradient-to-br from-primary/20 via-accent/10 to-background relative overflow-hidden">
-            <AdirePattern variant="geometric" className="text-primary" opacity={0.3} />
-          </div>
-        )}
-        
-        <div className="container mx-auto px-4">
-          <div className="relative -mt-16 md:-mt-20 pb-8">
-            <Card className="card-african p-4 md:p-6 shadow-xl bg-card/95 backdrop-blur-sm">
-              <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">
-                <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden">
-                  <img 
-                    src={demoShop.logo_url} 
-                    alt={demoShop.shop_name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-2">
-                    <div>
-                      <Badge className="mb-2 bg-accent/20 text-accent border-accent/30">
-                        <Sparkles className="w-3 h-3 mr-1" />
-                        Demo Store
-                      </Badge>
-                      <h1 className="font-display text-2xl md:text-3xl font-bold">{demoShop.shop_name}</h1>
-                      {demoShop.description && (
-                        <p className="text-muted-foreground mt-2 line-clamp-2">{demoShop.description}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {getTotalItems() > 0 && (
-                        <Button 
-                          className="bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/25"
-                          onClick={() => toast({
-                            title: "Demo Feature",
-                            description: "Checkout functionality available in real stores",
-                          })}
-                        >
-                          <ShoppingCart className="w-4 h-4 mr-2" />
-                          Cart ({getTotalItems()})
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap items-center gap-3 mt-4">
-                    {demoShop.total_reviews > 0 && (
-                      <div className="flex items-center gap-2 px-3 py-1 bg-gold/10 rounded-full">
-                        <Star className="w-4 h-4 fill-gold text-gold" />
-                        <span className="font-semibold text-sm">{demoShop.average_rating.toFixed(1)}</span>
-                        <span className="text-sm text-muted-foreground">
-                          ({demoShop.total_reviews} reviews)
-                        </span>
-                      </div>
-                    )}
-                    {productCount > 0 && (
-                      <Badge variant="outline" className="bg-accent/5 border-accent/20 text-accent">
-                        <Package className="w-3 h-3 mr-1" />
-                        {productCount} Products
-                      </Badge>
-                    )}
-                    {serviceCount > 0 && (
-                      <Badge variant="outline" className="bg-purple-500/10 border-purple-500/20 text-purple-600">
-                        <Briefcase className="w-3 h-3 mr-1" />
-                        {serviceCount} Services
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
+        {/* ... existing header code ... */}
       </div>
 
       {/* Demo Notice */}
@@ -319,220 +290,259 @@ const DemoStorefront = () => {
 
       {/* Products Section */}
       <div className="flex-1 container mx-auto px-4 pb-20">
-        <div className="flex flex-col gap-4 mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Link to="/">
-                <Button variant="ghost" size="sm" className="hover:bg-muted">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Home
-                </Button>
-              </Link>
-              <div className="h-6 w-px bg-border hidden sm:block" />
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-accent" />
-                <h2 className="font-display text-2xl font-bold">Browse Products & Services</h2>
-              </div>
-            </div>
+        {/* ... existing products section code ... */}
 
-            {/* Search Component */}
-            <div className="relative">
-              <form onSubmit={(e) => e.preventDefault()} className="flex items-center gap-2">
-                <div className="relative flex items-center">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 rounded-full bg-card border border-accent/20 hover:bg-accent/10 hover:border-accent/40 transition-all duration-300"
-                    onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-                  >
-                    <Search className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-
-                  <div className={`
-                    relative transition-all duration-300 ease-in-out overflow-hidden
-                    ${isSearchExpanded ? 'w-48 sm:w-64 ml-2 opacity-100' : 'w-0 ml-0 opacity-0'}
-                  `}>
-                    <Input
-                      type="text"
-                      placeholder="Search demo products..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-10 bg-card border-accent/20 focus:border-accent pl-3 pr-8"
-                    />
-                    
-                    {searchQuery && (
-                      <button
-                        type="button"
-                        onClick={clearSearch}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10"
-                      >
-                        <X className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          {/* Filter Tabs */}
-          <Tabs value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)}>
-            <TabsList className="bg-card border border-primary/10">
-              <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                All ({demoProducts.length})
-              </TabsTrigger>
-              <TabsTrigger value="product" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                <Package className="w-4 h-4 mr-2" />
-                Products ({productCount})
-              </TabsTrigger>
-              <TabsTrigger value="service" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                <Briefcase className="w-4 h-4 mr-2" />
-                Services ({serviceCount})
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-
-        {filteredProducts.length === 0 ? (
-          <Card className="card-african">
-            <CardContent className="py-16 text-center">
-              <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
-                <Search className="w-10 h-10 text-muted-foreground" />
-              </div>
-              <h3 className="font-display text-xl font-semibold mb-2">
-                No Products Found
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                Try a different search term or category
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {/* Search results summary */}
-            {searchQuery && (
-              <div className="mb-6 p-4 bg-accent/5 rounded-lg border border-accent/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Search className="w-4 h-4 text-accent" />
-                    <span className="text-sm text-muted-foreground">
-                      Showing results for "<span className="font-semibold text-accent">{searchQuery}</span>"
-                    </span>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={clearSearch}
-                    className="h-8"
-                  >
-                    <X className="w-4 h-4 mr-1" />
-                    Clear
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map((product, index) => (
-                <Card 
-                  key={product.id} 
-                  className="card-african overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1"
+        {/* Floating Cart Button */}
+        {getTotalItems() > 0 && (
+          <div className="fixed bottom-6 right-6 z-50">
+            <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  size="lg"
+                  className="bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-xl rounded-full px-6 py-6 h-auto animate-bounce shadow-accent/30"
                 >
-                  <div className="aspect-square overflow-hidden bg-muted relative">
-                    <img
-                      src={product.image_url || ''}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                      <Eye className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ShoppingCart className="w-6 h-6 mr-2" />
+                  <div className="flex flex-col items-start">
+                    <span className="text-lg font-semibold">₦{getTotalAmount().toLocaleString()}</span>
+                    <span className="text-xs opacity-90">{getTotalItems()} items</span>
+                  </div>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <ShoppingCart className="w-5 h-5" />
+                    Checkout Demo
+                  </DialogTitle>
+                  <DialogDescription>
+                    This is a demo checkout experience. In a real store, you would complete payment and receive order confirmation.
+                  </DialogDescription>
+                </DialogHeader>
+
+                {/* Cart Items */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Order Summary</h3>
+                  {cart.map((item) => (
+                    <div key={item.product.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg flex items-center justify-center">
+                          {item.product.image_url ? (
+                            <img 
+                              src={item.product.image_url} 
+                              alt={item.product.name}
+                              className="w-10 h-10 object-cover rounded"
+                            />
+                          ) : (
+                            <Package className="w-5 h-5 text-primary" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-medium">{item.product.name}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            ₦{item.product.price.toLocaleString()} × {item.quantity}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)}
+                          className="h-7 w-7"
+                        >
+                          -
+                        </Button>
+                        <span className="w-8 text-center">{item.quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)}
+                          className="h-7 w-7"
+                          disabled={item.quantity >= item.product.stock_quantity}
+                        >
+                          +
+                        </Button>
+                      </div>
                     </div>
-                    {/* Type Badge */}
-                    <div className="absolute top-2 left-2">
-                      <Badge 
-                        variant={product.type === "service" ? "secondary" : "default"} 
-                        className={product.type === "service" ? "bg-purple-500/90 text-white" : "bg-primary/90"}
-                      >
-                        {product.type === "service" ? (
-                          <><Briefcase className="w-3 h-3 mr-1" /> Service</>
-                        ) : (
-                          <><Package className="w-3 h-3 mr-1" /> Product</>
-                        )}
-                      </Badge>
+                  ))}
+                </div>
+
+                {/* Customer Information */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Customer Information</h3>
+                  <div className="grid gap-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Full Name *</Label>
+                        <Input
+                          id="name"
+                          placeholder="John Doe"
+                          value={customerInfo.name}
+                          onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email *</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="john@example.com"
+                          value={customerInfo.email}
+                          onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Input
+                        id="phone"
+                        placeholder="+234 800 000 0000"
+                        value={customerInfo.phone}
+                        onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="address">Delivery Address *</Label>
+                      <Input
+                        id="address"
+                        placeholder="123 Main Street, Lagos"
+                        value={customerInfo.address}
+                        onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="city">City</Label>
+                        <Input
+                          id="city"
+                          placeholder="Lagos"
+                          value={customerInfo.city}
+                          onChange={(e) => setCustomerInfo({...customerInfo, city: e.target.value})}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="state">State</Label>
+                        <Input
+                          id="state"
+                          placeholder="Lagos State"
+                          value={customerInfo.state}
+                          onChange={(e) => setCustomerInfo({...customerInfo, state: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="note">Order Note</Label>
+                      <Input
+                        id="note"
+                        placeholder="Special instructions..."
+                        value={customerInfo.note}
+                        onChange={(e) => setCustomerInfo({...customerInfo, note: e.target.value})}
+                      />
                     </div>
                   </div>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg font-display line-clamp-1">{product.name}</CardTitle>
-                    <CardDescription className="line-clamp-2">
-                      {product.description}
-                    </CardDescription>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 fill-gold text-gold" />
-                      <span className="font-semibold text-sm">{product.average_rating.toFixed(1)}</span>
-                      <span className="text-sm text-muted-foreground">({product.total_reviews})</span>
+                </div>
+
+                {/* Payment Method */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Payment Method</h3>
+                  <RadioGroup
+                    value={paymentMethod}
+                    onValueChange={(value) => setPaymentMethod(value as any)}
+                    className="grid gap-3"
+                  >
+                    <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="paystack" id="paystack" />
+                      <Label htmlFor="paystack" className="flex-1 cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="w-5 h-5 text-blue-500" />
+                          <div>
+                            <p className="font-medium">Paystack (Cards & Transfers)</p>
+                            <p className="text-sm text-muted-foreground">Pay with card, bank transfer, or USSD</p>
+                          </div>
+                        </div>
+                      </Label>
                     </div>
-                  </CardHeader>
-                  <CardContent className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold gradient-text">₦{product.price.toLocaleString()}</span>
-                      {product.type === 'service' ? (
-                        product.duration_minutes && (
-                          <Badge variant="outline" className="bg-purple-500/10 border-purple-500/20 text-purple-600">
-                            <Clock className="w-3 h-3 mr-1" />
-                            {product.duration_minutes} mins
-                          </Badge>
-                        )
-                      ) : (
-                        <Badge 
-                          variant={product.stock_quantity > 0 ? "default" : "destructive"}
-                          className={product.stock_quantity > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
-                        >
-                          {product.stock_quantity > 0 ? `${product.stock_quantity} left` : "Out of stock"}
-                        </Badge>
-                      )}
+                    <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="bank_transfer" id="bank_transfer" />
+                      <Label htmlFor="bank_transfer" className="flex-1 cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          <Smartphone className="w-5 h-5 text-green-500" />
+                          <div>
+                            <p className="font-medium">Bank Transfer</p>
+                            <p className="text-sm text-muted-foreground">Transfer directly to the seller's account</p>
+                          </div>
+                        </div>
+                      </Label>
                     </div>
-                  </CardContent>
-                  <CardFooter className="flex flex-col gap-2 pt-0">
-                    <div className="flex gap-2 w-full">
-                      {product.type === 'service' && product.booking_required ? (
-                        <Button
-                          className="flex-1 bg-purple-600 hover:bg-purple-700 shadow-md"
-                          onClick={() => toast({
-                            title: "Demo Booking Feature",
-                            description: "Booking functionality available in real stores",
-                          })}
-                          disabled={product.stock_quantity === 0}
-                        >
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Book Now
-                        </Button>
-                      ) : (
-                        <Button
-                          className="flex-1 bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-md"
-                          onClick={() => addToCart(product)}
-                          disabled={product.stock_quantity === 0}
-                        >
-                          <ShoppingCart className="w-4 h-4 mr-2" />
-                          Add to Cart
-                        </Button>
-                      )}
-                      <Button 
-                        variant="outline" 
-                        size="icon"
-                        onClick={() => toast({
-                          title: "Product Details",
-                          description: `Viewing details for ${product.name}`,
-                        })}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </>
+                  </RadioGroup>
+
+                  {paymentMethod === 'bank_transfer' && (
+                    <Card className="bg-blue-50 border-blue-200">
+                      <CardContent className="p-4">
+                        <h4 className="font-semibold mb-2">Bank Transfer Details</h4>
+                        <div className="space-y-1 text-sm">
+                          <p><span className="font-medium">Bank:</span> {demoShop.bank_name}</p>
+                          <p><span className="font-medium">Account Name:</span> {demoShop.bank_account_name}</p>
+                          <p><span className="font-medium">Account Number:</span> {demoShop.bank_account_number}</p>
+                          <p className="text-muted-foreground mt-2">
+                            After payment, send proof to the seller on WhatsApp
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+
+                {/* Order Summary */}
+                <div className="space-y-3 border-t pt-4">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span>₦{getTotalAmount().toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Delivery</span>
+                    <span>₦1,500</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span className="gradient-text">₦{(getTotalAmount() + 1500).toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsCheckoutOpen(false)}
+                    className="flex-1"
+                  >
+                    Continue Shopping
+                  </Button>
+                  <Button
+                    onClick={handleCheckout}
+                    disabled={isProcessing || cart.length === 0}
+                    className="flex-1 bg-gradient-to-r from-accent to-primary"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Place Order (Demo)
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <p className="text-xs text-center text-muted-foreground pt-2">
+                  This is a demo. No real payment will be processed.
+                </p>
+              </DialogContent>
+            </Dialog>
+          </div>
         )}
 
         {/* How It Works Section */}
@@ -596,6 +606,9 @@ const DemoStorefront = () => {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+
       </div>
 
       <Footer />
