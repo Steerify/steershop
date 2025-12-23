@@ -19,6 +19,7 @@ import {
   Target,
   Clock,
   Heart,
+  ArrowLeft,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -147,6 +148,37 @@ const Index = () => {
               )}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ================= DEMO PROMOTION BANNER ================= */}
+      <section className="py-8">
+        <div className="container mx-auto px-4">
+          <Link to="/demo">
+            <Card className="bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 border-primary/20 hover:border-accent/40 transition-all cursor-pointer group hover:-translate-y-0.5 hover:shadow-lg">
+              <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-accent to-primary rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <Sparkles className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-xl font-bold mb-1 text-foreground">See SteerSolo in Action</h3>
+                    <p className="text-muted-foreground max-w-2xl">
+                      Explore our interactive demo store to see exactly how your business would look.
+                      No signup required — experience it right now!
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  size="lg"
+                  className="bg-gradient-to-r from-accent to-primary group-hover:opacity-90 shadow-md"
+                >
+                  View Live Demo
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </section>
 
@@ -310,11 +342,17 @@ const EntrepreneurExperience = ({ offer }: { offer?: any }) => (
             </Card>
           )}
           
-          <div className="pt-4">
+          <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <Link to="/auth/signup">
               <Button size="lg" className="bg-gradient-to-r from-accent to-primary text-lg px-8">
                 Start Your 60-Second Setup
                 <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+            <Link to="/demo">
+              <Button size="lg" variant="outline" className="text-lg px-8">
+                <Sparkles className="w-5 h-5 mr-2" />
+                View Live Demo
               </Button>
             </Link>
           </div>
@@ -427,12 +465,20 @@ const EntrepreneurExperience = ({ offer }: { offer?: any }) => (
               ))}
             </ul>
             
-            <Link to="/auth/signup">
-              <Button size="lg" className="w-full bg-gradient-to-r from-accent to-primary text-lg">
-                Start 7-Day Free Trial
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
+            <div className="flex flex-col gap-3">
+              <Link to="/auth/signup">
+                <Button size="lg" className="w-full bg-gradient-to-r from-accent to-primary text-lg">
+                  Start 7-Day Free Trial
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+              <Link to="/demo">
+                <Button size="lg" variant="outline" className="w-full">
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Try Demo First
+                </Button>
+              </Link>
+            </div>
             <p className="text-sm text-muted-foreground mt-4">No credit card required</p>
           </CardContent>
         </Card>
