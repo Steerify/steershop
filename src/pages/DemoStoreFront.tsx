@@ -545,68 +545,6 @@ const DemoStorefront = () => {
           </div>
         )}
 
-        {/* How It Works Section */}
-        <div className="mt-16">
-          <h2 className="font-display text-3xl font-bold text-center mb-12">How SteerSolo Works</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all">
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-accent/20 to-primary/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Store className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="font-display text-xl font-bold mb-2">1. Create Your Store</h3>
-                <p className="text-muted-foreground">Sign up and set up your store in under 60 seconds</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all">
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-accent/20 to-primary/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <MessageCircle className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="font-display text-xl font-bold mb-2">2. Share Your Link</h3>
-                <p className="text-muted-foreground">Share your unique store link on WhatsApp, Instagram, etc.</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all">
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-accent/20 to-primary/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Zap className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="font-display text-xl font-bold mb-2">3. Start Selling</h3>
-                <p className="text-muted-foreground">Receive orders and payments directly to your WhatsApp</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Final CTA */}
-        <div className="mt-16 text-center">
-          <Card className="bg-gradient-to-br from-primary/10 via-accent/5 to-primary/10 border-primary/20">
-            <CardContent className="p-8 md:p-12">
-              <h2 className="font-display text-3xl font-bold mb-4">Ready to Build Your Store?</h2>
-              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Your hustle deserves a professional home. Start your 7-day free trial today.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/auth/signup">
-                  <Button size="lg" className="bg-gradient-to-r from-accent to-primary text-lg px-8">
-                    Start Free Trial
-                    <ArrowLeft className="w-5 h-5 ml-2 rotate-180" />
-                  </Button>
-                </Link>
-                <Link to="/">
-                  <Button size="lg" variant="outline">
-                    Learn More
-                  </Button>
-                </Link>
-              </div>
-              <p className="text-sm text-muted-foreground mt-4">No credit card required · Cancel anytime</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
 
 
       </div>
