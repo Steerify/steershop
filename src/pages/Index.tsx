@@ -8,41 +8,29 @@ import {
   Store,
   Zap,
   Shield,
+  TrendingUp,
+  Users,
   ShoppingBag,
+  Star,
+  MessageCircle,
   Sparkles,
   CheckCircle,
   Smartphone,
+  Target,
   Clock,
   Heart,
-  Globe,
-  Rocket,
-  Star,
-  Users,
-  TrendingUp,
-  MessageCircle,
-  Award,
   ArrowLeft,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireDivider } from "@/components/patterns/AdirePattern";
 import heroImage from "@/assets/hero-image.jpg";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [activeAudience, setActiveAudience] = useState<"customers" | "entrepreneurs">("entrepreneurs");
   const [offers, setOffers] = useState<any[]>([]);
-  const [currentPlatform, setCurrentPlatform] = useState(0);
-  
-  const platforms = ["WhatsApp", "Instagram", "Telegram", "Facebook", "Marketplaces", "Chats"];
-  
-  // Simple typewriter effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentPlatform((prev) => (prev + 1) % platforms.length);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     fetchOffers();
@@ -65,7 +53,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      {/* ================= SIMPLE HERO SECTION ================= */}
+      {/* ================= HERO SECTION ================= */}
       <section className="relative pt-24 md:pt-28 pb-12 md:pb-16 overflow-hidden">
         <AdirePattern variant="geometric" className="text-primary" opacity={0.6} />
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
@@ -73,25 +61,33 @@ const Index = () => {
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 border border-accent/20 rounded-full mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 border border-accent/20 rounded-full mb-6 animate-fade-in">
               <Sparkles className="w-4 h-4 text-accent" />
-              <span className="text-accent font-semibold text-sm">TRUSTED WORLDWIDE • BUILT IN NIGERIA</span>
+              <span className="text-accent font-semibold text-sm">Built for Nigerian Online Vendors</span>
             </div>
             
-            {/* Main Heading with Simple Typewriter */}
+            {/* Main Heading */}
             <h1 className="font-display text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 leading-tight">
-              Your Hustle is Bigger
-              <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent animate-gradient">
-                Than {platforms[currentPlatform]}
-              </span>
+              {activeAudience === "entrepreneurs" ? (
+                <>
+                  Your Hustle is Bigger
+                  <br />
+                  <span className="gradient-text">Than WhatsApp</span>
+                </>
+              ) : (
+                <>
+                  Shop from Real
+                  <br />
+                  <span className="gradient-text">Nigerian Entrepreneurs</span>
+                </>
+              )}
             </h1>
             
             {/* Subheading */}
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               {activeAudience === "entrepreneurs" 
-                ? "Turn your social media hustle into a global brand. Get a storefront, accept payments worldwide, and manage orders — no website needed."
-                : "Discover unique products from passionate sellers worldwide. Shop directly with trust and ease."
+                ? "Turn your WhatsApp hustle into a professional brand. Get a storefront, accept payments, and manage orders — no website needed."
+                : "Discover unique products from passionate local sellers. Shop directly with trust and ease."
               }
             </p>
             
@@ -124,16 +120,21 @@ const Index = () => {
               {activeAudience === "entrepreneurs" ? (
                 <>
                   <Link to="/auth/signup">
-                    <Button size="lg" className="bg-gradient-to-r from-accent to-primary text-white text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5">
+                    <Button size="lg" className="bg-gradient-to-r from-accent to-primary text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5">
                       Start Free Trial
                       <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                  </Link>
+                  <Link to="/demo">
+                    <Button size="lg" variant="outline" className="text-lg px-8 py-6">
+                      See Live Demo
                     </Button>
                   </Link>
                 </>
               ) : (
                 <>
                   <Link to="/shops">
-                    <Button size="lg" className="bg-gradient-to-r from-accent to-primary text-white text-lg px-8 py-6 shadow-lg hover:shadow-xl">
+                    <Button size="lg" className="bg-gradient-to-r from-accent to-primary text-lg px-8 py-6 shadow-lg hover:shadow-xl">
                       Browse Stores
                       <ShoppingBag className="ml-2 w-5 h-5" />
                     </Button>
@@ -145,28 +146,6 @@ const Index = () => {
                   </Link>
                 </>
               )}
-            </div>
-            
-            {/* Simple Stats */}
-            <div className="mt-12 pt-8 border-t border-border/50">
-              <div className="flex flex-wrap items-center justify-center gap-8 text-center">
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-primary mb-1">1,250+</div>
-                  <p className="text-sm text-muted-foreground">Stores Created</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-primary mb-1">18,500+</div>
-                  <p className="text-sm text-muted-foreground">Orders Processed</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-primary mb-1">12+</div>
-                  <p className="text-sm text-muted-foreground">Countries</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-primary mb-1">97%</div>
-                  <p className="text-sm text-muted-foreground">Satisfaction Rate</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -192,7 +171,7 @@ const Index = () => {
                 </div>
                 <Button 
                   size="lg"
-                  className="bg-gradient-to-r from-accent to-primary text-white group-hover:opacity-90 shadow-md"
+                  className="bg-gradient-to-r from-accent to-primary group-hover:opacity-90 shadow-md"
                 >
                   View Live Demo
                   <ArrowRight className="ml-2 w-4 h-4" />
@@ -205,30 +184,26 @@ const Index = () => {
 
       {/* ================= DYNAMIC CONTENT ================= */}
       {activeAudience === "entrepreneurs" ? (
-        <SimplifiedEntrepreneurExperience offer={entrepreneurOffer} />
+        <EntrepreneurExperience offer={entrepreneurOffer} />
       ) : (
-        <SimplifiedCustomerExperience offer={customerOffer} />
+        <CustomerExperience offer={customerOffer} />
       )}
 
       <AdireDivider />
 
-      {/* ================= GLOBAL VALUE PROPOSITION ================= */}
+      {/* ================= UNIFIED VALUE PROPOSITION ================= */}
       <section className="relative py-16 md:py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full mb-4">
-              <Globe className="w-4 h-4 text-accent" />
-              <span className="text-accent font-semibold">BUILT IN NIGERIA, READY FOR THE WORLD</span>
-            </div>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              Why Entrepreneurs Worldwide Choose SteerSolo
+              Why Choose SteerSolo?
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              The simplest way to turn your local hustle into a global business
+              The simplest way to turn your hustle into a real business
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
                 icon: Smartphone,
@@ -237,28 +212,18 @@ const Index = () => {
               },
               {
                 icon: Clock,
-                title: "60-Second Global Setup",
-                description: "Start selling worldwide in under a minute."
+                title: "60-Second Setup",
+                description: "Start selling in under a minute. No technical skills needed."
               },
               {
                 icon: Shield,
                 title: "Trust & Credibility",
-                description: "Professional storefront that customers trust globally."
+                description: "Look professional, earn customer trust, increase sales."
               },
               {
-                icon: Globe,
-                title: "Borderless Payments",
-                description: "Accept payments from anywhere with Paystack."
-              },
-              {
-                icon: Rocket,
-                title: "Scale Anywhere",
-                description: "From Lagos to London, grow without limits."
-              },
-              {
-                icon: Award,
-                title: "Premium Experience",
-                description: "Auto-generated designs that compete with global brands."
+                icon: Target,
+                title: "Built for Nigeria",
+                description: "Paystack payments, Naira pricing, local delivery focus."
               }
             ].map((item, index) => (
               <Card key={index} className="text-center border-0 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
@@ -275,123 +240,19 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ================= SIMPLE TESTIMONIALS ================= */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <h2 className="font-display text-3xl font-bold text-center mb-12">
-            From Local Hustle to Global Impact
-          </h2>
-          
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                name: "Chinelo N.",
-                location: "Lagos",
-                business: "Fashion Designer",
-                quote: "My Ankara designs now sell in London! SteerSolo made it possible.",
-                flag: "🇳🇬 → 🇬🇧"
-              },
-              {
-                name: "David C.",
-                location: "Hong Kong",
-                business: "Tech Accessories",
-                quote: "Perfect for selling to African markets. The WhatsApp integration is genius.",
-                flag: "🇭🇰 → 🌍"
-              },
-              {
-                name: "Fatima A.",
-                location: "Kano",
-                business: "Perfume Business",
-                quote: "From WhatsApp to 8 countries in 3 months. Game changer!",
-                flag: "🇳🇬 → 🇦🇪"
-              }
-            ].map((testimonial, index) => (
-              <Card key={index} className="border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <p className="italic text-muted-foreground mb-6">"{testimonial.quote}"</p>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-bold">{testimonial.name}</div>
-                      <div className="text-sm text-muted-foreground">{testimonial.business}, {testimonial.location}</div>
-                    </div>
-                    <div className="text-2xl">{testimonial.flag}</div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ================= SIMPLE PRICING ================= */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-md mx-auto">
-            <Card className="border-2 border-primary/20 shadow-2xl">
-              <CardHeader className="text-center pb-6">
-                <div className="inline-flex items-center gap-2 px-4 py-1 bg-accent/10 rounded-full text-accent font-semibold text-sm mx-auto mb-4">
-                  <Award className="w-4 h-4" />
-                  GLOBAL SOLO PLAN
-                </div>
-                <CardTitle className="font-display text-3xl">Everything You Need</CardTitle>
-                <CardDescription className="text-lg">Local price, global features</CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                <div className="mb-8">
-                  <span className="text-5xl font-bold text-primary">₦1,000</span>
-                  <span className="text-muted-foreground text-lg">/month</span>
-                  <p className="text-sm text-muted-foreground mt-2">≈ $1.10 • Cancel anytime</p>
-                </div>
-                
-                <ul className="space-y-3 mb-8 text-left">
-                  {[
-                    "Professional global storefront",
-                    "Unlimited products worldwide",
-                    "Paystack multi-currency payments",
-                    "WhatsApp order delivery",
-                    "Auto-generated premium designs",
-                    "Basic global analytics",
-                    "7-day free trial"
-                  ].map((item, idx) => (
-                    <li key={idx} className="flex items-center gap-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                
-                <Link to="/auth/signup">
-                  <Button size="lg" className="w-full bg-gradient-to-r from-accent to-primary text-white text-lg py-6">
-                    <Rocket className="w-5 h-5 mr-2" />
-                    Start Free Trial
-                    <ArrowRight className="ml-2 w-5 h-5" />
-                  </Button>
-                </Link>
-                <p className="text-sm text-muted-foreground mt-4">No credit card required</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
       {/* ================= FINAL CTA ================= */}
       <section className="relative py-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-accent" />
         <AdirePattern variant="circles" className="text-white" opacity={0.15} />
         
         <div className="container mx-auto px-4 text-center relative z-10">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-6">
-            Ready to {activeAudience === "entrepreneurs" ? "Go Global?" : "Shop Global?"}
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-primary-foreground mb-6">
+            Ready to {activeAudience === "entrepreneurs" ? "Upgrade Your Hustle?" : "Shop Local?"}
           </h2>
-          <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
             {activeAudience === "entrepreneurs"
-              ? "Join entrepreneurs worldwide building real brands with SteerSolo"
-              : "Support real entrepreneurs and discover amazing products worldwide"
+              ? "Join thousands of Nigerian vendors building real brands with SteerSolo"
+              : "Support real entrepreneurs and discover amazing products in your community"
             }
           </p>
           
@@ -406,14 +267,14 @@ const Index = () => {
             <Button
               size="lg"
               variant="outline"
-              className="text-lg px-10 py-6 border-white/30 text-white hover:bg-white/10"
+              className="text-lg px-10 py-6 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
               onClick={() => setActiveAudience(activeAudience === "entrepreneurs" ? "customers" : "entrepreneurs")}
             >
               {activeAudience === "entrepreneurs" ? "I Want to Shop" : "I Want to Sell"}
             </Button>
           </div>
           
-          <p className="mt-6 text-white/80">
+          <p className="mt-6 text-primary-foreground/80">
             {activeAudience === "entrepreneurs" ? "No credit card required · 7-day free trial" : "100% secure · Direct seller support"}
           </p>
         </div>
@@ -424,8 +285,8 @@ const Index = () => {
   );
 };
 
-/* ================= SIMPLIFIED ENTREPRENEUR EXPERIENCE ================= */
-const SimplifiedEntrepreneurExperience = ({ offer }: { offer?: any }) => (
+/* ================= ENTREPRENEUR EXPERIENCE ================= */
+const EntrepreneurExperience = ({ offer }: { offer?: any }) => (
   <>
     {/* Hero Section */}
     <section className="py-12 md:py-16">
@@ -433,23 +294,21 @@ const SimplifiedEntrepreneurExperience = ({ offer }: { offer?: any }) => (
         <div className="space-y-6">
           <h2 className="font-display text-3xl md:text-4xl font-bold">
             From WhatsApp Chaos to<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent">
-              Global Business
-            </span>
+            <span className="gradient-text">Professional Business</span>
           </h2>
           
           <p className="text-lg text-muted-foreground">
-            Stop losing sales in endless chats. Get a professional storefront that works worldwide, 
-            accept payments in multiple currencies, and manage orders efficiently.
+            Stop losing sales in endless chats. Get a clean storefront, accept payments with Paystack, 
+            and manage orders efficiently — all while keeping WhatsApp as your communication hub.
           </p>
           
           {/* Quick Benefits */}
           <ul className="space-y-3">
             {[
               "No website or hosting needed",
-              "Paystack multi-currency payments",
+              "Paystack + manual payment options",
               "Orders delivered to your WhatsApp",
-              "Professional global designs",
+              "Professional promo designs auto-generated",
               "₦1,000/month only"
             ].map((item, index) => (
               <li key={index} className="flex items-center gap-3">
@@ -485,7 +344,7 @@ const SimplifiedEntrepreneurExperience = ({ offer }: { offer?: any }) => (
           
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <Link to="/auth/signup">
-              <Button size="lg" className="bg-gradient-to-r from-accent to-primary text-white text-lg px-8">
+              <Button size="lg" className="bg-gradient-to-r from-accent to-primary text-lg px-8">
                 Start Your 60-Second Setup
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
@@ -515,10 +374,10 @@ const SimplifiedEntrepreneurExperience = ({ offer }: { offer?: any }) => (
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-            Everything You Need to Sell Worldwide
+            Everything You Need to Sell Smart
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Professional tools designed for global solo entrepreneurs
+            Professional tools designed for solo entrepreneurs
           </p>
         </div>
         
@@ -526,33 +385,33 @@ const SimplifiedEntrepreneurExperience = ({ offer }: { offer?: any }) => (
           {[
             {
               icon: Store,
-              title: "Instant Global Storefront",
-              description: "Professional-looking store that works worldwide."
+              title: "Instant Storefront",
+              description: "Professional-looking store in minutes. No design skills needed."
             },
             {
               icon: Zap,
-              title: "Borderless Payments",
-              description: "Accept cards, transfers worldwide with Paystack."
+              title: "Paystack Payments",
+              description: "Accept cards, transfers, USSD. Get paid directly to your bank."
             },
             {
               icon: MessageCircle,
               title: "WhatsApp Orders",
-              description: "Orders come straight to your WhatsApp anywhere."
+              description: "Orders come straight to your WhatsApp. No missed sales."
             },
             {
               icon: TrendingUp,
-              title: "Global Marketing",
-              description: "Professional posters and flyers for global audience."
+              title: "Auto-Generated Designs",
+              description: "Professional posters and flyers created automatically."
             },
             {
               icon: Shield,
-              title: "Build Global Trust",
-              description: "Look established and credible worldwide."
+              title: "Build Trust",
+              description: "Look established and credible to increase conversion."
             },
             {
-              icon: Globe,
-              title: "Made for Global",
-              description: "Built in Nigeria, ready for the world."
+              icon: Heart,
+              title: "Made for You",
+              description: "Built specifically for Nigerian online vendors."
             }
           ].map((feature, index) => (
             <Card key={index} className="hover:border-accent/50 transition-all hover:-translate-y-1">
@@ -568,11 +427,68 @@ const SimplifiedEntrepreneurExperience = ({ offer }: { offer?: any }) => (
         </div>
       </div>
     </section>
+
+    {/* Pricing */}
+    <section className="py-12 md:py-16">
+      <div className="container mx-auto px-4">
+        <Card className="max-w-md mx-auto overflow-hidden border-2 border-primary/20">
+          <CardHeader className="text-center pb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1 bg-gold/10 rounded-full text-gold font-semibold text-sm mx-auto mb-4">
+              <Sparkles className="w-4 h-4" />
+              Perfect for Solo Vendors
+            </div>
+            <CardTitle className="font-display text-3xl">Solo Plan</CardTitle>
+            <CardDescription className="text-lg">Everything to run your business</CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <div className="mb-8">
+              <span className="text-5xl font-bold gradient-text">₦1,000</span>
+              <span className="text-muted-foreground text-lg">/month</span>
+              <p className="text-sm text-muted-foreground mt-2">Less than ₦34 per day</p>
+            </div>
+            
+            <ul className="space-y-3 mb-8 text-left max-w-sm mx-auto">
+              {[
+                "Professional storefront",
+                "Unlimited products",
+                "Paystack payments",
+                "WhatsApp order delivery",
+                "Auto-generated designs",
+                "Order management",
+                "Customer reviews",
+                "Basic analytics"
+              ].map((item, idx) => (
+                <li key={idx} className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            
+            <div className="flex flex-col gap-3">
+              <Link to="/auth/signup">
+                <Button size="lg" className="w-full bg-gradient-to-r from-accent to-primary text-lg">
+                  Start 7-Day Free Trial
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+              <Link to="/demo">
+                <Button size="lg" variant="outline" className="w-full">
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Try Demo First
+                </Button>
+              </Link>
+            </div>
+            <p className="text-sm text-muted-foreground mt-4">No credit card required</p>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
   </>
 );
 
-/* ================= SIMPLIFIED CUSTOMER EXPERIENCE ================= */
-const SimplifiedCustomerExperience = ({ offer }: { offer?: any }) => (
+/* ================= CUSTOMER EXPERIENCE ================= */
+const CustomerExperience = ({ offer }: { offer?: any }) => (
   <>
     {/* Hero Section */}
     <section className="py-12 md:py-16">
@@ -580,13 +496,11 @@ const SimplifiedCustomerExperience = ({ offer }: { offer?: any }) => (
         <div className="space-y-6">
           <h2 className="font-display text-3xl md:text-4xl font-bold">
             Shop from Real<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent">
-              Global Entrepreneurs
-            </span>
+            <span className="gradient-text">Local Entrepreneurs</span>
           </h2>
           
           <p className="text-lg text-muted-foreground">
-            Discover unique products from passionate sellers worldwide. Every purchase directly supports 
+            Discover unique products from passionate Nigerian sellers. Every purchase directly supports 
             real people building their dreams from the ground up.
           </p>
           
@@ -594,9 +508,9 @@ const SimplifiedCustomerExperience = ({ offer }: { offer?: any }) => (
           <ul className="space-y-3">
             {[
               "Direct communication with sellers",
-              "Verified businesses worldwide",
-              "Secure multi-currency payments",
-              "Global shipping options",
+              "100% verified Nigerian businesses",
+              "Secure Paystack payments",
+              "Local delivery options",
               "Real customer reviews"
             ].map((item, index) => (
               <li key={index} className="flex items-center gap-3">
@@ -632,8 +546,8 @@ const SimplifiedCustomerExperience = ({ offer }: { offer?: any }) => (
           
           <div className="pt-4">
             <Link to="/shops">
-              <Button size="lg" className="bg-gradient-to-r from-accent to-primary text-white text-lg px-8">
-                Browse Global Stores
+              <Button size="lg" className="bg-gradient-to-r from-accent to-primary text-lg px-8">
+                Browse Local Stores
                 <ShoppingBag className="ml-2 w-5 h-5" />
               </Button>
             </Link>
@@ -644,7 +558,7 @@ const SimplifiedCustomerExperience = ({ offer }: { offer?: any }) => (
           <div className="absolute -inset-4 bg-gradient-to-tr from-primary/20 to-accent/20 blur-3xl rounded-3xl" />
           <img
             src={heroImage}
-            alt="Customers shopping from global businesses"
+            alt="Customers shopping from Nigerian businesses"
             className="relative rounded-2xl shadow-2xl w-full border"
           />
         </div>
@@ -659,7 +573,7 @@ const SimplifiedCustomerExperience = ({ offer }: { offer?: any }) => (
             Why Shop with SteerSolo?
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Experience shopping that's personal, secure, and meaningful worldwide
+            Experience shopping that's personal, secure, and meaningful
           </p>
         </div>
         
@@ -667,33 +581,33 @@ const SimplifiedCustomerExperience = ({ offer }: { offer?: any }) => (
           {[
             {
               icon: Users,
-              title: "Real Global Entrepreneurs",
-              description: "Connect directly with makers, not corporations."
+              title: "Real People",
+              description: "Connect directly with entrepreneurs, not corporations."
             },
             {
               icon: Shield,
-              title: "Verified Worldwide",
+              title: "Verified Stores",
               description: "Every seller is verified for your peace of mind."
             },
             {
               icon: Star,
-              title: "Unique Global Finds",
+              title: "Unique Finds",
               description: "Discover products you won't find anywhere else."
             },
             {
               icon: MessageCircle,
-              title: "Direct Global Chat",
+              title: "Direct Chat",
               description: "Message sellers on WhatsApp for personalized service."
             },
             {
               icon: Zap,
-              title: "Worldwide Delivery",
-              description: "Reliable shipping to most countries."
+              title: "Local Delivery",
+              description: "Fast, reliable delivery within Nigeria."
             },
             {
               icon: Heart,
-              title: "Support Global Dreams",
-              description: "Your purchase directly supports entrepreneurs worldwide."
+              title: "Support Dreams",
+              description: "Your purchase directly supports local entrepreneurs."
             }
           ].map((feature, index) => (
             <Card key={index} className="hover:border-accent/50 transition-all hover:-translate-y-1">
@@ -714,18 +628,18 @@ const SimplifiedCustomerExperience = ({ offer }: { offer?: any }) => (
     <section className="py-12 md:py-16">
       <div className="container mx-auto px-4">
         <h2 className="font-display text-3xl font-bold text-center mb-8">
-          Global Categories
+          Popular Categories
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            "African Fashion",
-            "Global Tech",
-            "World Foods",
-            "Art & Crafts",
-            "Beauty Worldwide",
+            "Fashion & Clothing",
+            "Beauty & Skincare",
+            "Food & Drinks",
+            "Phone Accessories",
+            "Home & Living",
             "Digital Services",
-            "Home Global",
-            "Fitness Global"
+            "Arts & Crafts",
+            "Fitness & Wellness"
           ].map((category, index) => (
             <Card key={index} className="text-center hover:bg-accent/5 cursor-pointer transition-colors">
               <CardContent className="p-6">
