@@ -27,31 +27,26 @@ const CELEBRATIONS: Celebration[] = [
   { name: "Easter", startDate: "04-07", endDate: "04-07", type: 'christian' }
 ];
 
-// --- Styled Components for Decorations ---
+// --- Static Decorations ---
 
 const SantaHat = () => (
-  <div className="absolute -top-[16px] -left-[12px] w-14 h-12 -rotate-[15deg] pointer-events-none z-30 drop-shadow-md animate-bounce" style={{ animationDuration: '3s' }}>
+  /* Positioned to perch on the top-left corner specifically */
+  <div className="absolute -top-[18px] -left-[14px] w-14 h-12 -rotate-[12deg] pointer-events-none z-30 drop-shadow-sm">
+    {/* Red Body */}
     <div className="absolute bottom-3 left-3 w-10 h-7 bg-red-600 rounded-t-[80%] rounded-b-sm" />
+    {/* Fur Trim */}
     <div className="absolute bottom-2 left-2 w-12 h-3.5 bg-white rounded-full shadow-sm" />
+    {/* Pom Pom */}
     <div className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full border border-slate-100" />
   </div>
 );
 
 const FireworkFlare = () => (
   <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-xl">
-    {[...Array(3)].map((_, i) => (
-      <div 
-        key={i}
-        className="absolute inset-0 animate-ping opacity-0"
-        style={{ 
-          animationDelay: `${i * 0.6}s`, 
-          animationDuration: '2s',
-          boxShadow: `inset 0 0 15px ${i % 2 === 0 ? '#fbbf24' : '#ffffff'}` 
-        }}
-      />
-    ))}
-    <div className="absolute top-1 right-1 animate-pulse text-yellow-400"><Sparkles size={12} /></div>
-    <div className="absolute bottom-1 left-1 animate-pulse delay-300 text-white"><Star size={10} /></div>
+    {/* Static decorative sparkles instead of moving flares */}
+    <div className="absolute top-1 right-1 text-yellow-400 opacity-80"><Sparkles size={14} /></div>
+    <div className="absolute bottom-1 left-1 text-orange-400 opacity-80"><Star size={12} /></div>
+    <div className="absolute inset-0 border-2 border-yellow-400/20 rounded-xl"></div>
   </div>
 );
 
@@ -113,9 +108,9 @@ const Navbar = () => {
         <div className="bg-gradient-to-r from-primary/20 to-accent/20 border-b border-primary/30">
           <div className="container mx-auto px-4 py-1 text-center">
             <span className="text-sm font-medium flex items-center justify-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+              <Sparkles className="w-4 h-4 text-primary" />
               <span>Celebrating {primary.name}!</span>
-              <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+              <Sparkles className="w-4 h-4 text-primary" />
             </span>
           </div>
         </div>
@@ -132,17 +127,17 @@ const Navbar = () => {
               <div className="w-11 h-11 rounded-xl overflow-hidden shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 relative bg-white">
                 <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
                 
-                {/* Visual Effects */}
+                {/* Visual Effects (Non-animated) */}
                 {isNewYear && <FireworkFlare />}
                 {isChristmas && <SantaHat />}
                 {!isChristmas && primary && <CelebrationBadge celebration={primary} />}
               </div>
 
-              {/* Your Original Typography Style */}
+              {/* Typography Style Restored */}
               <span className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 SteerSolo
                 {primary && (
-                  <span className="ml-2 text-lg animate-pulse inline-block text-primary">
+                  <span className="ml-2 text-lg inline-block text-primary">
                     {isChristmas ? "🎅" : <Sparkles className="inline w-5 h-5" />}
                   </span>
                 )}
@@ -180,7 +175,7 @@ const Navbar = () => {
             {/* Mobile Button */}
             <button className="md:hidden p-2 rounded-lg hover:bg-muted relative" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
               {activeCelebrations.length > 0 && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full animate-ping"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full"></div>
               )}
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
