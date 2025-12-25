@@ -21,11 +21,17 @@ import {
   TrendingUp,
   MessageCircle,
   Award,
+  Target,
+  Crown,
   X,
   Check,
   AlertCircle,
-  Target,
-  Crown,
+  Search,
+  Building,
+  MessageSquare,
+  SmartphoneIcon,
+  DollarSign,
+  Layers,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -42,11 +48,10 @@ const Index = () => {
     "Lost orders in chats",
     "Manual copy/paste prices",
     "No professional look",
-    "WhatsApp chaos",
-    "Buyer distrust"
+    "Customer distrust",
+    "Time wasted on admin"
   ];
   
-  // Simple typewriter effect
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPainPoint((prev) => (prev + 1) % painPoints.length);
@@ -88,7 +93,7 @@ const Index = () => {
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 border border-accent/20 rounded-full mb-4">
                   <Sparkles className="w-4 h-4 text-accent" />
-                  <span className="text-accent font-semibold text-sm">MADE FOR NIGERIAN HUSTLERS</span>
+                  <span className="text-accent font-semibold text-sm">MADE FOR WHATSAPP SELLERS</span>
                 </div>
                 
                 {/* Main Heading */}
@@ -98,22 +103,22 @@ const Index = () => {
                     {painPoints[currentPainPoint]}
                   </span>
                   <br />
-                  <span className="text-primary">Get a Real Store in 60 Seconds</span>
+                  <span className="text-primary">Get Your Professional Store Today</span>
                 </h1>
                 
                 {/* Subheading */}
                 <p className="text-lg md:text-xl text-muted-foreground">
-                  SteerSolo turns your WhatsApp hustle into a professional online shop that customers trust.
-                  No website needed. No designer needed. Just sales.
+                  Tired of messy WhatsApp sales? Get a clean, professional store that works with WhatsApp — 
+                  not against it. Accept payments, organize orders, and build trust instantly.
                 </p>
                 
                 {/* Pain Point Solution */}
                 <div className="space-y-3">
                   {[
-                    "✓ Replace blurry WhatsApp photos with clean product listings",
+                    "✓ Replace blurry photos with clean product listings",
                     "✓ Stop losing orders in endless chats",
                     "✓ Build instant trust with professional storefront",
-                    "✓ Accept payments via Paystack + manual transfer",
+                    "✓ Accept payments easily with Paystack",
                     "✓ Get orders straight to your WhatsApp"
                   ].map((item, idx) => (
                     <div key={idx} className="flex items-center gap-3">
@@ -142,49 +147,51 @@ const Index = () => {
                 {/* Trust Signal */}
                 <p className="text-sm text-muted-foreground pt-2">
                   <CheckCircle className="w-4 h-4 text-green-500 inline mr-1" />
-                  No credit card required • No technical skills needed
+                  No credit card required • Setup in 60 seconds
                 </p>
               </div>
               
-              {/* Right Column - Comparison */}
+              {/* Right Column - Solution Showcase */}
               <div className="space-y-6">
                 <Card className="border-2 border-primary/20 shadow-xl">
                   <CardHeader className="pb-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Crown className="w-5 h-5 text-accent" />
-                      <CardTitle className="text-xl">Why SteerSolo Beats Everything Else</CardTitle>
+                      <Target className="w-5 h-5 text-accent" />
+                      <CardTitle className="text-xl">The Smart Way to Sell Online</CardTitle>
                     </div>
-                    <CardDescription>Perfect for Nigerian social sellers</CardDescription>
+                    <CardDescription>Why successful sellers choose SteerSolo</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {[
                       {
-                        platform: "WhatsApp Only",
-                        issue: "Lost orders, messy chats",
-                        solution: "✓ Organized store + WhatsApp orders"
+                        icon: MessageSquare,
+                        title: "WhatsApp-Powered",
+                        description: "Keep chatting with customers on WhatsApp while we organize everything else"
                       },
                       {
-                        platform: "Shopify",
-                        issue: "Too complex, needs website",
-                        solution: "✓ 60-second setup, no hosting"
+                        icon: Building,
+                        title: "Professional Presence",
+                        description: "Look established even if you're just starting"
                       },
                       {
-                        platform: "Jumia/Konga",
-                        issue: "Price wars, high fees",
-                        solution: "✓ Your own store, no competition"
+                        icon: DollarSign,
+                        title: "Easy Payments",
+                        description: "Paystack + bank transfers — how Nigerians prefer to pay"
                       },
                       {
-                        platform: "Instagram Shops",
-                        issue: "Limited branding, weak trust",
-                        solution: "✓ Professional storefront"
+                        icon: Layers,
+                        title: "Everything Organized",
+                        description: "Products, prices, orders — all in one clean place"
                       }
                     ].map((item, idx) => (
-                      <div key={idx} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                        <div className="flex-1">
-                          <div className="font-semibold text-foreground">{item.platform}</div>
-                          <div className="text-sm text-muted-foreground">{item.issue}</div>
+                      <div key={idx} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors">
+                        <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <item.icon className="w-5 h-5 text-primary" />
                         </div>
-                        <div className="text-sm text-green-600 font-medium">{item.solution}</div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-foreground">{item.title}</div>
+                          <div className="text-sm text-muted-foreground">{item.description}</div>
+                        </div>
                       </div>
                     ))}
                   </CardContent>
@@ -194,11 +201,11 @@ const Index = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-card p-4 rounded-xl border shadow-sm">
                     <div className="text-2xl font-bold text-primary">60 sec</div>
-                    <div className="text-sm text-muted-foreground">Store setup time</div>
+                    <div className="text-sm text-muted-foreground">Store setup</div>
                   </div>
                   <div className="bg-card p-4 rounded-xl border shadow-sm">
                     <div className="text-2xl font-bold text-primary">₦1,000/mo</div>
-                    <div className="text-sm text-muted-foreground">Less than Jumia fees</div>
+                    <div className="text-sm text-muted-foreground">All features included</div>
                   </div>
                 </div>
               </div>
@@ -215,13 +222,13 @@ const Index = () => {
               <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-accent to-primary rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                    <Target className="w-6 h-6 text-white" />
+                    <Search className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-display text-xl font-bold mb-1 text-foreground">See Exactly How It Works</h3>
+                    <h3 className="font-display text-xl font-bold mb-1 text-foreground">See Your Future Store</h3>
                     <p className="text-muted-foreground max-w-2xl">
-                      Experience a real SteerSolo store — just like yours would look.
-                      No signup needed. See why sellers switch from WhatsApp chaos.
+                      Explore an interactive demo store identical to what you'll get. 
+                      No signup needed — experience professional selling today.
                     </p>
                   </div>
                 </div>
@@ -229,7 +236,7 @@ const Index = () => {
                   size="lg"
                   className="bg-gradient-to-r from-accent to-primary text-white group-hover:opacity-90 shadow-md"
                 >
-                  View Interactive Demo
+                  Try Live Demo
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </CardContent>
@@ -253,13 +260,13 @@ const Index = () => {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full mb-4">
               <Shield className="w-4 h-4 text-accent" />
-              <span className="text-accent font-semibold">DESIGNED FOR HOW NIGERIANS SELL</span>
+              <span className="text-accent font-semibold">BUILT FOR REAL SELLERS</span>
             </div>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              Everything Your Hustle Needs. Nothing It Doesn't.
+              Everything You Need, Nothing You Don't
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              We built SteerSolo specifically for Nigerian social sellers — not as a global template
+              We focus on what actually helps you sell more — not complex features you'll never use
             </p>
           </div>
           
@@ -267,38 +274,38 @@ const Index = () => {
             {[
               {
                 icon: Clock,
-                title: "60-Second Setup",
-                description: "Launch while your customer waits. No tech skills needed.",
+                title: "60-Second Launch",
+                description: "Start selling while your customer waits. No tech skills needed.",
                 color: "from-blue-500/20 to-cyan-500/20"
               },
               {
                 icon: MessageCircle,
                 title: "WhatsApp-First Design",
-                description: "Orders come to WhatsApp. No dashboard monitoring needed.",
+                description: "Orders come straight to WhatsApp. No dashboard monitoring needed.",
                 color: "from-green-500/20 to-emerald-500/20"
               },
               {
                 icon: Shield,
-                title: "Instant Trust",
-                description: "Professional store = higher prices + more sales.",
+                title: "Instant Trust Builder",
+                description: "Professional store = higher prices + repeat customers.",
                 color: "from-purple-500/20 to-violet-500/20"
               },
               {
                 icon: Zap,
-                title: "Paystack + Manual",
-                description: "How Nigerians actually pay. No foreign payment headaches.",
+                title: "Easy Nigerian Payments",
+                description: "Paystack + bank transfers — simple for you and your customers.",
                 color: "from-orange-500/20 to-amber-500/20"
               },
               {
                 icon: Sparkles,
-                title: "Auto Marketing",
-                description: "Professional posters without designer costs.",
+                title: "Auto Marketing Tools",
+                description: "Beautiful posters and flyers without designer costs.",
                 color: "from-pink-500/20 to-rose-500/20"
               },
               {
                 icon: Store,
-                title: "Your Brand, Not Ours",
-                description: "Own your customers. No marketplace competition.",
+                title: "Your Business, Your Rules",
+                description: "Own your customers. Set your prices. Build your brand.",
                 color: "from-primary/20 to-accent/20"
               }
             ].map((item, index) => (
@@ -316,100 +323,80 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ================= COMPETITOR COMPARISON ================= */}
+      {/* ================= THE OLD WAY VS NEW WAY ================= */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-bold mb-4">
-              Why Sellers Switch to SteerSolo
+              From Messy Selling to Professional Business
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              See how we solve the real problems other platforms ignore
+              See how SteerSolo transforms your selling experience
             </p>
           </div>
           
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse bg-card rounded-xl shadow-lg">
-              <thead>
-                <tr className="border-b">
-                  <th className="p-4 text-left font-bold">What You Need</th>
-                  <th className="p-4 text-center">
-                    <div className="inline-flex items-center gap-2">
-                      <X className="w-4 h-4 text-red-500" />
-                      WhatsApp Only
-                    </div>
-                  </th>
-                  <th className="p-4 text-center">Shopify</th>
-                  <th className="p-4 text-center">Jumia/Konga</th>
-                  <th className="p-4 text-center">
-                    <div className="inline-flex items-center gap-2 text-accent">
-                      <Crown className="w-4 h-4" />
-                      SteerSolo
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Old Way */}
+            <Card className="border-red-200/50 bg-red-50/30">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <X className="w-5 h-5 text-red-500" />
+                  <CardTitle className="text-red-600">The Old Way</CardTitle>
+                </div>
+                <CardDescription>What slows down most online sellers</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 {[
-                  {
-                    feature: "Setup Time",
-                    whatsapp: "Instant",
-                    shopify: "Hours/Days",
-                    marketplace: "Days",
-                    steersolo: "60 Seconds"
-                  },
-                  {
-                    feature: "Professional Look",
-                    whatsapp: "❌ Messy",
-                    shopify: "✅ Excellent",
-                    marketplace: "⚠️ Basic",
-                    steersolo: "✅ Excellent"
-                  },
-                  {
-                    feature: "Nigerian Payments",
-                    whatsapp: "✅ Manual only",
-                    shopify: "⚠️ Complex",
-                    marketplace: "✅ Yes",
-                    steersolo: "✅ Paystack + Manual"
-                  },
-                  {
-                    feature: "Your Own Customers",
-                    whatsapp: "✅ Yes",
-                    shopify: "✅ Yes",
-                    marketplace: "❌ Platform owns them",
-                    steersolo: "✅ Yes"
-                  },
-                  {
-                    feature: "Monthly Cost",
-                    whatsapp: "Free",
-                    shopify: "₦15,000+",
-                    marketplace: "Fees per sale",
-                    steersolo: "₦1,000 flat"
-                  },
-                  {
-                    feature: "Marketing Tools",
-                    whatsapp: "❌ None",
-                    shopify: "❌ Extra cost",
-                    marketplace: "⚠️ Limited",
-                    steersolo: "✅ Included"
-                  }
-                ].map((row, idx) => (
-                  <tr key={idx} className="border-b hover:bg-muted/50">
-                    <td className="p-4 font-medium">{row.feature}</td>
-                    <td className="p-4 text-center">{row.whatsapp}</td>
-                    <td className="p-4 text-center">{row.shopify}</td>
-                    <td className="p-4 text-center">{row.marketplace}</td>
-                    <td className="p-4 text-center font-bold text-accent bg-accent/5">{row.steersolo}</td>
-                  </tr>
+                  "Blurry photos lost in WhatsApp status",
+                  "Prices mixed up in chat history",
+                  "Orders forgotten or confused",
+                  "Customers questioning your legitimacy",
+                  "Hours wasted on admin work",
+                  "Limited to local buyers only",
+                  "Constant price negotiations",
+                  "No professional marketing materials"
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-3">
+                    <X className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-foreground">{item}</span>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </CardContent>
+            </Card>
+            
+            {/* New Way with SteerSolo */}
+            <Card className="border-green-200/50 bg-green-50/30">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-green-600" />
+                  <CardTitle className="text-green-600">With SteerSolo</CardTitle>
+                </div>
+                <CardDescription>How professional sellers operate</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {[
+                  "Clean product catalog with descriptions",
+                  "Clear pricing that customers can browse",
+                  "Organized order system to WhatsApp",
+                  "Professional store builds instant trust",
+                  "More time for sales, less for admin",
+                  "Reach customers anywhere in Nigeria",
+                  "Customers pay listed prices confidently",
+                  "Beautiful posters ready to share instantly"
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-3">
+                    <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-foreground">{item}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
           </div>
           
           <div className="text-center mt-8">
             <p className="text-muted-foreground">
               <Check className="w-4 h-4 text-green-500 inline mr-2" />
-              SteerSolo combines the best of all platforms without the headaches
+              SteerSolo gives you professional tools without the complexity or high costs
             </p>
           </div>
         </div>
@@ -420,38 +407,38 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              From WhatsApp Hustle to Real Business
+              From WhatsApp Seller to Business Owner
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Real sellers. Real results.
+              Real sellers. Real transformations. Real results.
             </p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
-                name: "Amaka's Ankara Fashion",
-                before: "❌ Blurry WhatsApp photos",
-                beforeSales: "3-5 sales/week",
-                after: "✅ Professional store",
-                afterSales: "15-20 sales/week",
+                name: "Amaka's Fashion Store",
+                location: "Lagos",
+                before: "Blurry photos in WhatsApp status",
+                after: "Professional online boutique",
+                result: "Sales tripled in 2 months",
                 quote: "Customers now pay without bargaining because my store looks legit"
               },
               {
-                name: "Tunde's Phone Accessories",
-                before: "❌ Lost orders in chats",
-                beforeSales: "Frequent mix-ups",
-                after: "✅ Organized orders",
-                afterSales: "100% order accuracy",
-                quote: "SteerSolo saved me 2 hours daily of tracking orders"
+                name: "Tunde's Tech Shop",
+                location: "Abuja",
+                before: "Lost orders in chats",
+                after: "Organized order system",
+                result: "Saves 3 hours daily",
+                quote: "No more order mix-ups. Everything comes straight to my WhatsApp"
               },
               {
-                name: "Chioma's Home Baking",
-                before: "❌ Manual price lists",
-                beforeSales: "Constant errors",
-                after: "✅ Clear pricing",
-                afterSales: "50% faster orders",
-                quote: "My baking business doubled in 2 months with a proper store"
+                name: "Chioma's Baking",
+                location: "Port Harcourt",
+                before: "Manual price lists",
+                after: "Clear online menu",
+                result: "50% faster orders",
+                quote: "Customers can browse my menu anytime and place orders instantly"
               }
             ].map((story, index) => (
               <Card key={index} className="border-0 shadow-xl hover:shadow-2xl transition-shadow">
@@ -459,37 +446,36 @@ const Index = () => {
                   <div className="mb-6">
                     <h3 className="font-display text-xl font-bold mb-2">{story.name}</h3>
                     <div className="flex items-center gap-2 mb-3">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      ))}
+                      <span className="text-sm text-muted-foreground">{story.location}</span>
+                      <div className="flex items-center ml-auto">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        ))}
+                      </div>
                     </div>
                   </div>
                   
                   <div className="space-y-4 mb-6">
-                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                      <span className="text-red-600 font-medium">Before</span>
-                      <span className="font-bold">{story.before}</span>
+                    <div className="p-3 bg-red-50 rounded-lg border border-red-100">
+                      <div className="text-sm text-red-600 font-medium mb-1">Before</div>
+                      <div className="font-medium">{story.before}</div>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <span className="text-green-600 font-medium">After SteerSolo</span>
-                      <span className="font-bold">{story.after}</span>
+                    <div className="p-3 bg-green-50 rounded-lg border border-green-100">
+                      <div className="text-sm text-green-600 font-medium mb-1">With SteerSolo</div>
+                      <div className="font-medium">{story.after}</div>
                     </div>
                   </div>
                   
-                  <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+                  <div className="bg-primary/5 p-4 rounded-lg border border-primary/10 mb-4">
                     <p className="italic text-foreground">"{story.quote}"</p>
                   </div>
                   
-                  <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                  <div className="flex items-center justify-between pt-4 border-t">
                     <div>
-                      <div className="text-sm text-muted-foreground">Before Sales</div>
-                      <div className="font-bold text-red-600">{story.beforeSales}</div>
+                      <div className="text-sm text-muted-foreground">Result</div>
+                      <div className="font-bold text-green-600">{story.result}</div>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <div className="text-sm text-muted-foreground">After Sales</div>
-                      <div className="font-bold text-green-600">{story.afterSales}</div>
-                    </div>
+                    <div className="text-2xl">🚀</div>
                   </div>
                 </CardContent>
               </Card>
@@ -504,22 +490,22 @@ const Index = () => {
           <div className="max-w-md mx-auto">
             <Card className="border-2 border-primary/20 shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 bg-accent text-white px-4 py-1 text-sm font-bold rounded-bl-lg">
-                MOST POPULAR
+                PERFECT FOR SELLERS
               </div>
               <CardHeader className="text-center pb-6 pt-8">
                 <div className="inline-flex items-center gap-2 px-4 py-1 bg-accent/10 rounded-full text-accent font-semibold text-sm mx-auto mb-4">
                   <Target className="w-4 h-4" />
-                  PERFECT FOR HUSTLERS
+                  ALL-IN-ONE PLAN
                 </div>
                 <CardTitle className="font-display text-3xl">Everything You Need</CardTitle>
-                <CardDescription className="text-lg">Less than what you'd lose in WhatsApp chaos</CardDescription>
+                <CardDescription className="text-lg">Professional tools at a hustler's price</CardDescription>
               </CardHeader>
               <CardContent className="text-center">
                 <div className="mb-8">
                   <span className="text-5xl font-bold text-primary">₦1,000</span>
                   <span className="text-muted-foreground text-lg">/month</span>
                   <p className="text-sm text-muted-foreground mt-2">
-                    ≈ $1.10 • Less than 3% of one sale
+                    Less than the cost of one lost order
                   </p>
                 </div>
                 
@@ -530,8 +516,8 @@ const Index = () => {
                     "Paystack + manual payments",
                     "WhatsApp order delivery",
                     "Auto-generated marketing posters",
-                    "Your own domain/store link",
-                    "7-day free trial"
+                    "Your own shareable store link",
+                    "7-day free trial included"
                   ].map((item, idx) => (
                     <li key={idx} className="flex items-center gap-3">
                       <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
@@ -555,11 +541,11 @@ const Index = () => {
               </CardContent>
             </Card>
             
-            {/* Price Comparison Note */}
+            {/* Value Proposition */}
             <div className="mt-6 p-4 bg-muted/30 rounded-lg text-center">
               <p className="text-sm text-muted-foreground">
                 <Check className="w-4 h-4 text-green-500 inline mr-1" />
-                Cheaper than Jumia fees • Faster than Shopify • Smarter than WhatsApp-only
+                Professional results without website costs or designer fees
               </p>
             </div>
           </div>
@@ -574,11 +560,11 @@ const Index = () => {
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="max-w-3xl mx-auto">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-6">
-              Your Hustle Deserves Better Than WhatsApp Chaos
+              Your Business Deserves a Professional Home
             </h2>
             <p className="text-lg md:text-xl text-white/90 mb-8">
-              Stop losing sales to messy chats and unprofessional looks. Get the storefront 
-              that makes customers trust you and pay more.
+              Stop letting messy WhatsApp sales hold you back. Get the professional storefront 
+              that makes customers trust you, pay more, and come back again.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -596,7 +582,7 @@ const Index = () => {
                   variant="outline"
                   className="text-lg px-10 py-6 border-white/30 text-white hover:bg-white/10"
                 >
-                  See It Live First
+                  Try Free Demo First
                 </Button>
               </Link>
             </div>
@@ -616,7 +602,7 @@ const Index = () => {
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">100%</div>
-                <div className="text-sm">Your customers</div>
+                <div className="text-sm">Yours to keep</div>
               </div>
             </div>
           </div>
@@ -636,10 +622,10 @@ const SimplifiedEntrepreneurExperience = ({ offer }: { offer?: any }) => (
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center mb-12">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-            From WhatsApp Seller to Business Owner
+            From WhatsApp Seller to Online Business
           </h2>
           <p className="text-lg text-muted-foreground">
-            SteerSolo gives you the tools that big platforms have — but made simple for how Nigerians actually sell
+            Keep the WhatsApp convenience you love, but add professional tools that help you sell more
           </p>
         </div>
         
@@ -649,27 +635,27 @@ const SimplifiedEntrepreneurExperience = ({ offer }: { offer?: any }) => (
             <div className="space-y-6">
               {[
                 {
-                  problem: "❌ Blurry photos in WhatsApp status",
-                  solution: "✅ Clean product listings with descriptions"
+                  problem: "❌ Photos that don't do your products justice",
+                  solution: "✅ Clean product listings with proper descriptions"
                 },
                 {
-                  problem: "❌ Prices lost in chat history",
-                  solution: "✅ Clear pricing that customers can see"
+                  problem: "❌ Constant price questions from customers",
+                  solution: "✅ Clear pricing that customers can see anytime"
                 },
                 {
-                  problem: "❌ Orders mixed up in messages",
-                  solution: "✅ Organized order system to WhatsApp"
+                  problem: "❌ Orders getting mixed up or forgotten",
+                  solution: "✅ Organized system that sends orders to WhatsApp"
                 },
                 {
-                  problem: "❌ Customers don't trust you",
-                  solution: "✅ Professional store builds instant trust"
+                  problem: "❌ Customers questioning if you're legit",
+                  solution: "✅ Professional store that builds instant trust"
                 },
                 {
-                  problem: "❌ Manual everything = time wasted",
-                  solution: "✅ Auto posters, auto order tracking"
+                  problem: "❌ Wasting hours on admin instead of selling",
+                  solution: "✅ Auto posters and organized products save time"
                 }
               ].map((item, idx) => (
-                <div key={idx} className="flex items-start gap-4 p-4 bg-card rounded-xl border">
+                <div key={idx} className="flex items-start gap-4 p-4 bg-card rounded-xl border hover:border-primary/30 transition-colors">
                   <div className="flex-1">
                     <div className="font-medium text-foreground mb-1">{item.problem}</div>
                     <div className="text-green-600 font-medium">{item.solution}</div>
@@ -705,14 +691,14 @@ const SimplifiedEntrepreneurExperience = ({ offer }: { offer?: any }) => (
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Link to="/auth/signup">
                 <Button size="lg" className="bg-gradient-to-r from-accent to-primary text-white text-lg px-8 w-full sm:w-auto">
-                  Start Your Store Now
+                  Start Your Professional Store
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
               <Link to="/demo">
                 <Button size="lg" variant="outline" className="text-lg px-8 w-full sm:w-auto">
                   <Sparkles className="w-5 h-5 mr-2" />
-                  View Live Example
+                  See Example Store
                 </Button>
               </Link>
             </div>
@@ -723,7 +709,7 @@ const SimplifiedEntrepreneurExperience = ({ offer }: { offer?: any }) => (
             <div className="relative space-y-4">
               <img
                 src={heroImage}
-                alt="Professional SteerSolo storefront"
+                alt="Professional SteerSolo storefront example"
                 className="rounded-2xl shadow-2xl w-full border"
               />
               <div className="text-center text-sm text-muted-foreground">
@@ -745,10 +731,10 @@ const SimplifiedCustomerExperience = ({ offer }: { offer?: any }) => (
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center mb-12">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-            Shop from Real Entrepreneurs, Not Big Corporations
+            Shop from Passionate Sellers, Not Big Corporations
           </h2>
           <p className="text-lg text-muted-foreground">
-            Discover amazing products from passionate sellers who care about quality and service
+            Discover unique products and support real entrepreneurs building their dreams
           </p>
         </div>
         
@@ -759,28 +745,28 @@ const SimplifiedCustomerExperience = ({ offer }: { offer?: any }) => (
               {[
                 {
                   icon: Shield,
-                  title: "Verified Sellers",
-                  description: "Every store is verified for your safety"
+                  title: "Verified Stores",
+                  description: "Every seller is verified for your safety and peace of mind"
                 },
                 {
                   icon: MessageCircle,
                   title: "Direct WhatsApp Chat",
-                  description: "Talk directly to sellers for personalized service"
+                  description: "Talk directly to sellers for personalized service and questions"
                 },
                 {
                   icon: Star,
-                  title: "Unique Products",
-                  description: "Find items you won't see on Jumia or Konga"
+                  title: "Unique Finds",
+                  description: "Discover amazing products you won't find everywhere"
                 },
                 {
                   icon: Heart,
                   title: "Support Real People",
-                  description: "Your purchase directly supports entrepreneurs"
+                  description: "Your purchase directly supports passionate entrepreneurs"
                 },
                 {
                   icon: Zap,
-                  title: "Fast Response",
-                  description: "Sellers respond quickly via WhatsApp"
+                  title: "Fast & Personal Service",
+                  description: "Get quick responses and personalized attention"
                 }
               ].map((item, idx) => (
                 <div key={idx} className="flex items-start gap-4 p-4 bg-card rounded-xl border hover:border-primary/30 transition-colors">
