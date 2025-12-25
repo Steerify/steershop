@@ -1,156 +1,376 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { User, Menu, X } from "lucide-react";
+import { User, Menu, X, Sparkles, Star, Heart, Calendar } from "lucide-react";
 import { AdireAccent } from "./patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
 
-// Celebration configuration
+// Celebration configuration with proper types
 interface Celebration {
+  id: string;
   name: string;
-  startDate: string; // Format: "MM-DD"
-  endDate: string;   // Format: "MM-DD"
-  icon: string;      // Emoji or custom component
-  years?: number[];  // Specific years if applicable
-  type: 'christian' | 'muslim' | 'general' | 'cultural';
+  startDate: string;
+  endDate: string;
+  icon: string;
+  color: string;
+  gradient: string;
+  animation: 'bounce' | 'pulse' | 'spin' | 'float' | 'wiggle' | 'ping';
+  intensity: 'low' | 'medium' | 'high';
+  type: 'christian' | 'muslim' | 'general' | 'cultural' | 'new-year';
 }
 
 const CELEBRATIONS: Celebration[] = [
-  // December celebrations
+  // Christmas (separated from New Year)
   {
-    name: "Christmas & New Year",
-    startDate: "12-01",
-    endDate: "01-07", // First week of January
-    icon: "🎅", // Santa hat
+    id: 'christmas',
+    name: "Christmas",
+    startDate: "12-20",
+    endDate: "12-26",
+    icon: "🎄",
+    color: "text-red-500",
+    gradient: "from-red-500 to-green-500",
+    animation: 'pulse',
+    intensity: 'high',
     type: 'christian'
   },
+  // New Year
   {
+    id: 'new-year',
+    name: "New Year",
+    startDate: "12-30",
+    endDate: "01-07",
+    icon: "🎆",
+    color: "text-yellow-400",
+    gradient: "from-purple-500 to-yellow-400",
+    animation: 'spin',
+    intensity: 'high',
+    type: 'new-year'
+  },
+  // Eid celebrations
+  {
+    id: 'eid-fitr',
     name: "Eid al-Fitr",
-    startDate: "04-09", // Approximate - will need to calculate Hijri dates
+    startDate: "04-09",
     endDate: "04-11",
-    icon: "🌙",
-    type: 'muslim'
-  },
-  {
-    name: "Eid al-Adha",
-    startDate: "06-16", // Approximate - will need to calculate Hijri dates
-    endDate: "06-18",
     icon: "🕌",
+    color: "text-emerald-500",
+    gradient: "from-emerald-400 to-emerald-600",
+    animation: 'float',
+    intensity: 'medium',
     type: 'muslim'
   },
   {
+    id: 'eid-adha',
+    name: "Eid al-Adha",
+    startDate: "06-16",
+    endDate: "06-18",
+    icon: "🌟",
+    color: "text-amber-500",
+    gradient: "from-amber-400 to-amber-600",
+    animation: 'ping',
+    intensity: 'medium',
+    type: 'muslim'
+  },
+  // Ramadan
+  {
+    id: 'ramadan',
     name: "Ramadan",
-    startDate: "03-01", // Approximate - month of Ramadan
+    startDate: "03-01",
     endDate: "04-01",
-    icon: "⭐",
+    icon: "🌙",
+    color: "text-indigo-500",
+    gradient: "from-indigo-500 to-purple-500",
+    animation: 'float',
+    intensity: 'low',
     type: 'muslim'
   },
-  // General celebrations
+  // Other celebrations
   {
+    id: 'valentine',
     name: "Valentine's Day",
     startDate: "02-14",
     endDate: "02-14",
     icon: "❤️",
+    color: "text-pink-500",
+    gradient: "from-pink-400 to-red-400",
+    animation: 'pulse',
+    intensity: 'medium',
     type: 'general'
   },
   {
+    id: 'independence',
     name: "Independence Day",
     startDate: "10-01",
     endDate: "10-01",
     icon: "🇳🇬",
+    color: "text-green-600",
+    gradient: "from-green-600 to-white",
+    animation: 'wiggle',
+    intensity: 'medium',
     type: 'cultural'
   },
   {
+    id: 'halloween',
     name: "Halloween",
     startDate: "10-31",
     endDate: "10-31",
     icon: "🎃",
+    color: "text-orange-500",
+    gradient: "from-orange-500 to-purple-500",
+    animation: 'bounce',
+    intensity: 'medium',
     type: 'general'
   },
   {
+    id: 'easter',
     name: "Easter",
-    startDate: "04-07", // Approximate date for 2024
+    startDate: "04-07",
     endDate: "04-07",
     icon: "🐣",
+    color: "text-pink-300",
+    gradient: "from-pink-300 to-yellow-300",
+    animation: 'bounce',
+    intensity: 'medium',
     type: 'christian'
   }
 ];
 
-// Helper function to check if current date is within celebration period
+// Helper functions
 const isCelebrationActive = (celebration: Celebration): boolean => {
   const today = new Date();
   const currentYear = today.getFullYear();
   
-  // Parse start date
   const [startMonth, startDay] = celebration.startDate.split('-').map(Number);
-  const startDate = new Date(currentYear, startMonth - 1, startDay);
-  
-  // Parse end date
   const [endMonth, endDay] = celebration.endDate.split('-').map(Number);
+  
+  let startDate = new Date(currentYear, startMonth - 1, startDay);
   let endDate = new Date(currentYear, endMonth - 1, endDay);
   
-  // Handle celebrations that span across years (like Christmas to January)
+  // Handle celebrations that span across years
   if (endMonth < startMonth) {
     endDate = new Date(currentYear + 1, endMonth - 1, endDay);
+  }
+  
+  // Special handling for New Year
+  if (celebration.id === 'new-year') {
+    if (startMonth === 12 && endMonth === 1) {
+      if (today.getMonth() + 1 >= startMonth) {
+        startDate = new Date(currentYear, startMonth - 1, startDay);
+        endDate = new Date(currentYear + 1, endMonth - 1, endDay);
+      } else {
+        startDate = new Date(currentYear - 1, startMonth - 1, startDay);
+        endDate = new Date(currentYear, endMonth - 1, endDay);
+      }
+    }
   }
   
   return today >= startDate && today <= endDate;
 };
 
-// Function to get active celebrations
 const getActiveCelebrations = (): Celebration[] => {
-  const currentDate = new Date();
-  const month = currentDate.getMonth() + 1; // 1-12
-  const day = currentDate.getDate();
-  
-  // Special handling for Hijri dates (Muslim celebrations)
-  const hijriDate = getHijriDate(currentDate);
-  
-  return CELEBRATIONS.filter(celebration => {
-    // Check if it's a Muslim celebration and calculate based on Hijri calendar
-    if (celebration.type === 'muslim') {
-      // For simplicity, using approximate Gregorian dates
-      // In production, use a proper Hijri calendar library
-      return isCelebrationActive(celebration);
-    }
-    
-    return isCelebrationActive(celebration);
-  });
+  return CELEBRATIONS.filter(isCelebrationActive);
 };
 
-// Simple Hijri date approximation (for demo purposes)
-// In production, use a library like 'hijri-converter'
-const getHijriDate = (date: Date): { year: number; month: number; day: number } => {
-  // This is a simplified approximation
-  const gregorianYear = date.getFullYear();
-  const hijriYear = Math.floor((gregorianYear - 622) * (33/32));
-  
-  return {
-    year: hijriYear,
-    month: date.getMonth() + 1,
-    day: date.getDate()
+// Animation function with proper TypeScript
+const getAnimationClass = (animation: string, intensity: string): string => {
+  const baseClasses: Record<string, string> = {
+    bounce: 'animate-bounce',
+    pulse: 'animate-pulse',
+    spin: 'animate-spin',
+    ping: 'animate-ping',
+    float: 'animate-[float_3s_ease-in-out_infinite]',
+    wiggle: 'animate-[wiggle_1s_ease-in-out_infinite]',
   };
+  
+  const intensityClasses: Record<string, string> = {
+    low: 'duration-3000',
+    medium: 'duration-2000',
+    high: 'duration-1000',
+  };
+  
+  return `${baseClasses[animation] || ''} ${intensityClasses[intensity] || ''}`;
 };
 
 // Celebration icon component
 const CelebrationIcon = ({ celebration }: { celebration: Celebration }) => {
-  if (celebration.name.includes("Christmas")) {
+  const { id, icon, animation, intensity } = celebration;
+  
+  // Christmas icon with multiple decorations
+  if (id === 'christmas') {
     return (
-      <div className="absolute -top-3 -right-3 transform rotate-12">
-        <div className="text-2xl animate-bounce" style={{ animationDuration: '2s' }}>
-          {celebration.icon}
+      <div className="absolute -top-4 -right-4">
+        <div className={`text-3xl ${getAnimationClass(animation, intensity)} relative`}>
+          <span className="drop-shadow-[0_0_10px_rgba(220,38,38,0.7)]">🎄</span>
+          
+          {/* Floating ornaments */}
+          <div className="absolute -top-1 -left-2 text-xs animate-bounce delay-100">
+            <span className="text-red-400">🔴</span>
+          </div>
+          <div className="absolute -top-2 -right-1 text-xs animate-bounce delay-300">
+            <span className="text-blue-400">🔵</span>
+          </div>
+          <div className="absolute -bottom-2 left-0 text-xs animate-bounce delay-500">
+            <span className="text-yellow-400">🟡</span>
+          </div>
+          
+          {/* Star on top */}
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-sm animate-spin duration-3000">
+            <span className="text-yellow-300">⭐</span>
+          </div>
         </div>
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-ping opacity-75"></div>
+        
+        {/* Snowflakes */}
+        <div className="absolute -top-6 left-2 text-xs animate-[float_5s_ease-in-out_infinite]">
+          <span className="text-blue-200 opacity-70">❄️</span>
+        </div>
+        <div className="absolute -top-5 right-0 text-xs animate-[float_4s_ease-in-out_infinite] delay-1000">
+          <span className="text-blue-200 opacity-70">❄️</span>
+        </div>
       </div>
     );
   }
   
+  // New Year icon with fireworks
+  if (id === 'new-year') {
+    return (
+      <div className="absolute -top-4 -right-4">
+        <div className={`text-3xl ${getAnimationClass('pulse', 'high')} relative`}>
+          <span className="drop-shadow-[0_0_10px_rgba(250,204,21,0.7)]">🎆</span>
+        </div>
+        
+        {/* Smaller fireworks around */}
+        <div className="absolute -top-2 -left-2 text-sm animate-ping duration-2000">
+          <span className="text-purple-400">✨</span>
+        </div>
+        <div className="absolute -top-1 -right-3 text-sm animate-ping duration-1500 delay-500">
+          <span className="text-pink-400">✨</span>
+        </div>
+        <div className="absolute -bottom-2 left-0 text-sm animate-ping duration-1000 delay-1000">
+          <span className="text-blue-400">✨</span>
+        </div>
+        
+        {/* Celebration effect */}
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold animate-bounce duration-500">
+          <span className="bg-gradient-to-r from-purple-500 to-yellow-400 bg-clip-text text-transparent">
+            🎉
+          </span>
+        </div>
+      </div>
+    );
+  }
+  
+  // Eid icon
+  if (id === 'eid-fitr' || id === 'eid-adha') {
+    return (
+      <div className="absolute -top-3 -right-3">
+        <div className={`text-2xl ${getAnimationClass(animation, intensity)} relative`}>
+          <span className="drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">{icon}</span>
+          
+          {/* Star effects */}
+          <div className="absolute -top-1 -right-1 text-xs animate-pulse">
+            <span className="text-yellow-300">✨</span>
+          </div>
+          <div className="absolute -bottom-1 -left-1 text-xs animate-pulse delay-300">
+            <span className="text-yellow-300">✨</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Default celebration icon
   return (
-    <div className="absolute -top-2 -right-2">
-      <div className="text-lg bg-background/80 backdrop-blur-sm rounded-full p-1 shadow-lg">
-        {celebration.icon}
+    <div className="absolute -top-3 -right-3">
+      <div className={`text-xl ${getAnimationClass(animation, intensity)} relative`}>
+        <div className={`rounded-full p-2 bg-gradient-to-br ${celebration.gradient} shadow-lg backdrop-blur-sm`}>
+          <span className="drop-shadow-md">{icon}</span>
+        </div>
+        
+        {/* Sparkle effect */}
+        <div className="absolute -top-1 -right-1">
+          <Sparkles className="w-3 h-3 text-yellow-300 animate-pulse" />
+        </div>
       </div>
     </div>
+  );
+};
+
+// Logo decorations component
+const LogoCelebrationDecorations = ({ celebrations }: { celebrations: Celebration[] }) => {
+  const primaryCelebration = celebrations.find(c => 
+    c.id === 'christmas' || c.id === 'new-year'
+  ) || celebrations[0];
+  
+  if (!primaryCelebration) return null;
+  
+  // Christmas decoration
+  if (primaryCelebration.id === 'christmas') {
+    return (
+      <>
+        <CelebrationIcon celebration={primaryCelebration} />
+        
+        {/* Garland */}
+        <div className="absolute -inset-1 rounded-xl border-2 border-red-400/30 animate-pulse pointer-events-none">
+          <div className="absolute -top-1 left-1/4 w-1 h-1 bg-green-400 rounded-full animate-ping"></div>
+          <div className="absolute -top-1 right-1/4 w-1 h-1 bg-red-400 rounded-full animate-ping delay-300"></div>
+          <div className="absolute -bottom-1 left-1/3 w-1 h-1 bg-yellow-400 rounded-full animate-ping delay-600"></div>
+        </div>
+        
+        {/* Snow effect */}
+        <div className="absolute -inset-2 pointer-events-none">
+          {[...Array(3)].map((_, i) => (
+            <div 
+              key={i}
+              className="absolute text-xs text-blue-100 animate-[float_3s_ease-in-out_infinite]"
+              style={{
+                left: `${20 + i * 30}%`,
+                top: `${10 + i * 20}%`,
+                animationDelay: `${i * 700}ms`,
+              }}
+            >
+              ❄️
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+  
+  // New Year decoration
+  if (primaryCelebration.id === 'new-year') {
+    return (
+      <>
+        <CelebrationIcon celebration={primaryCelebration} />
+        
+        {/* Confetti */}
+        <div className="absolute -inset-2 pointer-events-none">
+          {[...Array(5)].map((_, i) => (
+            <div 
+              key={i}
+              className="absolute text-xs animate-[float_2s_ease-in-out_infinite]"
+              style={{
+                left: `${10 + i * 20}%`,
+                top: `${5 + i * 10}%`,
+                animationDelay: `${i * 300}ms`,
+              }}
+            >
+              {['🎉', '✨', '🎊', '🥳', '🎈'][i]}
+            </div>
+          ))}
+        </div>
+        
+        {/* Glowing border */}
+        <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-purple-500/20 to-yellow-400/20 animate-pulse pointer-events-none"></div>
+      </>
+    );
+  }
+  
+  // Default decoration
+  return (
+    <>
+      <CelebrationIcon celebration={primaryCelebration} />
+      <div className={`absolute -inset-1 rounded-xl bg-gradient-to-r ${primaryCelebration.gradient} opacity-10 animate-pulse pointer-events-none`}></div>
+    </>
   );
 };
 
@@ -160,79 +380,147 @@ const Navbar = () => {
   const [showCelebrationHint, setShowCelebrationHint] = useState(false);
 
   useEffect(() => {
-    // Check for active celebrations on component mount
     const celebrations = getActiveCelebrations();
     setActiveCelebrations(celebrations);
     
-    // Show celebration hint if there are active celebrations
     if (celebrations.length > 0) {
       setShowCelebrationHint(true);
-      // Hide hint after 5 seconds
       const timer = setTimeout(() => {
         setShowCelebrationHint(false);
-      }, 5000);
+      }, 8000);
       return () => clearTimeout(timer);
     }
   }, []);
 
-  // Get the primary celebration (prioritize Christmas/New Year if active)
   const primaryCelebration = activeCelebrations.find(c => 
-    c.name.includes("Christmas") || c.name.includes("New Year")
+    ['christmas', 'new-year'].includes(c.id)
   ) || activeCelebrations[0];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
       {/* Celebration hint banner */}
       {showCelebrationHint && primaryCelebration && (
-        <div className="bg-gradient-to-r from-primary/20 to-accent/20 border-b border-primary/30">
-          <div className="container mx-auto px-4 py-1 text-center">
-            <span className="text-sm font-medium flex items-center justify-center gap-2">
-              <span className="animate-pulse">{primaryCelebration.icon}</span>
-              <span>Celebrating {primaryCelebration.name}!</span>
-              <span className="animate-pulse">{primaryCelebration.icon}</span>
-            </span>
+        <div className={`bg-gradient-to-r ${primaryCelebration.gradient}/20 to-background border-b border-primary/30 relative overflow-hidden`}>
+          {/* Animated particles */}
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(15)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-current rounded-full animate-[float_5s_ease-in-out_infinite]"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animationDelay: `${i * 200}ms`,
+                }}
+              />
+            ))}
+          </div>
+          
+          <div className="container mx-auto px-4 py-2 text-center relative">
+            <div className="flex items-center justify-center gap-3">
+              <Sparkles className="w-4 h-4 animate-spin duration-2000" />
+              <span className="text-sm font-semibold flex items-center gap-2">
+                <span className="text-xl animate-bounce">{primaryCelebration.icon}</span>
+                <span>Celebrating {primaryCelebration.name}!</span>
+                <span className="text-xl animate-bounce delay-300">{primaryCelebration.icon}</span>
+              </span>
+              <Sparkles className="w-4 h-4 animate-spin duration-2000 delay-1000" />
+            </div>
           </div>
         </div>
       )}
       
       {/* Adire accent line */}
-      <AdireAccent className="h-1" />
+      <div className={`h-1 bg-gradient-to-r ${primaryCelebration?.gradient || 'from-primary to-accent'} animate-pulse duration-2000`} />
       
       {/* Main navbar */}
-      <div className="bg-card/90 backdrop-blur-xl border-b border-border/50">
-        <div className="container mx-auto px-4 py-4">
+      <div className="bg-card/95 backdrop-blur-xl border-b border-border/50 relative">
+        {/* Floating particles */}
+        {activeCelebrations.length > 0 && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute text-xs animate-[float_3s_ease-in-out_infinite]"
+                style={{
+                  left: `${10 + i * 12}%`,
+                  top: '10%',
+                  animationDelay: `${i * 400}ms`,
+                }}
+              >
+                {primaryCelebration?.icon}
+              </div>
+            ))}
+          </div>
+        )}
+        
+        <div className="container mx-auto px-4 py-4 relative">
           <div className="flex items-center justify-between">
-            {/* Logo with celebration decoration */}
+            {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group relative">
-              <div className="w-11 h-11 rounded-xl overflow-hidden shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 relative">
+              <div className="w-12 h-12 rounded-xl overflow-hidden shadow-2xl ring-2 ring-primary/30 group-hover:ring-primary/50 transition-all duration-300 group-hover:scale-110 relative">
                 <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
                 
                 {/* Celebration decorations */}
-                {primaryCelebration && (
-                  <CelebrationIcon celebration={primaryCelebration} />
+                {activeCelebrations.length > 0 && (
+                  <LogoCelebrationDecorations celebrations={activeCelebrations} />
                 )}
                 
-                {/* Multiple celebration indicators */}
+                {/* Celebration count badge */}
                 {activeCelebrations.length > 1 && (
-                  <div className="absolute -bottom-1 -left-1 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  <div className="absolute -bottom-2 -left-2 bg-gradient-to-r from-primary to-accent text-primary-foreground text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg animate-bounce duration-1500">
                     +{activeCelebrations.length - 1}
                   </div>
                 )}
               </div>
-              <span className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                SteerSolo
-                {activeCelebrations.length > 0 && (
-                  <span className="ml-2 text-lg animate-pulse inline-block">
-                    {primaryCelebration?.icon}
-                  </span>
-                )}
-              </span>
               
-              {/* Celebration tooltip */}
+              <div className="flex flex-col">
+                <span className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  SteerSolo
+                </span>
+                
+                {/* Celebration indicator */}
+                {activeCelebrations.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Celebrating
+                    </span>
+                    <span className="text-sm font-semibold flex items-center gap-1">
+                      {primaryCelebration?.icon}
+                      <span className={`text-xs bg-gradient-to-r ${primaryCelebration?.gradient} bg-clip-text text-transparent`}>
+                        {primaryCelebration?.name}
+                      </span>
+                      {activeCelebrations.length > 1 && (
+                        <span className="text-xs text-muted-foreground">
+                          & {activeCelebrations.length - 1} more
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Celebration details tooltip */}
               {activeCelebrations.length > 0 && (
-                <div className="absolute -bottom-8 left-0 bg-background border border-border rounded-lg p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                  <div className="text-xs font-medium">
-                    {activeCelebrations.map(c => c.name).join(', ')}
+                <div className="absolute -bottom-10 left-0 bg-background/95 backdrop-blur-sm border border-border rounded-xl p-3 shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-20 min-w-[200px]">
+                  <div className="text-xs font-semibold mb-2 flex items-center gap-2">
+                    <Calendar className="w-3 h-3" />
+                    Active Celebrations
+                  </div>
+                  <div className="space-y-2">
+                    {activeCelebrations.map(celebration => (
+                      <div key={celebration.id} className="flex items-center gap-2">
+                        <div className={`text-lg ${getAnimationClass(celebration.animation, celebration.intensity)}`}>
+                          {celebration.icon}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xs font-medium">{celebration.name}</div>
+                          <div className="text-[10px] text-muted-foreground">
+                            {celebration.startDate} - {celebration.endDate}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -269,25 +557,51 @@ const Navbar = () => {
                 </Button>
               </Link>
               <Link to="/auth/login?tab=signup">
-                <Button size="sm" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity font-medium shadow-lg shadow-primary/20">
-                  Get Started
+                <Button size="sm" className="relative overflow-hidden bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity font-medium shadow-lg shadow-primary/20 group">
+                  <span className="relative z-10">Get Started</span>
+                  
+                  {/* Celebration sparkle */}
+                  {activeCelebrations.length > 0 && (
+                    <>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                      <Sparkles className="absolute -right-2 -top-2 w-4 h-4 text-yellow-300 animate-pulse" />
+                    </>
+                  )}
                 </Button>
               </Link>
             </div>
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors relative"
+              className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors relative group"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label="Toggle menu"
             >
               {activeCelebrations.length > 0 && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full animate-ping"></div>
+                <>
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-primary to-accent rounded-full animate-ping"></div>
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-primary to-accent rounded-full"></div>
+                </>
               )}
+              
               {isMobileMenuOpen ? (
                 <X className="w-6 h-6" />
               ) : (
-                <Menu className="w-6 h-6" />
+                <>
+                  <Menu className="w-6 h-6" />
+                  {/* Celebration indicator dots */}
+                  {activeCelebrations.length > 0 && (
+                    <div className="absolute -bottom-1 inset-x-0 flex justify-center gap-1">
+                      {[...Array(Math.min(activeCelebrations.length, 3))].map((_, i) => (
+                        <div 
+                          key={i}
+                          className="w-1 h-1 rounded-full bg-gradient-to-r from-primary to-accent animate-pulse"
+                          style={{ animationDelay: `${i * 200}ms` }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </button>
           </div>
@@ -296,53 +610,100 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       <div 
-        className={`md:hidden bg-card/95 backdrop-blur-xl border-b border-border overflow-hidden transition-all duration-300 ${
-          isMobileMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
+        className={`md:hidden bg-card/98 backdrop-blur-xl border-b border-border overflow-hidden transition-all duration-500 ${
+          isMobileMenuOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <div className="container mx-auto px-4 py-4 space-y-4">
-          {/* Active celebrations in mobile menu */}
+          {/* Active celebrations */}
           {activeCelebrations.length > 0 && (
-            <div className="mb-4 p-3 bg-primary/10 rounded-lg">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <span className="text-lg">{primaryCelebration?.icon}</span>
-                <span>Celebrating {activeCelebrations.map(c => c.name).join(', ')}</span>
+            <div className="mb-4 p-4 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-sm font-semibold">Active Celebrations</span>
+                </div>
+                <div className="flex gap-1">
+                  {activeCelebrations.map((celebration, i) => (
+                    <div 
+                      key={celebration.id}
+                      className={`text-lg ${getAnimationClass(celebration.animation, celebration.intensity)}`}
+                      style={{ animationDelay: `${i * 200}ms` }}
+                    >
+                      {celebration.icon}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                {activeCelebrations.map(celebration => (
+                  <div key={celebration.id} className="flex items-center gap-3 p-2 rounded-lg bg-background/50">
+                    <div className={`text-2xl ${getAnimationClass(celebration.animation, celebration.intensity)}`}>
+                      {celebration.icon}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{celebration.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {celebration.type.charAt(0).toUpperCase() + celebration.type.slice(1)} Celebration
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
           
-          <Link 
-            to="/shops" 
-            className="block py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Explore Shops
-          </Link>
-          <Link 
-            to="/about" 
-            className="block py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            About
-          </Link>
-          <Link 
-            to="/feedback" 
-            className="block py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Feedback
-          </Link>
+          {/* Navigation Links */}
+          <div className="space-y-1">
+            <Link 
+              to="/shops" 
+              className="flex items-center gap-3 py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium group"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <span>Explore Shops</span>
+            </Link>
+            
+            <Link 
+              to="/about" 
+              className="flex items-center gap-3 py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium group"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20">
+                <Star className="w-4 h-4" />
+              </div>
+              <span>About</span>
+            </Link>
+            
+            <Link 
+              to="/feedback" 
+              className="flex items-center gap-3 py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium group"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20">
+                <Heart className="w-4 h-4" />
+              </div>
+              <span>Feedback</span>
+            </Link>
+          </div>
           
+          {/* Auth Buttons */}
           <div className="pt-4 border-t border-border space-y-3">
             <Link to="/auth/login" className="block" onClick={() => setIsMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full border-primary/30 hover:bg-primary/10">
-                <User className="w-4 h-4 mr-2" />
+              <Button variant="outline" className="w-full border-primary/30 hover:bg-primary/10 group">
+                <User className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
                 Login
               </Button>
             </Link>
             <Link to="/auth/login?tab=signup" className="block" onClick={() => setIsMobileMenuOpen(false)}>
-              <Button className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90">
-                Get Started
+              <Button className="w-full relative overflow-hidden bg-gradient-to-r from-primary to-accent hover:opacity-90 group">
+                <span className="relative z-10">Get Started</span>
+                {activeCelebrations.length > 0 && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                )}
               </Button>
             </Link>
           </div>
