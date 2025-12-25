@@ -147,7 +147,7 @@ const Index = () => {
               )}
             </div>
             
-            {/* Simple Stats */}
+            {/* Simple Stats
             <div className="mt-12 pt-8 border-t border-border/50">
               <div className="flex flex-wrap items-center justify-center gap-8 text-center">
                 <div className="text-center">
@@ -167,7 +167,7 @@ const Index = () => {
                   <p className="text-sm text-muted-foreground">Satisfaction Rate</p>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
