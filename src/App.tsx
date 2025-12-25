@@ -31,7 +31,7 @@ import CustomerCourses from "./pages/customer/CustomerCourses";
 import CustomerRewards from "./pages/customer/CustomerRewards";
 import Feedback from "./pages/Feedback";
 import AdminFeedback from "./pages/admin/AdminFeedback";
-import DemoStoreFront from "./pages/DemoStoreFront"; // Add this import
+import DemoStoreFront from "./pages/DemoStoreFront"
 
 const queryClient = new QueryClient();
 
