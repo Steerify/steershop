@@ -138,7 +138,7 @@ const Navbar = () => {
                 SteerSolo
                 {primary && (
                   <span className="ml-2 text-lg inline-block text-primary">
-                    {isChristmas ? "🎅" : <Sparkles className="inline w-5 h-5" />}
+                    {isChristmas ? "🎄" : <Sparkles className="inline w-5 h-5" />}
                   </span>
                 )}
               </span>
