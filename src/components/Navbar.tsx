@@ -30,20 +30,15 @@ const CELEBRATIONS: Celebration[] = [
 // --- Static Decorations ---
 
 const SantaHat = () => (
-  /* Positioned to perch on the top-left corner specifically */
   <div className="absolute -top-[18px] -left-[14px] w-14 h-12 -rotate-[12deg] pointer-events-none z-30 drop-shadow-sm">
-    {/* Red Body */}
     <div className="absolute bottom-3 left-3 w-10 h-7 bg-red-600 rounded-t-[80%] rounded-b-sm" />
-    {/* Fur Trim */}
     <div className="absolute bottom-2 left-2 w-12 h-3.5 bg-white rounded-full shadow-sm" />
-    {/* Pom Pom */}
     <div className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full border border-slate-100" />
   </div>
 );
 
 const FireworkFlare = () => (
   <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-xl">
-    {/* Static decorative sparkles instead of moving flares */}
     <div className="absolute top-1 right-1 text-yellow-400 opacity-80"><Sparkles size={14} /></div>
     <div className="absolute bottom-1 left-1 text-orange-400 opacity-80"><Star size={12} /></div>
     <div className="absolute inset-0 border-2 border-yellow-400/20 rounded-xl"></div>
@@ -107,7 +102,7 @@ const Navbar = () => {
       {showCelebrationHint && primary && (
         <div className="bg-gradient-to-r from-primary/20 to-accent/20 border-b border-primary/30">
           <div className="container mx-auto px-4 py-1 text-center">
-            <span className="text-sm font-medium flex items-center justify-center gap-2">
+            <span className="text-sm font-medium flex items-center justify-center gap-2 font-sans">
               <Sparkles className="w-4 h-4 text-primary" />
               <span>Celebrating {primary.name}!</span>
               <Sparkles className="w-4 h-4 text-primary" />
@@ -133,8 +128,8 @@ const Navbar = () => {
                 {!isChristmas && primary && <CelebrationBadge celebration={primary} />}
               </div>
 
-              {/* Typography Style Restored */}
-              <span className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              {/* Updated typography to match index page */}
+              <span className="font-display text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 SteerSolo
                 {primary && (
                   <span className="ml-2 text-lg inline-block text-primary">
@@ -144,8 +139,8 @@ const Navbar = () => {
               </span>
             </Link>
 
-            {/* Desktop Nav */}
-            <div className="hidden md:flex items-center gap-8">
+            {/* Desktop Nav - Updated typography */}
+            <div className="hidden md:flex items-center gap-8 font-display">
               {["Shops", "About", "Feedback"].map((label) => (
                 <Link 
                   key={label}
@@ -157,8 +152,8 @@ const Navbar = () => {
               ))}
             </div>
 
-            {/* Desktop Auth */}
-            <div className="hidden md:flex items-center gap-3">
+            {/* Desktop Auth - Updated typography */}
+            <div className="hidden md:flex items-center gap-3 font-display">
               <Link to="/auth/login">
                 <Button variant="ghost" size="sm" className="font-medium hover:bg-primary/10 hover:text-primary">
                   <User className="w-4 h-4 mr-2" />
@@ -183,14 +178,18 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Updated typography */}
       <div className={`md:hidden bg-card/95 backdrop-blur-xl border-b border-border overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"}`}>
-        <div className="container mx-auto px-4 py-4 space-y-4">
+        <div className="container mx-auto px-4 py-4 space-y-4 font-display">
           <Link to="/shops" className="block py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">Explore Shops</Link>
           <Link to="/about" className="block py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">About</Link>
           <div className="pt-4 border-t border-border space-y-3">
-            <Link to="/auth/login"><Button variant="outline" className="w-full border-primary/30">Login</Button></Link>
-            <Link to="/auth/login?tab=signup"><Button className="w-full bg-gradient-to-r from-primary to-accent">Get Started</Button></Link>
+            <Link to="/auth/login">
+              <Button variant="outline" className="w-full border-primary/30 font-display">Login</Button>
+            </Link>
+            <Link to="/auth/login?tab=signup">
+              <Button className="w-full bg-gradient-to-r from-primary to-accent font-display">Get Started</Button>
+            </Link>
           </div>
         </div>
       </div>
