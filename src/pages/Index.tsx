@@ -45,11 +45,11 @@ const Index = () => {
   const [currentPainPoint, setCurrentPainPoint] = useState(0);
   
   const painPoints = [
-    "Lost orders in chats",
-    "Manual copy/paste prices",
-    "No professional look",
-    "Customer distrust",
-    "Time wasted on admin"
+    "Lost orders in chats?",
+    "Manual copy/paste prices?",
+    "No professional look?",
+    "Customer distrust?",
+    "Slow sales?"
   ];
   
   useEffect(() => {
@@ -98,7 +98,7 @@ const Index = () => {
                 
                 {/* Main Heading */}
                 <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                  Stop{" "}
+                  {" "}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent animate-gradient">
                     {painPoints[currentPainPoint]}
                   </span>
@@ -634,10 +634,6 @@ const SimplifiedEntrepreneurExperience = ({ offer }: { offer?: any }) => (
             {/* Problem/Solution Pairs */}
             <div className="space-y-6">
               {[
-                {
-                  problem: "❌ Photos that don't do your products justice",
-                  solution: "✅ Clean product listings with proper descriptions"
-                },
                 {
                   problem: "❌ Constant price questions from customers",
                   solution: "✅ Clear pricing that customers can see anytime"
