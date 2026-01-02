@@ -220,7 +220,18 @@ const Auth = () => {
   };
 
   const handleRoleConfirm = async (role: UserRole) => {
-    if (!googleCredentialIdToken) return;
+    console.log("handleRoleConfirm called with role:", role);
+    console.log("Current googleCredentialIdToken:", googleCredentialIdToken ? "Token present" : "Token missing");
+
+    if (!googleCredentialIdToken) {
+      console.error("Missing Google token in handleRoleConfirm");
+      toast({
+        title: "Error",
+        description: "Session invalid. Please try signing in with Google again.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setIsLoading(true);
     setAuthError(null);
@@ -228,6 +239,7 @@ const Auth = () => {
     try {
       // Use googleSignup for role selection flow
       const authData = await googleSignup(googleCredentialIdToken, role);
+      console.log("googleSignup success, authData:", authData);
 
       if (authData) {
         toast({
@@ -235,9 +247,12 @@ const Auth = () => {
           description: "Successfully signed up with Google",
         });
 
-        navigate(getDashboardPath(authData.user));
+        const redirectPath = getDashboardPath(authData.user);
+        console.log("Redirecting to:", redirectPath);
+        navigate(redirectPath);
       }
     } catch (error: any) {
+      console.error("googleSignup error:", error);
       const errorMessage = error.response?.data?.message || "Google signup failed. Please try again.";
       setAuthError(errorMessage);
       toast({
