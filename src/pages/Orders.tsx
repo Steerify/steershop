@@ -375,16 +375,16 @@ const Orders = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
       <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
 
-      <div className="container mx-auto px-4 py-8 relative z-10">
-        <div className="mb-6 flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 relative z-10">
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10 min-h-[44px] px-2 sm:px-4 self-start">
+            <ArrowLeft className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Back to Dashboard</span>
           </Button>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => navigate("/bookings")} className="border-purple-500/30 text-purple-600 hover:bg-purple-500/10">
-              <CalendarCheck className="w-4 h-4 mr-2" />
-              View Bookings
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Button variant="outline" onClick={() => navigate("/bookings")} className="border-purple-500/30 text-purple-600 hover:bg-purple-500/10 min-h-[44px] text-xs sm:text-sm">
+              <CalendarCheck className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">View Bookings</span>
             </Button>
             <TourButton
               onStartTour={startTour}
@@ -394,11 +394,11 @@ const Orders = () => {
           </div>
         </div>
 
-        <div className="mb-8">
-          <h1 className="text-4xl font-heading font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold mb-1 sm:mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Orders
           </h1>
-          <p className="text-muted-foreground">Track and manage customer orders</p>
+          <p className="text-sm sm:text-base text-muted-foreground">Track and manage customer orders</p>
         </div>
 
         {orders.length === 0 ? (

@@ -373,11 +373,11 @@ const MyStore = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
       <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
       
-      <div className="container mx-auto px-4 py-8 relative z-10">
-        <div className="mb-6 flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 relative z-10">
+        <div className="mb-4 sm:mb-6 flex items-center justify-between">
+          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10 min-h-[44px] px-2 sm:px-4">
+            <ArrowLeft className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Back to Dashboard</span>
           </Button>
           <TourButton 
             onStartTour={startTour} 
@@ -387,11 +387,11 @@ const MyStore = () => {
         </div>
 
         <div className="max-w-3xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-4xl font-heading font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold mb-1 sm:mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               My Store
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               {shop ? "Manage your store settings" : "Create your store to start selling"}
             </p>
           </div>
