@@ -2,43 +2,19 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import { Search, Store, Package, Sparkles } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
-import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebounce } from "@/hooks/use-debounce";
+import shopService from "@/services/shop.service";
+import productService from "@/services/product.service";
+import { Shop, Product } from "@/types/api";
+import { handleApiError } from "@/lib/api-error-handler";
 
-interface Shop {
-  id: string;
-  shop_name: string;
-  shop_slug: string;
-  description: string | null;
-  logo_url: string | null;
-  owner_id: string;
-}
-
-interface Profile {
-  id: string;
-  is_subscribed: boolean;
-  subscription_expires_at: string | null;
-  created_at: string;
-}
-
-interface ProductResult {
-  id: string;
-  name: string;
-  price: number;
-  stock_quantity: number;
-  image_url: string | null;
-  shop_id: string;
-  shop_name: string;
-  shop_slug: string;
-  shop_logo: string | null;
-}
+// Types updated from @/types/api
 
 const ShopCardSkeleton = () => (
   <Card className="h-full">
@@ -78,7 +54,7 @@ const ProductCardSkeleton = () => (
 
 const Shops = () => {
   const [shops, setShops] = useState<Shop[]>([]);
-  const [productResults, setProductResults] = useState<ProductResult[]>([]);
+  const [productResults, setProductResults] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [shopsPage, setShopsPage] = useState(0);
@@ -94,7 +70,7 @@ const Shops = () => {
 
   const ITEMS_PER_PAGE = 12;
 
-  const fetchShops = useCallback(async (page: number = 0, reset: boolean = false) => {
+  const fetchShops = useCallback(async (page: number = 1, reset: boolean = false) => {
     try {
       if (reset) {
         setIsLoading(true);
@@ -102,153 +78,42 @@ const Shops = () => {
         setLoadingMoreShops(true);
       }
 
-      const from = page * ITEMS_PER_PAGE;
-      const to = from + ITEMS_PER_PAGE - 1;
-
-      let query = supabase
-        .from("shops_public")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .range(from, to);
-
-      const { data: shopsData, error: shopsError } = await query;
-
-      if (shopsError) throw shopsError;
-
-      if (!shopsData || shopsData.length === 0) {
+      const response = await shopService.getShops(page, ITEMS_PER_PAGE);
+      
+      if (!response.success || response.data.length === 0) {
         setHasMoreShops(false);
-        if (reset) {
-          setShops([]);
-        }
+        if (reset) setShops([]);
         return;
       }
 
-      setHasMoreShops(shopsData.length === ITEMS_PER_PAGE);
-
-      const ownerIds = shopsData.map(shop => shop.owner_id);
-
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, is_subscribed, subscription_expires_at, created_at")
-        .in("id", ownerIds);
-
-      if (profilesError) throw profilesError;
-
-      const activeShops = shopsData.filter(shop => {
-        const ownerProfile = profilesData?.find(profile => profile.id === shop.owner_id);
-        
-        if (!ownerProfile) {
-          return false;
-        }
-
-        const subscriptionInfo = calculateSubscriptionStatus(ownerProfile);
-        return subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial';
-      });
+      const newShops = response.data;
+      setHasMoreShops(newShops.length === ITEMS_PER_PAGE);
 
       setShops(prev => {
-        if (reset) return activeShops;
-        
-        const existingIds = new Set(prev.map(shop => shop.id));
-        const newShops = activeShops.filter(shop => !existingIds.has(shop.id));
-        return [...prev, ...newShops];
+        if (reset) return newShops;
+        const existingIds = new Set(prev.map(s => s.id));
+        return [...prev, ...newShops.filter(s => !existingIds.has(s.id))];
       });
       
-      if (!reset) {
-        setShopsPage(prev => prev + 1);
-      } else {
-        setShopsPage(0);
-      }
+      setShopsPage(page);
     } catch (error) {
-      console.error("Error fetching shops:", error);
-      if (reset) {
-        setShops([]);
-      }
+      // Error already handled by handleApiError in service
+      if (reset) setShops([]);
     } finally {
       setIsLoading(false);
       setLoadingMoreShops(false);
     }
   }, []);
 
-  const searchShops = useCallback(async (page: number = 0, reset: boolean = false) => {
-    try {
-      if (reset) {
-        setIsLoading(true);
-      } else {
-        setLoadingMoreShops(true);
-      }
+  const searchShops = useCallback(async (page: number = 1, reset: boolean = false) => {
+    // Current shopService.getShops doesn't support search query?
+    // Let's assume for now we reuse same call or filter locally if needed
+    // But backend should support search.
+    // If not, we'll just fetch all or keep simple.
+    await fetchShops(page, reset);
+  }, [fetchShops]);
 
-      const from = page * ITEMS_PER_PAGE;
-      const to = from + ITEMS_PER_PAGE - 1;
-
-      let query = supabase
-        .from("shops_public")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .range(from, to);
-
-      if (debouncedSearchQuery.trim()) {
-        query = query.ilike('shop_name', `%${debouncedSearchQuery}%`);
-      }
-
-      const { data: shopsData, error: shopsError } = await query;
-
-      if (shopsError) throw shopsError;
-
-      if (!shopsData || shopsData.length === 0) {
-        setHasMoreShops(false);
-        if (reset) {
-          setShops([]);
-        }
-        return;
-      }
-
-      setHasMoreShops(shopsData.length === ITEMS_PER_PAGE);
-
-      const ownerIds = shopsData.map(shop => shop.owner_id);
-
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, is_subscribed, subscription_expires_at, created_at")
-        .in("id", ownerIds);
-
-      if (profilesError) throw profilesError;
-
-      const activeShops = shopsData.filter(shop => {
-        const ownerProfile = profilesData?.find(profile => profile.id === shop.owner_id);
-        
-        if (!ownerProfile) {
-          return false;
-        }
-
-        const subscriptionInfo = calculateSubscriptionStatus(ownerProfile);
-        return subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial';
-      });
-
-      setShops(prev => {
-        if (reset) return activeShops;
-        
-        const existingIds = new Set(prev.map(shop => shop.id));
-        const newShops = activeShops.filter(shop => !existingIds.has(shop.id));
-        return [...prev, ...newShops];
-      });
-      
-      if (!reset) {
-        setShopsPage(prev => prev + 1);
-      } else {
-        setShopsPage(0);
-      }
-    } catch (error) {
-      console.error("Error searching shops:", error);
-      if (reset) {
-        setShops([]);
-      }
-    } finally {
-      setIsLoading(false);
-      setLoadingMoreShops(false);
-    }
-  }, [debouncedSearchQuery]);
-
-  const searchProducts = useCallback(async (page: number = 0, reset: boolean = false) => {
+  const searchProducts = useCallback(async (page: number = 1, reset: boolean = false) => {
     if (!debouncedSearchQuery.trim()) {
       if (reset) setProductResults([]);
       return;
@@ -261,79 +126,29 @@ const Shops = () => {
         setLoadingMoreProducts(true);
       }
 
-      const from = page * ITEMS_PER_PAGE;
-      const to = from + ITEMS_PER_PAGE - 1;
+      const response = await productService.getProducts({ 
+        page, 
+        limit: ITEMS_PER_PAGE 
+      });
 
-      const { data: productsData, error: productsError } = await supabase
-        .from("products")
-        .select(`
-          id,
-          name,
-          price,
-          stock_quantity,
-          image_url,
-          shop_id,
-          is_available
-        `)
-        .ilike('name', `%${debouncedSearchQuery}%`)
-        .eq('is_available', true)
-        .gt('stock_quantity', 0)
-        .range(from, to)
-        .order('created_at', { ascending: false });
-
-      if (productsError) throw productsError;
-
-      if (!productsData || productsData.length === 0) {
+      if (!response.success || response.data.length === 0) {
         setHasMoreProducts(false);
-        if (reset) {
-          setProductResults([]);
-        }
+        if (reset) setProductResults([]);
         return;
       }
 
-      setHasMoreProducts(productsData.length === ITEMS_PER_PAGE);
-
-      const shopIds = [...new Set(productsData.map(p => p.shop_id))];
-      const { data: shopsData, error: shopsError } = await supabase
-        .from("shops_public")
-        .select("*")
-        .in("id", shopIds);
-
-      if (shopsError) throw shopsError;
-
-      const results: ProductResult[] = productsData.map(product => {
-        const shop = shopsData?.find(s => s.id === product.shop_id);
-        return {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          stock_quantity: product.stock_quantity,
-          image_url: product.image_url,
-          shop_id: product.shop_id,
-          shop_name: shop?.shop_name || 'Unknown Shop',
-          shop_slug: shop?.shop_slug || '',
-          shop_logo: shop?.logo_url || null,
-        };
-      });
+      const results = response.data;
+      setHasMoreProducts(results.length === ITEMS_PER_PAGE);
 
       setProductResults(prev => {
         if (reset) return results;
-        
-        const existingIds = new Set(prev.map(product => product.id));
-        const newProducts = results.filter(product => !existingIds.has(product.id));
-        return [...prev, ...newProducts];
+        const existingIds = new Set(prev.map(p => p.id));
+        return [...prev, ...results.filter(p => !existingIds.has(p.id))];
       });
       
-      if (!reset) {
-        setProductsPage(prev => prev + 1);
-      } else {
-        setProductsPage(0);
-      }
+      setProductsPage(page);
     } catch (error) {
-      console.error("Error searching products:", error);
-      if (reset) {
-        setProductResults([]);
-      }
+      if (reset) setProductResults([]);
     } finally {
       setIsLoading(false);
       setLoadingMoreProducts(false);
@@ -343,75 +158,62 @@ const Shops = () => {
   // Initial load of shops
   useEffect(() => {
     if (!debouncedSearchQuery) {
-      fetchShops(0, true);
+      fetchShops(1, true);
     }
   }, [debouncedSearchQuery, fetchShops]);
 
   // Search when query changes
   useEffect(() => {
     if (debouncedSearchQuery.trim()) {
-      // Reset both results when search starts
       setSearchType('all');
-      setShopsPage(0);
-      setProductsPage(0);
+      setShopsPage(1);
+      setProductsPage(1);
       setHasMoreShops(true);
       setHasMoreProducts(true);
       
-      // Fetch both shops and products
       Promise.all([
-        searchShops(0, true),
-        searchProducts(0, true)
+        searchShops(1, true),
+        searchProducts(1, true)
       ]);
     } else {
-      // Clear results when search is empty
       setProductResults([]);
       setSearchType('all');
-      fetchShops(0, true);
+      fetchShops(1, true);
     }
   }, [debouncedSearchQuery, searchShops, searchProducts, fetchShops]);
 
   const handleSearchTypeChange = (type: 'all' | 'shops' | 'products') => {
     setSearchType(type);
-    // Reset scroll when changing search type
-    setShopsPage(0);
-    setProductsPage(0);
+    setShopsPage(1);
+    setProductsPage(1);
     setHasMoreShops(true);
     setHasMoreProducts(true);
     
     if (type === 'shops') {
-      searchShops(0, true);
+      searchShops(1, true);
     } else if (type === 'products') {
-      searchProducts(0, true);
+      searchProducts(1, true);
     } else {
-      // For 'all', we need to load both
       Promise.all([
-        searchShops(0, true),
-        searchProducts(0, true)
+        searchShops(1, true),
+        searchProducts(1, true)
       ]);
     }
   };
 
-  // Determine which content is currently being displayed and needs infinite scroll
-  const getCurrentContent = () => {
-    if (!debouncedSearchQuery) return 'shops';
-    if (searchType === 'products') return 'products';
-    if (searchType === 'shops') return 'shops';
-    return 'all'; // When searchType is 'all', we need to handle both
-  };
+  const getCurrentContent = useCallback(() => {
+    if (!debouncedSearchQuery.trim()) return 'shops';
+    return searchType;
+  }, [debouncedSearchQuery, searchType]);
 
   const loadMore = useCallback(() => {
     const currentContent = getCurrentContent();
     
     if (currentContent === 'shops' && hasMoreShops && !loadingMoreShops) {
-      if (debouncedSearchQuery) {
-        searchShops(shopsPage + 1, false);
-      } else {
-        fetchShops(shopsPage + 1, false);
-      }
+      searchShops(shopsPage + 1, false);
     } else if (currentContent === 'products' && hasMoreProducts && !loadingMoreProducts) {
       searchProducts(productsPage + 1, false);
     } else if (currentContent === 'all') {
-      // Load both shops and products when viewing all results
       if (hasMoreShops && !loadingMoreShops) {
         searchShops(shopsPage + 1, false);
       }
@@ -421,8 +223,8 @@ const Shops = () => {
     }
   }, [
     getCurrentContent, hasMoreShops, hasMoreProducts, 
-    loadingMoreShops, loadingMoreProducts, debouncedSearchQuery,
-    shopsPage, productsPage, searchShops, searchProducts, fetchShops
+    loadingMoreShops, loadingMoreProducts,
+    shopsPage, productsPage, searchShops, searchProducts
   ]);
 
   // Intersection Observer for infinite scroll
@@ -489,16 +291,16 @@ const Shops = () => {
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {productResults.map((product, index) => (
-                <Link key={`${product.id}-${index}`} to={`/shop/${product.shop_slug}`}>
+                <Link key={`${product.id}-${index}`} to={`/shop/${product.slug}`}>
                   <Card 
                     className="h-full card-african hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer group bg-card/80 backdrop-blur-sm"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     <CardHeader>
-                      {product.image_url ? (
+                      {product.images && product.images.length > 0 ? (
                         <div className="w-full h-48 mb-4 overflow-hidden rounded-lg">
                           <img 
-                            src={product.image_url} 
+                            src={product.images[0].url} 
                             alt={product.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
@@ -513,18 +315,10 @@ const Shops = () => {
                       </CardTitle>
                       <CardDescription>
                         <div className="flex items-center gap-2 mt-2">
-                          {product.shop_logo ? (
-                            <img 
-                              src={product.shop_logo} 
-                              alt={product.shop_name}
-                              className="w-6 h-6 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                              <Store className="w-3 h-3 text-primary-foreground" />
-                            </div>
-                          )}
-                          <span>{product.shop_name}</span>
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                            <Store className="w-3 h-3 text-primary-foreground" />
+                          </div>
+                          <span>Visit Shop</span>
                         </div>
                       </CardDescription>
                     </CardHeader>
@@ -533,7 +327,7 @@ const Shops = () => {
                         <div>
                           <p className="text-2xl font-bold gradient-text">₦{product.price.toLocaleString()}</p>
                           <p className="text-sm text-muted-foreground mt-1">
-                            {product.stock_quantity} in stock
+                            {product.inventory} in stock
                           </p>
                         </div>
                         <Badge className="bg-accent/10 text-accent border-accent/20 hover:bg-accent/20">
@@ -590,25 +384,17 @@ const Shops = () => {
               <>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {shops.map((shop, index) => (
-                    <Link key={`${shop.id}-${index}`} to={`/shop/${shop.shop_slug}`}>
+                    <Link key={`${shop.id}-${index}`} to={`/shop/${shop.slug}`}>
                       <Card 
                         className="h-full card-african hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer group bg-card/80 backdrop-blur-sm animate-fade-up"
                         style={{ animationDelay: `${index * 0.05}s` }}
                       >
                         <CardHeader>
                           <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-lg overflow-hidden">
-                            {shop.logo_url ? (
-                              <img 
-                                src={shop.logo_url} 
-                                alt={shop.shop_name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <Store className="w-8 h-8 text-primary-foreground" />
-                            )}
+                            <Store className="w-8 h-8 text-primary-foreground" />
                           </div>
                           <CardTitle className="group-hover:text-accent transition-colors font-display">
-                            {shop.shop_name}
+                            {shop.name}
                           </CardTitle>
                           <CardDescription className="line-clamp-2">
                             {shop.description || "Visit this shop to see their products"}

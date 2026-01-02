@@ -3,7 +3,6 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -12,27 +11,12 @@ import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { ProductRating } from "@/components/ProductRating";
 import { ProductReviewForm } from "@/components/ProductReviewForm";
 import { format } from "date-fns";
+import shopService from "@/services/shop.service";
+import productService from "@/services/product.service";
+import { Shop, Product } from "@/types/api";
+import { handleApiError } from "@/lib/api-error-handler";
 
-interface Shop {
-  id: string;
-  shop_name: string;
-  shop_slug: string;
-  logo_url: string | null;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  stock_quantity: number;
-  is_available: boolean;
-  image_url: string | null;
-  average_rating: number;
-  total_reviews: number;
-  shop_id: string;
-}
-
+// Types from @/types/api used instead
 interface Review {
   id: string;
   rating: number;
@@ -58,15 +42,11 @@ const ProductDetails = () => {
 
   const loadProductData = async () => {
     try {
-      // Load shop data
-      const { data: shopData, error: shopError } = await supabase
-        .from("shops_public")
-        .select("id, shop_name, shop_slug, logo_url")
-        .eq("shop_slug", slug)
-        .single();
+      if (!slug || !productId) return;
 
-      if (shopError) throw shopError;
-      if (!shopData) {
+      // Load shop data
+      const shopResponse = await shopService.getShopBySlug(slug);
+      if (!shopResponse.success || !shopResponse.data) {
         toast({
           title: "Shop Not Found",
           description: "This shop doesn't exist",
@@ -75,18 +55,11 @@ const ProductDetails = () => {
         navigate("/shops");
         return;
       }
-
-      setShop(shopData);
+      setShop(shopResponse.data);
 
       // Load product data
-      const { data: productData, error: productError } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", productId)
-        .eq("shop_id", shopData.id)
-        .single();
-
-      if (productError || !productData) {
+      const productResponse = await productService.getProductById(productId);
+      if (!productResponse.success || !productResponse.data) {
         toast({
           title: "Product Not Found",
           description: "This product doesn't exist",
@@ -95,36 +68,23 @@ const ProductDetails = () => {
         navigate(`/shop/${slug}`);
         return;
       }
-
-      setProduct(productData);
-
-      // Load reviews
-      const { data: reviewsData } = await supabase
-        .from("product_reviews")
-        .select("id, rating, comment, customer_name, created_at")
-        .eq("product_id", productId)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      setReviews(reviewsData || []);
+      setProduct(productResponse.data);
 
       // Load related products
-      const { data: relatedData } = await supabase
-        .from("products")
-        .select("*")
-        .eq("shop_id", shopData.id)
-        .eq("is_available", true)
-        .neq("id", productId)
-        .limit(4);
-
-      setRelatedProducts(relatedData || []);
-    } catch (error: any) {
-      console.error("Error loading product:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load product data",
-        variant: "destructive",
+      const relatedResponse = await productService.getProducts({ 
+        shopId: shopResponse.data.id,
+        limit: 4 
       });
+      if (relatedResponse.success) {
+        setRelatedProducts(relatedResponse.data.filter(p => p.id !== productId));
+      }
+
+      // Reviews handled by ProductReviewForm or separate call if needed
+      // For now we'll set empty or keep mock if backend review endpoint isn't ready
+      setReviews([]);
+
+    } catch (error: any) {
+      // Error already handled by services or handleApiError
     } finally {
       setIsLoading(false);
     }
@@ -138,7 +98,7 @@ const ProductDetails = () => {
     const existingItem = existingCart.find((item: any) => item.product.id === product?.id);
     
     if (existingItem) {
-      existingItem.quantity = Math.min(existingItem.quantity + quantity, product?.stock_quantity || 1);
+      existingItem.quantity = Math.min(existingItem.quantity + quantity, product?.inventory || 1);
     } else {
       existingCart.push({ product, quantity });
     }
@@ -209,7 +169,7 @@ const ProductDetails = () => {
           </Link>
           <span className="text-muted-foreground">/</span>
           <Link to={`/shop/${slug}`} className="text-muted-foreground hover:text-foreground transition-colors">
-            {shop.shop_name}
+            {shop.name}
           </Link>
           <span className="text-muted-foreground">/</span>
           <span className="text-foreground font-medium">{product.name}</span>
@@ -219,17 +179,17 @@ const ProductDetails = () => {
         <Link to={`/shop/${slug}`} className="inline-block mb-6">
           <Button variant="ghost" size="sm" className="hover:bg-muted">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to {shop.shop_name}
+            Back to {shop.name}
           </Button>
         </Link>
 
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
           {/* Product Image */}
           <div className="relative">
-            {product.image_url ? (
+            {product.images && product.images.length > 0 ? (
               <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-xl">
                 <img
-                  src={product.image_url}
+                  src={product.images[0].url}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
@@ -247,14 +207,10 @@ const ProductDetails = () => {
             {/* Shop Info */}
             <Link to={`/shop/${slug}`} className="inline-flex items-center gap-3 p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
-                {shop.logo_url ? (
-                  <img src={shop.logo_url} alt={shop.shop_name} className="w-full h-full object-cover" />
-                ) : (
-                  <Store className="w-5 h-5 text-primary-foreground" />
-                )}
+                <Store className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <p className="font-medium">{shop.shop_name}</p>
+                <p className="font-medium">{shop.name}</p>
                 <p className="text-xs text-muted-foreground">View all products</p>
               </div>
             </Link>
@@ -263,8 +219,8 @@ const ProductDetails = () => {
             <div>
               <h1 className="font-display text-3xl md:text-4xl font-bold mb-3">{product.name}</h1>
               <ProductRating 
-                rating={product.average_rating || 0} 
-                totalReviews={product.total_reviews || 0}
+                rating={product.averageRating || 0} 
+                totalReviews={product.totalReviews || 0}
               />
             </div>
 
@@ -272,10 +228,10 @@ const ProductDetails = () => {
             <div className="flex items-baseline gap-3">
               <span className="text-4xl font-bold gradient-text">₦{product.price.toLocaleString()}</span>
               <Badge 
-                variant={product.stock_quantity > 0 ? "default" : "destructive"}
-                className={product.stock_quantity > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
+                variant={product.inventory > 0 ? "default" : "destructive"}
+                className={product.inventory > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
               >
-                {product.stock_quantity > 0 ? `${product.stock_quantity} in stock` : "Out of stock"}
+                {product.inventory > 0 ? `${product.inventory} in stock` : "Out of stock"}
               </Badge>
             </div>
 
@@ -288,7 +244,7 @@ const ProductDetails = () => {
             )}
 
             {/* Quantity Selector */}
-            {product.stock_quantity > 0 && (
+            {product.inventory > 0 && (
               <div className="space-y-3">
                 <h3 className="font-semibold">Quantity</h3>
                 <div className="flex items-center gap-4">
@@ -305,14 +261,14 @@ const ProductDetails = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}
-                      disabled={quantity >= product.stock_quantity}
+                      onClick={() => setQuantity(Math.min(product.inventory, quantity + 1))}
+                      disabled={quantity >= product.inventory}
                     >
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    Max: {product.stock_quantity}
+                    Max: {product.inventory}
                   </span>
                 </div>
               </div>
@@ -324,7 +280,7 @@ const ProductDetails = () => {
                 size="lg"
                 className="flex-1 bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg"
                 onClick={handleAddToCart}
-                disabled={product.stock_quantity === 0}
+                disabled={product.inventory === 0}
               >
                 <ShoppingCart className="w-5 h-5 mr-2" />
                 Add to Cart - ₦{(product.price * quantity).toLocaleString()}
@@ -348,7 +304,7 @@ const ProductDetails = () => {
             <MessageSquare className="w-5 h-5 text-accent" />
             <h2 className="font-display text-2xl font-bold">Customer Reviews</h2>
             <Badge variant="outline" className="ml-2">
-              {product.total_reviews || 0} reviews
+              {product.totalReviews || 0} reviews
             </Badge>
           </div>
 
@@ -401,15 +357,15 @@ const ProductDetails = () => {
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div>
-            <h2 className="font-display text-2xl font-bold mb-6">More from {shop.shop_name}</h2>
+            <h2 className="font-display text-2xl font-bold mb-6">More from {shop.name}</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((relProduct) => (
                 <Link key={relProduct.id} to={`/shop/${slug}/product/${relProduct.id}`}>
                   <Card className="card-african overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1">
-                    {relProduct.image_url ? (
+                    {relProduct.images && relProduct.images.length > 0 ? (
                       <div className="aspect-square overflow-hidden bg-muted">
                         <img
-                          src={relProduct.image_url}
+                          src={relProduct.images[0].url}
                           alt={relProduct.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />

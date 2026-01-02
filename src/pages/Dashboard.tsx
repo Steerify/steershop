@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
+import { mockApi } from "@/lib/api-mock";
 import { useToast } from "@/hooks/use-toast";
 import { Store, Package, ShoppingCart, LogOut, Clock, CheckCircle, AlertCircle, ArrowRight, TrendingUp, DollarSign, CalendarCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ import { TourButton } from "@/components/tours/TourButton";
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [daysRemaining, setDaysRemaining] = useState<number>(0);
@@ -42,192 +44,81 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    checkAuth();
-    verifyPaymentOnReturn();
-    loadActiveOffer();
-  }, []);
-
-  useEffect(() => {
-    if (profile) {
-      loadAnalytics();
+    if (user) {
+      loadData();
+    } else {
+      setIsLoading(false);
+      navigate("/auth/login");
     }
-  }, [profile]);
+  }, [user]);
 
-  const loadAnalytics = async () => {
+  const loadData = async () => {
     try {
-      const { data: shopData } = await supabase
-        .from("shops")
-        .select("id")
-        .eq("owner_id", profile.id)
-        .single();
+      setIsLoading(true);
+      // Fetch mock profile
+      const profileData = await mockApi.profiles.get(user!.id);
+      setProfile(profileData);
 
-      if (!shopData) return;
-
-      const thirtyDaysAgo = subMonths(new Date(), 1);
-      
-      const { data: revenueData } = await supabase
-        .from("revenue_transactions")
-        .select("amount, created_at")
-        .eq("shop_id", shopData.id)
-        .gte("created_at", thirtyDaysAgo.toISOString())
-        .order("created_at", { ascending: true });
-
-      if (!revenueData) return;
-
-      const revenue = revenueData.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
-      setTotalRevenue(revenue);
-      setTotalSales(revenueData.length);
-
-      const last7Days = eachDayOfInterval({
-        start: subMonths(new Date(), 0).setDate(new Date().getDate() - 6),
-        end: new Date()
-      });
-
-      const dailyData = last7Days.map(day => {
-        const dayRevenue = revenueData.filter(transaction => 
-          format(new Date(transaction.created_at), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')
-        );
-        
-        return {
-          date: format(day, 'MMM dd'),
-          revenue: dayRevenue.reduce((sum, transaction) => sum + Number(transaction.amount), 0),
-          sales: dayRevenue.length
-        };
-      });
-
-      setChartData(dailyData);
-    } catch (error) {
-      console.error("Error loading analytics:", error);
-    }
-  };
-
-  const loadActiveOffer = async () => {
-    try {
-      const now = new Date().toISOString();
-      const { data: offer } = await supabase
-        .from("special_offers")
-        .select("*")
-        .eq("target_audience", "shop_owners")
-        .eq("is_active", true)
-        .eq("applies_to_subscription", true)
-        .or(`valid_until.is.null,valid_until.gte.${now}`)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (offer) {
-        setActiveOffer(offer);
-        
-        let finalPrice = 1000;
-        
-        if (offer.subscription_price) {
-          finalPrice = offer.subscription_price / 100;
-        } else if (offer.discount_percentage) {
-          const originalPrice = (offer.original_price || 100000) / 100;
-          finalPrice = originalPrice * (1 - offer.discount_percentage / 100);
-        }
-        
-        setSubscriptionPrice(Math.round(finalPrice));
+      if (profileData) {
+        const subscriptionInfo = calculateSubscriptionStatus(profileData);
+        setDaysRemaining(subscriptionInfo.daysRemaining);
+        setSubscriptionStatus(subscriptionInfo.status);
       }
-    } catch (error) {
-      console.error("Error loading active offer:", error);
-    }
-  };
 
-  const verifyPaymentOnReturn = async () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const reference = urlParams.get('reference');
-    
-    if (reference) {
-      try {
-        const { data, error } = await supabase.functions.invoke('paystack-verify', {
-          body: { reference },
-          headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          },
+      // Fetch mock analytics
+      const shops = await mockApi.shops.getByOwner(user!.id);
+      if (shops) {
+        // Generate mock chart data since we don't have revenue transactions in mockApi yet
+        const last7Days = eachDayOfInterval({
+          start: subMonths(new Date(), 0).setDate(new Date().getDate() - 6),
+          end: new Date()
         });
 
-        if (error) throw error;
+        const dailyData = last7Days.map(day => ({
+          date: format(day, 'MMM dd'),
+          revenue: Math.floor(Math.random() * 5000),
+          sales: Math.floor(Math.random() * 5)
+        }));
 
-        if (data.success) {
-          toast({
-            title: "Payment Successful! 🎉",
-            description: "Your subscription has been activated.",
-          });
-          
-          checkAuth();
-          window.history.replaceState({}, '', '/dashboard');
-        }
-      } catch (error: any) {
-        console.error('Payment verification error:', error);
-      }
-    }
-  };
-
-  const checkAuth = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        navigate("/auth/login");
-        return;
+        setChartData(dailyData);
+        setTotalRevenue(dailyData.reduce((sum, d) => sum + d.revenue, 0));
+        setTotalSales(dailyData.reduce((sum, d) => sum + d.sales, 0));
       }
 
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+      // Mock offer
+      setActiveOffer({
+        id: "offer-1",
+        title: "New Year Special",
+        description: "Get 50% off your next month!",
+        button_text: "Claim Now",
+        subscription_price: 50000, // in kobo
+      });
+      setSubscriptionPrice(500);
 
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single();
-
-      if (roleData?.role !== "shop_owner") {
-        navigate("/customer/dashboard");
-        return;
-      }
-
-      setProfile(profileData);
-      
-      const subscriptionInfo = calculateSubscriptionStatus(profileData);
-      setDaysRemaining(subscriptionInfo.daysRemaining);
-      setSubscriptionStatus(subscriptionInfo.status);
-      
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error loading dashboard data:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSubscribe = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase.functions.invoke('paystack-initialize', {
-        headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-
-      window.location.href = data.authorization_url;
-    } catch (error: any) {
-      console.error('Error initializing payment:', error);
+    toast({
+      title: "Subscription Mock",
+      description: "Redirecting to mock payment gateway...",
+    });
+    // Simulate payment success
+    setTimeout(() => {
       toast({
-        title: "Payment Error",
-        description: error.message || "Failed to initialize payment. Please try again.",
-        variant: "destructive",
+        title: "Payment Successful! 🎉",
+        description: "Your subscription has been activated (Mocked).",
       });
-      setIsLoading(false);
-    }
+      setSubscriptionStatus('active');
+    }, 2000);
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     toast({
       title: "Logged out",
       description: "Come back soon!",
@@ -250,10 +141,8 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
-      {/* Background Pattern */}
       <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
       
-      {/* Navigation */}
       <nav className="bg-card/80 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50">
         <div className="h-1 bg-gradient-to-r from-primary via-accent to-primary" />
         <div className="container mx-auto px-4 py-4">
@@ -282,7 +171,6 @@ const Dashboard = () => {
       </nav>
 
       <div className="container mx-auto px-4 py-12 relative z-10">
-        {/* Header Section */}
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-6">
             <div>
@@ -314,7 +202,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Special Offer Card */}
           {activeOffer && (
             <Card className="bg-gradient-to-r from-primary to-accent text-primary-foreground overflow-hidden relative">
               <div className="absolute inset-0 opacity-20">
@@ -325,16 +212,6 @@ const Dashboard = () => {
                   <div className="flex-1">
                     <h3 className="text-xl font-heading font-bold mb-2">{activeOffer.title}</h3>
                     <p className="opacity-90">{activeOffer.description}</p>
-                    {activeOffer.code && (
-                      <p className="opacity-90 mt-1">
-                        Use code: <strong className="text-gold">{activeOffer.code}</strong>
-                      </p>
-                    )}
-                    {activeOffer.valid_until && (
-                      <p className="text-sm opacity-80 mt-1">
-                        Valid until {format(new Date(activeOffer.valid_until), "MMM dd, yyyy")}
-                      </p>
-                    )}
                   </div>
                   <Button 
                     variant="secondary" 
@@ -351,7 +228,6 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Subscription Notice */}
         {(subscriptionStatus === 'trial' || subscriptionStatus === 'expired') && (
           <Card className="mb-8 border-2 border-gold/30 bg-gold/5">
             <CardHeader>
@@ -386,12 +262,10 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Analytics Section */}
         <div className="mb-8" data-tour="sales-analytics">
           <h2 className="text-2xl font-heading font-bold mb-4">Sales Analytics</h2>
           
           <div className="grid md:grid-cols-2 gap-6 mb-6">
-            {/* Total Revenue Card */}
             <Card className="group hover:shadow-lg hover:shadow-primary/10 transition-all border-primary/10" data-tour="revenue-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -411,7 +285,6 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Total Sales Card */}
             <Card className="group hover:shadow-lg hover:shadow-accent/10 transition-all border-accent/10" data-tour="sales-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -430,7 +303,6 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          {/* Revenue Chart */}
           <Card className="border-primary/10" data-tour="revenue-chart">
             <CardHeader>
               <CardTitle className="font-heading">Revenue Trend (Last 7 Days)</CardTitle>
@@ -471,7 +343,6 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Quick Actions Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" data-tour="quick-actions">
           <Card 
             className="group hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer border-primary/10 hover:border-primary/30"
@@ -539,7 +410,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Guided Tour */}
       <Joyride
         steps={dashboardTourSteps}
         run={isRunning}

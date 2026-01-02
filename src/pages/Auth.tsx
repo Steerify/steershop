@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,18 +7,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
+import authService, { SignupRequest, LoginRequest } from "@/services/auth.service";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { UserRole } from "@/types/api";
 
 const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  fullName: z.string().min(2, "Full name is required"),
-  role: z.enum(["shop_owner", "customer"])
+  firstName: z.string().min(2, "First name is required"),
+  lastName: z.string().min(2, "Last name is required"),
+  phone: z.string().min(10, "Valid phone number is required"),
+  role: z.enum(["ENTREPRENEUR", "CUSTOMER", "ADMIN"])
 });
 
 const loginSchema = z.object({
@@ -31,116 +47,86 @@ const Auth = () => {
   const defaultTab = searchParams.get("tab") || "login";
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
-  
-  const [signupData, setSignupData] = useState({
-    email: "",
-    password: "",
-    fullName: "",
-    role: "shop_owner" as "shop_owner" | "customer"
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  const signupForm = useForm<SignupRequest>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      firstName: "",
+      lastName: "",
+      phone: "",
+      role: UserRole.ENTREPRENEUR,
+    },
   });
 
-  const [loginData, setLoginData] = useState({
-    email: "",
-    password: ""
+  const loginForm = useForm<LoginRequest>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const getDashboardPath = (role: UserRole) => {
+    switch (role) {
+      case UserRole.ADMIN:
+        return "/admin";
+      case UserRole.ENTREPRENEUR:
+        return "/dashboard";
+      case UserRole.CUSTOMER:
+        return "/customer_dashboard";
+      default:
+        return "/";
+    }
+  };
+
+  const onSignupSubmit = async (data: SignupRequest) => {
     setIsLoading(true);
+    setAuthError(null);
 
     try {
-      const validated = signupSchema.parse(signupData);
-      
-      const { data, error } = await supabase.auth.signUp({
-        email: validated.email,
-        password: validated.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: validated.fullName,
-            role: validated.role
-          }
-        }
-      });
+      const authData = await signUp(data);
 
-      if (error) throw error;
-
-      toast({
-        title: "Account created!",
-        description: "Welcome to SteerSolo. Redirecting to your dashboard...",
-      });
-
-      navigate(validated.role === "shop_owner" ? "/dashboard" : "/customer_dashboard");
-    } catch (error: any) {
-      if (error instanceof z.ZodError) {
+      if (authData) {
         toast({
-          title: "Validation Error",
-          description: error.errors[0].message,
-          variant: "destructive"
+          title: "Account created!",
+          description: "Welcome to SteerSolo. Redirecting to your dashboard...",
         });
-      } else {
-        toast({
-          title: "Signup failed",
-          description: error.message || "Please try again",
-          variant: "destructive"
-        });
+
+        navigate(getDashboardPath(authData.user.role));
       }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || "Please try again";
+      setAuthError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onLoginSubmit = async (data: LoginRequest) => {
     setIsLoading(true);
+    setAuthError(null);
 
     try {
-      const validated = loginSchema.parse(loginData);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: validated.email,
-        password: validated.password
-      });
+      const authData = await signIn(data);
 
-      if (error) throw error;
+      if (authData) {
+        toast({
+          title: "Welcome back!",
+          description: "Successfully logged in",
+        });
 
-      // Fetch user role from user_roles table (authoritative source)
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", data.user.id)
-        .single();
-
-      toast({
-        title: "Welcome back!",
-        description: "Successfully logged in",
-      });
-
-      // Navigate based on role
-      if (roleData?.role === "admin") {
-        navigate("/admin");
-      } else if (roleData?.role === "shop_owner") {
-        navigate("/dashboard");
-      } else {
-        navigate("/customer_dashboard");
+        navigate(getDashboardPath(authData.user.role));
       }
     } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        toast({
-          title: "Validation Error",
-          description: error.errors[0].message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Login failed",
-          description: error.message || "Invalid credentials",
-          variant: "destructive"
-        });
-      }
+      const errorMessage = error.response?.data?.message || "Invalid credentials";
+      setAuthError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -153,11 +139,7 @@ const Auth = () => {
     try {
       const emailValidation = z.string().email("Invalid email address").parse(forgotEmail);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(emailValidation, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
-      });
-
-      if (error) throw error;
+      await authService.forgotPassword(emailValidation);
 
       toast({
         title: "Check your email",
@@ -166,79 +148,98 @@ const Auth = () => {
       setShowForgotPassword(false);
       setForgotEmail("");
     } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        toast({
-          title: "Validation Error",
-          description: error.errors[0].message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Failed to send reset email",
-          description: error.message || "Please try again",
-          variant: "destructive"
-        });
-      }
+      // Errors handled by service or local validation
     } finally {
       setIsLoading(false);
     }
   };
 
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-
-  const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
+  // Google Sign-In Logic
+  const handleGoogleResponse = async (response: any) => {
+    setAuthError(null);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
+      const googleCredential = response.credential;
+      const authResponse = await authService.googleLogin(googleCredential);
 
-      if (error) throw error;
+      if (authResponse.success) {
+        const { user, tokens } = authResponse.data;
+        localStorage.setItem('accessToken', tokens.accessToken);
+        localStorage.setItem('refreshToken', tokens.refreshToken);
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        toast({
+          title: "Welcome back!",
+          description: "Successfully logged in with Google",
+        });
+
+        navigate(getDashboardPath(user.role));
+      }
     } catch (error: any) {
+      const errorMessage = error.response?.data?.message || "Google login failed";
+      setAuthError(errorMessage);
       toast({
         title: "Google Sign-in Failed",
-        description: error.message || "Please try again or use email login",
+        description: errorMessage,
         variant: "destructive"
       });
-      setIsGoogleLoading(false);
     }
   };
 
-  const GoogleButton = () => (
-    <Button
-      type="button"
-      variant="outline"
-      className="w-full border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all"
-      onClick={handleGoogleSignIn}
-      disabled={isGoogleLoading}
-    >
-      {isGoogleLoading ? (
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-      ) : (
-        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-          <path
-            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            fill="#4285F4"
-          />
-          <path
-            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            fill="#34A853"
-          />
-          <path
-            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-            fill="#FBBC05"
-          />
-          <path
-            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            fill="#EA4335"
-          />
-        </svg>
-      )}
-      Continue with Google
-    </Button>
+  useEffect(() => {
+    const initializeGoogle = () => {
+      if (!window.google) return;
+
+      console.log('Initializing Google Auth with Client ID:', import.meta.env.VITE_GOOGLE_CLIENT_ID);
+      console.log('Current Origin:', window.location.origin);
+      
+
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: handleGoogleResponse,
+        ux_mode: "popup",
+        auto_select: false,
+      });
+
+      // Render button in both login and signup containers
+      const renderButton = (elementId: string) => {
+        const element = document.getElementById(elementId);
+        if (element && window.google) {
+          window.google.accounts.id.renderButton(element, {
+            theme: "outline",
+            size: "large",
+            width: "350", // Fixed width to ensure it fits well
+            text: "continue_with",
+          });
+        }
+      };
+
+      // Try rendering immediately and also after a short delay for tab switch
+      renderButton("google-signin-btn-login");
+      renderButton("google-signin-btn-signup");
+
+      // Set intervals or timeouts if needed because TabsContent might render later
+      const retryInterval = setInterval(() => {
+        const loginBtn = document.getElementById("google-signin-btn-login");
+        const signupBtn = document.getElementById("google-signin-btn-signup");
+        
+        if (loginBtn && loginBtn.innerHTML === "") renderButton("google-signin-btn-login");
+        if (signupBtn && signupBtn.innerHTML === "") renderButton("google-signin-btn-signup");
+        
+        // Stop retrying once both are rendered
+        if (loginBtn && loginBtn.innerHTML !== "" && signupBtn && signupBtn.innerHTML !== "") {
+          clearInterval(retryInterval);
+        }
+      }, 500);
+
+      return () => clearInterval(retryInterval);
+    };
+
+    const timer = setTimeout(initializeGoogle, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const GoogleButton = ({ id }: { id: string }) => (
+    <div id={id} className="w-full flex justify-center mb-4 min-h-[44px]" />
   );
 
   const OrDivider = () => (
@@ -258,7 +259,6 @@ const Auth = () => {
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-accent/20 to-transparent rounded-full blur-3xl" />
       
       <Card className="w-full max-w-md relative z-10 border-primary/10 shadow-2xl backdrop-blur-sm bg-card/95">
-        {/* Decorative corner accents */}
         <div className="absolute top-0 left-0 w-16 h-16 border-l-4 border-t-4 border-primary/30 rounded-tl-lg" />
         <div className="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-accent/30 rounded-br-lg" />
         
@@ -277,6 +277,13 @@ const Auth = () => {
         </CardHeader>
         
         <CardContent>
+          {authError && (
+            <Alert variant="destructive" className="mb-6 animate-in fade-in slide-in-from-top-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{authError}</AlertDescription>
+            </Alert>
+          )}
 
           {showForgotPassword ? (
             <div className="space-y-4">
@@ -335,129 +342,174 @@ const Auth = () => {
               </TabsList>
 
               <TabsContent value="login" className="mt-6">
-                <GoogleButton />
+                <GoogleButton id="google-signin-btn-login" />
                 <OrDivider />
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="you@example.com"
-                      value={loginData.email}
-                      onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                      required
-                      className="border-primary/20 focus:border-primary focus:ring-primary/30"
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                    <FormField
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="you@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="login-password">Password</Label>
-                      <Button
-                        type="button"
-                        variant="link"
-                        className="px-0 text-xs text-primary hover:text-primary/80"
-                        onClick={() => setShowForgotPassword(true)}
-                      >
-                        Forgot password?
-                      </Button>
-                    </div>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={loginData.password}
-                      onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                      required
-                      className="border-primary/20 focus:border-primary focus:ring-primary/30"
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center justify-between">
+                            <FormLabel>Password</FormLabel>
+                            <Button
+                              type="button"
+                              variant="link"
+                              className="px-0 text-xs text-primary hover:text-primary/80"
+                              onClick={() => setShowForgotPassword(true)}
+                            >
+                              Forgot password?
+                            </Button>
+                          </div>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Logging in...
-                      </>
-                    ) : (
-                      "Login"
-                    )}
-                  </Button>
-                </form>
+                    <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Logging in...
+                        </>
+                      ) : (
+                        "Login"
+                      )}
+                    </Button>
+                  </form>
+                </Form>
               </TabsContent>
 
               <TabsContent value="signup" className="mt-6">
-                <GoogleButton />
+                <GoogleButton id="google-signin-btn-signup" />
                 <OrDivider />
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
-                    <Input
-                      id="signup-name"
-                      placeholder="John Doe"
-                      value={signupData.fullName}
-                      onChange={(e) => setSignupData({ ...signupData, fullName: e.target.value })}
-                      required
-                      className="border-primary/20 focus:border-primary focus:ring-primary/30"
+                <Form {...signupForm}>
+                  <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={signupForm.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>First Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="John" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={signupForm.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Last Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Doe" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={signupForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="+234..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="you@example.com"
-                      value={signupData.email}
-                      onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
-                      required
-                      className="border-primary/20 focus:border-primary focus:ring-primary/30"
+                    <FormField
+                      control={signupForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="you@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="At least 6 characters"
-                      value={signupData.password}
-                      onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                      required
-                      className="border-primary/20 focus:border-primary focus:ring-primary/30"
+                    <FormField
+                      control={signupForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="At least 6 characters" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="font-medium">I want to:</Label>
-                    <RadioGroup
-                      value={signupData.role}
-                      onValueChange={(value: "shop_owner" | "customer") => 
-                        setSignupData({ ...signupData, role: value })
-                      }
-                      className="space-y-2"
-                    >
-                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer">
-                        <RadioGroupItem value="shop_owner" id="shop_owner" className="text-primary" />
-                        <Label htmlFor="shop_owner" className="font-normal cursor-pointer flex-1">
-                          Create and manage my own shop
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer">
-                        <RadioGroupItem value="customer" id="customer" className="text-primary" />
-                        <Label htmlFor="customer" className="font-normal cursor-pointer flex-1">
-                          Browse and shop from stores
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                  <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      "Create Account"
-                    )}
-                  </Button>
-                </form>
+                    <FormField
+                      control={signupForm.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel>I want to:</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="space-y-2"
+                            >
+                              <div className="flex items-center space-x-3 p-3 rounded-lg border border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer">
+                                <RadioGroupItem value="ENTREPRENEUR" id="ENTREPRENEUR" className="text-primary" />
+                                <Label htmlFor="ENTREPRENEUR" className="font-normal cursor-pointer flex-1">
+                                  Create and manage my own shop
+                                </Label>
+                              </div>
+                              <div className="flex items-center space-x-3 p-3 rounded-lg border border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer">
+                                <RadioGroupItem value="CUSTOMER" id="CUSTOMER" className="text-primary" />
+                                <Label htmlFor="CUSTOMER" className="font-normal cursor-pointer flex-1">
+                                  Browse and shop from stores
+                                </Label>
+                              </div>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating account...
+                        </>
+                      ) : (
+                        "Create Account"
+                      )}
+                    </Button>
+                  </form>
+                </Form>
               </TabsContent>
             </Tabs>
           )}

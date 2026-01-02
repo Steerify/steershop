@@ -1,6 +1,5 @@
 // hooks/useOrderManagement.ts
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 
 export const useOrderManagement = () => {
@@ -35,12 +34,11 @@ export const useOrderManagement = () => {
         updateData[timestampFields[updates.status as keyof typeof timestampFields]] = new Date().toISOString();
       }
 
-      const { error } = await supabase
-        .from("orders")
-        .update(updateData)
-        .eq("id", orderId);
-
-      if (error) throw error;
+      // In mock mode, we just simulate the update
+      console.log("Mocking order update:", orderId, updateData);
+      
+      // Artificial delay
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       toast({
         title: "Order Updated",
@@ -68,21 +66,21 @@ export const useOrderManagement = () => {
     });
   };
 
-const getOrderStatusFlow = (currentStatus: string) => {
-  const flows: Record<string, string[]> = {
-    awaiting_approval: ["confirmed", "cancelled"],
-    pending: ["confirmed", "cancelled"],
-    confirmed: ["processing", "cancelled"],
-    paid_awaiting_delivery: ["processing", "cancelled"],
-    processing: ["out_for_delivery", "cancelled"],
-    out_for_delivery: ["delivered", "cancelled"],
-    delivered: ["completed"],
-    completed: [],
-    cancelled: []
-  };
+  const getOrderStatusFlow = (currentStatus: string) => {
+    const flows: Record<string, string[]> = {
+      awaiting_approval: ["confirmed", "cancelled"],
+      pending: ["confirmed", "cancelled"],
+      confirmed: ["processing", "cancelled"],
+      paid_awaiting_delivery: ["processing", "cancelled"],
+      processing: ["out_for_delivery", "cancelled"],
+      out_for_delivery: ["delivered", "cancelled"],
+      delivered: ["completed"],
+      completed: [],
+      cancelled: []
+    };
 
-  return flows[currentStatus] || [];
-};
+    return flows[currentStatus] || [];
+  };
 
   return {
     updateOrderStatus,

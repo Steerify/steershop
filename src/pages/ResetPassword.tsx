@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Store, Loader2, Lock, CheckCircle } from "lucide-react";
 import { z } from "zod";
+import authService from "@/services/auth.service";
+import { handleApiError } from "@/lib/api-error-handler";
 
 const passwordSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -25,46 +26,46 @@ const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
+
   useEffect(() => {
-    // Check if we have a valid session from the reset link
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Invalid or expired link",
-          description: "Please request a new password reset link",
-          variant: "destructive"
-        });
-        navigate("/auth/login");
-      }
-    };
-    checkSession();
-  }, [navigate, toast]);
+    if (!token) {
+      toast({
+        title: "Invalid link",
+        description: "Password reset token is missing",
+        variant: "destructive"
+      });
+      navigate("/auth/login");
+    }
+  }, [navigate, toast, token]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!token) return;
+    
     setIsLoading(true);
 
     try {
       passwordSchema.parse({ password, confirmPassword });
       
-      const { error } = await supabase.auth.updateUser({
+      const response = await authService.resetPassword({
+        token,
         password: password
       });
 
-      if (error) throw error;
+      if (response.success) {
+        setIsSuccess(true);
+        toast({
+          title: "Password updated!",
+          description: "Your password has been reset successfully",
+        });
 
-      setIsSuccess(true);
-      toast({
-        title: "Password updated!",
-        description: "Your password has been reset successfully",
-      });
-
-      // Sign out and redirect to login after 2 seconds
-      setTimeout(async () => {
-        await supabase.auth.signOut();
-        navigate("/auth/login");
-      }, 2000);
+        // Redirect to login after 2 seconds
+        setTimeout(() => {
+          navigate("/auth/login");
+        }, 2000);
+      }
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast({
@@ -73,11 +74,7 @@ const ResetPassword = () => {
           variant: "destructive"
         });
       } else {
-        toast({
-          title: "Failed to reset password",
-          description: error.message || "Please try again",
-          variant: "destructive"
-        });
+        // Handled by service/handler
       }
     } finally {
       setIsLoading(false);
