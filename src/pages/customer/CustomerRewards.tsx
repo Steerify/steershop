@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { CustomerSidebar } from "@/components/CustomerSidebar";
@@ -33,24 +34,26 @@ interface PrizeClaim {
 const CustomerRewards = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading: isAuthLoading } = useAuth(); // Use useAuth to get user and auth loading state
+  const [isLoading, setIsLoading] = useState(true); // This isLoading is for the component's data loading
   const [prizes, setPrizes] = useState<Prize[]>([]);
   const [claims, setClaims] = useState<PrizeClaim[]>([]);
   const [totalPoints, setTotalPoints] = useState(0);
   const [userId, setUserId] = useState<string>("");
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!isAuthLoading) { // Wait for authentication state to be resolved
+      if (user) {
+        loadData();
+      } else {
+        navigate("/auth/login");
+      }
+    }
+  }, [user, isAuthLoading, navigate]); // Added user, isAuthLoading, and navigate to dependencies
 
   const loadData = async () => {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !user) {
-        navigate("/auth/login");
-        return;
-      }
+      if (!user) return; // Use the user from useAuth context
 
       setUserId(user.id);
 

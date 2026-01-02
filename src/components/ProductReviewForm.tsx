@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
@@ -21,6 +22,7 @@ interface ProductReviewFormProps {
 }
 
 export const ProductReviewForm = ({ productId, productName, onReviewSubmitted }: ProductReviewFormProps) => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -43,8 +45,6 @@ export const ProductReviewForm = ({ productId, productName, onReviewSubmitted }:
     setIsSubmitting(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         toast({
           title: "Authentication required",

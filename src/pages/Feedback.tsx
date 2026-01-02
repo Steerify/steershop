@@ -15,10 +15,12 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 
 const Feedback = () => {
+  const { user } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [feedbackType, setFeedbackType] = useState("complaint");
@@ -42,8 +44,6 @@ const Feedback = () => {
     setIsSubmitting(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-
       const { error } = await supabase.from("platform_feedback").insert({
         user_id: user?.id || null,
         customer_name: name,

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, ShoppingCart, Package, Clock, CheckCircle, XCircle, MessageCircle, ThumbsUp, Truck, Banknote, CalendarCheck } from "lucide-react";
 import { format } from "date-fns";
@@ -19,6 +20,7 @@ import { TourButton } from "@/components/tours/TourButton";
 const Orders = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
   const [shop, setShop] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -142,28 +144,20 @@ const Orders = () => {
   };
 
   useEffect(() => {
-    loadUserAndOrders();
-  }, []);
+    if (!authLoading) {
+      if (user) {
+        loadUserAndOrders();
+      } else {
+        navigate("/auth/login");
+      }
+    }
+  }, [user, authLoading, navigate]);
 
   const loadUserAndOrders = async () => {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (!user) return; // Ensure user is available from context
 
-      if (userError) {
-        console.error('Auth error:', userError);
-        toast({
-          title: "Authentication Error",
-          description: "Please login again",
-          variant: "destructive",
-        });
-        navigate("/auth/login");
-        return;
-      }
-
-      if (!user) {
-        navigate("/auth/login");
-        return;
-      }
+      // Removed supabase.auth.getUser() as user is now from context
 
       const { data: shopData, error: shopError } = await supabase
         .from("shops")
@@ -253,7 +247,6 @@ const Orders = () => {
       };
 
       if (status === "cancelled") {
-        const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { data: profile } = await supabase
             .from("profiles")

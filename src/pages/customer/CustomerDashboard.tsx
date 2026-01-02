@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useAuth } from "@/context/AuthContext";
 import { CustomerSidebar } from "@/components/CustomerSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import { TourButton } from "@/components/tours/TourButton";
 const CustomerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [userName, setUserName] = useState("");
   const [stats, setStats] = useState({
@@ -41,17 +43,18 @@ const CustomerDashboard = () => {
   };
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    if (!isAuthLoading) {
+      if (user) {
+        loadDashboardData();
+      } else {
+        navigate("/auth/login");
+      }
+    }
+  }, [user, isAuthLoading, navigate]);
 
   const loadDashboardData = async () => {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !user) {
-        navigate("/auth/login");
-        return;
-      }
+      if (!user) return;
 
       // Get user profile for name
       const { data: profile } = await supabase

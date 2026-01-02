@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { CustomerSidebar } from "@/components/CustomerSidebar";
@@ -33,6 +34,7 @@ interface Enrollment {
 const CustomerCourses = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -40,17 +42,18 @@ const CustomerCourses = () => {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!isAuthLoading) {
+      if (user) {
+        loadData();
+      } else {
+        navigate("/auth/login");
+      }
+    }
+  }, [user, isAuthLoading, navigate]);
 
   const loadData = async () => {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !user) {
-        navigate("/auth/login");
-        return;
-      }
+      if (!user) return;
 
       // Load courses
       const { data: coursesData, error: coursesError } = await supabase
@@ -93,7 +96,6 @@ const CustomerCourses = () => {
 
   const handleEnroll = async (courseId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { error } = await supabase

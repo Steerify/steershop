@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Star, Sparkles, X } from "lucide-react";
 
@@ -25,6 +26,7 @@ interface OrderReviewPromptProps {
 
 export const OrderReviewPrompt = ({ orderId, orderItems, onReviewsSubmitted }: OrderReviewPromptProps) => {
   const { toast } = useToast();
+  const { user } = useAuth(); // Get user from AuthContext
   const [unreviewedItems, setUnreviewedItems] = useState<OrderItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState<OrderItem | null>(null);
@@ -35,11 +37,11 @@ export const OrderReviewPrompt = ({ orderId, orderItems, onReviewsSubmitted }: O
 
   useEffect(() => {
     checkUnreviewedProducts();
-  }, [orderItems]);
+  }, [orderItems, user]); // Add user to dependency array
 
   const checkUnreviewedProducts = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Use user from context
       if (!user) return;
 
       const productIds = orderItems
@@ -88,8 +90,7 @@ export const OrderReviewPrompt = ({ orderId, orderItems, onReviewsSubmitted }: O
     setIsSubmitting(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Please login to submit a review");
+      if (!user) throw new Error("Please login to submit a review"); // Removed supabase.auth.getUser()
 
       const { data: profile } = await supabase
         .from("profiles")

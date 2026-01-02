@@ -8,6 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { CalendarIcon, Clock, User, Mail, Phone, MessageSquare, Loader2, CheckCircle, Briefcase } from "lucide-react";
@@ -46,6 +47,7 @@ export const BookingDialog = ({
   whatsappNumber 
 }: BookingDialogProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [step, setStep] = useState<'datetime' | 'details' | 'confirm' | 'success'>("datetime");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -92,7 +94,7 @@ export const BookingDialog = ({
     setIsSubmitting(true);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Use user from context
       
       const { error } = await supabase
         .from("bookings")

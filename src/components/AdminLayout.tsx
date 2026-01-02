@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { UserRole } from "@/types/api";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -14,17 +16,18 @@ interface AdminLayoutProps {
 export function AdminLayout({ children }: AdminLayoutProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, signOut, isLoading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAdminAccess();
-  }, []);
+    if (!authLoading) {
+      checkAdminAccess();
+    }
+  }, [user, authLoading]);
 
   const checkAdminAccess = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         toast({
           title: "Access Denied",
@@ -35,6 +38,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         return;
       }
 
+      // Check if user role is admin in AuthContext or Supabase (legacy check)
+      if (user.role === UserRole.ADMIN) {
+        setIsAdmin(true);
+        setLoading(false);
+        return;
+      }
+
+      // Fallback to supabase check if role is not in context (though it should be)
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
@@ -62,7 +73,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     navigate("/");
   };
 

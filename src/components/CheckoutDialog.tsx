@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Minus, Plus, ShoppingCart, Trash2, CreditCard, MessageCircle, Copy, Check, Upload, Camera, User } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -223,6 +224,7 @@ const openWhatsAppWithOrderDetails = (
 
 const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAmount }: CheckoutDialogProps) => {
   const { toast } = useToast();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentChoice, setPaymentChoice] = useState<"pay_before" | "delivery_before">("delivery_before");
   const [formData, setFormData] = useState({
@@ -242,10 +244,9 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   // Auto-fill customer info for logged-in users
   useEffect(() => {
     const loadUserProfile = async () => {
-      if (!isOpen) return;
+      if (!isOpen || isAuthLoading) return;
 
       try {
-        const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { data: profile } = await supabase
             .from('profiles')
@@ -271,7 +272,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     };
 
     loadUserProfile();
-  }, [isOpen]);
+  }, [isOpen, user, isAuthLoading]);
 
   // Reset states when dialog closes
   useEffect(() => {
@@ -503,7 +504,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     setIsProcessing(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Use user from context
 
       const orderId = crypto.randomUUID();
 

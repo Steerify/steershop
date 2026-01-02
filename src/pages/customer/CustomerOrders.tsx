@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { CustomerSidebar } from "@/components/CustomerSidebar";
@@ -16,21 +17,24 @@ import logo from "@/assets/steersolo-logo.jpg";
 const CustomerOrders = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [orders, setOrders] = useState<any[]>([]);
+  // ... rest of state
 
   useEffect(() => {
-    loadOrders();
-  }, []);
+    if (!isAuthLoading) {
+      if (user) {
+        loadOrders();
+      } else {
+        navigate("/auth/login");
+      }
+    }
+  }, [user, isAuthLoading, navigate]);
 
   const loadOrders = async () => {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !user) {
-        navigate("/auth/login");
-        return;
-      }
+      if (!user) return;
 
       const { data, error } = await supabase
         .from("orders")

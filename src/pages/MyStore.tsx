@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Upload, Loader2, Store, CreditCard, MessageCircle, Copy, Share2, Check, ExternalLink, Download, QrCode } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
@@ -55,6 +56,7 @@ const shopSchema = z.object({
 const MyStore = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
   const [shop, setShop] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -87,17 +89,18 @@ const MyStore = () => {
   };
 
   useEffect(() => {
-    loadShop();
-  }, []);
+    if (!authLoading) {
+      if (user) {
+        loadShop();
+      } else {
+        navigate("/auth/login");
+      }
+    }
+  }, [user, authLoading, navigate]);
 
   const loadShop = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        navigate("/auth/login");
-        return;
-      }
+      if (!user) return;
 
       const { data: shopData } = await supabase
         .from("shops")
@@ -182,7 +185,6 @@ const MyStore = () => {
     setIsSaving(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
       let logoUrl = shop?.logo_url;

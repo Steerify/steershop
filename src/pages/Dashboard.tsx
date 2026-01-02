@@ -22,7 +22,7 @@ import { TourButton } from "@/components/tours/TourButton";
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isLoading: isAuthLoading } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [daysRemaining, setDaysRemaining] = useState<number>(0);
@@ -44,13 +44,15 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (user) {
-      loadData();
-    } else {
-      setIsLoading(false);
-      navigate("/auth/login");
+    if (!isAuthLoading) {
+      if (user) {
+        loadData();
+      } else {
+        setIsLoading(false);
+        navigate("/auth/login");
+      }
     }
-  }, [user]);
+  }, [user, isAuthLoading]);
 
   const loadData = async () => {
     try {

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, CalendarCheck, Clock, CheckCircle, XCircle, MessageCircle, User, Phone, Mail, Calendar, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
@@ -35,22 +36,27 @@ interface Booking {
 const Bookings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth(); // Using useAuth to get user and authLoading
   const [shop, setShop] = useState<any>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // This isLoading is for the bookings data, not auth
   const [updatingBookingId, setUpdatingBookingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("all");
 
   useEffect(() => {
-    loadUserAndBookings();
-  }, []);
+    if (!authLoading) { // Wait for authLoading to be false
+      if (user) {
+        loadUserAndBookings();
+      } else {
+        navigate("/auth/login");
+      }
+    }
+  }, [user, authLoading, navigate]); // Dependencies for useEffect
 
   const loadUserAndBookings = async () => {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !user) {
-        navigate("/auth/login");
+      if (!user) { // Use user from context
+        setIsLoading(false); // Ensure loading state is cleared if no user
         return;
       }
 
