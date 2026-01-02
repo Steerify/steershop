@@ -38,6 +38,18 @@ const shopService = {
     }
   },
 
+  getShopByOwner: async (ownerId: string) => {
+    try {
+      const response = await api.get<ApiResponse<Shop[]>>('/shops', {
+        params: { ownerId },
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
   getShopBySlug: async (slug: string) => {
     try {
       const response = await api.get<ApiResponse<Shop>>(`/shops/${slug}`);

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+
 import { useAuth } from "@/context/AuthContext";
+import orderService from "@/services/order.service";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { CustomerSidebar } from "@/components/CustomerSidebar";
@@ -36,28 +37,9 @@ const CustomerOrders = () => {
     try {
       if (!user) return;
 
-      const { data, error } = await supabase
-        .from("orders")
-        .select(`
-          *,
-          order_items (
-            *,
-            products (
-              id,
-              name,
-              image_url,
-              shops (
-                shop_name
-              )
-            )
-          )
-        `)
-        .eq("customer_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      setOrders(data || []);
+      const response = await orderService.getOrdersByCustomer(user.id);
+      
+      setOrders(response.data || []);
     } catch (error: any) {
       console.error("Error loading orders:", error);
       toast({

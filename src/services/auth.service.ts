@@ -45,8 +45,8 @@ const authService = {
 
   googleLogin: async (idToken: string) => {
     try {
-      console.log('Attempting Google Login at /api/v1/auth/google');
-      const response = await api.post<ApiResponse<any>>('/auth/google', { idToken });
+      console.log('Attempting Google Login at /api/v1/auth/google/login');
+      const response = await api.post<ApiResponse<any>>('/auth/google/login', { idToken });
       
       // Normalize response to match AuthData interface if needed
       if (response.data.success && response.data.data && !response.data.data.tokens) {
@@ -65,6 +65,32 @@ const authService = {
     } catch (error) {
       handleApiError(error);
       console.error('Google Login failed:', error);
+      throw error;
+    }
+  },
+
+  googleSignup: async (idToken: string, role: UserRole) => {
+    try {
+      console.log('Attempting Google Signup at /api/v1/auth/google/signup');
+      const response = await api.post<ApiResponse<any>>('/auth/google/signup', { idToken, role });
+      
+      // Normalize response to match AuthData interface if needed
+      if (response.data.success && response.data.data && !response.data.data.tokens) {
+        const rawData = response.data.data;
+        response.data.data = {
+          user: rawData.user,
+          tokens: {
+            accessToken: rawData.accessToken,
+            refreshToken: rawData.refreshToken
+          }
+        };
+      }
+      
+      console.log('Google Signup successful:', response.data);
+      return response.data as ApiResponse<AuthData>;
+    } catch (error) {
+      handleApiError(error);
+      console.error('Google Signup failed:', error);
       throw error;
     }
   },

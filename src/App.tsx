@@ -31,7 +31,8 @@ import CustomerCourses from "./pages/customer/CustomerCourses";
 import CustomerRewards from "./pages/customer/CustomerRewards";
 import Feedback from "./pages/Feedback";
 import AdminFeedback from "./pages/admin/AdminFeedback";
-import DemoStoreFront from "./pages/DemoStoreFront"
+import DemoStoreFront from "./pages/DemoStoreFront";
+import Onboarding from "./pages/entrepreneur/Onboarding";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
           <Route path="/shops" element={<Shops />} />
           <Route path="/shop/:slug" element={<ShopStorefront />} />
           <Route path="/shop/:slug/product/:productId" element={<ProductDetails />} />
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/my-store" element={<MyStore />} />
           <Route path="/products" element={<Products />} />

@@ -1,5 +1,6 @@
 import { useState, useEffect, useLayoutEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { RoleSelectionDialog } from "@/components/auth/RoleSelectionDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,11 +52,14 @@ const Auth = () => {
   const defaultTab = searchParams.get("tab") || "login";
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, signUp, setAuth, googleLogin, setGoogleCallback } = useAuth();
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  const { signIn, signUp, setAuth, googleLogin, googleSignup, setGoogleCallback } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
+  const [showRoleSelection, setShowRoleSelection] = useState(false);
+  const [googleCredentialIdToken, setGoogleCredentialIdToken] = useState<string | null>(null);
 
   const signupForm = useForm<SignupRequest>({
     resolver: zodResolver(signupSchema),
@@ -77,11 +81,17 @@ const Auth = () => {
     },
   });
 
-  const getDashboardPath = (role: UserRole) => {
-    switch (role) {
+  /*
+   * Helper to determine redirect path based on user role and status
+   */
+  const getDashboardPath = (user: { role: UserRole; onboardingCompleted?: boolean }) => {
+    switch (user.role) {
       case UserRole.ADMIN:
         return "/admin";
       case UserRole.ENTREPRENEUR:
+        if (!user.onboardingCompleted) {
+            return "/onboarding";
+        }
         return "/dashboard";
       case UserRole.CUSTOMER:
         return "/customer_dashboard";
@@ -103,7 +113,7 @@ const Auth = () => {
           description: "Welcome to SteerSolo. Redirecting to your dashboard...",
         });
 
-        navigate(getDashboardPath(authData.user.role));
+        navigate(getDashboardPath(authData.user));
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || "Please try again";
@@ -126,7 +136,7 @@ const Auth = () => {
           description: "Successfully logged in",
         });
 
-        navigate(getDashboardPath(authData.user.role));
+        navigate(getDashboardPath(authData.user));
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Invalid credentials. Please check your email and password.";
@@ -161,27 +171,81 @@ const Auth = () => {
   // Google Sign-In Logic
   const handleGoogleResponse = async (response: any) => {
     setAuthError(null);
-    setIsLoading(true);
     try {
       const googleCredential = response.credential;
-      const authData = await googleLogin(googleCredential);
+      if (googleCredential) {
+        setGoogleCredentialIdToken(googleCredential);
+        
+        if (activeTab === "signup") {
+          setShowRoleSelection(true);
+        } else {
+          // Login Flow
+          setIsLoading(true);
+          try {
+            const authData = await googleLogin(googleCredential);
+            if (authData) {
+              toast({
+                title: "Welcome back!",
+                description: "Successfully logged in with Google",
+              });
+              navigate(getDashboardPath(authData.user));
+            }
+          } catch (error: any) {
+             const statusCode = error.response?.status;
+             if (statusCode === 404) {
+               // User not found, prompt for signup
+               toast({
+                 title: "Account not found",
+                 description: "Please select a role to create a new account.",
+               });
+               setShowRoleSelection(true);
+             } else {
+               const errorMessage = error.response?.data?.message || "Google login failed. Please try again.";
+               setAuthError(errorMessage);
+               toast({
+                 title: "Google Sign-in Failed",
+                 description: errorMessage,
+                 variant: "destructive"
+               });
+             }
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      }
+    } catch (error: any) {
+       console.error("Google Auth Error", error);
+       setAuthError("Failed to initiate Google login");
+    }
+  };
+
+  const handleRoleConfirm = async (role: UserRole) => {
+    if (!googleCredentialIdToken) return;
+    
+    setIsLoading(true);
+    setAuthError(null);
+    
+    try {
+      // Use googleSignup for role selection flow
+      const authData = await googleSignup(googleCredentialIdToken, role);
 
       if (authData) {
         toast({
-          title: "Welcome back!",
-          description: "Successfully logged in with Google",
+          title: "Account created!",
+          description: "Successfully signed up with Google",
         });
 
-        navigate(getDashboardPath(authData.user.role));
+        navigate(getDashboardPath(authData.user));
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Google login failed. Please try again.";
+      const errorMessage = error.response?.data?.message || "Google signup failed. Please try again.";
       setAuthError(errorMessage);
       toast({
-        title: "Google Sign-in Failed",
+        title: "Google Sign-up Failed",
         description: errorMessage,
         variant: "destructive"
       });
+      setShowRoleSelection(false); // Close dialog on error to retry or show error better
     } finally {
       setIsLoading(false);
     }
@@ -311,7 +375,7 @@ const Auth = () => {
               </form>
             </div>
           ) : (
-            <Tabs defaultValue={defaultTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 bg-muted/50">
                 <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   Login
@@ -495,6 +559,12 @@ const Auth = () => {
           )}
         </CardContent>
       </Card>
+      
+      <RoleSelectionDialog 
+        open={showRoleSelection} 
+        onConfirm={handleRoleConfirm}
+        isLoading={isLoading}
+      />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import { rewardService } from "@/services/reward.service";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { CustomerSidebar } from "@/components/CustomerSidebar";
@@ -58,33 +58,17 @@ const CustomerRewards = () => {
       setUserId(user.id);
 
       // Load prizes
-      const { data: prizesData, error: prizesError } = await supabase
-        .from("rewards_prizes")
-        .select("*")
-        .eq("is_active", true)
-        .order("points_required", { ascending: true });
-
-      if (prizesError) throw prizesError;
+      const prizesData = await rewardService.getPrizes();
 
       // Load prize claims
-      const { data: claimsData, error: claimsError } = await supabase
-        .from("prize_claims")
-        .select("*, prizes:rewards_prizes(*)")
-        .eq("user_id", user.id)
-        .order("claimed_at", { ascending: false });
-
-      if (claimsError) throw claimsError;
+      const claimsData = await rewardService.getClaims();
 
       // Load points
-      const { data: pointsData } = await supabase
-        .from("rewards_points")
-        .select("total_points")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const pointsData = await rewardService.getUserPoints();
 
-      setPrizes(prizesData || []);
-      setClaims(claimsData || []);
-      setTotalPoints(pointsData?.total_points || 0);
+      setPrizes(prizesData?.data || []);
+      setClaims(claimsData?.data || []);
+      setTotalPoints(pointsData?.data?.total_points || 0);
     } catch (error: any) {
       console.error("Error loading data:", error);
       toast({
@@ -108,25 +92,18 @@ const CustomerRewards = () => {
     }
 
     try {
-      const { data, error } = await supabase.rpc("claim_prize", {
-        p_prize_id: prizeId,
-        p_user_id: userId,
-      });
-
-      if (error) throw error;
-
-      const result = data as any;
+      const result = await rewardService.claimPrize(prizeId);
       
       if (result.success) {
         toast({
           title: "Prize Claimed!",
-          description: `You've spent ${result.points_spent} points. Remaining: ${result.remaining_points}`,
+          description: `You've spent ${result.data.points_spent} points. Remaining: ${result.data.remaining_points}`,
         });
         loadData();
       } else {
         toast({
           title: "Claim Failed",
-          description: result.error,
+          description: result.message || "Could not claim prize",
           variant: "destructive",
         });
       }

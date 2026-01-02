@@ -40,6 +40,7 @@ export interface User {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  onboardingCompleted?: boolean;
   profile?: any;
 }
 
@@ -115,4 +116,53 @@ export interface PaymentInitialization {
 
 export interface PaymentVerification {
   status: "SUCCESS" | "FAILED" | "PENDING";
+}
+
+export interface Prize {
+  id: string;
+  title: string;
+  description: string;
+  points_required: number;
+  image_url: string;
+  stock_quantity: number;
+  is_active: boolean;
+}
+
+export interface PrizeClaim {
+  id: string;
+  prize_id: string;
+  points_spent: number;
+  status: string;
+  claimed_at: string;
+  fulfilled_at: string | null;
+  prizes: Prize;
+}
+
+export interface Course {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  image_url: string;
+  reward_points: number;
+  is_active: boolean;
+}
+
+export interface Enrollment {
+  id: string;
+  course_id: string;
+  progress: number;
+  completed_at: string | null;
+  reward_claimed: boolean;
+}
+
+export interface RevenueTransaction {
+  id?: string;
+  shop_id: string;
+  order_id: string;
+  amount: number;
+  currency: string;
+  payment_reference: string;
+  payment_method: string;
+  transaction_type: string;
 }

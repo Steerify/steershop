@@ -28,9 +28,37 @@ const orderService = {
     }
   },
 
-  updateOrderStatus: async (id: string, status: string) => {
+
+
+  getOrders: async (shopId: string) => {
     try {
-      const response = await api.patch<ApiResponse<null>>(`/orders/${id}/status`, { status }, {
+      const response = await api.get<ApiResponse<Order[]>>(`/orders`, {
+        headers: getAuthHeaders(),
+        params: { shopId },
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  getOrdersByCustomer: async (customerId: string) => {
+    try {
+      const response = await api.get<ApiResponse<Order[]>>('/orders', {
+        headers: getAuthHeaders(),
+        params: { customerId },
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  updateOrderStatus: async (id: string, status: string, additionalData?: any) => {
+    try {
+      const response = await api.patch<ApiResponse<null>>(`/orders/${id}/status`, { status, ...additionalData }, {
         headers: getAuthHeaders(),
       });
       return response.data;

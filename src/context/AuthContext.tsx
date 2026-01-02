@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import authService, { LoginRequest, SignupRequest } from '@/services/auth.service';
-import { User, AuthData } from '@/types/api';
+import { User, AuthData, UserRole } from '@/types/api';
 
 interface AuthContextType {
   user: User | null;
@@ -8,6 +8,7 @@ interface AuthContextType {
   signIn: (data: LoginRequest) => Promise<AuthData | undefined>;
   signUp: (data: SignupRequest) => Promise<AuthData | undefined>;
   googleLogin: (credential: string) => Promise<AuthData | undefined>;
+  googleSignup: (credential: string, role: UserRole) => Promise<AuthData | undefined>;
   setGoogleCallback: (callback: (response: any) => void) => void;
   signOut: () => Promise<void>;
   setAuth: (data: AuthData) => void;
@@ -116,6 +117,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const googleSignup = async (credential: string, role: UserRole) => {
+    setIsLoading(true);
+    try {
+      const response = await authService.googleSignup(credential, role);
+      if (response.success) {
+        setAuth(response.data);
+        return response.data;
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const setGoogleCallback = (callback: (response: any) => void) => {
     globalGoogleCallback = callback;
   };
@@ -126,7 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signUp, googleLogin, setGoogleCallback, signOut, setAuth }}>
+    <AuthContext.Provider value={{ user, isLoading, signIn, signUp, googleLogin, googleSignup, setGoogleCallback, signOut, setAuth }}>
       {children}
     </AuthContext.Provider>
   );

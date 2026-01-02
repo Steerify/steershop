@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import orderService from "@/services/order.service";
+import shopService from "@/services/shop.service";
+import { revenueService } from "@/services/revenue.service";
 import { ArrowLeft, Loader2, ShoppingCart, Package, Clock, CheckCircle, XCircle, MessageCircle, ThumbsUp, Truck, Banknote, CalendarCheck } from "lucide-react";
 import { format } from "date-fns";
 import OrderApprovalDialog from "@/components/OrderApprovalDialog";
@@ -157,23 +159,17 @@ const Orders = () => {
     try {
       if (!user) return; // Ensure user is available from context
 
-      // Removed supabase.auth.getUser() as user is now from context
 
-      const { data: shopData, error: shopError } = await supabase
-        .from("shops")
-        .select("*")
-        .eq("owner_id", user.id)
-        .single();
 
-      if (shopError) {
-        console.error('Shop fetch error:', shopError);
-        toast({
-          title: "No Store Found",
-          description: "Please create your store first",
-          variant: "destructive",
-        });
-        navigate("/my-store");
-        return;
+      // Use shopService to fetch shop
+      let shopData = null;
+      try {
+        const response = await shopService.getShopByOwner(user.id);
+        // Handle potential array or single object response flexibly
+        shopData = Array.isArray(response.data) ? response.data[0] : response.data;
+      } catch (err) {
+        // If shop not found or error
+        console.error("Shop fetch error", err);
       }
 
       if (!shopData) {
@@ -201,37 +197,14 @@ const Orders = () => {
 
   const loadOrders = async (shopId: string) => {
     try {
-      const { data: ordersData, error } = await supabase
-        .from("orders")
-        .select(`
-          *,
-          order_items (
-            *,
-            product_id,
-            products (
-              name,
-              image_url
-            )
-          ),
-          profiles (
-            full_name,
-            email
-          )
-        `)
-        .eq("shop_id", shopId)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error('Error loading orders:', error);
-        throw error;
-      }
-
-      setOrders(ordersData || []);
+      const response: any = await orderService.getOrders(shopId);
+      // Assuming response.data is the array of orders
+      setOrders(response.data || []);
     } catch (error: any) {
       console.error('Error in loadOrders:', error);
       toast({
         title: "Failed to load orders",
-        description: error.message || "Please check your RLS policies",
+        description: error.message || "Please check your network connection",
         variant: "destructive",
       });
     }
@@ -248,14 +221,10 @@ const Orders = () => {
 
       if (status === "cancelled") {
         if (user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("full_name")
-            .eq("id", user.id)
-            .single();
-
-          updateData.cancelled_by = profile?.full_name || "Shop Owner";
-          updateData.cancelled_at = new Date().toISOString();
+          // You might need a profile service here or assume user context has name
+          // For now, let's use a placeholder or partial update
+           updateData.cancelled_by = user.email || "Shop Owner"; // Fallback to email as name might not be in user object
+           updateData.cancelled_at = new Date().toISOString();
         }
       }
 
@@ -263,12 +232,7 @@ const Orders = () => {
         updateData.delivered_at = new Date().toISOString();
       }
 
-      const { error } = await supabase
-        .from("orders")
-        .update(updateData)
-        .eq("id", orderId);
-
-      if (error) throw error;
+      await orderService.updateOrderStatus(orderId, status, updateData);
 
       toast({
         title: "Success!",
@@ -293,20 +257,14 @@ const Orders = () => {
     setUpdatingOrderId(order.id);
 
     try {
-      const { error: updateError } = await supabase
-        .from("orders")
-        .update({
+      await orderService.updateOrderStatus(order.id, "confirmed", { // Use confirmed or another status to reflect partial update if needed, but here we just update payment
           payment_status: "paid",
           paid_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        })
-        .eq("id", order.id);
+      });
 
-      if (updateError) throw updateError;
 
-      const { error: revenueError } = await supabase
-        .from("revenue_transactions")
-        .insert({
+      await revenueService.createTransaction({
           shop_id: shop.id,
           order_id: order.id,
           amount: parseFloat(order.total_amount),
@@ -316,9 +274,7 @@ const Orders = () => {
           transaction_type: 'order_payment',
         });
 
-      if (revenueError) {
-        console.error('Revenue recording error:', revenueError);
-      }
+      // Error handling is now in catch block
 
       toast({
         title: "Payment Recorded! 💰",

@@ -12,7 +12,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/steersolo-logo.jpg";
 
@@ -27,22 +27,23 @@ export function CustomerSidebar() {
   const { state } = useSidebar();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signOut } = useAuth();
   const collapsed = state === "collapsed";
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
+    try {
+      await signOut();
       toast({
         title: "Logged out",
         description: "See you next time!",
       });
       navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 

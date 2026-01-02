@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import { courseService } from "@/services/course.service";
+import { rewardService } from "@/services/reward.service";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { CustomerSidebar } from "@/components/CustomerSidebar";
@@ -56,32 +57,17 @@ const CustomerCourses = () => {
       if (!user) return;
 
       // Load courses
-      const { data: coursesData, error: coursesError } = await supabase
-        .from("courses")
-        .select("*")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
-
-      if (coursesError) throw coursesError;
+      const coursesData = await courseService.getCourses();
 
       // Load enrollments
-      const { data: enrollmentsData, error: enrollmentsError } = await supabase
-        .from("course_enrollments")
-        .select("*")
-        .eq("user_id", user.id);
+      const enrollmentsData = await courseService.getEnrollments();
 
-      if (enrollmentsError) throw enrollmentsError;
+      // Load points (using rewardService for consistency)
+      const pointsData = await rewardService.getUserPoints();
 
-      // Load points
-      const { data: pointsData } = await supabase
-        .from("rewards_points")
-        .select("total_points")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      setCourses(coursesData || []);
-      setEnrollments(enrollmentsData || []);
-      setTotalPoints(pointsData?.total_points || 0);
+      setCourses(coursesData?.data || []);
+      setEnrollments(enrollmentsData?.data || []);
+      setTotalPoints(pointsData?.data?.total_points || 0);
     } catch (error: any) {
       console.error("Error loading data:", error);
       toast({
@@ -98,11 +84,7 @@ const CustomerCourses = () => {
     try {
       if (!user) return;
 
-      const { error } = await supabase
-        .from("course_enrollments")
-        .insert([{ user_id: user.id, course_id: courseId, progress: 0 }]);
-
-      if (error) throw error;
+      await courseService.enrollInCourse(courseId);
 
       toast({ title: "Successfully enrolled in course!" });
       loadData();
@@ -117,12 +99,7 @@ const CustomerCourses = () => {
 
   const handleMarkComplete = async (enrollmentId: string) => {
     try {
-      const { error } = await supabase
-        .from("course_enrollments")
-        .update({ progress: 100, completed_at: new Date().toISOString() })
-        .eq("id", enrollmentId);
-
-      if (error) throw error;
+      await courseService.markCourseComplete(enrollmentId);
 
       toast({
         title: "Course completed!",

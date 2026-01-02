@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { CustomerSidebar } from "@/components/CustomerSidebar";
+import orderService from "@/services/order.service";
+import { rewardService } from "@/services/reward.service";
+import { courseService } from "@/services/course.service";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, Package, Clock, CheckCircle2, Award, GraduationCap, ArrowRight } from "lucide-react";
@@ -57,23 +59,10 @@ const CustomerDashboard = () => {
       if (!user) return;
 
       // Get user profile for name
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", user.id)
-        .single();
+      setUserName(user.firstName || "Customer"); // Assuming User object has firstName or fallback
 
-      setUserName(profile?.full_name || "Customer");
-
-      const { data: orders, error } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("customer_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      const allOrders = orders || [];
+      const ordersResponse = await orderService.getOrdersByCustomer(user.id);
+      const allOrders = ordersResponse.data || [];
       
       setStats({
         totalOrders: allOrders.length,
@@ -85,20 +74,11 @@ const CustomerDashboard = () => {
       setRecentOrders(allOrders.slice(0, 5));
 
       // Load rewards points and courses
-      const { data: pointsData } = await supabase
-        .from("rewards_points")
-        .select("total_points")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const pointsData = await rewardService.getUserPoints();
+      const enrollmentsData = await courseService.getEnrollments();
 
-      const { data: enrollmentsData } = await supabase
-        .from("course_enrollments")
-        .select("completed_at")
-        .eq("user_id", user.id)
-        .not("completed_at", "is", null);
-
-      setTotalPoints(pointsData?.total_points || 0);
-      setCoursesCompleted(enrollmentsData?.length || 0);
+      setTotalPoints(pointsData?.data?.total_points || 0);
+      setCoursesCompleted(enrollmentsData?.data?.filter(e => e.completed_at).length || 0);
     } catch (error: any) {
       console.error("Error loading dashboard:", error);
       toast({
