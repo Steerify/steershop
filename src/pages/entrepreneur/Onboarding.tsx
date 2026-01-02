@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import onboardingService, { OnboardingData } from "@/services/onboarding.service";
@@ -19,6 +19,18 @@ const Onboarding = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1); // Optional: if we want multi-step animation, but keeping single page for simplicity as per request "single-page form" option
+  
+  // Guard: Redirect if not Entrepreneur
+  useEffect(() => {
+    if (user && user.role !== "ENTREPRENEUR") {
+      toast({
+        title: "Access Denied",
+        description: "Onboarding is for entrepreneurs only.",
+        variant: "destructive"
+      });
+      navigate("/customer_dashboard");
+    }
+  }, [user, navigate, toast]);
 
   const [formData, setFormData] = useState<OnboardingData>({
     businessType: "",
