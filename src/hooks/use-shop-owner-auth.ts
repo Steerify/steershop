@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { calculateSubscriptionStatus, canAccessShopFeatures } from "@/utils/subscription";
+import { UserRole } from "@/types/api";
 
 export const useShopOwnerAuth = () => {
   const navigate = useNavigate();
@@ -26,15 +27,19 @@ export const useShopOwnerAuth = () => {
 
     // In a mock world, we assume the user has a profile and the correct role
     // Since we hardcoded the user to be a shop_owner in AuthContext
+    const fullName = user.firstName && user.lastName 
+      ? `${user.firstName} ${user.lastName}` 
+      : user.email;
+    
     const mockProfileData = {
       id: user.id,
       email: user.email,
-      full_name: user.full_name,
+      full_name: fullName,
       subscription_tier: 'trial',
       trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     };
 
-    if (user.role !== "shop_owner") {
+    if (user.role !== UserRole.ENTREPRENEUR) {
       navigate("/customer/dashboard");
       return;
     }
