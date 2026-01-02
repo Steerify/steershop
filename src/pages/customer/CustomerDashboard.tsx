@@ -111,11 +111,11 @@ const CustomerDashboard = () => {
         <CustomerSidebar />
         
         <div className="flex-1 relative z-10">
-          <header className="h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center justify-between px-6">
+          <header className="h-14 sm:h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center justify-between px-4 sm:px-6">
             <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-primary via-accent to-primary" />
             <div className="flex items-center">
-              <SidebarTrigger className="mr-4" />
-              <h1 className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <SidebarTrigger className="mr-2 sm:mr-4" />
+              <h1 className="text-xl sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Dashboard
               </h1>
             </div>
@@ -126,62 +126,62 @@ const CustomerDashboard = () => {
             />
           </header>
 
-          <main className="p-6 space-y-6">
+          <main className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Welcome Section */}
             <div className="mb-2">
-              <h2 className="text-3xl font-heading font-bold mb-1">
+              <h2 className="text-2xl sm:text-3xl font-heading font-bold mb-1">
                 Welcome back, {userName}!
               </h2>
-              <p className="text-muted-foreground">Here's an overview of your activity</p>
+              <p className="text-sm sm:text-base text-muted-foreground">Here's an overview of your activity</p>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" data-tour="stats-grid">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" data-tour="stats-grid">
               <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
-                  <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <ShoppingBag className="h-5 w-5 text-primary" />
+                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-heading font-bold">{stats.totalOrders}</div>
+                <CardContent className="pt-0">
+                  <div className="text-2xl sm:text-3xl font-heading font-bold">{stats.totalOrders}</div>
                 </CardContent>
               </Card>
 
               <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
-                  <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Completed</CardTitle>
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-heading font-bold text-green-600">{stats.completedOrders}</div>
+                <CardContent className="pt-0">
+                  <div className="text-2xl sm:text-3xl font-heading font-bold text-green-600">{stats.completedOrders}</div>
                 </CardContent>
               </Card>
 
               <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/rewards")} data-tour="reward-points">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Reward Points</CardTitle>
-                  <div className="w-10 h-10 bg-gradient-to-br from-gold/20 to-amber-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Award className="h-5 w-5 text-gold" />
+                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Reward Points</CardTitle>
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-gold/20 to-amber-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Award className="h-4 w-4 sm:h-5 sm:w-5 text-gold" />
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-heading font-bold text-gold">{totalPoints}</div>
+                <CardContent className="pt-0">
+                  <div className="text-2xl sm:text-3xl font-heading font-bold text-gold">{totalPoints}</div>
                 </CardContent>
               </Card>
 
               <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/courses")} data-tour="courses-card">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Courses Completed</CardTitle>
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <GraduationCap className="h-5 w-5 text-purple-500" />
+                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Courses</CardTitle>
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-heading font-bold text-purple-600">{coursesCompleted}</div>
+                <CardContent className="pt-0">
+                  <div className="text-2xl sm:text-3xl font-heading font-bold text-purple-600">{coursesCompleted}</div>
                 </CardContent>
               </Card>
             </div>
