@@ -280,7 +280,7 @@ const Auth = () => {
     // Small delay to ensure tabs are rendered if switching
     const timer = setTimeout(renderGoogleButtons, 500);
     return () => clearTimeout(timer);
-  }, [defaultTab]); 
+  }, [activeTab]); 
 
   const GoogleButton = ({ id }: { id: string }) => (
     <div id={id} className="w-full flex justify-center mb-4 min-h-[44px]" />
