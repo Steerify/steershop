@@ -88,20 +88,22 @@ export function RoleSelectionDialog({ open, onConfirm, isLoading }: RoleSelectio
           </div>
         </div>
 
-        <Button
-          className="w-full bg-gradient-to-r from-primary to-accent py-6 text-lg"
-          onClick={handleConfirm}
-          disabled={!selectedRole || isLoading}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              Setting up account...
-            </>
-          ) : (
-            "Continue"
-          )}
-        </Button>
+        <div className="mt-2">
+          <Button
+            className="w-full bg-gradient-to-r from-primary to-accent py-6 text-lg"
+            onClick={handleConfirm}
+            disabled={!selectedRole || isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Setting up account...
+              </>
+            ) : (
+              "Continue"
+            )}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
