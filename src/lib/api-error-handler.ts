@@ -31,10 +31,10 @@ export const handleApiError = (error: unknown) => {
     if (status === 400) {
       const message = data?.message || "Invalid request parameters.";
       
-      // Handle structured validation errors (assuming data.error could be an object/array)
-      if (data?.error && typeof data.error === 'object') {
-        const validationErrors = data.error;
-        
+      // Handle structured validation errors (data.error or data.errors)
+      const validationErrors = data?.errors || data?.error;
+      
+      if (validationErrors && typeof validationErrors === 'object') {
         // If it's an array of errors (like Zod)
         if (Array.isArray(validationErrors)) {
           validationErrors.forEach((err: any) => {
@@ -50,8 +50,9 @@ export const handleApiError = (error: unknown) => {
         const errorEntries = Object.entries(validationErrors);
         if (errorEntries.length > 0) {
           errorEntries.forEach(([field, msg]: [string, any]) => {
+            const displayMsg = Array.isArray(msg) ? msg[0] : msg;
             toast.error("Validation Error", {
-              description: `${field}: ${msg}`,
+              description: `${field}: ${displayMsg}`,
             });
           });
           return;

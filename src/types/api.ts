@@ -10,6 +10,7 @@ export interface ApiErrorResponse {
   success: boolean;
   message: string;
   error?: any;
+  errors?: any;
 }
 
 export interface PaginatedResponse<T> {

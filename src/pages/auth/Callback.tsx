@@ -16,7 +16,7 @@ const Callback = () => {
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Log in the mock user
-        await signIn("google-user@example.com", "mock-password");
+        await signIn({ email: "google-user@example.com", password: "mock-password" });
 
         // Redirect based on role (default to customer dashboard)
         navigate("/customer_dashboard");

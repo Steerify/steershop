@@ -30,7 +30,11 @@ import { UserRole } from "@/types/api";
 
 const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
   firstName: z.string().min(2, "First name is required"),
   lastName: z.string().min(2, "Last name is required"),
   phone: z.string().min(10, "Valid phone number is required"),
@@ -47,7 +51,7 @@ const Auth = () => {
   const defaultTab = searchParams.get("tab") || "login";
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, setAuth } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -125,7 +129,7 @@ const Auth = () => {
         navigate(getDashboardPath(authData.user.role));
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Invalid credentials";
+      const errorMessage = error.response?.data?.message || "Invalid credentials. Please check your email and password.";
       setAuthError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -162,10 +166,8 @@ const Auth = () => {
       const authResponse = await authService.googleLogin(googleCredential);
 
       if (authResponse.success) {
-        const { user, tokens } = authResponse.data;
-        localStorage.setItem('accessToken', tokens.accessToken);
-        localStorage.setItem('refreshToken', tokens.refreshToken);
-        localStorage.setItem('user', JSON.stringify(user));
+        const { user } = authResponse.data;
+        setAuth(authResponse.data);
         
         toast({
           title: "Welcome back!",
@@ -175,7 +177,7 @@ const Auth = () => {
         navigate(getDashboardPath(user.role));
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Google login failed";
+      const errorMessage = error.response?.data?.message || "Google login failed. Please try again.";
       setAuthError(errorMessage);
       toast({
         title: "Google Sign-in Failed",
