@@ -336,14 +336,6 @@ const Auth = () => {
         </CardHeader>
         
         <CardContent>
-          {authError && (
-            <Alert variant="destructive" className="mb-6 animate-in fade-in slide-in-from-top-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{authError}</AlertDescription>
-            </Alert>
-          )}
-
           {showForgotPassword ? (
             <div className="space-y-4">
               <Button
