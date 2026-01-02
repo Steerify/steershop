@@ -47,9 +47,11 @@ const authService = {
     try {
       console.log('Attempting Google Login at /api/v1/auth/google');
       const response = await api.post<ApiResponse<AuthData>>('/auth/google', { idToken });
+      console.log('Google Login successful:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error);
+      console.error('Google Login failed:', error);
       throw error;
     }
   },
