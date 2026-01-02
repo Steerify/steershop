@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +51,7 @@ const Auth = () => {
   const defaultTab = searchParams.get("tab") || "login";
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, signUp, setAuth } = useAuth();
+  const { signIn, signUp, setAuth, googleLogin, setGoogleCallback } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -161,20 +161,18 @@ const Auth = () => {
   // Google Sign-In Logic
   const handleGoogleResponse = async (response: any) => {
     setAuthError(null);
+    setIsLoading(true);
     try {
       const googleCredential = response.credential;
-      const authResponse = await authService.googleLogin(googleCredential);
+      const authData = await googleLogin(googleCredential);
 
-      if (authResponse.success) {
-        const { user } = authResponse.data;
-        setAuth(authResponse.data);
-        
+      if (authData) {
         toast({
           title: "Welcome back!",
           description: "Successfully logged in with Google",
         });
 
-        navigate(getDashboardPath(user.role));
+        navigate(getDashboardPath(authData.user.role));
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Google login failed. Please try again.";
@@ -184,61 +182,41 @@ const Auth = () => {
         description: errorMessage,
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Register the callback on mount and when it changes
   useEffect(() => {
-    const initializeGoogle = () => {
+    setGoogleCallback(handleGoogleResponse);
+  }, [handleGoogleResponse, setGoogleCallback]);
+
+  // Use useLayoutEffect for DOM-related operations to avoid flashes
+  useLayoutEffect(() => {
+    const renderGoogleButtons = () => {
       if (!window.google) return;
 
-      console.log('Initializing Google Auth with Client ID:', import.meta.env.VITE_GOOGLE_CLIENT_ID);
-      console.log('Current Origin:', window.location.origin);
-      
-
-      window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        callback: handleGoogleResponse,
-        ux_mode: "popup",
-        auto_select: false,
-      });
-
-      // Render button in both login and signup containers
       const renderButton = (elementId: string) => {
         const element = document.getElementById(elementId);
-        if (element && window.google) {
+        if (element && element.innerHTML === "") {
           window.google.accounts.id.renderButton(element, {
             theme: "outline",
             size: "large",
-            width: "350", // Fixed width to ensure it fits well
+            width: "350",
             text: "continue_with",
           });
         }
       };
 
-      // Try rendering immediately and also after a short delay for tab switch
       renderButton("google-signin-btn-login");
       renderButton("google-signin-btn-signup");
-
-      // Set intervals or timeouts if needed because TabsContent might render later
-      const retryInterval = setInterval(() => {
-        const loginBtn = document.getElementById("google-signin-btn-login");
-        const signupBtn = document.getElementById("google-signin-btn-signup");
-        
-        if (loginBtn && loginBtn.innerHTML === "") renderButton("google-signin-btn-login");
-        if (signupBtn && signupBtn.innerHTML === "") renderButton("google-signin-btn-signup");
-        
-        // Stop retrying once both are rendered
-        if (loginBtn && loginBtn.innerHTML !== "" && signupBtn && signupBtn.innerHTML !== "") {
-          clearInterval(retryInterval);
-        }
-      }, 500);
-
-      return () => clearInterval(retryInterval);
     };
 
-    const timer = setTimeout(initializeGoogle, 500);
+    // Small delay to ensure tabs are rendered if switching
+    const timer = setTimeout(renderGoogleButtons, 500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [defaultTab]); 
 
   const GoogleButton = ({ id }: { id: string }) => (
     <div id={id} className="w-full flex justify-center mb-4 min-h-[44px]" />
