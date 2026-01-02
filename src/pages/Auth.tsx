@@ -83,13 +83,16 @@ const Auth = () => {
 
   /*
    * Helper to determine redirect path based on user role and status
+   * @param user - User object with role and onboardingCompleted status
+   * @param isSignup - Whether this is a new signup (true) or login (false). Onboarding only shown for new signups.
    */
-  const getDashboardPath = (user: { role: UserRole; onboardingCompleted?: boolean }) => {
+  const getDashboardPath = (user: { role: UserRole; onboardingCompleted?: boolean }, isSignup: boolean = false) => {
     switch (user.role) {
       case UserRole.ADMIN:
         return "/admin";
       case UserRole.ENTREPRENEUR:
-        if (!user.onboardingCompleted) {
+        // Only redirect to onboarding for NEW signups, not existing logins
+        if (isSignup && !user.onboardingCompleted) {
             return "/onboarding";
         }
         return "/dashboard";
@@ -113,7 +116,7 @@ const Auth = () => {
           description: "Welcome to SteerSolo. Redirecting to your dashboard...",
         });
 
-        navigate(getDashboardPath(authData.user));
+        navigate(getDashboardPath(authData.user, true)); // Email signup flow
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || "Please try again";
@@ -136,7 +139,7 @@ const Auth = () => {
           description: "Successfully logged in",
         });
 
-        navigate(getDashboardPath(authData.user));
+        navigate(getDashboardPath(authData.user, false)); // Email login flow
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Invalid credentials. Please check your email and password.";
@@ -188,7 +191,7 @@ const Auth = () => {
                 title: "Welcome back!",
                 description: "Successfully logged in with Google",
               });
-              navigate(getDashboardPath(authData.user));
+              navigate(getDashboardPath(authData.user, false)); // Google login flow
             }
           } catch (error: any) {
              const statusCode = error.response?.status;
@@ -247,7 +250,7 @@ const Auth = () => {
           description: "Successfully signed up with Google",
         });
 
-        const redirectPath = getDashboardPath(authData.user);
+        const redirectPath = getDashboardPath(authData.user, true); // Google signup flow
         console.log("Redirecting to:", redirectPath);
         navigate(redirectPath);
       }
