@@ -64,6 +64,17 @@ export interface Shop {
   address?: string;
   city?: string;
   state?: string;
+  shop_name?: string;
+  shop_slug?: string;
+  whatsapp_number?: string;
+  payment_method?: string;
+  bank_name?: string;
+  bank_account_name?: string;
+  bank_account_number?: string;
+  paystack_public_key?: string;
+  logo_url?: string;
+  banner_url?: string;
+  is_active?: boolean;
 }
 
 export interface ProductImage {
