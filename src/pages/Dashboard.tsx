@@ -92,13 +92,13 @@ const Dashboard = () => {
           
           return {
             date: format(day, 'MMM dd'),
-            revenue: dayOrders.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0),
+            revenue: dayOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0),
             sales: dayOrders.length
           };
         });
 
         setChartData(dailyData);
-        setTotalRevenue(allOrders.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0));
+        setTotalRevenue(allOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0));
         setTotalSales(allOrders.length);
       }
 
