@@ -305,7 +305,6 @@ const Auth = () => {
       const isDarkMode = document.documentElement.classList.contains('dark');
       
       window.google.accounts.id.renderButton(element, {
-        theme: isDarkMode ? "filled_black" : "outline",
         size: "large",
         width: responsiveWidth, // Dynamic width
         text: elementId.includes("login") ? "continue_with" : "signup_with",
