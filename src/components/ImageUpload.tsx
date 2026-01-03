@@ -1,5 +1,5 @@
 // src/components/ImageUpload.tsx
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
@@ -23,14 +23,31 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading, progress, error, reset } = useFileUpload();
   const { user } = useAuth();
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  const displayUrl = value || previewUrl;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Create local preview
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+
       const url = await upload(file, user?.id);
+      
       if (url) {
         onChange(url);
       }
+      setPreviewUrl(null); // Clear preview once uploaded (value will take over)
     }
   };
 
@@ -39,6 +56,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    setPreviewUrl(null);
     reset();
   };
 
@@ -64,24 +82,37 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           disabled={isUploading}
         />
 
-        {value ? (
+        {displayUrl ? (
           <div className="relative aspect-video w-full overflow-hidden rounded-lg group">
             <img 
-              src={value} 
+              src={displayUrl} 
               alt="Uploaded" 
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover ${isUploading ? 'opacity-50' : ''}`}
             />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <Button
-                type="button"
-                variant="destructive"
-                size="icon"
-                onClick={handleRemove}
-                className="h-8 w-8 rounded-full"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            
+            {isUploading && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/20 backdrop-blur-sm z-10 transition-all">
+                <Loader2 className="h-10 w-10 text-primary animate-spin mb-2" />
+                <div className="w-3/4 max-w-[200px] space-y-1">
+                  <Progress value={progress} className="h-1" />
+                  <p className="text-xs text-center text-foreground font-medium drop-shadow-sm">{progress}% uploaded</p>
+                </div>
+              </div>
+            )}
+
+            {!isUploading && (
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  onClick={handleRemove}
+                  className="h-8 w-8 rounded-full"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <div 
