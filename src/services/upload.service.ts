@@ -15,7 +15,7 @@ export const uploadService = {
   ): Promise<UploadResponse> => {
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('image', file);
       if (userId) {
         formData.append('userId', userId);
       }
@@ -23,6 +23,7 @@ export const uploadService = {
       const response = await api.post<ApiResponse<UploadResponse>>('/upload', formData, {
         headers: {
           ...getAuthHeaders(),
+          'Content-Type': undefined, // Allow Axios to set boundary automatically
         },
         onUploadProgress: (progressEvent) => {
           if (onProgress && progressEvent.total) {
