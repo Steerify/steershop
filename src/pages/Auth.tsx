@@ -290,23 +290,37 @@ const Auth = () => {
   // Use useLayoutEffect for DOM-related operations to avoid flashes
   useLayoutEffect(() => {
     const renderGoogleButtons = () => {
-      if (!window.google) return;
+  if (!window.google) return;
 
-      const renderButton = (elementId: string) => {
-        const element = document.getElementById(elementId);
-        if (element && element.innerHTML === "") {
-          window.google.accounts.id.renderButton(element, {
-            theme: "outline",
-            size: "large",
-            width: "350",
-            text: "continue_with",
-          });
-        }
-      };
+  const renderButton = (elementId: string) => {
+    const element = document.getElementById(elementId);
+    if (element && element.innerHTML === "") {
+      // Get the actual width of the parent container
+      const containerWidth = element.parentElement?.clientWidth || 350;
+      
+      // Set a responsive width based on container
+      const responsiveWidth = Math.min(containerWidth, 400); // Max 400px for readability
+      
+      // Determine theme based on current theme
+      const isDarkMode = document.documentElement.classList.contains('dark');
+      
+      window.google.accounts.id.renderButton(element, {
+        theme: isDarkMode ? "filled_black" : "outline",
+        size: "large",
+        width: responsiveWidth, // Dynamic width
+        text: elementId.includes("login") ? "continue_with" : "signup_with",
+        shape: "rectangular",
+        logo_alignment: "center",
+      });
+    }
+  };
 
-      renderButton("google-signin-btn-login");
-      renderButton("google-signin-btn-signup");
-    };
+  // Use a small delay to ensure DOM is ready
+  setTimeout(() => {
+    renderButton("google-signin-btn-login");
+    renderButton("google-signin-btn-signup");
+  }, 100);
+};
 
     // Small delay to ensure tabs are rendered if switching
     const timer = setTimeout(renderGoogleButtons, 500);
