@@ -304,7 +304,7 @@ const Auth = () => {
       // Determine theme based on current theme
       const isDarkMode = document.documentElement.classList.contains('dark');
       
-      window.google.accounts.id.renderButton(element, {
+      window.google.accounts.id.renderButton(element, {  
         size: "large",
         width: responsiveWidth, // Dynamic width
         text: elementId.includes("login") ? "continue_with" : "signup_with",
