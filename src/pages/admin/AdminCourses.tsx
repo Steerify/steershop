@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Check, X, AlertCircle } from "lucide-react";
 import DOMPurify from "dompurify";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ImageUpload } from "@/components/ImageUpload";
 
 export default function AdminCourses() {
   const [courses, setCourses] = useState<any[]>([]);
@@ -211,12 +212,10 @@ export default function AdminCourses() {
                 </div>
 
                 <div>
-                  <Label htmlFor="image_url">Image URL</Label>
-                  <Input
-                    id="image_url"
+                  <ImageUpload
+                    label="Course Image"
                     value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    placeholder="https://example.com/image.jpg"
+                    onChange={(url) => setFormData({ ...formData, image_url: url })}
                   />
                 </div>
 

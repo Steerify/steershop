@@ -5,9 +5,17 @@ import { handleApiError } from '@/lib/api-error-handler';
 export const courseService = {
   getCourses: async () => {
     try {
-      const response = await api.get<ApiResponse<Course[]>>('/courses', {
-        headers: getAuthHeaders(),
-      });
+      const response = await api.get<ApiResponse<Course[]>>('/courses');
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  getCourseById: async (id: string) => {
+    try {
+      const response = await api.get<ApiResponse<Course>>(`/courses/${id}`);
       return response.data;
     } catch (error) {
       handleApiError(error);
@@ -49,5 +57,42 @@ export const courseService = {
       handleApiError(error);
       throw error;
     }
-  }
+  },
+
+  // Admin methods
+  createCourse: async (data: Omit<Course, 'id'>) => {
+    try {
+      const response = await api.post<ApiResponse<Course>>('/courses', data, {
+        headers: getAuthHeaders(),
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  updateCourse: async (id: string, data: Partial<Course>) => {
+    try {
+      const response = await api.patch<ApiResponse<Course>>(`/courses/${id}`, data, {
+        headers: getAuthHeaders(),
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  deleteCourse: async (id: string) => {
+    try {
+      const response = await api.delete<ApiResponse<null>>(`/courses/${id}`, {
+        headers: getAuthHeaders(),
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
 };

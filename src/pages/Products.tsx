@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Upload, Clock, Briefcase, CalendarCheck, AlertCircle } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle } from "lucide-react";
+import { ImageUpload } from "@/components/ImageUpload";
 import { z } from "zod";
 import { Switch } from "@/components/ui/switch";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
@@ -41,7 +42,7 @@ const Products = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"all" | "products" | "services">("all");
   const [formData, setFormData] = useState({
     name: "",
@@ -121,7 +122,7 @@ const Products = () => {
       duration_minutes: "",
       booking_required: false,
     });
-    setImageFile(null);
+    setImageUrl("");
     setEditingProduct(null);
     setErrors({});
   };
@@ -139,6 +140,7 @@ const Products = () => {
         duration_minutes: "",
         booking_required: false,
       });
+      setImageUrl(product.images?.[0]?.url || "");
     } else {
       resetForm();
     }
@@ -175,8 +177,7 @@ const Products = () => {
     setIsSaving(true);
 
     try {
-      // Mocked image handling for now until real upload endpoint is used
-      const images = imageFile ? [{ url: "https://placeholder.com/image.png", alt: formData.name, position: 1 }] : [];
+      const images = imageUrl ? [{ url: imageUrl, alt: formData.name, position: 1 }] : [];
 
       const productData = {
         shopId: shop.id,
@@ -505,30 +506,11 @@ const Products = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="image">Image</Label>
-              <div className="border-2 border-dashed border-primary/20 rounded-lg p-4 text-center hover:border-primary/50 transition-colors cursor-pointer">
-                <input
-                  id="image"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                  className="hidden"
-                />
-                <label htmlFor="image" className="cursor-pointer">
-                  {imageFile || (editingProduct?.images && editingProduct.images.length > 0) ? (
-                    <img
-                      src={imageFile ? URL.createObjectURL(imageFile) : editingProduct?.images?.[0].url}
-                      alt="Preview"
-                      className="w-32 h-32 object-cover mx-auto rounded-lg mb-2"
-                    />
-                  ) : (
-                    <Upload className="w-10 h-10 mx-auto mb-2 text-muted-foreground" />
-                  )}
-                  <p className="text-sm text-muted-foreground">
-                    {imageFile ? imageFile.name : "Click to upload image"}
-                  </p>
-                </label>
-              </div>
+              <ImageUpload
+                label="Product Image"
+                value={imageUrl}
+                onChange={(url) => setImageUrl(url)}
+              />
             </div>
 
             <div className="flex items-center justify-between">

@@ -1,5 +1,5 @@
 import api, { getAuthHeaders } from '@/lib/api';
-import { ApiResponse, Order, OrderItem } from '@/types/api';
+import { ApiResponse, Order, OrderItem, PaginatedResponse } from '@/types/api';
 import { handleApiError } from '@/lib/api-error-handler';
 
 export interface CreateOrderRequest {
@@ -30,11 +30,23 @@ const orderService = {
 
 
 
-  getOrders: async (shopId: string) => {
+  getOrders: async (params?: { page?: number, limit?: number, shopId?: string, status?: string }) => {
     try {
-      const response = await api.get<ApiResponse<Order[]>>(`/orders`, {
+      const response = await api.get<PaginatedResponse<Order>>(`/orders`, {
         headers: getAuthHeaders(),
-        params: { shopId },
+        params,
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  getOrderById: async (id: string) => {
+    try {
+      const response = await api.get<ApiResponse<Order>>(`/orders/${id}`, {
+        headers: getAuthHeaders(),
       });
       return response.data;
     } catch (error) {
@@ -56,9 +68,21 @@ const orderService = {
     }
   },
 
-  updateOrderStatus: async (id: string, status: string, additionalData?: any) => {
+  updateOrderStatus: async (id: string, status: string) => {
     try {
-      const response = await api.patch<ApiResponse<null>>(`/orders/${id}/status`, { status, ...additionalData }, {
+      const response = await api.patch<ApiResponse<null>>(`/orders/${id}/status`, { status }, {
+        headers: getAuthHeaders(),
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  getWhatsAppLink: async (id: string) => {
+    try {
+      const response = await api.get<ApiResponse<{ whatsappLink: string; message: string }>>(`/orders/${id}/whatsapp-link`, {
         headers: getAuthHeaders(),
       });
       return response.data;

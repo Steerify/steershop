@@ -9,7 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload, Loader2, Store, CreditCard, MessageCircle, Copy, Share2, Check, ExternalLink, Download, QrCode } from "lucide-react";
+import { ArrowLeft, Loader2, Store, CreditCard, MessageCircle, Copy, Share2, Check, ExternalLink, Download, QrCode } from "lucide-react";
+import { ImageUpload } from "@/components/ImageUpload";
 import { QRCodeSVG } from "qrcode.react";
 import { StoreFlyerTemplate } from "@/components/StoreFlyerTemplate";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -73,9 +74,9 @@ const MyStore = () => {
     bank_name: "",
     bank_account_number: "",
     paystack_public_key: "",
+    logo_url: "",
+    banner_url: "",
   });
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Tour state
@@ -126,6 +127,8 @@ const MyStore = () => {
           bank_name: shopData.bank_name || "",
           bank_account_number: shopData.bank_account_number || "",
           paystack_public_key: shopData.paystack_public_key || "",
+          logo_url: shopData.logo_url || "",
+          banner_url: shopData.banner_url || "",
         });
 
         const { data: productsData } = await supabase
@@ -148,22 +151,6 @@ const MyStore = () => {
     }
   };
 
-  const uploadImage = async (file: File, bucket: string, userId: string): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}/${Date.now()}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(fileName, file, { upsert: true });
-
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(fileName);
-
-    return publicUrl;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,16 +174,8 @@ const MyStore = () => {
     try {
       if (!user) throw new Error("Not authenticated");
 
-      let logoUrl = shop?.logo_url;
-      let bannerUrl = shop?.banner_url;
-
-      if (logoFile) {
-        logoUrl = await uploadImage(logoFile, 'shop-images', user.id);
-      }
-
-      if (bannerFile) {
-        bannerUrl = await uploadImage(bannerFile, 'shop-images', user.id);
-      }
+      const logoUrl = formData.logo_url;
+      const bannerUrl = formData.banner_url;
 
       // Determine payment_method value based on checkboxes
       let paymentMethod = 'bank_transfer';
@@ -460,57 +439,21 @@ const MyStore = () => {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2" data-tour="store-logo">
-                    <Label htmlFor="logo">Store Logo</Label>
-                    <div className="border-2 border-dashed border-primary/20 rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer group">
-                      <input
-                        id="logo"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
-                        className="hidden"
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2" data-tour="store-logo">
+                      <ImageUpload
+                        label="Store Logo"
+                        value={formData.logo_url}
+                        onChange={(url) => setFormData({ ...formData, logo_url: url })}
                       />
-                      <label htmlFor="logo" className="cursor-pointer">
-                        {logoFile || shop?.logo_url ? (
-                          <img
-                            src={logoFile ? URL.createObjectURL(logoFile) : shop.logo_url}
-                            alt="Logo preview"
-                            className="w-32 h-32 object-cover mx-auto rounded-lg mb-2 group-hover:scale-105 transition-transform"
-                          />
-                        ) : (
-                          <Upload className="w-12 h-12 mx-auto mb-2 text-muted-foreground group-hover:text-primary transition-colors" />
-                        )}
-                        <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                          {logoFile ? logoFile.name : "Click to upload logo"}
-                        </p>
-                      </label>
                     </div>
-                  </div>
 
-                  <div className="space-y-2" data-tour="store-banner">
-                    <Label htmlFor="banner">Store Banner</Label>
-                    <div className="border-2 border-dashed border-primary/20 rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer group">
-                      <input
-                        id="banner"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setBannerFile(e.target.files?.[0] || null)}
-                        className="hidden"
+                    <div className="space-y-2" data-tour="store-banner">
+                      <ImageUpload
+                        label="Store Banner"
+                        value={formData.banner_url}
+                        onChange={(url) => setFormData({ ...formData, banner_url: url })}
                       />
-                      <label htmlFor="banner" className="cursor-pointer">
-                        {bannerFile || shop?.banner_url ? (
-                          <img
-                            src={bannerFile ? URL.createObjectURL(bannerFile) : shop.banner_url}
-                            alt="Banner preview"
-                            className="w-full h-32 object-cover mx-auto rounded-lg mb-2 group-hover:scale-105 transition-transform"
-                          />
-                        ) : (
-                          <Upload className="w-12 h-12 mx-auto mb-2 text-muted-foreground group-hover:text-primary transition-colors" />
-                        )}
-                        <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                          {bannerFile ? bannerFile.name : "Click to upload banner"}
-                        </p>
-                      </label>
                     </div>
                   </div>
                 </div>
