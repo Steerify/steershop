@@ -12,6 +12,8 @@ interface ImageUploadProps {
   onChange: (url: string) => void;
   label?: string;
   className?: string;
+  autoUpload?: boolean;
+  onFileSelect?: (file: File | null) => void;
 }
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -19,9 +21,12 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   onChange,
   label,
   className = '',
+  autoUpload = true,
+  onFileSelect,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { upload, isUploading, progress, error, reset } = useFileUpload();
+  const { upload, isUploading, progress, error: uploadError, reset } = useFileUpload();
+  const [localError, setLocalError] = useState<string | null>(null);
   const { user } = useAuth();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -37,26 +42,45 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    setLocalError(null);
     if (file) {
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+      if (!validTypes.includes(file.type)) {
+        setLocalError('Invalid file type. Please upload JPG, PNG, or WebP.');
+        return;
+      }
+
       // Create local preview
       const objectUrl = URL.createObjectURL(file);
       setPreviewUrl(objectUrl);
 
-      const url = await upload(file, user?.id);
-      
-      if (url) {
-        onChange(url);
+      if (autoUpload) {
+        const url = await upload(file, user?.id);
+        if (url) {
+          onChange(url);
+          // Only clear preview if upload succeeded and we have a new remote URL
+          setPreviewUrl(null); 
+        }
+      } else {
+        // Manual mode: just notify parent about the file selection
+        if (onFileSelect) {
+          onFileSelect(file);
+        }
       }
-      setPreviewUrl(null); // Clear preview once uploaded (value will take over)
     }
   };
 
   const handleRemove = () => {
     onChange('');
+    if (onFileSelect) {
+      onFileSelect(null);
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
     setPreviewUrl(null);
+    setLocalError(null);
     reset();
   };
 
@@ -142,9 +166,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         )}
       </div>
 
-      {error && (
+      {(uploadError || localError) && (
         <Alert variant="destructive" className="py-2">
-          <AlertDescription className="text-xs">{error}</AlertDescription>
+          <AlertDescription className="text-xs">{uploadError || localError}</AlertDescription>
         </Alert>
       )}
     </div>
