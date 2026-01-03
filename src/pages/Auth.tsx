@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { RoleSelectionDialog } from "@/components/auth/RoleSelectionDialog";
 import { Button } from "@/components/ui/button";
@@ -60,9 +60,6 @@ const Auth = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [showRoleSelection, setShowRoleSelection] = useState(false);
   const [googleCredentialIdToken, setGoogleCredentialIdToken] = useState<string | null>(null);
-  const [isGoogleScriptLoaded, setIsGoogleScriptLoaded] = useState(false);
-  const googleLoginBtnRef = useRef<HTMLDivElement>(null);
-  const googleSignupBtnRef = useRef<HTMLDivElement>(null);
 
   const signupForm = useForm<SignupRequest>({
     resolver: zodResolver(signupSchema),
@@ -84,6 +81,11 @@ const Auth = () => {
     },
   });
 
+  /*
+   * Helper to determine redirect path based on user role and status
+   * @param user - User object with role and onboardingCompleted status
+   * @param isSignup - Whether this is a new signup (true) or login (false). Onboarding only shown for new signups.
+   */
   const getDashboardPath = (user: { role: UserRole; onboardingCompleted?: boolean }, isSignup: boolean) => {
     switch (user.role) {
       case UserRole.ADMIN:
@@ -113,7 +115,7 @@ const Auth = () => {
           description: "Welcome to SteerSolo. Redirecting to your dashboard...",
         });
 
-        navigate(getDashboardPath(authData.user, true));
+        navigate(getDashboardPath(authData.user, true)); // Email signup flow
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || "Please try again";
@@ -136,12 +138,13 @@ const Auth = () => {
           description: "Successfully logged in",
         });
 
+        // Check for redirect after login (from token expiration)
         const redirectPath = sessionStorage.getItem('redirectAfterLogin');
         if (redirectPath) {
           sessionStorage.removeItem('redirectAfterLogin');
           navigate(redirectPath);
         } else {
-          navigate(getDashboardPath(authData.user, false));
+          navigate(getDashboardPath(authData.user, false)); // Email login flow
         }
       }
     } catch (error: any) {
@@ -174,6 +177,7 @@ const Auth = () => {
     }
   };
 
+  // Google Sign-In Logic
   const handleGoogleResponse = async (response: any) => {
     setAuthError(null);
     try {
@@ -193,17 +197,19 @@ const Auth = () => {
                 title: "Welcome back!",
                 description: "Successfully logged in with Google",
               });
+              // Check for redirect after login (from token expiration)
               const redirectPath = sessionStorage.getItem('redirectAfterLogin');
               if (redirectPath) {
                 sessionStorage.removeItem('redirectAfterLogin');
                 navigate(redirectPath);
               } else {
-                navigate(getDashboardPath(authData.user, false));
+                navigate(getDashboardPath(authData.user, false)); // Explicitly NOT signup
               }
             }
           } catch (error: any) {
              const statusCode = error.response?.status;
              if (statusCode === 404) {
+               // User not found, prompt for signup
                toast({
                  title: "Account not found",
                  description: "Please select a role to create a new account.",
@@ -230,7 +236,11 @@ const Auth = () => {
   };
 
   const handleRoleConfirm = async (role: UserRole) => {
+    console.log("handleRoleConfirm called with role:", role);
+    console.log("Current googleCredentialIdToken:", googleCredentialIdToken ? "Token present" : "Token missing");
+
     if (!googleCredentialIdToken) {
+      console.error("Missing Google token in handleRoleConfirm");
       toast({
         title: "Error",
         description: "Session invalid. Please try signing in with Google again.",
@@ -243,7 +253,9 @@ const Auth = () => {
     setAuthError(null);
     
     try {
+      // Use googleSignup for role selection flow
       const authData = await googleSignup(googleCredentialIdToken, role);
+      console.log("googleSignup success, authData:", authData);
 
       if (authData) {
         toast({
@@ -251,7 +263,8 @@ const Auth = () => {
           description: "Successfully signed up with Google",
         });
 
-        const redirectPath = getDashboardPath(authData.user, true);
+        const redirectPath = getDashboardPath(authData.user, true); // Explicitly IS signup
+        console.log("Redirecting to:", redirectPath);
         navigate(redirectPath);
       }
     } catch (error: any) {
@@ -263,142 +276,46 @@ const Auth = () => {
         description: errorMessage,
         variant: "destructive"
       });
-      setShowRoleSelection(false);
+      setShowRoleSelection(false); // Close dialog on error to retry or show error better
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Load Google Identity Services script
+  // Register the callback on mount and when it changes
   useEffect(() => {
-    const loadGoogleScript = () => {
-      if (window.google || isGoogleScriptLoaded) return;
+    setGoogleCallback(handleGoogleResponse);
+  }, [handleGoogleResponse, setGoogleCallback]);
 
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        setIsGoogleScriptLoaded(true);
+  // Use useLayoutEffect for DOM-related operations to avoid flashes
+  useLayoutEffect(() => {
+    const renderGoogleButtons = () => {
+      if (!window.google) return;
+
+      const renderButton = (elementId: string) => {
+        const element = document.getElementById(elementId);
+        if (element && element.innerHTML === "") {
+          window.google.accounts.id.renderButton(element, {
+            theme: "outline",
+            size: "large",
+            width: "350",
+            text: "continue_with",
+          });
+        }
       };
-      document.head.appendChild(script);
+
+      renderButton("google-signin-btn-login");
+      renderButton("google-signin-btn-signup");
     };
 
-    loadGoogleScript();
+    // Small delay to ensure tabs are rendered if switching
+    const timer = setTimeout(renderGoogleButtons, 500);
+    return () => clearTimeout(timer);
+  }, [activeTab]); 
 
-    return () => {
-      // Clean up Google button elements
-      if (googleLoginBtnRef.current) {
-        googleLoginBtnRef.current.innerHTML = '';
-      }
-      if (googleSignupBtnRef.current) {
-        googleSignupBtnRef.current.innerHTML = '';
-      }
-    };
-  }, []);
-
-  // Initialize Google Identity Services when script is loaded and tab changes
-  useEffect(() => {
-    if (!window.google || !isGoogleScriptLoaded) return;
-
-    try {
-      window.google.accounts.id.initialize({
-        client_id: process.env.VITE_GOOGLE_CLIENT_ID || "",
-        callback: handleGoogleResponse,
-        auto_select: false,
-        cancel_on_tap_outside: false,
-        theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline',
-        shape: 'rectangular',
-        size: 'large',
-        text: 'continue_with',
-        locale: 'en',
-        width: '100%',
-      });
-
-      // Render buttons based on current tab
-      if (activeTab === 'login' && googleLoginBtnRef.current) {
-        googleLoginBtnRef.current.innerHTML = '';
-        window.google.accounts.id.renderButton(
-          googleLoginBtnRef.current,
-          {
-            theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline',
-            size: 'large',
-            text: 'continue_with',
-            shape: 'rectangular',
-            width: googleLoginBtnRef.current.clientWidth,
-            logo_alignment: 'center'
-          }
-        );
-      }
-
-      if (activeTab === 'signup' && googleSignupBtnRef.current) {
-        googleSignupBtnRef.current.innerHTML = '';
-        window.google.accounts.id.renderButton(
-          googleSignupBtnRef.current,
-          {
-            theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline',
-            size: 'large',
-            text: 'signup_with',
-            shape: 'rectangular',
-            width: googleSignupBtnRef.current.clientWidth,
-            logo_alignment: 'center'
-          }
-        );
-      }
-
-      // Prompt is not needed for this flow as we have our own buttons
-      window.google.accounts.id.prompt();
-    } catch (error) {
-      console.error('Failed to initialize Google Identity Services:', error);
-    }
-  }, [isGoogleScriptLoaded, activeTab]);
-
-  // Watch for theme changes
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      if (window.google && isGoogleScriptLoaded) {
-        // Reinitialize Google button with current theme
-        const theme = document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline';
-        
-        if (activeTab === 'login' && googleLoginBtnRef.current) {
-          googleLoginBtnRef.current.innerHTML = '';
-          window.google.accounts.id.renderButton(
-            googleLoginBtnRef.current,
-            {
-              theme,
-              size: 'large',
-              text: 'continue_with',
-              shape: 'rectangular',
-              width: googleLoginBtnRef.current.clientWidth,
-              logo_alignment: 'center'
-            }
-          );
-        }
-
-        if (activeTab === 'signup' && googleSignupBtnRef.current) {
-          googleSignupBtnRef.current.innerHTML = '';
-          window.google.accounts.id.renderButton(
-            googleSignupBtnRef.current,
-            {
-              theme,
-              size: 'large',
-              text: 'signup_with',
-              shape: 'rectangular',
-              width: googleSignupBtnRef.current.clientWidth,
-              logo_alignment: 'center'
-            }
-          );
-        }
-      }
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-
-    return () => observer.disconnect();
-  }, [isGoogleScriptLoaded, activeTab]);
+  const GoogleButton = ({ id }: { id: string }) => (
+    <div id={id} className="w-full flex justify-center mb-4 min-h-[44px]" />
+  );
 
   const OrDivider = () => (
     <div className="relative my-6">
@@ -406,28 +323,6 @@ const Auth = () => {
       <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground font-medium">
         or continue with email
       </span>
-    </div>
-  );
-
-  // Custom Google button component with proper styling
-  const CustomGoogleButton = ({ isSignup = false, ref }: { isSignup?: boolean, ref: React.RefObject<HTMLDivElement> }) => (
-    <div className="w-full mb-4">
-      <div 
-        ref={ref}
-        className="w-full h-[44px] flex items-center justify-center bg-background border border-input rounded-md hover:bg-accent/50 transition-colors overflow-hidden"
-        style={{
-          minHeight: '44px',
-          minWidth: '240px'
-        }}
-      >
-        {/* Loading placeholder */}
-        {!isGoogleScriptLoaded && (
-          <div className="flex items-center justify-center gap-2 text-muted-foreground">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-sm">Loading Google sign-in...</span>
-          </div>
-        )}
-      </div>
     </div>
   );
 
@@ -514,7 +409,7 @@ const Auth = () => {
               </TabsList>
 
               <TabsContent value="login" className="mt-6">
-                <CustomGoogleButton ref={googleLoginBtnRef} />
+                <GoogleButton id="google-signin-btn-login" />
                 <OrDivider />
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
@@ -569,7 +464,7 @@ const Auth = () => {
               </TabsContent>
 
               <TabsContent value="signup" className="mt-6">
-                <CustomGoogleButton isSignup={true} ref={googleSignupBtnRef} />
+                <GoogleButton id="google-signin-btn-signup" />
                 <OrDivider />
                 <Form {...signupForm}>
                   <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
