@@ -317,6 +317,98 @@ const Auth = () => {
     <div id={id} className="w-full flex justify-center mb-4 min-h-[44px]" />
   );
 
+<<<<<<< HEAD
+      // Render buttons based on current tab
+      if (activeTab === 'login' && googleLoginBtnRef.current) {
+        googleLoginBtnRef.current.innerHTML = '';
+        window.google.accounts.id.renderButton(
+          googleLoginBtnRef.current,
+          {
+            theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline',
+            size: 'large',
+            text: 'continue_with',
+            shape: 'rectangular',
+            width: '100%',
+            logo_alignment: 'center',
+            type: 'standard'
+          }
+        );
+      }
+
+      if (activeTab === 'signup' && googleSignupBtnRef.current) {
+        googleSignupBtnRef.current.innerHTML = '';
+        window.google.accounts.id.renderButton(
+          googleSignupBtnRef.current,
+          {
+            theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline',
+            size: 'large',
+            text: 'signup_with',
+            shape: 'rectangular',
+            width: '100%',
+            logo_alignment: 'center',
+            type: 'standard'
+          }
+        );
+      }
+
+      // Prompt is not needed for this flow as we have our own buttons
+      window.google.accounts.id.prompt();
+    } catch (error) {
+      console.error('Failed to initialize Google Identity Services:', error);
+    }
+  }, [isGoogleScriptLoaded, activeTab]);
+
+  // Watch for theme changes
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      if (window.google && isGoogleScriptLoaded) {
+        // Reinitialize Google button with current theme
+        const theme = document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline';
+        
+        if (activeTab === 'login' && googleLoginBtnRef.current) {
+          googleLoginBtnRef.current.innerHTML = '';
+          window.google.accounts.id.renderButton(
+            googleLoginBtnRef.current,
+            {
+              theme,
+              size: 'large',
+              text: 'continue_with',
+              shape: 'rectangular',
+              width: '100%',
+              logo_alignment: 'center',
+              type: 'standard'
+            }
+          );
+        }
+
+        if (activeTab === 'signup' && googleSignupBtnRef.current) {
+          googleSignupBtnRef.current.innerHTML = '';
+          window.google.accounts.id.renderButton(
+            googleSignupBtnRef.current,
+            {
+              theme,
+              size: 'large',
+              text: 'signup_with',
+              shape: 'rectangular',
+              width: '100%',
+              logo_alignment: 'center',
+              type: 'standard'
+            }
+          );
+        }
+      }
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, [isGoogleScriptLoaded, activeTab]);
+
+=======
+>>>>>>> 6575e014220c5e761f1fcd0713df270b7a0a956f
   const OrDivider = () => (
     <div className="relative my-6">
       <Separator className="bg-border/50" />
@@ -326,77 +418,106 @@ const Auth = () => {
     </div>
   );
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Patterns */}
-      <AdirePattern variant="geometric" className="absolute inset-0 opacity-5" />
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-accent/20 to-transparent rounded-full blur-3xl" />
-      
-      <Card className="w-full max-w-md relative z-10 border-primary/10 shadow-2xl backdrop-blur-sm bg-card/95">
-        <div className="absolute top-0 left-0 w-16 h-16 border-l-4 border-t-4 border-primary/30 rounded-tl-lg" />
-        <div className="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-accent/30 rounded-br-lg" />
-        
-        <CardHeader className="text-center pb-4">
-          <div className="flex justify-center mb-4">
-            <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg ring-4 ring-primary/20 animate-float">
-              <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
-            </div>
+<<<<<<< HEAD
+  // Custom Google button component with proper styling - UPDATED FOR MOBILE RESPONSIVENESS
+  const CustomGoogleButton = ({ isSignup = false, ref }: { isSignup?: boolean, ref: React.RefObject<HTMLDivElement> }) => (
+    <div className="w-full mb-4">
+      <div 
+        ref={ref}
+        className="w-full h-[44px] flex items-center justify-center bg-background border border-input rounded-md hover:bg-accent/50 transition-colors overflow-hidden"
+        style={{
+          minHeight: '44px',
+        }}
+      >
+        {/* Loading placeholder */}
+        {!isGoogleScriptLoaded && (
+          <div className="flex items-center justify-center gap-2 text-muted-foreground px-2 sm:px-4">
+            <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+            <span className="text-sm truncate text-center">
+              Loading Google sign-in...
+            </span>
           </div>
-          <CardTitle className="text-3xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Welcome to SteerSolo
-          </CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Your business journey starts here
-          </CardDescription>
-        </CardHeader>
+        )}
+      </div>
+    </div>
+  );
+
+=======
+>>>>>>> 6575e014220c5e761f1fcd0713df270b7a0a956f
+  return (
+    <>
+      {/* Add CSS overrides for Google button responsiveness */}
+      <style>
+        {`
+          iframe[src*="accounts.google.com"] {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+          
+          @media (max-width: 640px) {
+            .gsi-material-button {
+              min-width: 100% !important;
+              width: 100% !important;
+            }
+          }
+        `}
+      </style>
+      
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Background Patterns */}
+        <AdirePattern variant="geometric" className="absolute inset-0 opacity-5" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-accent/20 to-transparent rounded-full blur-3xl" />
         
-        <CardContent>
-          {showForgotPassword ? (
-            <div className="space-y-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowForgotPassword(false)}
-                className="mb-2 hover:bg-primary/10"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to login
-              </Button>
-              <div className="text-center mb-4">
-                <h3 className="text-lg font-semibold font-heading">Reset your password</h3>
-                <p className="text-sm text-muted-foreground">
-                  Enter your email and we'll send you a reset link
-                </p>
+        <Card className="w-full max-w-md relative z-10 border-primary/10 shadow-2xl backdrop-blur-sm bg-card/95 mx-4">
+          <div className="absolute top-0 left-0 w-16 h-16 border-l-4 border-t-4 border-primary/30 rounded-tl-lg" />
+          <div className="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-accent/30 rounded-br-lg" />
+          
+          <CardHeader className="text-center pb-4">
+            <div className="flex justify-center mb-4">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg ring-4 ring-primary/20 animate-float">
+                <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
               </div>
-              <form onSubmit={handleForgotPassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="forgot-email">Email</Label>
-                  <Input
-                    id="forgot-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={forgotEmail}
-                    onChange={(e) => setForgotEmail(e.target.value)}
-                    required
-                    className="border-primary/20 focus:border-primary focus:ring-primary/30"
-                  />
-                </div>
-                <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="mr-2 h-4 w-4" />
-                      Send Reset Link
-                    </>
-                  )}
-                </Button>
-              </form>
             </div>
+<<<<<<< HEAD
+            <CardTitle className="text-3xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Welcome to SteerSolo
+            </CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Your business journey starts here
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="px-4 sm:px-6">
+            {showForgotPassword ? (
+              <div className="space-y-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowForgotPassword(false)}
+                  className="mb-2 hover:bg-primary/10"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to login
+                </Button>
+                <div className="text-center mb-4">
+                  <h3 className="text-lg font-semibold font-heading">Reset your password</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Enter your email and we'll send you a reset link
+                  </p>
+                </div>
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-email">Email</Label>
+                    <Input
+                      id="forgot-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      required
+                      className="border-primary/20 focus:border-primary focus:ring-primary/30"
+=======
           ) : (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 bg-muted/50">
@@ -425,58 +546,140 @@ const Auth = () => {
                           <FormMessage />
                         </FormItem>
                       )}
+>>>>>>> 6575e014220c5e761f1fcd0713df270b7a0a956f
                     />
-                    <FormField
-                      control={loginForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <div className="flex items-center justify-between">
-                            <FormLabel>Password</FormLabel>
-                            <Button
-                              type="button"
-                              variant="link"
-                              className="px-0 text-xs text-primary hover:text-primary/80"
-                              onClick={() => setShowForgotPassword(true)}
-                            >
-                              Forgot password?
-                            </Button>
-                          </div>
-                          <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Logging in...
-                        </>
-                      ) : (
-                        "Login"
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              </TabsContent>
+                  </div>
+                  <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="mr-2 h-4 w-4" />
+                        Send Reset Link
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </div>
+            ) : (
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+                  <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                    Login
+                  </TabsTrigger>
+                  <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                    Sign Up
+                  </TabsTrigger>
+                </TabsList>
 
+<<<<<<< HEAD
+                <TabsContent value="login" className="mt-6">
+                  <CustomGoogleButton ref={googleLoginBtnRef} />
+                  <OrDivider />
+                  <Form {...loginForm}>
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+=======
               <TabsContent value="signup" className="mt-6">
                 <GoogleButton id="google-signin-btn-signup" />
                 <OrDivider />
                 <Form {...signupForm}>
                   <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
+>>>>>>> 6575e014220c5e761f1fcd0713df270b7a0a956f
                       <FormField
-                        control={signupForm.control}
-                        name="firstName"
+                        control={loginForm.control}
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>First Name</FormLabel>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="John" {...field} />
+                              <Input placeholder="you@example.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={loginForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex items-center justify-between">
+                              <FormLabel>Password</FormLabel>
+                              <Button
+                                type="button"
+                                variant="link"
+                                className="px-0 text-xs text-primary hover:text-primary/80"
+                                onClick={() => setShowForgotPassword(true)}
+                              >
+                                Forgot password?
+                              </Button>
+                            </div>
+                            <FormControl>
+                              <Input type="password" placeholder="••••••••" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Logging in...
+                          </>
+                        ) : (
+                          "Login"
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
+
+                <TabsContent value="signup" className="mt-6">
+                  <CustomGoogleButton isSignup={true} ref={googleSignupBtnRef} />
+                  <OrDivider />
+                  <Form {...signupForm}>
+                    <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormField
+                          control={signupForm.control}
+                          name="firstName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>First Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="John" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={signupForm.control}
+                          name="lastName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Last Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Doe" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={signupForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number</FormLabel>
+                            <FormControl>
+                              <Input placeholder="+234..." {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -484,111 +687,85 @@ const Auth = () => {
                       />
                       <FormField
                         control={signupForm.control}
-                        name="lastName"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Last Name</FormLabel>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="Doe" {...field} />
+                              <Input placeholder="you@example.com" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </div>
-                    <FormField
-                      control={signupForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
-                          <FormControl>
-                            <Input placeholder="+234..." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={signupForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input placeholder="you@example.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={signupForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="At least 6 characters" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={signupForm.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel>I want to:</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              className="space-y-2"
-                            >
-                              <div className="flex items-center space-x-3 p-3 rounded-lg border border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer">
-                                <RadioGroupItem value="ENTREPRENEUR" id="ENTREPRENEUR" className="text-primary" />
-                                <Label htmlFor="ENTREPRENEUR" className="font-normal cursor-pointer flex-1">
-                                  Create and manage my own shop
-                                </Label>
-                              </div>
-                              <div className="flex items-center space-x-3 p-3 rounded-lg border border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer">
-                                <RadioGroupItem value="CUSTOMER" id="CUSTOMER" className="text-primary" />
-                                <Label htmlFor="CUSTOMER" className="font-normal cursor-pointer flex-1">
-                                  Browse and shop from stores
-                                </Label>
-                              </div>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating account...
-                        </>
-                      ) : (
-                        "Create Account"
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              </TabsContent>
-            </Tabs>
-          )}
-        </CardContent>
-      </Card>
-      
-      <RoleSelectionDialog 
-        open={showRoleSelection} 
-        onConfirm={handleRoleConfirm}
-        isLoading={isLoading}
-      />
-    </div>
+                      <FormField
+                        control={signupForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="At least 8 characters" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={signupForm.control}
+                        name="role"
+                        render={({ field }) => (
+                          <FormItem className="space-y-3">
+                            <FormLabel>I want to:</FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className="space-y-2"
+                              >
+                                <div className="flex items-center space-x-3 p-3 rounded-lg border border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer">
+                                  <RadioGroupItem value="ENTREPRENEUR" id="ENTREPRENEUR" className="text-primary" />
+                                  <Label htmlFor="ENTREPRENEUR" className="font-normal cursor-pointer flex-1">
+                                    Create and manage my own shop
+                                  </Label>
+                                </div>
+                                <div className="flex items-center space-x-3 p-3 rounded-lg border border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer">
+                                  <RadioGroupItem value="CUSTOMER" id="CUSTOMER" className="text-primary" />
+                                  <Label htmlFor="CUSTOMER" className="font-normal cursor-pointer flex-1">
+                                    Browse and shop from stores
+                                  </Label>
+                                </div>
+                              </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Creating account...
+                          </>
+                        ) : (
+                          "Create Account"
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
+              </Tabs>
+            )}
+          </CardContent>
+        </Card>
+        
+        <RoleSelectionDialog 
+          open={showRoleSelection} 
+          onConfirm={handleRoleConfirm}
+          isLoading={isLoading}
+        />
+      </div>
+    </>
   );
 };
 
