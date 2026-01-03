@@ -223,18 +223,18 @@ const EntrepreneurHero = ({ painPoints, offer }: { painPoints: string[], offer?:
         
         {/* Subheading */}
         <p className="text-lg md:text-xl text-muted-foreground">
-          Tired of messy WhatsApp sales? SteerSolo gives you a professional store that works <strong>with</strong> WhatsApp — not against it. 
+          Tired of messy WhatsApp sales? SteerSolo gives you a professional store that works <strong>with</strong> WhatsApp. 
           Accept payments, organize orders, and build trust instantly.
         </p>
         
         {/* Quick Solution Points */}
         <div className="space-y-3">
           {[
-            "✓ Replace blurry photos with clean product listings",
-            "✓ Stop losing orders in endless chats",
-            "✓ Build instant trust with professional storefront",
-            "✓ Accept payments easily with Paystack",
-            "✓ Get orders straight to your WhatsApp"
+            "Replace blurry photos with clean product listings",
+            "Stop losing orders in endless chats",
+            "Build instant trust with professional storefront",
+            "Accept payments easily with Paystack",
+            "Get orders straight to your WhatsApp"
           ].map((item, idx) => (
             <div key={idx} className="flex items-center gap-3">
               <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />

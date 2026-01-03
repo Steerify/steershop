@@ -11,8 +11,8 @@ import { Store, Package, ShoppingCart, LogOut, Clock, CheckCircle, AlertCircle, 
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths } from "date-fns";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
 import Joyride, { CallBackProps, STATUS } from "react-joyride";
@@ -108,7 +108,6 @@ const Dashboard = () => {
         const entOffer = offerResponse.data.find(o => o.target_audience === 'entrepreneurs' && o.is_active);
         if (entOffer) {
           setActiveOffer(entOffer);
-          // Map discount_percentage to kobo if needed by your logic, or just use title
         }
       }
 
@@ -183,7 +182,11 @@ const Dashboard = () => {
                 hasSeenTour={hasSeenTour} 
                 onResetTour={resetTour}
               />
-              <Button variant="ghost" onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive min-h-[44px] px-2 sm:px-4">
+              <Button 
+                variant="ghost" 
+                onClick={handleLogout} 
+                className="hover:bg-destructive/10 hover:text-destructive min-h-[44px] px-2 sm:px-4 text-sm sm:text-base"
+              >
                 <LogOut className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Logout</span>
               </Button>
@@ -204,20 +207,20 @@ const Dashboard = () => {
 
             <div data-tour="subscription-status">
               {subscriptionStatus === 'trial' && daysRemaining > 0 && (
-                <Badge variant="outline" className="text-lg py-2 px-4 border-gold text-gold bg-gold/10">
-                  <Clock className="w-4 h-4 mr-2" />
+                <Badge variant="outline" className="text-sm sm:text-lg py-1.5 sm:py-2 px-3 sm:px-4 border-gold text-gold bg-gold/10">
+                  <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                   {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} trial remaining
                 </Badge>
               )}
               {subscriptionStatus === 'active' && (
-                <Badge variant="outline" className="text-lg py-2 px-4 border-green-500 text-green-500 bg-green-500/10">
-                  <CheckCircle className="w-4 h-4 mr-2" />
+                <Badge variant="outline" className="text-sm sm:text-lg py-1.5 sm:py-2 px-3 sm:px-4 border-green-500 text-green-500 bg-green-500/10">
+                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                   Active Subscription
                 </Badge>
               )}
               {subscriptionStatus === 'expired' && (
-                <Badge variant="outline" className="text-lg py-2 px-4 border-destructive text-destructive bg-destructive/10">
-                  <AlertCircle className="w-4 h-4 mr-2" />
+                <Badge variant="outline" className="text-sm sm:text-lg py-1.5 sm:py-2 px-3 sm:px-4 border-destructive text-destructive bg-destructive/10">
+                  <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                   Subscription Expired
                 </Badge>
               )}
@@ -229,20 +232,20 @@ const Dashboard = () => {
               <div className="absolute inset-0 opacity-20">
                 <AdirePattern variant="geometric" />
               </div>
-              <CardContent className="p-6 relative z-10">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <CardContent className="p-4 sm:p-6 relative z-10">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
                   <div className="flex-1">
-                    <h3 className="text-xl font-heading font-bold mb-2">{activeOffer.title}</h3>
-                    <p className="opacity-90">{activeOffer.description}</p>
+                    <h3 className="text-lg sm:text-xl font-heading font-bold mb-1 sm:mb-2">{activeOffer.title}</h3>
+                    <p className="opacity-90 text-sm sm:text-base">{activeOffer.description}</p>
                   </div>
                   <Button 
                     variant="secondary" 
                     onClick={handleSubscribe}
                     disabled={isLoading}
-                    className="whitespace-nowrap bg-gold text-primary hover:bg-gold/90"
+                    className="whitespace-nowrap bg-gold text-primary hover:bg-gold/90 text-sm sm:text-base py-2 px-3 sm:px-4"
                   >
                     {isLoading ? "Processing..." : activeOffer.button_text || "Claim Offer"}
-                    <ArrowRight className="ml-2 w-4 h-4" />
+                    <ArrowRight className="ml-1.5 sm:ml-2 w-3 h-3 sm:w-4 sm:h-4" />
                   </Button>
                 </div>
               </CardContent>
@@ -251,31 +254,31 @@ const Dashboard = () => {
         </div>
 
         {(subscriptionStatus === 'trial' || subscriptionStatus === 'expired') && (
-          <Card className="mb-8 border-2 border-gold/30 bg-gold/5">
-            <CardHeader>
-              <CardTitle className="font-heading text-gold">
+          <Card className="mb-6 sm:mb-8 border-2 border-gold/30 bg-gold/5">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="font-heading text-gold text-lg sm:text-xl">
                 {subscriptionStatus === 'trial' 
                   ? '🎉 Upgrade Your Store' 
                   : '⚠️ Subscription Required'}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm sm:text-base">
                 {subscriptionStatus === 'trial' 
                   ? `You have ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left in your free trial. Subscribe now for only ₦${subscriptionPrice.toLocaleString()}/month to continue selling after your trial ends.`
                   : `Your trial has expired. Subscribe for ₦${subscriptionPrice.toLocaleString()}/month to reactivate your store and continue selling.`
                 }
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row items-center gap-4">
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                 <Button 
-                  className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                  className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-sm sm:text-base py-2 sm:py-3 px-4 sm:px-6 w-full sm:w-auto"
                   onClick={handleSubscribe}
                   disabled={isLoading}
                 >
                   {isLoading ? "Processing..." : `Subscribe Now - ₦${subscriptionPrice.toLocaleString()}/month`}
                 </Button>
                 {subscriptionStatus === 'trial' && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
                     Enjoy your free trial! No payment required until day 8.
                   </p>
                 )}
@@ -287,18 +290,18 @@ const Dashboard = () => {
         <div className="mb-6 sm:mb-8" data-tour="sales-analytics">
           <h2 className="text-xl sm:text-2xl font-heading font-bold mb-3 sm:mb-4">Sales Analytics</h2>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
             <Card className="group hover:shadow-lg hover:shadow-primary/10 transition-all border-primary/10" data-tour="revenue-card">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
+                <CardTitle className="text-sm sm:text-base font-medium text-muted-foreground">
                   Total Revenue
                 </CardTitle>
-                <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <DollarSign className="w-5 h-5 text-primary" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <div className="text-2xl sm:text-3xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   ₦{totalRevenue.toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -308,16 +311,16 @@ const Dashboard = () => {
             </Card>
 
             <Card className="group hover:shadow-lg hover:shadow-accent/10 transition-all border-accent/10" data-tour="sales-card">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
+                <CardTitle className="text-sm sm:text-base font-medium text-muted-foreground">
                   Total Sales
                 </CardTitle>
-                <div className="w-10 h-10 bg-gradient-to-br from-accent/20 to-primary/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <TrendingUp className="w-5 h-5 text-accent" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-accent/20 to-primary/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-heading font-bold">{totalSales}</div>
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <div className="text-2xl sm:text-3xl font-heading font-bold">{totalSales}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Orders in the last 30 days
                 </p>
@@ -326,57 +329,74 @@ const Dashboard = () => {
           </div>
 
           <Card className="border-primary/10" data-tour="revenue-chart">
-            <CardHeader>
-              <CardTitle className="font-heading">Revenue Trend (Last 7 Days)</CardTitle>
-              <CardDescription>Daily revenue from completed orders</CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="font-heading text-lg sm:text-xl">Revenue Trend (Last 7 Days)</CardTitle>
+              <CardDescription className="text-sm sm:text-base">Daily revenue from completed orders</CardDescription>
             </CardHeader>
-            <CardContent>
-              <ChartContainer
-                config={{
-                  revenue: {
-                    label: "Revenue (₦)",
-                    color: "hsl(var(--primary))",
-                  },
-                }}
-                className="h-[300px]"
-              >
+            <CardContent className="p-2 sm:p-4 pt-0">
+              <div className="h-[250px] sm:h-[300px] lg:h-[350px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <BarChart 
+                    data={chartData}
+                    margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
+                  >
+                    <CartesianGrid 
+                      strokeDasharray="3 3" 
+                      stroke="hsl(var(--border))"
+                      vertical={false}
+                    />
                     <XAxis 
                       dataKey="date" 
                       stroke="hsl(var(--muted-foreground))"
                       fontSize={12}
+                      tickLine={false}
+                      axisLine={{ stroke: 'hsl(var(--border))' }}
+                      tickMargin={10}
+                      interval="preserveStartEnd"
+                      minTickGap={10}
                     />
                     <YAxis 
                       stroke="hsl(var(--muted-foreground))"
                       fontSize={12}
+                      tickLine={false}
+                      axisLine={{ stroke: 'hsl(var(--border))' }}
+                      tickFormatter={(value) => `₦${value.toLocaleString()}`}
                     />
-                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Tooltip 
+                      formatter={(value) => [`₦${Number(value).toLocaleString()}`, 'Revenue']}
+                      labelFormatter={(label) => `Date: ${label}`}
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        fontSize: '14px'
+                      }}
+                    />
                     <Bar 
                       dataKey="revenue" 
                       fill="hsl(var(--primary))" 
-                      radius={[8, 8, 0, 0]}
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={50}
                     />
                   </BarChart>
                 </ResponsiveContainer>
-              </ChartContainer>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6" data-tour="quick-actions">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6" data-tour="quick-actions">
           <Card 
             className="group hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer border-primary/10 hover:border-primary/30"
             onClick={() => navigate("/my-store")}
             data-tour="my-store-action"
           >
-            <CardHeader>
-              <div className="w-14 h-14 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Store className="w-7 h-7 text-primary" />
+            <CardHeader className="p-4 sm:p-6">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
+                <Store className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
               </div>
-              <CardTitle className="font-heading group-hover:text-primary transition-colors">My Store</CardTitle>
-              <CardDescription>
+              <CardTitle className="font-heading group-hover:text-primary transition-colors text-base sm:text-lg">My Store</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Setup and customize your storefront
               </CardDescription>
             </CardHeader>
@@ -387,12 +407,12 @@ const Dashboard = () => {
             onClick={() => navigate("/products")}
             data-tour="products-action"
           >
-            <CardHeader>
-              <div className="w-14 h-14 bg-gradient-to-br from-accent/20 to-primary/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Package className="w-7 h-7 text-accent" />
+            <CardHeader className="p-4 sm:p-6">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-accent/20 to-primary/20 rounded-2xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
+                <Package className="w-6 h-6 sm:w-7 sm:h-7 text-accent" />
               </div>
-              <CardTitle className="font-heading group-hover:text-accent transition-colors">Products</CardTitle>
-              <CardDescription>
+              <CardTitle className="font-heading group-hover:text-accent transition-colors text-base sm:text-lg">Products</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Manage your product catalog
               </CardDescription>
             </CardHeader>
@@ -403,12 +423,12 @@ const Dashboard = () => {
             onClick={() => navigate("/orders")}
             data-tour="orders-action"
           >
-            <CardHeader>
-              <div className="w-14 h-14 bg-gradient-to-br from-gold/20 to-primary/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <ShoppingCart className="w-7 h-7 text-gold" />
+            <CardHeader className="p-4 sm:p-6">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-gold/20 to-primary/20 rounded-2xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
+                <ShoppingCart className="w-6 h-6 sm:w-7 sm:h-7 text-gold" />
               </div>
-              <CardTitle className="font-heading group-hover:text-gold transition-colors">Orders</CardTitle>
-              <CardDescription>
+              <CardTitle className="font-heading group-hover:text-gold transition-colors text-base sm:text-lg">Orders</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 View and manage customer orders
               </CardDescription>
             </CardHeader>
@@ -419,12 +439,12 @@ const Dashboard = () => {
             onClick={() => navigate("/bookings")}
             data-tour="bookings-action"
           >
-            <CardHeader>
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-500/20 to-accent/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <CalendarCheck className="w-7 h-7 text-purple-500" />
+            <CardHeader className="p-4 sm:p-6">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-500/20 to-accent/20 rounded-2xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
+                <CalendarCheck className="w-6 h-6 sm:w-7 sm:h-7 text-purple-500" />
               </div>
-              <CardTitle className="font-heading group-hover:text-purple-500 transition-colors">Bookings</CardTitle>
-              <CardDescription>
+              <CardTitle className="font-heading group-hover:text-purple-500 transition-colors text-base sm:text-lg">Bookings</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Manage service appointments
               </CardDescription>
             </CardHeader>
