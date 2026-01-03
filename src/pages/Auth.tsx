@@ -138,7 +138,14 @@ const Auth = () => {
           description: "Successfully logged in",
         });
 
-        navigate(getDashboardPath(authData.user, false)); // Email login flow
+        // Check for redirect after login (from token expiration)
+        const redirectPath = sessionStorage.getItem('redirectAfterLogin');
+        if (redirectPath) {
+          sessionStorage.removeItem('redirectAfterLogin');
+          navigate(redirectPath);
+        } else {
+          navigate(getDashboardPath(authData.user, false)); // Email login flow
+        }
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Invalid credentials. Please check your email and password.";
@@ -190,7 +197,14 @@ const Auth = () => {
                 title: "Welcome back!",
                 description: "Successfully logged in with Google",
               });
-              navigate(getDashboardPath(authData.user, false)); // Explicitly NOT signup
+              // Check for redirect after login (from token expiration)
+              const redirectPath = sessionStorage.getItem('redirectAfterLogin');
+              if (redirectPath) {
+                sessionStorage.removeItem('redirectAfterLogin');
+                navigate(redirectPath);
+              } else {
+                navigate(getDashboardPath(authData.user, false)); // Explicitly NOT signup
+              }
             }
           } catch (error: any) {
              const statusCode = error.response?.status;

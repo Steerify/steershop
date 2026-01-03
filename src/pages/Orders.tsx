@@ -197,7 +197,7 @@ const Orders = () => {
 
   const loadOrders = async (shopId: string) => {
     try {
-      const response: any = await orderService.getOrders(shopId);
+      const response: any = await orderService.getOrders({ shopId });
       // Assuming response.data is the array of orders
       setOrders(response.data || []);
     } catch (error: any) {
@@ -232,7 +232,7 @@ const Orders = () => {
         updateData.delivered_at = new Date().toISOString();
       }
 
-      await orderService.updateOrderStatus(orderId, status, updateData);
+      await orderService.updateOrderStatus(orderId, status);
 
       toast({
         title: "Success!",
@@ -257,11 +257,7 @@ const Orders = () => {
     setUpdatingOrderId(order.id);
 
     try {
-      await orderService.updateOrderStatus(order.id, "confirmed", { // Use confirmed or another status to reflect partial update if needed, but here we just update payment
-          payment_status: "paid",
-          paid_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-      });
+      await orderService.updateOrderStatus(order.id, "confirmed");
 
 
       await revenueService.createTransaction({

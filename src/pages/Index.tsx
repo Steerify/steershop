@@ -43,11 +43,11 @@ import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireDivider } from "@/components/patterns/AdirePattern";
 import heroImage from "@/assets/hero-image.jpg";
 import offerService from "@/services/offer.service";
+import { TypewriterEffect } from "@/components/TypewriterEffect";
 
 const Index = () => {
   const [activeAudience, setActiveAudience] = useState<"customers" | "entrepreneurs">("entrepreneurs");
   const [offers, setOffers] = useState<any[]>([]);
-  const [currentPainPoint, setCurrentPainPoint] = useState(0);
   
   const painPoints = [
     "Lost orders in WhatsApp?",
@@ -58,13 +58,6 @@ const Index = () => {
   ];
   
   const platformNames = ["Shopify", "Jumia", "Instagram", "WhatsApp", "Simple Stores"];
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentPainPoint((prev) => (prev + 1) % painPoints.length);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     fetchOffers();
@@ -123,7 +116,7 @@ const Index = () => {
           {/* Dynamic Hero Content */}
           {activeAudience === "entrepreneurs" ? (
             <EntrepreneurHero 
-              currentPainPoint={painPoints[currentPainPoint]}
+              painPoints={painPoints}
               offer={entrepreneurOffer}
             />
           ) : (
@@ -203,7 +196,7 @@ const Index = () => {
 };
 
 /* ================= ENTREPRENEUR HERO ================= */
-const EntrepreneurHero = ({ currentPainPoint, offer }: { currentPainPoint: string, offer?: any }) => (
+const EntrepreneurHero = ({ painPoints, offer }: { painPoints: string[], offer?: any }) => (
   <div className="max-w-6xl mx-auto">
     <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
       {/* Left Column - Main Message */}
@@ -216,8 +209,13 @@ const EntrepreneurHero = ({ currentPainPoint, offer }: { currentPainPoint: strin
         
         {/* Main Heading */}
         <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent animate-gradient">
-            {currentPainPoint}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent">
+            <TypewriterEffect 
+              texts={painPoints} 
+              typingSpeed={80} 
+              deletingSpeed={40} 
+              pauseDuration={2500}
+            />
           </span>
           <br />
           <span className="text-primary">Get Your Professional Store Today</span>
