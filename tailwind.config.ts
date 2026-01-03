@@ -14,8 +14,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        'display': ['Playfair Display', 'serif'],
-        'sans': ['Inter', 'system-ui', 'sans-serif'],
+        'display': ['Poppins', 'Playfair Display', 'serif'],
+        'heading': ['Poppins', 'sans-serif'],
+        'sans': ['Inter', 'Roboto', 'system-ui', 'sans-serif'],
+        'body': ['Roboto', 'Inter', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

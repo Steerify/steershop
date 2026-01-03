@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
-  User, Menu, X, Gift, Moon, Star, 
+  User, Menu, X, Gift, Moon, Sun, Star, 
   Heart, Flag, Ghost, Egg, Sparkles 
 } from "lucide-react";
 import { AdireAccent } from "./patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
+import { useTheme } from "next-themes";
 
 // --- Types ---
 interface Celebration {
@@ -70,6 +71,12 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeCelebrations, setActiveCelebrations] = useState<Celebration[]>([]);
   const [showCelebrationHint, setShowCelebrationHint] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const today = new Date();
@@ -154,6 +161,22 @@ const Navbar = () => {
 
             {/* Desktop Auth - Updated typography */}
             <div className="hidden md:flex items-center gap-3 font-display">
+              {/* Dark Mode Toggle */}
+              {mounted && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
+                  aria-label="Toggle theme"
+                >
+                  {theme === 'dark' ? (
+                    <Sun className="h-5 w-5 text-yellow-500" />
+                  ) : (
+                    <Moon className="h-5 w-5" />
+                  )}
+                </Button>
+              )}
               <Link to="/auth/login">
                 <Button variant="ghost" size="sm" className="font-medium hover:bg-primary/10 hover:text-primary">
                   <User className="w-4 h-4 mr-2" />
@@ -179,10 +202,30 @@ const Navbar = () => {
       </div>
 
       {/* Mobile Menu - Updated typography */}
-      <div className={`md:hidden bg-card/95 backdrop-blur-xl border-b border-border overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"}`}>
+      <div className={`md:hidden bg-card/95 backdrop-blur-xl border-b border-border overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
         <div className="container mx-auto px-4 py-4 space-y-4 font-display">
+          {/* Mobile Theme Toggle */}
+          {mounted && (
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="flex items-center gap-3 w-full py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium"
+            >
+              {theme === 'dark' ? (
+                <>
+                  <Sun className="h-5 w-5 text-yellow-500" />
+                  <span>Light Mode</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="h-5 w-5" />
+                  <span>Dark Mode</span>
+                </>
+              )}
+            </button>
+          )}
           <Link to="/shops" className="block py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">Explore Shops</Link>
           <Link to="/about" className="block py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">About</Link>
+          <Link to="/feedback" className="block py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">Feedback</Link>
           <div className="pt-4 border-t border-border space-y-3">
             <Link to="/auth/login">
               <Button variant="outline" className="w-full border-primary/30 font-display">Login</Button>

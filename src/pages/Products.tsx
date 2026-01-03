@@ -253,11 +253,11 @@ const Products = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
       <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
       
-      <div className="container mx-auto px-4 py-8 relative z-10">
-        <div className="mb-6 flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 relative z-10">
+        <div className="mb-4 sm:mb-6 flex items-center justify-between">
+          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10 min-h-[44px] px-2 sm:px-4">
+            <ArrowLeft className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Back to Dashboard</span>
           </Button>
           <TourButton 
             onStartTour={startTour} 
@@ -266,32 +266,32 @@ const Products = () => {
           />
         </div>
 
-        <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-heading font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold mb-1 sm:mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Products & Services
             </h1>
-            <p className="text-muted-foreground">Manage your catalog - sell products or offer services</p>
+            <p className="text-sm sm:text-base text-muted-foreground">Manage your catalog - sell products or offer services</p>
           </div>
-          <Button onClick={() => handleOpenDialog()} className="bg-gradient-to-r from-primary to-accent hover:opacity-90" data-tour="add-item-btn">
+          <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90 min-h-[44px]" data-tour="add-item-btn">
             <Plus className="w-4 h-4 mr-2" />
             Add New
           </Button>
         </div>
 
         {/* Tabs for filtering */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mb-6" data-tour="type-filter">
-          <TabsList className="bg-card border border-primary/10">
-            <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mb-4 sm:mb-6" data-tour="type-filter">
+          <TabsList className="bg-card border border-primary/10 w-full sm:w-auto flex overflow-x-auto">
+            <TabsTrigger value="all" className="flex-1 sm:flex-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground min-h-[40px] text-xs sm:text-sm">
               All ({products.length})
             </TabsTrigger>
-            <TabsTrigger value="products" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Package className="w-4 h-4 mr-2" />
-              Products ({productsCount})
+            <TabsTrigger value="products" className="flex-1 sm:flex-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground min-h-[40px] text-xs sm:text-sm">
+              <Package className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Products</span> ({productsCount})
             </TabsTrigger>
-            <TabsTrigger value="services" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-              <Briefcase className="w-4 h-4 mr-2" />
-              Services ({servicesCount})
+            <TabsTrigger value="services" className="flex-1 sm:flex-none data-[state=active]:bg-accent data-[state=active]:text-accent-foreground min-h-[40px] text-xs sm:text-sm">
+              <Briefcase className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Services</span> ({servicesCount})
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -324,7 +324,7 @@ const Products = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredProducts.map((product, index) => (
               <Card key={product.id} className="overflow-hidden group hover:shadow-xl hover:shadow-primary/10 transition-all border-primary/10 hover:border-primary/30" data-tour={index === 0 ? "product-card" : undefined}>
                 {product.images && product.images.length > 0 ? (

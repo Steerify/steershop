@@ -232,50 +232,50 @@ const Bookings = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
       <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
       
-      <div className="container mx-auto px-4 py-8 relative z-10">
-        <div className="mb-6">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 relative z-10">
+        <div className="mb-4 sm:mb-6">
+          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10 min-h-[44px] px-2 sm:px-4">
+            <ArrowLeft className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Back to Dashboard</span>
           </Button>
         </div>
 
-        <div className="mb-8">
-          <h1 className="text-4xl font-heading font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold mb-1 sm:mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Bookings
           </h1>
-          <p className="text-muted-foreground">Manage your service appointments</p>
+          <p className="text-sm sm:text-base text-muted-foreground">Manage your service appointments</p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
           <Card className="border-yellow-500/20 bg-yellow-500/5">
-            <CardContent className="pt-4 text-center">
-              <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
-              <p className="text-sm text-muted-foreground">Pending</p>
+            <CardContent className="p-3 sm:pt-4 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-yellow-600">{pendingCount}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Pending</p>
             </CardContent>
           </Card>
           <Card className="border-blue-500/20 bg-blue-500/5">
-            <CardContent className="pt-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{confirmedCount}</p>
-              <p className="text-sm text-muted-foreground">Confirmed</p>
+            <CardContent className="p-3 sm:pt-4 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-blue-600">{confirmedCount}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Confirmed</p>
             </CardContent>
           </Card>
           <Card className="border-green-500/20 bg-green-500/5">
-            <CardContent className="pt-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{completedCount}</p>
-              <p className="text-sm text-muted-foreground">Completed</p>
+            <CardContent className="p-3 sm:pt-4 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-green-600">{completedCount}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Completed</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="bg-card border border-primary/10">
-            <TabsTrigger value="all">All ({bookings.length})</TabsTrigger>
-            <TabsTrigger value="pending">Pending ({pendingCount})</TabsTrigger>
-            <TabsTrigger value="confirmed">Confirmed ({confirmedCount})</TabsTrigger>
-            <TabsTrigger value="completed">Completed ({completedCount})</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4 sm:mb-6">
+          <TabsList className="bg-card border border-primary/10 w-full sm:w-auto flex overflow-x-auto">
+            <TabsTrigger value="all" className="flex-1 sm:flex-none min-h-[40px] text-xs sm:text-sm">All ({bookings.length})</TabsTrigger>
+            <TabsTrigger value="pending" className="flex-1 sm:flex-none min-h-[40px] text-xs sm:text-sm">Pending ({pendingCount})</TabsTrigger>
+            <TabsTrigger value="confirmed" className="flex-1 sm:flex-none min-h-[40px] text-xs sm:text-sm">Confirmed ({confirmedCount})</TabsTrigger>
+            <TabsTrigger value="completed" className="flex-1 sm:flex-none min-h-[40px] text-xs sm:text-sm">Completed ({completedCount})</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -362,7 +362,7 @@ const Bookings = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border/50">
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-4 pt-4 border-t border-border/50">
                     {booking.status === "pending" && (
                       <>
                         <Button

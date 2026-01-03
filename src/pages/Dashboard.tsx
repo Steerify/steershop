@@ -92,13 +92,13 @@ const Dashboard = () => {
           
           return {
             date: format(day, 'MMM dd'),
-            revenue: dayOrders.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0),
+            revenue: dayOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0),
             sales: dayOrders.length
           };
         });
 
         setChartData(dailyData);
-        setTotalRevenue(allOrders.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0));
+        setTotalRevenue(allOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0));
         setTotalSales(allOrders.length);
       }
 
@@ -167,39 +167,39 @@ const Dashboard = () => {
       
       <nav className="bg-card/80 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50">
         <div className="h-1 bg-gradient-to-r from-primary via-accent to-primary" />
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-primary/20">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-primary/20">
                 <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
               </div>
-              <span className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <span className="text-xl sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 SteerSolo
               </span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <TourButton 
                 onStartTour={startTour} 
                 hasSeenTour={hasSeenTour} 
                 onResetTour={resetTour}
               />
-              <Button variant="ghost" onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive">
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
+              <Button variant="ghost" onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive min-h-[44px] px-2 sm:px-4">
+                <LogOut className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Logout</span>
               </Button>
             </div>
           </div>
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-12 relative z-10">
-        <div className="mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-6">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 relative z-10">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 mb-4 sm:mb-6">
             <div>
-              <h1 className="text-4xl font-heading font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold mb-1 sm:mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Dashboard
               </h1>
-              <p className="text-muted-foreground">Welcome back, {profile?.full_name}!</p>
+              <p className="text-sm sm:text-base text-muted-foreground">Welcome back, {profile?.full_name}!</p>
             </div>
 
             <div data-tour="subscription-status">
@@ -284,10 +284,10 @@ const Dashboard = () => {
           </Card>
         )}
 
-        <div className="mb-8" data-tour="sales-analytics">
-          <h2 className="text-2xl font-heading font-bold mb-4">Sales Analytics</h2>
+        <div className="mb-6 sm:mb-8" data-tour="sales-analytics">
+          <h2 className="text-xl sm:text-2xl font-heading font-bold mb-3 sm:mb-4">Sales Analytics</h2>
           
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
             <Card className="group hover:shadow-lg hover:shadow-primary/10 transition-all border-primary/10" data-tour="revenue-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -365,7 +365,7 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" data-tour="quick-actions">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6" data-tour="quick-actions">
           <Card 
             className="group hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer border-primary/10 hover:border-primary/30"
             onClick={() => navigate("/my-store")}

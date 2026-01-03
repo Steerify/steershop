@@ -11,7 +11,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
 import { useAuth } from "@/context/AuthContext";
@@ -20,22 +19,10 @@ import {
   ArrowLeft,
   Loader2,
   Store,
-  CreditCard,
-  MessageCircle,
-  Copy,
-  Share2,
-  Check,
-  ExternalLink,
-  Download,
-  QrCode,
 } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
-import { QRCodeSVG } from "qrcode.react";
-import { StoreFlyerTemplate } from "@/components/StoreFlyerTemplate";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
-import logo from "@/assets/steersolo-logo.jpg";
 import Joyride, { CallBackProps, STATUS } from "react-joyride";
 import { useTour } from "@/hooks/useTour";
 import { TourTooltip } from "@/components/tours/TourTooltip";
@@ -44,17 +31,13 @@ import { TourButton } from "@/components/tours/TourButton";
 
 const shopSchema = z
   .object({
-    shop_name: z
-      .string()
-      .trim()
-      .min(2, "Store name must be at least 2 characters")
-      .max(100),
+    shop_name: z.string().trim().min(2).max(100),
     shop_slug: z
       .string()
       .trim()
       .min(2)
       .max(50)
-      .regex(/^[a-z0-9-]+$/, "Invalid slug"),
+      .regex(/^[a-z0-9-]+$/),
     description: z.string().trim().max(500).optional(),
     whatsapp_number: z.string().trim().min(10).max(20),
     enable_paystack: z.boolean(),
@@ -64,19 +47,13 @@ const shopSchema = z
     bank_account_number: z.string().optional(),
     paystack_public_key: z.string().optional(),
   })
-  .refine((d) => d.enable_paystack || d.enable_bank_transfer, {
-    message: "Enable at least one payment method",
-  })
+  .refine((d) => d.enable_paystack || d.enable_bank_transfer)
   .refine(
     (d) =>
       !d.enable_bank_transfer ||
-      (d.bank_account_name && d.bank_name && d.bank_account_number),
-    { message: "Complete bank details required" }
+      (d.bank_account_name && d.bank_name && d.bank_account_number)
   )
-  .refine(
-    (d) => !d.enable_paystack || d.paystack_public_key,
-    { message: "Paystack public key required" }
-  );
+  .refine((d) => !d.enable_paystack || d.paystack_public_key);
 
 const MyStore = () => {
   const navigate = useNavigate();
@@ -84,10 +61,8 @@ const MyStore = () => {
   const { user, isLoading: authLoading } = useAuth();
 
   const [shop, setShop] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isCopied, setIsCopied] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
@@ -124,14 +99,12 @@ const MyStore = () => {
     try {
       const res = await shopService.getShopByOwner(user.id);
       const data = Array.isArray(res.data) ? res.data[0] : res.data;
-
       if (!data) return;
 
       setShop(data);
-
       setFormData({
-        shop_name: data.shop_name || data.name,
-        shop_slug: data.shop_slug || data.slug,
+        shop_name: data.shop_name || "",
+        shop_slug: data.shop_slug || "",
         description: data.description || "",
         whatsapp_number: data.whatsapp_number || "",
         enable_paystack: ["paystack", "both"].includes(data.payment_method),
@@ -145,11 +118,6 @@ const MyStore = () => {
         logo_url: data.logo_url || "",
         banner_url: data.banner_url || "",
       });
-
-      const productsRes = await productService.getProducts({
-        shopId: data.id,
-      });
-      setProducts(productsRes.data || []);
     } catch {
       toast({
         title: "Error",
@@ -212,40 +180,53 @@ const MyStore = () => {
   }
 
   return (
-    <div className="min-h-screen relative">
-      <AdirePattern variant="dots" className="fixed inset-0 opacity-5" />
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
+      <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
 
-      <div className="container mx-auto py-8 relative z-10 max-w-3xl">
-        <Button variant="ghost" onClick={() => navigate("/dashboard")}>
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back
-        </Button>
+      <div className="container mx-auto px-4 py-8 relative z-10 max-w-3xl">
+        <div className="flex items-center justify-between mb-6">
+          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back
+          </Button>
+          <TourButton
+            onStartTour={startTour}
+            hasSeenTour={hasSeenTour}
+            onResetTour={resetTour}
+          />
+        </div>
 
-        <Card className="mt-6">
+        <Card>
           <CardHeader>
-            <CardTitle>Store Information</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Store className="w-5 h-5" /> Store Information
+            </CardTitle>
             <CardDescription>Manage your store</CardDescription>
           </CardHeader>
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <Input
-                value={formData.shop_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, shop_name: e.target.value })
-                }
-                placeholder="Store name"
-              />
+              <div>
+                <Label>Store Name</Label>
+                <Input
+                  value={formData.shop_name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, shop_name: e.target.value })
+                  }
+                />
+              </div>
 
-              <Input
-                value={formData.shop_slug}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    shop_slug: e.target.value.toLowerCase(),
-                  })
-                }
-                placeholder="store-slug"
-              />
+              <div>
+                <Label>Store Slug</Label>
+                <Input
+                  value={formData.shop_slug}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      shop_slug: e.target.value.toLowerCase(),
+                    })
+                  }
+                />
+              </div>
 
               <Textarea
                 value={formData.description}
@@ -269,13 +250,6 @@ const MyStore = () => {
                     setFormData({ ...formData, logo_url: url })
                   }
                 />
-
-                {formData.logo_url && (
-                  <img
-                    src={formData.logo_url}
-                    className="w-full h-40 object-cover rounded-lg border"
-                  />
-                )}
               </div>
 
               {/* BANNER */}
@@ -293,13 +267,6 @@ const MyStore = () => {
                     setFormData({ ...formData, banner_url: url })
                   }
                 />
-
-                {formData.banner_url && (
-                  <img
-                    src={formData.banner_url}
-                    className="w-full h-40 object-cover rounded-lg border"
-                  />
-                )}
               </div>
 
               <Button type="submit" disabled={isSaving}>
