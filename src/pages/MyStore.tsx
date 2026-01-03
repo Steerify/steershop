@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
+import shopService from "@/services/shop.service";
+import productService from "@/services/product.service";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Store, CreditCard, MessageCircle, Copy, Share2, Check, ExternalLink, Download, QrCode } from "lucide-react";
@@ -103,11 +104,8 @@ const MyStore = () => {
     try {
       if (!user) return;
 
-      const { data: shopData } = await supabase
-        .from("shops")
-        .select("*")
-        .eq("owner_id", user.id)
-        .maybeSingle();
+      const shopResponse = await shopService.getShopByOwner(user.id);
+      const shopData = Array.isArray(shopResponse.data) ? shopResponse.data[0] : shopResponse.data;
 
       if (shopData) {
         setShop(shopData);
@@ -117,10 +115,10 @@ const MyStore = () => {
         const enableBankTransfer = shopData.payment_method === 'bank_transfer' || shopData.payment_method === 'both' || !shopData.payment_method;
         
         setFormData({
-          shop_name: shopData.shop_name,
-          shop_slug: shopData.shop_slug,
+          shop_name: shopData.shop_name || shopData.name,
+          shop_slug: shopData.shop_slug || shopData.slug,
           description: shopData.description || "",
-          whatsapp_number: shopData.whatsapp_number || "",
+          whatsapp_number: shopData.whatsapp_number || shopData.whatsapp || "",
           enable_paystack: enablePaystack,
           enable_bank_transfer: enableBankTransfer,
           bank_account_name: shopData.bank_account_name || "",
@@ -131,13 +129,8 @@ const MyStore = () => {
           banner_url: shopData.banner_url || "",
         });
 
-        const { data: productsData } = await supabase
-          .from("products")
-          .select("*")
-          .eq("shop_id", shopData.id)
-          .order("created_at", { ascending: false });
-
-        setProducts(productsData || []);
+        const productsResponse = await productService.getProducts({ shopId: shopData.id });
+        setProducts(productsResponse.data || []);
       }
     } catch (error) {
       console.error("Error loading shop:", error);
@@ -203,18 +196,20 @@ const MyStore = () => {
       };
 
       if (shop) {
-        const { error } = await supabase
-          .from("shops")
-          .update(shopData)
-          .eq("id", shop.id);
-
-        if (error) throw error;
+        await shopService.updateShop(shop.id, shopData);
       } else {
-        const { error } = await supabase
-          .from("shops")
-          .insert(shopData);
-
-        if (error) throw error;
+        // Map to CreateShopRequest fields
+        const createData = {
+          name: shopData.shop_name,
+          slug: shopData.shop_slug,
+          description: shopData.description,
+          phone: shopData.whatsapp_number, // using whatsapp as phone for now
+          whatsapp: shopData.whatsapp_number,
+          address: "",
+          city: "",
+          state: ""
+        };
+        await shopService.createShop(createData);
       }
 
       toast({
@@ -239,12 +234,7 @@ const MyStore = () => {
     if (!shop) return;
 
     try {
-      const { error } = await supabase
-        .from("shops")
-        .update({ is_active: !shop.is_active })
-        .eq("id", shop.id);
-
-      if (error) throw error;
+      await shopService.updateShop(shop.id, { is_active: !shop.is_active } as any);
 
       toast({
         title: "Success",

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import offerService from "@/services/offer.service";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,17 +36,15 @@ export default function AdminOffers() {
   }, []);
 
   const fetchOffers = async () => {
-    const { data, error } = await supabase
-      .from("special_offers")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
+    try {
+      const response = await offerService.getOffers();
+      if (response.success) {
+        setOffers(response.data || []);
+      }
+    } catch (error) {
+      console.error("Error loading offers:", error);
       toast({ title: "Error loading offers", variant: "destructive" });
-      return;
     }
-
-    setOffers(data || []);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,29 +56,17 @@ export default function AdminOffers() {
       valid_until: formData.valid_until || null,
     };
 
-    if (editingOffer) {
-      const { error } = await supabase
-        .from("special_offers")
-        .update(offerData)
-        .eq("id", editingOffer.id);
-
-      if (error) {
-        toast({ title: "Error updating offer", variant: "destructive" });
-        return;
+    try {
+      if (editingOffer) {
+        await offerService.updateOffer(editingOffer.id, offerData);
+        toast({ title: "Offer updated successfully" });
+      } else {
+        await offerService.createOffer(offerData);
+        toast({ title: "Offer created successfully" });
       }
-
-      toast({ title: "Offer updated successfully" });
-    } else {
-      const { error } = await supabase
-        .from("special_offers")
-        .insert([offerData]);
-
-      if (error) {
-        toast({ title: "Error creating offer", variant: "destructive" });
-        return;
-      }
-
-      toast({ title: "Offer created successfully" });
+    } catch (error) {
+      console.error("Error saving offer:", error);
+      return;
     }
 
     resetForm();
@@ -106,33 +92,23 @@ export default function AdminOffers() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this offer?")) return;
 
-    const { error } = await supabase
-      .from("special_offers")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      toast({ title: "Error deleting offer", variant: "destructive" });
-      return;
+    try {
+      await offerService.deleteOffer(id);
+      toast({ title: "Offer deleted successfully" });
+      fetchOffers();
+    } catch (error) {
+      console.error("Error deleting offer:", error);
     }
-
-    toast({ title: "Offer deleted successfully" });
-    fetchOffers();
   };
 
   const toggleStatus = async (id: string, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from("special_offers")
-      .update({ is_active: !currentStatus })
-      .eq("id", id);
-
-    if (error) {
-      toast({ title: "Error updating status", variant: "destructive" });
-      return;
+    try {
+      await offerService.updateOffer(id, { is_active: !currentStatus });
+      toast({ title: "Status updated successfully" });
+      fetchOffers();
+    } catch (error) {
+      console.error("Error updating status:", error);
     }
-
-    toast({ title: "Status updated successfully" });
-    fetchOffers();
   };
 
   const resetForm = () => {

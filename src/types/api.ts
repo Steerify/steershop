@@ -107,6 +107,8 @@ export interface Order {
   deliveryFee: number;
   notes?: string;
   status: string;
+  total_amount?: string | number;
+  created_at?: string;
 }
 
 export interface PaymentInitialization {

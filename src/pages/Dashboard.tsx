@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
-import { mockApi } from "@/lib/api-mock";
+import shopService from "@/services/shop.service";
+import orderService from "@/services/order.service";
+import offerService from "@/services/offer.service";
 import { useToast } from "@/hooks/use-toast";
 import { Store, Package, ShoppingCart, LogOut, Clock, CheckCircle, AlertCircle, ArrowRight, TrendingUp, DollarSign, CalendarCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -57,48 +59,66 @@ const Dashboard = () => {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      // Fetch mock profile
-      const profileData = await mockApi.profiles.get(user!.id);
-      setProfile(profileData);
+      if (!user) return;
 
-      if (profileData) {
-        const subscriptionInfo = calculateSubscriptionStatus(profileData);
+      setProfile(user);
+
+      // Fetch real shop data
+      const shopResponse = await shopService.getShopByOwner(user.id);
+      const shops = shopResponse.data;
+      const primaryShop = Array.isArray(shops) ? shops[0] : (shops as any);
+
+      if (primaryShop) {
+        // Fetch real orders to calculate analytics
+        const ordersResponse = await orderService.getOrders({ shopId: primaryShop.id });
+        const allOrders = ordersResponse.data || [];
+        
+        // Calculate trial status (simplified for now, backend should provide this ideally)
+        const subscriptionInfo = calculateSubscriptionStatus(user);
         setDaysRemaining(subscriptionInfo.daysRemaining);
         setSubscriptionStatus(subscriptionInfo.status);
-      }
 
-      // Fetch mock analytics
-      const shops = await mockApi.shops.getByOwner(user!.id);
-      if (shops) {
-        // Generate mock chart data since we don't have revenue transactions in mockApi yet
+        // Generate chart data from real orders
         const last7Days = eachDayOfInterval({
           start: subMonths(new Date(), 0).setDate(new Date().getDate() - 6),
           end: new Date()
         });
 
-        const dailyData = last7Days.map(day => ({
-          date: format(day, 'MMM dd'),
-          revenue: Math.floor(Math.random() * 5000),
-          sales: Math.floor(Math.random() * 5)
-        }));
+        const dailyData = last7Days.map(day => {
+          const dateStr = format(day, 'yyyy-MM-dd');
+          const dayOrders = allOrders.filter(o => 
+            o.created_at && format(new Date(o.created_at), 'yyyy-MM-dd') === dateStr
+          );
+          
+          return {
+            date: format(day, 'MMM dd'),
+            revenue: dayOrders.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0),
+            sales: dayOrders.length
+          };
+        });
 
         setChartData(dailyData);
-        setTotalRevenue(dailyData.reduce((sum, d) => sum + d.revenue, 0));
-        setTotalSales(dailyData.reduce((sum, d) => sum + d.sales, 0));
+        setTotalRevenue(allOrders.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0));
+        setTotalSales(allOrders.length);
       }
 
-      // Mock offer
-      setActiveOffer({
-        id: "offer-1",
-        title: "New Year Special",
-        description: "Get 50% off your next month!",
-        button_text: "Claim Now",
-        subscription_price: 50000, // in kobo
-      });
-      setSubscriptionPrice(500);
+      // Fetch active offer for entrepreneurs
+      const offerResponse = await offerService.getOffers();
+      if (offerResponse.success && offerResponse.data) {
+        const entOffer = offerResponse.data.find(o => o.target_audience === 'entrepreneurs' && o.is_active);
+        if (entOffer) {
+          setActiveOffer(entOffer);
+          // Map discount_percentage to kobo if needed by your logic, or just use title
+        }
+      }
 
     } catch (error) {
       console.error("Error loading dashboard data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

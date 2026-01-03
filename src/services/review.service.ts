@@ -18,7 +18,12 @@ export interface Review {
 export interface ReviewResponse extends ApiResponse<Review> {}
 
 const reviewService = {
-  createReview: async (data: { productId: string; rating: number; comment: string }) => {
+  createReview: async (data: { 
+    productId: string; 
+    rating: number; 
+    comment: string;
+    customer_name: string;
+  }) => {
     try {
       const response = await api.post<ReviewResponse>('/reviews', data, {
         headers: getAuthHeaders(),
