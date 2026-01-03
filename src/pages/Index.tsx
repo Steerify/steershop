@@ -42,7 +42,7 @@ import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireDivider } from "@/components/patterns/AdirePattern";
 import heroImage from "@/assets/hero-image.jpg";
-import { supabase } from "@/integrations/supabase/client";
+import offerService from "@/services/offer.service";
 
 const Index = () => {
   const [activeAudience, setActiveAudience] = useState<"customers" | "entrepreneurs">("entrepreneurs");
@@ -71,13 +71,14 @@ const Index = () => {
   }, []);
 
   const fetchOffers = async () => {
-    const { data } = await supabase
-      .from("special_offers")
-      .select("*")
-      .eq("is_active", true)
-      .order("created_at", { ascending: false });
-
-    setOffers(data || []);
+    try {
+      const response = await offerService.getOffers();
+      if (response.success) {
+        setOffers(response.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching offers:", error);
+    }
   };
 
   const customerOffer = offers.find(o => o.target_audience === "customers");

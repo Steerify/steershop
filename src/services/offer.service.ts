@@ -6,10 +6,13 @@ export interface Offer {
   id: string;
   title: string;
   description: string;
-  discountPercentage: number;
-  startDate: string;
-  endDate: string;
-  isActive: boolean;
+  code?: string;
+  discount_percentage?: number;
+  valid_until?: string;
+  target_audience: string;
+  button_text: string;
+  button_link: string;
+  is_active: boolean;
   image_url?: string;
 }
 

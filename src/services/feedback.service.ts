@@ -12,7 +12,13 @@ export interface Feedback {
 }
 
 const feedbackService = {
-  submitFeedback: async (data: { subject: string; message: string }) => {
+  submitFeedback: async (data: { 
+    subject: string; 
+    message: string;
+    customer_name: string;
+    customer_email: string;
+    feedback_type: string;
+  }) => {
     try {
       const response = await api.post<ApiResponse<Feedback>>('/feedback', data, {
         headers: getAuthHeaders(),

@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import feedbackService from "@/services/feedback.service";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
@@ -44,16 +44,13 @@ const Feedback = () => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from("platform_feedback").insert({
-        user_id: user?.id || null,
+      await feedbackService.submitFeedback({
         customer_name: name,
         customer_email: email,
         feedback_type: feedbackType,
         subject,
         message,
       });
-
-      if (error) throw error;
 
       toast({
         title: "Feedback submitted! 🎉",
@@ -67,11 +64,9 @@ const Feedback = () => {
       setSubject("");
       setMessage("");
     } catch (error: any) {
-      toast({
-        title: "Error submitting feedback",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Error is already handled by handleApiError in most cases, 
+      // but toast can be kept if we want specialized messages.
+      console.error("Feedback error:", error);
     } finally {
       setIsSubmitting(false);
     }

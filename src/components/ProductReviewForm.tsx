@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import reviewService from "@/services/review.service";
 import {
   Dialog,
   DialogContent,
@@ -54,15 +54,12 @@ export const ProductReviewForm = ({ productId, productName, onReviewSubmitted }:
         return;
       }
 
-      const { error } = await supabase.from("product_reviews").insert({
-        product_id: productId,
-        customer_id: user.id,
+      await reviewService.createReview({
+        productId: productId,
         rating,
-        comment: comment.trim() || null,
+        comment: comment.trim(),
         customer_name: user.email?.split("@")[0] || "Anonymous",
       });
-
-      if (error) throw error;
 
       toast({
         title: "Review submitted",

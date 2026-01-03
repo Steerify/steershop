@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import adminService from "@/services/admin.service";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Store, Package, ShoppingCart, Users } from "lucide-react";
@@ -17,19 +17,19 @@ export default function AdminDashboard() {
   }, []);
 
   const fetchStats = async () => {
-    const [shopsResult, productsResult, ordersResult, usersResult] = await Promise.all([
-      supabase.from("shops").select("id", { count: "exact", head: true }),
-      supabase.from("products").select("id", { count: "exact", head: true }),
-      supabase.from("orders").select("id", { count: "exact", head: true }),
-      supabase.from("profiles").select("id", { count: "exact", head: true }),
-    ]);
-
-    setStats({
-      totalShops: shopsResult.count || 0,
-      totalProducts: productsResult.count || 0,
-      totalOrders: ordersResult.count || 0,
-      totalUsers: usersResult.count || 0,
-    });
+    try {
+      const response = await adminService.getAnalytics();
+      if (response.success && response.data) {
+        setStats({
+          totalShops: response.data.totalShops || 0,
+          totalProducts: response.data.totalProducts || 0,
+          totalOrders: response.data.totalOrders || 0,
+          totalUsers: response.data.totalUsers || 0,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+    }
   };
 
   return (
