@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Check, X, Gift, Clock } from "lucide-react";
+import { ImageUpload } from "@/components/ImageUpload";
 
 export default function AdminPrizes() {
   const [prizes, setPrizes] = useState<any[]>([]);
@@ -216,12 +217,10 @@ export default function AdminPrizes() {
                 </div>
 
                 <div>
-                  <Label htmlFor="image_url">Image URL</Label>
-                  <Input
-                    id="image_url"
+                  <ImageUpload
+                    label="Prize Image"
                     value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    placeholder="https://example.com/prize.jpg"
+                    onChange={(url) => setFormData({ ...formData, image_url: url })}
                   />
                 </div>
 

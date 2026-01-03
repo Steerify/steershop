@@ -1,0 +1,121 @@
+// src/components/ImageUpload.tsx
+import React, { useRef } from 'react';
+import { Button } from './ui/button';
+import { Progress } from './ui/progress';
+import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { useAuth } from '@/context/AuthContext';
+import { Alert, AlertDescription } from './ui/alert';
+
+interface ImageUploadProps {
+  value?: string;
+  onChange: (url: string) => void;
+  label?: string;
+  className?: string;
+}
+
+export const ImageUpload: React.FC<ImageUploadProps> = ({
+  value,
+  onChange,
+  label,
+  className = '',
+}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { upload, isUploading, progress, error, reset } = useFileUpload();
+  const { user } = useAuth();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = await upload(file, user?.id);
+      if (url) {
+        onChange(url);
+      }
+    }
+  };
+
+  const handleRemove = () => {
+    onChange('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    reset();
+  };
+
+  const triggerUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  return (
+    <div className={`space-y-2 ${className}`}>
+      {label && <label className="text-sm font-medium text-foreground">{label}</label>}
+      
+      <div 
+        className={`relative border-2 border-dashed rounded-xl p-4 transition-all duration-200 ${
+          isUploading ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-accent/50'
+        }`}
+      >
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*"
+          className="hidden"
+          disabled={isUploading}
+        />
+
+        {value ? (
+          <div className="relative aspect-video w-full overflow-hidden rounded-lg group">
+            <img 
+              src={value} 
+              alt="Uploaded" 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                onClick={handleRemove}
+                className="h-8 w-8 rounded-full"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div 
+            className="flex flex-col items-center justify-center py-6 cursor-pointer space-y-2"
+            onClick={triggerUpload}
+          >
+            {isUploading ? (
+              <div className="flex flex-col items-center space-y-4 w-full px-4">
+                <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                <div className="w-full space-y-1">
+                  <Progress value={progress} className="h-1" />
+                  <p className="text-xs text-center text-muted-foreground">{progress}% uploaded</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Upload className="h-6 w-6" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium">Click to upload image</p>
+                  <p className="text-xs text-muted-foreground">PNG, JPG or WebP (max. 5MB)</p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {error && (
+        <Alert variant="destructive" className="py-2">
+          <AlertDescription className="text-xs">{error}</AlertDescription>
+        </Alert>
+      )}
+    </div>
+  );
+};

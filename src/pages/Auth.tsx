@@ -86,14 +86,13 @@ const Auth = () => {
    * @param user - User object with role and onboardingCompleted status
    * @param isSignup - Whether this is a new signup (true) or login (false). Onboarding only shown for new signups.
    */
-  const getDashboardPath = (user: { role: UserRole; onboardingCompleted?: boolean }, isSignup: boolean = false) => {
+  const getDashboardPath = (user: { role: UserRole; onboardingCompleted?: boolean }, isSignup: boolean) => {
     switch (user.role) {
       case UserRole.ADMIN:
         return "/admin";
       case UserRole.ENTREPRENEUR:
-        // Only redirect to onboarding for NEW signups, not existing logins
         if (isSignup && !user.onboardingCompleted) {
-            return "/onboarding";
+          return "/onboarding";
         }
         return "/dashboard";
       case UserRole.CUSTOMER:
@@ -191,7 +190,7 @@ const Auth = () => {
                 title: "Welcome back!",
                 description: "Successfully logged in with Google",
               });
-              navigate(getDashboardPath(authData.user, false)); // Google login flow
+              navigate(getDashboardPath(authData.user, false)); // Explicitly NOT signup
             }
           } catch (error: any) {
              const statusCode = error.response?.status;
@@ -250,7 +249,7 @@ const Auth = () => {
           description: "Successfully signed up with Google",
         });
 
-        const redirectPath = getDashboardPath(authData.user, true); // Google signup flow
+        const redirectPath = getDashboardPath(authData.user, true); // Explicitly IS signup
         console.log("Redirecting to:", redirectPath);
         navigate(redirectPath);
       }

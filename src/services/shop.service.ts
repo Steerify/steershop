@@ -59,6 +59,18 @@ const shopService = {
       throw error;
     }
   },
+
+  updateShop: async (id: string, data: Partial<Shop>) => {
+    try {
+      const response = await api.patch<ApiResponse<Shop>>(`/shops/${id}`, data, {
+        headers: getAuthHeaders(),
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
 };
 
 export default shopService;
