@@ -23,7 +23,6 @@ export const uploadService = {
       const response = await api.post<ApiResponse<UploadResponse>>('/upload', formData, {
         headers: {
           ...getAuthHeaders(),
-          'Content-Type': 'multipart/form-data',
         },
         onUploadProgress: (progressEvent) => {
           if (onProgress && progressEvent.total) {

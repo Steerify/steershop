@@ -32,19 +32,12 @@ export const useFileUpload = (): UseFileUploadReturn => {
       });
       setIsUploading(false);
       return response.url;
-    } catch (err: unknown) {
+    } catch (err: any) {
       setIsUploading(false);
-      let errorMessage = 'Upload failed. Please try again.';
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      // Check for axios error specifically if needed, or stick to a general approach
-      if (typeof err === 'object' && err !== null && 'response' in err) {
-        const axiosError = err as { response?: { data?: { message?: string } } };
-        if (axiosError.response?.data?.message) {
-          errorMessage = axiosError.response.data.message;
-        }
-      }
+      
+      // Error is already handled by uploadService calling handleApiError
+      // We just capture the message for local UI display if needed
+      const errorMessage = err.response?.data?.message || err.message || 'Upload failed';
       setError(errorMessage);
       return null;
     }
