@@ -59,3 +59,20 @@
     transform: rotate(3deg);
   }
 }
+
+/* Add to your global CSS file or component styles */
+.g_id_signin iframe {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Or more specifically */
+div[aria-labelledby="button-label"] {
+  margin: 0 !important;
+}
+
+/* Container adjustments */
+#google-signin-btn-login,
+#google-signin-btn-signup {
+  width: 100% !important;
+}
