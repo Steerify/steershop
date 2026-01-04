@@ -1,15 +1,34 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
+import shopService from "@/services/shop.service";
+import productService from "@/services/product.service";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Store, CreditCard, MessageCircle, Copy, Share2, Check, ExternalLink, Download, QrCode } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  Store,
+  CreditCard,
+  MessageCircle,
+  Copy,
+  Share2,
+  Check,
+  ExternalLink,
+  Download,
+  QrCode,
+} from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { QRCodeSVG } from "qrcode.react";
 import { StoreFlyerTemplate } from "@/components/StoreFlyerTemplate";
@@ -23,46 +42,71 @@ import { TourTooltip } from "@/components/tours/TourTooltip";
 import { myStoreTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
 
-const shopSchema = z.object({
-  shop_name: z.string().trim().min(2, "Store name must be at least 2 characters").max(100, "Store name must be less than 100 characters"),
-  shop_slug: z.string().trim().min(2, "URL slug must be at least 2 characters").max(50, "URL slug must be less than 50 characters").regex(/^[a-z0-9-]+$/, "URL slug can only contain lowercase letters, numbers, and hyphens"),
-  description: z.string().trim().max(500, "Description must be less than 500 characters").optional(),
-  whatsapp_number: z.string().trim().min(10, "WhatsApp number must be at least 10 digits").max(20, "WhatsApp number too long"),
-  enable_paystack: z.boolean(),
-  enable_bank_transfer: z.boolean(),
-  bank_account_name: z.string().trim().max(100).optional(),
-  bank_name: z.string().trim().max(100).optional(),
-  bank_account_number: z.string().trim().max(20).optional(),
-  paystack_public_key: z.string().trim().optional(),
-}).refine((data) => {
-  return data.enable_paystack || data.enable_bank_transfer;
-}, {
-  message: "Please enable at least one payment method",
-}).refine((data) => {
-  if (data.enable_bank_transfer) {
-    return data.bank_account_name && data.bank_name && data.bank_account_number;
+const shopSchema = z
+  .object({
+    shop_name: z
+      .string()
+      .trim()
+      .min(2, "Store name must be at least 2 characters")
+      .max(100),
+    shop_slug: z
+      .string()
+      .trim()
+      .min(2)
+      .max(50)
+      .regex(/^[a-z0-9-]+$/, "Invalid slug"),
+    description: z.string().trim().max(500).optional(),
+    whatsapp_number: z.string().trim().min(10).max(20),
+    enable_paystack: z.boolean(),
+    enable_bank_transfer: z.boolean(),
+    bank_account_name: z.string().optional(),
+    bank_name: z.string().optional(),
+    bank_account_number: z.string().optional(),
+    paystack_public_key: z.string().optional(),
+  })
+  .refine((d) => d.enable_paystack || d.enable_bank_transfer, {
+    message: "Enable at least one payment method",
+  })
+  .refine(
+    (d) =>
+      !d.enable_bank_transfer ||
+      (d.bank_account_name && d.bank_name && d.bank_account_number),
+    { message: "Complete bank details required" }
+  )
+  .refine(
+    (d) => !d.enable_paystack || d.paystack_public_key,
+    { message: "Paystack public key required" }
+  );
+
+// Helper function to format UUID with hyphens
+const formatUUIDWithHyphens = (uuid: string): string => {
+  if (!uuid) return uuid;
+  
+  // Remove any existing hyphens
+  const cleanUuid = uuid.replace(/-/g, '');
+  
+  // Check if it's a 32-character hex string (standard UUID without hyphens)
+  if (cleanUuid.length === 32 && /^[a-f0-9]{32}$/i.test(cleanUuid)) {
+    // Format with hyphens in standard UUID format: 8-4-4-4-12
+    return `${cleanUuid.substring(0, 8)}-${cleanUuid.substring(8, 12)}-${cleanUuid.substring(12, 16)}-${cleanUuid.substring(16, 20)}-${cleanUuid.substring(20)}`;
   }
-  return true;
-}, {
-  message: "Please provide all bank account details",
-}).refine((data) => {
-  if (data.enable_paystack) {
-    return data.paystack_public_key;
-  }
-  return true;
-}, {
-  message: "Please provide your Paystack public key",
-});
+  
+  // Return as-is if not a standard UUID format
+  return uuid;
+};
 
 const MyStore = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
+
   const [shop, setShop] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const [formData, setFormData] = useState({
     shop_name: "",
     shop_slug: "",
@@ -77,73 +121,70 @@ const MyStore = () => {
     logo_url: "",
     banner_url: "",
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Tour state
-  const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('my-store');
+  const { hasSeenTour, isRunning, startTour, endTour, resetTour } =
+    useTour("my-store");
 
   const handleTourCallback = (data: CallBackProps) => {
-    const { status } = data;
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
-      endTour(status === STATUS.FINISHED);
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(data.status as any)) {
+      endTour(data.status === STATUS.FINISHED);
     }
   };
 
   useEffect(() => {
     if (!authLoading) {
-      if (user) {
-        loadShop();
-      } else {
-        navigate("/auth/login");
-      }
+      user ? loadShop() : navigate("/auth/login");
     }
-  }, [user, authLoading, navigate]);
+  }, [authLoading, user]);
 
   const loadShop = async () => {
     try {
-      if (!user) return;
+      // Format the user ID to ensure it has hyphens for UUID
+      const formattedUserId = formatUUIDWithHyphens(user.id);
+      console.log("Formatted User ID for API call:", formattedUserId);
+      
+      const res = await shopService.getShopByOwner(formattedUserId);
+      const data = Array.isArray(res.data) ? res.data[0] : res.data;
 
-      const { data: shopData } = await supabase
-        .from("shops")
-        .select("*")
-        .eq("owner_id", user.id)
-        .maybeSingle();
-
-      if (shopData) {
-        setShop(shopData);
-        
-        // Determine payment method flags from existing payment_method field
-        const enablePaystack = shopData.payment_method === 'paystack' || shopData.payment_method === 'both';
-        const enableBankTransfer = shopData.payment_method === 'bank_transfer' || shopData.payment_method === 'both' || !shopData.payment_method;
-        
-        setFormData({
-          shop_name: shopData.shop_name,
-          shop_slug: shopData.shop_slug,
-          description: shopData.description || "",
-          whatsapp_number: shopData.whatsapp_number || "",
-          enable_paystack: enablePaystack,
-          enable_bank_transfer: enableBankTransfer,
-          bank_account_name: shopData.bank_account_name || "",
-          bank_name: shopData.bank_name || "",
-          bank_account_number: shopData.bank_account_number || "",
-          paystack_public_key: shopData.paystack_public_key || "",
-          logo_url: shopData.logo_url || "",
-          banner_url: shopData.banner_url || "",
+      if (!data) {
+        toast({
+          title: "No Store Found",
+          description: "You haven't created a store yet",
         });
-
-        const { data: productsData } = await supabase
-          .from("products")
-          .select("*")
-          .eq("shop_id", shopData.id)
-          .order("created_at", { ascending: false });
-
-        setProducts(productsData || []);
+        setIsLoading(false);
+        return;
       }
-    } catch (error) {
+
+      setShop(data);
+
+      setFormData({
+        shop_name: data.shop_name || data.name,
+        shop_slug: data.shop_slug || data.slug,
+        description: data.description || "",
+        whatsapp_number: data.whatsapp_number || "",
+        enable_paystack: ["paystack", "both"].includes(data.payment_method),
+        enable_bank_transfer:
+          ["bank_transfer", "both"].includes(data.payment_method) ||
+          !data.payment_method,
+        bank_account_name: data.bank_account_name || "",
+        bank_name: data.bank_name || "",
+        bank_account_number: data.bank_account_number || "",
+        paystack_public_key: data.paystack_public_key || "",
+        logo_url: data.logo_url || "",
+        banner_url: data.banner_url || "",
+      });
+
+      // Also format the shop ID when fetching products
+      const formattedShopId = formatUUIDWithHyphens(data.id);
+      const productsRes = await productService.getProducts({
+        shopId: formattedShopId,
+      });
+      setProducts(productsRes.data || []);
+    } catch (error: any) {
       console.error("Error loading shop:", error);
       toast({
         title: "Error",
-        description: "Failed to load shop data",
+        description: error.message || "Failed to load store",
         variant: "destructive",
       });
     } finally {
@@ -151,80 +192,42 @@ const MyStore = () => {
     }
   };
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
-    // Validate form data
-    const validation = shopSchema.safeParse(formData);
-    if (!validation.success) {
-      const newErrors: Record<string, string> = {};
-      validation.error.errors.forEach((err) => {
-        if (err.path[0]) {
-          newErrors[err.path[0] as string] = err.message;
-        }
+    const parsed = shopSchema.safeParse(formData);
+    if (!parsed.success) {
+      const errs: Record<string, string> = {};
+      parsed.error.errors.forEach((e) => {
+        if (e.path[0]) errs[e.path[0] as string] = e.message;
       });
-      setErrors(newErrors);
+      setErrors(errs);
       return;
     }
 
     setIsSaving(true);
 
     try {
-      if (!user) throw new Error("Not authenticated");
+      const payment_method =
+        formData.enable_paystack && formData.enable_bank_transfer
+          ? "both"
+          : formData.enable_paystack
+          ? "paystack"
+          : "bank_transfer";
 
-      const logoUrl = formData.logo_url;
-      const bannerUrl = formData.banner_url;
-
-      // Determine payment_method value based on checkboxes
-      let paymentMethod = 'bank_transfer';
-      if (formData.enable_paystack && formData.enable_bank_transfer) {
-        paymentMethod = 'both';
-      } else if (formData.enable_paystack) {
-        paymentMethod = 'paystack';
-      } else if (formData.enable_bank_transfer) {
-        paymentMethod = 'bank_transfer';
-      }
-
-      const shopData = {
-        shop_name: formData.shop_name,
-        shop_slug: formData.shop_slug,
-        description: formData.description,
-        whatsapp_number: formData.whatsapp_number,
-        payment_method: paymentMethod,
-        bank_account_name: formData.enable_bank_transfer ? formData.bank_account_name : null,
-        bank_name: formData.enable_bank_transfer ? formData.bank_name : null,
-        bank_account_number: formData.enable_bank_transfer ? formData.bank_account_number : null,
-        paystack_public_key: formData.enable_paystack ? formData.paystack_public_key : null,
-        logo_url: logoUrl,
-        banner_url: bannerUrl,
-        owner_id: user.id,
-      };
-
-      if (shop) {
-        const { error } = await supabase
-          .from("shops")
-          .update(shopData)
-          .eq("id", shop.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("shops")
-          .insert(shopData);
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: "Success",
-        description: shop ? "Store updated successfully" : "Store created successfully",
+      // Format shop ID for update if needed
+      const formattedShopId = shop?.id ? formatUUIDWithHyphens(shop.id) : shop?.id;
+      
+      await shopService.updateShop(formattedShopId, {
+        ...formData,
+        payment_method,
       });
 
+      toast({ title: "Success", description: "Store updated" });
       loadShop();
     } catch (error: any) {
-      console.error("Error saving shop:", error);
+      console.error("Error updating shop:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to save store",
@@ -235,476 +238,286 @@ const MyStore = () => {
     }
   };
 
-  const handleActivateStore = async () => {
-    if (!shop) return;
-
-    try {
-      const { error } = await supabase
-        .from("shops")
-        .update({ is_active: !shop.is_active })
-        .eq("id", shop.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: shop.is_active ? "Store deactivated" : "Store activated",
-      });
-
-      loadShop();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getStoreUrl = () => {
-    if (!shop?.shop_slug) return "";
-    return `${window.location.origin}/shop/${shop.shop_slug}`;
-  };
-
-  const handleCopyUrl = async () => {
-    const url = getStoreUrl();
-    try {
-      await navigator.clipboard.writeText(url);
-      setIsCopied(true);
-      toast({
-        title: "Copied!",
-        description: "Store URL copied to clipboard",
-      });
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to copy URL",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleShareToWhatsApp = () => {
-    const url = getStoreUrl();
-    const text = encodeURIComponent(`Check out my store: ${shop?.shop_name}! Visit: ${url}`);
-    window.open(`https://wa.me/?text=${text}`, "_blank");
-  };
-
-  const handleShareToTwitter = () => {
-    const url = getStoreUrl();
-    const text = encodeURIComponent(`Check out my store: ${shop?.shop_name}!`);
-    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`, "_blank");
-  };
-
-  const handleShareToFacebook = () => {
-    const url = getStoreUrl();
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank");
-  };
-
-  const handleDownloadQRCode = () => {
-    const svg = document.getElementById("store-qr-code");
-    if (!svg) return;
-
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx?.drawImage(img, 0, 0);
-
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${shop?.shop_slug || "store"}-qr-code.png`;
-        link.click();
-        URL.revokeObjectURL(url);
-
-        toast({
-          title: "Downloaded!",
-          description: "QR code saved successfully",
-        });
-      });
-    };
-
-    img.src = "data:image/svg+xml;base64," + btoa(svgData);
-  };
-
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
-        <div className="animate-pulse flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-xl overflow-hidden">
-            <img src={logo} alt="Loading" className="w-full h-full object-cover" />
-          </div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
-      <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
-      
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 relative z-10">
-        <div className="mb-4 sm:mb-6 flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10 min-h-[44px] px-2 sm:px-4">
-            <ArrowLeft className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Back to Dashboard</span>
-          </Button>
-          <TourButton 
-            onStartTour={startTour} 
-            hasSeenTour={hasSeenTour} 
-            onResetTour={resetTour}
-          />
-        </div>
+    <div className="min-h-screen relative">
+      <AdirePattern variant="dots" className="fixed inset-0 opacity-5" />
 
-        <div className="max-w-3xl mx-auto">
-          <div className="mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold mb-1 sm:mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              My Store
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              {shop ? "Manage your store settings" : "Create your store to start selling"}
-            </p>
-          </div>
+      <div className="container mx-auto py-8 relative z-10 max-w-3xl">
+        <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back
+        </Button>
 
-          <Card className="border-primary/10 shadow-lg">
-            <CardHeader className="border-b border-border/50">
-              <CardTitle className="flex items-center gap-2 font-heading">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center">
-                  <Store className="w-5 h-5 text-primary" />
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Store Information</CardTitle>
+            <CardDescription>Manage your store</CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="shop_name">Store Name</Label>
+                <Input
+                  id="shop_name"
+                  value={formData.shop_name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, shop_name: e.target.value })
+                  }
+                  placeholder="Enter store name"
+                  className={errors.shop_name ? "border-red-500" : ""}
+                />
+                {errors.shop_name && (
+                  <p className="text-red-500 text-sm">{errors.shop_name}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="shop_slug">Store Slug</Label>
+                <Input
+                  id="shop_slug"
+                  value={formData.shop_slug}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      shop_slug: e.target.value.toLowerCase(),
+                    })
+                  }
+                  placeholder="store-slug"
+                  className={errors.shop_slug ? "border-red-500" : ""}
+                />
+                {errors.shop_slug && (
+                  <p className="text-red-500 text-sm">{errors.shop_slug}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder="Describe your store"
+                  className="min-h-[100px]"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="whatsapp_number">WhatsApp Number</Label>
+                <Input
+                  id="whatsapp_number"
+                  value={formData.whatsapp_number}
+                  onChange={(e) =>
+                    setFormData({ ...formData, whatsapp_number: e.target.value })
+                  }
+                  placeholder="+2348012345678"
+                  className={errors.whatsapp_number ? "border-red-500" : ""}
+                />
+                {errors.whatsapp_number && (
+                  <p className="text-red-500 text-sm">{errors.whatsapp_number}</p>
+                )}
+              </div>
+
+              {/* LOGO */}
+              <div className="space-y-2">
+                <Label>Store Logo</Label>
+                <ImageUpload
+                  label="Upload Logo"
+                  value={formData.logo_url}
+                  onChange={(url) =>
+                    setFormData({ ...formData, logo_url: url })
+                  }
+                />
+                {formData.logo_url && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500 mb-2">Current Logo:</p>
+                    <img
+                      src={formData.logo_url}
+                      alt="Store Logo"
+                      className="w-32 h-32 object-cover rounded-lg border"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* BANNER */}
+              <div className="space-y-2">
+                <Label>Store Banner</Label>
+                <ImageUpload
+                  label="Upload Banner"
+                  value={formData.banner_url}
+                  onChange={(url) =>
+                    setFormData({ ...formData, banner_url: url })
+                  }
+                />
+                {formData.banner_url && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500 mb-2">Current Banner:</p>
+                    <img
+                      src={formData.banner_url}
+                      alt="Store Banner"
+                      className="w-full h-48 object-cover rounded-lg border"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Payment Methods */}
+              <div className="space-y-4">
+                <Label>Payment Methods</Label>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="enable_bank_transfer"
+                    checked={formData.enable_bank_transfer}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, enable_bank_transfer: checked as boolean })
+                    }
+                  />
+                  <Label htmlFor="enable_bank_transfer">Enable Bank Transfer</Label>
                 </div>
-                Store Information
-              </CardTitle>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="enable_paystack"
+                    checked={formData.enable_paystack}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, enable_paystack: checked as boolean })
+                    }
+                  />
+                  <Label htmlFor="enable_paystack">Enable Paystack</Label>
+                </div>
+
+                {errors.enable_paystack && errors.enable_bank_transfer && (
+                  <p className="text-red-500 text-sm">{errors.enable_paystack}</p>
+                )}
+              </div>
+
+              {/* Bank Transfer Details */}
+              {formData.enable_bank_transfer && (
+                <div className="space-y-4 border p-4 rounded-lg">
+                  <Label className="text-lg">Bank Transfer Details</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="bank_account_name">Account Name</Label>
+                    <Input
+                      id="bank_account_name"
+                      value={formData.bank_account_name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, bank_account_name: e.target.value })
+                      }
+                      placeholder="John Doe"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bank_name">Bank Name</Label>
+                    <Input
+                      id="bank_name"
+                      value={formData.bank_name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, bank_name: e.target.value })
+                      }
+                      placeholder="First Bank"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bank_account_number">Account Number</Label>
+                    <Input
+                      id="bank_account_number"
+                      value={formData.bank_account_number}
+                      onChange={(e) =>
+                        setFormData({ ...formData, bank_account_number: e.target.value })
+                      }
+                      placeholder="1234567890"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Paystack Details */}
+              {formData.enable_paystack && (
+                <div className="space-y-2">
+                  <Label htmlFor="paystack_public_key">Paystack Public Key</Label>
+                  <Input
+                    id="paystack_public_key"
+                    value={formData.paystack_public_key}
+                    onChange={(e) =>
+                      setFormData({ ...formData, paystack_public_key: e.target.value })
+                    }
+                    placeholder="pk_live_xxxxxxxx"
+                  />
+                </div>
+              )}
+
+              <Button type="submit" disabled={isSaving} className="w-full">
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {shop && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Your Store URL</CardTitle>
               <CardDescription>
-                Set up your store details and branding
+                Share this link with your customers
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2" data-tour="store-name">
-                  <Label htmlFor="shop_name">Store Name *</Label>
-                  <Input
-                    id="shop_name"
-                    value={formData.shop_name}
-                    onChange={(e) => setFormData({ ...formData, shop_name: e.target.value })}
-                    placeholder="My Awesome Store"
-                    className={`border-primary/20 focus:border-primary ${errors.shop_name ? "border-destructive" : ""}`}
-                  />
-                  {errors.shop_name && (
-                    <p className="text-sm text-destructive">{errors.shop_name}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2" data-tour="store-url">
-                  <Label htmlFor="shop_slug">Store URL *</Label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">steersolo.com/shop/</span>
-                    <Input
-                      id="shop_slug"
-                      value={formData.shop_slug}
-                      onChange={(e) => setFormData({ ...formData, shop_slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
-                      placeholder="my-store"
-                      className={`border-primary/20 focus:border-primary ${errors.shop_slug ? "border-destructive" : ""}`}
-                    />
-                  </div>
-                  {errors.shop_slug && (
-                    <p className="text-sm text-destructive">{errors.shop_slug}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Tell customers about your store..."
-                    rows={4}
-                    className={`border-primary/20 focus:border-primary ${errors.description ? "border-destructive" : ""}`}
-                  />
-                  {errors.description && (
-                    <p className="text-sm text-destructive">{errors.description}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    {formData.description.length}/500 characters
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2" data-tour="store-logo">
-                    <ImageUpload
-                      label="Store Logo"
-                      value={formData.logo_url}
-                      onChange={(url) => setFormData({ ...formData, logo_url: url })}
-                      bucket="shop-images"
-                    />
-                  </div>
-
-                  <div className="space-y-2" data-tour="store-banner">
-                    <ImageUpload
-                      label="Store Banner"
-                      value={formData.banner_url}
-                      onChange={(url) => setFormData({ ...formData, banner_url: url })}
-                      bucket="shop-images"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2" data-tour="whatsapp-number">
-                  <Label htmlFor="whatsapp_number">WhatsApp Number *</Label>
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5 text-green-500" />
-                    <Input
-                      id="whatsapp_number"
-                      value={formData.whatsapp_number}
-                      onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
-                      placeholder="+234 xxx xxx xxxx"
-                      className={`border-primary/20 focus:border-primary ${errors.whatsapp_number ? "border-destructive" : ""}`}
-                    />
-                  </div>
-                  {errors.whatsapp_number && (
-                    <p className="text-sm text-destructive">{errors.whatsapp_number}</p>
-                  )}
-                </div>
-
-                {/* Payment Methods */}
-                <div className="space-y-4" data-tour="payment-methods">
-                  <Label className="text-lg font-heading">Payment Methods</Label>
-                  
-                  <div className="space-y-4">
-                    <div className="flex items-start space-x-3 p-4 border border-primary/20 rounded-lg">
-                      <Checkbox
-                        id="enable_bank_transfer"
-                        checked={formData.enable_bank_transfer}
-                        onCheckedChange={(checked) => setFormData({ ...formData, enable_bank_transfer: !!checked })}
-                      />
-                      <div className="flex-1">
-                        <Label htmlFor="enable_bank_transfer" className="font-semibold cursor-pointer">
-                          Bank Transfer
-                        </Label>
-                        <p className="text-sm text-muted-foreground">Accept direct bank transfers</p>
-                        
-                        {formData.enable_bank_transfer && (
-                          <div className="mt-4 space-y-3">
-                            <Input
-                              placeholder="Bank Name"
-                              value={formData.bank_name}
-                              onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-                              className="border-primary/20"
-                            />
-                            <Input
-                              placeholder="Account Name"
-                              value={formData.bank_account_name}
-                              onChange={(e) => setFormData({ ...formData, bank_account_name: e.target.value })}
-                              className="border-primary/20"
-                            />
-                            <Input
-                              placeholder="Account Number"
-                              value={formData.bank_account_number}
-                              onChange={(e) => setFormData({ ...formData, bank_account_number: e.target.value })}
-                              className="border-primary/20"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-start space-x-3 p-4 border border-primary/20 rounded-lg">
-                      <Checkbox
-                        id="enable_paystack"
-                        checked={formData.enable_paystack}
-                        onCheckedChange={(checked) => setFormData({ ...formData, enable_paystack: !!checked })}
-                      />
-                      <div className="flex-1">
-                        <Label htmlFor="enable_paystack" className="font-semibold cursor-pointer">
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="w-4 h-4 text-blue-500" />
-                            Paystack
-                          </div>
-                        </Label>
-                        <p className="text-sm text-muted-foreground">Accept card payments via Paystack</p>
-                        
-                        {formData.enable_paystack && (
-                          <div className="mt-4">
-                            <Input
-                              placeholder="Paystack Public Key (pk_live_...)"
-                              value={formData.paystack_public_key}
-                              onChange={(e) => setFormData({ ...formData, paystack_public_key: e.target.value })}
-                              className="border-primary/20"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Get your public key from your Paystack dashboard
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 pt-4">
-                  <Button
-                    type="submit"
-                    className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90"
-                    disabled={isSaving}
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      shop ? "Update Store" : "Create Store"
-                    )}
-                  </Button>
-                  
-                  {shop && (
-                    <Button
-                      type="button"
-                      variant={shop.is_active ? "destructive" : "default"}
-                      onClick={handleActivateStore}
-                    >
-                      {shop.is_active ? "Deactivate" : "Activate"}
-                    </Button>
-                  )}
-                </div>
-              </form>
+            <CardContent>
+              <div className="flex items-center space-x-2">
+                <Input
+                  value={`${window.location.origin}/shop/${formData.shop_slug}`}
+                  readOnly
+                  className="font-mono"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      `${window.location.origin}/shop/${formData.shop_slug}`
+                    );
+                    setIsCopied(true);
+                    setTimeout(() => setIsCopied(false), 2000);
+                    toast({
+                      title: "Copied!",
+                      description: "Store URL copied to clipboard",
+                    });
+                  }}
+                >
+                  {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
             </CardContent>
           </Card>
-
-          {/* Share Store Card */}
-          {shop && shop.is_active && (
-            <Card className="mt-6 border-primary/10 shadow-lg" data-tour="store-sharing">
-              <CardHeader className="border-b border-border/50">
-                <CardTitle className="flex items-center gap-2 font-heading">
-                  <div className="w-10 h-10 bg-gradient-to-br from-accent/20 to-primary/20 rounded-xl flex items-center justify-center">
-                    <Share2 className="w-5 h-5 text-accent" />
-                  </div>
-                  Share Your Store
-                </CardTitle>
-                <CardDescription>
-                  Get your store URL and share it with customers
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-6">
-                {/* Store URL */}
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={getStoreUrl()}
-                    readOnly
-                    className="flex-1 bg-muted border-primary/20"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handleCopyUrl}
-                    className="border-primary/30 hover:bg-primary/10"
-                  >
-                    {isCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => window.open(getStoreUrl(), "_blank")}
-                    className="border-primary/30 hover:bg-primary/10"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                {/* Social Share Buttons */}
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={handleShareToWhatsApp}
-                    className="border-green-500/30 text-green-600 hover:bg-green-500/10"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    WhatsApp
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleShareToTwitter}
-                    className="border-blue-400/30 text-blue-500 hover:bg-blue-500/10"
-                  >
-                    Share on X
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleShareToFacebook}
-                    className="border-blue-600/30 text-blue-600 hover:bg-blue-600/10"
-                  >
-                    Facebook
-                  </Button>
-                </div>
-
-                {/* QR Code / Flyer Tabs */}
-                <Tabs defaultValue="qr" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 bg-muted">
-                    <TabsTrigger value="qr">
-                      <QrCode className="w-4 h-4 mr-2" />
-                      QR Code
-                    </TabsTrigger>
-                    <TabsTrigger value="flyer">
-                      <Download className="w-4 h-4 mr-2" />
-                      Store Flyer
-                    </TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="qr" className="mt-4">
-                    <div className="flex flex-col items-center gap-4 p-6 bg-card rounded-lg border border-primary/10">
-                      <QRCodeSVG
-                        id="store-qr-code"
-                        value={getStoreUrl()}
-                        size={200}
-                        level="H"
-                        includeMargin
-                        className="rounded-lg"
-                      />
-                      <Button
-                        onClick={handleDownloadQRCode}
-                        className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download QR Code
-                      </Button>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="flyer" className="mt-4">
-                    <StoreFlyerTemplate
-                      shop={shop}
-                      products={products.slice(0, 4)}
-                    />
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        )}
       </div>
 
-      {/* Guided Tour */}
       <Joyride
         steps={myStoreTourSteps}
         run={isRunning}
+        callback={handleTourCallback}
+        tooltipComponent={TourTooltip}
         continuous
         showSkipButton
         showProgress
-        callback={handleTourCallback}
-        tooltipComponent={TourTooltip}
-        styles={{
-          options: {
-            zIndex: 10000,
-            arrowColor: 'hsl(var(--card))',
-          }
-        }}
       />
     </div>
   );

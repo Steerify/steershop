@@ -138,14 +138,7 @@ const Auth = () => {
           description: "Successfully logged in",
         });
 
-        // Check for redirect after login (from token expiration)
-        const redirectPath = sessionStorage.getItem('redirectAfterLogin');
-        if (redirectPath) {
-          sessionStorage.removeItem('redirectAfterLogin');
-          navigate(redirectPath);
-        } else {
-          navigate(getDashboardPath(authData.user, false)); // Email login flow
-        }
+        navigate(getDashboardPath(authData.user, false)); // Email login flow
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Invalid credentials. Please check your email and password.";
@@ -197,14 +190,7 @@ const Auth = () => {
                 title: "Welcome back!",
                 description: "Successfully logged in with Google",
               });
-              // Check for redirect after login (from token expiration)
-              const redirectPath = sessionStorage.getItem('redirectAfterLogin');
-              if (redirectPath) {
-                sessionStorage.removeItem('redirectAfterLogin');
-                navigate(redirectPath);
-              } else {
-                navigate(getDashboardPath(authData.user, false)); // Explicitly NOT signup
-              }
+              navigate(getDashboardPath(authData.user, false)); // Explicitly NOT signup
             }
           } catch (error: any) {
              const statusCode = error.response?.status;
@@ -290,17 +276,16 @@ const Auth = () => {
   // Use useLayoutEffect for DOM-related operations to avoid flashes
   useLayoutEffect(() => {
     const renderGoogleButtons = () => {
-  if (!window.google) return;
+      if (!window.google) return;
 
+<<<<<<< HEAD
   const renderButton = (elementId: string) => {
     const element = document.getElementById(elementId);
     if (element && element.innerHTML === "") {
       // Get the actual width of the parent container
       const containerWidth = element.parentElement?.clientWidth || 350;
-      
       // Set a responsive width based on container
       const responsiveWidth = Math.min(containerWidth, 400); // Max 400px for readability
-      
       // Determine theme based on current theme
       const isDarkMode = document.documentElement.classList.contains('dark');
       
@@ -314,12 +299,9 @@ const Auth = () => {
     }
   };
 
-  // Use a small delay to ensure DOM is ready
-  setTimeout(() => {
-    renderButton("google-signin-btn-login");
-    renderButton("google-signin-btn-signup");
-  }, 100);
-};
+      renderButton("google-signin-btn-login");
+      renderButton("google-signin-btn-signup");
+    };
 
     // Small delay to ensure tabs are rendered if switching
     const timer = setTimeout(renderGoogleButtons, 500);
