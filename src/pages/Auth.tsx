@@ -278,7 +278,6 @@ const Auth = () => {
     const renderGoogleButtons = () => {
       if (!window.google) return;
 
-<<<<<<< HEAD
   const renderButton = (elementId: string) => {
     const element = document.getElementById(elementId);
     if (element && element.innerHTML === "") {
