@@ -438,23 +438,23 @@ const MyStore = () => {
                   </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2" data-tour="store-logo">
-                      <ImageUpload
-                        label="Store Logo"
-                        value={formData.logo_url}
-                        onChange={(url) => setFormData({ ...formData, logo_url: url })}
-                      />
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2" data-tour="store-logo">
+                    <ImageUpload
+                      label="Store Logo"
+                      value={formData.logo_url}
+                      onChange={(url) => setFormData({ ...formData, logo_url: url })}
+                      bucket="shop-images"
+                    />
+                  </div>
 
-                    <div className="space-y-2" data-tour="store-banner">
-                      <ImageUpload
-                        label="Store Banner"
-                        value={formData.banner_url}
-                        onChange={(url) => setFormData({ ...formData, banner_url: url })}
-                      />
-                    </div>
+                  <div className="space-y-2" data-tour="store-banner">
+                    <ImageUpload
+                      label="Store Banner"
+                      value={formData.banner_url}
+                      onChange={(url) => setFormData({ ...formData, banner_url: url })}
+                      bucket="shop-images"
+                    />
                   </div>
                 </div>
 

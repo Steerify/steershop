@@ -2,9 +2,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
-import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Upload, X, Loader2 } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription } from './ui/alert';
 
 interface ImageUploadProps {
@@ -14,6 +13,7 @@ interface ImageUploadProps {
   className?: string;
   autoUpload?: boolean;
   onFileSelect?: (file: File | null) => void;
+  bucket?: 'shop-images' | 'product-images';
 }
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -23,11 +23,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   className = '',
   autoUpload = true,
   onFileSelect,
+  bucket = 'product-images',
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading, progress, error: uploadError, reset } = useFileUpload();
   const [localError, setLocalError] = useState<string | null>(null);
-  const { user } = useAuth();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -56,10 +56,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       setPreviewUrl(objectUrl);
 
       if (autoUpload) {
-        const url = await upload(file, user?.id);
+        const url = await upload(file, bucket);
         if (url) {
           onChange(url);
-          // Only clear preview if upload succeeded and we have a new remote URL
           setPreviewUrl(null); 
         }
       } else {
