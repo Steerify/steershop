@@ -3,16 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import shopService from "@/services/shop.service";
 import orderService from "@/services/order.service";
 import offerService from "@/services/offer.service";
 import { useToast } from "@/hooks/use-toast";
 import { Store, Package, ShoppingCart, LogOut, Clock, CheckCircle, AlertCircle, ArrowRight, TrendingUp, DollarSign, CalendarCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { format, eachDayOfInterval, subMonths } from "date-fns";
-import { calculateSubscriptionStatus } from "@/utils/subscription";
+import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
 import Joyride, { CallBackProps, STATUS } from "react-joyride";
@@ -61,7 +60,39 @@ const Dashboard = () => {
       setIsLoading(true);
       if (!user) return;
 
-      setProfile(user);
+      // Fetch profile from Supabase for accurate subscription data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        setProfile({ full_name: user.email?.split('@')[0] || 'User' });
+      } else {
+        setProfile(profileData);
+        
+        // Calculate subscription status from profile
+        if (profileData.subscription_expires_at) {
+          const expiresAt = new Date(profileData.subscription_expires_at);
+          const now = new Date();
+          const daysLeft = differenceInDays(expiresAt, now);
+          
+          setDaysRemaining(Math.max(0, daysLeft));
+          
+          if (profileData.is_subscribed && expiresAt > now) {
+            setSubscriptionStatus('active');
+          } else if (!profileData.is_subscribed && expiresAt > now) {
+            setSubscriptionStatus('trial');
+          } else {
+            setSubscriptionStatus('expired');
+          }
+        } else {
+          setSubscriptionStatus('trial');
+          setDaysRemaining(7);
+        }
+      }
 
       // Fetch real shop data
       const shopResponse = await shopService.getShopByOwner(user.id);
@@ -72,11 +103,6 @@ const Dashboard = () => {
         // Fetch real orders to calculate analytics
         const ordersResponse = await orderService.getOrders({ shopId: primaryShop.id });
         const allOrders = ordersResponse.data || [];
-        
-        // Calculate trial status (simplified for now, backend should provide this ideally)
-        const subscriptionInfo = calculateSubscriptionStatus(user);
-        setDaysRemaining(subscriptionInfo.daysRemaining);
-        setSubscriptionStatus(subscriptionInfo.status);
 
         // Generate chart data from real orders
         const last7Days = eachDayOfInterval({

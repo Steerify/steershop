@@ -480,11 +480,11 @@ const CompetitorComparisonSection = () => (
             <CardContent className="space-y-4">
               <div className="p-3 bg-red-50 rounded-lg border border-red-100">
                 <div className="text-sm text-red-600 font-medium mb-2">The Problem</div>
-                <div className="text-foreground">{item.problem}</div>
+                <div className="text-gray-800">{item.problem}</div>
               </div>
               <div className="p-3 bg-green-50 rounded-lg border border-green-100">
                 <div className="text-sm text-green-600 font-medium mb-2">SteerSolo Solution</div>
-                <div className="text-foreground">{item.solution}</div>
+                <div className="text-gray-800">{item.solution}</div>
               </div>
             </CardContent>
           </Card>
@@ -538,11 +538,11 @@ const TransformationSection = () => (
               <div className="space-y-4 mb-6">
                 <div className="p-3 bg-red-50 rounded-lg border border-red-100">
                   <div className="text-sm text-red-600 font-medium mb-1">Before SteerSolo</div>
-                  <div className="font-medium">{story.before}</div>
+                  <div className="font-medium text-gray-800">{story.before}</div>
                 </div>
                 <div className="p-3 bg-green-50 rounded-lg border border-green-100">
                   <div className="text-sm text-green-600 font-medium mb-1">After SteerSolo</div>
-                  <div className="font-medium">{story.after}</div>
+                  <div className="font-medium text-gray-800">{story.after}</div>
                 </div>
               </div>
               

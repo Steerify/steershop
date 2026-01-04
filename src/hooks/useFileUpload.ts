@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { uploadService } from '@/services/upload.service';
 
 interface UseFileUploadReturn {
-  upload: (file: File, userId?: string) => Promise<string | null>;
+  upload: (file: File, bucket?: 'shop-images' | 'product-images') => Promise<string | null>;
   isUploading: boolean;
   progress: number;
   error: string | null;
@@ -21,23 +21,23 @@ export const useFileUpload = (): UseFileUploadReturn => {
     setError(null);
   }, []);
 
-  const upload = useCallback(async (file: File, userId?: string): Promise<string | null> => {
+  const upload = useCallback(async (
+    file: File, 
+    bucket: 'shop-images' | 'product-images' = 'product-images'
+  ): Promise<string | null> => {
     setIsUploading(true);
     setProgress(0);
     setError(null);
 
     try {
-      const response = await uploadService.uploadImage(file, userId, (p) => {
+      const response = await uploadService.uploadImage(file, bucket, (p) => {
         setProgress(p);
       });
       setIsUploading(false);
       return response.url;
     } catch (err: any) {
       setIsUploading(false);
-      
-      // Error is already handled by uploadService calling handleApiError
-      // We just capture the message for local UI display if needed
-      const errorMessage = err.response?.data?.message || err.message || 'Upload failed';
+      const errorMessage = err.message || 'Upload failed';
       setError(errorMessage);
       return null;
     }
