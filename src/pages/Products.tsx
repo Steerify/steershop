@@ -507,9 +507,10 @@ const Products = () => {
 
             <div className="space-y-2">
               <ImageUpload
-                label="Product Image"
+                label={formData.type === 'service' ? 'Service Image' : 'Product Image'}
                 value={imageUrl}
                 onChange={(url) => setImageUrl(url)}
+                folder="product-images"
               />
             </div>
 
