@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { uploadService } from '@/services/upload.service';
 
 interface UseFileUploadReturn {
-  upload: (file: File, bucket?: 'shop-images' | 'product-images') => Promise<string | null>;
+  upload: (file: File, folder?: 'shop-images' | 'product-images') => Promise<string | null>;
   isUploading: boolean;
   progress: number;
   error: string | null;
@@ -23,14 +23,14 @@ export const useFileUpload = (): UseFileUploadReturn => {
 
   const upload = useCallback(async (
     file: File, 
-    bucket: 'shop-images' | 'product-images' = 'product-images'
+    folder: 'shop-images' | 'product-images' = 'product-images'
   ): Promise<string | null> => {
     setIsUploading(true);
     setProgress(0);
     setError(null);
 
     try {
-      const response = await uploadService.uploadImage(file, bucket, (p) => {
+      const response = await uploadService.uploadImage(file, folder, (p) => {
         setProgress(p);
       });
       setIsUploading(false);

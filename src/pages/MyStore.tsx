@@ -336,6 +336,7 @@ const MyStore = () => {
                   onChange={(url) =>
                     setFormData({ ...formData, logo_url: url })
                   }
+                  folder="shop-images"
                 />
                 {formData.logo_url && (
                   <div className="mt-2">
@@ -358,6 +359,7 @@ const MyStore = () => {
                   onChange={(url) =>
                     setFormData({ ...formData, banner_url: url })
                   }
+                  folder="shop-images"
                 />
                 {formData.banner_url && (
                   <div className="mt-2">

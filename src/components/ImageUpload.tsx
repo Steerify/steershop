@@ -13,7 +13,7 @@ interface ImageUploadProps {
   className?: string;
   autoUpload?: boolean;
   onFileSelect?: (file: File | null) => void;
-  bucket?: 'shop-images' | 'product-images';
+  folder?: 'shop-images' | 'product-images';
 }
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -23,7 +23,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   className = '',
   autoUpload = true,
   onFileSelect,
-  bucket = 'product-images',
+  folder = 'product-images',
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading, progress, error: uploadError, reset } = useFileUpload();
@@ -56,7 +56,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       setPreviewUrl(objectUrl);
 
       if (autoUpload) {
-        const url = await upload(file, bucket);
+        const url = await upload(file, folder);
         if (url) {
           onChange(url);
           setPreviewUrl(null); 
