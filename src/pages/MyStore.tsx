@@ -42,7 +42,7 @@ import { useTour } from "@/hooks/useTour";
 import { TourTooltip } from "@/components/tours/TourTooltip";
 import { myStoreTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
-import { PaystackSubaccountSetup } from "@/components/PaystackSubaccountSetup";
+
 
 const shopSchema = z
   .object({
@@ -460,17 +460,6 @@ const MyStore = () => {
                     />
                   </div>
 
-                  {/* Direct Payments Setup */}
-                  {shop && (
-                    <PaystackSubaccountSetup
-                      shopId={shop.id}
-                      shopName={formData.shop_name}
-                      existingSubaccountCode={shop.paystack_subaccount_code}
-                      existingBankCode={shop.settlement_bank_code}
-                      existingAccountNumber={shop.settlement_account_number}
-                      onSuccess={loadShop}
-                    />
-                  )}
                 </div>
               )}
 

@@ -49,6 +49,7 @@ const Onboarding = lazy(() => import("./pages/entrepreneur/Onboarding"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Pricing = lazy(() => import("./pages/Pricing"));
+const Subscription = lazy(() => import("./pages/Subscription"));
 const SetupService = lazy(() => import("./pages/SetupService"));
 
 const queryClient = new QueryClient();
@@ -114,6 +115,11 @@ const App = () => (
             <Route path="/bookings" element={
               <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
                 <Bookings />
+              </ProtectedRoute>
+            } />
+            <Route path="/subscription" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <Subscription />
               </ProtectedRoute>
             } />
             
