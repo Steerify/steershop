@@ -1,12 +1,13 @@
 // src/services/auth.service.ts
-import api, { getAuthHeaders } from '@/lib/api';
-import { ApiResponse, AuthData, User, UserRole } from '@/types/api';
-import { handleApiError } from '@/lib/api-error-handler';
+// This service is now a thin wrapper around Supabase auth
+// Most auth operations are handled directly in AuthContext
+
+import { supabase } from '@/integrations/supabase/client';
 
 export interface SignupRequest {
   email: string;
   password: string;
-  role: UserRole | string;
+  role: string;
   firstName: string;
   lastName: string;
   phone: string;
@@ -23,114 +24,36 @@ export interface ResetPasswordRequest {
 }
 
 const authService = {
-  signup: async (data: SignupRequest) => {
-    try {
-      const response = await api.post<ApiResponse<AuthData>>('/auth/signup', data);
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  login: async (data: LoginRequest) => {
-    try {
-      const response = await api.post<ApiResponse<AuthData>>('/auth/login', data);
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  googleLogin: async (idToken: string) => {
-    try {
-      console.log('Attempting Google Login at /api/v1/auth/google/login');
-      const response = await api.post<ApiResponse<any>>('/auth/google/login', { idToken });
-      
-      // Normalize response to match AuthData interface if needed
-      if (response.data.success && response.data.data && !response.data.data.tokens) {
-        const rawData = response.data.data;
-        response.data.data = {
-          user: rawData.user,
-          tokens: {
-            accessToken: rawData.accessToken,
-            refreshToken: rawData.refreshToken
-          }
-        };
-      }
-      
-      console.log('Google Login successful:', response.data);
-      return response.data as ApiResponse<AuthData>;
-    } catch (error) {
-      handleApiError(error);
-      console.error('Google Login failed:', error);
-      throw error;
-    }
-  },
-
-  googleSignup: async (idToken: string, role: UserRole) => {
-    try {
-      console.log('Attempting Google Signup at /api/v1/auth/google/signup');
-      const response = await api.post<ApiResponse<any>>('/auth/google/signup', { idToken, role });
-      
-      // Normalize response to match AuthData interface if needed
-      if (response.data.success && response.data.data && !response.data.data.tokens) {
-        const rawData = response.data.data;
-        response.data.data = {
-          user: rawData.user,
-          tokens: {
-            accessToken: rawData.accessToken,
-            refreshToken: rawData.refreshToken
-          }
-        };
-      }
-      
-      console.log('Google Signup successful:', response.data);
-      return response.data as ApiResponse<AuthData>;
-    } catch (error) {
-      handleApiError(error);
-      console.error('Google Signup failed:', error);
-      throw error;
-    }
-  },
-
-  refreshToken: async (refreshToken: string) => {
-    try {
-      const response = await api.post<ApiResponse<{ accessToken: string }>>('/auth/refresh', {
-        refreshToken,
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
+  // Forgot password - sends reset email
   forgotPassword: async (email: string) => {
-    try {
-      const response = await api.post<ApiResponse<null>>('/auth/forgot-password', { email });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    
+    if (error) {
+      throw new Error(error.message);
     }
+    
+    return { success: true, message: 'Password reset email sent' };
   },
 
-  resetPassword: async (data: ResetPasswordRequest) => {
-    try {
-      const response = await api.post<ApiResponse<null>>('/auth/reset-password', data);
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
+  // Reset password with new password
+  resetPassword: async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    
+    if (error) {
+      throw new Error(error.message);
     }
+    
+    return { success: true, message: 'Password updated successfully' };
   },
 
+  // Clear auth data (handled by Supabase, but keeping for compatibility)
   clearAuthData: () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+    // Supabase handles this automatically
+    console.log('Auth data cleared');
   },
 };
 

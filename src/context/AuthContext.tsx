@@ -1,146 +1,228 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import authService, { LoginRequest, SignupRequest } from '@/services/auth.service';
-import { User, AuthData, UserRole } from '@/types/api';
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
+import { UserRole } from '@/types/api';
+
+export interface AppUser {
+  id: string;
+  email: string;
+  role: UserRole;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  onboardingCompleted?: boolean;
+}
 
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
+  session: Session | null;
   isLoading: boolean;
-  signIn: (data: LoginRequest) => Promise<AuthData | undefined>;
-  signUp: (data: SignupRequest) => Promise<AuthData | undefined>;
-  googleLogin: (credential: string) => Promise<AuthData | undefined>;
-  googleSignup: (credential: string, role: UserRole) => Promise<AuthData | undefined>;
-  setGoogleCallback: (callback: (response: any) => void) => void;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (data: SignUpData) => Promise<{ error: string | null; user?: AppUser }>;
+  signInWithGoogle: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
-  setAuth: (data: AuthData) => void;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
+}
+
+export interface SignUpData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  role: UserRole;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Track if Google is initialized to prevent multiple initializations
-let isGoogleInitialized = false;
-// Global ref to the current handleGoogleResponse to allow context-based routing/toasts
-let globalGoogleCallback: ((response: any) => void) | null = null;
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error('Failed to parse stored user', e);
+  // Convert Supabase user to AppUser by fetching profile
+  const fetchUserProfile = async (supabaseUser: User): Promise<AppUser | null> => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', supabaseUser.id)
+        .single();
+
+      if (error || !profile) {
+        console.error('Error fetching profile:', error);
+        // Return basic user info if profile fetch fails
+        return {
+          id: supabaseUser.id,
+          email: supabaseUser.email || '',
+          role: UserRole.CUSTOMER,
+          firstName: supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
+          lastName: supabaseUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+          onboardingCompleted: false,
+        };
       }
+
+      // Map role string to UserRole enum
+      let role = UserRole.CUSTOMER;
+      if (profile.role === 'shop_owner') {
+        role = UserRole.ENTREPRENEUR;
+      } else if (profile.role === 'admin') {
+        role = UserRole.ADMIN;
+      }
+
+      // Check if shop owner has completed onboarding by checking if they have a shop
+      let onboardingCompleted = false;
+      if (role === UserRole.ENTREPRENEUR) {
+        const { data: shops } = await supabase
+          .from('shops')
+          .select('id')
+          .eq('owner_id', profile.id)
+          .limit(1);
+        onboardingCompleted = (shops && shops.length > 0) || false;
+      }
+
+      return {
+        id: profile.id,
+        email: profile.email || supabaseUser.email || '',
+        role,
+        firstName: profile.full_name?.split(' ')[0] || '',
+        lastName: profile.full_name?.split(' ').slice(1).join(' ') || '',
+        phone: profile.phone || '',
+        onboardingCompleted,
+      };
+    } catch (err) {
+      console.error('Error in fetchUserProfile:', err);
+      return null;
     }
-    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        console.log('Auth state changed:', event);
+        setSession(currentSession);
+        
+        if (currentSession?.user) {
+          // Defer profile fetch with setTimeout to avoid deadlock
+          setTimeout(() => {
+            fetchUserProfile(currentSession.user).then(setUser);
+          }, 0);
+        } else {
+          setUser(null);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+      setSession(existingSession);
+      if (existingSession?.user) {
+        fetchUserProfile(existingSession.user).then((appUser) => {
+          setUser(appUser);
+          setIsLoading(false);
+        });
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Initialize Google SDK only once
-  useEffect(() => {
-    // Only run if not already initialized
-    if (isGoogleInitialized) return;
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        return { error: error.message };
+      }
+      return { error: null };
+    } catch (err: any) {
+      return { error: err.message || 'An error occurred during sign in' };
+    }
+  };
 
-    const initializeGoogle = () => {
-      if (!window.google || isGoogleInitialized) return;
-
-      window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        callback: (response: any) => {
-          if (globalGoogleCallback) {
-            globalGoogleCallback(response);
-          }
-        },
-        ux_mode: "popup",
-        auto_select: false,
-      });
+  const signUp = async (data: SignUpData) => {
+    try {
+      // Map frontend role to database role
+      const dbRole = data.role === UserRole.ENTREPRENEUR ? 'shop_owner' : 'customer';
       
-      isGoogleInitialized = true;
-    };
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: `${data.firstName} ${data.lastName}`,
+            phone: data.phone,
+            role: dbRole,
+          }
+        }
+      });
 
-    if (window.google) {
-      initializeGoogle();
-    } else {
-      const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-      if (script) {
-        script.addEventListener('load', initializeGoogle);
-        return () => script.removeEventListener('load', initializeGoogle);
+      if (error) {
+        return { error: error.message };
       }
-    }
-  }, []);
 
-  const setAuth = (data: AuthData) => {
-    const { user, tokens } = data;
-    localStorage.setItem('accessToken', tokens.accessToken);
-    localStorage.setItem('refreshToken', tokens.refreshToken);
-    localStorage.setItem('user', JSON.stringify(user));
-    setUser(user);
+      if (authData.user) {
+        const appUser = await fetchUserProfile(authData.user);
+        return { error: null, user: appUser || undefined };
+      }
+
+      return { error: null };
+    } catch (err: any) {
+      return { error: err.message || 'An error occurred during sign up' };
+    }
   };
 
-  const signIn = async (data: LoginRequest) => {
-    setIsLoading(true);
+  const signInWithGoogle = async () => {
     try {
-      const response = await authService.login(data);
-      if (response.success) {
-        setAuth(response.data);
-        return response.data;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+      if (error) {
+        return { error: error.message };
       }
-    } finally {
-      setIsLoading(false);
+      return { error: null };
+    } catch (err: any) {
+      return { error: err.message || 'An error occurred during Google sign in' };
     }
-  };
-
-  const signUp = async (data: SignupRequest) => {
-    setIsLoading(true);
-    try {
-      const response = await authService.signup(data);
-      if (response.success) {
-        setAuth(response.data);
-        return response.data;
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const googleLogin = async (credential: string) => {
-    setIsLoading(true);
-    try {
-      const response = await authService.googleLogin(credential);
-      if (response.success) {
-        setAuth(response.data);
-        return response.data;
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const googleSignup = async (credential: string, role: UserRole) => {
-    setIsLoading(true);
-    try {
-      const response = await authService.googleSignup(credential, role);
-      if (response.success) {
-        setAuth(response.data);
-        return response.data;
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const setGoogleCallback = (callback: (response: any) => void) => {
-    globalGoogleCallback = callback;
   };
 
   const signOut = async () => {
-    authService.clearAuthData();
+    await supabase.auth.signOut();
     setUser(null);
+    setSession(null);
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        return { error: error.message };
+      }
+      return { error: null };
+    } catch (err: any) {
+      return { error: err.message || 'An error occurred' };
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signUp, googleLogin, googleSignup, setGoogleCallback, signOut, setAuth }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session,
+      isLoading, 
+      signIn, 
+      signUp, 
+      signInWithGoogle,
+      signOut,
+      resetPassword,
+    }}>
       {children}
     </AuthContext.Provider>
   );

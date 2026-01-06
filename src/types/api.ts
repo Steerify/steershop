@@ -56,17 +56,17 @@ export interface AuthData {
 
 export interface Shop {
   id: string;
-  name: string;
-  slug: string;
+  name?: string;
+  slug?: string;
+  shop_name?: string;
+  shop_slug?: string;
   description?: string;
   phone?: string;
   whatsapp?: string;
+  whatsapp_number?: string;
   address?: string;
   city?: string;
   state?: string;
-  shop_name?: string;
-  shop_slug?: string;
-  whatsapp_number?: string;
   payment_method?: string;
   bank_name?: string;
   bank_account_name?: string;
@@ -75,6 +75,9 @@ export interface Shop {
   logo_url?: string;
   banner_url?: string;
   is_active?: boolean;
+  average_rating?: number;
+  total_reviews?: number;
+  owner_id?: string;
 }
 
 export interface ProductImage {

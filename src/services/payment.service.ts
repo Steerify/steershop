@@ -1,28 +1,39 @@
-import api, { getAuthHeaders } from '@/lib/api';
-import { ApiResponse, PaymentInitialization, PaymentVerification } from '@/types/api';
-import { handleApiError } from '@/lib/api-error-handler';
+import { supabase } from '@/integrations/supabase/client';
+import { PaymentInitialization, PaymentVerification } from '@/types/api';
 
 const paymentService = {
   initializePayment: async (orderId: string) => {
-    try {
-      const response = await api.post<ApiResponse<PaymentInitialization>>('/payments/initialize', { orderId }, {
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
+    const { data, error } = await supabase.functions.invoke('paystack-initialize', {
+      body: { orderId }
+    });
+
+    if (error) {
+      console.error('Payment initialization error:', error);
+      throw new Error(error.message);
     }
+
+    return {
+      success: true,
+      data: data as PaymentInitialization,
+      message: 'Payment initialized successfully'
+    };
   },
 
   verifyPayment: async (reference: string) => {
-    try {
-      const response = await api.get<ApiResponse<PaymentVerification>>(`/payments/verify/${reference}`);
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
+    const { data, error } = await supabase.functions.invoke('paystack-verify', {
+      body: { reference }
+    });
+
+    if (error) {
+      console.error('Payment verification error:', error);
+      throw new Error(error.message);
     }
+
+    return {
+      success: true,
+      data: data as PaymentVerification,
+      message: 'Payment verified successfully'
+    };
   },
 };
 

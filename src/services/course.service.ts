@@ -1,98 +1,175 @@
-import api, { getAuthHeaders } from '@/lib/api';
-import { ApiResponse, Course, Enrollment } from '@/types/api';
-import { handleApiError } from '@/lib/api-error-handler';
+import { supabase } from '@/integrations/supabase/client';
+import { Course, Enrollment } from '@/types/api';
 
 export const courseService = {
   getCourses: async () => {
-    try {
-      const response = await api.get<ApiResponse<Course[]>>('/courses');
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
+    const { data, error } = await supabase
+      .from('courses')
+      .select('*')
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Get courses error:', error);
+      throw new Error(error.message);
     }
+
+    return {
+      success: true,
+      data: data as Course[],
+      message: 'Courses fetched successfully'
+    };
   },
 
   getCourseById: async (id: string) => {
-    try {
-      const response = await api.get<ApiResponse<Course>>(`/courses/${id}`);
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
+    const { data, error } = await supabase
+      .from('courses')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Get course error:', error);
+      throw new Error(error.message);
     }
+
+    return {
+      success: true,
+      data: data as Course,
+      message: 'Course fetched successfully'
+    };
   },
 
   getEnrollments: async () => {
-    try {
-      const response = await api.get<ApiResponse<Enrollment[]>>('/courses/enrollments', {
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User not authenticated');
     }
+
+    const { data, error } = await supabase
+      .from('course_enrollments')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Get enrollments error:', error);
+      throw new Error(error.message);
+    }
+
+    return {
+      success: true,
+      data: data as Enrollment[],
+      message: 'Enrollments fetched successfully'
+    };
   },
 
   enrollInCourse: async (courseId: string) => {
-    try {
-      const response = await api.post<ApiResponse<Enrollment>>('/courses/enrollments', { courseId }, {
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User not authenticated');
     }
+
+    const { data, error } = await supabase
+      .from('course_enrollments')
+      .insert({
+        user_id: user.id,
+        course_id: courseId,
+        progress: 0,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Enroll error:', error);
+      throw new Error(error.message);
+    }
+
+    return {
+      success: true,
+      data: data as Enrollment,
+      message: 'Enrolled successfully'
+    };
   },
 
   markCourseComplete: async (enrollmentId: string) => {
-    try {
-      const response = await api.patch<ApiResponse<Enrollment>>(`/courses/enrollments/${enrollmentId}/complete`, {}, {
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
+    const { data, error } = await supabase
+      .from('course_enrollments')
+      .update({
+        progress: 100,
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', enrollmentId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Mark complete error:', error);
+      throw new Error(error.message);
     }
+
+    return {
+      success: true,
+      data: data as Enrollment,
+      message: 'Course completed successfully'
+    };
   },
 
   // Admin methods
   createCourse: async (data: Omit<Course, 'id'>) => {
-    try {
-      const response = await api.post<ApiResponse<Course>>('/courses', data, {
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
+    const { data: course, error } = await supabase
+      .from('courses')
+      .insert(data)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Create course error:', error);
+      throw new Error(error.message);
     }
+
+    return {
+      success: true,
+      data: course as Course,
+      message: 'Course created successfully'
+    };
   },
 
   updateCourse: async (id: string, data: Partial<Course>) => {
-    try {
-      const response = await api.patch<ApiResponse<Course>>(`/courses/${id}`, data, {
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
+    const { data: course, error } = await supabase
+      .from('courses')
+      .update(data)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Update course error:', error);
+      throw new Error(error.message);
     }
+
+    return {
+      success: true,
+      data: course as Course,
+      message: 'Course updated successfully'
+    };
   },
 
   deleteCourse: async (id: string) => {
-    try {
-      const response = await api.delete<ApiResponse<null>>(`/courses/${id}`, {
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
+    const { error } = await supabase
+      .from('courses')
+      .update({ is_active: false })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Delete course error:', error);
+      throw new Error(error.message);
     }
+
+    return {
+      success: true,
+      data: null,
+      message: 'Course deleted successfully'
+    };
   },
 };

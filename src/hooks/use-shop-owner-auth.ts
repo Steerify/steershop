@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { calculateSubscriptionStatus, canAccessShopFeatures } from "@/utils/subscription";
 import { UserRole } from "@/types/api";
 
@@ -21,37 +22,51 @@ export const useShopOwnerAuth = () => {
 
   const checkShopOwnerAuth = async () => {
     if (!user) {
-      navigate("/auth/login");
+      navigate("/auth?tab=login");
       return;
     }
 
-    // In a mock world, we assume the user has a profile and the correct role
-    // Since we hardcoded the user to be a shop_owner in AuthContext
-    const fullName = user.firstName && user.lastName 
-      ? `${user.firstName} ${user.lastName}` 
-      : user.email;
-    
-    const mockProfileData = {
-      id: user.id,
-      email: user.email,
-      full_name: fullName,
-      subscription_tier: 'trial',
-      trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    };
-
+    // Check role
     if (user.role !== UserRole.ENTREPRENEUR) {
-      navigate("/customer/dashboard");
+      navigate("/customer_dashboard");
       return;
     }
 
-    setProfile(mockProfileData);
-    
-    const subscriptionInfo = calculateSubscriptionStatus(mockProfileData);
-    setSubscriptionStatus(subscriptionInfo.status);
-    setDaysRemaining(subscriptionInfo.daysRemaining);
-    setCanAccess(canAccessShopFeatures(mockProfileData));
-    
-    setIsLoading(false);
+    try {
+      // Fetch profile from Supabase
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        // Use basic profile from user
+        const basicProfile = {
+          id: user.id,
+          email: user.email,
+          full_name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+          subscription_tier: 'trial',
+          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+        setProfile(basicProfile);
+        setSubscriptionStatus('trial');
+        setDaysRemaining(7);
+        setCanAccess(true);
+      } else {
+        setProfile(profileData);
+        
+        const subscriptionInfo = calculateSubscriptionStatus(profileData);
+        setSubscriptionStatus(subscriptionInfo.status);
+        setDaysRemaining(subscriptionInfo.daysRemaining);
+        setCanAccess(canAccessShopFeatures(profileData));
+      }
+    } catch (err) {
+      console.error('Error in checkShopOwnerAuth:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return { 
