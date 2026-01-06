@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      badges: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          icon_name: string
+          id: string
+          is_active: boolean | null
+          name: string
+          requirement_type: string
+          requirement_value: number
+          slug: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon_name: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          requirement_type: string
+          requirement_value: number
+          slug: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon_name?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          requirement_type?: string
+          requirement_value?: number
+          slug?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           booking_date: string
@@ -632,6 +671,8 @@ export type Database = {
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           subscription_expires_at: string | null
+          subscription_plan_id: string | null
+          subscription_type: string | null
           updated_at: string
         }
         Insert: {
@@ -643,6 +684,8 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           subscription_expires_at?: string | null
+          subscription_plan_id?: string | null
+          subscription_type?: string | null
           updated_at?: string
         }
         Update: {
@@ -654,9 +697,19 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           subscription_expires_at?: string | null
+          subscription_plan_id?: string | null
+          subscription_type?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_subscription_plan_id_fkey"
+            columns: ["subscription_plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       revenue_transactions: {
         Row: {
@@ -840,6 +893,71 @@ export type Database = {
         }
         Relationships: []
       }
+      setup_requests: {
+        Row: {
+          admin_notes: string | null
+          amount_paid: number | null
+          business_description: string | null
+          business_name: string
+          completed_at: string | null
+          contact_phone: string | null
+          created_at: string | null
+          id: string
+          instagram_handle: string | null
+          package_type: string | null
+          paid_at: string | null
+          payment_reference: string | null
+          products_info: string | null
+          started_at: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount_paid?: number | null
+          business_description?: string | null
+          business_name: string
+          completed_at?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          instagram_handle?: string | null
+          package_type?: string | null
+          paid_at?: string | null
+          payment_reference?: string | null
+          products_info?: string | null
+          started_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          amount_paid?: number | null
+          business_description?: string | null
+          business_name?: string
+          completed_at?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          instagram_handle?: string | null
+          package_type?: string | null
+          paid_at?: string | null
+          payment_reference?: string | null
+          products_info?: string | null
+          started_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shops: {
         Row: {
           average_rating: number | null
@@ -1000,6 +1118,90 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          ai_features_enabled: boolean | null
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          max_products: number | null
+          name: string
+          price_monthly: number
+          price_yearly: number | null
+          priority_support: boolean | null
+          slug: string
+        }
+        Insert: {
+          ai_features_enabled?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          max_products?: number | null
+          name: string
+          price_monthly: number
+          price_yearly?: number | null
+          priority_support?: boolean | null
+          slug: string
+        }
+        Update: {
+          ai_features_enabled?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          max_products?: number | null
+          name?: string
+          price_monthly?: number
+          price_yearly?: number | null
+          priority_support?: boolean | null
+          slug?: string
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          badge_id: string | null
+          earned_at: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          badge_id?: string | null
+          earned_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          badge_id?: string | null
+          earned_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

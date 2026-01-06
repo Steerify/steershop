@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
@@ -8,6 +8,7 @@ import shopService from "@/services/shop.service";
 import orderService from "@/services/order.service";
 import offerService from "@/services/offer.service";
 import productService from "@/services/product.service";
+import subscriptionService from "@/services/subscription.service";
 import { useToast } from "@/hooks/use-toast";
 import { Store, Package, ShoppingCart, LogOut, Clock, CheckCircle, AlertCircle, ArrowRight, TrendingUp, DollarSign, CalendarCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -22,13 +23,16 @@ import { dashboardTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
 import { StrokeMyShop } from "@/components/ai/StrokeMyShop";
 import { ProfileCompletionChecklist } from "@/components/ProfileCompletionChecklist";
+import { BadgeDisplay } from "@/components/BadgeDisplay";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, signOut, isLoading: isAuthLoading } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubscribing, setIsSubscribing] = useState(false);
   const [daysRemaining, setDaysRemaining] = useState<number>(0);
   const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'trial' | 'expired'>('trial');
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -39,6 +43,7 @@ const Dashboard = () => {
   const [shopData, setShopData] = useState<{ id: string; name: string } | null>(null);
   const [shopFullData, setShopFullData] = useState<any>(null);
   const [productsCount, setProductsCount] = useState(0);
+  const [userBadges, setUserBadges] = useState<any[]>([]);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
@@ -49,6 +54,48 @@ const Dashboard = () => {
       endTour(status === STATUS.FINISHED);
     }
   };
+
+  // Handle payment verification from Paystack redirect
+  useEffect(() => {
+    const verifyPayment = async () => {
+      const subscriptionParam = searchParams.get('subscription');
+      const reference = searchParams.get('reference') || localStorage.getItem('paystack_reference');
+      
+      if (subscriptionParam === 'verify' && reference) {
+        setIsSubscribing(true);
+        try {
+          const result = await subscriptionService.verifyPayment(reference);
+          
+          if (result.success) {
+            toast({
+              title: "Payment Successful! 🎉",
+              description: "Your subscription has been activated. Welcome to SteerSolo!",
+            });
+            setSubscriptionStatus('active');
+            localStorage.removeItem('paystack_reference');
+            // Reload data to reflect new subscription
+            loadData();
+          } else {
+            toast({
+              title: "Payment Verification Failed",
+              description: result.error || "Please try again or contact support.",
+              variant: "destructive",
+            });
+          }
+        } catch (error) {
+          console.error('Payment verification error:', error);
+        } finally {
+          setIsSubscribing(false);
+          // Clear URL params
+          navigate('/dashboard', { replace: true });
+        }
+      }
+    };
+
+    if (user) {
+      verifyPayment();
+    }
+  }, [searchParams, user]);
 
   useEffect(() => {
     if (!isAuthLoading) {
@@ -137,7 +184,15 @@ const Dashboard = () => {
 
         setChartData(dailyData);
         setTotalRevenue(allOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0));
-        setTotalSales(allOrders.length);
+        setTotalSales(allOrders.filter(o => (o as any).payment_status === 'paid').length || allOrders.length);
+      }
+
+      // Fetch user badges
+      if (user) {
+        const badgesResult = await subscriptionService.getUserBadges(user.id);
+        if (badgesResult.success && badgesResult.data) {
+          setUserBadges(badgesResult.data.map(ub => ub.badges).filter(Boolean));
+        }
       }
 
       // Fetch active offer for entrepreneurs
@@ -162,18 +217,40 @@ const Dashboard = () => {
   };
 
   const handleSubscribe = async () => {
-    toast({
-      title: "Subscription Mock",
-      description: "Redirecting to mock payment gateway...",
-    });
-    // Simulate payment success
-    setTimeout(() => {
+    setIsSubscribing(true);
+    
+    try {
+      // Initialize payment with basic plan (default)
+      const result = await subscriptionService.initializePayment('basic', 'monthly');
+      
+      if (result.success && result.authorization_url) {
+        // Store reference for verification after redirect
+        localStorage.setItem('paystack_reference', result.reference || '');
+        
+        toast({
+          title: "Redirecting to Payment",
+          description: "You'll be redirected to Paystack to complete your payment...",
+        });
+        
+        // Redirect to Paystack
+        window.location.href = result.authorization_url;
+      } else {
+        toast({
+          title: "Payment Error",
+          description: result.error || "Failed to initialize payment. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Subscription error:', error);
       toast({
-        title: "Payment Successful! 🎉",
-        description: "Your subscription has been activated (Mocked).",
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
       });
-      setSubscriptionStatus('active');
-    }, 2000);
+    } finally {
+      setIsSubscribing(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -243,7 +320,12 @@ const Dashboard = () => {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold mb-1 sm:mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Dashboard
               </h1>
-              <p className="text-sm sm:text-base text-muted-foreground">Welcome back, {profile?.full_name}!</p>
+              <div className="flex items-center gap-3 flex-wrap">
+                <p className="text-sm sm:text-base text-muted-foreground">Welcome back, {profile?.full_name}!</p>
+                {userBadges.length > 0 && (
+                  <BadgeDisplay badges={userBadges} size="sm" />
+                )}
+              </div>
             </div>
 
             <div data-tour="subscription-status">
@@ -317,9 +399,16 @@ const Dashboard = () => {
                 <Button 
                   className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-sm sm:text-base py-2 sm:py-3 px-4 sm:px-6 w-full sm:w-auto"
                   onClick={handleSubscribe}
-                  disabled={isLoading}
+                  disabled={isSubscribing}
                 >
-                  {isLoading ? "Processing..." : `Subscribe Now - ₦${subscriptionPrice.toLocaleString()}/month`}
+                  {isSubscribing ? "Redirecting to Payment..." : `Subscribe Now - ₦${subscriptionPrice.toLocaleString()}/month`}
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="text-sm sm:text-base w-full sm:w-auto"
+                  onClick={() => navigate('/pricing')}
+                >
+                  View All Plans
                 </Button>
                 {subscriptionStatus === 'trial' && (
                   <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">

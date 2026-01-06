@@ -42,6 +42,8 @@ const DemoStoreFront = lazy(() => import("./pages/DemoStoreFront"));
 const Onboarding = lazy(() => import("./pages/entrepreneur/Onboarding"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const SetupService = lazy(() => import("./pages/SetupService"));
 
 const queryClient = new QueryClient();
 
@@ -90,6 +92,8 @@ const App = () => (
             <Route path="/admin/feedback" element={<AdminFeedback />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/setup-service" element={<SetupService />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

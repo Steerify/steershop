@@ -27,6 +27,12 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
+    // Parse request body for plan selection
+    const body = await req.json().catch(() => ({}));
+    const { plan_slug = 'basic', billing_cycle = 'monthly' } = body;
+
+    console.log('Payment request:', { plan_slug, billing_cycle, user_id: user.id });
+
     // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -38,7 +44,29 @@ serve(async (req) => {
       throw new Error('Profile not found');
     }
 
-    // Get active subscription offer for shop owners
+    // Get the selected subscription plan
+    const { data: selectedPlan, error: planError } = await supabase
+      .from('subscription_plans')
+      .select('*')
+      .eq('slug', plan_slug)
+      .eq('is_active', true)
+      .single();
+
+    if (planError || !selectedPlan) {
+      console.error('Plan not found:', plan_slug);
+      throw new Error('Invalid subscription plan');
+    }
+
+    // Calculate amount based on billing cycle
+    let subscriptionAmount = selectedPlan.price_monthly;
+    let subscriptionDays = 30;
+
+    if (billing_cycle === 'yearly' && selectedPlan.price_yearly) {
+      subscriptionAmount = selectedPlan.price_yearly;
+      subscriptionDays = 365;
+    }
+
+    // Check for active subscription offer for shop owners
     const { data: activeOffer } = await supabase
       .from('special_offers')
       .select('*')
@@ -50,27 +78,23 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    // Calculate subscription amount based on active offer
-    let subscriptionAmount = 100000; // Default: ₦1,000 in kobo
     let offerCode = null;
+    let originalAmount = subscriptionAmount;
 
-    if (activeOffer) {
-      if (activeOffer.subscription_price) {
-        // Use explicit subscription price from offer
-        subscriptionAmount = activeOffer.subscription_price;
-      } else if (activeOffer.discount_percentage) {
-        // Calculate price based on discount percentage
-        const discount = (activeOffer.original_price || 100000) * (activeOffer.discount_percentage / 100);
-        subscriptionAmount = Math.round((activeOffer.original_price || 100000) - discount);
-      }
+    if (activeOffer && activeOffer.discount_percentage) {
+      const discount = subscriptionAmount * (activeOffer.discount_percentage / 100);
+      subscriptionAmount = Math.round(subscriptionAmount - discount);
       offerCode = activeOffer.code;
     }
 
     console.log('Subscription pricing:', {
-      original: 100000,
+      plan: selectedPlan.name,
+      billing_cycle,
+      original: originalAmount,
       final: subscriptionAmount,
       offer_applied: !!activeOffer,
       offer_code: offerCode,
+      days: subscriptionDays,
     });
 
     // Initialize Paystack transaction
@@ -86,11 +110,15 @@ serve(async (req) => {
         currency: 'NGN',
         metadata: {
           user_id: user.id,
-          subscription_type: 'monthly',
+          plan_id: selectedPlan.id,
+          plan_slug: selectedPlan.slug,
+          plan_name: selectedPlan.name,
+          billing_cycle,
+          subscription_days: subscriptionDays,
           offer_code: offerCode,
-          original_amount: 100000,
+          original_amount: originalAmount,
         },
-        callback_url: `${req.headers.get('origin')}/dashboard`,
+        callback_url: `${req.headers.get('origin')}/dashboard?subscription=verify`,
       }),
     });
 
@@ -109,7 +137,8 @@ serve(async (req) => {
       email: profile.email,
       reference: paystackData.data.reference,
       amount: subscriptionAmount,
-      offer_code: offerCode,
+      plan: selectedPlan.name,
+      billing_cycle,
     });
 
     return new Response(
@@ -117,6 +146,11 @@ serve(async (req) => {
         authorization_url: paystackData.data.authorization_url,
         access_code: paystackData.data.access_code,
         reference: paystackData.data.reference,
+        plan: {
+          name: selectedPlan.name,
+          amount: subscriptionAmount,
+          billing_cycle,
+        },
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
