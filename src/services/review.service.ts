@@ -26,7 +26,7 @@ const reviewService = {
       .from('product_reviews')
       .insert({
         product_id: data.productId,
-        user_id: user?.id || null,
+        customer_id: user?.id || null,
         rating: data.rating,
         comment: data.comment,
         customer_name: data.customer_name,

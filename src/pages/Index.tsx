@@ -42,6 +42,7 @@ import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { TopSellerBanner } from "@/components/TopSellerBanner";
 import { AdirePattern, AdireDivider } from "@/components/patterns/AdirePattern";
+import { DynamicTestimonialsSection, DynamicTransformationSection } from "@/components/DynamicTestimonials";
 import heroImage from "@/assets/hero-image.jpg";
 import offerService from "@/services/offer.service";
 import { TypewriterEffect } from "@/components/TypewriterEffect";
@@ -172,9 +173,9 @@ const Index = () => {
       {activeAudience === "entrepreneurs" ? (
         <>
           <CompetitorComparisonSection />
-          <TransformationSection />
+          <DynamicTransformationSection />
           <FeatureGridSection />
-          <TestimonialsSection />
+          <DynamicTestimonialsSection />
         </>
       ) : (
         <>
