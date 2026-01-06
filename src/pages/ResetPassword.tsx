@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Store, Loader2, Lock, CheckCircle } from "lucide-react";
 import { z } from "zod";
 import authService from "@/services/auth.service";
-import { handleApiError } from "@/lib/api-error-handler";
+import { supabase } from "@/integrations/supabase/client";
 
 const passwordSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -25,34 +25,36 @@ const ResetPassword = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
+  const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
-    if (!token) {
-      toast({
-        title: "Invalid link",
-        description: "Password reset token is missing",
-        variant: "destructive"
-      });
-      navigate("/auth/login");
-    }
-  }, [navigate, toast, token]);
+    // Check if user has a valid session from the reset link
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setHasSession(true);
+      } else {
+        toast({
+          title: "Invalid or expired link",
+          description: "Please request a new password reset link",
+          variant: "destructive"
+        });
+        navigate("/auth?tab=login");
+      }
+    };
+    
+    checkSession();
+  }, [navigate, toast]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
     
     setIsLoading(true);
 
     try {
       passwordSchema.parse({ password, confirmPassword });
       
-      const response = await authService.resetPassword({
-        token,
-        password: password
-      });
+      const response = await authService.resetPassword(password);
 
       if (response.success) {
         setIsSuccess(true);
@@ -63,7 +65,7 @@ const ResetPassword = () => {
 
         // Redirect to login after 2 seconds
         setTimeout(() => {
-          navigate("/auth/login");
+          navigate("/auth?tab=login");
         }, 2000);
       }
     } catch (error: any) {
@@ -74,12 +76,24 @@ const ResetPassword = () => {
           variant: "destructive"
         });
       } else {
-        // Handled by service/handler
+        toast({
+          title: "Error",
+          description: error.message || "Failed to reset password",
+          variant: "destructive"
+        });
       }
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (!hasSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 flex items-center justify-center p-4">

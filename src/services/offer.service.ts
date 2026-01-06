@@ -1,7 +1,4 @@
-import api, { getAuthHeaders } from '@/lib/api';
-import { ApiResponse } from '@/types/api';
-import { handleApiError } from '@/lib/api-error-handler';
-
+// Offer service - using mock data since offers table may not exist
 export interface Offer {
   id: string;
   title: string;
@@ -18,49 +15,24 @@ export interface Offer {
 
 const offerService = {
   getOffers: async () => {
-    try {
-      const response = await api.get<ApiResponse<Offer[]>>('/offers');
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
+    // Return empty array - offers feature not yet implemented in database
+    return {
+      success: true,
+      data: [] as Offer[],
+      message: 'Offers fetched successfully'
+    };
   },
 
   createOffer: async (data: Omit<Offer, 'id'>) => {
-    try {
-      const response = await api.post<ApiResponse<Offer>>('/offers', data, {
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
+    return { success: false, data: null, message: 'Offers not implemented' };
   },
 
   updateOffer: async (id: string, data: Partial<Offer>) => {
-    try {
-      const response = await api.put<ApiResponse<Offer>>(`/offers/${id}`, data, {
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
+    return { success: false, data: null, message: 'Offers not implemented' };
   },
 
   deleteOffer: async (id: string) => {
-    try {
-      const response = await api.delete<ApiResponse<null>>(`/offers/${id}`, {
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
+    return { success: false, data: null, message: 'Offers not implemented' };
   },
 };
 

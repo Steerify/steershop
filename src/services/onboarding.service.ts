@@ -1,6 +1,3 @@
-import api, { getAuthHeaders } from '@/lib/api';
-import { ApiResponse } from '@/types/api';
-import { handleApiError } from '@/lib/api-error-handler';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface OnboardingData {
@@ -13,15 +10,32 @@ export interface OnboardingData {
 
 const onboardingService = {
   submitOnboarding: async (data: OnboardingData) => {
-    try {
-      const response = await api.post<ApiResponse<any>>('/onboarding', data, {
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User not authenticated');
     }
+
+    // Store onboarding response
+    const { error } = await supabase.from('onboarding_responses').insert({
+      user_id: user.id,
+      business_type: data.businessType,
+      customer_source: data.customerSource,
+      biggest_struggle: data.biggestStruggle,
+      payment_method: data.paymentMethod,
+      perfect_feature: data.perfectFeature || null,
+    });
+    
+    if (error) {
+      console.error('Onboarding error:', error);
+      throw new Error(error.message);
+    }
+
+    return {
+      success: true,
+      data: null,
+      message: 'Onboarding completed successfully'
+    };
   },
 
   // Store to Supabase for analytics
