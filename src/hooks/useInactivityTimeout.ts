@@ -1,11 +1,12 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { updateActivity, showWarning, hideWarning } from '@/store/slices/activitySlice';
 import { setReturnUrl, setSessionExpired } from '@/store/slices/uiSlice';
 import { useAuth } from '@/context/AuthContext';
 import { useLocation } from 'react-router-dom';
 
-const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+const STANDARD_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+const EXTENDED_TIMEOUT = 30 * 24 * 60 * 60 * 1000; // 30 days
 const WARNING_BEFORE_TIMEOUT = 1 * 60 * 1000; // Show warning 1 minute before timeout
 const CHECK_INTERVAL = 10 * 1000; // Check every 10 seconds
 
@@ -15,7 +16,12 @@ export const useInactivityTimeout = () => {
   const location = useLocation();
   const lastActivity = useAppSelector((state) => state.activity.lastActivity);
   const isWarningShown = useAppSelector((state) => state.activity.isWarningShown);
+  const rememberMe = useAppSelector((state) => state.activity.rememberMe);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const INACTIVITY_TIMEOUT = useMemo(() => 
+    rememberMe ? EXTENDED_TIMEOUT : STANDARD_TIMEOUT
+  , [rememberMe]);
 
   const resetTimer = useCallback(() => {
     dispatch(updateActivity());

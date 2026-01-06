@@ -252,6 +252,36 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_usage: {
+        Row: {
+          created_at: string | null
+          feature_name: string
+          id: string
+          month_year: string
+          updated_at: string | null
+          usage_count: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          feature_name: string
+          id?: string
+          month_year: string
+          updated_at?: string | null
+          usage_count?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          feature_name?: string
+          id?: string
+          month_year?: string
+          updated_at?: string | null
+          usage_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       onboarding_responses: {
         Row: {
           biggest_struggle: string | null
@@ -1018,6 +1048,45 @@ export type Database = {
           },
         ]
       }
+      shop_reactions: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          id: string
+          reaction_type: string
+          shop_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          id?: string
+          reaction_type: string
+          shop_id: string
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          id?: string
+          reaction_type?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_reactions_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_reactions_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shops: {
         Row: {
           average_rating: number | null
@@ -1227,6 +1296,48 @@ export type Database = {
         }
         Relationships: []
       }
+      top_seller_banners: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          month_year: string
+          shop_id: string
+          total_sales: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          month_year: string
+          shop_id: string
+          total_sales: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          month_year?: string
+          shop_id?: string
+          total_sales?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "top_seller_banners_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "top_seller_banners_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_badges: {
         Row: {
           badge_id: string | null
@@ -1350,6 +1461,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_feature_usage: {
+        Args: { _feature_name: string; _user_id: string }
+        Returns: Json
+      }
       claim_prize: {
         Args: { p_prize_id: string; p_user_id: string }
         Returns: Json
@@ -1360,6 +1475,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_feature_usage: {
+        Args: { _feature_name: string; _user_id: string }
+        Returns: number
       }
       order_exists: { Args: { order_id_param: string }; Returns: boolean }
       product_available: {
