@@ -15,6 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
+import { PageWrapper } from "@/components/PageWrapper";
+import { FeatureDiscoveryPopup } from "@/components/FeatureDiscoveryPopup";
 import logo from "@/assets/steersolo-logo.jpg";
 import Joyride, { CallBackProps, STATUS } from "react-joyride";
 import { useTour } from "@/hooks/useTour";
@@ -276,9 +278,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
-      <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
-      
+    <PageWrapper patternVariant="dots" patternOpacity={0.5}>
       <nav className="bg-card/80 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50">
         <div className="h-1 bg-gradient-to-r from-primary via-accent to-primary" />
         <div className="container mx-auto px-4 py-3 sm:py-4">
@@ -600,7 +600,8 @@ const Dashboard = () => {
           }
         }}
       />
-    </div>
+      <FeatureDiscoveryPopup featureId="stroke_my_shop" />
+    </PageWrapper>
   );
 };
 

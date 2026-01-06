@@ -35,6 +35,7 @@ import { StoreFlyerTemplate } from "@/components/StoreFlyerTemplate";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
+import { PageWrapper } from "@/components/PageWrapper";
 import logo from "@/assets/steersolo-logo.jpg";
 import Joyride, { CallBackProps, STATUS } from "react-joyride";
 import { useTour } from "@/hooks/useTour";
@@ -248,10 +249,8 @@ const MyStore = () => {
   }
 
   return (
-    <div className="min-h-screen relative">
-      <AdirePattern variant="dots" className="fixed inset-0 opacity-5" />
-
-      <div className="container mx-auto py-8 relative z-10 max-w-3xl">
+    <PageWrapper patternVariant="dots" patternOpacity={0.5}>
+      <div className="container mx-auto py-8 max-w-3xl">
         <Button variant="ghost" onClick={() => navigate("/dashboard")}>
           <ArrowLeft className="w-4 h-4 mr-2" /> Back
         </Button>
@@ -536,7 +535,7 @@ const MyStore = () => {
         showSkipButton
         showProgress
       />
-    </div>
+    </PageWrapper>
   );
 };
 

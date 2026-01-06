@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { TopSellerBanner } from "@/components/TopSellerBanner";
 import { AdirePattern, AdireDivider } from "@/components/patterns/AdirePattern";
 import heroImage from "@/assets/hero-image.jpg";
 import offerService from "@/services/offer.service";
@@ -157,6 +158,13 @@ const Index = () => {
               </CardContent>
             </Card>
           </Link>
+        </div>
+      </section>
+
+      {/* ================= TOP SELLER BANNER ================= */}
+      <section className="py-4">
+        <div className="container mx-auto px-4">
+          <TopSellerBanner />
         </div>
       </section>
 

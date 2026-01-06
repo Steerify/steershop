@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Award, BookOpen, CheckCircle2, Lock, Sparkles, Gift, Clock } from "lucide-react";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
+import { PageWrapper } from "@/components/PageWrapper";
 import DOMPurify from "dompurify";
 
 interface Course {
@@ -140,11 +141,10 @@ const CustomerCourses = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
-        <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
-        <CustomerSidebar />
-        
-        <div className="flex-1 relative z-10">
+      <PageWrapper patternVariant="dots" patternOpacity={0.5}>
+        <div className="min-h-screen flex w-full">
+          <CustomerSidebar />
+          <div className="flex-1">
           <header className="h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center px-6 justify-between">
             <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-primary via-accent to-primary" />
             <div className="flex items-center">
@@ -356,7 +356,8 @@ const CustomerCourses = () => {
             </Tabs>
           </main>
         </div>
-      </div>
+        </div>
+        </PageWrapper>
 
       {/* Course Content Modal */}
       {selectedCourse && (
