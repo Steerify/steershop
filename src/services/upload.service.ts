@@ -1,7 +1,5 @@
 // src/services/upload.service.ts
-
-const CLOUDINARY_CLOUD_NAME = 'dipfltl37';
-const CLOUDINARY_UPLOAD_PRESET = 'Steersolo';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface UploadResponse {
   url: string;
@@ -68,79 +66,102 @@ export const uploadService = {
 
     onProgress?.(5);
 
-    // Convert WebP to JPEG before uploading (Cloudinary preset may not support WebP)
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('Please log in to upload images');
+    }
+
+    onProgress?.(10);
+
+    // Get user's shop for file path organization
+    const { data: shop, error: shopError } = await supabase
+      .from('shops')
+      .select('id')
+      .eq('owner_id', user.id)
+      .maybeSingle();
+
+    if (shopError) {
+      console.error('Error fetching shop:', shopError);
+      throw new Error('Failed to verify shop ownership');
+    }
+
+    // For shop-images, use user.id (as per RLS policy)
+    // For product-images, use shop.id (as per RLS policy)
+    let pathPrefix: string;
+    if (folder === 'shop-images') {
+      pathPrefix = user.id;
+    } else {
+      if (!shop?.id) {
+        throw new Error('You need to create a shop first before uploading product images');
+      }
+      pathPrefix = shop.id;
+    }
+
+    onProgress?.(15);
+
+    // Convert WebP to JPEG before uploading for better compatibility
     let fileToUpload = file;
     if (file.type === 'image/webp') {
       try {
-        onProgress?.(10);
         fileToUpload = await convertWebPToJpeg(file);
-        onProgress?.(20);
+        onProgress?.(25);
       } catch (error) {
         console.warn('WebP conversion failed, attempting direct upload:', error);
         // Continue with original file if conversion fails
       }
     } else {
-      onProgress?.(10);
+      onProgress?.(25);
     }
 
-    // Create FormData for Cloudinary upload
-    const formData = new FormData();
-    formData.append('file', fileToUpload);
-    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    formData.append('folder', folder);
+    // Create unique file path: {shop_id or user_id}/{timestamp}_{sanitized_filename}
+    const timestamp = Date.now();
+    const sanitizedName = fileToUpload.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filePath = `${pathPrefix}/${timestamp}_${sanitizedName}`;
 
-    // Use XMLHttpRequest for progress tracking
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      
-      xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable) {
-          const percentComplete = Math.round((event.loaded / event.total) * 70) + 20;
-          onProgress?.(percentComplete);
-        }
+    onProgress?.(30);
+
+    // Upload to Supabase Storage
+    const { data, error: uploadError } = await supabase.storage
+      .from(folder)
+      .upload(filePath, fileToUpload, {
+        cacheControl: '3600',
+        upsert: false
       });
 
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const response = JSON.parse(xhr.responseText);
-            onProgress?.(100);
-            resolve({
-              url: response.secure_url,
-              publicId: response.public_id,
-            });
-          } catch (error) {
-            reject(new Error('Failed to parse upload response'));
-          }
-        } else {
-          try {
-            const errorResponse = JSON.parse(xhr.responseText);
-            const errorMessage = errorResponse.error?.message || 'Upload failed';
-            console.error('Cloudinary upload error:', errorResponse);
-            reject(new Error(errorMessage));
-          } catch {
-            reject(new Error(`Upload failed with status ${xhr.status}`));
-          }
-        }
-      });
+    onProgress?.(80);
 
-      xhr.addEventListener('error', () => {
-        reject(new Error('Network error during upload. Please check your connection and try again.'));
-      });
+    if (uploadError) {
+      console.error('Supabase upload error:', uploadError);
+      throw new Error(uploadError.message || 'Failed to upload image');
+    }
 
-      xhr.addEventListener('abort', () => {
-        reject(new Error('Upload cancelled'));
-      });
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from(folder)
+      .getPublicUrl(data.path);
 
-      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
-      xhr.send(formData);
-    });
+    onProgress?.(100);
+
+    return {
+      url: publicUrl,
+      publicId: data.path,
+    };
   },
 
-  deleteImage: async (publicId: string): Promise<void> => {
-    // Note: Cloudinary deletion requires signed API (server-side)
-    // This is a no-op for now - images will remain in Cloudinary
-    // To properly delete, implement an edge function with Cloudinary API secret
-    console.log('Image deletion requires server-side implementation:', publicId);
+  deleteImage: async (publicId: string, folder: 'shop-images' | 'product-images' = 'product-images'): Promise<void> => {
+    if (!publicId) return;
+
+    try {
+      const { error } = await supabase.storage
+        .from(folder)
+        .remove([publicId]);
+
+      if (error) {
+        console.error('Failed to delete image:', error);
+      }
+    } catch (error) {
+      console.error('Error deleting image:', error);
+    }
   },
 };
