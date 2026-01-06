@@ -49,9 +49,13 @@ const shopService = {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
+    // Fetch shops with owner profile to get subscription info
     const { data: shops, error, count } = await supabase
       .from('shops')
-      .select('*', { count: 'exact' })
+      .select(`
+        *,
+        owner:profiles(subscription_plan_id)
+      `, { count: 'exact' })
       .eq('is_active', true)
       .range(from, to);
 
@@ -60,8 +64,24 @@ const shopService = {
       throw new Error(error.message);
     }
 
+    // Fetch subscription plans to determine priority
+    const { data: plans } = await supabase
+      .from('subscription_plans')
+      .select('id, slug, display_order');
+
+    const planMap = new Map(plans?.map(p => [p.id, p]) || []);
+
+    // Sort shops: Business first (highest display_order), then Pro, then Basic
+    const sortedShops = [...(shops || [])].sort((a, b) => {
+      const planA = planMap.get((a as any).owner?.subscription_plan_id);
+      const planB = planMap.get((b as any).owner?.subscription_plan_id);
+      const orderA = planA?.display_order || 0;
+      const orderB = planB?.display_order || 0;
+      return orderB - orderA; // Higher display_order first (business)
+    });
+
     // Map database fields to include both naming conventions
-    const mappedShops: Shop[] = (shops || []).map(s => ({
+    const mappedShops: Shop[] = sortedShops.map(s => ({
       id: s.id,
       name: s.shop_name,
       slug: s.shop_slug,

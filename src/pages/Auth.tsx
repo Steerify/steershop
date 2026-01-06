@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth, SignUpData } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, ArrowLeft } from "lucide-react";
@@ -28,7 +29,7 @@ import { AlertCircle } from "lucide-react";
 import { UserRole } from "@/types/api";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { clearSessionExpired, setReturnUrl } from "@/store/slices/uiSlice";
-import { resetSession } from "@/store/slices/activitySlice";
+import { resetSession, setRememberMe } from "@/store/slices/activitySlice";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 const signupSchema = z.object({
@@ -67,6 +68,9 @@ const Auth = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
+  const [rememberMe, setRememberMeLocal] = useState(
+    localStorage.getItem('rememberMe') === 'true'
+  );
 
   // Get return URL from Redux or location state
   const returnUrl = useAppSelector((state) => state.ui.returnUrl);
@@ -372,6 +376,26 @@ const Auth = () => {
                         </FormItem>
                       )}
                     />
+                    
+                    {/* Remember Me Checkbox */}
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="remember"
+                        checked={rememberMe}
+                        onCheckedChange={(checked) => {
+                          const value = checked === true;
+                          setRememberMeLocal(value);
+                          dispatch(setRememberMe(value));
+                        }}
+                      />
+                      <Label 
+                        htmlFor="remember" 
+                        className="text-sm text-muted-foreground cursor-pointer"
+                      >
+                        Remember me for 30 days
+                      </Label>
+                    </div>
+                    
                     <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
                       {isLoading ? (
                         <>

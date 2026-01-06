@@ -4,12 +4,14 @@ interface ActivityState {
   lastActivity: number;
   isWarningShown: boolean;
   sessionStartedAt: number;
+  rememberMe: boolean;
 }
 
 const initialState: ActivityState = {
   lastActivity: Date.now(),
   isWarningShown: false,
   sessionStartedAt: Date.now(),
+  rememberMe: localStorage.getItem('rememberMe') === 'true',
 };
 
 const activitySlice = createSlice({
@@ -31,8 +33,12 @@ const activitySlice = createSlice({
       state.isWarningShown = false;
       state.sessionStartedAt = Date.now();
     },
+    setRememberMe: (state, action: PayloadAction<boolean>) => {
+      state.rememberMe = action.payload;
+      localStorage.setItem('rememberMe', action.payload.toString());
+    },
   },
 });
 
-export const { updateActivity, showWarning, hideWarning, resetSession } = activitySlice.actions;
+export const { updateActivity, showWarning, hideWarning, resetSession, setRememberMe } = activitySlice.actions;
 export default activitySlice.reducer;

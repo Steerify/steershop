@@ -102,6 +102,33 @@ serve(async (req) => {
       );
     }
 
+    // Check usage limits using the security definer function
+    const { data: usageCheck, error: usageError } = await supabase
+      .rpc('check_feature_usage', {
+        _user_id: user.id,
+        _feature_name: 'stroke_my_shop'
+      });
+
+    if (usageError) {
+      console.error('Usage check error:', usageError);
+    }
+
+    // Parse usage check result
+    const usageResult = usageCheck as { can_use: boolean; is_business: boolean; current_usage: number; max_usage: number } | null;
+
+    if (usageResult && !usageResult.can_use) {
+      console.log(`User ${user.id} has reached stroke_my_shop limit: ${usageResult.current_usage}/${usageResult.max_usage}`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Monthly limit reached. Upgrade to Business for unlimited roasts!',
+          limit_reached: true,
+          current_usage: usageResult.current_usage,
+          max_usage: usageResult.max_usage
+        }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Fetch products
     const { data: products } = await supabase
       .from('products')
@@ -179,6 +206,19 @@ Remember to be specific about their actual issues. If their shop is actually goo
         JSON.stringify({ error: 'AI service error' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Increment usage after successful AI call
+    const { error: incrementError } = await supabase
+      .rpc('increment_feature_usage', {
+        _user_id: user.id,
+        _feature_name: 'stroke_my_shop'
+      });
+
+    if (incrementError) {
+      console.error('Failed to increment usage:', incrementError);
+    } else {
+      console.log(`Incremented stroke_my_shop usage for user ${user.id}`);
     }
 
     // Stream the response
