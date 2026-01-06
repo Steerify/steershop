@@ -20,6 +20,8 @@ import { useTour } from "@/hooks/useTour";
 import { TourTooltip } from "@/components/tours/TourTooltip";
 import { storefrontTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
+import { KnowThisShop } from "@/components/ai/KnowThisShop";
+import { TrustBadges } from "@/components/TrustBadges";
 
 interface Shop {
   id: string;
@@ -376,6 +378,16 @@ const ShopStorefront = () => {
                         {serviceCount} Services
                       </Badge>
                     )}
+                    <KnowThisShop shopId={shop.id} />
+                  </div>
+
+                  {/* Trust Badges */}
+                  <div className="mt-3">
+                    <TrustBadges
+                      hasWhatsApp={!!shop.whatsapp_number}
+                      totalReviews={shop.total_reviews}
+                      averageRating={shop.average_rating}
+                    />
                   </div>
                 </div>
               </div>

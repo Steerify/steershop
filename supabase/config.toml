@@ -11,3 +11,15 @@ verify_jwt = false
 
 [functions.migrate-images]
 verify_jwt = false
+
+[functions.paystack-list-banks]
+verify_jwt = false
+
+[functions.paystack-create-subaccount]
+verify_jwt = false
+
+[functions.stroke-my-shop]
+verify_jwt = false
+
+[functions.know-this-shop]
+verify_jwt = false
