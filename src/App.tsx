@@ -57,13 +57,13 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <SessionExpiryModal />
-      <BrowserRouter
+        <BrowserRouter
         future={{
           v7_startTransition: true,
           v7_relativeSplatPath: true,
         }}
       >
+        <SessionExpiryModal />
         <Suspense fallback={<PageLoadingSkeleton />}>
           <Routes>
             {/* Public routes */}
