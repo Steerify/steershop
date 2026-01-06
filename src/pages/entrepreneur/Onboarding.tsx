@@ -8,17 +8,16 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, SkipForward } from "lucide-react";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
 import { cn } from "@/lib/utils";
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { user, setAuth } = useAuth(); // Assuming setAuth can update user state
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState(1); // Optional: if we want multi-step animation, but keeping single page for simplicity as per request "single-page form" option
   
   // Guard: Redirect if not Entrepreneur
   useEffect(() => {
@@ -44,13 +43,21 @@ const Onboarding = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const isFormValid = () => {
-    return (
-      formData.businessType &&
-      formData.customerSource &&
-      formData.biggestStruggle &&
-      formData.paymentMethod
-    );
+  const answeredCount = [
+    formData.businessType,
+    formData.customerSource,
+    formData.biggestStruggle,
+    formData.paymentMethod,
+  ].filter(Boolean).length;
+
+  const isFormValid = () => answeredCount === 4;
+
+  const handleSkip = () => {
+    toast({
+      title: "Skipped for now",
+      description: "You can complete this anytime from settings.",
+    });
+    navigate("/dashboard");
   };
 
   const handleSubmit = async () => {
@@ -58,24 +65,18 @@ const Onboarding = () => {
 
     setIsLoading(true);
     try {
+      // Store to Supabase for analytics
+      if (user?.id) {
+        await onboardingService.storeOnboardingResponse(user.id, formData);
+      }
+
+      // Also submit to Render backend
       await onboardingService.submitOnboarding(formData);
       
       toast({
-        title: "Setup Compelte!",
+        title: "Setup Complete!",
         description: "Your store dashboard is ready.",
       });
-
-      // Update local user state to reflect onboarding completion if possible, 
-      // or just navigate and let next dashboard load fetch fresh user data if needed.
-      // Ideally, we update the context. Here we assume backend updates the user record.
-      if (user && setAuth) {
-           // Refetch or manually update local user object to prevent redirect loop if context relies on it
-           // For now, prompt navigation. The AuthContext might need a refresh mechanism or we rely on page reload/navigation.
-           const updatedUser = { ...user, onboardingCompleted: true };
-           // We might need a way to update just the user in context without full login response, 
-           // but `setAuth` expects AuthData. If we can't easily update context, we navigate.
-           // Assuming dashboard check might re-validate or we trust the navigation.
-      }
 
       navigate("/dashboard");
     } catch (error: any) {
@@ -95,17 +96,37 @@ const Onboarding = () => {
       
       <Card className="w-full max-w-2xl relative z-10 border-primary/10 shadow-2xl backdrop-blur-sm bg-card/95">
         <CardHeader className="text-center border-b border-border/50 pb-6">
-           <div className="flex justify-center mb-4">
-             <div className="w-16 h-16 rounded-xl overflow-hidden shadow-lg ring-4 ring-primary/20">
-               <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
-             </div>
-           </div>
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 rounded-xl overflow-hidden shadow-lg ring-4 ring-primary/20">
+              <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+            </div>
+          </div>
           <CardTitle className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             SteerSolo Quick Setup
           </CardTitle>
           <CardDescription className="text-lg">
             Help us tailor your store (2 mins)
           </CardDescription>
+
+          {/* Progress Indicator */}
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center justify-center gap-2">
+              {[1, 2, 3, 4].map((stepNum) => (
+                <div 
+                  key={stepNum}
+                  className={cn(
+                    "h-2 rounded-full transition-all duration-300",
+                    answeredCount >= stepNum 
+                      ? "bg-primary w-10" 
+                      : "bg-muted w-8"
+                  )}
+                />
+              ))}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {answeredCount} of 4 required questions answered
+            </p>
+          </div>
         </CardHeader>
 
         <CardContent className="p-6 space-y-8">
@@ -150,7 +171,7 @@ const Onboarding = () => {
 
           {/* Question 3 */}
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
-            <Label className="text-base font-semibold">3. What’s your biggest struggle with selling online?</Label>
+            <Label className="text-base font-semibold">3. What's your biggest struggle with selling online?</Label>
             <RadioGroup value={formData.biggestStruggle} onValueChange={(val) => handleChange("biggestStruggle", val)} className="space-y-2">
               {["Repeating prices & details", "Losing orders in chats", "Customers not trusting payment", "Too much back-and-forth", "Organizing products & orders"].map((opt) => (
                 <div key={opt} className="flex items-center space-x-2">
@@ -191,18 +212,29 @@ const Onboarding = () => {
             />
           </div>
 
-          <Button 
-            onClick={handleSubmit} 
-            className="w-full bg-gradient-to-r from-primary to-accent py-6 text-lg mt-4"
-            disabled={!isFormValid() || isLoading}
-          >
-            {isLoading ? (
-               <>
-                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                 Saving preferences...
-               </>
-            ) : "Complete Setup"}
-          </Button>
+          <div className="flex items-center justify-between gap-4 mt-4">
+            <Button 
+              variant="ghost" 
+              onClick={handleSkip}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <SkipForward className="w-4 h-4 mr-2" />
+              Skip for now
+            </Button>
+
+            <Button 
+              onClick={handleSubmit} 
+              className="flex-1 bg-gradient-to-r from-primary to-accent py-6 text-lg"
+              disabled={!isFormValid() || isLoading}
+            >
+              {isLoading ? (
+                 <>
+                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                   Saving preferences...
+                 </>
+              ) : "Complete Setup"}
+            </Button>
+          </div>
 
         </CardContent>
       </Card>

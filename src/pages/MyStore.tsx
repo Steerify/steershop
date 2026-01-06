@@ -41,6 +41,7 @@ import { useTour } from "@/hooks/useTour";
 import { TourTooltip } from "@/components/tours/TourTooltip";
 import { myStoreTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
+import { PaystackSubaccountSetup } from "@/components/PaystackSubaccountSetup";
 
 const shopSchema = z
   .object({
@@ -447,16 +448,30 @@ const MyStore = () => {
 
               {/* Paystack Details */}
               {formData.enable_paystack && (
-                <div className="space-y-2">
-                  <Label htmlFor="paystack_public_key">Paystack Public Key</Label>
-                  <Input
-                    id="paystack_public_key"
-                    value={formData.paystack_public_key}
-                    onChange={(e) =>
-                      setFormData({ ...formData, paystack_public_key: e.target.value })
-                    }
-                    placeholder="pk_live_xxxxxxxx"
-                  />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="paystack_public_key">Paystack Public Key</Label>
+                    <Input
+                      id="paystack_public_key"
+                      value={formData.paystack_public_key}
+                      onChange={(e) =>
+                        setFormData({ ...formData, paystack_public_key: e.target.value })
+                      }
+                      placeholder="pk_live_xxxxxxxx"
+                    />
+                  </div>
+
+                  {/* Direct Payments Setup */}
+                  {shop && (
+                    <PaystackSubaccountSetup
+                      shopId={shop.id}
+                      shopName={formData.shop_name}
+                      existingSubaccountCode={shop.paystack_subaccount_code}
+                      existingBankCode={shop.settlement_bank_code}
+                      existingAccountNumber={shop.settlement_account_number}
+                      onSuccess={loadShop}
+                    />
+                  )}
                 </div>
               )}
 
