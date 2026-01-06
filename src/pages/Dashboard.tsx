@@ -19,6 +19,7 @@ import { useTour } from "@/hooks/useTour";
 import { TourTooltip } from "@/components/tours/TourTooltip";
 import { dashboardTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
+import { StrokeMyShop } from "@/components/ai/StrokeMyShop";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ const Dashboard = () => {
   const [chartData, setChartData] = useState<any[]>([]);
   const [activeOffer, setActiveOffer] = useState<any>(null);
   const [subscriptionPrice, setSubscriptionPrice] = useState(1000);
+  const [shopData, setShopData] = useState<{ id: string; name: string } | null>(null);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
@@ -100,7 +102,8 @@ const Dashboard = () => {
       const primaryShop = Array.isArray(shops) ? shops[0] : (shops as any);
 
       if (primaryShop) {
-        // Fetch real orders to calculate analytics
+        setShopData({ id: primaryShop.id, name: primaryShop.shop_name || primaryShop.name });
+        
         const ordersResponse = await orderService.getOrders({ shopId: primaryShop.id });
         const allOrders = ordersResponse.data || [];
 
@@ -203,6 +206,9 @@ const Dashboard = () => {
               </span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
+              {shopData && (
+                <StrokeMyShop shopId={shopData.id} shopName={shopData.name} />
+              )}
               <TourButton 
                 onStartTour={startTour} 
                 hasSeenTour={hasSeenTour} 

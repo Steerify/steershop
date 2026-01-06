@@ -213,6 +213,47 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_responses: {
+        Row: {
+          biggest_struggle: string | null
+          business_type: string | null
+          created_at: string | null
+          customer_source: string | null
+          id: string
+          payment_method: string | null
+          perfect_feature: string | null
+          user_id: string | null
+        }
+        Insert: {
+          biggest_struggle?: string | null
+          business_type?: string | null
+          created_at?: string | null
+          customer_source?: string | null
+          id?: string
+          payment_method?: string | null
+          perfect_feature?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          biggest_struggle?: string | null
+          business_type?: string | null
+          created_at?: string | null
+          customer_source?: string | null
+          id?: string
+          payment_method?: string | null
+          perfect_feature?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -814,6 +855,9 @@ export type Database = {
           owner_id: string
           payment_method: string | null
           paystack_public_key: string | null
+          paystack_subaccount_code: string | null
+          settlement_account_number: string | null
+          settlement_bank_code: string | null
           shop_name: string
           shop_slug: string
           total_reviews: number | null
@@ -834,6 +878,9 @@ export type Database = {
           owner_id: string
           payment_method?: string | null
           paystack_public_key?: string | null
+          paystack_subaccount_code?: string | null
+          settlement_account_number?: string | null
+          settlement_bank_code?: string | null
           shop_name: string
           shop_slug: string
           total_reviews?: number | null
@@ -854,6 +901,9 @@ export type Database = {
           owner_id?: string
           payment_method?: string | null
           paystack_public_key?: string | null
+          paystack_subaccount_code?: string | null
+          settlement_account_number?: string | null
+          settlement_bank_code?: string | null
           shop_name?: string
           shop_slug?: string
           total_reviews?: number | null
