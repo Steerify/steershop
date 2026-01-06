@@ -37,9 +37,8 @@ const CustomerOrders = () => {
     try {
       if (!user) return;
 
-      const response = await orderService.getOrdersByCustomer(user.id);
-      
-      setOrders(response.data || []);
+      const orders = await orderService.getOrdersByCustomer(user.id);
+      setOrders(orders || []);
     } catch (error: any) {
       console.error("Error loading orders:", error);
       toast({

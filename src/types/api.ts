@@ -106,6 +106,7 @@ export interface Product {
 export interface OrderItem {
   productId: string;
   quantity: number;
+  price: number;
 }
 
 export interface Order {

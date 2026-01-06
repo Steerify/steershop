@@ -18,15 +18,13 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      const response = await adminService.getAnalytics();
-      if (response.success && response.data) {
-        setStats({
-          totalShops: response.data.totalShops || 0,
-          totalProducts: response.data.totalProducts || 0,
-          totalOrders: response.data.totalOrders || 0,
-          totalUsers: response.data.totalUsers || 0,
-        });
-      }
+      const analytics = await adminService.getAnalytics();
+      setStats({
+        totalShops: analytics.totalShops || 0,
+        totalProducts: analytics.totalProducts || 0,
+        totalOrders: analytics.totalOrders || 0,
+        totalUsers: analytics.totalUsers || 0,
+      });
     } catch (error) {
       console.error("Error fetching admin stats:", error);
     }

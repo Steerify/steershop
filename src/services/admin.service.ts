@@ -1,6 +1,4 @@
-import api, { getAuthHeaders } from '@/lib/api';
-import { ApiResponse, PaginatedResponse, User, Shop, Order, Product, UserRole } from '@/types/api';
-import { handleApiError } from '@/lib/api-error-handler';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface AdminAnalytics {
   totalUsers: number;
@@ -10,84 +8,135 @@ export interface AdminAnalytics {
   totalOrders: number;
   pendingOrders: number;
   totalRevenue: number;
-  recentOrders: Order[];
+  recentOrders: any[];
 }
 
 const adminService = {
-  getAnalytics: async () => {
-    try {
-      const response = await api.get<ApiResponse<AdminAnalytics>>('/admin/analytics', {
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
+  getAnalytics: async (): Promise<AdminAnalytics> => {
+    const [
+      { count: totalUsers },
+      { count: totalShops },
+      { count: activeShops },
+      { count: totalProducts },
+      { count: totalOrders },
+      { count: pendingOrders },
+      { data: revenueData },
+      { data: recentOrders }
+    ] = await Promise.all([
+      supabase.from('profiles').select('*', { count: 'exact', head: true }),
+      supabase.from('shops').select('*', { count: 'exact', head: true }),
+      supabase.from('shops').select('*', { count: 'exact', head: true }).eq('is_active', true),
+      supabase.from('products').select('*', { count: 'exact', head: true }),
+      supabase.from('orders').select('*', { count: 'exact', head: true }),
+      supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('orders').select('total_amount').eq('payment_status', 'paid'),
+      supabase.from('orders').select('*, order_items(*, products(*))').order('created_at', { ascending: false }).limit(10)
+    ]);
+
+    const totalRevenue = revenueData?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0;
+
+    return {
+      totalUsers: totalUsers || 0,
+      totalShops: totalShops || 0,
+      activeShops: activeShops || 0,
+      totalProducts: totalProducts || 0,
+      totalOrders: totalOrders || 0,
+      pendingOrders: pendingOrders || 0,
+      totalRevenue,
+      recentOrders: recentOrders || []
+    };
   },
 
   getUsers: async (page = 1, limit = 10) => {
-    try {
-      const response = await api.get<PaginatedResponse<User>>('/admin/users', {
-        params: { page, limit },
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, error, count } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact' })
+      .range(from, to)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return {
+      data: data || [],
+      total: count || 0,
+      page,
+      limit
+    };
   },
 
   getShops: async (page = 1, limit = 10) => {
-    try {
-      const response = await api.get<PaginatedResponse<Shop>>('/admin/shops', {
-        params: { page, limit },
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, error, count } = await supabase
+      .from('shops')
+      .select('*, profiles(full_name, email)', { count: 'exact' })
+      .range(from, to)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return {
+      data: data || [],
+      total: count || 0,
+      page,
+      limit
+    };
   },
 
   getOrders: async (page = 1, limit = 10) => {
-    try {
-      const response = await api.get<PaginatedResponse<Order>>('/admin/orders', {
-        params: { page, limit },
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, error, count } = await supabase
+      .from('orders')
+      .select('*, order_items(*, products(*)), shops(shop_name)', { count: 'exact' })
+      .range(from, to)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return {
+      data: data || [],
+      total: count || 0,
+      page,
+      limit
+    };
   },
 
   getProducts: async (page = 1, limit = 10) => {
-    try {
-      const response = await api.get<PaginatedResponse<Product>>('/admin/products', {
-        params: { page, limit },
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, error, count } = await supabase
+      .from('products')
+      .select('*, shops(shop_name)', { count: 'exact' })
+      .range(from, to)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return {
+      data: data || [],
+      total: count || 0,
+      page,
+      limit
+    };
   },
 
-  updateUserRole: async (id: string, role: UserRole) => {
-    try {
-      const response = await api.patch<ApiResponse<User>>(`/admin/users/${id}/role`, { role }, {
-        headers: getAuthHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
+  updateUserRole: async (id: string, role: 'customer' | 'shop_owner' | 'admin') => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ role })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   },
 };
 
