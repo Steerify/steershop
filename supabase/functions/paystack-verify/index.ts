@@ -57,7 +57,14 @@ serve(async (req) => {
       reference,
       user_id: user.id,
       amount: verifyData.data.amount,
+      metadata: verifyData.data.metadata,
     });
+
+    // Extract metadata from payment
+    const metadata = verifyData.data.metadata || {};
+    const planId = metadata.plan_id;
+    const billingCycle = metadata.billing_cycle || 'monthly';
+    const subscriptionDays = metadata.subscription_days || 30;
 
     // Get current subscription expiry
     const { data: currentProfile } = await supabase
@@ -66,7 +73,7 @@ serve(async (req) => {
       .eq('id', user.id)
       .single();
     
-    // Calculate new expiry date (30 days from current expiry or now, whichever is later)
+    // Calculate new expiry date
     let newExpiryDate = new Date();
     
     if (currentProfile?.subscription_expires_at) {
@@ -77,16 +84,24 @@ serve(async (req) => {
       }
     }
     
-    // Add 30 days
-    newExpiryDate.setDate(newExpiryDate.getDate() + 30);
+    // Add subscription days based on billing cycle
+    newExpiryDate.setDate(newExpiryDate.getDate() + subscriptionDays);
 
-    // Update user profile
+    // Update user profile with subscription info
+    const updateData: any = {
+      is_subscribed: true,
+      subscription_expires_at: newExpiryDate.toISOString(),
+      subscription_type: billingCycle,
+    };
+
+    // Only set plan_id if it exists in metadata
+    if (planId) {
+      updateData.subscription_plan_id = planId;
+    }
+
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({
-        is_subscribed: true,
-        subscription_expires_at: newExpiryDate.toISOString(),
-      })
+      .update(updateData)
       .eq('id', user.id);
 
     if (updateError) {
@@ -96,6 +111,8 @@ serve(async (req) => {
 
     console.log('Subscription activated via verification:', {
       user_id: user.id,
+      plan_id: planId,
+      billing_cycle: billingCycle,
       expires_at: newExpiryDate.toISOString(),
       reference,
     });
@@ -104,6 +121,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         subscription_expires_at: newExpiryDate.toISOString(),
+        plan_id: planId,
+        billing_cycle: billingCycle,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

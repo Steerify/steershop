@@ -1,12 +1,15 @@
 project_id = "hwkcqgmtinbgyjjgcgmp"
 
 [functions.paystack-initialize]
-verify_jwt = true
+verify_jwt = false
 
 [functions.paystack-verify]
 verify_jwt = false
 
 [functions.paystack-webhook]
+verify_jwt = false
+
+[functions.paystack-setup-service]
 verify_jwt = false
 
 [functions.migrate-images]
