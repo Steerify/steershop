@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Clock, CheckCircle, AlertCircle, Calendar, Crown, Zap, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle, AlertCircle, Calendar, Crown, Zap, ArrowRight, Loader2, CreditCard, Gift, History } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
@@ -21,12 +21,23 @@ interface SubscriptionPlan {
   features: string[];
 }
 
+interface SubscriptionHistoryEvent {
+  id: string;
+  event_type: string;
+  plan_name: string | null;
+  amount: number | null;
+  new_expiry_at: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
 const Subscription = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan | null>(null);
   const [allPlans, setAllPlans] = useState<SubscriptionPlan[]>([]);
+  const [history, setHistory] = useState<SubscriptionHistoryEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -72,10 +83,50 @@ const Subscription = () => {
         const plan = parsedPlans.find(p => p.id === profileData.subscription_plan_id);
         setCurrentPlan(plan || null);
       }
+
+      // Fetch subscription history
+      const { data: historyData } = await supabase
+        .from("subscription_history")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      setHistory(historyData || []);
     } catch (error) {
       console.error("Error loading subscription data:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const getEventIcon = (eventType: string) => {
+    switch (eventType) {
+      case 'payment':
+        return <CreditCard className="w-4 h-4 text-green-600" />;
+      case 'extension':
+        return <Gift className="w-4 h-4 text-blue-600" />;
+      case 'activation':
+        return <CheckCircle className="w-4 h-4 text-primary" />;
+      case 'plan_change':
+        return <ArrowRight className="w-4 h-4 text-purple-600" />;
+      default:
+        return <History className="w-4 h-4 text-muted-foreground" />;
+    }
+  };
+
+  const getEventTitle = (event: SubscriptionHistoryEvent) => {
+    switch (event.event_type) {
+      case 'payment':
+        return `Payment - ${event.plan_name || 'Subscription'}`;
+      case 'extension':
+        return 'Subscription Extended';
+      case 'activation':
+        return `${event.plan_name || 'Subscription'} Activated`;
+      case 'plan_change':
+        return `Changed to ${event.plan_name}`;
+      default:
+        return 'Subscription Update';
     }
   };
 
@@ -215,6 +266,55 @@ const Subscription = () => {
                 </Button>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Subscription History */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-xl font-heading flex items-center gap-2">
+              <History className="w-5 h-5" />
+              Subscription History
+            </CardTitle>
+            <CardDescription>Your payment and plan change history</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {history.length === 0 ? (
+              <p className="text-muted-foreground text-center py-6">No subscription history yet</p>
+            ) : (
+              <div className="space-y-4">
+                {history.map((event) => (
+                  <div key={event.id} className="flex gap-4 p-4 rounded-lg border bg-muted/30">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      event.event_type === 'payment' ? 'bg-green-100' :
+                      event.event_type === 'extension' ? 'bg-blue-100' :
+                      event.event_type === 'activation' ? 'bg-primary/10' : 'bg-muted'
+                    }`}>
+                      {getEventIcon(event.event_type)}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{getEventTitle(event)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(event.created_at), "MMM dd, yyyy 'at' h:mm a")}
+                      </p>
+                      {event.amount && (
+                        <p className="text-sm text-green-600 font-medium mt-1">
+                          ₦{(event.amount / 100).toLocaleString()}
+                        </p>
+                      )}
+                      {event.new_expiry_at && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Valid until {format(new Date(event.new_expiry_at), "MMM dd, yyyy")}
+                        </p>
+                      )}
+                      {event.notes && (
+                        <p className="text-xs text-muted-foreground mt-1 italic">{event.notes}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

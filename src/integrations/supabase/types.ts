@@ -1221,6 +1221,59 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_history: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          created_by: string | null
+          event_type: string
+          id: string
+          new_expiry_at: string | null
+          notes: string | null
+          payment_reference: string | null
+          plan_id: string | null
+          plan_name: string | null
+          previous_expiry_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          event_type: string
+          id?: string
+          new_expiry_at?: string | null
+          notes?: string | null
+          payment_reference?: string | null
+          plan_id?: string | null
+          plan_name?: string | null
+          previous_expiry_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          event_type?: string
+          id?: string
+          new_expiry_at?: string | null
+          notes?: string | null
+          payment_reference?: string | null
+          plan_id?: string | null
+          plan_name?: string | null
+          previous_expiry_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_history_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_notifications: {
         Row: {
           created_at: string
