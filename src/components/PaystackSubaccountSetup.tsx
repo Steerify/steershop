@@ -155,7 +155,7 @@ export const PaystackSubaccountSetup = ({
           </div>
           <p className="text-xs text-muted-foreground mt-4">
             <Banknote className="w-3 h-3 inline mr-1" />
-            3% platform fee is deducted from each transaction
+            Payments are deposited directly to your bank account
           </p>
         </CardContent>
       </Card>
@@ -170,7 +170,7 @@ export const PaystackSubaccountSetup = ({
           Enable Direct Payments
         </CardTitle>
         <CardDescription>
-          Connect your bank account to receive customer payments directly. A 3% platform fee applies.
+          Connect your bank account to receive customer payments directly.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -215,9 +215,8 @@ export const PaystackSubaccountSetup = ({
             <p className="font-medium">How it works:</p>
             <ul className="text-muted-foreground space-y-1 text-xs">
               <li>• We'll verify your account details with Paystack</li>
-              <li>• Customer payments are split automatically</li>
-              <li>• You receive 97% directly to your bank</li>
-              <li>• SteerSolo takes 3% platform fee</li>
+              <li>• Customer payments go directly to your bank</li>
+              <li>• You receive 100% of every transaction</li>
             </ul>
           </div>
 

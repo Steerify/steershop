@@ -110,7 +110,7 @@ serve(async (req) => {
         business_name: business_name,
         settlement_bank: bank_code,
         account_number: account_number,
-        percentage_charge: 3, // SteerSolo takes 3% commission
+        percentage_charge: 0, // No platform fee
         primary_contact_email: user.email,
       }),
     });
