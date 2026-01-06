@@ -61,8 +61,7 @@ const CustomerDashboard = () => {
       // Get user profile for name
       setUserName(user.firstName || "Customer"); // Assuming User object has firstName or fallback
 
-      const ordersResponse = await orderService.getOrdersByCustomer(user.id);
-      const allOrders = ordersResponse.data || [];
+      const allOrders = await orderService.getOrdersByCustomer(user.id);
       
       setStats({
         totalOrders: allOrders.length,
