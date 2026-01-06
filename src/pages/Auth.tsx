@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,9 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { UserRole } from "@/types/api";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { clearSessionExpired, setReturnUrl } from "@/store/slices/uiSlice";
+import { resetSession } from "@/store/slices/activitySlice";
 
 const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -51,16 +54,24 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const defaultTab = searchParams.get("tab") || "login";
   const refCode = searchParams.get("ref") || "";
   const navigate = useNavigate();
   const { toast } = useToast();
+  const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState(defaultTab);
   const { signIn, signUp, signInWithGoogle, resetPassword, user, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
+
+  // Get return URL from Redux or location state
+  const returnUrl = useAppSelector((state) => state.ui.returnUrl);
+  const lastRoute = useAppSelector((state) => state.ui.lastRoute);
+  const sessionExpiredAt = useAppSelector((state) => state.ui.sessionExpiredAt);
+  const locationState = location.state as { from?: { pathname: string } } | null;
 
   const signupForm = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -83,13 +94,21 @@ const Auth = () => {
     },
   });
 
-  // Redirect if already logged in
+  // Redirect if already logged in - restore previous route if available
   useEffect(() => {
     if (user && !authLoading) {
-      const redirectPath = getDashboardPath(user.role);
-      navigate(redirectPath);
+      // Determine redirect path: returnUrl (from session expiry) > location state > last route > default dashboard
+      const defaultPath = getDashboardPath(user.role);
+      const redirectPath = returnUrl || locationState?.from?.pathname || lastRoute || defaultPath;
+      
+      // Clear session-related state
+      dispatch(clearSessionExpired());
+      dispatch(setReturnUrl(null));
+      dispatch(resetSession());
+      
+      navigate(redirectPath, { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, returnUrl, lastRoute, locationState, dispatch]);
 
   const getDashboardPath = (role: UserRole) => {
     switch (role) {

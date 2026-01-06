@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { lazy, Suspense } from "react";
 import { PageLoadingSkeleton } from "@/components/PageLoadingSkeleton";
+import { SessionExpiryModal } from "@/components/SessionExpiryModal";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { UserRole } from "@/types/api";
 
 // Eager load critical pages
 import Index from "./pages/Index";
@@ -54,6 +57,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <SessionExpiryModal />
       <BrowserRouter
         future={{
           v7_startTransition: true,
@@ -62,6 +66,7 @@ const App = () => (
       >
         <Suspense fallback={<PageLoadingSkeleton />}>
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/auth/:type" element={<Auth />} />
@@ -70,32 +75,119 @@ const App = () => (
             <Route path="/shops" element={<Shops />} />
             <Route path="/shop/:slug" element={<ShopStorefront />} />
             <Route path="/shop/:slug/product/:productId" element={<ProductDetails />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/my-store" element={<MyStore />} />
-            <Route path="/products" element={<Products />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/bookings" element={<Bookings />} />
             <Route path="/demo" element={<DemoStoreFront />} />
-            <Route path="/customer_dashboard" element={<CustomerDashboard />} />
-            <Route path="/customer/orders" element={<CustomerOrders />} />
-            <Route path="/customer/courses" element={<CustomerCourses />} />
-            <Route path="/customer/rewards" element={<CustomerRewards />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/shops" element={<AdminShops />} />
-            <Route path="/admin/products" element={<AdminProducts />} />
-            <Route path="/admin/orders" element={<AdminOrders />} />
-            <Route path="/admin/users" element={<AdminUsers />} />
-            <Route path="/admin/courses" element={<AdminCourses />} />
-            <Route path="/admin/prizes" element={<AdminPrizes />} />
-            <Route path="/admin/offers" element={<AdminOffers />} />
-            <Route path="/admin/referrals" element={<AdminReferrals />} />
-            <Route path="/feedback" element={<Feedback />} />
-            <Route path="/admin/feedback" element={<AdminFeedback />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/setup-service" element={<SetupService />} />
+            <Route path="/feedback" element={<Feedback />} />
+            
+            {/* Shop owner routes */}
+            <Route path="/onboarding" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <Onboarding />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-store" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <MyStore />
+              </ProtectedRoute>
+            } />
+            <Route path="/products" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <Products />
+              </ProtectedRoute>
+            } />
+            <Route path="/orders" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <Orders />
+              </ProtectedRoute>
+            } />
+            <Route path="/bookings" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <Bookings />
+              </ProtectedRoute>
+            } />
+            
+            {/* Customer routes */}
+            <Route path="/customer_dashboard" element={
+              <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
+                <CustomerDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/customer/orders" element={
+              <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
+                <CustomerOrders />
+              </ProtectedRoute>
+            } />
+            <Route path="/customer/courses" element={
+              <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
+                <CustomerCourses />
+              </ProtectedRoute>
+            } />
+            <Route path="/customer/rewards" element={
+              <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
+                <CustomerRewards />
+              </ProtectedRoute>
+            } />
+            
+            {/* Admin routes */}
+            <Route path="/admin" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/shops" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminShops />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/products" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminProducts />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/orders" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminOrders />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/users" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminUsers />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/courses" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminCourses />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/prizes" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminPrizes />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/offers" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminOffers />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/referrals" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminReferrals />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/feedback" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminFeedback />
+              </ProtectedRoute>
+            } />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
