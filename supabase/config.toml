@@ -12,6 +12,9 @@ verify_jwt = false
 [functions.paystack-setup-service]
 verify_jwt = false
 
+[functions.send-notification-email]
+verify_jwt = false
+
 [functions.migrate-images]
 verify_jwt = false
 
