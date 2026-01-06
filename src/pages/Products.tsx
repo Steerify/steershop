@@ -217,8 +217,7 @@ const Products = () => {
     if (!confirm(`Are you sure you want to delete this product?`)) return;
 
     try {
-      // Assuming deleteProduct method exists
-      // await productService.deleteProduct(productId);
+      await productService.deleteProduct(productId);
       
       toast({
         title: "Success",
@@ -227,7 +226,11 @@ const Products = () => {
 
       loadShopAndProducts();
     } catch (error: any) {
-      // Error handled
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete product",
+        variant: "destructive",
+      });
     }
   };
 

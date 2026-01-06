@@ -9,7 +9,7 @@ import { rewardService } from "@/services/reward.service";
 import { courseService } from "@/services/course.service";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Package, Clock, CheckCircle2, Award, GraduationCap, ArrowRight } from "lucide-react";
+import { ShoppingBag, Package, Clock, CheckCircle2, Award, GraduationCap, ArrowRight, Store } from "lucide-react";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
 import Joyride, { CallBackProps, STATUS } from "react-joyride";
@@ -17,6 +17,7 @@ import { useTour } from "@/hooks/useTour";
 import { TourTooltip } from "@/components/tours/TourTooltip";
 import { customerDashboardTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
+import { ReferralCard } from "@/components/ReferralCard";
 
 const CustomerDashboard = () => {
   const navigate = useNavigate();
@@ -59,7 +60,7 @@ const CustomerDashboard = () => {
       if (!user) return;
 
       // Get user profile for name
-      setUserName(user.firstName || "Customer"); // Assuming User object has firstName or fallback
+      setUserName(user.firstName || user.email?.split('@')[0] || "Customer");
 
       const allOrders = await orderService.getOrdersByCustomer(user.id);
       
@@ -185,57 +186,66 @@ const CustomerDashboard = () => {
               </Card>
             </div>
 
-            {/* Recent Orders */}
-            <Card className="border-primary/10" data-tour="recent-orders">
-              <CardHeader className="border-b border-border/50">
-                <CardTitle className="font-heading">Recent Orders</CardTitle>
-                <CardDescription>Your latest order activity</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                {recentOrders.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center">
-                      <ShoppingBag className="w-8 h-8 text-primary" />
+            {/* Two Column Layout: Orders + Referral */}
+            <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
+              {/* Recent Orders - Takes 2 columns */}
+              <Card className="border-primary/10 lg:col-span-2" data-tour="recent-orders">
+                <CardHeader className="border-b border-border/50">
+                  <CardTitle className="font-heading">Recent Orders</CardTitle>
+                  <CardDescription>Your latest order activity</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  {recentOrders.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center">
+                        <ShoppingBag className="w-8 h-8 text-primary" />
+                      </div>
+                      <p className="text-muted-foreground mb-4">No orders yet</p>
+                      <Button onClick={() => navigate("/shops")} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                        <Store className="w-4 h-4 mr-2" />
+                        Start Shopping
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
                     </div>
-                    <p className="text-muted-foreground mb-4">No orders yet</p>
-                    <Button onClick={() => navigate("/shops")} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
-                      Start Shopping
+                  ) : (
+                    <div className="space-y-3">
+                      {recentOrders.map((order) => (
+                        <div key={order.id} className="flex items-center justify-between p-4 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors">
+                          <div>
+                            <p className="font-semibold">Order #{order.id.slice(0, 8)}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-heading font-bold text-primary">₦{parseFloat(order.total_amount).toLocaleString()}</p>
+                            <p className="text-sm text-muted-foreground capitalize">
+                              {order.status.replace(/_/g, ' ')}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {recentOrders.length > 0 && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full mt-4 hover:bg-primary/10"
+                      onClick={() => navigate("/customer/orders")}
+                    >
+                      View All Orders
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {recentOrders.map((order) => (
-                      <div key={order.id} className="flex items-center justify-between p-4 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors">
-                        <div>
-                          <p className="font-semibold">Order #{order.id.slice(0, 8)}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(order.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-heading font-bold text-primary">₦{parseFloat(order.total_amount).toLocaleString()}</p>
-                          <p className="text-sm text-muted-foreground capitalize">
-                            {order.status.replace(/_/g, ' ')}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {recentOrders.length > 0 && (
-                  <Button 
-                    variant="outline" 
-                    className="w-full mt-4 hover:bg-primary/10"
-                    onClick={() => navigate("/customer/orders")}
-                  >
-                    View All Orders
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Referral Card - Takes 1 column */}
+              <div className="lg:col-span-1">
+                <ReferralCard />
+              </div>
+            </div>
           </main>
         </div>
       </div>

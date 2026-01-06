@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Award, Gift, Clock, CheckCircle2 } from "lucide-react";
+import { Loader2, Award, Gift, Clock, CheckCircle2, Sparkles, BookOpen, Star } from "lucide-react";
+import { AdirePattern } from "@/components/patterns/AdirePattern";
 
 interface Prize {
   id: string;
@@ -121,7 +122,7 @@ const CustomerRewards = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -129,38 +130,88 @@ const CustomerRewards = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
+        <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
         <CustomerSidebar />
         
-        <div className="flex-1">
-          <header className="h-16 border-b bg-card flex items-center px-6 justify-between">
+        <div className="flex-1 relative z-10">
+          <header className="h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center px-6 justify-between">
+            <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-primary via-accent to-primary" />
             <div className="flex items-center">
               <SidebarTrigger className="mr-4" />
-              <h1 className="text-2xl font-bold">Rewards Store</h1>
+              <h1 className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Rewards Store
+              </h1>
             </div>
-            <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-lg">
+            <div className="flex items-center gap-2 bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-2 rounded-xl border border-primary/20">
               <Award className="w-5 h-5 text-primary" />
-              <span className="font-semibold">{totalPoints} Points</span>
+              <span className="font-bold text-primary">{totalPoints}</span>
+              <span className="text-muted-foreground text-sm">Points</span>
             </div>
           </header>
 
-          <main className="p-6">
+          <main className="p-6 space-y-6">
+            {/* Points Hero */}
+            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-accent/20 to-transparent rounded-full blur-3xl" />
+              <CardContent className="p-6 relative">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg">
+                      <Star className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Your Balance</p>
+                      <p className="text-4xl font-bold font-heading text-primary">{totalPoints} Points</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => navigate("/customer/courses")}>
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Earn More Points
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Tabs defaultValue="prizes" className="space-y-6">
-              <TabsList>
-                <TabsTrigger value="prizes">
+              <TabsList className="bg-card border">
+                <TabsTrigger value="prizes" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <Gift className="w-4 h-4 mr-2" />
                   Available Prizes ({prizes.length})
                 </TabsTrigger>
-                <TabsTrigger value="claimed">
+                <TabsTrigger value="claimed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
                   My Claims ({claims.length})
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="prizes" className="space-y-4">
                 {prizes.length === 0 ? (
-                  <Card>
-                    <CardContent className="py-12 text-center">
-                      <Gift className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-muted-foreground">No prizes available at the moment</p>
+                  <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
+                    <CardContent className="py-16 text-center">
+                      <div className="relative inline-block mb-4">
+                        <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground">
+                          Coming Soon
+                        </Badge>
+                        <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl flex items-center justify-center">
+                          <Gift className="w-10 h-10 text-primary" />
+                        </div>
+                      </div>
+                      <h3 className="text-xl font-heading font-semibold mb-2">Exciting Prizes Coming Soon!</h3>
+                      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                        We're preparing amazing rewards for our loyal customers.
+                        Complete courses and earn points to redeem prizes!
+                      </p>
+                      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
+                        <Sparkles className="w-4 h-4 text-accent" />
+                        <span>Earn points by completing courses and making referrals</span>
+                      </div>
+                      <Button onClick={() => navigate("/customer/courses")} className="bg-gradient-to-r from-primary to-accent">
+                        <BookOpen className="w-4 h-4 mr-2" />
+                        Start Earning Points
+                      </Button>
                     </CardContent>
                   </Card>
                 ) : (

@@ -37,7 +37,8 @@ const signupSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
   lastName: z.string().min(2, "Last name is required"),
   phone: z.string().min(10, "Valid phone number is required"),
-  role: z.enum(["ENTREPRENEUR", "CUSTOMER"])
+  role: z.enum(["ENTREPRENEUR", "CUSTOMER"]),
+  referralCode: z.string().optional()
 });
 
 const loginSchema = z.object({
@@ -51,6 +52,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get("tab") || "login";
+  const refCode = searchParams.get("ref") || "";
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -69,6 +71,7 @@ const Auth = () => {
       lastName: "",
       phone: "",
       role: "ENTREPRENEUR",
+      referralCode: refCode,
     },
   });
 
@@ -486,6 +489,20 @@ const Auth = () => {
                             </RadioGroup>
                           </FormControl>
                           <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={signupForm.control}
+                      name="referralCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Referral Code (Optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. SS-ABC123" {...field} className="uppercase" />
+                          </FormControl>
+                          <FormMessage />
+                          <p className="text-xs text-muted-foreground">Have a friend's code? Enter it to earn 25 bonus points!</p>
                         </FormItem>
                       )}
                     />

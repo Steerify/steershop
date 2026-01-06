@@ -711,6 +711,66 @@ export type Database = {
           },
         ]
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string | null
+          id: string
+          points_earned: number | null
+          qualified_at: string | null
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          rewarded_at: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          points_earned?: number | null
+          qualified_at?: string | null
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          rewarded_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          points_earned?: number | null
+          qualified_at?: string | null
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          rewarded_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       revenue_transactions: {
         Row: {
           amount: number

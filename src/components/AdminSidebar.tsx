@@ -19,7 +19,8 @@ import {
   Gift,
   GraduationCap,
   Award,
-  MessageSquare
+  MessageSquare,
+  UserPlus
 } from "lucide-react";
 import logo from "@/assets/steersolo-logo.jpg";
 
@@ -29,6 +30,7 @@ const menuItems = [
   { title: "Products", url: "/admin/products", icon: Package },
   { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
   { title: "Users", url: "/admin/users", icon: Users },
+  { title: "Referrals", url: "/admin/referrals", icon: UserPlus },
   { title: "Courses", url: "/admin/courses", icon: GraduationCap },
   { title: "Rewards", url: "/admin/prizes", icon: Award },
   { title: "Special Offers", url: "/admin/offers", icon: Gift },

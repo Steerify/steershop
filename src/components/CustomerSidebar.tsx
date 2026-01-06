@@ -1,4 +1,4 @@
-import { Home, ShoppingBag, Sparkles, GraduationCap, LogOut } from "lucide-react";
+import { Home, ShoppingBag, Sparkles, GraduationCap, LogOut, Users } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   Sidebar,
