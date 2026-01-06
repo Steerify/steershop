@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import shopService from "@/services/shop.service";
 import orderService from "@/services/order.service";
 import offerService from "@/services/offer.service";
+import productService from "@/services/product.service";
 import { useToast } from "@/hooks/use-toast";
 import { Store, Package, ShoppingCart, LogOut, Clock, CheckCircle, AlertCircle, ArrowRight, TrendingUp, DollarSign, CalendarCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ import { TourTooltip } from "@/components/tours/TourTooltip";
 import { dashboardTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
 import { StrokeMyShop } from "@/components/ai/StrokeMyShop";
+import { ProfileCompletionChecklist } from "@/components/ProfileCompletionChecklist";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -35,6 +37,8 @@ const Dashboard = () => {
   const [activeOffer, setActiveOffer] = useState<any>(null);
   const [subscriptionPrice, setSubscriptionPrice] = useState(1000);
   const [shopData, setShopData] = useState<{ id: string; name: string } | null>(null);
+  const [shopFullData, setShopFullData] = useState<any>(null);
+  const [productsCount, setProductsCount] = useState(0);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
@@ -103,6 +107,11 @@ const Dashboard = () => {
 
       if (primaryShop) {
         setShopData({ id: primaryShop.id, name: primaryShop.shop_name || primaryShop.name });
+        setShopFullData(primaryShop);
+        
+        // Fetch products count for checklist
+        const productsResponse = await productService.getProducts({ shopId: primaryShop.id });
+        setProductsCount(productsResponse.data?.length || 0);
         
         const ordersResponse = await orderService.getOrders({ shopId: primaryShop.id });
         const allOrders = ordersResponse.data || [];
@@ -284,6 +293,9 @@ const Dashboard = () => {
             </Card>
           )}
         </div>
+
+        {/* Profile Completion Checklist */}
+        <ProfileCompletionChecklist shop={shopFullData} productsCount={productsCount} />
 
         {(subscriptionStatus === 'trial' || subscriptionStatus === 'expired') && (
           <Card className="mb-6 sm:mb-8 border-2 border-gold/30 bg-gold/5">
