@@ -97,6 +97,7 @@ export default function AdminUsers() {
         ? new Date(selectedUser.subscription_expires_at)
         : new Date();
       
+      const previousExpiry = selectedUser.subscription_expires_at;
       const newExpiry = addDays(currentExpiry > new Date() ? currentExpiry : new Date(), days);
 
       const { error } = await supabase
@@ -108,6 +109,16 @@ export default function AdminUsers() {
         .eq('id', selectedUser.id);
 
       if (error) throw error;
+
+      // Log to subscription history
+      await supabase.from('subscription_history').insert({
+        user_id: selectedUser.id,
+        event_type: 'extension',
+        plan_name: getPlanName(selectedUser.subscription_plan_id),
+        previous_expiry_at: previousExpiry,
+        new_expiry_at: newExpiry.toISOString(),
+        notes: `Extended by ${days} days by admin`,
+      });
 
       toast({
         title: "Subscription Extended",
@@ -130,6 +141,8 @@ export default function AdminUsers() {
     if (!selectedUser || !customDate) return;
 
     try {
+      const previousExpiry = selectedUser.subscription_expires_at;
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -139,6 +152,16 @@ export default function AdminUsers() {
         .eq('id', selectedUser.id);
 
       if (error) throw error;
+
+      // Log to subscription history
+      await supabase.from('subscription_history').insert({
+        user_id: selectedUser.id,
+        event_type: 'extension',
+        plan_name: getPlanName(selectedUser.subscription_plan_id),
+        previous_expiry_at: previousExpiry,
+        new_expiry_at: customDate.toISOString(),
+        notes: 'Extended to custom date by admin',
+      });
 
       toast({
         title: "Subscription Extended",
@@ -162,9 +185,10 @@ export default function AdminUsers() {
     if (!selectedUser) return;
 
     try {
+      const newExpiry = addDays(new Date(), 30);
       const updateData: any = {
         is_subscribed: true,
-        subscription_expires_at: addDays(new Date(), 30).toISOString(),
+        subscription_expires_at: newExpiry.toISOString(),
       };
 
       if (selectedPlanId) {
@@ -179,6 +203,17 @@ export default function AdminUsers() {
       if (error) throw error;
 
       const planName = plans.find(p => p.id === selectedPlanId)?.name || 'Basic';
+
+      // Log to subscription history
+      await supabase.from('subscription_history').insert({
+        user_id: selectedUser.id,
+        event_type: 'activation',
+        plan_id: selectedPlanId || null,
+        plan_name: planName,
+        new_expiry_at: newExpiry.toISOString(),
+        notes: 'Activated by admin',
+      });
+
       toast({
         title: "Subscription Activated",
         description: `${selectedUser.email} now has an active ${planName} subscription for 30 days.`,
