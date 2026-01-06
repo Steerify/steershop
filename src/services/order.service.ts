@@ -67,7 +67,7 @@ const orderService = {
 
     let query = supabase
       .from('orders')
-      .select('*, order_items(*, products(*)), shops(name)', { count: 'exact' });
+      .select('*, order_items(*, products(*)), shops(shop_name)', { count: 'exact' });
 
     if (params?.shopId) {
       query = query.eq('shop_id', params.shopId);

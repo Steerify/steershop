@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Award, BookOpen, CheckCircle2, Lock } from "lucide-react";
+import { Loader2, Award, BookOpen, CheckCircle2, Lock, Sparkles, Gift, Clock } from "lucide-react";
+import { AdirePattern } from "@/components/patterns/AdirePattern";
 import DOMPurify from "dompurify";
 
 interface Course {
@@ -131,7 +132,7 @@ const CustomerCourses = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -139,41 +140,90 @@ const CustomerCourses = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
+        <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
         <CustomerSidebar />
         
-        <div className="flex-1">
-          <header className="h-16 border-b bg-card flex items-center px-6 justify-between">
+        <div className="flex-1 relative z-10">
+          <header className="h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center px-6 justify-between">
+            <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-primary via-accent to-primary" />
             <div className="flex items-center">
               <SidebarTrigger className="mr-4" />
-              <h1 className="text-2xl font-bold">Learning Courses</h1>
+              <h1 className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Learning Courses
+              </h1>
             </div>
-            <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-lg">
+            <div className="flex items-center gap-2 bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-2 rounded-xl border border-primary/20">
               <Award className="w-5 h-5 text-primary" />
-              <span className="font-semibold">{totalPoints} Points</span>
+              <span className="font-bold text-primary">{totalPoints}</span>
+              <span className="text-muted-foreground text-sm">Points</span>
             </div>
           </header>
 
-          <main className="p-6">
+          <main className="p-6 space-y-6">
+            {/* Learning Progress Hero */}
+            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-accent/20 to-transparent rounded-full blur-3xl" />
+              <CardContent className="p-6 relative">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg">
+                      <BookOpen className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Your Learning Journey</p>
+                      <p className="text-2xl font-bold font-heading">
+                        {completedCourses.length} of {courses.length} Courses Completed
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => navigate("/customer/rewards")}>
+                      <Gift className="w-4 h-4 mr-2" />
+                      View Rewards
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Tabs defaultValue="available" className="space-y-6">
-              <TabsList>
-                <TabsTrigger value="available">
+              <TabsList className="bg-card border">
+                <TabsTrigger value="available" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <BookOpen className="w-4 h-4 mr-2" />
                   Available ({availableCourses.length})
                 </TabsTrigger>
-                <TabsTrigger value="in-progress">
+                <TabsTrigger value="in-progress" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <Clock className="w-4 h-4 mr-2" />
                   In Progress ({inProgressCourses.length})
                 </TabsTrigger>
-                <TabsTrigger value="completed">
+                <TabsTrigger value="completed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
                   Completed ({completedCourses.length})
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="available" className="space-y-4">
                 {availableCourses.length === 0 ? (
-                  <Card>
-                    <CardContent className="py-12 text-center">
-                      <Lock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-muted-foreground">No available courses at the moment</p>
+                  <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
+                    <CardContent className="py-16 text-center">
+                      <div className="relative inline-block mb-4">
+                        <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground">
+                          Coming Soon
+                        </Badge>
+                        <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl flex items-center justify-center">
+                          <BookOpen className="w-10 h-10 text-primary" />
+                        </div>
+                      </div>
+                      <h3 className="text-xl font-heading font-semibold mb-2">Exciting Courses Coming Soon!</h3>
+                      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                        We're preparing educational content to help you become a smarter shopper.
+                        Complete courses to earn reward points!
+                      </p>
+                      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                        <Sparkles className="w-4 h-4 text-accent" />
+                        <span>Earn up to 100 points per course</span>
+                      </div>
                     </CardContent>
                   </Card>
                 ) : (
