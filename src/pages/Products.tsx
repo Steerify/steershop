@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { z } from "zod";
+import { PageWrapper } from "@/components/PageWrapper";
 import { Switch } from "@/components/ui/switch";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -253,10 +254,8 @@ const Products = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
-      <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
-      
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 relative z-10">
+    <PageWrapper patternVariant="dots" patternOpacity={0.5}>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="mb-4 sm:mb-6 flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10 min-h-[44px] px-2 sm:px-4">
             <ArrowLeft className="w-4 h-4 sm:mr-2" />
@@ -573,7 +572,7 @@ const Products = () => {
           }
         }}
       />
-    </div>
+    </PageWrapper>
   );
 };
 

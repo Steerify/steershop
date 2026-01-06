@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Store, Package, Sparkles } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { TopSellerBanner } from "@/components/TopSellerBanner";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -463,6 +464,11 @@ const Shops = () => {
           </div>
         </div>
       </section>
+
+      {/* Top Seller Banner */}
+      <div className="container mx-auto px-4 mb-8">
+        <TopSellerBanner />
+      </div>
 
       {/* Main Content */}
       <div className="flex-1 container mx-auto px-4 pb-20">

@@ -444,3 +444,16 @@ div[aria-labelledby="button-label"] {
 .animate-blink {
   animation: blink 1s step-end infinite;
 }
+
+/* Google Sign-In button alignment */
+.google-sign-in-container > div,
+.google-sign-in-container > div > div {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+#credential_picker_container {
+  top: 60px !important;
+  right: 16px !important;
+}
