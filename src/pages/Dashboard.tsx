@@ -328,21 +328,21 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div data-tour="subscription-status">
+            <div data-tour="subscription-status" className="cursor-pointer" onClick={() => navigate('/subscription')}>
               {subscriptionStatus === 'trial' && daysRemaining > 0 && (
-                <Badge variant="outline" className="text-sm sm:text-lg py-1.5 sm:py-2 px-3 sm:px-4 border-gold text-gold bg-gold/10">
+                <Badge variant="outline" className="text-sm sm:text-lg py-1.5 sm:py-2 px-3 sm:px-4 border-gold text-gold bg-gold/10 hover:bg-gold/20 transition-colors">
                   <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                   {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} trial remaining
                 </Badge>
               )}
               {subscriptionStatus === 'active' && (
-                <Badge variant="outline" className="text-sm sm:text-lg py-1.5 sm:py-2 px-3 sm:px-4 border-green-500 text-green-500 bg-green-500/10">
+                <Badge variant="outline" className="text-sm sm:text-lg py-1.5 sm:py-2 px-3 sm:px-4 border-green-500 text-green-500 bg-green-500/10 hover:bg-green-500/20 transition-colors">
                   <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                   Active Subscription
                 </Badge>
               )}
               {subscriptionStatus === 'expired' && (
-                <Badge variant="outline" className="text-sm sm:text-lg py-1.5 sm:py-2 px-3 sm:px-4 border-destructive text-destructive bg-destructive/10">
+                <Badge variant="outline" className="text-sm sm:text-lg py-1.5 sm:py-2 px-3 sm:px-4 border-destructive text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors">
                   <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                   Subscription Expired
                 </Badge>
