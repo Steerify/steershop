@@ -10,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Minus, Plus, ShoppingCart, Trash2, CreditCard, MessageCircle, Copy, Check, Upload, Camera, User } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { z } from "zod";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { saveCheckoutDraft, clearCheckoutDraft } from "@/store/slices/formSlice";
+import { clearCart } from "@/store/slices/cartSlice";
 
 interface Product {
   id: string;
@@ -225,13 +228,15 @@ const openWhatsAppWithOrderDetails = (
 const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAmount }: CheckoutDialogProps) => {
   const { toast } = useToast();
   const { user, isLoading: isAuthLoading } = useAuth();
+  const dispatch = useAppDispatch();
+  const checkoutDraft = useAppSelector((state) => state.forms.checkoutDraft);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentChoice, setPaymentChoice] = useState<"pay_before" | "delivery_before">("delivery_before");
   const [formData, setFormData] = useState({
-    customer_name: "",
-    customer_email: "",
-    customer_phone: "",
-    delivery_address: "",
+    customer_name: checkoutDraft?.customerName || "",
+    customer_email: checkoutDraft?.customerEmail || "",
+    customer_phone: checkoutDraft?.customerPhone || "",
+    delivery_address: checkoutDraft?.deliveryAddress || "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -240,6 +245,17 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   const [isInitializingPayment, setIsInitializingPayment] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [proofSent, setProofSent] = useState(false);
+
+  // Save form data to Redux on change
+  const handleFormChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    dispatch(saveCheckoutDraft({
+      customerName: field === 'customer_name' ? value : formData.customer_name,
+      customerEmail: field === 'customer_email' ? value : formData.customer_email,
+      customerPhone: field === 'customer_phone' ? value : formData.customer_phone,
+      deliveryAddress: field === 'delivery_address' ? value : formData.delivery_address,
+    }));
+  };
 
   // Auto-fill customer info for logged-in users
   useEffect(() => {
