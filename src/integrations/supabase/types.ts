@@ -282,6 +282,58 @@ export type Database = {
         }
         Relationships: []
       }
+      featured_shop_analytics: {
+        Row: {
+          clicked_at: string | null
+          device_type: string | null
+          featured_shop_id: string
+          id: string
+          shop_id: string
+          source: string | null
+          user_id: string | null
+        }
+        Insert: {
+          clicked_at?: string | null
+          device_type?: string | null
+          featured_shop_id: string
+          id?: string
+          shop_id: string
+          source?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          clicked_at?: string | null
+          device_type?: string | null
+          featured_shop_id?: string
+          id?: string
+          shop_id?: string
+          source?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_shop_analytics_featured_shop_id_fkey"
+            columns: ["featured_shop_id"]
+            isOneToOne: false
+            referencedRelation: "featured_shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "featured_shop_analytics_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "featured_shop_analytics_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       featured_shops: {
         Row: {
           created_at: string | null
@@ -329,6 +381,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      marketing_ai_usage: {
+        Row: {
+          created_at: string | null
+          credits_used: number | null
+          feature_type: string
+          id: string
+          prompt: string | null
+          result: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          credits_used?: number | null
+          feature_type: string
+          id?: string
+          prompt?: string | null
+          result?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          credits_used?: number | null
+          feature_type?: string
+          id?: string
+          prompt?: string | null
+          result?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       onboarding_responses: {
         Row: {
@@ -543,6 +625,45 @@ export type Database = {
           subject?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      poster_templates: {
+        Row: {
+          category: string
+          created_at: string | null
+          creator_id: string | null
+          id: string
+          is_platform: boolean | null
+          is_public: boolean | null
+          name: string
+          template_data: Json
+          thumbnail_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          creator_id?: string | null
+          id?: string
+          is_platform?: boolean | null
+          is_public?: boolean | null
+          name: string
+          template_data?: Json
+          thumbnail_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          creator_id?: string | null
+          id?: string
+          is_platform?: boolean | null
+          is_public?: boolean | null
+          name?: string
+          template_data?: Json
+          thumbnail_url?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1475,6 +1596,67 @@ export type Database = {
           },
         ]
       }
+      user_posters: {
+        Row: {
+          canvas_data: Json
+          created_at: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          shop_id: string | null
+          template_id: string | null
+          thumbnail_url: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          canvas_data?: Json
+          created_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          shop_id?: string | null
+          template_id?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          canvas_data?: Json
+          created_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          shop_id?: string | null
+          template_id?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_posters_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_posters_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_posters_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "poster_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1571,6 +1753,7 @@ export type Database = {
         Args: { p_prize_id: string; p_user_id: string }
         Returns: Json
       }
+      cleanup_expired_featured_shops: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
