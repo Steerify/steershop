@@ -115,7 +115,26 @@ serve(async (req) => {
     }
 
     // Parse usage check result
-    const usageResult = usageCheck as { can_use: boolean; is_business: boolean; current_usage: number; max_usage: number } | null;
+    const usageResult = usageCheck as { 
+      can_use: boolean; 
+      blocked_by_plan: boolean;
+      is_business: boolean; 
+      current_usage: number; 
+      max_usage: number 
+    } | null;
+
+    // Check if blocked by plan (Basic users have no AI access)
+    if (usageResult && usageResult.blocked_by_plan) {
+      console.log(`User ${user.id} is blocked from stroke_my_shop by their plan`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'AI features are not available on your current plan. Upgrade to Pro or Business to unlock!',
+          blocked_by_plan: true,
+          plan_slug: 'basic'
+        }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (usageResult && !usageResult.can_use) {
       console.log(`User ${user.id} has reached stroke_my_shop limit: ${usageResult.current_usage}/${usageResult.max_usage}`);
