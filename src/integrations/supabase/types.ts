@@ -282,6 +282,54 @@ export type Database = {
         }
         Relationships: []
       }
+      featured_shops: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          label: string | null
+          shop_id: string
+          tagline: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string | null
+          shop_id: string
+          tagline?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string | null
+          shop_id?: string
+          tagline?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_shops_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "featured_shops_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_responses: {
         Row: {
           biggest_struggle: string | null
