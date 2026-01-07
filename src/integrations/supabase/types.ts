@@ -1518,6 +1518,7 @@ export type Database = {
         Args: { _feature_name: string; _user_id: string }
         Returns: Json
       }
+      check_product_limit: { Args: { _user_id: string }; Returns: Json }
       claim_prize: {
         Args: { p_prize_id: string; p_user_id: string }
         Returns: Json

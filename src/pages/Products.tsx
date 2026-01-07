@@ -25,6 +25,8 @@ import productService from "@/services/product.service";
 import { Shop, Product } from "@/types/api";
 import { handleApiError } from "@/lib/api-error-handler";
 import { useAuth } from "@/context/AuthContext";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
 
 const productSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters").max(200, "Name must be less than 200 characters"),
@@ -37,6 +39,7 @@ const Products = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { checkProductLimit } = useSubscriptionLimits();
   const [shop, setShop] = useState<Shop | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,6 +48,12 @@ const Products = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [imageUrl, setImageUrl] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"all" | "products" | "services">("all");
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [productLimitInfo, setProductLimitInfo] = useState<{
+    current_count: number;
+    max_allowed: number;
+    plan_slug: string;
+  } | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -128,24 +137,41 @@ const Products = () => {
     setErrors({});
   };
 
-  const handleOpenDialog = (product?: Product) => {
+  const handleOpenDialog = async (product?: Product) => {
     if (product) {
+      // Editing existing product - no limit check needed
       setEditingProduct(product);
       setFormData({
         name: product.name,
         description: product.description || "",
         price: product.price.toString(),
         inventory: product.inventory.toString(),
-        is_available: true, // Placeholder
-        type: "product", // Placeholder
+        is_available: true,
+        type: "product",
         duration_minutes: "",
         booking_required: false,
       });
       setImageUrl(product.images?.[0]?.url || "");
+      setIsDialogOpen(true);
     } else {
+      // Creating new product - check limits first
+      const limitCheck = await checkProductLimit();
+      if (limitCheck) {
+        setProductLimitInfo({
+          current_count: limitCheck.current_count,
+          max_allowed: limitCheck.max_allowed,
+          plan_slug: limitCheck.plan_slug,
+        });
+        
+        if (!limitCheck.can_create) {
+          // Show upgrade prompt instead of opening dialog
+          setShowUpgradePrompt(true);
+          return;
+        }
+      }
       resetForm();
+      setIsDialogOpen(true);
     }
-    setIsDialogOpen(true);
   };
 
   // Image upload logic will be moved to a real API endpoint later
@@ -254,19 +280,30 @@ const Products = () => {
   }
 
   return (
-    <PageWrapper patternVariant="dots" patternOpacity={0.5}>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <div className="mb-4 sm:mb-6 flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10 min-h-[44px] px-2 sm:px-4">
-            <ArrowLeft className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Back to Dashboard</span>
-          </Button>
-          <TourButton 
-            onStartTour={startTour} 
-            hasSeenTour={hasSeenTour} 
-            onResetTour={resetTour}
-          />
-        </div>
+    <>
+      {/* Upgrade Prompt for Product Limit */}
+      <UpgradePrompt
+        isOpen={showUpgradePrompt}
+        onClose={() => setShowUpgradePrompt(false)}
+        feature="products"
+        currentPlan={productLimitInfo?.plan_slug || "basic"}
+        currentCount={productLimitInfo?.current_count}
+        maxAllowed={productLimitInfo?.max_allowed}
+      />
+
+      <PageWrapper patternVariant="dots" patternOpacity={0.5}>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="mb-4 sm:mb-6 flex items-center justify-between">
+            <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10 min-h-[44px] px-2 sm:px-4">
+              <ArrowLeft className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Back to Dashboard</span>
+            </Button>
+            <TourButton 
+              onStartTour={startTour} 
+              hasSeenTour={hasSeenTour} 
+              onResetTour={resetTour}
+            />
+          </div>
 
         <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -572,7 +609,8 @@ const Products = () => {
           }
         }}
       />
-    </PageWrapper>
+      </PageWrapper>
+    </>
   );
 };
 

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface FeatureUsageResult {
   can_use: boolean;
+  blocked_by_plan: boolean;
   current_usage: number;
   max_usage: number;
   is_business: boolean;
