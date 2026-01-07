@@ -208,7 +208,7 @@ export const StrokeMyShop = ({ shopId, shopName }: StrokeMyShopProps) => {
             Stroke My Shop
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-2xl max-h-[85vh]">
+        <DialogContent className="w-[calc(100%-2rem)] sm:max-w-2xl max-h-[85vh] mx-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">

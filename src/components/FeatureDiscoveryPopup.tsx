@@ -98,7 +98,7 @@ export const FeatureDiscoveryPopup = ({
   return (
     <div
       className={cn(
-        "fixed bottom-4 right-4 z-50 w-80 animate-slide-in-right",
+        "fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 z-50 w-auto sm:w-80 max-w-[calc(100vw-2rem)] animate-slide-in-right",
         className
       )}
     >
