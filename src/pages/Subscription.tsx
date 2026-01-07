@@ -140,7 +140,13 @@ const Subscription = () => {
 
   const subStatus = profile ? calculateSubscriptionStatus(profile) : { status: 'expired', daysRemaining: 0 };
   const expiryDate = profile?.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
-  const progressPercentage = subStatus.daysRemaining > 0 ? Math.min((subStatus.daysRemaining / 30) * 100, 100) : 0;
+  
+  // Convert kobo to Naira for display
+  const formatPrice = (kobo: number) => (kobo / 100).toLocaleString();
+  
+  // Use correct max days based on billing cycle
+  const maxDays = profile?.subscription_type === 'yearly' ? 365 : 30;
+  const progressPercentage = subStatus.daysRemaining > 0 ? Math.min((subStatus.daysRemaining / maxDays) * 100, 100) : 0;
 
   return (
     <PageWrapper patternVariant="dots" patternOpacity={0.5}>
@@ -201,7 +207,7 @@ const Subscription = () => {
               </div>
               {currentPlan && (
                 <p className="text-muted-foreground">
-                  ₦{currentPlan.price_monthly.toLocaleString()}/month
+                  ₦{formatPrice(currentPlan.price_monthly)}/month
                 </p>
               )}
             </div>
@@ -342,11 +348,11 @@ const Subscription = () => {
                     )}
                   </div>
                   <p className="text-2xl font-bold text-primary mb-1">
-                    ₦{plan.price_monthly.toLocaleString()}
+                    ₦{formatPrice(plan.price_monthly)}
                     <span className="text-sm font-normal text-muted-foreground">/mo</span>
                   </p>
                   <p className="text-xs text-muted-foreground mb-3">
-                    or ₦{plan.price_yearly.toLocaleString()}/year (save 2 months)
+                    or ₦{formatPrice(plan.price_yearly)}/year (save 2 months)
                   </p>
                   <ul className="space-y-1">
                     {plan.features.slice(0, 3).map((feature, idx) => (
