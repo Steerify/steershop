@@ -43,6 +43,7 @@ const AdminPrizes = lazy(() => import("./pages/admin/AdminPrizes"));
 const AdminFeedback = lazy(() => import("./pages/admin/AdminFeedback"));
 const AdminReferrals = lazy(() => import("./pages/admin/AdminReferrals"));
 const AdminTopSeller = lazy(() => import("./pages/admin/AdminTopSeller"));
+const AdminFeaturedShops = lazy(() => import("./pages/admin/AdminFeaturedShops"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const DemoStoreFront = lazy(() => import("./pages/DemoStoreFront"));
 const Onboarding = lazy(() => import("./pages/entrepreneur/Onboarding"));
@@ -194,6 +195,11 @@ const App = () => (
             <Route path="/admin/top-sellers" element={
               <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
                 <AdminTopSeller />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/featured-shops" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminFeaturedShops />
               </ProtectedRoute>
             } />
             <Route path="/admin/feedback" element={

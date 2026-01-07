@@ -21,13 +21,15 @@ import {
   Award,
   MessageSquare,
   UserPlus,
-  Crown
+  Crown,
+  Sparkles
 } from "lucide-react";
 import logo from "@/assets/steersolo-logo.jpg";
 
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Shops", url: "/admin/shops", icon: Store },
+  { title: "Featured Shops", url: "/admin/featured-shops", icon: Sparkles },
   { title: "Products", url: "/admin/products", icon: Package },
   { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
   { title: "Users", url: "/admin/users", icon: Users },
