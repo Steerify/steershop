@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.know-this-shop]
 verify_jwt = false
+
+[functions.marketing-ai-assist]
+verify_jwt = false

@@ -6,17 +6,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface TourButtonProps {
   onStartTour: () => void;
   hasSeenTour: boolean;
   onResetTour?: () => void;
+  className?: string;
 }
 
-export const TourButton = ({ onStartTour, hasSeenTour, onResetTour }: TourButtonProps) => {
+export const TourButton = ({ onStartTour, hasSeenTour, onResetTour, className }: TourButtonProps) => {
   return (
     <TooltipProvider>
-      <div className="flex items-center gap-2">
+      <div className={cn("flex items-center gap-2", className)}>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
