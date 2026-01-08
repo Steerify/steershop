@@ -44,6 +44,7 @@ import { AdirePattern, AdireDivider } from "@/components/patterns/AdirePattern";
 import heroImage from "@/assets/hero-image.jpg";
 import offerService from "@/services/offer.service";
 import { TypewriterEffect } from "@/components/TypewriterEffect";
+import { FeaturedShopsBanner } from "@/components/FeaturedShopsBanner";
 
 const Index = () => {
   const [activeAudience, setActiveAudience] = useState<"customers" | "entrepreneurs">("entrepreneurs");
@@ -155,6 +156,13 @@ const Index = () => {
               </CardContent>
             </Card>
           </Link>
+        </div>
+      </section>
+
+      {/* ================= FEATURED SHOPS BANNER ================= */}
+      <section className="py-6">
+        <div className="container mx-auto px-4">
+          <FeaturedShopsBanner />
         </div>
       </section>
 

@@ -52,6 +52,8 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Subscription = lazy(() => import("./pages/Subscription"));
 const SetupService = lazy(() => import("./pages/SetupService"));
+const Marketing = lazy(() => import("./pages/entrepreneur/Marketing"));
+const PosterEditor = lazy(() => import("./pages/entrepreneur/PosterEditor"));
 
 const queryClient = new QueryClient();
 
@@ -121,6 +123,16 @@ const App = () => (
             <Route path="/subscription" element={
               <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
                 <Subscription />
+              </ProtectedRoute>
+            } />
+            <Route path="/marketing" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <Marketing />
+              </ProtectedRoute>
+            } />
+            <Route path="/marketing/editor/:id?" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <PosterEditor />
               </ProtectedRoute>
             } />
             

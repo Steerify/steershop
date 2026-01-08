@@ -48,6 +48,25 @@ export const FeaturedShopsBanner = () => {
     fetchFeaturedShops();
   }, []);
 
+  // Track click analytics (fire and forget)
+  const trackClick = async (featured: FeaturedShop) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const deviceType = window.innerWidth < 768 ? 'mobile' : 
+                         window.innerWidth < 1024 ? 'tablet' : 'desktop';
+      
+      supabase.from('featured_shop_analytics').insert({
+        featured_shop_id: featured.id,
+        shop_id: featured.shop_id,
+        user_id: user?.id || null,
+        source: 'homepage',
+        device_type: deviceType
+      });
+    } catch (error) {
+      console.error('Error tracking click:', error);
+    }
+  };
+
   const fetchFeaturedShops = async () => {
     try {
       const { data, error } = await supabase
@@ -66,6 +85,7 @@ export const FeaturedShopsBanner = () => {
           )
         `)
         .eq("is_active", true)
+        .or('expires_at.is.null,expires_at.gt.now()')
         .order("display_order", { ascending: true });
 
       if (error) throw error;
@@ -145,6 +165,7 @@ export const FeaturedShopsBanner = () => {
             <Link
               key={featured.id}
               to={`/shop/${featured.shop.shop_slug}`}
+              onClick={() => trackClick(featured)}
               className="flex-shrink-0 w-[280px] sm:w-[320px]"
             >
               <div className={cn(
