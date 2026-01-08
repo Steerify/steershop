@@ -1,7 +1,3 @@
-// src/services/auth.service.ts
-// This service is now a thin wrapper around Supabase auth
-// Most auth operations are handled directly in AuthContext
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface SignupRequest {
@@ -27,9 +23,9 @@ const authService = {
   // Forgot password - sends reset email
   forgotPassword: async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/auth/reset-password`,
     });
-    
+     
     if (error) {
       throw new Error(error.message);
     }
