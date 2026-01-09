@@ -41,38 +41,34 @@
   color: #888;
 }
 
-/* Add these CSS animations to your global CSS file */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+/* App.css additions */
+
+/* Reset Google button container */
+#g_id_onload,
+#g_id_signin {
+  width: 100% !important;
 }
 
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(-3deg);
-  }
-  50% {
-    transform: rotate(3deg);
-  }
+/* Ensure the button takes full width */
+.g_id_signin {
+  width: 100% !important;
+  max-width: none !important;
 }
 
-/* Add to your global CSS file or component styles */
-.g_id_signin iframe {
+/* Remove any default Google margins */
+iframe[src*="accounts.google.com"] {
   margin: 0 !important;
   padding: 0 !important;
 }
 
-/* Or more specifically */
-div[aria-labelledby="button-label"] {
-  margin: 0 !important;
+/* Force the button to be centered */
+div[aria-labelledby^="button-label"] {
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
-/* Container adjustments */
-#google-signin-btn-login,
-#google-signin-btn-signup {
+/* Additional specificity for Google button */
+body .g_id_signin > div {
   width: 100% !important;
+  margin: 0 !important;
 }

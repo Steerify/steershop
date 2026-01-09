@@ -395,65 +395,88 @@
   }
 }
 
-/* Add to your global CSS file or component styles */
-.g_id_signin iframe {
+/* Add to index.css */
+
+/* Google Sign-In Container - Force proper alignment */
+.google-sign-in-container {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 40px;
+}
+
+/* Target the Google button iframe directly */
+.g_id_signin iframe,
+#g_id_onload,
+#g_id_signin {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Specifically target the button div */
+div[role="button"][aria-labelledby^="button-label"],
+.gsi-material-button {
+  width: 100% !important;
+  margin: 0 !important;
+  border-radius: var(--radius) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  background: white !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* Hover state for Google button */
+div[role="button"][aria-labelledby^="button-label"]:hover,
+.gsi-material-button:hover {
+  background: hsl(var(--muted)) !important;
+  border-color: hsl(var(--primary) / 0.5) !important;
+}
+
+/* Remove Google's default box shadow and outline */
+.gsi-material-button:focus,
+div[role="button"][aria-labelledby^="button-label"]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: hsl(var(--primary)) !important;
+}
+
+/* Style the text inside */
+.gsi-material-button .button-content,
+div[role="button"][aria-labelledby^="button-label"] span {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: hsl(var(--foreground)) !important;
   margin: 0 !important;
   padding: 0 !important;
 }
 
-/* Or more specifically */
-div[aria-labelledby="button-label"] {
-  margin: 0 !important;
+/* Adjust the logo size */
+.gsi-material-button .logo-image,
+div[role="button"][aria-labelledby^="button-label"] svg {
+  width: 18px !important;
+  height: 18px !important;
+  margin-right: 8px !important;
 }
 
-/* Container adjustments */
+/* Container wrapper adjustments */
 #google-signin-btn-login,
 #google-signin-btn-signup {
   width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-
-/* Add these CSS animations to your global CSS file */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(-3deg);
-  }
-  50% {
-    transform: rotate(3deg);
-  }
-}
-
-@keyframes blink {
-  0%, 50% {
-    opacity: 1;
-  }
-  51%, 100% {
-    opacity: 0;
-  }
-}
-
-.animate-blink {
-  animation: blink 1s step-end infinite;
-}
-
-/* Google Sign-In button alignment */
-.google-sign-in-container > div,
-.google-sign-in-container > div > div {
+/* Override any conflicting styles */
+[id*="g_id"] > div {
   width: 100% !important;
-  display: flex !important;
-  justify-content: center !important;
-}
-
-#credential_picker_container {
-  top: 60px !important;
-  right: 16px !important;
 }
