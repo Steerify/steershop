@@ -395,88 +395,81 @@
   }
 }
 
-/* Add to index.css */
-
-/* Google Sign-In Container - Force proper alignment */
-.google-sign-in-container {
-  width: 100% !important;
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  min-height: 40px;
-}
-
-/* Target the Google button iframe directly */
-.g_id_signin iframe,
-#g_id_onload,
+/* ===== GOOGLE BUTTON ALIGNMENT FIX ===== */
+/* Force all Google button containers to be centered and maintain width */
+.g_id_signin,
 #g_id_signin {
   width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: block !important;
-  border: none !important;
-  background: transparent !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  overflow: hidden !important;
 }
 
-/* Specifically target the button div */
-div[role="button"][aria-labelledby^="button-label"],
+/* Target the actual button container */
+div[role="button"][aria-labelledby^="button-label"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+  border-radius: var(--radius) !important;
+}
+
+/* Center the button content */
 .gsi-material-button {
   width: 100% !important;
-  margin: 0 !important;
-  border-radius: var(--radius) !important;
-  border: 1px solid hsl(var(--border)) !important;
-  background: white !important;
-  height: 40px !important;
   display: flex !important;
-  align-items: center !important;
   justify-content: center !important;
-  font-family: 'Roboto', sans-serif !important;
+  align-items: center !important;
+  margin: 0 auto !important;
 }
 
-/* Hover state for Google button */
-div[role="button"][aria-labelledby^="button-label"]:hover,
-.gsi-material-button:hover {
-  background: hsl(var(--muted)) !important;
-  border-color: hsl(var(--primary) / 0.5) !important;
+/* Center the iframe wrapper */
+.g_id_signin > div,
+#g_id_signin > div {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
 }
 
-/* Remove Google's default box shadow and outline */
-.gsi-material-button:focus,
-div[role="button"][aria-labelledby^="button-label"]:focus {
-  outline: none !important;
-  box-shadow: none !important;
-  border-color: hsl(var(--primary)) !important;
+/* Center the button text and icon */
+.gsi-material-button .button-content {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
 }
 
-/* Style the text inside */
-.gsi-material-button .button-content,
-div[role="button"][aria-labelledby^="button-label"] span {
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  color: hsl(var(--foreground)) !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* Adjust the logo size */
-.gsi-material-button .logo-image,
-div[role="button"][aria-labelledby^="button-label"] svg {
-  width: 18px !important;
-  height: 18px !important;
+/* Center the SVG icon */
+.gsi-material-button .logo-image {
+  margin-left: 0 !important;
   margin-right: 8px !important;
 }
 
-/* Container wrapper adjustments */
+/* For the expanded account selector - keep it centered */
+div[role="menu"],
+div[aria-label*="account"] {
+  transform: translateX(-50%) !important;
+  left: 50% !important;
+  right: auto !important;
+  width: auto !important;
+  min-width: 300px !important;
+}
+
+/* Ensure the iframe doesn't break centering */
+iframe[src*="accounts.google.com"] {
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+/* Specific fix for your login and signup buttons */
 #google-signin-btn-login,
 #google-signin-btn-signup {
   width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* Override any conflicting styles */
-[id*="g_id"] > div {
-  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
 }
