@@ -333,19 +333,11 @@ const Auth = () => {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="login" className="mt-6 space-y-4">
-                {/* Google Sign-In Button with proper alignment */}
-                <div className="w-full google-sign-in-container">
-                  <div className="relative w-full" style={{ minHeight: '40px' }}>
-                    <GoogleSignInButton 
-                      text="continue_with" 
-                      className="w-full"
-                    />
-                  </div>
+              <TabsContent value="login" className="mt-6">
+                <div className="mb-4">
+                  <GoogleSignInButton text="continue_with" />
                 </div>
-                
                 <OrDivider />
-                
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                     <FormField
@@ -355,11 +347,7 @@ const Auth = () => {
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder="you@example.com" 
-                              {...field} 
-                              className="border-primary/20 focus:border-primary focus:ring-primary/30"
-                            />
+                            <Input placeholder="you@example.com" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -382,12 +370,7 @@ const Auth = () => {
                             </Button>
                           </div>
                           <FormControl>
-                            <Input 
-                              type="password" 
-                              placeholder="••••••••" 
-                              {...field} 
-                              className="border-primary/20 focus:border-primary focus:ring-primary/30"
-                            />
+                            <Input type="password" placeholder="••••••••" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -413,11 +396,7 @@ const Auth = () => {
                       </Label>
                     </div>
                     
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" 
-                      disabled={isLoading}
-                    >
+                    <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
                       {isLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -431,19 +410,11 @@ const Auth = () => {
                 </Form>
               </TabsContent>
 
-              <TabsContent value="signup" className="mt-6 space-y-4">
-                {/* Google Sign-In Button with proper alignment */}
-                <div className="w-full google-sign-in-container">
-                  <div className="relative w-full" style={{ minHeight: '40px' }}>
-                    <GoogleSignInButton 
-                      text="signup_with" 
-                      className="w-full"
-                    />
-                  </div>
+              <TabsContent value="signup" className="mt-6">
+                <div className="mb-4">
+                  <GoogleSignInButton text="signup_with" />
                 </div>
-                
                 <OrDivider />
-                
                 <Form {...signupForm}>
                   <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -454,11 +425,7 @@ const Auth = () => {
                           <FormItem>
                             <FormLabel>First Name</FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="John" 
-                                {...field} 
-                                className="border-primary/20 focus:border-primary focus:ring-primary/30"
-                              />
+                              <Input placeholder="John" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -471,11 +438,7 @@ const Auth = () => {
                           <FormItem>
                             <FormLabel>Last Name</FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="Doe" 
-                                {...field} 
-                                className="border-primary/20 focus:border-primary focus:ring-primary/30"
-                              />
+                              <Input placeholder="Doe" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -489,11 +452,7 @@ const Auth = () => {
                         <FormItem>
                           <FormLabel>Phone Number</FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder="+234..." 
-                              {...field} 
-                              className="border-primary/20 focus:border-primary focus:ring-primary/30"
-                            />
+                            <Input placeholder="+234..." {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -506,11 +465,7 @@ const Auth = () => {
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder="you@example.com" 
-                              {...field} 
-                              className="border-primary/20 focus:border-primary focus:ring-primary/30"
-                            />
+                            <Input placeholder="you@example.com" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -523,12 +478,7 @@ const Auth = () => {
                         <FormItem>
                           <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="password" 
-                              placeholder="At least 8 characters" 
-                              {...field} 
-                              className="border-primary/20 focus:border-primary focus:ring-primary/30"
-                            />
+                            <Input type="password" placeholder="At least 8 characters" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -571,22 +521,14 @@ const Auth = () => {
                         <FormItem>
                           <FormLabel>Referral Code (Optional)</FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder="e.g. SS-ABC123" 
-                              {...field} 
-                              className="uppercase border-primary/20 focus:border-primary focus:ring-primary/30"
-                            />
+                            <Input placeholder="e.g. SS-ABC123" {...field} className="uppercase" />
                           </FormControl>
                           <FormMessage />
                           <p className="text-xs text-muted-foreground">Have a friend's code? Enter it to earn 25 bonus points!</p>
                         </FormItem>
                       )}
                     />
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" 
-                      disabled={isLoading}
-                    >
+                    <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
                       {isLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
