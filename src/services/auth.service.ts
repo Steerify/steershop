@@ -23,7 +23,7 @@ const authService = {
   // Forgot password - sends reset email
   forgotPassword: async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
      
     if (error) {

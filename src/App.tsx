@@ -78,7 +78,7 @@ const App = () => (
             <Route path="/about" element={<AboutPage />} />
             <Route path="/auth/:type" element={<Auth />} />
             <Route path="/auth/callback" element={<Callback />} />
-            <Route path="/auth/reset-password" element={<ResetPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/shops" element={<Shops />} />
             <Route path="/shop/:slug" element={<ShopStorefront />} />
             <Route path="/shop/:slug/product/:productId" element={<ProductDetails />} />
