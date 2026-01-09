@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      auth_rate_limits: {
+        Row: {
+          attempt_type: string
+          attempts: number | null
+          created_at: string | null
+          id: string
+          identifier: string
+          last_attempt: string | null
+          locked_until: string | null
+        }
+        Insert: {
+          attempt_type: string
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          identifier: string
+          last_attempt?: string | null
+          locked_until?: string | null
+        }
+        Update: {
+          attempt_type?: string
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          identifier?: string
+          last_attempt?: string | null
+          locked_until?: string | null
+        }
+        Relationships: []
+      }
       badges: {
         Row: {
           color: string | null
@@ -868,6 +898,9 @@ export type Database = {
           id: string
           is_subscribed: boolean
           phone: string | null
+          phone_verification_code: string | null
+          phone_verification_expires: string | null
+          phone_verified: boolean | null
           role: Database["public"]["Enums"]["user_role"]
           subscription_expires_at: string | null
           subscription_plan_id: string | null
@@ -881,6 +914,9 @@ export type Database = {
           id: string
           is_subscribed?: boolean
           phone?: string | null
+          phone_verification_code?: string | null
+          phone_verification_expires?: string | null
+          phone_verified?: boolean | null
           role?: Database["public"]["Enums"]["user_role"]
           subscription_expires_at?: string | null
           subscription_plan_id?: string | null
@@ -894,6 +930,9 @@ export type Database = {
           id?: string
           is_subscribed?: boolean
           phone?: string | null
+          phone_verification_code?: string | null
+          phone_verification_expires?: string | null
+          phone_verified?: boolean | null
           role?: Database["public"]["Enums"]["user_role"]
           subscription_expires_at?: string | null
           subscription_plan_id?: string | null
@@ -1754,6 +1793,7 @@ export type Database = {
         Returns: Json
       }
       cleanup_expired_featured_shops: { Args: never; Returns: undefined }
+      cleanup_expired_rate_limits: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
