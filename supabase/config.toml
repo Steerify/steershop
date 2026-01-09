@@ -32,3 +32,12 @@ verify_jwt = false
 
 [functions.marketing-ai-assist]
 verify_jwt = false
+
+[functions.send-password-reset]
+verify_jwt = false
+
+[functions.send-phone-otp]
+verify_jwt = false
+
+[functions.verify-phone-otp]
+verify_jwt = false
