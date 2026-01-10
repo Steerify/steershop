@@ -8,16 +8,22 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle2, SkipForward } from "lucide-react";
+import { Loader2, CheckCircle2, SkipForward, Phone, Shield } from "lucide-react";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
 import { cn } from "@/lib/utils";
+import { PhoneVerification } from "@/components/auth/PhoneVerification";
+import { supabase } from "@/integrations/supabase/client";
+
+type OnboardingStep = "phone" | "questions" | "complete";
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>("phone");
+  const [isCheckingPhone, setIsCheckingPhone] = useState(true);
   
   // Guard: Redirect if not Entrepreneur
   useEffect(() => {
@@ -30,6 +36,33 @@ const Onboarding = () => {
       navigate("/customer_dashboard");
     }
   }, [user, navigate, toast]);
+
+  // Check if phone is already verified
+  useEffect(() => {
+    const checkPhoneVerification = async () => {
+      if (user?.id) {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('phone_verified')
+            .eq('id', user.id)
+            .single();
+          
+          // Skip phone step if already verified
+          if (profile?.phone_verified) {
+            setCurrentStep("questions");
+          }
+        } catch (error) {
+          console.error("Error checking phone verification:", error);
+        } finally {
+          setIsCheckingPhone(false);
+        }
+      } else {
+        setIsCheckingPhone(false);
+      }
+    };
+    checkPhoneVerification();
+  }, [user]);
 
   const [formData, setFormData] = useState<OnboardingData>({
     businessType: "",
@@ -52,7 +85,19 @@ const Onboarding = () => {
 
   const isFormValid = () => answeredCount === 4;
 
-  const handleSkip = () => {
+  const handleSkipPhone = () => {
+    toast({
+      title: "Skipped for now",
+      description: "You can verify your phone anytime from settings.",
+    });
+    setCurrentStep("questions");
+  };
+
+  const handlePhoneVerified = () => {
+    setCurrentStep("questions");
+  };
+
+  const handleSkipQuestions = () => {
     toast({
       title: "Skipped for now",
       description: "You can complete this anytime from settings.",
@@ -90,6 +135,15 @@ const Onboarding = () => {
     }
   };
 
+  // Show loading while checking phone status
+  if (isCheckingPhone) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4 relative overflow-hidden">
       <AdirePattern variant="geometric" className="absolute inset-0 opacity-5" />
@@ -102,140 +156,184 @@ const Onboarding = () => {
             </div>
           </div>
           <CardTitle className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            SteerSolo Quick Setup
+            {currentStep === "phone" ? "Secure Your Account" : "SteerSolo Quick Setup"}
           </CardTitle>
           <CardDescription className="text-lg">
-            Help us tailor your store (2 mins)
+            {currentStep === "phone" 
+              ? "Verify your phone for order notifications & security"
+              : "Help us tailor your store (2 mins)"}
           </CardDescription>
 
           {/* Progress Indicator */}
           <div className="mt-4 space-y-2">
             <div className="flex items-center justify-center gap-2">
+              {/* Phone verification step */}
+              <div 
+                className={cn(
+                  "h-2 rounded-full transition-all duration-300 flex items-center justify-center",
+                  currentStep !== "phone" ? "bg-primary w-10" : "bg-primary/50 w-10 animate-pulse"
+                )}
+              />
+              {/* Questions steps */}
               {[1, 2, 3, 4].map((stepNum) => (
                 <div 
                   key={stepNum}
                   className={cn(
                     "h-2 rounded-full transition-all duration-300",
-                    answeredCount >= stepNum 
+                    currentStep === "questions" && answeredCount >= stepNum 
                       ? "bg-primary w-10" 
                       : "bg-muted w-8"
                   )}
                 />
               ))}
             </div>
-            <p className="text-sm text-muted-foreground">
-              {answeredCount} of 4 required questions answered
+            <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+              {currentStep === "phone" ? (
+                <>
+                  <Phone className="w-4 h-4" />
+                  Step 1: Verify your phone number
+                </>
+              ) : (
+                <>
+                  <Shield className="w-4 h-4 text-green-500" />
+                  Step 2: {answeredCount} of 4 questions answered
+                </>
+              )}
             </p>
           </div>
         </CardHeader>
 
-        <CardContent className="p-6 space-y-8">
-          
-          {/* Question 1 */}
-          <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <Label className="text-base font-semibold">1. What best describes your business?</Label>
-            <RadioGroup value={formData.businessType} onValueChange={(val) => handleChange("businessType", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {["Fashion / Clothing", "Food / Bakery", "Beauty / Skincare", "Gadgets / Accessories", "Digital services", "Other"].map((opt) => (
-                <div key={opt}>
-                  <RadioGroupItem value={opt} id={`q1-${opt}`} className="peer sr-only" />
-                  <Label
-                    htmlFor={`q1-${opt}`}
-                    className="flex items-center justify-between p-4 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
-                  >
-                    {opt}
-                    {formData.businessType === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
-                  </Label>
+        <CardContent className="p-6">
+          {currentStep === "phone" ? (
+            <div className="space-y-6">
+              <div className="text-center space-y-3 mb-6">
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="w-4 h-4 text-primary" />
+                  <span>Receive order notifications via SMS</span>
                 </div>
-              ))}
-            </RadioGroup>
-          </div>
-
-          {/* Question 2 */}
-          <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
-            <Label className="text-base font-semibold">2. Where do most of your customers come from right now?</Label>
-            <RadioGroup value={formData.customerSource} onValueChange={(val) => handleChange("customerSource", val)} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {["WhatsApp", "Instagram", "TikTok", "Facebook", "Offline / Referrals"].map((opt) => (
-                <div key={opt}>
-                  <RadioGroupItem value={opt} id={`q2-${opt}`} className="peer sr-only" />
-                  <Label
-                     htmlFor={`q2-${opt}`}
-                     className="flex items-center justify-between p-3 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
-                  >
-                    {opt}
-                    {formData.customerSource === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
-                  </Label>
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="w-4 h-4 text-primary" />
+                  <span>Recover your account securely</span>
                 </div>
-              ))}
-            </RadioGroup>
-          </div>
-
-          {/* Question 3 */}
-          <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
-            <Label className="text-base font-semibold">3. What's your biggest struggle with selling online?</Label>
-            <RadioGroup value={formData.biggestStruggle} onValueChange={(val) => handleChange("biggestStruggle", val)} className="space-y-2">
-              {["Repeating prices & details", "Losing orders in chats", "Customers not trusting payment", "Too much back-and-forth", "Organizing products & orders"].map((opt) => (
-                <div key={opt} className="flex items-center space-x-2">
-                  <RadioGroupItem value={opt} id={`q3-${opt}`} />
-                  <Label htmlFor={`q3-${opt}`} className="font-normal cursor-pointer">{opt}</Label>
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="w-4 h-4 text-primary" />
+                  <span>Build trust with verified seller badge</span>
                 </div>
-              ))}
-            </RadioGroup>
-          </div>
+              </div>
+              
+              <PhoneVerification 
+                onVerified={handlePhoneVerified}
+                onSkip={handleSkipPhone}
+              />
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {/* Question 1 */}
+              <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <Label className="text-base font-semibold">1. What best describes your business?</Label>
+                <RadioGroup value={formData.businessType} onValueChange={(val) => handleChange("businessType", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {["Fashion / Clothing", "Food / Bakery", "Beauty / Skincare", "Gadgets / Accessories", "Digital services", "Other"].map((opt) => (
+                    <div key={opt}>
+                      <RadioGroupItem value={opt} id={`q1-${opt}`} className="peer sr-only" />
+                      <Label
+                        htmlFor={`q1-${opt}`}
+                        className="flex items-center justify-between p-4 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
+                      >
+                        {opt}
+                        {formData.businessType === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
 
-           {/* Question 4 */}
-           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
-            <Label className="text-base font-semibold">4. How do you currently collect payments?</Label>
-            <RadioGroup value={formData.paymentMethod} onValueChange={(val) => handleChange("paymentMethod", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {["Bank transfer only", "Paystack", "Cash on delivery", "I want all options"].map((opt) => (
-                <div key={opt}>
-                  <RadioGroupItem value={opt} id={`q4-${opt}`} className="peer sr-only" />
-                  <Label
-                     htmlFor={`q4-${opt}`}
-                     className="flex items-center justify-between p-3 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
-                  >
-                    {opt}
-                    {formData.paymentMethod === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
+              {/* Question 2 */}
+              <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+                <Label className="text-base font-semibold">2. Where do most of your customers come from right now?</Label>
+                <RadioGroup value={formData.customerSource} onValueChange={(val) => handleChange("customerSource", val)} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {["WhatsApp", "Instagram", "TikTok", "Facebook", "Offline / Referrals"].map((opt) => (
+                    <div key={opt}>
+                      <RadioGroupItem value={opt} id={`q2-${opt}`} className="peer sr-only" />
+                      <Label
+                         htmlFor={`q2-${opt}`}
+                         className="flex items-center justify-between p-3 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
+                      >
+                        {opt}
+                        {formData.customerSource === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
 
-          {/* Question 5 */}
-          <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-400">
-            <Label className="text-base font-semibold">5. What would make SteerSolo perfect for your business? <span className="text-muted-foreground font-normal text-sm">(Optional)</span></Label>
-            <Textarea 
-              placeholder="Tell us what you'd love to see" 
-              value={formData.perfectFeature}
-              onChange={(e) => handleChange("perfectFeature", e.target.value)}
-              className="resize-none min-h-[100px]"
-            />
-          </div>
+              {/* Question 3 */}
+              <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
+                <Label className="text-base font-semibold">3. What's your biggest struggle with selling online?</Label>
+                <RadioGroup value={formData.biggestStruggle} onValueChange={(val) => handleChange("biggestStruggle", val)} className="space-y-2">
+                  {["Repeating prices & details", "Losing orders in chats", "Customers not trusting payment", "Too much back-and-forth", "Organizing products & orders"].map((opt) => (
+                    <div key={opt} className="flex items-center space-x-2">
+                      <RadioGroupItem value={opt} id={`q3-${opt}`} />
+                      <Label htmlFor={`q3-${opt}`} className="font-normal cursor-pointer">{opt}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
 
-          <div className="flex items-center justify-between gap-4 mt-4">
-            <Button 
-              variant="ghost" 
-              onClick={handleSkip}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <SkipForward className="w-4 h-4 mr-2" />
-              Skip for now
-            </Button>
+               {/* Question 4 */}
+               <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
+                <Label className="text-base font-semibold">4. How do you currently collect payments?</Label>
+                <RadioGroup value={formData.paymentMethod} onValueChange={(val) => handleChange("paymentMethod", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {["Bank transfer only", "Paystack", "Cash on delivery", "I want all options"].map((opt) => (
+                    <div key={opt}>
+                      <RadioGroupItem value={opt} id={`q4-${opt}`} className="peer sr-only" />
+                      <Label
+                         htmlFor={`q4-${opt}`}
+                         className="flex items-center justify-between p-3 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
+                      >
+                        {opt}
+                        {formData.paymentMethod === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
 
-            <Button 
-              onClick={handleSubmit} 
-              className="flex-1 bg-gradient-to-r from-primary to-accent py-6 text-lg"
-              disabled={!isFormValid() || isLoading}
-            >
-              {isLoading ? (
-                 <>
-                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                   Saving preferences...
-                 </>
-              ) : "Complete Setup"}
-            </Button>
-          </div>
+              {/* Question 5 */}
+              <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-400">
+                <Label className="text-base font-semibold">5. What would make SteerSolo perfect for your business? <span className="text-muted-foreground font-normal text-sm">(Optional)</span></Label>
+                <Textarea 
+                  placeholder="Tell us what you'd love to see" 
+                  value={formData.perfectFeature}
+                  onChange={(e) => handleChange("perfectFeature", e.target.value)}
+                  className="resize-none min-h-[100px]"
+                />
+              </div>
 
+              <div className="flex items-center justify-between gap-4 mt-4">
+                <Button 
+                  variant="ghost" 
+                  onClick={handleSkipQuestions}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <SkipForward className="w-4 h-4 mr-2" />
+                  Skip for now
+                </Button>
+
+                <Button 
+                  onClick={handleSubmit} 
+                  className="flex-1 bg-gradient-to-r from-primary to-accent py-6 text-lg"
+                  disabled={!isFormValid() || isLoading}
+                >
+                  {isLoading ? (
+                     <>
+                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                       Saving preferences...
+                     </>
+                  ) : "Complete Setup"}
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
