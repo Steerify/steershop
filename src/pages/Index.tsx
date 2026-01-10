@@ -45,6 +45,7 @@ import heroImage from "@/assets/hero-image.jpg";
 import offerService from "@/services/offer.service";
 import { TypewriterEffect } from "@/components/TypewriterEffect";
 import { FeaturedShopsBanner } from "@/components/FeaturedShopsBanner";
+import { SocialProofStats } from "@/components/SocialProofStats";
 
 const Index = () => {
   const [activeAudience, setActiveAudience] = useState<"customers" | "entrepreneurs">("entrepreneurs");
@@ -165,6 +166,9 @@ const Index = () => {
           <FeaturedShopsBanner />
         </div>
       </section>
+
+      {/* ================= SOCIAL PROOF STATS ================= */}
+      <SocialProofStats />
 
       {/* ================= DYNAMIC CONTENT SECTIONS ================= */}
       {activeAudience === "entrepreneurs" ? (
