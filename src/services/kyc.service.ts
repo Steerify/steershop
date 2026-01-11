@@ -1,7 +1,4 @@
-import axios from 'axios';
 import { supabase } from '@/integrations/supabase/client';
-
-const BASE_URL = 'https://steershop-kyc.onrender.com/api/kyc';
 
 /**
  * Service for Paystack Identity Verification
@@ -13,25 +10,38 @@ const kycService = {
    */
   verifyLevel1: async (data: { bvn: string; firstName: string; lastName: string }) => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-
-      const response = await axios.post(`${BASE_URL}/level1`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const { data: response, error } = await supabase.functions.invoke('verify-identity', {
+        body: { type: 'level1', ...data },
       });
 
-      return response.data;
-    } catch (error: any) {
-      if (error.response && error.response.data) {
-        throw new Error(error.response.data.error || 'BVN verification failed');
+      if (error) {
+        throw error;
       }
-      throw error;
+      
+      // Check if the business logic failed but returned 200 (if structured that way)
+      // My edge function returns 400 on error, so 'error' variable should catch it if invoke fails.
+      // But let's be safe and check response.error as well if it parsed JSON
+      if (response && response.error) {
+          throw new Error(response.error);
+      }
+
+      return response;
+    } catch (error: any) {
+      console.error('BVN Verification Error:', error);
+      // Construct a meaningful error message
+      let errorMessage = 'BVN verification failed';
+       try {
+          if (error.context && typeof error.context.json === 'function') {
+            const errorBody = await error.context.json();
+            errorMessage = errorBody.error || errorBody.message || errorMessage;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+        } catch (e) {
+             // connection errors etc
+             errorMessage = error.message || errorMessage;
+        }
+      throw new Error(errorMessage);
     }
   },
 
@@ -41,25 +51,33 @@ const kycService = {
    */
   verifyLevel2: async (data: { accountNumber: string; bankCode: string }) => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-
-      const response = await axios.post(`${BASE_URL}/level2`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const { data: response, error } = await supabase.functions.invoke('verify-identity', {
+        body: { type: 'level2', ...data },
       });
 
-      return response.data;
-    } catch (error: any) {
-      if (error.response && error.response.data) {
-        throw new Error(error.response.data.error || 'Bank account verification failed');
+      if (error) {
+        throw error;
       }
-      throw error;
+
+      if (response && response.error) {
+          throw new Error(response.error);
+      }
+
+      return response;
+    } catch (error: any) {
+      console.error('Bank Verification Error:', error);
+       let errorMessage = 'Bank account verification failed';
+       try {
+          if (error.context && typeof error.context.json === 'function') {
+            const errorBody = await error.context.json();
+            errorMessage = errorBody.error || errorBody.message || errorMessage;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+        } catch (e) {
+             errorMessage = error.message || errorMessage;
+        }
+      throw new Error(errorMessage);
     }
   },
 };
