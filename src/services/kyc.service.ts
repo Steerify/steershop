@@ -10,38 +10,25 @@ const kycService = {
    */
   verifyLevel1: async (data: { bvn: string; firstName: string; lastName: string }) => {
     try {
+      console.log('Invoking Level 1 verification...');
       const { data: response, error } = await supabase.functions.invoke('verify-identity', {
         body: { type: 'level1', ...data },
       });
 
       if (error) {
-        throw error;
+        console.error('Supabase function error:', error);
+        // Supabase functions.invoke error is an object with a message
+        throw new Error(error.message || 'Failed to reach verification service');
       }
       
-      // Check if the business logic failed but returned 200 (if structured that way)
-      // My edge function returns 400 on error, so 'error' variable should catch it if invoke fails.
-      // But let's be safe and check response.error as well if it parsed JSON
-      if (response && response.error) {
-          throw new Error(response.error);
+      if (response && response.success === false) {
+          throw new Error(response.error || 'BVN verification failed');
       }
 
       return response;
     } catch (error: any) {
-      console.error('BVN Verification Error:', error);
-      // Construct a meaningful error message
-      let errorMessage = 'BVN verification failed';
-       try {
-          if (error.context && typeof error.context.json === 'function') {
-            const errorBody = await error.context.json();
-            errorMessage = errorBody.error || errorBody.message || errorMessage;
-          } else if (error.message) {
-            errorMessage = error.message;
-          }
-        } catch (e) {
-             // connection errors etc
-             errorMessage = error.message || errorMessage;
-        }
-      throw new Error(errorMessage);
+      console.error('BVN Verification Service Error:', error);
+      throw error;
     }
   },
 
@@ -51,35 +38,44 @@ const kycService = {
    */
   verifyLevel2: async (data: { accountNumber: string; bankCode: string }) => {
     try {
+      console.log('Invoking Level 2 verification...');
       const { data: response, error } = await supabase.functions.invoke('verify-identity', {
         body: { type: 'level2', ...data },
       });
 
       if (error) {
-        throw error;
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to reach verification service');
       }
 
-      if (response && response.error) {
-          throw new Error(response.error);
+      if (response && response.success === false) {
+          throw new Error(response.error || 'Bank account verification failed');
       }
 
       return response;
     } catch (error: any) {
-      console.error('Bank Verification Error:', error);
-       let errorMessage = 'Bank account verification failed';
-       try {
-          if (error.context && typeof error.context.json === 'function') {
-            const errorBody = await error.context.json();
-            errorMessage = errorBody.error || errorBody.message || errorMessage;
-          } else if (error.message) {
-            errorMessage = error.message;
-          }
-        } catch (e) {
-             errorMessage = error.message || errorMessage;
-        }
-      throw new Error(errorMessage);
+      console.error('Bank Verification Service Error:', error);
+      throw error;
     }
   },
+
+  /**
+   * List Nigerian Banks
+   */
+  getBanks: async () => {
+    try {
+      const { data: response, error } = await supabase.functions.invoke('paystack-list-banks');
+      
+      if (error) throw error;
+      if (response && response.success === false) throw new Error(response.error);
+      
+      return response.data || [];
+    } catch (error: any) {
+      console.error('Error fetching banks:', error);
+      // Fallback to empty array to not break UI
+      return [];
+    }
+  }
 };
 
 export default kycService;

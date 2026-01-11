@@ -12,35 +12,48 @@ interface KYCLevel2FormProps {
   onSuccess?: (accountName: string) => void;
 }
 
-// Popular Nigerian Banks (Mock list, in a real app this would come from an API)
-const NIGERIAN_BANKS = [
-  { code: '058', name: 'GTBank' },
-  { code: '011', name: 'First Bank' },
-  { code: '044', name: 'Access Bank' },
-  { code: '033', name: 'United Bank for Africa (UBA)' },
-  { code: '057', name: 'Zenith Bank' },
-  { code: '035', name: 'Wema Bank' },
-  { code: '070', name: 'Fidelity Bank' },
-  { code: '214', name: 'First City Monument Bank (FCMB)' },
-  { code: '082', name: 'Keystone Bank' },
-  { code: '030', name: 'Heritage Bank' },
-  { code: '032', name: 'Union Bank' },
-  { code: '232', name: 'Sterling Bank' },
-  { code: '101', name: 'Providus Bank' },
-  { code: '901', name: 'Kuda Bank' },
-  { code: '100004', name: 'Opay (Paycom)' },
-  { code: '999992', name: 'PalmPay' },
-];
+// Nigerian Banks are now fetched from the Paystack API via kycService
+
 
 export const KYCLevel2Form = ({ onSuccess }: KYCLevel2FormProps) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [banksLoading, setBanksLoading] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
   const [verifiedName, setVerifiedName] = useState('');
+  const [banks, setBanks] = useState<{code: string, name: string}[]>([]);
   const [formData, setFormData] = useState({
     accountNumber: '',
     bankCode: '',
   });
+
+  useEffect(() => {
+    const fetchBanks = async () => {
+      try {
+        const banksList = await kycService.getBanks();
+        if (banksList && banksList.length > 0) {
+          setBanks(banksList);
+        } else {
+          // Fallback if API fails
+          setBanks([
+            { code: '058', name: 'GTBank' },
+            { code: '011', name: 'First Bank' },
+            { code: '044', name: 'Access Bank' },
+            { code: '033', name: 'UBA' },
+            { code: '057', name: 'Zenith Bank' },
+            { code: '901', name: 'Kuda Bank' },
+            { code: '100004', name: 'Opay (Paycom)' },
+            { code: '999992', name: 'PalmPay' },
+          ]);
+        }
+      } catch (error) {
+        console.error('Error in component fetching banks:', error);
+      } finally {
+        setBanksLoading(false);
+      }
+    };
+    fetchBanks();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,11 +137,11 @@ export const KYCLevel2Form = ({ onSuccess }: KYCLevel2FormProps) => {
               onValueChange={(value) => setFormData({ ...formData, bankCode: value })}
               value={formData.bankCode}
             >
-              <SelectTrigger id="bank">
-                <SelectValue placeholder="Choose your bank" />
+              <SelectTrigger id="bank" disabled={banksLoading}>
+                <SelectValue placeholder={banksLoading ? "Loading banks..." : "Choose your bank"} />
               </SelectTrigger>
               <SelectContent>
-                {NIGERIAN_BANKS.map((bank) => (
+                {banks.map((bank) => (
                   <SelectItem key={bank.code} value={bank.code}>
                     {bank.name}
                   </SelectItem>
