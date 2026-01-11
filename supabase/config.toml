@@ -41,3 +41,9 @@ verify_jwt = false
 
 [functions.verify-phone-otp]
 verify_jwt = false
+
+[functions.verify-identity]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false
