@@ -74,9 +74,23 @@ export const PhoneVerification = ({ onVerified, onSkip }: PhoneVerificationProps
         body: { phone: formattedPhone, userId: user.id },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Try to parse the error if it's a non-200 response
+        let errorMessage = "Failed to send verification code";
+        try {
+          if (error.context && typeof error.context.json === 'function') {
+            const errorBody = await error.context.json();
+            errorMessage = errorBody.error || errorBody.message || errorMessage;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+        } catch (e) {
+          console.error("Error parsing function error:", e);
+        }
+        throw new Error(errorMessage);
+      }
 
-      if (data.success) {
+      if (data && data.success) {
         // Store dev OTP for testing (remove in production)
         if (data.devOtp) {
           setDevOtp(data.devOtp);
@@ -89,9 +103,10 @@ export const PhoneVerification = ({ onVerified, onSkip }: PhoneVerificationProps
           description: "Check your phone for the 6-digit verification code",
         });
       } else {
-        throw new Error(data.error || "Failed to send code");
+        throw new Error(data?.error || "Failed to send code");
       }
     } catch (error: any) {
+      console.error("Send OTP error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to send verification code",
@@ -121,9 +136,22 @@ export const PhoneVerification = ({ onVerified, onSkip }: PhoneVerificationProps
         body: { otp, userId: user.id },
       });
 
-      if (error) throw error;
+      if (error) {
+        let errorMessage = "Invalid verification code";
+        try {
+          if (error.context && typeof error.context.json === 'function') {
+            const errorBody = await error.context.json();
+            errorMessage = errorBody.error || errorBody.message || errorMessage;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+        } catch (e) {
+          console.error("Error parsing function error:", e);
+        }
+        throw new Error(errorMessage);
+      }
 
-      if (data.success) {
+      if (data && data.success) {
         setStep("verified");
         toast({
           title: "Phone Verified!",
@@ -134,9 +162,10 @@ export const PhoneVerification = ({ onVerified, onSkip }: PhoneVerificationProps
           onVerified?.();
         }, 1500);
       } else {
-        throw new Error(data.error || "Verification failed");
+        throw new Error(data?.error || "Verification failed");
       }
     } catch (error: any) {
+      console.error("Verify OTP error:", error);
       toast({
         title: "Verification Failed",
         description: error.message || "Invalid verification code",

@@ -10,7 +10,12 @@ import offerService from "@/services/offer.service";
 import productService from "@/services/product.service";
 import subscriptionService from "@/services/subscription.service";
 import { useToast } from "@/hooks/use-toast";
-import { Store, Package, ShoppingCart, LogOut, Clock, CheckCircle, AlertCircle, ArrowRight, TrendingUp, DollarSign, CalendarCheck, Menu, X } from "lucide-react";
+import { 
+  Plus, Store, Package, ShoppingCart, TrendingUp, Users, 
+  Settings, User, PlusCircle, Calendar, Share2, Palette,
+  Sparkles, Megaphone, Target, ArrowRight, LogOut, Clock,
+  CheckCircle, AlertCircle, DollarSign, CalendarCheck, Menu, X
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";

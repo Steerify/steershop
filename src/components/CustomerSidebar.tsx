@@ -1,4 +1,4 @@
-import { Home, ShoppingBag, Sparkles, GraduationCap, LogOut, Users } from "lucide-react";
+import { Home, ShoppingBag, Sparkles, GraduationCap, LogOut, Users, Settings } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -21,6 +21,7 @@ const items = [
   { title: "My Orders", url: "/customer/orders", icon: ShoppingBag },
   { title: "Courses", url: "/customer/courses", icon: GraduationCap },
   { title: "Rewards", url: "/customer/rewards", icon: Sparkles },
+  { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 export function CustomerSidebar() {
