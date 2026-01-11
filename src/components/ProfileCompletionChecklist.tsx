@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { 
   Store, Image, FileText, MessageCircle, CreditCard, Package, 
-  CheckCircle, Circle, ChevronRight, Sparkles, X
+  CheckCircle, Circle, ChevronRight, Sparkles, X, ShieldCheck
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -107,6 +107,14 @@ export const ProfileCompletionChecklist = ({ shop, productsCount }: ProfileCompl
       isComplete: productsCount >= 1,
       link: "/products",
       icon: <Package className="w-4 h-4" />,
+    },
+    {
+      id: "kyc",
+      label: "Identity Verification",
+      description: "Verify your profile identity",
+      isComplete: !!shop?.paystack_subaccount_code, // Assuming presence of subaccount code means verified Level 2
+      link: "/identity-verification",
+      icon: <ShieldCheck className="w-4 h-4" />,
     },
     {
       id: "direct-payments",

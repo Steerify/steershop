@@ -47,6 +47,7 @@ const AdminFeaturedShops = lazy(() => import("./pages/admin/AdminFeaturedShops")
 const Feedback = lazy(() => import("./pages/Feedback"));
 const DemoStoreFront = lazy(() => import("./pages/DemoStoreFront"));
 const Onboarding = lazy(() => import("./pages/entrepreneur/Onboarding"));
+const IdentityVerification = lazy(() => import("./pages/IdentityVerification"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Pricing = lazy(() => import("./pages/Pricing"));
@@ -113,6 +114,11 @@ const App = () => (
             <Route path="/orders" element={
               <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
                 <Orders />
+              </ProtectedRoute>
+            } />
+            <Route path="/identity-verification" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <IdentityVerification />
               </ProtectedRoute>
             } />
             <Route path="/bookings" element={

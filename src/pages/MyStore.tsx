@@ -28,6 +28,7 @@ import {
   ExternalLink,
   Download,
   QrCode,
+  ShieldCheck,
 } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { QRCodeSVG } from "qrcode.react";
@@ -441,6 +442,24 @@ const MyStore = () => {
                       }
                       placeholder="1234567890"
                     />
+                  </div>
+                  
+                  <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <ShieldCheck className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="text-sm font-medium">Identity Verification</p>
+                        <p className="text-xs text-muted-foreground">Verify your bank account to enable payouts</p>
+                      </div>
+                    </div>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => navigate('/identity-verification')}
+                    >
+                      Verify Now
+                    </Button>
                   </div>
                 </div>
               )}
