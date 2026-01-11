@@ -577,7 +577,7 @@ const DemoStorefront = () => {
             <CardContent className="p-8 md:p-12">
               <h2 className="font-display text-3xl font-bold mb-4">Ready to Build Your Store?</h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Your hustle deserves a professional home. Start your 7-day free trial today.
+                Your hustle deserves a professional home. Start your 15-day free trial today.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/auth/signup">

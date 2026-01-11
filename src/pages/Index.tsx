@@ -917,7 +917,7 @@ const BusinessFoundationSection = () => (
                 "Organized order management through WhatsApp",
                 "Professional marketing materials",
                 "Your own brand-able store link",
-                "7-day free foundation trial"
+                "15-day free foundation trial"
               ].map((item, idx) => (
                 <li key={idx} className="flex items-center gap-3">
                   <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
