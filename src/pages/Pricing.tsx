@@ -103,7 +103,7 @@ const Pricing = () => {
             Simple, Transparent Pricing
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-            Choose the plan that fits your business. Start with a 7-day free trial on any plan.
+            Choose the plan that fits your business. Start with a 15-day free trial on any plan.
           </p>
         </div>
 

@@ -48,7 +48,7 @@ export const useShopOwnerAuth = () => {
           email: user.email,
           full_name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
           subscription_tier: 'trial',
-          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          trial_ends_at: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
         };
         setProfile(basicProfile);
         setSubscriptionStatus('trial');

@@ -8,12 +8,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Package, BarChart3, Crown, Zap, Star } from "lucide-react";
+import { Sparkles, Package, BarChart3, Crown, Zap, Star, Wand2, Calendar } from "lucide-react";
 
 interface UpgradePromptProps {
   isOpen: boolean;
   onClose: () => void;
-  feature: "ai" | "products" | "analytics";
+  feature: "ai" | "products" | "analytics" | "marketing" | "bookings";
   currentPlan?: string;
   currentCount?: number;
   maxAllowed?: number;
@@ -55,6 +55,30 @@ const featureConfig = {
       "Export data for business planning",
     ],
     upgradeText: "Upgrade to Pro or Business for advanced analytics",
+  },
+  marketing: {
+    icon: Wand2,
+    title: "Unlock Marketing Tools",
+    description: "Create stunning marketing materials for your business!",
+    benefits: [
+      "Professional poster templates",
+      "AI-powered copy generation",
+      "Canvas editor for customization",
+      "Unlimited poster designs",
+    ],
+    upgradeText: "Upgrade to Business plan to access marketing tools",
+  },
+  bookings: {
+    icon: Calendar,
+    title: "Accept Bookings",
+    description: "Let customers book your services online!",
+    benefits: [
+      "Online appointment booking",
+      "Automated notifications",
+      "Calendar management",
+      "Customer reminders",
+    ],
+    upgradeText: "Upgrade to Pro or Business to accept bookings",
   },
 };
 
