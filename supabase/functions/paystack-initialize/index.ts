@@ -97,29 +97,44 @@ serve(async (req) => {
       days: subscriptionDays,
     });
 
+    // Determine which plan code to use if any
+    const planCode = billing_cycle === 'yearly' 
+      ? selectedPlan.paystack_plan_yearly 
+      : selectedPlan.paystack_plan_monthly;
+
     // Initialize Paystack transaction
+    const paystackBody: any = {
+      email: profile.email,
+      amount: subscriptionAmount,
+      currency: 'NGN',
+      metadata: {
+        user_id: user.id,
+        plan_id: selectedPlan.id,
+        plan_slug: selectedPlan.slug,
+        plan_name: selectedPlan.name,
+        billing_cycle,
+        subscription_days: subscriptionDays,
+        offer_code: offerCode,
+        original_amount: originalAmount,
+      },
+      callback_url: `${req.headers.get('origin')}/dashboard?subscription=verify`,
+    };
+
+    // If we have a plan code, add it to the request to make it a subscription
+    if (planCode) {
+      paystackBody.plan = planCode;
+      console.log('Initializing recurring subscription with plan:', planCode);
+    } else {
+      console.log('Initializing one-time payment (no plan code found)');
+    }
+
     const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${paystackSecretKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        email: profile.email,
-        amount: subscriptionAmount,
-        currency: 'NGN',
-        metadata: {
-          user_id: user.id,
-          plan_id: selectedPlan.id,
-          plan_slug: selectedPlan.slug,
-          plan_name: selectedPlan.name,
-          billing_cycle,
-          subscription_days: subscriptionDays,
-          offer_code: offerCode,
-          original_amount: originalAmount,
-        },
-        callback_url: `${req.headers.get('origin')}/dashboard?subscription=verify`,
-      }),
+      body: JSON.stringify(paystackBody),
     });
 
     const paystackData = await paystackResponse.json();

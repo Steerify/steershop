@@ -1524,6 +1524,8 @@ export type Database = {
           price_yearly: number | null
           priority_support: boolean | null
           slug: string
+          paystack_plan_monthly: string | null
+          paystack_plan_yearly: string | null
         }
         Insert: {
           ai_features_enabled?: boolean | null
@@ -1539,6 +1541,8 @@ export type Database = {
           price_yearly?: number | null
           priority_support?: boolean | null
           slug: string
+          paystack_plan_monthly?: string | null
+          paystack_plan_yearly?: string | null
         }
         Update: {
           ai_features_enabled?: boolean | null
@@ -1554,6 +1558,8 @@ export type Database = {
           price_yearly?: number | null
           priority_support?: boolean | null
           slug?: string
+          paystack_plan_monthly?: string | null
+          paystack_plan_yearly?: string | null
         }
         Relationships: []
       }

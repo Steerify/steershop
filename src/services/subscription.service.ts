@@ -13,6 +13,8 @@ export interface SubscriptionPlan {
   priority_support: boolean;
   is_active: boolean;
   display_order: number;
+  paystack_plan_monthly?: string | null;
+  paystack_plan_yearly?: string | null;
 }
 
 export interface Badge {
