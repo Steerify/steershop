@@ -51,39 +51,85 @@ serve(async (req) => {
       
       console.log('Processing charge.success:', { user_id, order_id, shop_id });
 
-      // If this is a subscription payment (has user_id, no order_id)
-      if (user_id && !order_id) {
-        const { data: currentProfile } = await supabase
-          .from('profiles')
-          .select('subscription_expires_at')
-          .eq('id', user_id)
-          .single();
-        
-        let newExpiryDate = new Date();
-        
-        if (currentProfile?.subscription_expires_at) {
-          const currentExpiry = new Date(currentProfile.subscription_expires_at);
-          if (currentExpiry > newExpiryDate) {
-            newExpiryDate = currentExpiry;
+      // If this is a subscription payment (has user_id OR a plan code)
+      const planCode = event.data.plan?.plan_code;
+      const customerEmail = event.data.customer.email;
+      
+      if ((user_id && !order_id) || planCode) {
+        let finalUserId = user_id;
+
+        // If user_id is missing (recurring charge), find user by email
+        if (!finalUserId && customerEmail) {
+          const { data: profileByEmail } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', customerEmail)
+            .maybeSingle();
+          
+          if (profileByEmail) {
+            finalUserId = profileByEmail.id;
           }
         }
-        
-        newExpiryDate.setDate(newExpiryDate.getDate() + 30);
 
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
+        if (finalUserId) {
+          const { data: currentProfile } = await supabase
+            .from('profiles')
+            .select('subscription_expires_at, subscription_type')
+            .eq('id', finalUserId)
+            .single();
+          
+          let newExpiryDate = new Date();
+          
+          if (currentProfile?.subscription_expires_at) {
+            const currentExpiry = new Date(currentProfile.subscription_expires_at);
+            if (currentExpiry > newExpiryDate) {
+              newExpiryDate = currentExpiry;
+            }
+          }
+          
+          // Determine subscription days (default to 30)
+          let daysToAdd = 30;
+          if (event.data.metadata?.subscription_days) {
+            daysToAdd = event.data.metadata.subscription_days;
+          } else if (currentProfile?.subscription_type === 'yearly' || (planCode && planCode.includes('year'))) {
+            // Heuristic for recurring charges if metadata is lost
+            daysToAdd = 365;
+          }
+
+          newExpiryDate.setDate(newExpiryDate.getDate() + daysToAdd);
+
+          const updateData: any = {
             is_subscribed: true,
             subscription_expires_at: newExpiryDate.toISOString(),
-          })
-          .eq('id', user_id);
+          };
 
-        if (updateError) {
-          console.error('Error updating subscription:', updateError);
+          // If metadata contains plan_id, update it
+          if (event.data.metadata?.plan_id) {
+            updateData.subscription_plan_id = event.data.metadata.plan_id;
+          }
+          if (event.data.metadata?.billing_cycle) {
+            updateData.subscription_type = event.data.metadata.billing_cycle;
+          }
+
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update(updateData)
+            .eq('id', finalUserId);
+
+          if (updateError) {
+            console.error('Error updating subscription:', updateError);
+          } else {
+            console.log('Subscription updated via webhook:', {
+              user_id: finalUserId,
+              expires_at: newExpiryDate.toISOString(),
+              event: event.event,
+              is_recurring: !!planCode
+            });
+          }
         } else {
-          console.log('Subscription updated via webhook:', {
-            user_id,
-            expires_at: newExpiryDate.toISOString(),
+          console.error('Could not identify user for subscription charge:', {
+            email: customerEmail,
+            reference: event.data.reference
           });
         }
       }
