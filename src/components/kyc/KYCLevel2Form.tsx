@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +19,7 @@ interface KYCLevel2FormProps {
 
 export const KYCLevel2Form = ({ onSuccess }: KYCLevel2FormProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [banksLoading, setBanksLoading] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
@@ -26,6 +29,28 @@ export const KYCLevel2Form = ({ onSuccess }: KYCLevel2FormProps) => {
     accountNumber: '',
     bankCode: '',
   });
+
+  // Check existing verification status on mount
+  useEffect(() => {
+    const checkKYCStatus = async () => {
+      if (!user?.id) return;
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('bank_verified, verified_bank_account_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (data?.bank_verified && data?.verified_bank_account_name) {
+          setIsVerified(true);
+          setVerifiedName(data.verified_bank_account_name);
+        }
+      } catch (error) {
+        console.error('Error checking KYC status:', error);
+      }
+    };
+    checkKYCStatus();
+  }, [user?.id]);
 
   useEffect(() => {
     const fetchBanks = async () => {

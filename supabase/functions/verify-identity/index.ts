@@ -9,7 +9,7 @@ const corsHeaders = {
 
 interface VerificationRequest {
   type: 'level1' | 'level2';
-  userId?: string; // Optional if we want to update profile directly
+  userId?: string;
   bvn?: string;
   firstName?: string;
   lastName?: string;
@@ -79,8 +79,12 @@ const handler = async (req: Request): Promise<Response> => {
         const paystackData = await paystackResponse.json();
 
         if (!paystackResponse.ok) {
-            console.error("Paystack API Error:", paystackData);
-            throw new Error(paystackData.message || "BVN Verification failed via Paystack");
+            console.error("Paystack BVN API Error:", {
+              status: paystackResponse.status,
+              message: paystackData.message,
+              data: paystackData
+            });
+            throw new Error(paystackData.message || "BVN Verification failed. Please check your BVN and try again.");
         }
 
         const bvnData = paystackData.data;
@@ -96,14 +100,24 @@ const handler = async (req: Request): Promise<Response> => {
              throw new Error(`Name mismatch. BVN record shows ${bvnData.first_name} ${bvnData.last_name}`);
         }
 
-        // Update user profile or shops depending on where KYC should be stored
-        // Since we don't have a specific column yet, we'll log it or update a metadata field if it exists
-        // Recommendation: Add 'kyc_level' and 'identity_verified' to profiles
-        
-        // For now, let's at least log it successfully in the database if possible
-        // We'll update 'phone_verified' as a placeholder or just return success if we can't find a better field
-        
-        console.log("Successfully verified BVN for user:", user.id);
+        // Update user profile with KYC Level 1 status
+        console.log("Updating profile with BVN verification for user:", user.id);
+        const { error: updateError } = await supabaseAdmin
+          .from('profiles')
+          .update({
+            bvn_verified: true,
+            bvn_verified_at: new Date().toISOString(),
+            kyc_level: 1,
+            full_name: `${bvnData.first_name} ${bvnData.last_name}` // Update with verified name
+          })
+          .eq('id', user.id);
+
+        if (updateError) {
+          console.error("Failed to update profile with BVN verification:", updateError);
+          // Don't fail the verification, just log it
+        } else {
+          console.log("Successfully updated profile with BVN verification");
+        }
 
         return new Response(
             JSON.stringify({ 
@@ -135,8 +149,12 @@ const handler = async (req: Request): Promise<Response> => {
         const paystackData = await paystackResponse.json();
 
         if (!paystackResponse.ok) {
-             console.error("Paystack API Error:", paystackData);
-             throw new Error(paystackData.message || "Account Verification failed via Paystack");
+             console.error("Paystack Bank Account API Error:", {
+               status: paystackResponse.status,
+               message: paystackData.message,
+               data: paystackData
+             });
+             throw new Error(paystackData.message || "Account verification failed. Please check your account details.");
         }
 
         const accountData = paystackData.data;
@@ -154,9 +172,26 @@ const handler = async (req: Request): Promise<Response> => {
              
              if (!matches) {
                  console.warn("Account name mismatch warning:", { accountName, profileName });
-                 // We might still allow it but return a warning, or strict fail
-                 // For now, let's just log and continue as Paystack verified the account exists
+                 // Continue anyway - Paystack has verified the account exists
              }
+        }
+
+        // Update profile with KYC Level 2 status
+        console.log("Updating profile with bank verification for user:", user.id);
+        const { error: profileError } = await supabaseAdmin
+          .from('profiles')
+          .update({
+            bank_verified: true,
+            bank_verified_at: new Date().toISOString(),
+            kyc_level: 2,
+            verified_bank_account_name: accountData.account_name
+          })
+          .eq('id', user.id);
+
+        if (profileError) {
+          console.error("Failed to update profile with bank verification:", profileError);
+        } else {
+          console.log("Successfully updated profile with bank verification");
         }
 
         // Update shop bank details
@@ -167,13 +202,12 @@ const handler = async (req: Request): Promise<Response> => {
                 bank_account_number: accountNumber,
                 settlement_bank_code: bankCode,
                 bank_account_name: accountData.account_name,
-                bank_name: "Verified Account" // We could improve this by looking up the bank name
+                bank_name: "Verified Account"
             })
             .eq('owner_id', user.id);
 
         if (updateError) {
-            console.error("Database update error:", updateError);
-            // We ignore database error for response but log it
+            console.error("Database update error for shop:", updateError);
         }
 
         return new Response(
