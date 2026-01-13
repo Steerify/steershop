@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import kycService from '@/services/kyc.service';
 import { Loader2, CheckCircle2, ShieldCheck } from 'lucide-react';
 
@@ -13,6 +15,7 @@ interface KYCLevel1FormProps {
 
 export const KYCLevel1Form = ({ onSuccess }: KYCLevel1FormProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [formData, setFormData] = useState({
@@ -20,6 +23,27 @@ export const KYCLevel1Form = ({ onSuccess }: KYCLevel1FormProps) => {
     firstName: '',
     lastName: '',
   });
+
+  // Check existing verification status on mount
+  useEffect(() => {
+    const checkKYCStatus = async () => {
+      if (!user?.id) return;
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('bvn_verified')
+          .eq('id', user.id)
+          .single();
+        
+        if (data?.bvn_verified) {
+          setIsVerified(true);
+        }
+      } catch (error) {
+        console.error('Error checking KYC status:', error);
+      }
+    };
+    checkKYCStatus();
+  }, [user?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

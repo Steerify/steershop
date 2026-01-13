@@ -892,11 +892,16 @@ export type Database = {
       }
       profiles: {
         Row: {
+          bank_verified: boolean | null
+          bank_verified_at: string | null
+          bvn_verified: boolean | null
+          bvn_verified_at: string | null
           created_at: string
           email: string
           full_name: string | null
           id: string
           is_subscribed: boolean
+          kyc_level: number | null
           phone: string | null
           phone_verification_code: string | null
           phone_verification_expires: string | null
@@ -906,13 +911,19 @@ export type Database = {
           subscription_plan_id: string | null
           subscription_type: string | null
           updated_at: string
+          verified_bank_account_name: string | null
         }
         Insert: {
+          bank_verified?: boolean | null
+          bank_verified_at?: string | null
+          bvn_verified?: boolean | null
+          bvn_verified_at?: string | null
           created_at?: string
           email: string
           full_name?: string | null
           id: string
           is_subscribed?: boolean
+          kyc_level?: number | null
           phone?: string | null
           phone_verification_code?: string | null
           phone_verification_expires?: string | null
@@ -922,13 +933,19 @@ export type Database = {
           subscription_plan_id?: string | null
           subscription_type?: string | null
           updated_at?: string
+          verified_bank_account_name?: string | null
         }
         Update: {
+          bank_verified?: boolean | null
+          bank_verified_at?: string | null
+          bvn_verified?: boolean | null
+          bvn_verified_at?: string | null
           created_at?: string
           email?: string
           full_name?: string | null
           id?: string
           is_subscribed?: boolean
+          kyc_level?: number | null
           phone?: string | null
           phone_verification_code?: string | null
           phone_verification_expires?: string | null
@@ -938,6 +955,7 @@ export type Database = {
           subscription_plan_id?: string | null
           subscription_type?: string | null
           updated_at?: string
+          verified_bank_account_name?: string | null
         }
         Relationships: [
           {
@@ -1524,8 +1542,6 @@ export type Database = {
           price_yearly: number | null
           priority_support: boolean | null
           slug: string
-          paystack_plan_monthly: string | null
-          paystack_plan_yearly: string | null
         }
         Insert: {
           ai_features_enabled?: boolean | null
@@ -1541,8 +1557,6 @@ export type Database = {
           price_yearly?: number | null
           priority_support?: boolean | null
           slug: string
-          paystack_plan_monthly?: string | null
-          paystack_plan_yearly?: string | null
         }
         Update: {
           ai_features_enabled?: boolean | null
@@ -1558,8 +1572,6 @@ export type Database = {
           price_yearly?: number | null
           priority_support?: boolean | null
           slug?: string
-          paystack_plan_monthly?: string | null
-          paystack_plan_yearly?: string | null
         }
         Relationships: []
       }
