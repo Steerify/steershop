@@ -322,13 +322,27 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     setIsInitializingPayment(true);
 
     try {
+      // Validate Paystack key exists and is not empty
       if (!shop.paystack_public_key?.trim()) {
-        throw new Error("Shop Paystack configuration is missing. Please contact the shop owner.");
+        throw new Error("This shop hasn't set up online payments yet. Please choose 'Pay on Delivery' or contact the seller directly.");
+      }
+
+      // Validate key format (should start with pk_)
+      if (!shop.paystack_public_key.startsWith('pk_')) {
+        console.error("Invalid Paystack key format:", shop.paystack_public_key.substring(0, 10));
+        throw new Error("Invalid payment configuration. Please contact the seller or use 'Pay on Delivery'.");
       }
 
       if (!customerEmail?.trim()) {
         throw new Error("Email is required for Paystack payment");
       }
+
+      console.log("Initializing Paystack payment:", {
+        hasKey: !!shop.paystack_public_key,
+        keyPrefix: shop.paystack_public_key?.substring(0, 7),
+        amount: totalAmount,
+        email: customerEmail
+      });
 
       const scriptLoaded = await loadPaystackScript();
       

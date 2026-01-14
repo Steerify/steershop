@@ -84,6 +84,19 @@ const handler = async (req: Request): Promise<Response> => {
               message: paystackData.message,
               data: paystackData
             });
+            
+            // Handle specific 451 status code for unavailable features
+            if (paystackResponse.status === 451) {
+              throw new Error("BVN verification service is currently unavailable. Please use Bank Account Verification instead.");
+            }
+            
+            // Handle feature_unavailable error type
+            if (paystackData.message?.toLowerCase().includes('feature') || 
+                paystackData.message?.toLowerCase().includes('unavailable') ||
+                paystackData.message?.toLowerCase().includes('not enabled')) {
+              throw new Error("BVN verification is currently being activated. Please use Bank Account Verification instead.");
+            }
+            
             throw new Error(paystackData.message || "BVN Verification failed. Please check your BVN and try again.");
         }
 
