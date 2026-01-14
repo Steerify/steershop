@@ -35,6 +35,9 @@ interface Shop {
   payment_method?: string;
   paystack_public_key?: string;
   whatsapp_number?: string;
+  bank_account_name?: string;
+  bank_name?: string;
+  bank_account_number?: string;
 }
 
 interface Product {

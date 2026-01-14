@@ -6,16 +6,17 @@ import { KYCLevel1Form } from "@/components/kyc/KYCLevel1Form";
 import { KYCLevel2Form } from "@/components/kyc/KYCLevel2Form";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ShieldCheck, BadgeCheck, AlertCircle } from "lucide-react";
+import { ArrowLeft, ShieldCheck, BadgeCheck, AlertCircle, Info } from "lucide-react";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const IdentityVerification = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("level1");
+  const [activeTab, setActiveTab] = useState("level2"); // Default to Bank Account verification
 
   useEffect(() => {
     if (!user) {
@@ -39,7 +40,7 @@ const IdentityVerification = () => {
               Identity Verification
             </h1>
             <p className="text-muted-foreground mt-2 max-w-xl">
-              Complete your identity verification to unlock full store capabilities, higher payout limits, and build trust with your customers.
+              Complete your identity verification to unlock full store capabilities, receive payouts, and build trust with your customers.
             </p>
           </div>
           <div className="hidden lg:block">
@@ -49,15 +50,33 @@ const IdentityVerification = () => {
           </div>
         </div>
 
+        {/* Recommended Method Banner */}
+        <Alert className="mb-6 border-accent/30 bg-accent/5">
+          <Info className="h-4 w-4 text-accent" />
+          <AlertTitle className="text-accent">Recommended: Bank Account Verification</AlertTitle>
+          <AlertDescription>
+            Verify your bank account to receive payments directly and display the "Verified Seller" badge on your shop.
+          </AlertDescription>
+        </Alert>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-8 p-1 bg-muted/50 border border-border/50">
-                <TabsTrigger value="level1" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium">
+                <TabsTrigger 
+                  value="level1" 
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium relative"
+                >
                   Level 1: BVN
+                  <span className="absolute -top-2 -right-2 text-[10px] bg-muted-foreground/20 text-muted-foreground px-1.5 py-0.5 rounded-full">
+                    Soon
+                  </span>
                 </TabsTrigger>
-                <TabsTrigger value="level2" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground font-medium">
-                  Level 2: Bank Account
+                <TabsTrigger 
+                  value="level2" 
+                  className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground font-medium"
+                >
+                  Level 2: Bank Account ✓
                 </TabsTrigger>
               </TabsList>
 
@@ -80,9 +99,9 @@ const IdentityVerification = () => {
                 </h3>
                 <ul className="space-y-3">
                   {[
-                    "Faster payout processing",
-                    "Higher transaction limits",
-                    "Verified Seller badge on your shop",
+                    "Receive payments directly to your bank",
+                    "Display Verified Seller badge on your shop",
+                    "Build customer trust and credibility",
                     "Priority merchant support",
                     "Access to advanced marketing tools"
                   ].map((benefit, i) => (
@@ -104,7 +123,7 @@ const IdentityVerification = () => {
                 <div className="space-y-2">
                   <h4 className="font-bold text-gold text-sm">Important Note</h4>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Identity verification is powered by Paystack. Ensure the names provided match exactly with what is on your official identity documents.
+                    Identity verification is powered by Paystack. Ensure the bank account is in your name and matches your profile information.
                   </p>
                 </div>
               </div>

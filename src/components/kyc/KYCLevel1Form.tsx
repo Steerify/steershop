@@ -3,11 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import kycService from '@/services/kyc.service';
-import { Loader2, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Loader2, CheckCircle2, ShieldCheck, AlertCircle, ArrowRight } from 'lucide-react';
 
 interface KYCLevel1FormProps {
   onSuccess?: () => void;
@@ -73,11 +74,21 @@ export const KYCLevel1Form = ({ onSuccess }: KYCLevel1FormProps) => {
         });
       }
     } catch (error: any) {
-      toast({
-        title: 'Verification Failed',
-        description: error.message || 'Something went wrong during verification.',
-        variant: 'destructive',
-      });
+      // Check for specific BVN service unavailable error
+      const errorMessage = error.message || '';
+      if (errorMessage.includes('unavailable') || errorMessage.includes('451') || errorMessage.includes('not enabled')) {
+        toast({
+          title: 'BVN Service Unavailable',
+          description: 'BVN verification is currently being activated. Please use Bank Account Verification instead.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Verification Failed',
+          description: error.message || 'Something went wrong during verification.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -100,67 +111,75 @@ export const KYCLevel1Form = ({ onSuccess }: KYCLevel1FormProps) => {
   }
 
   return (
-    <Card className="border-primary/10 shadow-sm overflow-hidden">
-      <div className="h-1.5 bg-gradient-to-r from-primary to-accent" />
-      <CardHeader>
-        <div className="flex items-center gap-2 mb-1">
-          <ShieldCheck className="w-5 h-5 text-primary" />
-          <CardTitle className="text-xl">Level 1 Verification</CardTitle>
-        </div>
-        <CardDescription>
-          Verify your identity using your Bank Verification Number (BVN)
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="bvn">BVN (11 Digits)</Label>
-            <Input
-              id="bvn"
-              placeholder="22222222222"
-              value={formData.bvn}
-              onChange={(e) => setFormData({ ...formData, bvn: e.target.value.replace(/\D/g, '').slice(0, 11) })}
-              required
-              className="font-mono tracking-widest text-lg"
-            />
+    <div className="space-y-4">
+      {/* BVN Unavailable Alert */}
+      <Alert className="border-amber-500/30 bg-amber-500/5">
+        <AlertCircle className="h-4 w-4 text-amber-600" />
+        <AlertTitle className="text-amber-700">BVN Verification Temporarily Unavailable</AlertTitle>
+        <AlertDescription className="text-amber-600/80">
+          BVN verification is currently being activated on our payment provider. 
+          Please use <strong>Bank Account Verification</strong> (Level 2) instead — it provides the same benefits including the Verified Seller badge and payout access.
+        </AlertDescription>
+      </Alert>
+
+      <Card className="border-primary/10 shadow-sm overflow-hidden opacity-60 pointer-events-none">
+        <div className="h-1.5 bg-gradient-to-r from-primary to-accent" />
+        <CardHeader>
+          <div className="flex items-center gap-2 mb-1">
+            <ShieldCheck className="w-5 h-5 text-primary" />
+            <CardTitle className="text-xl">Level 1 Verification</CardTitle>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <CardDescription>
+            Verify your identity using your Bank Verification Number (BVN)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
+              <Label htmlFor="bvn">BVN (11 Digits)</Label>
               <Input
-                id="firstName"
-                placeholder="John"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                id="bvn"
+                placeholder="22222222222"
+                value={formData.bvn}
+                onChange={(e) => setFormData({ ...formData, bvn: e.target.value.replace(/\D/g, '').slice(0, 11) })}
                 required
+                className="font-mono tracking-widest text-lg"
+                disabled
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input
-                id="lastName"
-                placeholder="Doe"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                required
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  placeholder="John"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  required
+                  disabled
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  placeholder="Doe"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  required
+                  disabled
+                />
+              </div>
             </div>
-          </div>
-          <Button type="submit" className="w-full mt-2" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Verifying...
-              </>
-            ) : (
-              'Verify BVN'
-            )}
-          </Button>
-          <p className="text-[10px] text-muted-foreground text-center px-4">
-            Your BVN is only used for identity verification and is processed securely. We do not store your BVN.
-          </p>
-        </form>
-      </CardContent>
-    </Card>
+            <Button type="submit" className="w-full mt-2" disabled>
+              Coming Soon
+            </Button>
+            <p className="text-[10px] text-muted-foreground text-center px-4">
+              Your BVN is only used for identity verification and is processed securely. We do not store your BVN.
+            </p>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };

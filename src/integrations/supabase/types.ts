@@ -1740,6 +1740,9 @@ export type Database = {
       shops_public: {
         Row: {
           average_rating: number | null
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_name: string | null
           banner_url: string | null
           created_at: string | null
           description: string | null
@@ -1757,6 +1760,9 @@ export type Database = {
         }
         Insert: {
           average_rating?: number | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
           banner_url?: string | null
           created_at?: string | null
           description?: string | null
@@ -1774,6 +1780,9 @@ export type Database = {
         }
         Update: {
           average_rating?: number | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
           banner_url?: string | null
           created_at?: string | null
           description?: string | null
