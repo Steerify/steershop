@@ -54,15 +54,37 @@ const checkoutSchema = z.object({
 // Paystack utilities
 const loadPaystackScript = (): Promise<boolean> => {
   return new Promise((resolve) => {
+    // Check if already loaded
     if (typeof window.PaystackPop !== 'undefined') {
+      console.log("Paystack script already loaded");
       resolve(true);
       return;
     }
 
+    // Check if script is already being loaded
+    const existingScript = document.querySelector('script[src="https://js.paystack.co/v1/inline.js"]');
+    if (existingScript) {
+      console.log("Paystack script already exists, waiting for load...");
+      existingScript.addEventListener('load', () => resolve(true));
+      existingScript.addEventListener('error', () => resolve(false));
+      return;
+    }
+
+    console.log("Loading Paystack script...");
     const script = document.createElement('script');
     script.src = 'https://js.paystack.co/v1/inline.js';
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
+    script.async = true;
+    
+    script.onload = () => {
+      console.log("Paystack script loaded successfully");
+      resolve(true);
+    };
+    
+    script.onerror = (error) => {
+      console.error("Failed to load Paystack script - may be blocked by CSP or network issue:", error);
+      resolve(false);
+    };
+    
     document.head.appendChild(script);
   });
 };
