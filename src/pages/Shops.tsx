@@ -262,22 +262,22 @@ const Shops = () => {
       <>
         {/* Search Type Tabs - Only show when searching */}
         {debouncedSearchQuery && (
-          <div className="flex gap-2 mb-6 border-b pb-4">
+          <div className="flex gap-1 sm:gap-2 mb-4 sm:mb-6 border-b pb-3 sm:pb-4 overflow-x-auto">
             <button
               onClick={() => handleSearchTypeChange('all')}
-              className={`px-4 py-2 rounded-lg transition-colors ${searchType === 'all' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/10'}`}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm whitespace-nowrap min-h-[40px] ${searchType === 'all' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/10'}`}
             >
-              All Results ({shops.length + productResults.length})
+              All ({shops.length + productResults.length})
             </button>
             <button
               onClick={() => handleSearchTypeChange('shops')}
-              className={`px-4 py-2 rounded-lg transition-colors ${searchType === 'shops' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/10'}`}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm whitespace-nowrap min-h-[40px] ${searchType === 'shops' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/10'}`}
             >
               Shops ({shops.length})
             </button>
             <button
               onClick={() => handleSearchTypeChange('products')}
-              className={`px-4 py-2 rounded-lg transition-colors ${searchType === 'products' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/10'}`}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm whitespace-nowrap min-h-[40px] ${searchType === 'products' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/10'}`}
             >
               Products ({productResults.length})
             </button>
@@ -286,20 +286,20 @@ const Shops = () => {
 
         {/* Product Results */}
         {showProducts && productResults.length > 0 && (
-          <div className="mb-12 animate-fade-up">
-            <h2 className="font-display text-2xl font-bold mb-6">
+          <div className="mb-8 sm:mb-12 animate-fade-up">
+            <h2 className="font-display text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
               Product Results <span className="text-accent">({productResults.length})</span>
             </h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {productResults.map((product, index) => (
                 <Link key={`${product.id}-${index}`} to={`/shop/${product.slug}`}>
                   <Card 
                     className="h-full card-african hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer group bg-card/80 backdrop-blur-sm"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    <CardHeader>
+                    <CardHeader className="p-2 sm:p-4">
                       {product.images && product.images.length > 0 ? (
-                        <div className="w-full h-48 mb-4 overflow-hidden rounded-lg">
+                        <div className="w-full h-32 sm:h-48 mb-2 sm:mb-4 overflow-hidden rounded-lg">
                           <img 
                             src={product.images[0].url} 
                             alt={product.name}
@@ -307,31 +307,31 @@ const Shops = () => {
                           />
                         </div>
                       ) : (
-                        <div className="w-full h-48 mb-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg flex items-center justify-center adire-pattern">
-                          <Package className="w-16 h-16 text-muted-foreground" />
+                        <div className="w-full h-32 sm:h-48 mb-2 sm:mb-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg flex items-center justify-center adire-pattern">
+                          <Package className="w-10 h-10 sm:w-16 sm:h-16 text-muted-foreground" />
                         </div>
                       )}
-                      <CardTitle className="group-hover:text-accent transition-colors text-lg font-display">
+                      <CardTitle className="group-hover:text-accent transition-colors text-sm sm:text-lg font-display line-clamp-2">
                         {product.name}
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="hidden sm:block">
                         <div className="flex items-center gap-2 mt-2">
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                            <Store className="w-3 h-3 text-primary-foreground" />
+                          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                            <Store className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary-foreground" />
                           </div>
-                          <span>Visit Shop</span>
+                          <span className="text-xs sm:text-sm">Visit Shop</span>
                         </div>
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-2 sm:p-4 pt-0">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-2xl font-bold gradient-text">₦{product.price.toLocaleString()}</p>
-                          <p className="text-sm text-muted-foreground mt-1">
+                          <p className="text-lg sm:text-2xl font-bold gradient-text">₦{product.price.toLocaleString()}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
                             {product.inventory} in stock
                           </p>
                         </div>
-                        <Badge className="bg-accent/10 text-accent border-accent/20 hover:bg-accent/20">
+                        <Badge className="bg-accent/10 text-accent border-accent/20 hover:bg-accent/20 text-xs">
                           Available
                         </Badge>
                       </div>
@@ -343,7 +343,7 @@ const Shops = () => {
             
             {/* Products Loading Skeleton */}
             {loadingMoreProducts && (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mt-4 sm:mt-6">
                 {Array.from({ length: 3 }).map((_, index) => (
                   <ProductCardSkeleton key={`product-skeleton-${index}`} />
                 ))}
@@ -356,13 +356,13 @@ const Shops = () => {
         {showShops && (
           <div>
             {(debouncedSearchQuery && searchType === 'all') && (
-              <h2 className="font-display text-2xl font-bold mb-6">
+              <h2 className="font-display text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
                 Shop Results <span className="text-accent">({shops.length})</span>
               </h2>
             )}
             
             {isLoading && !shops.length ? (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                 {Array.from({ length: 6 }).map((_, index) => (
                   <ShopCardSkeleton key={index} />
                 ))}
@@ -383,26 +383,26 @@ const Shops = () => {
               </div>
             ) : (
               <>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                   {shops.map((shop, index) => (
                     <Link key={`${shop.id}-${index}`} to={`/shop/${shop.slug}`}>
                       <Card 
                         className="h-full card-african hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer group bg-card/80 backdrop-blur-sm animate-fade-up"
                         style={{ animationDelay: `${index * 0.05}s` }}
                       >
-                        <CardHeader>
-                          <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-lg overflow-hidden">
-                            <Store className="w-8 h-8 text-primary-foreground" />
+                        <CardHeader className="p-3 sm:p-6">
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-transform shadow-lg overflow-hidden">
+                            <Store className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground" />
                           </div>
-                          <CardTitle className="group-hover:text-accent transition-colors font-display">
+                          <CardTitle className="group-hover:text-accent transition-colors font-display text-base sm:text-lg line-clamp-1">
                             {shop.name}
                           </CardTitle>
-                          <CardDescription className="line-clamp-2">
+                          <CardDescription className="line-clamp-2 text-xs sm:text-sm">
                             {shop.description || "Visit this shop to see their products"}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent>
-                          <div className="text-sm text-accent font-medium group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                        <CardContent className="p-3 sm:p-6 pt-0">
+                          <div className="text-xs sm:text-sm text-accent font-medium group-hover:translate-x-1 transition-transform flex items-center gap-1">
                             Visit Store 
                             <span className="group-hover:translate-x-1 transition-transform">→</span>
                           </div>
@@ -414,7 +414,7 @@ const Shops = () => {
 
                 {/* Shops Loading Skeleton */}
                 {loadingMoreShops && (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mt-4 sm:mt-6">
                     {Array.from({ length: 3 }).map((_, index) => (
                       <ShopCardSkeleton key={`shop-skeleton-${index}`} />
                     ))}
@@ -433,32 +433,32 @@ const Shops = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative pt-28 pb-12 overflow-hidden">
+      <section className="relative pt-24 sm:pt-28 pb-8 sm:pb-12 overflow-hidden">
         <AdirePattern variant="geometric" className="text-primary" opacity={0.5} />
         <div className="absolute inset-0 bg-gradient-to-b from-accent/5 via-transparent to-transparent" />
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 border border-accent/20 rounded-full mb-6">
-              <Sparkles className="w-4 h-4 text-accent" />
-              <span className="text-accent font-semibold text-sm">Discover Nigerian Businesses</span>
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-accent/10 border border-accent/20 rounded-full mb-4 sm:mb-6">
+              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />
+              <span className="text-accent font-semibold text-xs sm:text-sm">Discover Nigerian Businesses</span>
             </div>
             
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4">
               Explore <span className="gradient-text">Amazing Shops</span>
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-6 sm:mb-8 px-2">
               Discover unique products from talented Nigerian entrepreneurs
             </p>
 
             {/* Search */}
-            <div className="relative max-w-md mx-auto">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <div className="relative max-w-md mx-auto px-2">
+              <Search className="absolute left-6 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
               <Input
                 placeholder="Search shops or products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-12 text-base bg-card/80 backdrop-blur-sm border-border/50 focus:border-accent shadow-lg"
+                className="pl-10 sm:pl-12 h-11 sm:h-12 text-sm sm:text-base bg-card/80 backdrop-blur-sm border-border/50 focus:border-accent shadow-lg"
               />
             </div>
           </div>
@@ -466,12 +466,12 @@ const Shops = () => {
       </section>
 
       {/* Top Seller Banner */}
-      <div className="container mx-auto px-4 mb-8">
+      <div className="container mx-auto px-4 mb-6 sm:mb-8">
         <TopSellerBanner />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 container mx-auto px-4 pb-20">
+      <div className="flex-1 container mx-auto px-4 pb-16 sm:pb-20">
         <div className="max-w-6xl mx-auto">
           {renderContent()}
 

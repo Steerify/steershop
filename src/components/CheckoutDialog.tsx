@@ -660,13 +660,13 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5" />
-            Checkout - {shop.shop_name}
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="truncate">Checkout - {shop.shop_name}</span>
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             {orderCreated && paymentChoice === "pay_before" && shop.payment_method === "bank_transfer" 
               ? "Make payment and send proof via WhatsApp"
               : isInitializingPayment
@@ -675,144 +675,150 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Cart Items */}
           <div>
-            <h3 className="font-semibold mb-3">Your Cart</h3>
-            <div className="space-y-3">
+            <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Your Cart</h3>
+            <div className="space-y-2 sm:space-y-3">
               {cart.map((item) => (
-                <div key={item.product.id} className="flex items-center gap-4 p-3 bg-muted rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium">{item.product.name}</p>
-                    <p className="text-sm text-muted-foreground">₦{item.product.price.toLocaleString()}</p>
+                <div key={item.product.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-muted rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm sm:text-base truncate">{item.product.name}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">₦{item.product.price.toLocaleString()}</p>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-                    <span className="w-8 text-center font-medium">{item.quantity}</span>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
-                      disabled={item.quantity >= item.product.stock_quantity}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      onClick={() => onUpdateQuantity(item.product.id, 0)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="font-semibold w-24 text-right">
-                    ₦{(item.product.price * item.quantity).toLocaleString()}
+                  <div className="flex items-center justify-between sm:justify-end gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
+                        className="h-8 w-8 sm:h-9 sm:w-9"
+                      >
+                        <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
+                      <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{item.quantity}</span>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
+                        disabled={item.quantity >= item.product.stock_quantity}
+                        className="h-8 w-8 sm:h-9 sm:w-9"
+                      >
+                        <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        onClick={() => onUpdateQuantity(item.product.id, 0)}
+                        className="h-8 w-8 sm:h-9 sm:w-9"
+                      >
+                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
+                    </div>
+                    
+                    <div className="font-semibold text-sm sm:text-base min-w-[80px] sm:w-24 text-right">
+                      ₦{(item.product.price * item.quantity).toLocaleString()}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
             
-            <div className="mt-4 pt-4 border-t flex justify-between items-center">
-              <span className="text-lg font-semibold">Total:</span>
-              <span className="text-2xl font-bold">₦{totalAmount.toLocaleString()}</span>
+            <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t flex justify-between items-center">
+              <span className="text-base sm:text-lg font-semibold">Total:</span>
+              <span className="text-xl sm:text-2xl font-bold">₦{totalAmount.toLocaleString()}</span>
             </div>
           </div>
 
           {!orderCreated ? (
-            <form onSubmit={handleCheckout} className="space-y-4">
+            <form onSubmit={handleCheckout} className="space-y-3 sm:space-y-4">
               {/* Auto-fill indicator for logged-in users */}
               {isUserLoggedIn && (
-                <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-2">
-                  <User className="w-4 h-4 text-primary" />
-                  <span className="text-sm text-primary font-medium">
+                <div className="p-2 sm:p-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-2">
+                  <User className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-xs sm:text-sm text-primary font-medium">
                     Logged in - your info has been auto-filled
                   </span>
                 </div>
               )}
 
               {/* Form fields */}
-              <div className="space-y-2">
-                <Label htmlFor="customer_name">Full Name *</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="customer_name" className="text-sm">Full Name *</Label>
                 <Input
                   id="customer_name"
                   value={formData.customer_name}
-                  onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+                  onChange={(e) => handleFormChange('customer_name', e.target.value)}
                   placeholder="John Doe"
-                  className={errors.customer_name ? "border-destructive" : ""}
+                  className={`min-h-[44px] ${errors.customer_name ? "border-destructive" : ""}`}
                 />
                 {errors.customer_name && (
-                  <p className="text-sm text-destructive">{errors.customer_name}</p>
+                  <p className="text-xs sm:text-sm text-destructive">{errors.customer_name}</p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="customer_email">Email *</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="customer_email" className="text-sm">Email *</Label>
                 <Input
                   id="customer_email"
                   type="email"
                   value={formData.customer_email}
-                  onChange={(e) => setFormData({ ...formData, customer_email: e.target.value })}
+                  onChange={(e) => handleFormChange('customer_email', e.target.value)}
                   placeholder="john@example.com"
-                  className={errors.customer_email ? "border-destructive" : ""}
+                  className={`min-h-[44px] ${errors.customer_email ? "border-destructive" : ""}`}
                 />
                 {errors.customer_email && (
-                  <p className="text-sm text-destructive">{errors.customer_email}</p>
+                  <p className="text-xs sm:text-sm text-destructive">{errors.customer_email}</p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="customer_phone">Phone Number *</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="customer_phone" className="text-sm">Phone Number *</Label>
                 <Input
                   id="customer_phone"
                   type="tel"
                   value={formData.customer_phone}
-                  onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
+                  onChange={(e) => handleFormChange('customer_phone', e.target.value)}
                   placeholder="+234 800 000 0000"
-                  className={errors.customer_phone ? "border-destructive" : ""}
+                  className={`min-h-[44px] ${errors.customer_phone ? "border-destructive" : ""}`}
                 />
                 {errors.customer_phone && (
-                  <p className="text-sm text-destructive">{errors.customer_phone}</p>
+                  <p className="text-xs sm:text-sm text-destructive">{errors.customer_phone}</p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="delivery_address">Delivery Address *</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="delivery_address" className="text-sm">Delivery Address *</Label>
                 <Textarea
                   id="delivery_address"
                   value={formData.delivery_address}
-                  onChange={(e) => setFormData({ ...formData, delivery_address: e.target.value })}
+                  onChange={(e) => handleFormChange('delivery_address', e.target.value)}
                   placeholder="Enter your full delivery address including landmarks"
                   rows={3}
-                  className={errors.delivery_address ? "border-destructive" : ""}
+                  className={`min-h-[80px] ${errors.delivery_address ? "border-destructive" : ""}`}
                 />
                 {errors.delivery_address && (
-                  <p className="text-sm text-destructive">{errors.delivery_address}</p>
+                  <p className="text-xs sm:text-sm text-destructive">{errors.delivery_address}</p>
                 )}
               </div>
 
               {/* Payment Choice */}
-              <div className="space-y-3">
-                <Label>Payment Option *</Label>
+              <div className="space-y-2 sm:space-y-3">
+                <Label className="text-sm">Payment Option *</Label>
                 <RadioGroup
                   value={paymentChoice}
                   onValueChange={(value: "pay_before" | "delivery_before") => setPaymentChoice(value)}
+                  className="space-y-2"
                 >
-                  <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted cursor-pointer">
+                  <div className="flex items-start space-x-2 sm:space-x-3 p-2.5 sm:p-3 border rounded-lg hover:bg-muted cursor-pointer min-h-[60px]">
                     <RadioGroupItem value="pay_before" id="pay_before" className="mt-1" />
-                    <div className="flex-1">
-                      <Label htmlFor="pay_before" className="font-medium cursor-pointer flex items-center gap-2">
-                        <CreditCard className="w-4 h-4" />
-                        Pay Before Service
+                    <div className="flex-1 min-w-0">
+                      <Label htmlFor="pay_before" className="font-medium cursor-pointer flex items-center gap-2 text-sm sm:text-base">
+                        <CreditCard className="w-4 h-4 flex-shrink-0" />
+                        <span>Pay Before Service</span>
                       </Label>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                         {shop.payment_method === "paystack" 
                           ? "Complete payment via Paystack before delivery"
                           : "Transfer to shop's bank account before delivery"}
@@ -820,14 +826,14 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                     </div>
                   </div>
                   
-                  <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted cursor-pointer">
+                  <div className="flex items-start space-x-2 sm:space-x-3 p-2.5 sm:p-3 border rounded-lg hover:bg-muted cursor-pointer min-h-[60px]">
                     <RadioGroupItem value="delivery_before" id="delivery_before" className="mt-1" />
-                    <div className="flex-1">
-                      <Label htmlFor="delivery_before" className="font-medium cursor-pointer flex items-center gap-2">
-                        <MessageCircle className="w-4 h-4" />
-                        Pay on Delivery
+                    <div className="flex-1 min-w-0">
+                      <Label htmlFor="delivery_before" className="font-medium cursor-pointer flex items-center gap-2 text-sm sm:text-base">
+                        <MessageCircle className="w-4 h-4 flex-shrink-0" />
+                        <span>Pay on Delivery</span>
                       </Label>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                         Pay when your order arrives. We'll contact you via WhatsApp to confirm.
                       </p>
                     </div>
@@ -850,11 +856,14 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 </div>
               )}
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-4 pt-3 sm:pt-4">
+                <Button type="button" variant="outline" onClick={onClose} disabled={isProcessing || isInitializingPayment} className="min-h-[48px] w-full sm:w-auto">
+                  Cancel
+                </Button>
                 <Button 
                   type="submit" 
                   disabled={isProcessing || cart.length === 0 || isInitializingPayment} 
-                  className="flex-1"
+                  className="flex-1 min-h-[48px] text-sm sm:text-base"
                 >
                   {isProcessing ? (
                     <>
@@ -864,16 +873,13 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                   ) : isInitializingPayment ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Initializing Payment...
+                      Initializing...
                     </>
                   ) : paymentChoice === "delivery_before" ? (
-                    `Place Order & Contact Seller - ₦${totalAmount.toLocaleString()}`
+                    <span className="truncate">Place Order - ₦{totalAmount.toLocaleString()}</span>
                   ) : (
-                    `Place Order - ₦${totalAmount.toLocaleString()}`
+                    <span className="truncate">Pay ₦{totalAmount.toLocaleString()}</span>
                   )}
-                </Button>
-                <Button type="button" variant="outline" onClick={onClose} disabled={isProcessing || isInitializingPayment}>
-                  Cancel
                 </Button>
               </div>
             </form>

@@ -251,19 +251,20 @@ const MyStore = () => {
 
   return (
     <PageWrapper patternVariant="dots" patternOpacity={0.5}>
-      <div className="container mx-auto py-8 max-w-3xl">
-        <Button variant="ghost" onClick={() => navigate("/dashboard")}>
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-3xl">
+        <Button variant="ghost" onClick={() => navigate("/dashboard")} className="min-h-[44px] px-2 sm:px-4 mb-4">
+          <ArrowLeft className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">Back to Dashboard</span>
         </Button>
 
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Store Information</CardTitle>
-            <CardDescription>Manage your store</CardDescription>
+        <Card className="border-primary/10">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-xl sm:text-2xl">Store Information</CardTitle>
+            <CardDescription className="text-sm">Manage your store settings and payment methods</CardDescription>
           </CardHeader>
 
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+            <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="shop_name">Store Name</Label>
                 <Input
@@ -376,40 +377,42 @@ const MyStore = () => {
 
               {/* Payment Methods */}
               <div className="space-y-4">
-                <Label>Payment Methods</Label>
-                <div className="flex items-center space-x-2">
+                <Label className="text-sm sm:text-base">Payment Methods</Label>
+                <div className="flex items-center space-x-2 min-h-[44px]">
                   <Checkbox
                     id="enable_bank_transfer"
                     checked={formData.enable_bank_transfer}
                     onCheckedChange={(checked) =>
                       setFormData({ ...formData, enable_bank_transfer: checked as boolean })
                     }
+                    className="h-5 w-5"
                   />
-                  <Label htmlFor="enable_bank_transfer">Enable Bank Transfer</Label>
+                  <Label htmlFor="enable_bank_transfer" className="text-sm sm:text-base cursor-pointer">Enable Bank Transfer</Label>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 min-h-[44px]">
                   <Checkbox
                     id="enable_paystack"
                     checked={formData.enable_paystack}
                     onCheckedChange={(checked) =>
                       setFormData({ ...formData, enable_paystack: checked as boolean })
                     }
+                    className="h-5 w-5"
                   />
-                  <Label htmlFor="enable_paystack">Enable Paystack</Label>
+                  <Label htmlFor="enable_paystack" className="text-sm sm:text-base cursor-pointer">Enable Paystack</Label>
                 </div>
 
                 {errors.enable_paystack && errors.enable_bank_transfer && (
-                  <p className="text-red-500 text-sm">{errors.enable_paystack}</p>
+                  <p className="text-red-500 text-xs sm:text-sm">{errors.enable_paystack}</p>
                 )}
               </div>
 
               {/* Bank Transfer Details */}
               {formData.enable_bank_transfer && (
-                <div className="space-y-4 border p-4 rounded-lg">
-                  <Label className="text-lg">Bank Transfer Details</Label>
+                <div className="space-y-4 border border-border/50 p-3 sm:p-4 rounded-lg bg-muted/30">
+                  <Label className="text-base sm:text-lg font-semibold">Bank Transfer Details</Label>
                   <div className="space-y-2">
-                    <Label htmlFor="bank_account_name">Account Name</Label>
+                    <Label htmlFor="bank_account_name" className="text-sm">Account Name</Label>
                     <Input
                       id="bank_account_name"
                       value={formData.bank_account_name}
@@ -417,11 +420,12 @@ const MyStore = () => {
                         setFormData({ ...formData, bank_account_name: e.target.value })
                       }
                       placeholder="John Doe"
+                      className="min-h-[44px]"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="bank_name">Bank Name</Label>
+                    <Label htmlFor="bank_name" className="text-sm">Bank Name</Label>
                     <Input
                       id="bank_name"
                       value={formData.bank_name}
@@ -429,11 +433,12 @@ const MyStore = () => {
                         setFormData({ ...formData, bank_name: e.target.value })
                       }
                       placeholder="First Bank"
+                      className="min-h-[44px]"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="bank_account_number">Account Number</Label>
+                    <Label htmlFor="bank_account_number" className="text-sm">Account Number</Label>
                     <Input
                       id="bank_account_number"
                       value={formData.bank_account_number}
@@ -441,12 +446,13 @@ const MyStore = () => {
                         setFormData({ ...formData, bank_account_number: e.target.value })
                       }
                       placeholder="1234567890"
+                      className="min-h-[44px]"
                     />
                   </div>
                   
-                  <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10 flex items-center justify-between">
+                  <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <ShieldCheck className="w-5 h-5 text-primary" />
+                      <ShieldCheck className="w-5 h-5 text-primary flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium">Identity Verification</p>
                         <p className="text-xs text-muted-foreground">Verify your bank account to enable payouts</p>
@@ -457,6 +463,7 @@ const MyStore = () => {
                       variant="outline" 
                       size="sm"
                       onClick={() => navigate('/identity-verification')}
+                      className="w-full sm:w-auto min-h-[40px]"
                     >
                       Verify Now
                     </Button>
@@ -482,7 +489,7 @@ const MyStore = () => {
                 </div>
               )}
 
-              <Button type="submit" disabled={isSaving} className="w-full">
+              <Button type="submit" disabled={isSaving} className="w-full min-h-[48px] text-base">
                 {isSaving ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />

@@ -245,35 +245,35 @@ const Auth = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-3 sm:p-4 relative overflow-hidden">
       {/* Background Patterns */}
       <AdirePattern variant="geometric" className="absolute inset-0 opacity-5" />
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-accent/20 to-transparent rounded-full blur-3xl" />
+      <div className="absolute top-0 right-0 w-48 sm:w-96 h-48 sm:h-96 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-48 sm:w-96 h-48 sm:h-96 bg-gradient-to-tr from-accent/20 to-transparent rounded-full blur-3xl" />
       
-      <Card className="w-full max-w-md relative z-10 border-primary/10 shadow-2xl backdrop-blur-sm bg-card/95">
-        <div className="absolute top-0 left-0 w-16 h-16 border-l-4 border-t-4 border-primary/30 rounded-tl-lg" />
-        <div className="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-accent/30 rounded-br-lg" />
+      <Card className="w-full max-w-md relative z-10 border-primary/10 shadow-2xl backdrop-blur-sm bg-card/95 mx-2 sm:mx-0">
+        <div className="absolute top-0 left-0 w-12 sm:w-16 h-12 sm:h-16 border-l-4 border-t-4 border-primary/30 rounded-tl-lg" />
+        <div className="absolute bottom-0 right-0 w-12 sm:w-16 h-12 sm:h-16 border-r-4 border-b-4 border-accent/30 rounded-br-lg" />
         
-        <CardHeader className="text-center pb-4">
-          <div className="flex justify-center mb-4">
-            <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg ring-4 ring-primary/20 animate-float">
+        <CardHeader className="text-center pb-3 sm:pb-4 px-4 sm:px-6">
+          <div className="flex justify-center mb-3 sm:mb-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden shadow-lg ring-4 ring-primary/20 animate-float">
               <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <CardTitle className="text-2xl sm:text-3xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Welcome to SteerSolo
           </CardTitle>
-          <CardDescription className="text-muted-foreground">
+          <CardDescription className="text-muted-foreground text-sm sm:text-base">
             Your business journey starts here
           </CardDescription>
         </CardHeader>
         
-        <CardContent>
+        <CardContent className="px-4 sm:px-6">
           {authError && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{authError}</AlertDescription>
+              <AlertDescription className="text-sm">{authError}</AlertDescription>
             </Alert>
           )}
 
@@ -283,7 +283,7 @@ const Auth = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowForgotPassword(false)}
-                className="mb-2 hover:bg-primary/10"
+                className="mb-2 hover:bg-primary/10 min-h-[44px]"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to login
@@ -296,7 +296,7 @@ const Auth = () => {
               </div>
               <form onSubmit={handleForgotPassword} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="forgot-email">Email</Label>
+                  <Label htmlFor="forgot-email" className="text-sm">Email</Label>
                   <Input
                     id="forgot-email"
                     type="email"
@@ -304,10 +304,10 @@ const Auth = () => {
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
                     required
-                    className="border-primary/20 focus:border-primary focus:ring-primary/30"
+                    className="border-primary/20 focus:border-primary focus:ring-primary/30 min-h-[44px]"
                   />
                 </div>
-                <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
+                <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity min-h-[48px]" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -324,11 +324,11 @@ const Auth = () => {
             </div>
           ) : (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-muted/50">
-                <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsList className="grid w-full grid-cols-2 bg-muted/50 min-h-[48px]">
+                <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground min-h-[44px] text-sm sm:text-base">
                   Login
                 </TabsTrigger>
-                <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground min-h-[44px] text-sm sm:text-base">
                   Sign Up
                 </TabsTrigger>
               </TabsList>
@@ -396,7 +396,7 @@ const Auth = () => {
                       </Label>
                     </div>
                     
-                    <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" disabled={isLoading}>
+                    <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity min-h-[48px] text-base" disabled={isLoading}>
                       {isLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -417,17 +417,17 @@ const Auth = () => {
                 <OrDivider />
                 <Form {...signupForm}>
                   <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <FormField
                         control={signupForm.control}
                         name="firstName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>First Name</FormLabel>
+                            <FormLabel className="text-sm">First Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="John" {...field} />
+                              <Input placeholder="John" {...field} className="min-h-[44px]" />
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage className="text-xs" />
                           </FormItem>
                         )}
                       />
@@ -436,11 +436,11 @@ const Auth = () => {
                         name="lastName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Last Name</FormLabel>
+                            <FormLabel className="text-sm">Last Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="Doe" {...field} />
+                              <Input placeholder="Doe" {...field} className="min-h-[44px]" />
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage className="text-xs" />
                           </FormItem>
                         )}
                       />
