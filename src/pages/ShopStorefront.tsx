@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X, Briefcase, Clock, Calendar } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X, Briefcase, Clock, Calendar, BadgeCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireAccent } from "@/components/patterns/AdirePattern";
@@ -38,6 +38,7 @@ interface Shop {
   bank_account_name?: string;
   bank_name?: string;
   bank_account_number?: string;
+  is_verified?: boolean;
 }
 
 interface Product {
@@ -335,7 +336,15 @@ const ShopStorefront = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-2">
                     <div>
-                      <h1 className="font-display text-2xl md:text-3xl font-bold">{shop.shop_name}</h1>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <h1 className="font-display text-2xl md:text-3xl font-bold">{shop.shop_name}</h1>
+                        {shop.is_verified && (
+                          <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">
+                            <BadgeCheck className="w-3.5 h-3.5 mr-1" />
+                            Verified Business
+                          </Badge>
+                        )}
+                      </div>
                       {shop.description && (
                         <p className="text-muted-foreground mt-2 line-clamp-2">{shop.description}</p>
                       )}
@@ -387,6 +396,7 @@ const ShopStorefront = () => {
                   {/* Trust Badges */}
                   <div className="mt-3">
                     <TrustBadges
+                      isVerified={shop.is_verified}
                       hasWhatsApp={!!shop.whatsapp_number}
                       totalReviews={shop.total_reviews}
                       averageRating={shop.average_rating}

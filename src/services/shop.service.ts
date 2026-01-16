@@ -45,19 +45,25 @@ const shopService = {
     };
   },
 
-  getShops: async (page = 1, limit = 10) => {
+  getShops: async (page = 1, limit = 10, filters?: { verified?: boolean }) => {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
     // Fetch shops with owner profile to get subscription info
-    const { data: shops, error, count } = await supabase
+    let query = supabase
       .from('shops')
       .select(`
         *,
         owner:profiles(subscription_plan_id)
       `, { count: 'exact' })
-      .eq('is_active', true)
-      .range(from, to);
+      .eq('is_active', true);
+
+    // Apply verified filter if specified
+    if (filters?.verified !== undefined) {
+      query = query.eq('is_verified', filters.verified);
+    }
+
+    const { data: shops, error, count } = await query.range(from, to);
 
     if (error) {
       console.error('Get shops error:', error);
@@ -100,6 +106,7 @@ const shopService = {
       average_rating: s.average_rating,
       total_reviews: s.total_reviews,
       owner_id: s.owner_id,
+      is_verified: s.is_verified,
     }));
 
     return {
@@ -145,6 +152,7 @@ const shopService = {
       average_rating: s.average_rating,
       total_reviews: s.total_reviews,
       owner_id: s.owner_id,
+      is_verified: s.is_verified,
     }));
 
     return {
@@ -185,6 +193,7 @@ const shopService = {
       average_rating: shop.average_rating,
       total_reviews: shop.total_reviews,
       owner_id: shop.owner_id,
+      is_verified: shop.is_verified,
     };
 
     return {
@@ -242,6 +251,7 @@ const shopService = {
       average_rating: shop.average_rating,
       total_reviews: shop.total_reviews,
       owner_id: shop.owner_id,
+      is_verified: shop.is_verified,
     };
 
     return {

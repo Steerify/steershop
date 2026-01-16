@@ -1324,6 +1324,7 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean
+          is_verified: boolean | null
           logo_url: string | null
           owner_id: string
           payment_method: string | null
@@ -1347,6 +1348,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_verified?: boolean | null
           logo_url?: string | null
           owner_id: string
           payment_method?: string | null
@@ -1370,6 +1372,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_verified?: boolean | null
           logo_url?: string | null
           owner_id?: string
           payment_method?: string | null
@@ -1748,6 +1751,7 @@ export type Database = {
           description: string | null
           id: string | null
           is_active: boolean | null
+          is_verified: boolean | null
           logo_url: string | null
           owner_id: string | null
           payment_method: string | null
@@ -1768,6 +1772,7 @@ export type Database = {
           description?: string | null
           id?: string | null
           is_active?: boolean | null
+          is_verified?: boolean | null
           logo_url?: string | null
           owner_id?: string | null
           payment_method?: string | null
@@ -1788,6 +1793,7 @@ export type Database = {
           description?: string | null
           id?: string | null
           is_active?: boolean | null
+          is_verified?: boolean | null
           logo_url?: string | null
           owner_id?: string | null
           payment_method?: string | null
@@ -1815,6 +1821,7 @@ export type Database = {
         Returns: Json
       }
       check_product_limit: { Args: { _user_id: string }; Returns: Json }
+      check_shop_verification: { Args: { shop_uuid: string }; Returns: boolean }
       claim_prize: {
         Args: { p_prize_id: string; p_user_id: string }
         Returns: Json
@@ -1842,6 +1849,7 @@ export type Database = {
         Returns: boolean
       }
       shop_is_active: { Args: { shop_id_param: string }; Returns: boolean }
+      update_all_shop_verifications: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "shop_owner" | "customer"
