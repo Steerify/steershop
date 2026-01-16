@@ -2,13 +2,15 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Store, Package, Sparkles } from "lucide-react";
+import { Search, Store, Package, Sparkles, BadgeCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { TopSellerBanner } from "@/components/TopSellerBanner";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useDebounce } from "@/hooks/use-debounce";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
@@ -65,6 +67,7 @@ const Shops = () => {
   const [loadingMoreShops, setLoadingMoreShops] = useState(false);
   const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
   const [searchType, setSearchType] = useState<'all' | 'shops' | 'products'>('all');
+  const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -79,7 +82,9 @@ const Shops = () => {
         setLoadingMoreShops(true);
       }
 
-      const response = await shopService.getShops(page, ITEMS_PER_PAGE);
+      const response = await shopService.getShops(page, ITEMS_PER_PAGE, { 
+        verified: showVerifiedOnly || undefined 
+      });
       
       if (!response.success || response.data.length === 0) {
         setHasMoreShops(false);
@@ -104,7 +109,7 @@ const Shops = () => {
       setIsLoading(false);
       setLoadingMoreShops(false);
     }
-  }, []);
+  }, [showVerifiedOnly]);
 
   const searchShops = useCallback(async (page: number = 1, reset: boolean = false) => {
     // Current shopService.getShops doesn't support search query?
@@ -161,7 +166,7 @@ const Shops = () => {
     if (!debouncedSearchQuery) {
       fetchShops(1, true);
     }
-  }, [debouncedSearchQuery, fetchShops]);
+  }, [debouncedSearchQuery, fetchShops, showVerifiedOnly]);
 
   // Search when query changes
   useEffect(() => {
@@ -391,12 +396,27 @@ const Shops = () => {
                         style={{ animationDelay: `${index * 0.05}s` }}
                       >
                         <CardHeader className="p-3 sm:p-6">
-                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-transform shadow-lg overflow-hidden">
-                            <Store className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground" />
+                          <div className="relative">
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-transform shadow-lg overflow-hidden">
+                              <Store className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground" />
+                            </div>
+                            {shop.is_verified && (
+                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-sm">
+                                <BadgeCheck className="w-3 h-3 text-white" />
+                              </div>
+                            )}
                           </div>
-                          <CardTitle className="group-hover:text-accent transition-colors font-display text-base sm:text-lg line-clamp-1">
-                            {shop.name}
-                          </CardTitle>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <CardTitle className="group-hover:text-accent transition-colors font-display text-base sm:text-lg line-clamp-1">
+                              {shop.name}
+                            </CardTitle>
+                            {shop.is_verified && (
+                              <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800 text-xs">
+                                <BadgeCheck className="w-3 h-3 mr-1" />
+                                Verified
+                              </Badge>
+                            )}
+                          </div>
                           <CardDescription className="line-clamp-2 text-xs sm:text-sm">
                             {shop.description || "Visit this shop to see their products"}
                           </CardDescription>
@@ -460,6 +480,19 @@ const Shops = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 sm:pl-12 h-11 sm:h-12 text-sm sm:text-base bg-card/80 backdrop-blur-sm border-border/50 focus:border-accent shadow-lg"
               />
+            </div>
+
+            {/* Verified Filter */}
+            <div className="flex items-center gap-2 bg-green-50 dark:bg-green-950/20 px-3 py-2 rounded-lg border border-green-200 dark:border-green-900/30">
+              <Switch 
+                id="verified-filter"
+                checked={showVerifiedOnly} 
+                onCheckedChange={setShowVerifiedOnly}
+              />
+              <Label htmlFor="verified-filter" className="flex items-center gap-1.5 cursor-pointer">
+                <BadgeCheck className="w-4 h-4 text-green-600" />
+                <span className="text-sm font-medium text-green-700 dark:text-green-400">Verified Only</span>
+              </Label>
             </div>
           </div>
         </div>

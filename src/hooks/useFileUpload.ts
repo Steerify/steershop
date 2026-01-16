@@ -8,6 +8,7 @@ interface UseFileUploadReturn {
   progress: number;
   error: string | null;
   reset: () => void;
+  setProgress: (progress: number) => void;
 }
 
 export const useFileUpload = (): UseFileUploadReturn => {
@@ -49,5 +50,6 @@ export const useFileUpload = (): UseFileUploadReturn => {
     progress,
     error,
     reset,
+    setProgress,
   };
 };
