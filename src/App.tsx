@@ -56,6 +56,7 @@ const Subscription = lazy(() => import("./pages/Subscription"));
 const SetupService = lazy(() => import("./pages/SetupService"));
 const Marketing = lazy(() => import("./pages/entrepreneur/Marketing"));
 const PosterEditor = lazy(() => import("./pages/entrepreneur/PosterEditor"));
+const FAQ = lazy(() => import("./pages/FAQ"));
 
 const queryClient = new QueryClient();
 
@@ -90,6 +91,7 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/setup-service" element={<SetupService />} />
             <Route path="/feedback" element={<Feedback />} />
+            <Route path="/faq" element={<FAQ />} />
             
             {/* Shop owner routes */}
             <Route path="/onboarding" element={

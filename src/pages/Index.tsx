@@ -52,6 +52,7 @@ const Index = () => {
   const [offers, setOffers] = useState<any[]>([]);
   
   const growthMilestones = [
+    "From hustle to brand",
     "From Chat Sales to Structured Business",
     "From Blurry Photos to Professional Storefront",
     "From Order Chaos to Organized Growth",
