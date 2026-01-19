@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Twitter, Instagram, Mail, Heart } from "lucide-react";
+import { Twitter, Instagram, Mail, Heart, MessageCircle } from "lucide-react";
 import { AdirePattern, AdireAccent } from "./patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
 
@@ -57,11 +57,20 @@ export const Footer = () => {
                 </svg>
               </button>
               <a 
-                href="mailto:info@steerifygroup.com" 
+                href="mailto:steerifygroup@gmail.com" 
                 className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"
                 aria-label="Email"
               >
                 <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
+              </a>
+              <a 
+                href="https://wa.me/2349059947055" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"
+                aria-label="WhatsApp"
+              >
+                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
               </a>
             </div>
           </div>
@@ -103,7 +112,7 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/feedback" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                <Link to="/faq" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   FAQs
                 </Link>
               </li>
