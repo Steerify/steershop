@@ -1743,9 +1743,6 @@ export type Database = {
       shops_public: {
         Row: {
           average_rating: number | null
-          bank_account_name: string | null
-          bank_account_number: string | null
-          bank_name: string | null
           banner_url: string | null
           created_at: string | null
           description: string | null
@@ -1753,7 +1750,6 @@ export type Database = {
           is_active: boolean | null
           is_verified: boolean | null
           logo_url: string | null
-          owner_id: string | null
           payment_method: string | null
           paystack_public_key: string | null
           shop_name: string | null
@@ -1764,9 +1760,6 @@ export type Database = {
         }
         Insert: {
           average_rating?: number | null
-          bank_account_name?: string | null
-          bank_account_number?: string | null
-          bank_name?: string | null
           banner_url?: string | null
           created_at?: string | null
           description?: string | null
@@ -1774,7 +1767,6 @@ export type Database = {
           is_active?: boolean | null
           is_verified?: boolean | null
           logo_url?: string | null
-          owner_id?: string | null
           payment_method?: string | null
           paystack_public_key?: string | null
           shop_name?: string | null
@@ -1785,9 +1777,6 @@ export type Database = {
         }
         Update: {
           average_rating?: number | null
-          bank_account_name?: string | null
-          bank_account_number?: string | null
-          bank_name?: string | null
           banner_url?: string | null
           created_at?: string | null
           description?: string | null
@@ -1795,7 +1784,6 @@ export type Database = {
           is_active?: boolean | null
           is_verified?: boolean | null
           logo_url?: string | null
-          owner_id?: string | null
           payment_method?: string | null
           paystack_public_key?: string | null
           shop_name?: string | null
@@ -1804,15 +1792,7 @@ export type Database = {
           updated_at?: string | null
           whatsapp_number?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "shops_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
