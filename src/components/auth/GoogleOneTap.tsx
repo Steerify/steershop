@@ -28,7 +28,12 @@ export const GoogleOneTap = () => {
 
       if (data.user) {
         toast.success('Signed in successfully!');
-        // Navigation will be handled by auth state change
+        
+        // Force navigation to callback for role-based routing
+        // Critical for mobile browsers where auth state changes may be delayed
+        setTimeout(() => {
+          window.location.href = '/auth/callback';
+        }, 300);
       }
     } catch (err) {
       console.error('Google One Tap error:', err);
