@@ -10,10 +10,10 @@ const Callback = () => {
     const handleCallback = async () => {
       try {
         console.log('Processing OAuth callback...');
-        
+
         // Get the session from the URL hash (Supabase OAuth redirect)
         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           console.error('OAuth callback error:', error);
           navigate("/auth?tab=login");
@@ -22,7 +22,7 @@ const Callback = () => {
 
         if (session?.user) {
           console.log('User authenticated:', session.user.id);
-          
+
           // Check if this is a new user by looking at their profile
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -35,8 +35,9 @@ const Callback = () => {
           // If no profile exists (PGRST116 = no rows returned), it's a new user
           if (profileError && profileError.code === 'PGRST116') {
             console.log('New Google user detected, redirecting to role selection');
-            
-            // Create a basic profile for the new Google user
+
+            // In Callback.tsx - make sure new Google users get role: null
+            // In the section where you create a profile for new users:
             const { error: createProfileError } = await supabase
               .from('profiles')
               .insert({
@@ -44,16 +45,15 @@ const Callback = () => {
                 email: session.user.email,
                 full_name: session.user.user_metadata?.full_name || '',
                 avatar_url: session.user.user_metadata?.avatar_url || '',
-                role: null, // Set role as null initially - THIS IS KEY!
+                role: null, // ← THIS IS CRITICAL: Set role as null
                 phone_verified: false,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
               });
-
             if (createProfileError) {
               console.error('Error creating profile for Google user:', createProfileError);
             }
-            
+
             // Redirect to role selection page for Google signups
             navigate("/select-role");
             return;
@@ -68,9 +68,9 @@ const Callback = () => {
 
           // Existing user with role set - proceed with normal flow
           console.log('Existing user with role:', profile.role);
-          
+
           let redirectPath = '/';
-          
+
           if (profile.role === 'admin') {
             redirectPath = '/admin';
           } else if (profile.role === 'shop_owner') {
@@ -80,7 +80,7 @@ const Callback = () => {
               .select('id')
               .eq('owner_id', session.user.id)
               .limit(1);
-            
+
             redirectPath = (shops && shops.length > 0) ? '/dashboard' : '/onboarding';
           } else if (profile.role === 'customer') {
             redirectPath = '/customer_dashboard';
@@ -98,7 +98,7 @@ const Callback = () => {
         }
       } catch (error: any) {
         console.error('Callback error:', error);
-        
+
         // More detailed error logging
         if (error.message) {
           console.error('Error message:', error.message);
@@ -106,7 +106,7 @@ const Callback = () => {
         if (error.stack) {
           console.error('Error stack:', error.stack);
         }
-        
+
         navigate("/auth?tab=login");
       }
     };

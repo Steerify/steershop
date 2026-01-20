@@ -42,6 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Convert Supabase user to AppUser by fetching profile
   // In your AuthContext.tsx - update the fetchUserProfile function:
+// In fetchUserProfile function in AuthContext.tsx
 const fetchUserProfile = async (supabaseUser: User): Promise<AppUser | null> => {
   try {
     const { data: profile, error } = await supabase
@@ -52,26 +53,38 @@ const fetchUserProfile = async (supabaseUser: User): Promise<AppUser | null> => 
 
     if (error) {
       console.error('Error fetching profile:', error);
-      // Return null if profile doesn't exist
       return null;
     }
 
     // Map database role string to UserRole enum
     let role: UserRole;
-    switch (profile?.role) {
-      case 'shop_owner':
-        role = UserRole.ENTREPRENEUR;
-        break;
-      case 'admin':
-        role = UserRole.ADMIN;
-        break;
-      case 'customer':
-        role = UserRole.CUSTOMER;
-        break;
-      default:
-        // If role is null or undefined, set to CUSTOMER as default
-        role = UserRole.CUSTOMER;
+    
+    // Debug log to see what's in the database
+    console.log('Database role value:', profile?.role);
+    
+    // Handle null/undefined role first
+    if (!profile?.role) {
+      role = UserRole.CUSTOMER; // Default for new users
+    } else {
+      const dbRole = profile.role.toLowerCase();
+      
+      switch (dbRole) {
+        case 'shop_owner':
+          role = UserRole.ENTREPRENEUR; // Maps to "ENTREPRENEUR"
+          break;
+        case 'admin':
+          role = UserRole.ADMIN; // Maps to "ADMIN"
+          break;
+        case 'customer':
+          role = UserRole.CUSTOMER; // Maps to "CUSTOMER"
+          break;
+        default:
+          console.warn('Unknown role in database, defaulting to CUSTOMER:', dbRole);
+          role = UserRole.CUSTOMER;
+      }
     }
+
+    console.log('Mapped UserRole:', role);
 
     // Check if entrepreneur has completed onboarding by checking if they have a shop
     let onboardingCompleted = false;

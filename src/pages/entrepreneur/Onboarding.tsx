@@ -25,54 +25,61 @@ const Onboarding = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("phone");
   const [isCheckingPhone, setIsCheckingPhone] = useState(true);
+  const [hasCheckedAccess, setHasCheckedAccess] = useState(false);
   
   // Guard: Redirect if not Entrepreneur
   useEffect(() => {
-    const checkUserRole = async () => {
-      if (!user?.id) return;
+    const checkAccess = async () => {
+      if (!user?.id) {
+        console.log('No user ID available');
+        return;
+      }
       
       try {
-        // First check the user's role from AuthContext
-        if (user.role !== UserRole.ENTREPRENEUR) { // CHANGED FROM "ENTREPRENEUR" to UserRole.ENTREPRENEUR
-          toast({
-            title: "Access Denied",
-            description: "Onboarding is for entrepreneurs only.",
-            variant: "destructive"
-          });
-          navigate("/customer_dashboard");
-          return;
-        }
-
-        // Also verify with database for extra security
+        // Always check against the database directly
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
         
+        console.log('Database role for user:', profile?.role);
+        console.log('Expected role for entrepreneur: shop_owner');
+        
         // Check if database role is 'shop_owner' (database value for entrepreneur)
         if (profile?.role !== 'shop_owner') {
+          console.log('Access denied: User is not shop_owner in database');
           toast({
             title: "Access Denied",
             description: "Onboarding is for entrepreneurs only.",
             variant: "destructive"
           });
           navigate("/customer_dashboard");
+        } else {
+          console.log('Access granted: User is shop_owner');
+          setHasCheckedAccess(true);
         }
       } catch (error) {
-        console.error("Error checking role:", error);
+        console.error("Error checking access:", error);
+        toast({
+          title: "Error",
+          description: "Unable to verify your account.",
+          variant: "destructive"
+        });
+        navigate("/");
       }
     };
     
-    if (user) {
-      checkUserRole();
+    if (user && !hasCheckedAccess) {
+      console.log('Checking access for user:', user.id);
+      checkAccess();
     }
-  }, [user, navigate, toast]);
+  }, [user, navigate, toast, hasCheckedAccess]);
 
   // Check if phone is already verified
   useEffect(() => {
     const checkPhoneVerification = async () => {
-      if (user?.id) {
+      if (user?.id && hasCheckedAccess) {
         try {
           const { data: profile } = await supabase
             .from('profiles')
@@ -93,8 +100,13 @@ const Onboarding = () => {
         setIsCheckingPhone(false);
       }
     };
-    checkPhoneVerification();
-  }, [user]);
+    
+    if (user && hasCheckedAccess) {
+      checkPhoneVerification();
+    } else {
+      setIsCheckingPhone(false);
+    }
+  }, [user, hasCheckedAccess]);
 
   const [formData, setFormData] = useState<OnboardingData>({
     businessType: "",
@@ -166,6 +178,16 @@ const Onboarding = () => {
       setIsLoading(false);
     }
   };
+
+  // Don't show anything until access is checked
+  if (!hasCheckedAccess && user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-2">Verifying access...</span>
+      </div>
+    );
+  }
 
   // Show loading while checking phone status
   if (isCheckingPhone) {
