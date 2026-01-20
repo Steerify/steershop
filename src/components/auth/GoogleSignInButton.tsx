@@ -43,16 +43,7 @@ export const GoogleSignInButton = ({
 
       if (data.user) {
         toast.success('Signed in successfully!');
-        
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          // Fallback: Navigate to callback to handle role-based routing
-          // This is especially important for mobile browsers
-          setTimeout(() => {
-            window.location.href = '/auth/callback';
-          }, 300);
-        }
+        onSuccess?.();
       }
     } catch (err) {
       console.error('Google sign in error:', err);
