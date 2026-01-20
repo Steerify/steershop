@@ -43,14 +43,26 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
   // Check role-based access if roles are specified
   if (allowedRoles && allowedRoles.length > 0) {
     const userRole = user.role;
+    
+    // Ensure userRole is defined before checking
+    if (!userRole) {
+      // If user has no role, redirect to role selection
+      return <Navigate to="/select-role" replace />;
+    }
+    
+    // Check if user's role is in the allowed roles list
     if (!allowedRoles.includes(userRole)) {
       // Redirect to appropriate dashboard based on role
-      if (userRole === UserRole.ADMIN) {
-        return <Navigate to="/admin" replace />;
-      } else if (userRole === UserRole.ENTREPRENEUR) {
-        return <Navigate to="/dashboard" replace />;
-      } else {
-        return <Navigate to="/customer_dashboard" replace />;
+      switch (userRole) {
+        case UserRole.ADMIN:
+          return <Navigate to="/admin" replace />;
+        case UserRole.ENTREPRENEUR:
+          return <Navigate to="/dashboard" replace />;
+        case UserRole.CUSTOMER:
+          return <Navigate to="/customer_dashboard" replace />;
+        default:
+          // If role is unknown, redirect to role selection
+          return <Navigate to="/select-role" replace />;
       }
     }
   }

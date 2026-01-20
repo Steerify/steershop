@@ -16,6 +16,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Callback from "@/pages/auth/Callback";
 import NotFound from "./pages/NotFound";
+// Add RoleSelection import
+import RoleSelection from "./pages/auth/RoleSelection";
 
 // Lazy load other pages for performance
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -81,6 +83,8 @@ const App = () => (
             <Route path="/about" element={<AboutPage />} />
             <Route path="/auth/:type" element={<Auth />} />
             <Route path="/auth/callback" element={<Callback />} />
+            {/* Add RoleSelection route - this is public but only accessible after signup */}
+            <Route path="/select-role" element={<RoleSelection />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/shops" element={<Shops />} />
             <Route path="/shop/:slug" element={<ShopStorefront />} />

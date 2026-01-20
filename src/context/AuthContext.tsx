@@ -41,60 +41,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   // Convert Supabase user to AppUser by fetching profile
-  const fetchUserProfile = async (supabaseUser: User): Promise<AppUser | null> => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', supabaseUser.id)
-        .single();
+  // In your AuthContext.tsx - update the fetchUserProfile function:
+const fetchUserProfile = async (supabaseUser: User): Promise<AppUser | null> => {
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', supabaseUser.id)
+      .single();
 
-      if (error || !profile) {
-        console.error('Error fetching profile:', error);
-        // Return basic user info if profile fetch fails
-        return {
-          id: supabaseUser.id,
-          email: supabaseUser.email || '',
-          role: UserRole.CUSTOMER,
-          firstName: supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
-          lastName: supabaseUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-          onboardingCompleted: false,
-        };
-      }
-
-      // Map role string to UserRole enum
-      let role = UserRole.CUSTOMER;
-      if (profile.role === 'shop_owner') {
-        role = UserRole.ENTREPRENEUR;
-      } else if (profile.role === 'admin') {
-        role = UserRole.ADMIN;
-      }
-
-      // Check if shop owner has completed onboarding by checking if they have a shop
-      let onboardingCompleted = false;
-      if (role === UserRole.ENTREPRENEUR) {
-        const { data: shops } = await supabase
-          .from('shops')
-          .select('id')
-          .eq('owner_id', profile.id)
-          .limit(1);
-        onboardingCompleted = (shops && shops.length > 0) || false;
-      }
-
-      return {
-        id: profile.id,
-        email: profile.email || supabaseUser.email || '',
-        role,
-        firstName: profile.full_name?.split(' ')[0] || '',
-        lastName: profile.full_name?.split(' ').slice(1).join(' ') || '',
-        phone: profile.phone || '',
-        onboardingCompleted,
-      };
-    } catch (err) {
-      console.error('Error in fetchUserProfile:', err);
+    if (error) {
+      console.error('Error fetching profile:', error);
+      // Return null if profile doesn't exist
       return null;
     }
-  };
+
+    // Map database role string to UserRole enum
+    let role: UserRole;
+    switch (profile?.role) {
+      case 'shop_owner':
+        role = UserRole.ENTREPRENEUR;
+        break;
+      case 'admin':
+        role = UserRole.ADMIN;
+        break;
+      case 'customer':
+        role = UserRole.CUSTOMER;
+        break;
+      default:
+        // If role is null or undefined, set to CUSTOMER as default
+        role = UserRole.CUSTOMER;
+    }
+
+    // Check if entrepreneur has completed onboarding by checking if they have a shop
+    let onboardingCompleted = false;
+    if (role === UserRole.ENTREPRENEUR) {
+      const { data: shops } = await supabase
+        .from('shops')
+        .select('id')
+        .eq('owner_id', supabaseUser.id)
+        .limit(1);
+      onboardingCompleted = (shops && shops.length > 0) || false;
+    }
+
+    return {
+      id: supabaseUser.id,
+      email: profile?.email || supabaseUser.email || '',
+      role,
+      firstName: profile?.full_name?.split(' ')[0] || supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
+      lastName: profile?.full_name?.split(' ').slice(1).join(' ') || supabaseUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+      phone: profile?.phone || '',
+      onboardingCompleted,
+    };
+  } catch (err) {
+    console.error('Error in fetchUserProfile:', err);
+    return null;
+  }
+};
 
   useEffect(() => {
     // Set up auth state listener FIRST

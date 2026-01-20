@@ -14,6 +14,7 @@ import logo from "@/assets/steersolo-logo.jpg";
 import { cn } from "@/lib/utils";
 import { PhoneVerification } from "@/components/auth/PhoneVerification";
 import { supabase } from "@/integrations/supabase/client";
+import { UserRole } from "@/types/api"; // ADD THIS IMPORT
 
 type OnboardingStep = "phone" | "questions" | "complete";
 
@@ -27,13 +28,44 @@ const Onboarding = () => {
   
   // Guard: Redirect if not Entrepreneur
   useEffect(() => {
-    if (user && user.role !== "ENTREPRENEUR") {
-      toast({
-        title: "Access Denied",
-        description: "Onboarding is for entrepreneurs only.",
-        variant: "destructive"
-      });
-      navigate("/customer_dashboard");
+    const checkUserRole = async () => {
+      if (!user?.id) return;
+      
+      try {
+        // First check the user's role from AuthContext
+        if (user.role !== UserRole.ENTREPRENEUR) { // CHANGED FROM "ENTREPRENEUR" to UserRole.ENTREPRENEUR
+          toast({
+            title: "Access Denied",
+            description: "Onboarding is for entrepreneurs only.",
+            variant: "destructive"
+          });
+          navigate("/customer_dashboard");
+          return;
+        }
+
+        // Also verify with database for extra security
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        // Check if database role is 'shop_owner' (database value for entrepreneur)
+        if (profile?.role !== 'shop_owner') {
+          toast({
+            title: "Access Denied",
+            description: "Onboarding is for entrepreneurs only.",
+            variant: "destructive"
+          });
+          navigate("/customer_dashboard");
+        }
+      } catch (error) {
+        console.error("Error checking role:", error);
+      }
+    };
+    
+    if (user) {
+      checkUserRole();
     }
   }, [user, navigate, toast]);
 
