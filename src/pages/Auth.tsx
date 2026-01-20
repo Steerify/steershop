@@ -335,7 +335,13 @@ const Auth = () => {
 
               <TabsContent value="login" className="mt-6">
                 <div className="mb-4">
-                  <GoogleSignInButton text="continue_with" />
+                  <GoogleSignInButton 
+                    text="continue_with" 
+                    onSuccess={() => {
+                      // Force navigation to callback for role-based routing
+                      window.location.href = '/auth/callback';
+                    }}
+                  />
                 </div>
                 <OrDivider />
                 <Form {...loginForm}>
@@ -412,7 +418,13 @@ const Auth = () => {
 
               <TabsContent value="signup" className="mt-6">
                 <div className="mb-4">
-                  <GoogleSignInButton text="signup_with" />
+                  <GoogleSignInButton 
+                    text="signup_with"
+                    onSuccess={() => {
+                      // Force navigation to callback for role-based routing
+                      window.location.href = '/auth/callback';
+                    }}
+                  />
                 </div>
                 <OrDivider />
                 <Form {...signupForm}>
