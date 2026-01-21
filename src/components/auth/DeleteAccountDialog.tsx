@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -18,6 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Trash2, AlertTriangle } from "lucide-react";
+import '@/types/google';
 
 export function DeleteAccountDialog() {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,6 +34,12 @@ export function DeleteAccountDialog() {
 
     setIsDeleting(true);
     try {
+      // Disable Google auto-select BEFORE deleting account
+      // This prevents Google from remembering and auto-suggesting this account
+      if (window.google?.accounts?.id) {
+        window.google.accounts.id.disableAutoSelect();
+      }
+
       // Call the edge function to delete the account
       const { data, error } = await supabase.functions.invoke("delete-account");
 
