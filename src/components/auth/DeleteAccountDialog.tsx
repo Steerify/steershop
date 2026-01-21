@@ -17,7 +17,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Trash2, AlertTriangle } from "lucide-react";
-import '@/types/google';
 
 export function DeleteAccountDialog() {
   const [isOpen, setIsOpen] = useState(false);
