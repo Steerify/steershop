@@ -48,7 +48,7 @@ const RoleSelection = () => {
       }
 
       // Map UserRole enum to database role string
-      let dbRole: string;
+      let dbRole: "admin" | "customer" | "shop_owner";
       switch (selectedRole) {
         case UserRole.ENTREPRENEUR:
           dbRole = 'shop_owner';
@@ -63,11 +63,12 @@ const RoleSelection = () => {
           dbRole = 'customer';
       }
 
-      // Update the user's profile with the selected role
+      // Update the user's profile with the selected role and clear the flag
       const { error } = await supabase
         .from('profiles')
         .update({ 
           role: dbRole,
+          needs_role_selection: false,
           updated_at: new Date().toISOString()
         })
         .eq('id', session.user.id);

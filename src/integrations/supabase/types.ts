@@ -902,6 +902,7 @@ export type Database = {
           id: string
           is_subscribed: boolean
           kyc_level: number | null
+          needs_role_selection: boolean | null
           phone: string | null
           phone_verification_code: string | null
           phone_verification_expires: string | null
@@ -924,6 +925,7 @@ export type Database = {
           id: string
           is_subscribed?: boolean
           kyc_level?: number | null
+          needs_role_selection?: boolean | null
           phone?: string | null
           phone_verification_code?: string | null
           phone_verification_expires?: string | null
@@ -946,6 +948,7 @@ export type Database = {
           id?: string
           is_subscribed?: boolean
           kyc_level?: number | null
+          needs_role_selection?: boolean | null
           phone?: string | null
           phone_verification_code?: string | null
           phone_verification_expires?: string | null
