@@ -23,45 +23,25 @@ const Callback = () => {
         if (session?.user) {
           console.log('User authenticated:', session.user.id);
 
-          // Check if this is a new user by looking at their profile
+          // Check if this user needs role selection (Google OAuth signups)
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('role, phone_verified')
+            .select('role, phone_verified, needs_role_selection')
             .eq('id', session.user.id)
             .single();
 
           console.log('Profile fetch result:', { profile, profileError });
 
-          // If no profile exists (PGRST116 = no rows returned), it's a new user
+          // If profile doesn't exist (shouldn't happen due to trigger, but handle gracefully)
           if (profileError && profileError.code === 'PGRST116') {
-            console.log('New Google user detected, redirecting to role selection');
-
-            // In Callback.tsx - make sure new Google users get role: null
-            // In the section where you create a profile for new users:
-            const { error: createProfileError } = await supabase
-              .from('profiles')
-              .insert({
-                id: session.user.id,
-                email: session.user.email,
-                full_name: session.user.user_metadata?.full_name || '',
-                avatar_url: session.user.user_metadata?.avatar_url || '',
-                role: null, // ← THIS IS CRITICAL: Set role as null
-                phone_verified: false,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              });
-            if (createProfileError) {
-              console.error('Error creating profile for Google user:', createProfileError);
-            }
-
-            // Redirect to role selection page for Google signups
+            console.log('No profile found, redirecting to role selection');
             navigate("/select-role");
             return;
           }
 
-          // If profile exists but role is not set (null), redirect to role selection
-          if (!profile?.role || profile.role === null) {
-            console.log('Google user needs role selection (role is null/empty)');
+          // If user needs role selection (Google OAuth signup), redirect to role selection
+          if (profile?.needs_role_selection) {
+            console.log('Google user needs role selection, redirecting...');
             navigate("/select-role");
             return;
           }
