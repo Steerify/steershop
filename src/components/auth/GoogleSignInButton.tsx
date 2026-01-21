@@ -1,6 +1,8 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import '@/types/google';
 
 interface GoogleSignInButtonProps {
   onSuccess?: () => void;
@@ -26,6 +28,7 @@ export const GoogleSignInButton = ({
 }: GoogleSignInButtonProps) => {
   const buttonRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
+  const navigate = useNavigate();
 
   const handleCredentialResponse = useCallback(async (response: CredentialResponse) => {
     try {
@@ -42,6 +45,19 @@ export const GoogleSignInButton = ({
       }
 
       if (data.user) {
+        // Check if this is a new Google user needing role selection
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('needs_role_selection')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profile?.needs_role_selection) {
+          toast.success('Welcome! Please select your account type.');
+          navigate('/select-role');
+          return;
+        }
+
         toast.success('Signed in successfully!');
         onSuccess?.();
       }
@@ -51,7 +67,7 @@ export const GoogleSignInButton = ({
       toast.error('An error occurred during sign in');
       onError?.(errorMessage);
     }
-  }, [onSuccess, onError]);
+  }, [onSuccess, onError, navigate]);
 
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;

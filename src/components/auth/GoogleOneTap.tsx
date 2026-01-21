@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import '@/types/google';
 
 interface CredentialResponse {
   credential: string;
@@ -27,6 +28,19 @@ export const GoogleOneTap = () => {
       }
 
       if (data.user) {
+        // Check if this is a new Google user needing role selection
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('needs_role_selection')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profile?.needs_role_selection) {
+          toast.success('Welcome! Please select your account type.');
+          navigate('/select-role');
+          return;
+        }
+
         toast.success('Signed in successfully!');
         // Navigation will be handled by auth state change
       }
@@ -34,7 +48,7 @@ export const GoogleOneTap = () => {
       console.error('Google One Tap error:', err);
       toast.error('An error occurred during sign in');
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     // Don't show One Tap if user is already logged in

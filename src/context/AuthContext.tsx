@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { UserRole } from '@/types/api';
+import '@/types/google';
 
 export interface AppUser {
   id: string;
@@ -209,6 +210,11 @@ const fetchUserProfile = async (supabaseUser: User): Promise<AppUser | null> => 
   };
 
   const signOut = async () => {
+    // Disable Google auto-select to prevent immediate re-authentication
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.disableAutoSelect();
+    }
+    
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
