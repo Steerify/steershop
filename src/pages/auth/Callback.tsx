@@ -46,8 +46,17 @@ const Callback = () => {
             return;
           }
 
+          // Check if onboarding/survey is needed (for this implementation, we check if they have onboarding responses)
+          const { data: onboardingResponses } = await supabase
+            .from('onboarding_responses')
+            .select('id')
+            .eq('user_id', session.user.id)
+            .limit(1);
+
+          const needsOnboarding = !onboardingResponses || onboardingResponses.length === 0;
+
           // Existing user with role set - proceed with normal flow
-          console.log('Existing user with role:', profile.role);
+          console.log('User role:', profile.role, 'Needs onboarding:', needsOnboarding);
 
           let redirectPath = '/';
 
@@ -61,9 +70,13 @@ const Callback = () => {
               .eq('owner_id', session.user.id)
               .limit(1);
 
-            redirectPath = (shops && shops.length > 0) ? '/dashboard' : '/onboarding';
+            if (needsOnboarding) {
+              redirectPath = '/onboarding';
+            } else {
+              redirectPath = (shops && shops.length > 0) ? '/dashboard' : '/onboarding';
+            }
           } else if (profile.role === 'customer') {
-            redirectPath = '/customer_dashboard';
+            redirectPath = needsOnboarding ? '/onboarding' : '/customer_dashboard';
           } else {
             // Unknown role, default to customer dashboard
             console.warn('Unknown role, defaulting to customer dashboard');

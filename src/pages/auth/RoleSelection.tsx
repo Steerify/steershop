@@ -49,22 +49,30 @@ const RoleSelection = () => {
 
       // Map UserRole enum to database role string
       let dbRole: "admin" | "customer" | "shop_owner";
+      let appRole: "admin" | "customer" | "shop_owner";
+      
       switch (selectedRole) {
         case UserRole.ENTREPRENEUR:
           dbRole = 'shop_owner';
+          appRole = 'shop_owner';
           break;
         case UserRole.CUSTOMER:
           dbRole = 'customer';
+          appRole = 'customer';
           break;
         case UserRole.ADMIN:
           dbRole = 'admin';
+          appRole = 'admin';
           break;
         default:
           dbRole = 'customer';
+          appRole = 'customer';
       }
 
+      console.log('Updating profile and role for user:', session.user.id, 'to:', dbRole);
+
       // Update the user's profile with the selected role and clear the flag
-      const { error } = await supabase
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
           role: dbRole,
@@ -73,9 +81,32 @@ const RoleSelection = () => {
         })
         .eq('id', session.user.id);
 
-      if (error) {
-        console.error("Error updating profile:", error);
-        throw error;
+      if (profileError) {
+        console.error("Error updating profile:", profileError);
+        throw profileError;
+      }
+
+      // Also update user_roles table to keep it in sync
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .update({ 
+          role: appRole
+        })
+        .eq('user_id', session.user.id);
+
+      if (roleError) {
+        console.error("Error updating user_roles:", roleError);
+        // Try to upsert if update fails (though update should work with RLS)
+        const { error: insertError } = await supabase
+          .from('user_roles')
+          .upsert({ 
+            user_id: session.user.id,
+            role: appRole
+          });
+        
+        if (insertError) {
+          console.error("Error upserting user_roles:", insertError);
+        }
       }
 
       toast({
@@ -83,12 +114,8 @@ const RoleSelection = () => {
         description: `Welcome as ${selectedRole === UserRole.ENTREPRENEUR ? "an Entrepreneur" : "a Customer"}`,
       });
 
-      // Redirect based on role
-      if (selectedRole === UserRole.ENTREPRENEUR) {
-        navigate("/onboarding");
-      } else {
-        navigate("/customer_dashboard");
-      }
+      // Always send to onboarding first for both roles
+      navigate("/onboarding");
 
     } catch (error: any) {
       console.error("Error setting role:", error);
@@ -114,7 +141,7 @@ const RoleSelection = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4 relative overflow-hidden">
       <AdirePattern variant="geometric" className="absolute inset-0 opacity-5" />
       
-      <Card className="w-full max-w-md relative z-10 border-primary/10 shadow-2xl backdrop-blur-sm bg-card/95">
+      <Card className="w-full max-md relative z-10 border-primary/10 shadow-2xl backdrop-blur-sm bg-card/95">
         <CardHeader className="text-center border-b border-border/50 pb-6">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 rounded-xl overflow-hidden shadow-lg ring-4 ring-primary/20">

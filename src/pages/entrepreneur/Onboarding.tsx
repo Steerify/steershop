@@ -27,7 +27,7 @@ const Onboarding = () => {
   const [isCheckingPhone, setIsCheckingPhone] = useState(true);
   const [hasCheckedAccess, setHasCheckedAccess] = useState(false);
   
-  // Guard: Redirect if not Entrepreneur
+  // Guard: Redirect if not Entrepreneur or Customer
   useEffect(() => {
     const checkAccess = async () => {
       if (!user?.id) {
@@ -44,19 +44,18 @@ const Onboarding = () => {
           .single();
         
         console.log('Database role for user:', profile?.role);
-        console.log('Expected role for entrepreneur: shop_owner');
         
-        // Check if database role is 'shop_owner' (database value for entrepreneur)
-        if (profile?.role !== 'shop_owner') {
-          console.log('Access denied: User is not shop_owner in database');
+        // Allow both shop_owner and customer for onboarding survey
+        if (profile?.role !== 'shop_owner' && profile?.role !== 'customer') {
+          console.log('Access denied: User is not shop_owner or customer in database');
           toast({
             title: "Access Denied",
-            description: "Onboarding is for entrepreneurs only.",
+            description: "Onboarding is for registered users only.",
             variant: "destructive"
           });
-          navigate("/customer_dashboard");
+          navigate("/");
         } else {
-          console.log('Access granted: User is shop_owner');
+          console.log('Access granted:', profile?.role);
           setHasCheckedAccess(true);
         }
       } catch (error) {
@@ -83,10 +82,16 @@ const Onboarding = () => {
         try {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('phone_verified')
+            .select('phone_verified, role')
             .eq('id', user.id)
             .single();
           
+          // For customers, we might want to skip phone verification entirely and go to questions
+          if (profile?.role === 'customer') {
+            setCurrentStep("questions");
+            return;
+          }
+
           // Skip phone step if already verified
           if (profile?.phone_verified) {
             setCurrentStep("questions");
@@ -141,12 +146,24 @@ const Onboarding = () => {
     setCurrentStep("questions");
   };
 
-  const handleSkipQuestions = () => {
+  const handleSkipQuestions = async () => {
     toast({
       title: "Skipped for now",
       description: "You can complete this anytime from settings.",
     });
-    navigate("/dashboard");
+    
+    // Redirect based on actual database role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user?.id || '')
+      .single();
+      
+    if (profile?.role === 'shop_owner') {
+      navigate("/dashboard");
+    } else {
+      navigate("/customer_dashboard");
+    }
   };
 
   const handleSubmit = async () => {
@@ -164,10 +181,21 @@ const Onboarding = () => {
       
       toast({
         title: "Setup Complete!",
-        description: "Your store dashboard is ready.",
+        description: "Welcome to SteerSolo.",
       });
 
-      navigate("/dashboard");
+      // Redirect based on actual database role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user?.id || '')
+        .single();
+        
+      if (profile?.role === 'shop_owner') {
+        navigate("/dashboard");
+      } else {
+        navigate("/customer_dashboard");
+      }
     } catch (error: any) {
       toast({
         title: "Error",
