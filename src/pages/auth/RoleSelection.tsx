@@ -42,7 +42,7 @@ const RoleSelection = () => {
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session?.user) {
         throw new Error("No user session found");
       }
@@ -50,7 +50,7 @@ const RoleSelection = () => {
       // Map UserRole enum to database role string
       let dbRole: "admin" | "customer" | "shop_owner";
       let appRole: "admin" | "customer" | "shop_owner";
-      
+
       switch (selectedRole) {
         case UserRole.ENTREPRENEUR:
           dbRole = 'shop_owner';
@@ -74,7 +74,7 @@ const RoleSelection = () => {
       // Update the user's profile with the selected role and clear the flag
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ 
+        .update({
           role: dbRole,
           needs_role_selection: false,
           updated_at: new Date().toISOString()
@@ -89,7 +89,7 @@ const RoleSelection = () => {
       // Also update user_roles table to keep it in sync
       const { error: roleError } = await supabase
         .from('user_roles')
-        .update({ 
+        .update({
           role: appRole
         })
         .eq('user_id', session.user.id);
@@ -99,15 +99,16 @@ const RoleSelection = () => {
         // Try to upsert if update fails (though update should work with RLS)
         const { error: insertError } = await supabase
           .from('user_roles')
-          .upsert({ 
+          .upsert({
             user_id: session.user.id,
             role: appRole
           });
-        
+
         if (insertError) {
           console.error("Error upserting user_roles:", insertError);
         }
       }
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       toast({
         title: "Role selected!",
@@ -140,7 +141,7 @@ const RoleSelection = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4 relative overflow-hidden">
       <AdirePattern variant="geometric" className="absolute inset-0 opacity-5" />
-      
+
       <Card className="w-full max-md relative z-10 border-primary/10 shadow-2xl backdrop-blur-sm bg-card/95">
         <CardHeader className="text-center border-b border-border/50 pb-6">
           <div className="flex justify-center mb-4">
