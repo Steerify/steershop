@@ -108,7 +108,7 @@ const RoleSelection = () => {
           console.error("Error upserting user_roles:", insertError);
         }
       }
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       toast({
         title: "Role selected!",
