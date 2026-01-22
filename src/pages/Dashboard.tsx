@@ -349,7 +349,7 @@ const Dashboard = () => {
                       </span>
                     </div>
                     
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                       <TourButton 
                         onStartTour={() => {
                           startTour();
@@ -359,6 +359,29 @@ const Dashboard = () => {
                         onResetTour={resetTour}
                         className="w-full justify-start"
                       />
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => {
+                          navigate("/marketing");
+                          setIsMobileMenuOpen(false);
+                        }} 
+                        className="w-full justify-start"
+                      >
+                        <Megaphone className="w-4 h-4 mr-2" />
+                        Marketing
+                        <Badge variant="outline" className="ml-auto text-[10px] bg-primary/10 border-primary/20">Business</Badge>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => {
+                          navigate("/settings");
+                          setIsMobileMenuOpen(false);
+                        }} 
+                        className="w-full justify-start"
+                      >
+                        <Settings className="w-4 h-4 mr-2" />
+                        Settings
+                      </Button>
                       <Button 
                         variant="ghost" 
                         onClick={() => {
@@ -618,7 +641,7 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-6" data-tour="quick-actions">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-6" data-tour="quick-actions">
           <Card 
             className="group hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer border-primary/10 hover:border-primary/30"
             onClick={() => navigate("/my-store")}
@@ -687,6 +710,41 @@ const Dashboard = () => {
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm line-clamp-2">
                 Manage service appointments
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card 
+            className="group hover:shadow-xl hover:shadow-pink-500/10 transition-all cursor-pointer border-pink-500/10 hover:border-pink-500/30 relative overflow-hidden"
+            onClick={() => navigate("/marketing")}
+          >
+            <CardHeader className="p-3 sm:p-4 lg:p-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-pink-500/20 to-accent/20 rounded-xl sm:rounded-2xl flex items-center justify-center mb-2 sm:mb-3 lg:mb-4 group-hover:scale-110 transition-transform">
+                <Megaphone className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-pink-500" />
+              </div>
+              <CardTitle className="font-heading group-hover:text-pink-500 transition-colors text-sm sm:text-base lg:text-lg truncate flex items-center gap-2">
+                Marketing
+                <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/20">Business</Badge>
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm line-clamp-2">
+                Create posters with AI
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card 
+            className="group hover:shadow-xl hover:shadow-muted-foreground/10 transition-all cursor-pointer border-muted-foreground/10 hover:border-muted-foreground/30"
+            onClick={() => navigate("/settings")}
+          >
+            <CardHeader className="p-3 sm:p-4 lg:p-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-muted-foreground/20 to-primary/20 rounded-xl sm:rounded-2xl flex items-center justify-center mb-2 sm:mb-3 lg:mb-4 group-hover:scale-110 transition-transform">
+                <Settings className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-muted-foreground" />
+              </div>
+              <CardTitle className="font-heading group-hover:text-muted-foreground transition-colors text-sm sm:text-base lg:text-lg truncate">
+                Settings
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm line-clamp-2">
+                Account and preferences
               </CardDescription>
             </CardHeader>
           </Card>
