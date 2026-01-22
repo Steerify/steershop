@@ -44,7 +44,6 @@ import { TourTooltip } from "@/components/tours/TourTooltip";
 import { myStoreTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
 
-
 const shopSchema = z
   .object({
     shop_name: z
@@ -67,18 +66,37 @@ const shopSchema = z
     bank_account_number: z.string().optional(),
     paystack_public_key: z.string().optional(),
   })
-  .refine((d) => d.enable_paystack || d.enable_bank_transfer, {
+  .refine((data) => data.enable_paystack || data.enable_bank_transfer, {
     message: "Enable at least one payment method",
+    path: ["enable_bank_transfer"],
   })
   .refine(
-    (d) =>
-      !d.enable_bank_transfer ||
-      (d.bank_account_name && d.bank_name && d.bank_account_number),
-    { message: "Complete bank details required" }
+    (data) => {
+      if (data.enable_bank_transfer) {
+        return (
+          data.bank_account_name &&
+          data.bank_name &&
+          data.bank_account_number
+        );
+      }
+      return true;
+    },
+    {
+      message: "Complete bank details required",
+      path: ["bank_account_name"],
+    }
   )
   .refine(
-    (d) => !d.enable_paystack || d.paystack_public_key,
-    { message: "Paystack public key required" }
+    (data) => {
+      if (data.enable_paystack) {
+        return data.paystack_public_key;
+      }
+      return true;
+    },
+    {
+      message: "Paystack public key required",
+      path: ["paystack_public_key"],
+    }
   );
 
 // Helper function to format UUID with hyphens
@@ -206,6 +224,15 @@ const MyStore = () => {
         if (e.path[0]) errs[e.path[0] as string] = e.message;
       });
       setErrors(errs);
+      
+      // Show toast for general errors
+      if (errs.enable_bank_transfer) {
+        toast({
+          title: "Payment Method Required",
+          description: "Please enable at least one payment method",
+          variant: "destructive",
+        });
+      }
       return;
     }
 
@@ -222,12 +249,43 @@ const MyStore = () => {
       // Format shop ID for update if needed
       const formattedShopId = shop?.id ? formatUUIDWithHyphens(shop.id) : shop?.id;
       
-      await shopService.updateShop(formattedShopId, {
-        ...formData,
+      // Create payload only with necessary fields
+      const payload: any = {
+        shop_name: formData.shop_name,
+        shop_slug: formData.shop_slug,
+        description: formData.description,
+        whatsapp_number: formData.whatsapp_number,
         payment_method,
-      });
+        logo_url: formData.logo_url,
+        banner_url: formData.banner_url,
+      };
 
-      toast({ title: "Success", description: "Store updated" });
+      // Add bank details only if bank transfer is enabled
+      if (formData.enable_bank_transfer) {
+        payload.bank_account_name = formData.bank_account_name;
+        payload.bank_name = formData.bank_name;
+        payload.bank_account_number = formData.bank_account_number;
+      } else {
+        // Clear bank details if disabled
+        payload.bank_account_name = "";
+        payload.bank_name = "";
+        payload.bank_account_number = "";
+      }
+
+      // Add Paystack details only if Paystack is enabled
+      if (formData.enable_paystack) {
+        payload.paystack_public_key = formData.paystack_public_key;
+      } else {
+        // Clear Paystack key if disabled
+        payload.paystack_public_key = "";
+      }
+
+      await shopService.updateShop(formattedShopId, payload);
+
+      toast({ 
+        title: "Success", 
+        description: "Store updated successfully" 
+      });
       loadShop();
     } catch (error: any) {
       console.error("Error updating shop:", error);
@@ -382,9 +440,16 @@ const MyStore = () => {
                   <Checkbox
                     id="enable_bank_transfer"
                     checked={formData.enable_bank_transfer}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, enable_bank_transfer: checked as boolean })
-                    }
+                    onCheckedChange={(checked) => {
+                      setFormData({ 
+                        ...formData, 
+                        enable_bank_transfer: checked as boolean 
+                      });
+                      // Clear bank transfer errors when toggling
+                      if (errors.enable_bank_transfer) {
+                        setErrors({ ...errors, enable_bank_transfer: "" });
+                      }
+                    }}
                     className="h-5 w-5"
                   />
                   <Label htmlFor="enable_bank_transfer" className="text-sm sm:text-base cursor-pointer">Enable Bank Transfer</Label>
@@ -394,16 +459,23 @@ const MyStore = () => {
                   <Checkbox
                     id="enable_paystack"
                     checked={formData.enable_paystack}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, enable_paystack: checked as boolean })
-                    }
+                    onCheckedChange={(checked) => {
+                      setFormData({ 
+                        ...formData, 
+                        enable_paystack: checked as boolean 
+                      });
+                      // Clear Paystack errors when toggling
+                      if (errors.paystack_public_key) {
+                        setErrors({ ...errors, paystack_public_key: "" });
+                      }
+                    }}
                     className="h-5 w-5"
                   />
                   <Label htmlFor="enable_paystack" className="text-sm sm:text-base cursor-pointer">Enable Paystack</Label>
                 </div>
 
-                {errors.enable_paystack && errors.enable_bank_transfer && (
-                  <p className="text-red-500 text-xs sm:text-sm">{errors.enable_paystack}</p>
+                {errors.enable_bank_transfer && (
+                  <p className="text-red-500 text-xs sm:text-sm">{errors.enable_bank_transfer}</p>
                 )}
               </div>
 
@@ -420,8 +492,11 @@ const MyStore = () => {
                         setFormData({ ...formData, bank_account_name: e.target.value })
                       }
                       placeholder="John Doe"
-                      className="min-h-[44px]"
+                      className={`min-h-[44px] ${errors.bank_account_name ? "border-red-500" : ""}`}
                     />
+                    {errors.bank_account_name && (
+                      <p className="text-red-500 text-sm">{errors.bank_account_name}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -473,7 +548,8 @@ const MyStore = () => {
 
               {/* Paystack Details */}
               {formData.enable_paystack && (
-                <div className="space-y-4">
+                <div className="space-y-4 border border-border/50 p-3 sm:p-4 rounded-lg bg-muted/30">
+                  <Label className="text-base sm:text-lg font-semibold">Paystack Details</Label>
                   <div className="space-y-2">
                     <Label htmlFor="paystack_public_key">Paystack Public Key</Label>
                     <Input
@@ -483,9 +559,12 @@ const MyStore = () => {
                         setFormData({ ...formData, paystack_public_key: e.target.value })
                       }
                       placeholder="pk_live_xxxxxxxx"
+                      className={`min-h-[44px] ${errors.paystack_public_key ? "border-red-500" : ""}`}
                     />
+                    {errors.paystack_public_key && (
+                      <p className="text-red-500 text-sm">{errors.paystack_public_key}</p>
+                    )}
                   </div>
-
                 </div>
               )}
 
