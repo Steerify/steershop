@@ -43,7 +43,7 @@ import { useTour } from "@/hooks/useTour";
 import { TourTooltip } from "@/components/tours/TourTooltip";
 import { myStoreTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
-
+import { ShopAppearanceSettings } from "@/components/ShopAppearanceSettings";
 
 const shopSchema = z
   .object({
@@ -67,33 +67,52 @@ const shopSchema = z
     bank_account_number: z.string().optional(),
     paystack_public_key: z.string().optional(),
   })
-  .refine((d) => d.enable_paystack || d.enable_bank_transfer, {
+  .refine((data) => data.enable_paystack || data.enable_bank_transfer, {
     message: "Enable at least one payment method",
+    path: ["enable_bank_transfer"],
   })
   .refine(
-    (d) =>
-      !d.enable_bank_transfer ||
-      (d.bank_account_name && d.bank_name && d.bank_account_number),
-    { message: "Complete bank details required" }
+    (data) => {
+      if (data.enable_bank_transfer) {
+        return (
+          data.bank_account_name &&
+          data.bank_name &&
+          data.bank_account_number
+        );
+      }
+      return true;
+    },
+    {
+      message: "Complete bank details required",
+      path: ["bank_account_name"],
+    }
   )
   .refine(
-    (d) => !d.enable_paystack || d.paystack_public_key,
-    { message: "Paystack public key required" }
+    (data) => {
+      if (data.enable_paystack) {
+        return data.paystack_public_key;
+      }
+      return true;
+    },
+    {
+      message: "Paystack public key required",
+      path: ["paystack_public_key"],
+    }
   );
 
 // Helper function to format UUID with hyphens
 const formatUUIDWithHyphens = (uuid: string): string => {
   if (!uuid) return uuid;
-  
+
   // Remove any existing hyphens
   const cleanUuid = uuid.replace(/-/g, '');
-  
+
   // Check if it's a 32-character hex string (standard UUID without hyphens)
   if (cleanUuid.length === 32 && /^[a-f0-9]{32}$/i.test(cleanUuid)) {
     // Format with hyphens in standard UUID format: 8-4-4-4-12
     return `${cleanUuid.substring(0, 8)}-${cleanUuid.substring(8, 12)}-${cleanUuid.substring(12, 16)}-${cleanUuid.substring(16, 20)}-${cleanUuid.substring(20)}`;
   }
-  
+
   // Return as-is if not a standard UUID format
   return uuid;
 };
@@ -110,7 +129,25 @@ const MyStore = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    shop_name: string;
+    shop_slug: string;
+    description: string;
+    whatsapp_number: string;
+    enable_paystack: boolean;
+    enable_bank_transfer: boolean;
+    bank_account_name: string;
+    bank_name: string;
+    bank_account_number: string;
+    paystack_public_key: string;
+    logo_url: string;
+    banner_url: string;
+    primary_color: string;
+    secondary_color: string;
+    accent_color: string;
+    theme_mode: 'light' | 'dark' | 'auto';
+    font_style: 'modern' | 'classic' | 'playful' | 'elegant';
+  }>({
     shop_name: "",
     shop_slug: "",
     description: "",
@@ -123,6 +160,11 @@ const MyStore = () => {
     paystack_public_key: "",
     logo_url: "",
     banner_url: "",
+    primary_color: "#D4AF37",
+    secondary_color: "#2E1A47",
+    accent_color: "#FF6B35",
+    theme_mode: "auto",
+    font_style: "modern",
   });
 
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } =
@@ -145,15 +187,12 @@ const MyStore = () => {
       // Format the user ID to ensure it has hyphens for UUID
       const formattedUserId = formatUUIDWithHyphens(user.id);
       console.log("Formatted User ID for API call:", formattedUserId);
-      
+
       const res = await shopService.getShopByOwner(formattedUserId);
       const data = Array.isArray(res.data) ? res.data[0] : res.data;
 
       if (!data) {
-        toast({
-          title: "No Store Found",
-          description: "You haven't created a store yet",
-        });
+        // No toast here - we'll handle "no store" by showing create form
         setIsLoading(false);
         return;
       }
@@ -175,6 +214,12 @@ const MyStore = () => {
         paystack_public_key: data.paystack_public_key || "",
         logo_url: data.logo_url || "",
         banner_url: data.banner_url || "",
+        // Appearance settings
+        primary_color: data.primary_color || "#D4AF37",
+        secondary_color: data.secondary_color || "#2E1A47",
+        accent_color: data.accent_color || "#FF6B35",
+        theme_mode: (data.theme_mode || "auto") as "light" | "dark" | "auto",
+        font_style: (data.font_style || "modern") as "modern" | "classic" | "playful" | "elegant",
       });
 
       // Also format the shop ID when fetching products
@@ -206,6 +251,15 @@ const MyStore = () => {
         if (e.path[0]) errs[e.path[0] as string] = e.message;
       });
       setErrors(errs);
+
+      // Show toast for general errors
+      if (errs.enable_bank_transfer) {
+        toast({
+          title: "Payment Method Required",
+          description: "Please enable at least one payment method",
+          variant: "destructive",
+        });
+      }
       return;
     }
 
@@ -219,18 +273,68 @@ const MyStore = () => {
           ? "paystack"
           : "bank_transfer";
 
-      // Format shop ID for update if needed
-      const formattedShopId = shop?.id ? formatUUIDWithHyphens(shop.id) : shop?.id;
-      
-      await shopService.updateShop(formattedShopId, {
-        ...formData,
+      // Create payload only with necessary fields
+      const payload: any = {
+        shop_name: formData.shop_name,
+        shop_slug: formData.shop_slug,
+        description: formData.description,
+        whatsapp_number: formData.whatsapp_number,
         payment_method,
-      });
+        logo_url: formData.logo_url,
+        banner_url: formData.banner_url,
+        // Appearance settings
+        primary_color: formData.primary_color,
+        secondary_color: formData.secondary_color,
+        accent_color: formData.accent_color,
+        theme_mode: formData.theme_mode,
+        font_style: formData.font_style,
+      };
 
-      toast({ title: "Success", description: "Store updated" });
+      // Add bank details only if bank transfer is enabled
+      if (formData.enable_bank_transfer) {
+        payload.bank_account_name = formData.bank_account_name;
+        payload.bank_name = formData.bank_name;
+        payload.bank_account_number = formData.bank_account_number;
+      } else {
+        // Clear bank details if disabled
+        payload.bank_account_name = "";
+        payload.bank_name = "";
+        payload.bank_account_number = "";
+      }
+
+      // Add Paystack details only if Paystack is enabled
+      if (formData.enable_paystack) {
+        payload.paystack_public_key = formData.paystack_public_key;
+      } else {
+        // Clear Paystack key if disabled
+        payload.paystack_public_key = "";
+      }
+
+      let currentShopId = shop?.id;
+
+      if (!currentShopId) {
+        // Create basic shop first
+        const createPayload = {
+          name: formData.shop_name,
+          slug: formData.shop_slug,
+          description: formData.description,
+          whatsapp: formData.whatsapp_number,
+        };
+        const createRes = await shopService.createShop(createPayload);
+        currentShopId = createRes.data.id;
+      }
+
+      // Now update (or set the rest after create)
+      const formattedShopId = formatUUIDWithHyphens(currentShopId);
+      await shopService.updateShop(formattedShopId, payload);
+
+      toast({
+        title: "Success",
+        description: shop ? "Store updated successfully" : "Store created successfully",
+      });
       loadShop();
     } catch (error: any) {
-      console.error("Error updating shop:", error);
+      console.error("Error saving shop:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to save store",
@@ -259,7 +363,7 @@ const MyStore = () => {
 
         <Card className="border-primary/10">
           <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-xl sm:text-2xl">Store Information</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">{shop ? "Store Information" : "Create Your Store"}</CardTitle>
             <CardDescription className="text-sm">Manage your store settings and payment methods</CardDescription>
           </CardHeader>
 
@@ -382,9 +486,16 @@ const MyStore = () => {
                   <Checkbox
                     id="enable_bank_transfer"
                     checked={formData.enable_bank_transfer}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, enable_bank_transfer: checked as boolean })
-                    }
+                    onCheckedChange={(checked) => {
+                      setFormData({
+                        ...formData,
+                        enable_bank_transfer: checked as boolean
+                      });
+                      // Clear bank transfer errors when toggling
+                      if (errors.enable_bank_transfer) {
+                        setErrors({ ...errors, enable_bank_transfer: "" });
+                      }
+                    }}
                     className="h-5 w-5"
                   />
                   <Label htmlFor="enable_bank_transfer" className="text-sm sm:text-base cursor-pointer">Enable Bank Transfer</Label>
@@ -394,16 +505,23 @@ const MyStore = () => {
                   <Checkbox
                     id="enable_paystack"
                     checked={formData.enable_paystack}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, enable_paystack: checked as boolean })
-                    }
+                    onCheckedChange={(checked) => {
+                      setFormData({
+                        ...formData,
+                        enable_paystack: checked as boolean
+                      });
+                      // Clear Paystack errors when toggling
+                      if (errors.paystack_public_key) {
+                        setErrors({ ...errors, paystack_public_key: "" });
+                      }
+                    }}
                     className="h-5 w-5"
                   />
                   <Label htmlFor="enable_paystack" className="text-sm sm:text-base cursor-pointer">Enable Paystack</Label>
                 </div>
 
-                {errors.enable_paystack && errors.enable_bank_transfer && (
-                  <p className="text-red-500 text-xs sm:text-sm">{errors.enable_paystack}</p>
+                {errors.enable_bank_transfer && (
+                  <p className="text-red-500 text-xs sm:text-sm">{errors.enable_bank_transfer}</p>
                 )}
               </div>
 
@@ -420,8 +538,11 @@ const MyStore = () => {
                         setFormData({ ...formData, bank_account_name: e.target.value })
                       }
                       placeholder="John Doe"
-                      className="min-h-[44px]"
+                      className={`min-h-[44px] ${errors.bank_account_name ? "border-red-500" : ""}`}
                     />
+                    {errors.bank_account_name && (
+                      <p className="text-red-500 text-sm">{errors.bank_account_name}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -449,7 +570,7 @@ const MyStore = () => {
                       className="min-h-[44px]"
                     />
                   </div>
-                  
+
                   <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <ShieldCheck className="w-5 h-5 text-primary flex-shrink-0" />
@@ -458,9 +579,9 @@ const MyStore = () => {
                         <p className="text-xs text-muted-foreground">Verify your bank account to enable payouts</p>
                       </div>
                     </div>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       size="sm"
                       onClick={() => navigate('/identity-verification')}
                       className="w-full sm:w-auto min-h-[40px]"
@@ -473,7 +594,8 @@ const MyStore = () => {
 
               {/* Paystack Details */}
               {formData.enable_paystack && (
-                <div className="space-y-4">
+                <div className="space-y-4 border border-border/50 p-3 sm:p-4 rounded-lg bg-muted/30">
+                  <Label className="text-base sm:text-lg font-semibold">Paystack Details</Label>
                   <div className="space-y-2">
                     <Label htmlFor="paystack_public_key">Paystack Public Key</Label>
                     <Input
@@ -483,9 +605,12 @@ const MyStore = () => {
                         setFormData({ ...formData, paystack_public_key: e.target.value })
                       }
                       placeholder="pk_live_xxxxxxxx"
+                      className={`min-h-[44px] ${errors.paystack_public_key ? "border-red-500" : ""}`}
                     />
+                    {errors.paystack_public_key && (
+                      <p className="text-red-500 text-sm">{errors.paystack_public_key}</p>
+                    )}
                   </div>
-
                 </div>
               )}
 
@@ -496,12 +621,40 @@ const MyStore = () => {
                     Saving...
                   </>
                 ) : (
-                  "Save Changes"
+                  shop ? "Save Changes" : "Create Store"
                 )}
               </Button>
             </form>
           </CardContent>
         </Card>
+
+        {/* Appearance Settings */}
+        <div className="mt-6">
+          <ShopAppearanceSettings
+            settings={{
+              primary_color: formData.primary_color,
+              secondary_color: formData.secondary_color,
+              accent_color: formData.accent_color,
+              theme_mode: formData.theme_mode,
+              font_style: formData.font_style,
+            }}
+            onChange={(newSettings) => setFormData({ ...formData, ...newSettings })}
+          />
+          <Button
+            onClick={handleSubmit}
+            disabled={isSaving}
+            className="w-full min-h-[48px] text-base mt-4"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Appearance"
+            )}
+          </Button>
+        </div>
 
         {shop && (
           <Card className="mt-6">
