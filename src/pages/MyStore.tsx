@@ -100,9 +100,17 @@ const shopSchema = z
     }
   );
 
-// Helper function to format UUID with hyphens
+// Helper function to format UUID with hyphens - FIXED VERSION
 const formatUUIDWithHyphens = (uuid: string): string => {
-  if (!uuid) return uuid;
+  // Enhanced validation
+  if (!uuid || uuid.trim() === '') {
+    throw new Error('UUID is required for formatting');
+  }
+  
+  // Check specifically for 'undefined' or 'null' strings
+  if (uuid === 'undefined' || uuid === 'null') {
+    throw new Error(`Invalid UUID value: ${uuid}`);
+  }
   
   // Remove any existing hyphens
   const cleanUuid = uuid.replace(/-/g, '');
@@ -113,7 +121,14 @@ const formatUUIDWithHyphens = (uuid: string): string => {
     return `${cleanUuid.substring(0, 8)}-${cleanUuid.substring(8, 12)}-${cleanUuid.substring(12, 16)}-${cleanUuid.substring(16, 20)}-${cleanUuid.substring(20)}`;
   }
   
-  // Return as-is if not a standard UUID format
+  // If it's already in UUID format with hyphens, validate and return as-is
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(uuid)) {
+    return uuid;
+  }
+  
+  // If not a standard UUID format but not empty, log warning and return as-is
+  console.warn('Non-standard UUID format detected:', uuid);
   return uuid;
 };
 
@@ -184,9 +199,41 @@ const MyStore = () => {
 
   const loadShop = async () => {
     try {
-      // Format the user ID to ensure it has hyphens for UUID
-      const formattedUserId = formatUUIDWithHyphens(user.id);
-      console.log("Formatted User ID for API call:", formattedUserId);
+      // Validate user ID before proceeding
+      if (!user?.id) {
+        toast({
+          title: "User not found",
+          description: "Please log in again",
+          variant: "destructive",
+        });
+        navigate("/auth/login");
+        return;
+      }
+
+      // Check for invalid ID values
+      if (user.id === 'undefined' || user.id === 'null') {
+        toast({
+          title: "Invalid user session",
+          description: "Please log out and log in again",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      let formattedUserId;
+      try {
+        formattedUserId = formatUUIDWithHyphens(user.id);
+        console.log("Formatted User ID for API call:", formattedUserId);
+      } catch (error: any) {
+        toast({
+          title: "Invalid user ID",
+          description: error.message,
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
       
       const res = await shopService.getShopByOwner(formattedUserId);
       const data = Array.isArray(res.data) ? res.data[0] : res.data;
@@ -226,11 +273,16 @@ const MyStore = () => {
       });
 
       // Also format the shop ID when fetching products
-      const formattedShopId = formatUUIDWithHyphens(data.id);
-      const productsRes = await productService.getProducts({
-        shopId: formattedShopId,
-      });
-      setProducts(productsRes.data || []);
+      try {
+        const formattedShopId = formatUUIDWithHyphens(data.id);
+        const productsRes = await productService.getProducts({
+          shopId: formattedShopId,
+        });
+        setProducts(productsRes.data || []);
+      } catch (productError: any) {
+        console.error("Error loading products:", productError);
+        // Don't show toast for product loading errors as they're not critical
+      }
     } catch (error: any) {
       console.error("Error loading shop:", error);
       toast({
@@ -247,13 +299,25 @@ const MyStore = () => {
     e.preventDefault();
     setErrors({});
 
-    // Validate shop ID exists before attempting update
+    // Enhanced shop ID validation
     if (!shop?.id) {
       toast({
         title: "Error",
-        description: "Unable to update store. Please refresh and try again.",
+        description: "Shop data not loaded. Please refresh the page and try again.",
         variant: "destructive",
       });
+      console.error('Shop ID is undefined:', shop);
+      return;
+    }
+
+    // Validate that shop.id is not the string 'undefined'
+    if (shop.id === 'undefined' || shop.id === 'null') {
+      toast({
+        title: "Invalid Shop ID",
+        description: "Shop data is corrupted. Please refresh the page.",
+        variant: "destructive",
+      });
+      console.error('Invalid shop ID value:', shop.id);
       return;
     }
 
@@ -265,7 +329,6 @@ const MyStore = () => {
       });
       setErrors(errs);
       
-      // Show toast for general errors
       if (errs.enable_bank_transfer) {
         toast({
           title: "Payment Method Required",
@@ -286,9 +349,21 @@ const MyStore = () => {
           ? "paystack"
           : "bank_transfer";
 
-      // Format shop ID for update if needed
-      const formattedShopId = shop?.id ? formatUUIDWithHyphens(shop.id) : shop?.id;
-      
+      // Fix: Add validation before formatting - THIS WAS THE MAIN ISSUE
+      let formattedShopId;
+      try {
+        formattedShopId = formatUUIDWithHyphens(shop.id);
+        console.log('Formatted shop ID:', formattedShopId);
+      } catch (formatError: any) {
+        toast({
+          title: "Invalid Shop ID",
+          description: formatError.message || "Failed to process shop ID",
+          variant: "destructive",
+        });
+        setIsSaving(false);
+        return;
+      }
+
       // Create payload only with necessary fields
       const payload: any = {
         shop_name: formData.shop_name,
@@ -298,6 +373,12 @@ const MyStore = () => {
         payment_method,
         logo_url: formData.logo_url,
         banner_url: formData.banner_url,
+        // Appearance settings
+        primary_color: formData.primary_color,
+        secondary_color: formData.secondary_color,
+        accent_color: formData.accent_color,
+        theme_mode: formData.theme_mode,
+        font_style: formData.font_style,
       };
 
       // Add bank details only if bank transfer is enabled
@@ -320,12 +401,9 @@ const MyStore = () => {
         payload.paystack_public_key = "";
       }
 
-      // Add appearance settings
-      payload.primary_color = formData.primary_color;
-      payload.secondary_color = formData.secondary_color;
-      payload.accent_color = formData.accent_color;
-      payload.theme_mode = formData.theme_mode;
-      payload.font_style = formData.font_style;
+      // Log for debugging
+      console.log('Updating shop with ID:', formattedShopId);
+      console.log('Payload:', payload);
 
       await shopService.updateShop(formattedShopId, payload);
 
@@ -349,8 +427,33 @@ const MyStore = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin" />
+        <Loader2 className="animate-spin w-8 h-8" />
+        <span className="ml-3">Loading shop data...</span>
       </div>
+    );
+  }
+
+  if (!shop && !isLoading) {
+    return (
+      <PageWrapper patternVariant="dots" patternOpacity={0.5}>
+        <div className="container mx-auto px-4 py-8 max-w-3xl">
+          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-6">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+          
+          <div className="min-h-[60vh] flex flex-col items-center justify-center text-center">
+            <Store className="w-16 h-16 mb-4 text-muted-foreground" />
+            <h2 className="text-2xl font-bold mb-2">No shop found</h2>
+            <p className="text-muted-foreground mb-6 max-w-md">
+              You haven't created a shop yet. Create one to start selling your products or services.
+            </p>
+            <Button onClick={() => navigate('/create-shop')} size="lg">
+              Create Your First Shop
+            </Button>
+          </div>
+        </div>
+      </PageWrapper>
     );
   }
 
@@ -380,6 +483,7 @@ const MyStore = () => {
                   }
                   placeholder="Enter store name"
                   className={errors.shop_name ? "border-red-500" : ""}
+                  disabled={!shop?.id}
                 />
                 {errors.shop_name && (
                   <p className="text-red-500 text-sm">{errors.shop_name}</p>
@@ -399,6 +503,7 @@ const MyStore = () => {
                   }
                   placeholder="store-slug"
                   className={errors.shop_slug ? "border-red-500" : ""}
+                  disabled={!shop?.id}
                 />
                 {errors.shop_slug && (
                   <p className="text-red-500 text-sm">{errors.shop_slug}</p>
@@ -415,6 +520,7 @@ const MyStore = () => {
                   }
                   placeholder="Describe your store"
                   className="min-h-[100px]"
+                  disabled={!shop?.id}
                 />
               </div>
 
@@ -428,6 +534,7 @@ const MyStore = () => {
                   }
                   placeholder="+2348012345678"
                   className={errors.whatsapp_number ? "border-red-500" : ""}
+                  disabled={!shop?.id}
                 />
                 {errors.whatsapp_number && (
                   <p className="text-red-500 text-sm">{errors.whatsapp_number}</p>
@@ -444,6 +551,7 @@ const MyStore = () => {
                     setFormData({ ...formData, logo_url: url })
                   }
                   folder="shop-images"
+                  disabled={!shop?.id}
                 />
                 {formData.logo_url && (
                   <div className="mt-2">
@@ -467,6 +575,7 @@ const MyStore = () => {
                     setFormData({ ...formData, banner_url: url })
                   }
                   folder="shop-images"
+                  disabled={!shop?.id}
                 />
                 {formData.banner_url && (
                   <div className="mt-2">
@@ -492,12 +601,12 @@ const MyStore = () => {
                         ...formData, 
                         enable_bank_transfer: checked as boolean 
                       });
-                      // Clear bank transfer errors when toggling
                       if (errors.enable_bank_transfer) {
                         setErrors({ ...errors, enable_bank_transfer: "" });
                       }
                     }}
                     className="h-5 w-5"
+                    disabled={!shop?.id}
                   />
                   <Label htmlFor="enable_bank_transfer" className="text-sm sm:text-base cursor-pointer">Enable Bank Transfer</Label>
                 </div>
@@ -511,12 +620,12 @@ const MyStore = () => {
                         ...formData, 
                         enable_paystack: checked as boolean 
                       });
-                      // Clear Paystack errors when toggling
                       if (errors.paystack_public_key) {
                         setErrors({ ...errors, paystack_public_key: "" });
                       }
                     }}
                     className="h-5 w-5"
+                    disabled={!shop?.id}
                   />
                   <Label htmlFor="enable_paystack" className="text-sm sm:text-base cursor-pointer">Enable Paystack</Label>
                 </div>
@@ -540,6 +649,7 @@ const MyStore = () => {
                       }
                       placeholder="John Doe"
                       className={`min-h-[44px] ${errors.bank_account_name ? "border-red-500" : ""}`}
+                      disabled={!shop?.id}
                     />
                     {errors.bank_account_name && (
                       <p className="text-red-500 text-sm">{errors.bank_account_name}</p>
@@ -556,6 +666,7 @@ const MyStore = () => {
                       }
                       placeholder="First Bank"
                       className="min-h-[44px]"
+                      disabled={!shop?.id}
                     />
                   </div>
 
@@ -569,6 +680,7 @@ const MyStore = () => {
                       }
                       placeholder="1234567890"
                       className="min-h-[44px]"
+                      disabled={!shop?.id}
                     />
                   </div>
                   
@@ -586,6 +698,7 @@ const MyStore = () => {
                       size="sm"
                       onClick={() => navigate('/identity-verification')}
                       className="w-full sm:w-auto min-h-[40px]"
+                      disabled={!shop?.id}
                     >
                       Verify Now
                     </Button>
@@ -607,6 +720,7 @@ const MyStore = () => {
                       }
                       placeholder="pk_live_xxxxxxxx"
                       className={`min-h-[44px] ${errors.paystack_public_key ? "border-red-500" : ""}`}
+                      disabled={!shop?.id}
                     />
                     {errors.paystack_public_key && (
                       <p className="text-red-500 text-sm">{errors.paystack_public_key}</p>
@@ -615,8 +729,12 @@ const MyStore = () => {
                 </div>
               )}
 
-              <Button type="submit" disabled={isSaving} className="w-full min-h-[48px] text-base">
-                {isSaving ? (
+              <Button 
+                type="submit" 
+                disabled={isSaving || !shop?.id} 
+                className="w-full min-h-[48px] text-base"
+              >
+                {!shop?.id ? "Loading shop data..." : isSaving ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Saving...
@@ -640,13 +758,14 @@ const MyStore = () => {
               font_style: formData.font_style,
             }}
             onChange={(newSettings) => setFormData({ ...formData, ...newSettings })}
+            disabled={!shop?.id}
           />
           <Button 
             onClick={handleSubmit} 
-            disabled={isSaving} 
+            disabled={isSaving || !shop?.id} 
             className="w-full min-h-[48px] text-base mt-4"
           >
-            {isSaving ? (
+            {!shop?.id ? "Loading shop data..." : isSaving ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Saving...

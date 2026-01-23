@@ -122,6 +122,15 @@ const shopService = {
   },
 
   getShopByOwner: async (ownerId: string) => {
+    // Enhanced validation
+    if (!ownerId || ownerId.trim() === '') {
+      throw new Error('Owner ID is required');
+    }
+    
+    if (ownerId === 'undefined' || ownerId === 'null') {
+      throw new Error(`Invalid owner ID: ${ownerId}`);
+    }
+
     const { data: shops, error } = await supabase
       .from('shops')
       .select('*')
@@ -204,9 +213,22 @@ const shopService = {
   },
 
   updateShop: async (id: string, data: Partial<Shop>) => {
-    // Validate ID before querying
-    if (!id || id === 'undefined') {
+    // Enhanced validation
+    if (!id || id.trim() === '') {
       throw new Error('Shop ID is required for update');
+    }
+
+    if (id === 'undefined' || id === 'null') {
+      throw new Error(`Invalid shop ID: ${id}`);
+    }
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const cleanId = id.replace(/-/g, '');
+    const isHexUUID = /^[a-f0-9]{32}$/i.test(cleanId);
+    
+    if (!uuidRegex.test(id) && !isHexUUID) {
+      throw new Error(`Invalid UUID format: ${id}`);
     }
 
     // Map from API types to database column names
@@ -237,6 +259,8 @@ const shopService = {
     if (data.accent_color !== undefined) updateData.accent_color = data.accent_color;
     if (data.theme_mode !== undefined) updateData.theme_mode = data.theme_mode;
     if (data.font_style !== undefined) updateData.font_style = data.font_style;
+
+    console.log('Updating shop with ID:', id, 'Data:', updateData);
 
     const { data: shop, error } = await supabase
       .from('shops')
