@@ -39,12 +39,6 @@ interface Shop {
   bank_name?: string;
   bank_account_number?: string;
   is_verified?: boolean;
-  // Appearance customization
-  primary_color?: string;
-  secondary_color?: string;
-  accent_color?: string;
-  theme_mode?: 'light' | 'dark' | 'auto';
-  font_style?: 'modern' | 'classic' | 'playful' | 'elegant';
 }
 
 interface Product {
@@ -304,23 +298,8 @@ const ShopStorefront = () => {
     );
   }
 
-  // Apply custom shop colors as CSS variables
-  const customStyles = {
-    '--shop-primary': shop.primary_color || '#D4AF37',
-    '--shop-secondary': shop.secondary_color || '#2E1A47',
-    '--shop-accent': shop.accent_color || '#FF6B35',
-  } as React.CSSProperties;
-
-  // Font family based on shop's font_style
-  const fontFamilyClass = {
-    modern: 'font-sans',
-    classic: 'font-serif',
-    playful: 'font-display',
-    elegant: 'font-heading',
-  }[shop.font_style || 'modern'];
-
   return (
-    <div className={`min-h-screen bg-background flex flex-col ${fontFamilyClass}`} style={customStyles}>
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
       {/* Shop Header */}
@@ -333,12 +312,7 @@ const ShopStorefront = () => {
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
           </div>
         ) : (
-          <div 
-            className="h-48 md:h-64 relative overflow-hidden"
-            style={{ 
-              background: `linear-gradient(to bottom right, ${shop.primary_color || '#D4AF37'}33, ${shop.accent_color || '#FF6B35'}1A, var(--background))` 
-            }}
-          >
+          <div className="h-48 md:h-64 bg-gradient-to-br from-primary/20 via-accent/10 to-background relative overflow-hidden">
             <AdirePattern variant="geometric" className="text-primary" opacity={0.3} />
           </div>
         )}
@@ -347,12 +321,7 @@ const ShopStorefront = () => {
           <div className="relative -mt-16 md:-mt-20 pb-8">
             <Card className="card-african p-4 md:p-6 shadow-xl bg-card/95 backdrop-blur-sm">
               <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">
-                <div 
-                  className="w-20 h-20 md:w-24 md:h-24 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden"
-                  style={{ 
-                    background: `linear-gradient(to bottom right, ${shop.primary_color || '#D4AF37'}, ${shop.accent_color || '#FF6B35'})` 
-                  }}
-                >
+                <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden">
                   {shop.logo_url ? (
                     <img 
                       src={shop.logo_url} 
