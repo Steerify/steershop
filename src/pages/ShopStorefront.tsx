@@ -22,7 +22,6 @@ import { storefrontTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
 import { KnowThisShop } from "@/components/ai/KnowThisShop";
 import { TrustBadges } from "@/components/TrustBadges";
-
 interface Shop {
   id: string;
   shop_name: string;
@@ -39,8 +38,8 @@ interface Shop {
   bank_name?: string;
   bank_account_number?: string;
   is_verified?: boolean;
+  owner_id?: string;
 }
-
 interface Product {
   id: string;
   name: string;
@@ -55,12 +54,10 @@ interface Product {
   duration_minutes: number | null;
   booking_required: boolean;
 }
-
 interface CartItem {
   product: Product;
   quantity: number;
 }
-
 const ShopStorefront = () => {
   const { slug } = useParams();
   const { toast } = useToast();
@@ -75,31 +72,28 @@ const ShopStorefront = () => {
   const [typeFilter, setTypeFilter] = useState<'all' | 'product' | 'service'>('all');
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Product | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('storefront');
-
   const handleTourCallback = (data: CallBackProps) => {
     const { status } = data;
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
       endTour(status === STATUS.FINISHED);
     }
   };
-
   useEffect(() => {
     loadShopData();
   }, [slug]);
-
   useEffect(() => {
     let filtered = products;
-    
+   
     // Filter by type
     if (typeFilter !== 'all') {
       filtered = filtered.filter(p => p.type === typeFilter);
     }
-    
+   
     // Filter by search
     if (searchQuery.trim() !== "") {
       filtered = filtered.filter(product =>
@@ -108,18 +102,15 @@ const ShopStorefront = () => {
         product.price.toString().includes(searchQuery)
       );
     }
-    
+   
     setFilteredProducts(filtered);
   }, [searchQuery, products, typeFilter]);
-
   const handleBookService = (service: Product) => {
     setSelectedService(service);
     setIsBookingOpen(true);
   };
-
   const productCount = products.filter(p => p.type === 'product').length;
   const serviceCount = products.filter(p => p.type === 'service').length;
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -128,11 +119,9 @@ const ShopStorefront = () => {
         }
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [searchQuery, isSearchExpanded]);
-
   useEffect(() => {
     if (isSearchExpanded && inputRef.current) {
       setTimeout(() => {
@@ -140,15 +129,14 @@ const ShopStorefront = () => {
       }, 100);
     }
   }, [isSearchExpanded]);
-
   const loadShopData = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
       const { data: shopData, error: shopError } = await supabase
-        .from("shops_public")
+        .from("shops")
         .select("*")
         .eq("shop_slug", slug)
         .single();
-
       if (shopError) throw shopError;
       if (!shopData) {
         toast({
@@ -158,16 +146,17 @@ const ShopStorefront = () => {
         });
         return;
       }
-
       setShop(shopData);
-
-      const { data: productsData, error: productsError } = await supabase
+      setIsOwner(user?.id === shopData.owner_id);
+      let productsQuery = supabase
         .from("products")
         .select("*")
         .eq("shop_id", shopData.id)
-        .eq("is_available", true)
         .order("created_at", { ascending: false });
-
+      if (!user || user.id !== shopData.owner_id) {
+        productsQuery = productsQuery.eq("is_available", true);
+      }
+      const { data: productsData, error: productsError } = await productsQuery;
       if (productsError) throw productsError;
       const productsList = (productsData || []).map(p => ({
         ...p,
@@ -187,11 +176,10 @@ const ShopStorefront = () => {
       setIsLoading(false);
     }
   };
-
   const addToCart = (product: Product) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.product.id === product.id);
-      
+     
       if (existingItem) {
         if (existingItem.quantity >= product.stock_quantity) {
           toast({
@@ -207,37 +195,30 @@ const ShopStorefront = () => {
             : item
         );
       }
-
       return [...prevCart, { product, quantity: 1 }];
     });
-
     toast({
       title: "Added to Cart",
       description: `${product.name} added to your cart`,
     });
   };
-
   const updateCartQuantity = (productId: string, quantity: number) => {
     if (quantity === 0) {
       setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId));
       return;
     }
-
     setCart((prevCart) =>
       prevCart.map((item) =>
         item.product.id === productId ? { ...item, quantity } : item
       )
     );
   };
-
   const getTotalAmount = () => {
     return cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
   };
-
   const getTotalItems = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
-
   const clearSearch = () => {
     setSearchQuery("");
     if (!isSearchExpanded) {
@@ -247,14 +228,12 @@ const ShopStorefront = () => {
       }, 100);
     }
   };
-
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       setIsSearchExpanded(true);
     }
   };
-
   const toggleSearch = () => {
     setIsSearchExpanded(!isSearchExpanded);
     if (!isSearchExpanded) {
@@ -263,7 +242,6 @@ const ShopStorefront = () => {
       }, 100);
     }
   };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -275,7 +253,6 @@ const ShopStorefront = () => {
       </div>
     );
   }
-
   if (!shop) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -297,15 +274,13 @@ const ShopStorefront = () => {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
-
       {/* Shop Header */}
       <div className="relative pt-20" data-tour="shop-header">
         {shop.banner_url ? (
-          <div 
+          <div
             className="h-48 md:h-64 bg-cover bg-center"
             style={{ backgroundImage: `url(${shop.banner_url})` }}
           >
@@ -316,15 +291,15 @@ const ShopStorefront = () => {
             <AdirePattern variant="geometric" className="text-primary" opacity={0.3} />
           </div>
         )}
-        
+       
         <div className="container mx-auto px-4">
           <div className="relative -mt-16 md:-mt-20 pb-8">
             <Card className="card-african p-4 md:p-6 shadow-xl bg-card/95 backdrop-blur-sm">
               <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">
                 <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden">
                   {shop.logo_url ? (
-                    <img 
-                      src={shop.logo_url} 
+                    <img
+                      src={shop.logo_url}
                       alt={shop.shop_name}
                       className="w-full h-full object-cover"
                     />
@@ -332,7 +307,7 @@ const ShopStorefront = () => {
                     <Store className="w-10 h-10 md:w-12 md:h-12 text-primary-foreground" />
                   )}
                 </div>
-                
+               
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-2">
                     <div>
@@ -350,13 +325,13 @@ const ShopStorefront = () => {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <TourButton 
-                        onStartTour={startTour} 
-                        hasSeenTour={hasSeenTour} 
+                      <TourButton
+                        onStartTour={startTour}
+                        hasSeenTour={hasSeenTour}
                         onResetTour={resetTour}
                       />
                       {getTotalItems() > 0 && (
-                        <Button 
+                        <Button
                           onClick={() => setIsCheckoutOpen(true)}
                           className="bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/25"
                           data-tour="cart-button"
@@ -367,7 +342,7 @@ const ShopStorefront = () => {
                       )}
                     </div>
                   </div>
-                  
+                 
                   <div className="flex flex-wrap items-center gap-3 mt-4">
                     {shop.total_reviews > 0 && (
                       <div className="flex items-center gap-2 px-3 py-1 bg-gold/10 rounded-full">
@@ -392,7 +367,6 @@ const ShopStorefront = () => {
                     )}
                     <KnowThisShop shopId={shop.id} />
                   </div>
-
                   {/* Trust Badges */}
                   <div className="mt-3">
                     <TrustBadges
@@ -408,7 +382,6 @@ const ShopStorefront = () => {
           </div>
         </div>
       </div>
-
       {/* Products Section */}
       <div className="flex-1 container mx-auto px-4 pb-20">
         <div className="flex flex-col gap-4 mb-8">
@@ -426,7 +399,6 @@ const ShopStorefront = () => {
                 <h2 className="font-display text-2xl font-bold">Catalog</h2>
               </div>
             </div>
-
             {/* Search Component */}
             <div ref={searchRef} className="relative" data-tour="search-products">
               <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
@@ -441,7 +413,6 @@ const ShopStorefront = () => {
                   >
                     <Search className="h-4 w-4 text-muted-foreground" />
                   </Button>
-
                   <div className={`
                     relative transition-all duration-300 ease-in-out overflow-hidden
                     ${isSearchExpanded ? 'w-48 sm:w-64 ml-2 opacity-100' : 'w-0 ml-0 opacity-0'}
@@ -459,7 +430,7 @@ const ShopStorefront = () => {
                         }
                       }}
                     />
-                    
+                   
                     {searchQuery && (
                       <button
                         type="button"
@@ -474,7 +445,6 @@ const ShopStorefront = () => {
               </form>
             </div>
           </div>
-
           {/* Filter Tabs */}
           {(productCount > 0 || serviceCount > 0) && (
             <Tabs value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)} data-tour="product-filters">
@@ -498,7 +468,6 @@ const ShopStorefront = () => {
             </Tabs>
           )}
         </div>
-
         {filteredProducts.length === 0 ? (
           <Card className="card-african">
             <CardContent className="py-16 text-center">
@@ -513,14 +482,14 @@ const ShopStorefront = () => {
                 {searchQuery ? "No Products Found" : "No Products Available"}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {searchQuery 
+                {searchQuery
                   ? `No products found for "${searchQuery}"`
                   : "This shop hasn't added any products yet"
                 }
               </p>
               {searchQuery && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={clearSearch}
                   className="mt-2"
                 >
@@ -542,9 +511,9 @@ const ShopStorefront = () => {
                       Showing results for "<span className="font-semibold text-accent">{searchQuery}</span>"
                     </span>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={clearSearch}
                     className="h-8"
                   >
@@ -554,11 +523,10 @@ const ShopStorefront = () => {
                 </div>
               </div>
             )}
-
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map((product, index) => (
-                <Card 
-                  key={product.id} 
+                <Card
+                  key={product.id}
                   className="card-african overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 animate-fade-up"
                   style={{ animationDelay: `${index * 0.05}s` }}
                   data-tour={index === 0 ? "product-card" : undefined}
@@ -585,8 +553,8 @@ const ShopStorefront = () => {
                       </div>
                       {/* Type Badge */}
                       <div className="absolute top-2 left-2">
-                        <Badge 
-                          variant={product.type === "service" ? "secondary" : "default"} 
+                        <Badge
+                          variant={product.type === "service" ? "secondary" : "default"}
                           className={product.type === "service" ? "bg-purple-500/90 text-white" : "bg-primary/90"}
                         >
                           {product.type === "service" ? (
@@ -596,6 +564,14 @@ const ShopStorefront = () => {
                           )}
                         </Badge>
                       </div>
+                      {/* Availability Badge for Owner */}
+                      {isOwner && !product.is_available && (
+                        <div className="absolute top-2 right-2">
+                          <Badge variant="destructive">
+                            Unavailable
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                   </Link>
                   <CardHeader className="pb-3">
@@ -605,8 +581,8 @@ const ShopStorefront = () => {
                     <CardDescription className="line-clamp-2">
                       {product.description}
                     </CardDescription>
-                    <ProductRating 
-                      rating={product.average_rating || 0} 
+                    <ProductRating
+                      rating={product.average_rating || 0}
                       totalReviews={product.total_reviews || 0}
                     />
                   </CardHeader>
@@ -621,7 +597,7 @@ const ShopStorefront = () => {
                           </Badge>
                         )
                       ) : (
-                        <Badge 
+                        <Badge
                           variant={product.stock_quantity > 0 ? "default" : "destructive"}
                           className={product.stock_quantity > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
                         >
@@ -639,7 +615,7 @@ const ShopStorefront = () => {
                             e.preventDefault();
                             handleBookService(product);
                           }}
-                          disabled={product.stock_quantity === 0}
+                          disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                         >
                           <Calendar className="w-4 h-4 mr-2" />
                           Book Now
@@ -651,7 +627,7 @@ const ShopStorefront = () => {
                             e.preventDefault();
                             addToCart(product);
                           }}
-                          disabled={product.stock_quantity === 0}
+                          disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                         >
                           <ShoppingCart className="w-4 h-4 mr-2" />
                           Add to Cart
@@ -663,7 +639,7 @@ const ShopStorefront = () => {
                         </Button>
                       </Link>
                     </div>
-                    <ProductReviewForm 
+                    <ProductReviewForm
                       productId={product.id}
                       productName={product.name}
                       onReviewSubmitted={loadShopData}
@@ -675,9 +651,7 @@ const ShopStorefront = () => {
           </>
         )}
       </div>
-
       <Footer />
-
       {/* Checkout Dialog */}
       {shop && (
         <CheckoutDialog
@@ -689,7 +663,6 @@ const ShopStorefront = () => {
           totalAmount={getTotalAmount()}
         />
       )}
-
       {/* Booking Dialog */}
       {selectedService && shop && (
         <BookingDialog
@@ -704,7 +677,6 @@ const ShopStorefront = () => {
           whatsappNumber={shop.whatsapp_number}
         />
       )}
-
       {/* Guided Tour */}
       <Joyride
         steps={storefrontTourSteps}
@@ -724,5 +696,4 @@ const ShopStorefront = () => {
     </div>
   );
 };
-
 export default ShopStorefront;
