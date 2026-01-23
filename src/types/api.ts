@@ -79,6 +79,12 @@ export interface Shop {
   total_reviews?: number;
   owner_id?: string;
   is_verified?: boolean;
+  // Appearance customization
+  primary_color?: string;
+  secondary_color?: string;
+  accent_color?: string;
+  theme_mode?: 'light' | 'dark' | 'auto';
+  font_style?: 'modern' | 'classic' | 'playful' | 'elegant';
 }
 
 export interface ProductImage {

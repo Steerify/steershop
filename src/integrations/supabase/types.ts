@@ -1318,6 +1318,7 @@ export type Database = {
       }
       shops: {
         Row: {
+          accent_color: string | null
           average_rating: number | null
           bank_account_name: string | null
           bank_account_number: string | null
@@ -1325,6 +1326,7 @@ export type Database = {
           banner_url: string | null
           created_at: string
           description: string | null
+          font_style: string | null
           id: string
           is_active: boolean
           is_verified: boolean | null
@@ -1333,15 +1335,19 @@ export type Database = {
           payment_method: string | null
           paystack_public_key: string | null
           paystack_subaccount_code: string | null
+          primary_color: string | null
+          secondary_color: string | null
           settlement_account_number: string | null
           settlement_bank_code: string | null
           shop_name: string
           shop_slug: string
+          theme_mode: string | null
           total_reviews: number | null
           updated_at: string
           whatsapp_number: string | null
         }
         Insert: {
+          accent_color?: string | null
           average_rating?: number | null
           bank_account_name?: string | null
           bank_account_number?: string | null
@@ -1349,6 +1355,7 @@ export type Database = {
           banner_url?: string | null
           created_at?: string
           description?: string | null
+          font_style?: string | null
           id?: string
           is_active?: boolean
           is_verified?: boolean | null
@@ -1357,15 +1364,19 @@ export type Database = {
           payment_method?: string | null
           paystack_public_key?: string | null
           paystack_subaccount_code?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
           settlement_account_number?: string | null
           settlement_bank_code?: string | null
           shop_name: string
           shop_slug: string
+          theme_mode?: string | null
           total_reviews?: number | null
           updated_at?: string
           whatsapp_number?: string | null
         }
         Update: {
+          accent_color?: string | null
           average_rating?: number | null
           bank_account_name?: string | null
           bank_account_number?: string | null
@@ -1373,6 +1384,7 @@ export type Database = {
           banner_url?: string | null
           created_at?: string
           description?: string | null
+          font_style?: string | null
           id?: string
           is_active?: boolean
           is_verified?: boolean | null
@@ -1381,10 +1393,13 @@ export type Database = {
           payment_method?: string | null
           paystack_public_key?: string | null
           paystack_subaccount_code?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
           settlement_account_number?: string | null
           settlement_bank_code?: string | null
           shop_name?: string
           shop_slug?: string
+          theme_mode?: string | null
           total_reviews?: number | null
           updated_at?: string
           whatsapp_number?: string | null

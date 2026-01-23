@@ -204,21 +204,39 @@ const shopService = {
   },
 
   updateShop: async (id: string, data: Partial<Shop>) => {
+    // Validate ID before querying
+    if (!id || id === 'undefined') {
+      throw new Error('Shop ID is required for update');
+    }
+
     // Map from API types to database column names
+    // Use !== undefined to allow clearing fields with empty strings
     const updateData: any = {};
     
-    if (data.name || data.shop_name) updateData.shop_name = data.name || data.shop_name;
-    if (data.slug || data.shop_slug) updateData.shop_slug = data.slug || data.shop_slug;
+    if (data.name !== undefined || data.shop_name !== undefined) {
+      updateData.shop_name = data.name || data.shop_name;
+    }
+    if (data.slug !== undefined || data.shop_slug !== undefined) {
+      updateData.shop_slug = data.slug || data.shop_slug;
+    }
     if (data.description !== undefined) updateData.description = data.description;
-    if (data.whatsapp || data.whatsapp_number) updateData.whatsapp_number = data.whatsapp || data.whatsapp_number;
-    if (data.logo_url) updateData.logo_url = data.logo_url;
-    if (data.banner_url) updateData.banner_url = data.banner_url;
-    if (data.payment_method) updateData.payment_method = data.payment_method;
-    if (data.bank_name) updateData.bank_name = data.bank_name;
-    if (data.bank_account_name) updateData.bank_account_name = data.bank_account_name;
-    if (data.bank_account_number) updateData.bank_account_number = data.bank_account_number;
-    if (data.paystack_public_key) updateData.paystack_public_key = data.paystack_public_key;
+    if (data.whatsapp !== undefined || data.whatsapp_number !== undefined) {
+      updateData.whatsapp_number = data.whatsapp || data.whatsapp_number;
+    }
+    if (data.logo_url !== undefined) updateData.logo_url = data.logo_url;
+    if (data.banner_url !== undefined) updateData.banner_url = data.banner_url;
+    if (data.payment_method !== undefined) updateData.payment_method = data.payment_method;
+    if (data.bank_name !== undefined) updateData.bank_name = data.bank_name;
+    if (data.bank_account_name !== undefined) updateData.bank_account_name = data.bank_account_name;
+    if (data.bank_account_number !== undefined) updateData.bank_account_number = data.bank_account_number;
+    if (data.paystack_public_key !== undefined) updateData.paystack_public_key = data.paystack_public_key;
     if (data.is_active !== undefined) updateData.is_active = data.is_active;
+    // Appearance customization fields
+    if (data.primary_color !== undefined) updateData.primary_color = data.primary_color;
+    if (data.secondary_color !== undefined) updateData.secondary_color = data.secondary_color;
+    if (data.accent_color !== undefined) updateData.accent_color = data.accent_color;
+    if (data.theme_mode !== undefined) updateData.theme_mode = data.theme_mode;
+    if (data.font_style !== undefined) updateData.font_style = data.font_style;
 
     const { data: shop, error } = await supabase
       .from('shops')
@@ -252,6 +270,12 @@ const shopService = {
       total_reviews: shop.total_reviews,
       owner_id: shop.owner_id,
       is_verified: shop.is_verified,
+      // Appearance fields
+      primary_color: shop.primary_color,
+      secondary_color: shop.secondary_color,
+      accent_color: shop.accent_color,
+      theme_mode: shop.theme_mode as 'light' | 'dark' | 'auto' | undefined,
+      font_style: shop.font_style as 'modern' | 'classic' | 'playful' | 'elegant' | undefined,
     };
 
     return {
