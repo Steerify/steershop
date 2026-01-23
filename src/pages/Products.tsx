@@ -249,7 +249,7 @@ const Products = () => {
 
       toast({
         title: "Success",
-        description: editingProduct ? "Product updated" : "Product created",
+        description: editingProduct ? `${formData.type.charAt(0).toUpperCase() + formData.type.slice(1)} updated` : `${formData.type.charAt(0).toUpperCase() + formData.type.slice(1)} created`,
       });
 
       setIsDialogOpen(false);
@@ -262,8 +262,8 @@ const Products = () => {
     }
   };
 
-  const handleDelete = async (productId: string) => {
-    if (!confirm(`Are you sure you want to delete this product?`)) return;
+  const handleDelete = async (productId: string, type: string) => {
+    if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
 
     try {
       const formattedProductId = formatUUIDWithHyphens(productId);
@@ -271,14 +271,14 @@ const Products = () => {
       
       toast({
         title: "Success",
-        description: "Product deleted",
+        description: `${type.charAt(0).toUpperCase() + type.slice(1)} deleted`,
       });
 
       loadShopAndProducts();
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to delete product",
+        description: error.message || `Failed to delete ${type}`,
         variant: "destructive",
       });
     }
@@ -398,13 +398,20 @@ const Products = () => {
                     />
                   </div>
                 ) : (
-                  <div className="h-48 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center relative">
-                    <Package className="w-12 h-12 text-muted-foreground" />
+                  <div className={`h-48 bg-gradient-to-br ${product.type === 'service' ? 'from-accent/10 to-primary/10' : 'from-primary/10 to-accent/10'} flex items-center justify-center relative`}>
+                    {product.type === 'service' ? (
+                      <Briefcase className="w-12 h-12 text-muted-foreground" />
+                    ) : (
+                      <Package className="w-12 h-12 text-muted-foreground" />
+                    )}
                   </div>
                 )}
                 <CardHeader>
                   <CardTitle className="flex items-start justify-between gap-2 font-heading">
                     <span className="line-clamp-1">{product.name}</span>
+                    <Badge variant={product.type === 'service' ? 'secondary' : 'default'}>
+                      {product.type.charAt(0).toUpperCase() + product.type.slice(1)}
+                    </Badge>
                   </CardTitle>
                   <CardDescription className="line-clamp-2">
                     {product.description}
@@ -417,11 +424,23 @@ const Products = () => {
                       <span className="font-semibold text-primary">₦{product.price.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Stock:</span>
+                      <span className="text-muted-foreground">{product.type === 'service' ? 'Available Slots:' : 'Stock:'}</span>
                       <span className={product.inventory === 0 ? "text-destructive font-semibold" : "text-foreground"}>
-                        {product.inventory} units
+                        {product.inventory} {product.type === 'service' ? 'slots' : 'units'}
                       </span>
                     </div>
+                    {product.type === 'service' && product.duration_minutes && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Duration:</span>
+                        <span>{product.duration_minutes} minutes</span>
+                      </div>
+                    )}
+                    {product.type === 'service' && product.booking_required && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Booking:</span>
+                        <span className="text-accent font-semibold">Required</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -435,7 +454,7 @@ const Products = () => {
                     <Button
                       variant="outline"
                       className="border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-                      onClick={() => handleDelete(product.id)}
+                      onClick={() => handleDelete(product.id, product.type || 'item')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
