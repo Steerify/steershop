@@ -28,11 +28,32 @@ import { useAuth } from "@/context/AuthContext";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 
+// Helper function to format UUID with hyphens
+const formatUUIDWithHyphens = (uuid: string): string => {
+  if (!uuid) return uuid;
+  
+  // Remove any existing hyphens
+  const cleanUuid = uuid.replace(/-/g, '');
+  
+  // Check if it's a 32-character hex string (standard UUID without hyphens)
+  if (cleanUuid.length === 32 && /^[a-f0-9]{32}$/i.test(cleanUuid)) {
+    // Format with hyphens in standard UUID format: 8-4-4-4-12
+    return `${cleanUuid.substring(0, 8)}-${cleanUuid.substring(8, 12)}-${cleanUuid.substring(12, 16)}-${cleanUuid.substring(16, 20)}-${cleanUuid.substring(20)}`;
+  }
+  
+  // Return as-is if not a standard UUID format
+  return uuid;
+};
+
 const productSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters").max(200, "Name must be less than 200 characters"),
   description: z.string().trim().max(1000, "Description must be less than 1000 characters").optional(),
   price: z.number().min(0.01, "Price must be greater than 0").max(10000000, "Price is too high"),
   inventory: z.number().int().min(0, "Stock/slots cannot be negative"),
+  type: z.enum(["product", "service"]),
+  duration_minutes: z.number().int().min(0).optional(),
+  booking_required: z.boolean().optional(),
+  is_available: z.boolean(),
 });
 
 const Products = () => {
@@ -87,14 +108,9 @@ const Products = () => {
         return;
       }
 
-      // Fetch own shop
-      // In a real API, we might have /shops/mine
-      // For now, let's assume we can find it by getting shops and filtering or using a specific method if I add it.
-      // Assuming shopService.getShops returns current user's shops if they are merchant
-      // Or I'll use a placeholder until /shops/mine is confirmed.
-      const shopsResponse = await shopService.getShops(1, 10);
+      const formattedUserId = formatUUIDWithHyphens(user.id);
+      const shopsResponse = await shopService.getShopByOwner(formattedUserId);
       
-      // Let's assume for now we take the first shop returned if any.
       const userShop = shopsResponse.data[0];
 
       if (!userShop) {
@@ -108,8 +124,9 @@ const Products = () => {
 
       setShop(userShop);
 
+      const formattedShopId = formatUUIDWithHyphens(userShop.id);
       const productsResponse = await productService.getProducts({ 
-        shopId: userShop.id,
+        shopId: formattedShopId,
         limit: 100 
       });
 
@@ -146,10 +163,10 @@ const Products = () => {
         description: product.description || "",
         price: product.price.toString(),
         inventory: product.inventory.toString(),
-        is_available: true,
-        type: "product",
-        duration_minutes: "",
-        booking_required: false,
+        is_available: product.is_available ?? true,
+        type: product.type || "product",
+        duration_minutes: product.duration_minutes?.toString() || "",
+        booking_required: product.booking_required ?? false,
       });
       setImageUrl(product.images?.[0]?.url || "");
       setIsDialogOpen(true);
@@ -185,6 +202,7 @@ const Products = () => {
       ...formData,
       price: parseFloat(formData.price),
       inventory: parseInt(formData.inventory),
+      duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : undefined,
     });
 
     if (!validation.success) {
@@ -215,14 +233,18 @@ const Products = () => {
         price: parseFloat(formData.price),
         inventory: parseInt(formData.inventory),
         images: images,
+        type: formData.type,
+        duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : undefined,
+        booking_required: formData.booking_required,
+        is_available: formData.is_available,
       };
 
+      let response;
       if (editingProduct) {
-        // Assuming updateProduct method exists or uses same create but with ID if supported
-        // For now using createProduct as update if ID is provided (need to check service)
-        await productService.createProduct(productData);
+        const formattedProductId = formatUUIDWithHyphens(editingProduct.id);
+        response = await productService.updateProduct(formattedProductId, productData);
       } else {
-        await productService.createProduct(productData);
+        response = await productService.createProduct(productData);
       }
 
       toast({
@@ -244,7 +266,8 @@ const Products = () => {
     if (!confirm(`Are you sure you want to delete this product?`)) return;
 
     try {
-      await productService.deleteProduct(productId);
+      const formattedProductId = formatUUIDWithHyphens(productId);
+      await productService.deleteProduct(formattedProductId);
       
       toast({
         title: "Success",
