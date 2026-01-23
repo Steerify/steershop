@@ -43,6 +43,7 @@ import { useTour } from "@/hooks/useTour";
 import { TourTooltip } from "@/components/tours/TourTooltip";
 import { myStoreTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
+import { Shop } from "@/types/api";
 
 
 const shopSchema = z
@@ -219,18 +220,41 @@ const MyStore = () => {
           ? "paystack"
           : "bank_transfer";
 
-      // Format shop ID for update if needed
-      const formattedShopId = shop?.id ? formatUUIDWithHyphens(shop.id) : shop?.id;
-      
-      await shopService.updateShop(formattedShopId, {
-        ...formData,
+      const shopData: Partial<Shop> = {
+        shop_name: formData.shop_name,
+        shop_slug: formData.shop_slug,
+        description: formData.description,
+        whatsapp_number: formData.whatsapp_number,
+        logo_url: formData.logo_url,
+        banner_url: formData.banner_url,
         payment_method,
-      });
+        bank_account_name: formData.bank_account_name,
+        bank_name: formData.bank_name,
+        bank_account_number: formData.bank_account_number,
+        paystack_public_key: formData.paystack_public_key,
+      };
 
-      toast({ title: "Success", description: "Store updated" });
+      let currentShopId: string;
+
+      if (shop) {
+        currentShopId = formatUUIDWithHyphens(shop.id);
+        await shopService.updateShop(currentShopId, shopData);
+      } else {
+        const createReq = {
+          name: shopData.shop_name!,
+          slug: shopData.shop_slug!,
+          description: shopData.description || "",
+          whatsapp: shopData.whatsapp_number!,
+        };
+        const createRes = await shopService.createShop(createReq);
+        currentShopId = createRes.data.id;
+        await shopService.updateShop(currentShopId, shopData);
+      }
+
+      toast({ title: "Success", description: shop ? "Store updated" : "Store created" });
       loadShop();
     } catch (error: any) {
-      console.error("Error updating shop:", error);
+      console.error("Error saving shop:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to save store",
