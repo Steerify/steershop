@@ -43,6 +43,7 @@ import { useTour } from "@/hooks/useTour";
 import { TourTooltip } from "@/components/tours/TourTooltip";
 import { myStoreTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
+import { ShopAppearanceSettings } from "@/components/ShopAppearanceSettings";
 
 const shopSchema = z
   .object({
@@ -128,7 +129,25 @@ const MyStore = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    shop_name: string;
+    shop_slug: string;
+    description: string;
+    whatsapp_number: string;
+    enable_paystack: boolean;
+    enable_bank_transfer: boolean;
+    bank_account_name: string;
+    bank_name: string;
+    bank_account_number: string;
+    paystack_public_key: string;
+    logo_url: string;
+    banner_url: string;
+    primary_color: string;
+    secondary_color: string;
+    accent_color: string;
+    theme_mode: 'light' | 'dark' | 'auto';
+    font_style: 'modern' | 'classic' | 'playful' | 'elegant';
+  }>({
     shop_name: "",
     shop_slug: "",
     description: "",
@@ -141,6 +160,11 @@ const MyStore = () => {
     paystack_public_key: "",
     logo_url: "",
     banner_url: "",
+    primary_color: "#D4AF37",
+    secondary_color: "#2E1A47",
+    accent_color: "#FF6B35",
+    theme_mode: "auto",
+    font_style: "modern",
   });
 
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } =
@@ -193,6 +217,12 @@ const MyStore = () => {
         paystack_public_key: data.paystack_public_key || "",
         logo_url: data.logo_url || "",
         banner_url: data.banner_url || "",
+        // Appearance settings
+        primary_color: data.primary_color || "#D4AF37",
+        secondary_color: data.secondary_color || "#2E1A47",
+        accent_color: data.accent_color || "#FF6B35",
+        theme_mode: (data.theme_mode || "auto") as "light" | "dark" | "auto",
+        font_style: (data.font_style || "modern") as "modern" | "classic" | "playful" | "elegant",
       });
 
       // Also format the shop ID when fetching products
@@ -216,6 +246,16 @@ const MyStore = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+
+    // Validate shop ID exists before attempting update
+    if (!shop?.id) {
+      toast({
+        title: "Error",
+        description: "Unable to update store. Please refresh and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const parsed = shopSchema.safeParse(formData);
     if (!parsed.success) {
@@ -279,6 +319,13 @@ const MyStore = () => {
         // Clear Paystack key if disabled
         payload.paystack_public_key = "";
       }
+
+      // Add appearance settings
+      payload.primary_color = formData.primary_color;
+      payload.secondary_color = formData.secondary_color;
+      payload.accent_color = formData.accent_color;
+      payload.theme_mode = formData.theme_mode;
+      payload.font_style = formData.font_style;
 
       await shopService.updateShop(formattedShopId, payload);
 
@@ -581,6 +628,34 @@ const MyStore = () => {
             </form>
           </CardContent>
         </Card>
+
+        {/* Appearance Settings */}
+        <div className="mt-6">
+          <ShopAppearanceSettings
+            settings={{
+              primary_color: formData.primary_color,
+              secondary_color: formData.secondary_color,
+              accent_color: formData.accent_color,
+              theme_mode: formData.theme_mode,
+              font_style: formData.font_style,
+            }}
+            onChange={(newSettings) => setFormData({ ...formData, ...newSettings })}
+          />
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isSaving} 
+            className="w-full min-h-[48px] text-base mt-4"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Appearance"
+            )}
+          </Button>
+        </div>
 
         {shop && (
           <Card className="mt-6">
