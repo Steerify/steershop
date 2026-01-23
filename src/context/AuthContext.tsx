@@ -22,8 +22,6 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
-  refreshUserData: () => Promise<void>;
-
 }
 
 export interface SignUpData {
@@ -44,86 +42,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Convert Supabase user to AppUser by fetching profile
   // In your AuthContext.tsx - update the fetchUserProfile function:
-  // In fetchUserProfile function in AuthContext.tsx
-  const refreshUserData = async () => {
-    try {
-      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
-      if (supabaseUser) {
-        const appUser = await fetchUserProfile(supabaseUser);
-        setUser(appUser);
-      }
-    } catch (error) {
-      console.error('Error refreshing user data:', error);
-    }
-  };
-  const fetchUserProfile = async (supabaseUser: User): Promise<AppUser | null> => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', supabaseUser.id)
-        .single();
+// In fetchUserProfile function in AuthContext.tsx
+const fetchUserProfile = async (supabaseUser: User): Promise<AppUser | null> => {
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', supabaseUser.id)
+      .single();
 
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return null;
-      }
-
-      // Map database role string to UserRole enum
-      let role: UserRole;
-
-      // Debug log to see what's in the database
-      console.log('Database role value:', profile?.role);
-
-      // Handle null/undefined role first
-      if (!profile?.role) {
-        role = UserRole.CUSTOMER; // Default for new users
-      } else {
-        const dbRole = profile.role.toLowerCase();
-
-        switch (dbRole) {
-          case 'shop_owner':
-            role = UserRole.ENTREPRENEUR; // Maps to "ENTREPRENEUR"
-            break;
-          case 'admin':
-            role = UserRole.ADMIN; // Maps to "ADMIN"
-            break;
-          case 'customer':
-            role = UserRole.CUSTOMER; // Maps to "CUSTOMER"
-            break;
-          default:
-            console.warn('Unknown role in database, defaulting to CUSTOMER:', dbRole);
-            role = UserRole.CUSTOMER;
-        }
-      }
-
-      console.log('Mapped UserRole:', role);
-
-      // Check if entrepreneur has completed onboarding by checking if they have a shop
-      let onboardingCompleted = false;
-      if (role === UserRole.ENTREPRENEUR) {
-        const { data: shops } = await supabase
-          .from('shops')
-          .select('id')
-          .eq('owner_id', supabaseUser.id)
-          .limit(1);
-        onboardingCompleted = (shops && shops.length > 0) || false;
-      }
-
-      return {
-        id: supabaseUser.id,
-        email: profile?.email || supabaseUser.email || '',
-        role,
-        firstName: profile?.full_name?.split(' ')[0] || supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
-        lastName: profile?.full_name?.split(' ').slice(1).join(' ') || supabaseUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-        phone: profile?.phone || '',
-        onboardingCompleted,
-      };
-    } catch (err) {
-      console.error('Error in fetchUserProfile:', err);
+    if (error) {
+      console.error('Error fetching profile:', error);
       return null;
     }
-  };
+
+    // Map database role string to UserRole enum
+    let role: UserRole;
+    
+    // Debug log to see what's in the database
+    console.log('Database role value:', profile?.role);
+    
+    // Handle null/undefined role first
+    if (!profile?.role) {
+      role = UserRole.CUSTOMER; // Default for new users
+    } else {
+      const dbRole = profile.role.toLowerCase();
+      
+      switch (dbRole) {
+        case 'shop_owner':
+          role = UserRole.ENTREPRENEUR; // Maps to "ENTREPRENEUR"
+          break;
+        case 'admin':
+          role = UserRole.ADMIN; // Maps to "ADMIN"
+          break;
+        case 'customer':
+          role = UserRole.CUSTOMER; // Maps to "CUSTOMER"
+          break;
+        default:
+          console.warn('Unknown role in database, defaulting to CUSTOMER:', dbRole);
+          role = UserRole.CUSTOMER;
+      }
+    }
+
+    console.log('Mapped UserRole:', role);
+
+    // Check if entrepreneur has completed onboarding by checking if they have a shop
+    let onboardingCompleted = false;
+    if (role === UserRole.ENTREPRENEUR) {
+      const { data: shops } = await supabase
+        .from('shops')
+        .select('id')
+        .eq('owner_id', supabaseUser.id)
+        .limit(1);
+      onboardingCompleted = (shops && shops.length > 0) || false;
+    }
+
+    return {
+      id: supabaseUser.id,
+      email: profile?.email || supabaseUser.email || '',
+      role,
+      firstName: profile?.full_name?.split(' ')[0] || supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
+      lastName: profile?.full_name?.split(' ').slice(1).join(' ') || supabaseUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+      phone: profile?.phone || '',
+      onboardingCompleted,
+    };
+  } catch (err) {
+    console.error('Error in fetchUserProfile:', err);
+    return null;
+  }
+};
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -131,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (event, currentSession) => {
         console.log('Auth state changed:', event);
         setSession(currentSession);
-
+        
         if (currentSession?.user) {
           // Defer profile fetch with setTimeout to avoid deadlock
           setTimeout(() => {
@@ -175,7 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Map frontend role to database role
       const dbRole = data.role === UserRole.ENTREPRENEUR ? 'shop_owner' : 'customer';
-
+      
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -226,7 +213,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (window.google?.accounts?.id) {
       window.google.accounts.id.disableAutoSelect();
     }
-
+    
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
@@ -247,17 +234,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
+    <AuthContext.Provider value={{ 
+      user, 
       session,
-      isLoading,
-      signIn,
-      signUp,
+      isLoading, 
+      signIn, 
+      signUp, 
       signInWithGoogle,
       signOut,
       resetPassword,
-      refreshUserData,
-
     }}>
       {children}
     </AuthContext.Provider>

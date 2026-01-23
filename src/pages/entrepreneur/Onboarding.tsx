@@ -14,13 +14,13 @@ import logo from "@/assets/steersolo-logo.jpg";
 import { cn } from "@/lib/utils";
 import { PhoneVerification } from "@/components/auth/PhoneVerification";
 import { supabase } from "@/integrations/supabase/client";
-import { UserRole } from "@/types/api";
+import { UserRole } from "@/types/api"; // ADD THIS IMPORT
 
 type OnboardingStep = "phone" | "questions" | "complete";
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { user, refreshUserData } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("phone");
@@ -152,16 +152,14 @@ const Onboarding = () => {
       description: "You can complete this anytime from settings.",
     });
     
-    // Refresh user data to ensure we have the latest role
-    if (refreshUserData) {
-      await refreshUserData();
-    }
-    
-    // Add small delay to ensure ProtectedRoute sees updated role
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Navigate based on the user role from AuthContext
-    if (user?.role === UserRole.ENTREPRENEUR) {
+    // Redirect based on actual database role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user?.id || '')
+      .single();
+      
+    if (profile?.role === 'shop_owner') {
       navigate("/dashboard");
     } else {
       navigate("/customer_dashboard");
@@ -186,16 +184,14 @@ const Onboarding = () => {
         description: "Welcome to SteerSolo.",
       });
 
-      // Refresh user data in AuthContext to ensure role is up-to-date
-      if (refreshUserData) {
-        await refreshUserData();
-      }
-      
-      // Add a small delay to ensure ProtectedRoute sees the updated role
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Navigate based on the user role from AuthContext (which should now be updated)
-      if (user?.role === UserRole.ENTREPRENEUR) {
+      // Redirect based on actual database role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user?.id || '')
+        .single();
+        
+      if (profile?.role === 'shop_owner') {
         navigate("/dashboard");
       } else {
         navigate("/customer_dashboard");

@@ -9,10 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
 import { UserRole } from "@/types/api";
-import { useAuth } from "@/context/AuthContext";
 
 const RoleSelection = () => {
-  const { refreshUserData } = useAuth(); 
   const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
@@ -116,12 +114,7 @@ const RoleSelection = () => {
         title: "Role selected!",
         description: `Welcome as ${selectedRole === UserRole.ENTREPRENEUR ? "an Entrepreneur" : "a Customer"}`,
       });
-      // Refresh the user data in AuthContext
-      await refreshUserData?.(); // This will update the role in AuthContext
-      
-      // Add a small delay to ensure state is updated
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       // Always send to onboarding first for both roles
       navigate("/onboarding");
 
