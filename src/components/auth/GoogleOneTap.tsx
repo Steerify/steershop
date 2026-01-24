@@ -62,7 +62,7 @@ export const GoogleOneTap = () => {
       callback: handleCredentialResponse,
       auto_select: true,
       cancel_on_tap_outside: true,
-      use_fedcm_for_prompt: true,
+      use_fedcm_for_prompt: false, // Disabled to avoid nonce mismatch with Supabase
     });
 
     // Show the One Tap prompt
