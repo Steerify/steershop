@@ -83,7 +83,7 @@ export const GoogleSignInButton = ({
     window.google.accounts.id.initialize({
       client_id: clientId,
       callback: handleCredentialResponse,
-      use_fedcm_for_prompt: true,
+      use_fedcm_for_prompt: false, // Disabled to avoid nonce mismatch with Supabase
     });
 
     // Render the personalized button
