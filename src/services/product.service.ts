@@ -12,6 +12,9 @@ export interface CreateProductRequest {
   inventory: number;
   images: ProductImage[];
   type?: 'product' | 'service';
+  duration_minutes?: number;
+  booking_required?: boolean;
+  is_available?: boolean;
 }
 
 const productService = {
@@ -87,6 +90,9 @@ const productService = {
       averageRating: p.average_rating ? Number(p.average_rating) : undefined,
       totalReviews: p.total_reviews || 0,
       type: p.type as 'product' | 'service' | undefined,
+      is_available: p.is_available,
+      duration_minutes: p.duration_minutes,
+      booking_required: p.booking_required,
     }));
 
     return {
@@ -127,6 +133,9 @@ const productService = {
       averageRating: product.average_rating ? Number(product.average_rating) : undefined,
       totalReviews: product.total_reviews || 0,
       type: product.type as 'product' | 'service' | undefined,
+      is_available: product.is_available,
+      duration_minutes: product.duration_minutes,
+      booking_required: product.booking_required,
     };
 
     return {
@@ -145,6 +154,9 @@ const productService = {
     if (data.inventory !== undefined) updateData.stock_quantity = data.inventory;
     if (data.images && data.images.length > 0) updateData.image_url = data.images[0].url;
     if (data.type) updateData.type = data.type;
+    if (data.duration_minutes !== undefined) updateData.duration_minutes = data.duration_minutes;
+    if (data.booking_required !== undefined) updateData.booking_required = data.booking_required;
+    if (data.is_available !== undefined) updateData.is_available = data.is_available;
 
     const { data: product, error } = await supabase
       .from('products')

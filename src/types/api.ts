@@ -102,6 +102,9 @@ export interface Product {
   totalReviews?: number;
   type?: 'product' | 'service';
   reviews?: any[];
+  is_available?: boolean;
+  duration_minutes?: number;
+  booking_required?: boolean;
 }
 
 export interface OrderItem {
