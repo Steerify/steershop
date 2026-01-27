@@ -724,10 +724,27 @@ const Dashboard = () => {
               </div>
               <CardTitle className="font-heading group-hover:text-pink-500 transition-colors text-sm sm:text-base lg:text-lg truncate flex items-center gap-2">
                 Marketing
-                <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/20">Business</Badge>
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm line-clamp-2">
                 Create posters with AI
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card 
+            className="group hover:shadow-xl hover:shadow-cyan-500/10 transition-all cursor-pointer border-cyan-500/10 hover:border-cyan-500/30 relative overflow-hidden"
+            onClick={() => navigate("/marketing-services")}
+          >
+            <CardHeader className="p-3 sm:p-4 lg:p-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-cyan-500/20 to-accent/20 rounded-xl sm:rounded-2xl flex items-center justify-center mb-2 sm:mb-3 lg:mb-4 group-hover:scale-110 transition-transform">
+                <Target className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-cyan-500" />
+              </div>
+              <CardTitle className="font-heading group-hover:text-cyan-500 transition-colors text-sm sm:text-base lg:text-lg truncate flex items-center gap-2">
+                Services
+                <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/20">Business</Badge>
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm line-clamp-2">
+                Google & Ad consultations
               </CardDescription>
             </CardHeader>
           </Card>

@@ -46,6 +46,10 @@ import offerService from "@/services/offer.service";
 import { TypewriterEffect } from "@/components/TypewriterEffect";
 import { FeaturedShopsBanner } from "@/components/FeaturedShopsBanner";
 import { SocialProofStats } from "@/components/SocialProofStats";
+import { UrgencyBanner } from "@/components/UrgencyBanner";
+import { HomepageReviews } from "@/components/HomepageReviews";
+import { HowItWorks } from "@/components/HowItWorks";
+import { TrustBadgesSection } from "@/components/TrustBadgesSection";
 
 const Index = () => {
   const [activeAudience, setActiveAudience] = useState<"customers" | "entrepreneurs">("entrepreneurs");
@@ -80,6 +84,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <UrgencyBanner />
       <Navbar />
       
       {/* ================= SMART HEADER WITH AUDIENCE TOGGLE ================= */}
@@ -175,17 +180,22 @@ const Index = () => {
       {activeAudience === "entrepreneurs" ? (
         <>
           <TheSteerSoloWaySection />
+          <HowItWorks />
           <GrowthJourneySection />
+          <HomepageReviews />
           <OutcomesGridSection />
-          <TestimonialsSection />
         </>
       ) : (
         <>
           <CustomerBenefitsSection />
           <ShopCategoriesSection />
+          <HomepageReviews />
           <TrustSignalsSection />
         </>
       )}
+
+      {/* ================= TRUST BADGES ================= */}
+      <TrustBadgesSection />
 
       {/* ================= SHARED VALUE PROPOSITION ================= */}
       <SharedValueProposition />

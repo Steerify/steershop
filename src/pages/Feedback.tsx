@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Send, MessageSquare } from "lucide-react";
+import { ArrowLeft, Send, MessageSquare, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import feedbackService from "@/services/feedback.service";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
+import { cn } from "@/lib/utils";
 
 const Feedback = () => {
   const { user } = useAuth();
@@ -26,6 +27,8 @@ const Feedback = () => {
   const [feedbackType, setFeedbackType] = useState("complaint");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [rating, setRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -50,6 +53,7 @@ const Feedback = () => {
         feedback_type: feedbackType,
         subject,
         message,
+        rating: rating > 0 ? rating : undefined,
       });
 
       toast({
@@ -63,6 +67,7 @@ const Feedback = () => {
       setFeedbackType("complaint");
       setSubject("");
       setMessage("");
+      setRating(0);
     } catch (error: any) {
       // Error is already handled by handleApiError in most cases, 
       // but toast can be kept if we want specialized messages.
@@ -145,7 +150,32 @@ const Feedback = () => {
                     <SelectItem value="suggestion">💡 Suggestion</SelectItem>
                     <SelectItem value="other">📝 Other</SelectItem>
                   </SelectContent>
-                </Select>
+              </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Rate Your Experience (Optional)</Label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      onMouseEnter={() => setHoveredRating(star)}
+                      onMouseLeave={() => setHoveredRating(0)}
+                      className="p-1 transition-transform hover:scale-110"
+                    >
+                      <Star
+                        className={cn(
+                          "w-8 h-8 transition-colors",
+                          (hoveredRating || rating) >= star
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-muted-foreground"
+                        )}
+                      />
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-2">

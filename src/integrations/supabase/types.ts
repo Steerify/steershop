@@ -442,6 +442,66 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_services: {
+        Row: {
+          amount: number | null
+          consultation_date: string | null
+          consultation_notes: string | null
+          created_at: string | null
+          google_profile_url: string | null
+          id: string
+          payment_reference: string | null
+          payment_status: string | null
+          service_type: string
+          shop_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: number | null
+          consultation_date?: string | null
+          consultation_notes?: string | null
+          created_at?: string | null
+          google_profile_url?: string | null
+          id?: string
+          payment_reference?: string | null
+          payment_status?: string | null
+          service_type: string
+          shop_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number | null
+          consultation_date?: string | null
+          consultation_notes?: string | null
+          created_at?: string | null
+          google_profile_url?: string | null
+          id?: string
+          payment_reference?: string | null
+          payment_status?: string | null
+          service_type?: string
+          shop_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_services_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_services_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_responses: {
         Row: {
           biggest_struggle: string | null
@@ -627,6 +687,8 @@ export type Database = {
           feedback_type: string
           id: string
           message: string
+          rating: number | null
+          show_on_homepage: boolean | null
           status: string
           subject: string
           updated_at: string
@@ -639,6 +701,8 @@ export type Database = {
           feedback_type?: string
           id?: string
           message: string
+          rating?: number | null
+          show_on_homepage?: boolean | null
           status?: string
           subject: string
           updated_at?: string
@@ -651,6 +715,8 @@ export type Database = {
           feedback_type?: string
           id?: string
           message?: string
+          rating?: number | null
+          show_on_homepage?: boolean | null
           status?: string
           subject?: string
           updated_at?: string
@@ -1556,6 +1622,10 @@ export type Database = {
           display_order: number | null
           features: Json | null
           id: string
+          includes_business_profile: boolean | null
+          includes_google_setup: boolean | null
+          includes_organic_marketing: boolean | null
+          includes_seo: boolean | null
           is_active: boolean | null
           max_products: number | null
           name: string
@@ -1571,6 +1641,10 @@ export type Database = {
           display_order?: number | null
           features?: Json | null
           id?: string
+          includes_business_profile?: boolean | null
+          includes_google_setup?: boolean | null
+          includes_organic_marketing?: boolean | null
+          includes_seo?: boolean | null
           is_active?: boolean | null
           max_products?: number | null
           name: string
@@ -1586,6 +1660,10 @@ export type Database = {
           display_order?: number | null
           features?: Json | null
           id?: string
+          includes_business_profile?: boolean | null
+          includes_google_setup?: boolean | null
+          includes_organic_marketing?: boolean | null
+          includes_seo?: boolean | null
           is_active?: boolean | null
           max_products?: number | null
           name?: string
