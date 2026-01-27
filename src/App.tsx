@@ -9,6 +9,7 @@ import { PageLoadingSkeleton } from "@/components/PageLoadingSkeleton";
 import { SessionExpiryModal } from "@/components/SessionExpiryModal";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { PlatformReviewPopup } from "@/components/PlatformReviewPopup";
 import { UserRole } from "@/types/api";
 
 // Eager load critical pages
@@ -57,6 +58,7 @@ const Pricing = lazy(() => import("./pages/Pricing"));
 const Subscription = lazy(() => import("./pages/Subscription"));
 const SetupService = lazy(() => import("./pages/SetupService"));
 const Marketing = lazy(() => import("./pages/entrepreneur/Marketing"));
+const MarketingServices = lazy(() => import("./pages/entrepreneur/MarketingServices"));
 const PosterEditor = lazy(() => import("./pages/entrepreneur/PosterEditor"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 
@@ -76,6 +78,7 @@ const App = () => (
       >
         <GoogleOneTap />
         <SessionExpiryModal />
+        <PlatformReviewPopup />
         <Suspense fallback={<PageLoadingSkeleton />}>
           <Routes>
             {/* Public routes */}
@@ -151,6 +154,11 @@ const App = () => (
             <Route path="/marketing/editor/:id?" element={
               <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
                 <PosterEditor />
+              </ProtectedRoute>
+            } />
+            <Route path="/marketing-services" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <MarketingServices />
               </ProtectedRoute>
             } />
             
