@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Shop } from '@/types/api';
+import activityLogService from './activity-log.service';
 
 export interface CreateShopRequest {
   name: string;
@@ -37,6 +38,15 @@ const shopService = {
       console.error('Create shop error:', error);
       throw new Error(error.message);
     }
+
+    // Log activity
+    activityLogService.log({
+      action_type: 'create',
+      resource_type: 'shop',
+      resource_id: shop.id,
+      resource_name: shop.shop_name,
+      details: { slug: shop.shop_slug }
+    });
 
     return { 
       success: true, 
@@ -231,6 +241,15 @@ const shopService = {
       console.error('Update shop error:', error);
       throw new Error(error.message);
     }
+
+    // Log activity
+    activityLogService.log({
+      action_type: 'update',
+      resource_type: 'shop',
+      resource_id: shop.id,
+      resource_name: shop.shop_name,
+      details: { updated_fields: Object.keys(updateData) }
+    });
 
     const mappedShop: Shop = {
       id: shop.id,

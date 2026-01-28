@@ -47,6 +47,7 @@ const AdminFeedback = lazy(() => import("./pages/admin/AdminFeedback"));
 const AdminReferrals = lazy(() => import("./pages/admin/AdminReferrals"));
 const AdminTopSeller = lazy(() => import("./pages/admin/AdminTopSeller"));
 const AdminFeaturedShops = lazy(() => import("./pages/admin/AdminFeaturedShops"));
+const AdminActivityLogs = lazy(() => import("./pages/admin/AdminActivityLogs"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const DemoStoreFront = lazy(() => import("./pages/DemoStoreFront"));
 const Onboarding = lazy(() => import("./pages/entrepreneur/Onboarding"));
@@ -91,6 +92,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/shops" element={<Shops />} />
             <Route path="/shop/:slug" element={<ShopStorefront />} />
+            <Route path="/s/:slug" element={<ShopStorefront />} />
             <Route path="/shop/:slug/product/:productId" element={<ProductDetails />} />
             <Route path="/demo" element={<DemoStoreFront />} />
             <Route path="/terms" element={<TermsOfService />} />
@@ -243,6 +245,11 @@ const App = () => (
             <Route path="/admin/feedback" element={
               <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
                 <AdminFeedback />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/activity-logs" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminActivityLogs />
               </ProtectedRoute>
             } />
             
