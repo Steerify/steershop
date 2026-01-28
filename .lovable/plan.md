@@ -1,368 +1,474 @@
 
-# Comprehensive SteerSolo Enhancement Plan
 
-## Overview
-This plan covers four major areas:
-1. **Subscription Plan Updates** - Differentiate Pro and Business plans with marketing services
-2. **Platform Review System** - Star rating popup with homepage showcase
-3. **Marketing Services Integration** - Google My Business, SEO, and consultation booking
-4. **Homepage Redesign with CRO** - Conversion rate optimization overhaul
+# SteerSolo Comprehensive Enhancement Plan
+
+## Executive Summary
+
+This plan addresses four major areas:
+1. **Shop Owner CRUD & Product/Service Display Fixes** - Fix issues in product service, frontend display, and data handling
+2. **Admin Activity Logging System** - Create comprehensive audit trail for all platform activities
+3. **Custom Subdomains (shopname.steersolo.com)** - Custom subdomain routing for stores
+4. **Frontend Optimization for Quick Signup/Login** - Streamline user onboarding with reduced text
 
 ---
 
-## Part 1: Subscription Plan Updates
+## Part 1: Shop Owner CRUD & Display Fixes
 
-### Current State
-- **Basic**: ₦1,000/month - 20 products, basic features
-- **Pro**: ₦3,000/month - 100 products, AI features, priority support
-- **Business**: ₦5,000/month - Unlimited products, all AI features
+### Issues Identified
 
-### Proposed Changes
+| Issue | Location | Details |
+|-------|----------|---------|
+| Products not saving `duration_minutes` and `booking_required` | `product.service.ts` line 30-41 | These fields are missing from the INSERT statement |
+| Services not displaying correctly | `ShopStorefront.tsx` | Type casting needs validation |
+| Product image not updating correctly | `product.service.ts` line 155 | Conditional check may skip update |
+| `getProducts` filters out unavailable items | `product.service.ts` line 64 | Shop owners can't see their own unavailable products |
+| Missing error handling in product operations | Multiple files | API errors not properly caught/displayed |
 
-#### Pro Plan Updates
-| Feature | Current | New |
-|---------|---------|-----|
-| Business Profile Setup | Not included | Included (Done-for-you profile) |
-| Products | 100 | 100 |
-| AI Features | Enabled | Enabled |
+### Fixes Required
 
-#### Business Plan Updates
-| Feature | Current | New |
-|---------|---------|-----|
-| Organic Marketing | Not included | Included |
-| Google My Business Setup | Not included | Included |
-| SEO Optimization | Not included | Included |
-| YouTube/Google Ads | Not included | Add-on (Consultation required) |
-| Google Profile Dashboard Access | Not included | Included |
+#### 1.1 Fix Product Service - Save All Service Fields
 
-### Database Changes
-```sql
--- Add marketing services columns to subscription_plans
-ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS 
-  includes_business_profile BOOLEAN DEFAULT false;
-ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS 
-  includes_google_setup BOOLEAN DEFAULT false;
-ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS 
-  includes_seo BOOLEAN DEFAULT false;
-ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS 
-  includes_organic_marketing BOOLEAN DEFAULT false;
+```typescript
+// product.service.ts line 28-41
+// CURRENT: Missing duration_minutes and booking_required in insert
+const { data: product, error } = await supabase
+  .from('products')
+  .insert({
+    shop_id: data.shopId,
+    name: data.name,
+    description: data.description,
+    price: data.price,
+    stock_quantity: data.inventory,
+    image_url: primaryImage,
+    type: data.type || 'product',
+    is_available: true,
+    // MISSING: duration_minutes, booking_required
+  })
 
--- Create marketing_services table for add-on tracking
-CREATE TABLE marketing_services (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  shop_id UUID REFERENCES shops(id) ON DELETE CASCADE,
-  service_type TEXT NOT NULL, -- 'youtube_ads', 'google_ads', 'consultation'
-  status TEXT DEFAULT 'pending', -- pending, scheduled, in_progress, completed
-  consultation_date TIMESTAMPTZ,
-  consultation_notes TEXT,
-  amount INTEGER, -- Additional cost in kobo
-  payment_reference TEXT,
-  payment_status TEXT DEFAULT 'pending',
-  google_profile_url TEXT, -- Shop owner's Google profile link
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Update plan features
-UPDATE subscription_plans SET 
-  includes_business_profile = true,
-  features = jsonb_build_array(
-    'Up to 100 products',
-    'Done-for-you Business Profile',
-    'Advanced analytics',
-    'AI Shop Assistant',
-    'Paystack direct payments',
-    'Priority support'
-  )
-WHERE slug = 'pro';
-
-UPDATE subscription_plans SET 
-  includes_google_setup = true,
-  includes_seo = true,
-  includes_organic_marketing = true,
-  features = jsonb_build_array(
-    'Unlimited products',
-    'Full analytics suite',
-    'All AI features',
-    'Google My Business Setup',
-    'SEO Optimization',
-    'Organic Marketing Strategy',
-    'Priority support',
-    'Custom domain (coming soon)',
-    'Add-on: YouTube/Google Ads (consultation required)'
-  )
-WHERE slug = 'business';
+// FIX: Add missing fields
+.insert({
+  shop_id: data.shopId,
+  name: data.name,
+  description: data.description,
+  price: data.price,
+  stock_quantity: data.inventory,
+  image_url: primaryImage,
+  type: data.type || 'product',
+  is_available: data.is_available !== undefined ? data.is_available : true,
+  duration_minutes: data.duration_minutes || null,
+  booking_required: data.booking_required || false,
+})
 ```
 
-### Files to Create/Modify
-| File | Action | Purpose |
-|------|--------|---------|
-| `src/pages/entrepreneur/MarketingServices.tsx` | Create | Dashboard for Google profile access, consultation booking |
-| `src/services/marketing-services.service.ts` | Create | API for marketing services CRUD |
-| `src/components/ConsultationBooking.tsx` | Create | Modal for booking ads consultation |
-| `src/pages/Dashboard.tsx` | Modify | Add "Marketing Services" quick action for Business users |
-| `src/pages/entrepreneur/Marketing.tsx` | Modify | Add Google profile section for Business users |
-| `src/components/SubscriptionCard.tsx` | Modify | Display new features for each plan |
+#### 1.2 Fix Product Query for Shop Owners
+
+```typescript
+// product.service.ts - Allow shop owners to see unavailable products
+getProducts: async (params?: { shopId?: string; page?: number; limit?: number; includeUnavailable?: boolean }) => {
+  let query = supabase
+    .from('products')
+    .select('*', { count: 'exact' });
+
+  // Only filter by is_available if not explicitly requesting all
+  if (!params?.includeUnavailable) {
+    query = query.eq('is_available', true);
+  }
+  // Rest of implementation...
+}
+```
+
+#### 1.3 Add Proper Error Display in Products Page
+
+```typescript
+// Products.tsx - Add toast on API errors
+} catch (error: any) {
+  toast({
+    title: "Error",
+    description: error.message || "Failed to save product",
+    variant: "destructive",
+  });
+}
+```
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/services/product.service.ts` | Add `duration_minutes`, `booking_required`, `is_available` to insert; fix update logic |
+| `src/pages/Products.tsx` | Add proper error handling, verify form data mapping |
+| `src/pages/ShopStorefront.tsx` | Verify type handling for services |
+| `src/pages/Orders.tsx` | Add service type indicator in order items |
 
 ---
 
-## Part 2: Platform Star Review System
+## Part 2: Admin Activity Logging System
 
 ### Overview
-- Popup prompting users to rate SteerSolo (1-5 stars)
-- Only show 4-5 star reviews on homepage testimonials
-- Add star rating to feedback submission
 
-### Database Changes
+Create a comprehensive audit trail system to track all platform activities including:
+- User actions (login, signup, profile updates)
+- Shop actions (create, update, delete)
+- Order actions (status changes, payments)
+- Product actions (CRUD operations)
+- Admin actions (user management, settings changes)
+
+### Database Schema
+
 ```sql
--- Add rating column to platform_feedback
-ALTER TABLE platform_feedback ADD COLUMN IF NOT EXISTS 
-  rating INTEGER CHECK (rating >= 1 AND rating <= 5);
-ALTER TABLE platform_feedback ADD COLUMN IF NOT EXISTS 
-  show_on_homepage BOOLEAN DEFAULT false;
+-- Create activity_logs table
+CREATE TABLE public.activity_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  user_email TEXT,
+  action_type TEXT NOT NULL, -- 'create', 'update', 'delete', 'login', 'logout', etc.
+  resource_type TEXT NOT NULL, -- 'shop', 'product', 'order', 'user', 'booking', etc.
+  resource_id UUID,
+  resource_name TEXT,
+  details JSONB DEFAULT '{}',
+  ip_address TEXT,
+  user_agent TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  metadata JSONB DEFAULT '{}'
+);
+
+-- Index for efficient querying
+CREATE INDEX idx_activity_logs_user_id ON activity_logs(user_id);
+CREATE INDEX idx_activity_logs_resource_type ON activity_logs(resource_type);
+CREATE INDEX idx_activity_logs_created_at ON activity_logs(created_at DESC);
+CREATE INDEX idx_activity_logs_action_type ON activity_logs(action_type);
+
+-- Enable RLS
+ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
+
+-- Only admins can view activity logs
+CREATE POLICY "Admins can view all activity logs" ON activity_logs
+  FOR SELECT USING (has_role(auth.uid(), 'admin'));
+
+-- System can insert logs (via edge function or service role)
+CREATE POLICY "System can insert activity logs" ON activity_logs
+  FOR INSERT WITH CHECK (true);
 ```
 
-### Components to Create
-| Component | Purpose |
-|-----------|---------|
-| `src/components/PlatformReviewPopup.tsx` | Modal popup for star rating + feedback |
-| `src/components/HomepageReviews.tsx` | Display approved reviews on homepage |
+### Activity Log Service
 
-### Popup Logic
-- Show after user completes first order OR after 5 days of signup
-- Dismiss for 30 days if closed
-- On submit: save to platform_feedback with rating
-- Admin can mark reviews as "show_on_homepage"
-
-### Files to Modify
-| File | Changes |
-|------|---------|
-| `src/pages/Feedback.tsx` | Add star rating component |
-| `src/pages/Index.tsx` | Replace static testimonials with HomepageReviews component |
-| `src/pages/admin/AdminFeedback.tsx` | Add "Show on Homepage" toggle |
-| `src/services/feedback.service.ts` | Fix to actually insert into platform_feedback table |
-| `src/App.tsx` | Add PlatformReviewPopup with conditional display |
-
----
-
-## Part 3: Homepage Redesign with CRO
-
-### Current Issues Identified
-1. Hero section is text-heavy, lacks urgency
-2. No clear social proof numbers above the fold
-3. Testimonials are static, not dynamic
-4. Missing trust badges and verification indicators
-5. Pricing section buried at bottom
-6. No exit-intent or urgency triggers
-
-### CRO Improvements
-
-#### Above the Fold Optimizations
-1. **Add urgency banner** - "Join 500+ Nigerian businesses already growing"
-2. **Simplified hero** - One clear value proposition
-3. **Trust badges** - Payment security, verified businesses count
-4. **Floating stats bar** - Real-time stats (shops, products, orders)
-
-#### Social Proof Enhancements
-1. **Dynamic review carousel** - Show real 4-5 star platform reviews
-2. **Live activity feed** - "Amaka just opened her store" notifications
-3. **Success metrics** - Revenue processed, orders completed
-
-#### Call-to-Action Improvements
-1. **Sticky CTA button** on mobile
-2. **Exit-intent popup** with trial offer
-3. **Comparison table** - Before/After SteerSolo
-
-#### Trust & Credibility
-1. **Nigerian market focus** - Localized messaging
-2. **Payment partners** - Paystack logo, bank logos
-3. **Media mentions** (if any)
-
-### New Homepage Sections Structure
-```text
-1. Urgency Banner (NEW)
-2. Hero with Audience Toggle (IMPROVED)
-3. Floating Stats Bar (NEW)
-4. Featured Shops Banner (existing)
-5. Problem/Solution Section (IMPROVED)
-6. Dynamic Platform Reviews (NEW - replaces static testimonials)
-7. How It Works (IMPROVED - 3 step visual)
-8. Pricing Comparison (MOVED UP)
-9. Success Stories (IMPROVED - with real metrics)
-10. Trust Badges Section (NEW)
-11. Final CTA with Urgency (IMPROVED)
-```
-
-### Files to Create
-| File | Purpose |
-|------|---------|
-| `src/components/UrgencyBanner.tsx` | Top banner with countdown/live count |
-| `src/components/FloatingStatsBar.tsx` | Sticky stats showing live metrics |
-| `src/components/HomepageReviews.tsx` | Dynamic platform reviews from DB |
-| `src/components/HowItWorks.tsx` | Visual 3-step process |
-| `src/components/TrustBadgesSection.tsx` | Payment partners, verification |
-| `src/components/ExitIntentPopup.tsx` | Capture leaving visitors |
-| `src/components/LiveActivityFeed.tsx` | Real-time signup notifications |
-
-### Files to Modify
-| File | Changes |
-|------|---------|
-| `src/pages/Index.tsx` | Complete redesign with CRO sections |
-| `src/components/SocialProofStats.tsx` | Add real data from database |
-
----
-
-## Part 4: Technical Implementation Details
-
-### Priority Order
-1. **Database migrations** (foundation for all features)
-2. **Feedback service fix** + Star rating
-3. **Platform review popup**
-4. **Homepage reviews component**
-5. **Subscription plan updates**
-6. **Marketing services dashboard**
-7. **Homepage CRO redesign**
-
-### New Service: Marketing Services
 ```typescript
-// src/services/marketing-services.service.ts
-interface MarketingService {
-  id: string;
-  shop_id: string;
-  service_type: 'youtube_ads' | 'google_ads' | 'consultation';
-  status: string;
-  consultation_date?: string;
-  google_profile_url?: string;
-  amount?: number;
+// src/services/activity-log.service.ts
+interface ActivityLogEntry {
+  action_type: 'create' | 'update' | 'delete' | 'login' | 'logout' | 'view' | 'export' | 'approve' | 'reject';
+  resource_type: 'shop' | 'product' | 'order' | 'booking' | 'user' | 'review' | 'subscription' | 'payment';
+  resource_id?: string;
+  resource_name?: string;
+  details?: Record<string, any>;
 }
 
-const marketingServicesService = {
-  requestConsultation: async (shopId: string, serviceType: string) => {...},
-  updateGoogleProfile: async (shopId: string, profileUrl: string) => {...},
-  getServicesByShop: async (shopId: string) => {...},
+const activityLogService = {
+  log: async (entry: ActivityLogEntry) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    await supabase.from('activity_logs').insert({
+      user_id: user?.id,
+      user_email: user?.email,
+      action_type: entry.action_type,
+      resource_type: entry.resource_type,
+      resource_id: entry.resource_id,
+      resource_name: entry.resource_name,
+      details: entry.details,
+      user_agent: navigator.userAgent,
+    });
+  },
+  
+  getActivityLogs: async (params: {
+    page?: number;
+    limit?: number;
+    resource_type?: string;
+    action_type?: string;
+    user_id?: string;
+    start_date?: string;
+    end_date?: string;
+  }) => {
+    // Implementation for admin dashboard
+  }
 };
 ```
 
-### Platform Review Popup Component
-```typescript
-// src/components/PlatformReviewPopup.tsx
-// Shows after conditions met:
-// - User has made a purchase OR
-// - User signed up 5+ days ago
-// - Hasn't dismissed in last 30 days
+### Admin Activity Dashboard Page
 
-interface PlatformReviewPopupProps {
-  onClose: () => void;
-  onSubmit: (rating: number, feedback: string) => void;
-}
+Create `src/pages/admin/AdminActivityLogs.tsx`:
+- Filterable table showing all activities
+- Filter by: date range, action type, resource type, user
+- Export to CSV functionality
+- Real-time updates using Supabase realtime
+
+### Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/services/activity-log.service.ts` | Activity logging service |
+| `src/pages/admin/AdminActivityLogs.tsx` | Admin activity dashboard |
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/components/AdminSidebar.tsx` | Add "Activity Logs" menu item |
+| `src/App.tsx` | Add route for activity logs |
+| `src/services/product.service.ts` | Add activity logging on CRUD |
+| `src/services/shop.service.ts` | Add activity logging on CRUD |
+| `src/services/order.service.ts` | Add activity logging on status changes |
+| `src/context/AuthContext.tsx` | Add login/logout activity logging |
+
+---
+
+## Part 3: Custom Subdomains (shopname.steersolo.com)
+
+### Technical Assessment
+
+Implementing `shopname.steersolo.com` subdomains requires:
+
+1. **Wildcard DNS Configuration** - DNS A record for `*.steersolo.com`
+2. **Server-side Routing** - Handle subdomain extraction and routing
+3. **SSL Certificates** - Wildcard SSL for `*.steersolo.com`
+4. **Database Updates** - Store subdomain preferences
+
+### Current Architecture Limitation
+
+SteerSolo runs on Lovable/Vercel with static hosting. True subdomain routing requires:
+- Backend infrastructure changes (reverse proxy like Nginx or Cloudflare Workers)
+- Custom domain setup at the hosting level
+- This is NOT achievable purely in frontend code
+
+### Alternative Approaches
+
+#### Option A: Path-Based URLs (Current - `/shop/shopname`)
+- Already implemented
+- Works with current infrastructure
+- Example: `steersolo.com/shop/elegance-collections`
+
+#### Option B: Subdomain Redirect Service
+- Create a subdomain redirect that maps to paths
+- Requires external service (Cloudflare Workers, AWS Lambda)
+- User visits `shopname.steersolo.com` → redirects to `steersolo.com/shop/shopname`
+
+#### Option C: Custom Domain per Shop (Future)
+- Allow shop owners to connect their own domains
+- Use CNAME records pointing to `steersolo.com`
+- Requires SSL certificate management
+
+### Recommended Implementation
+
+**Phase 1 (Now)**: Improve path-based URLs with prettier links
+```text
+Current: steersolo.com/shop/my-store-slug
+Improved: steersolo.com/s/my-store-slug (shorter)
 ```
 
-### Homepage Reviews Query
-```sql
--- Fetch approved reviews for homepage
-SELECT 
-  customer_name,
-  message as quote,
-  rating,
-  created_at
-FROM platform_feedback
-WHERE show_on_homepage = true
-  AND rating >= 4
-ORDER BY rating DESC, created_at DESC
-LIMIT 6;
+**Phase 2 (Future)**: Subdomain support via edge workers
+- Requires infrastructure investment
+- Cloudflare Workers or Vercel Edge Middleware
+- Budget: Approximately $5-20/month
+
+### Frontend Changes for Phase 1
+
+```typescript
+// Add short URL route in App.tsx
+<Route path="/s/:slug" element={<ShopStorefront />} />
+
+// Update shop sharing component to use shorter URL
+const shareUrl = `${window.location.origin}/s/${shop.shop_slug}`;
 ```
 
 ---
 
-## Summary of All Database Changes
+## Part 4: Frontend Optimization for Quick Signup/Login
+
+### Issues Identified
+
+1. **Auth Page** (`src/pages/Auth.tsx`) - 552 lines, complex with too many form fields
+2. **Homepage** (`src/pages/Index.tsx`) - 1035 lines, information overload
+3. **Signup form** requires 6 fields upfront (email, password, first name, last name, phone, role)
+4. **No progressive disclosure** - all fields shown at once
+
+### Optimization Strategy
+
+#### 4.1 Simplified Auth Flow
+
+**Current Flow:**
+```text
+Login: Email + Password + Remember Me
+Signup: First Name + Last Name + Email + Phone + Password + Role Selection
+```
+
+**Proposed Flow:**
+```text
+Login: Email + Password (Google prominent)
+Signup: 
+  Step 1: Email + Password OR Google (primary)
+  Step 2: Role Selection (if new user)
+  Step 3: Profile completion (optional, dashboard prompt)
+```
+
+#### 4.2 Auth Page Redesign
+
+```typescript
+// Simplified Auth.tsx structure
+- Remove inline role selection from signup
+- Make Google Sign-In the primary action
+- Progressive form with 2 steps maximum
+- Collect name/phone later during onboarding
+```
+
+**Signup Form Reduction:**
+| Current | Proposed |
+|---------|----------|
+| First Name | → Move to onboarding |
+| Last Name | → Move to onboarding |
+| Phone | → Move to onboarding |
+| Email | Keep |
+| Password | Keep |
+| Role | → Separate page after signup |
+
+#### 4.3 Homepage Text Reduction
+
+Current sections with excessive text:
+- `EntrepreneurHero` - 5 bullet points + paragraph
+- `TheSteerSoloWaySection` - Multiple cards with descriptions
+- `GrowthJourneySection` - 3 cards with long text
+- Multiple testimonial sections
+
+**Proposed Changes:**
+1. **Hero**: Single value proposition + CTA (remove bullet list)
+2. **How It Works**: 3 icons only, one-liner each
+3. **Social Proof**: Numbers only, minimal text
+4. **Trust Badges**: Icons without lengthy descriptions
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/pages/Auth.tsx` | Simplify form, 2-step signup, prominent Google |
+| `src/pages/Index.tsx` | Reduce text, visual-first approach |
+| `src/pages/entrepreneur/Onboarding.tsx` | Add name/phone collection |
+| `src/components/HowItWorks.tsx` | Simplify to icons + one-liners |
+
+### Visual Improvements
+
+```text
+BEFORE (Auth Page):
+┌─────────────────────────────────────┐
+│  Welcome to SteerSolo               │
+│  Your business journey starts here  │
+│  ─────────────────────────────────  │
+│  [Login] [Sign Up]                  │
+│  ─────────────────────────────────  │
+│  [Google Button]                    │
+│  ─── or continue with email ───     │
+│  First Name: [_________]            │
+│  Last Name: [__________]            │
+│  Email: [______________]            │
+│  Phone: [______________]            │
+│  Password: [___________]            │
+│  Role: ○ Business ○ Customer        │
+│  [Create Account]                   │
+└─────────────────────────────────────┘
+
+AFTER (Auth Page):
+┌─────────────────────────────────────┐
+│           [SteerSolo Logo]          │
+│        Start Growing Today          │
+│                                     │
+│    [🔵 Continue with Google]        │
+│                                     │
+│    ─────── or ───────              │
+│                                     │
+│  Email: [______________]            │
+│  Password: [___________]            │
+│                                     │
+│  [Create Account / Login]           │
+│                                     │
+│  Already have account? [Login]      │
+└─────────────────────────────────────┘
+```
+
+---
+
+## Implementation Priority
+
+| Priority | Task | Effort | Impact |
+|----------|------|--------|--------|
+| 1 | Fix Product Service CRUD | 2 hours | High - Core functionality |
+| 2 | Simplify Auth Page | 3 hours | High - Conversion rate |
+| 3 | Homepage Text Reduction | 2 hours | Medium - User experience |
+| 4 | Admin Activity Logging | 4 hours | Medium - Audit compliance |
+| 5 | Short URL Route (/s/slug) | 30 mins | Low - Nice-to-have |
+| 6 | Custom Subdomains | Future | Low - Infrastructure needed |
+
+---
+
+## Technical Details
+
+### Database Migrations Required
 
 ```sql
--- 1. Platform feedback rating
-ALTER TABLE platform_feedback ADD COLUMN rating INTEGER CHECK (rating >= 1 AND rating <= 5);
-ALTER TABLE platform_feedback ADD COLUMN show_on_homepage BOOLEAN DEFAULT false;
-
--- 2. Subscription plan marketing features
-ALTER TABLE subscription_plans ADD COLUMN includes_business_profile BOOLEAN DEFAULT false;
-ALTER TABLE subscription_plans ADD COLUMN includes_google_setup BOOLEAN DEFAULT false;
-ALTER TABLE subscription_plans ADD COLUMN includes_seo BOOLEAN DEFAULT false;
-ALTER TABLE subscription_plans ADD COLUMN includes_organic_marketing BOOLEAN DEFAULT false;
-
--- 3. Marketing services tracking
-CREATE TABLE marketing_services (
+-- Migration 1: Activity Logs Table
+CREATE TABLE public.activity_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  shop_id UUID REFERENCES shops(id) ON DELETE CASCADE,
-  service_type TEXT NOT NULL,
-  status TEXT DEFAULT 'pending',
-  consultation_date TIMESTAMPTZ,
-  consultation_notes TEXT,
-  amount INTEGER,
-  payment_reference TEXT,
-  payment_status TEXT DEFAULT 'pending',
-  google_profile_url TEXT,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  user_email TEXT,
+  action_type TEXT NOT NULL,
+  resource_type TEXT NOT NULL,
+  resource_id UUID,
+  resource_name TEXT,
+  details JSONB DEFAULT '{}',
+  ip_address TEXT,
+  user_agent TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
+  metadata JSONB DEFAULT '{}'
 );
 
--- RLS for marketing_services
-ALTER TABLE marketing_services ENABLE ROW LEVEL SECURITY;
+CREATE INDEX idx_activity_logs_user_id ON activity_logs(user_id);
+CREATE INDEX idx_activity_logs_resource_type ON activity_logs(resource_type);
+CREATE INDEX idx_activity_logs_created_at ON activity_logs(created_at DESC);
 
-CREATE POLICY "Shop owners can manage their marketing services"
-  ON marketing_services FOR ALL
-  USING (EXISTS (SELECT 1 FROM shops WHERE shops.id = marketing_services.shop_id AND shops.owner_id = auth.uid()));
+ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
 
--- 4. Update plan features
-UPDATE subscription_plans SET 
-  includes_business_profile = true
-WHERE slug = 'pro';
+CREATE POLICY "Admins can view all activity logs" ON activity_logs
+  FOR SELECT USING (has_role(auth.uid(), 'admin'));
 
-UPDATE subscription_plans SET 
-  includes_google_setup = true,
-  includes_seo = true,
-  includes_organic_marketing = true
-WHERE slug = 'business';
+CREATE POLICY "Anyone can insert activity logs" ON activity_logs
+  FOR INSERT WITH CHECK (true);
 ```
 
----
+### Files Summary
 
-## Files Summary
+**New Files (4):**
+1. `src/services/activity-log.service.ts`
+2. `src/pages/admin/AdminActivityLogs.tsx`
+3. Database migration for activity_logs table
 
-### New Files (13)
-1. `src/components/PlatformReviewPopup.tsx`
-2. `src/components/HomepageReviews.tsx`
-3. `src/components/UrgencyBanner.tsx`
-4. `src/components/FloatingStatsBar.tsx`
-5. `src/components/HowItWorks.tsx`
-6. `src/components/TrustBadgesSection.tsx`
-7. `src/components/ExitIntentPopup.tsx`
-8. `src/components/LiveActivityFeed.tsx`
-9. `src/components/ConsultationBooking.tsx`
-10. `src/pages/entrepreneur/MarketingServices.tsx`
-11. `src/services/marketing-services.service.ts`
-12. Database migration SQL
-
-### Modified Files (9)
-1. `src/pages/Index.tsx` - Complete CRO redesign
-2. `src/pages/Feedback.tsx` - Add star rating
-3. `src/pages/Dashboard.tsx` - Add marketing services link
-4. `src/pages/entrepreneur/Marketing.tsx` - Google profile section
-5. `src/pages/admin/AdminFeedback.tsx` - Homepage toggle
-6. `src/services/feedback.service.ts` - Fix to use Supabase
-7. `src/components/SubscriptionCard.tsx` - New plan features
-8. `src/components/SocialProofStats.tsx` - Real data
-9. `src/App.tsx` - Add review popup
+**Modified Files (12):**
+1. `src/services/product.service.ts` - Fix CRUD fields
+2. `src/pages/Products.tsx` - Error handling
+3. `src/pages/Auth.tsx` - Simplify signup
+4. `src/pages/Index.tsx` - Reduce text
+5. `src/components/HowItWorks.tsx` - Simplify
+6. `src/components/AdminSidebar.tsx` - Add activity logs link
+7. `src/App.tsx` - Add routes
+8. `src/services/shop.service.ts` - Add logging
+9. `src/services/order.service.ts` - Add logging
+10. `src/context/AuthContext.tsx` - Add login logging
+11. `src/pages/entrepreneur/Onboarding.tsx` - Collect name/phone
+12. `src/pages/MyStore.tsx` - Share URL update
 
 ---
 
-## Expected Outcomes
+## Notes on Custom Subdomains
 
-### Conversion Rate Improvements
-- **Above-fold urgency**: +15-25% engagement
-- **Social proof**: +10-20% trust signals
-- **Star reviews**: +20-30% credibility
-- **Sticky CTAs**: +5-10% mobile conversions
+The request for `shopname.steersolo.com` configuration requires infrastructure-level changes that are outside the scope of frontend development. This would require:
 
-### Business Value
-- **Pro plan**: Clear differentiator with business profile
-- **Business plan**: Premium marketing services drive upgrades
-- **Add-on revenue**: YouTube/Google ads consultations
-- **User feedback**: Direct insights from star ratings
+1. **DNS Configuration**: Wildcard A record `*.steersolo.com` pointing to your server
+2. **Hosting Platform Support**: Vercel/Lovable needs to support wildcard domains
+3. **SSL Certificate**: Wildcard SSL for `*.steersolo.com`
+4. **Edge Middleware**: To parse subdomains and route to correct shops
+
+**Recommendation**: Use the improved path-based URL (`/s/shopname`) for now, and consider subdomain routing as a future infrastructure investment when the platform scales.
+
