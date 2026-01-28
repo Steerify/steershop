@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          resource_id: string | null
+          resource_name: string | null
+          resource_type: string
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_name?: string | null
+          resource_type: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_name?: string | null
+          resource_type?: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       auth_rate_limits: {
         Row: {
           attempt_type: string

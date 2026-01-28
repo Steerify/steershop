@@ -35,7 +35,9 @@ const productService = {
         stock_quantity: data.inventory,
         image_url: primaryImage,
         type: data.type || 'product',
-        is_available: true,
+        is_available: data.is_available !== undefined ? data.is_available : true,
+        duration_minutes: data.duration_minutes || null,
+        booking_required: data.booking_required || false,
       })
       .select()
       .single();
@@ -52,7 +54,7 @@ const productService = {
     };
   },
 
-  getProducts: async (params?: { shopId?: string; page?: number; limit?: number }) => {
+  getProducts: async (params?: { shopId?: string; page?: number; limit?: number; includeUnavailable?: boolean }) => {
     const page = params?.page || 1;
     const limit = params?.limit || 50;
     const from = (page - 1) * limit;
@@ -61,8 +63,12 @@ const productService = {
     let query = supabase
       .from('products')
       .select('*', { count: 'exact' })
-      .eq('is_available', true)
       .range(from, to);
+
+    // Only filter by is_available if not explicitly requesting all
+    if (!params?.includeUnavailable) {
+      query = query.eq('is_available', true);
+    }
 
     if (params?.shopId) {
       query = query.eq('shop_id', params.shopId);
