@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CanvasEditor } from "@/components/marketing/CanvasEditor";
 import { AIAssistant } from "@/components/marketing/AIAssistant";
-import { ArrowLeft, Loader2, Save, Sparkles, X } from "lucide-react";
+import { 
+  ArrowLeft, Loader2, Save, Sparkles, X, Download, 
+  FileImage, FileText, Layers, Undo, Redo, ZoomIn, ZoomOut 
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+// Helper to format UUID
+const formatUUID = (id: string) => {
+  if (!id) return id;
+  const clean = id.replace(/-/g, '');
+  if (clean.length === 32 && /^[a-f0-9]{32}$/i.test(clean)) {
+    return `${clean.slice(0,8)}-${clean.slice(8,12)}-${clean.slice(12,16)}-${clean.slice(16,20)}-${clean.slice(20)}`;
+  }
+  return id;
+};
 
 const PosterEditor = () => {
   const navigate = useNavigate();
@@ -24,141 +43,135 @@ const PosterEditor = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [posterName, setPosterName] = useState("Untitled Poster");
   const [canvasData, setCanvasData] = useState<any>(null);
-  const [shopData, setShopData] = useState<{ id: string; name: string } | null>(null);
+  const [shopData, setShopData] = useState<any>(null);
   const [showAI, setShowAI] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
+  const formattedPosterId = id ? formatUUID(id) : null;
+  const formattedTemplateId = templateId ? formatUUID(templateId) : null;
 
   useEffect(() => {
     if (user) {
       fetchShopData();
       loadPosterData();
     }
-  }, [user, id, templateId]);
+  }, [user, formattedPosterId, formattedTemplateId]);
 
   const fetchShopData = async () => {
-    if (!user) return;
     const { data } = await supabase
       .from("shops")
-      .select("id, shop_name")
-      .eq("owner_id", user.id)
+      .select("id, shop_name, logo_url")
+      .eq("owner_id", formatUUID(user!.id))
       .single();
 
-    if (data) {
-      setShopData({ id: data.id, name: data.shop_name });
-    }
+    if (data) setShopData(data);
   };
 
   const loadPosterData = async () => {
     setIsLoading(true);
     try {
-      if (id) {
-        // Load existing poster
-        const { data, error } = await supabase
+      if (formattedPosterId) {
+        const { data } = await supabase
           .from("user_posters")
           .select("*")
-          .eq("id", id)
+          .eq("id", formattedPosterId)
           .single();
 
-        if (error) throw error;
         if (data) {
           setPosterName(data.name);
           setCanvasData(data.canvas_data);
+          setHistory([data.canvas_data]);
+          setHistoryIndex(0);
         }
-      } else if (templateId) {
-        // Load template
-        const { data, error } = await supabase
+      } else if (formattedTemplateId) {
+        const { data } = await supabase
           .from("poster_templates")
           .select("*")
-          .eq("id", templateId)
+          .eq("id", formattedTemplateId)
           .single();
 
-        if (error) throw error;
         if (data) {
           setPosterName(`${data.name} - Copy`);
           setCanvasData(data.template_data);
+          setHistory([data.template_data]);
+          setHistoryIndex(0);
         }
       }
-    } catch (error) {
-      console.error("Error loading poster:", error);
-      toast({
-        title: "Error loading poster",
-        description: "Please try again",
-        variant: "destructive",
-      });
+    } catch (err) {
+      toast({ title: "Failed to load", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSave = async (data: any) => {
-    if (!user || !shopData) {
-      toast({
-        title: "Cannot save",
-        description: "Please ensure you're logged in and have a shop",
-        variant: "destructive",
-      });
-      return;
+  const pushToHistory = useCallback((newData: any) => {
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push(newData);
+      return newHistory.slice(-20); // limit history
+    });
+    setHistoryIndex(prev => Math.min(prev + 1, 19));
+  }, [historyIndex]);
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      setHistoryIndex(i => i - 1);
+      setCanvasData(history[historyIndex - 1]);
     }
+  };
 
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex(i => i + 1);
+      setCanvasData(history[historyIndex + 1]);
+    }
+  };
+
+  const handleSave = async (data: any) => {
+    if (!user || !shopData) return;
     setIsSaving(true);
+
     try {
-      if (id) {
-        // Update existing poster
-        const { error } = await supabase
-          .from("user_posters")
-          .update({
-            name: posterName,
-            canvas_data: data,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", id);
+      const payload = {
+        name: posterName,
+        canvas_data: data,
+        thumbnail_url: await generateThumbnail(data), // implement in CanvasEditor
+        updated_at: new Date().toISOString(),
+      };
 
-        if (error) throw error;
+      if (formattedPosterId) {
+        await supabase.from("user_posters").update(payload).eq("id", formattedPosterId);
       } else {
-        // Create new poster
-        const { error } = await supabase.from("user_posters").insert({
-          user_id: user.id,
-          shop_id: shopData.id,
-          name: posterName,
-          canvas_data: data,
+        await supabase.from("user_posters").insert({
+          user_id: formatUUID(user.id),
+          shop_id: formatUUID(shopData.id),
+          ...payload,
         });
-
-        if (error) throw error;
       }
 
-      toast({
-        title: "Poster saved!",
-        description: "Your poster has been saved successfully",
-      });
-
+      toast({ title: "Poster saved successfully" });
       navigate("/marketing");
-    } catch (error: any) {
-      console.error("Error saving poster:", error);
-      toast({
-        title: "Failed to save",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
+    } catch (err: any) {
+      toast({ title: "Save failed", description: err.message, variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleInsertText = (text: string) => {
-    // This would be connected to the canvas editor to insert AI-generated text
-    toast({
-      title: "Text copied",
-      description: "Paste it into your canvas using the text tool",
-    });
+  const generateThumbnail = async (data: any) => {
+    // Delegate to CanvasEditor or use html2canvas/dom-to-image (if allowed)
+    // Return base64 or uploaded URL
+    return null; // placeholder
+  };
+
+  const handleExport = async (format: "png" | "jpg" | "pdf") => {
+    // Call CanvasEditor.export(format)
+    toast({ title: `Exporting as ${format.toUpperCase()}...` });
   };
 
   if (access.isLoading || isLoading) {
-    return (
-      <PageWrapper>
-        <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </PageWrapper>
-    );
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
   }
 
   if (!access.canAccess) {
@@ -168,78 +181,76 @@ const PosterEditor = () => {
 
   return (
     <PageWrapper>
-      {/* Header */}
-      <div className="bg-card border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <Button variant="ghost" size="icon" onClick={() => navigate("/marketing")}>
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <Input
-                value={posterName}
-                onChange={(e) => setPosterName(e.target.value)}
-                className="max-w-xs font-medium"
-              />
-            </div>
+      {/* Top Toolbar */}
+      <div className="border-b bg-card sticky top-0 z-50">
+        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/marketing")}>
+              <ArrowLeft />
+            </Button>
+            <Input 
+              value={posterName} 
+              onChange={e => setPosterName(e.target.value)}
+              className="font-medium w-80"
+            />
+          </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAI(!showAI)}
-                className={showAI ? "bg-primary/10" : ""}
-              >
-                <Sparkles className="w-4 h-4 mr-1" />
-                <span className="hidden sm:inline">AI</span>
-              </Button>
-              <Button size="sm" disabled={isSaving} onClick={() => handleSave(canvasData)}>
-                {isSaving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-1" />
-                    <span className="hidden sm:inline">Save</span>
-                  </>
-                )}
-              </Button>
-            </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleUndo} disabled={historyIndex <= 0}>
+              <Undo className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleRedo} disabled={historyIndex >= history.length - 1}>
+              <Redo className="w-4 h-4" />
+            </Button>
+
+            <Button variant="outline" size="sm" onClick={() => setShowAI(!showAI)}>
+              <Sparkles className="w-4 h-4 mr-1" />
+              AI
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm">
+                  <Download className="w-4 h-4 mr-1" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => handleExport("png")}>PNG</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("jpg")}>JPG</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("pdf")}>PDF</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button size="sm" onClick={() => handleSave(canvasData)} disabled={isSaving}>
+              {isSaving ? <Loader2 className="animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
+              Save
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Editor Content */}
-      <div className="container mx-auto px-4 py-4 h-[calc(100vh-65px)]">
-        <div className="flex gap-4 h-full">
-          {/* Main Editor */}
-          <div className="flex-1 min-w-0">
-            <CanvasEditor
-              initialData={canvasData}
-              onSave={handleSave}
-              shopName={shopData?.name || "My Shop"}
-            />
-          </div>
-
-          {/* AI Sidebar */}
-          {showAI && (
-            <div className="w-80 hidden lg:block">
-              <div className="relative h-full">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute -left-2 top-2 z-10"
-                  onClick={() => setShowAI(false)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-                <AIAssistant
-                  shopName={shopData?.name || "My Shop"}
-                  onInsertText={handleInsertText}
-                />
-              </div>
-            </div>
-          )}
+      <div className="flex h-[calc(100vh-56px)]">
+        {/* Canvas Area */}
+        <div className="flex-1 relative">
+          <CanvasEditor
+            initialData={canvasData}
+            onChange={pushToHistory}
+            onSave={handleSave}
+            shopName={shopData?.shop_name || "My Shop"}
+            shopLogo={shopData?.logo_url}
+          />
         </div>
+
+        {/* AI Sidebar */}
+        {showAI && (
+          <div className="w-96 border-l bg-card relative">
+            <Button variant="ghost" size="icon" className="absolute -left-3 top-4" onClick={() => setShowAI(false)}>
+              <X />
+            </Button>
+            <AIAssistant shopName={shopData?.shop_name} />
+          </div>
+        )}
       </div>
     </PageWrapper>
   );
