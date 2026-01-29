@@ -58,29 +58,29 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <UrgencyBanner />
       <Navbar />
-
+      
       {/* SECTION 1: PROFESSIONAL HERO */}
       <section className="relative pt-20 md:pt-24 pb-8 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-
+        
         <div className="container mx-auto px-4 relative z-10">
           {/* Simplified Audience Toggle */}
           <div className="max-w-sm mx-auto mb-10">
-            <Tabs
-              value={activeAudience}
+            <Tabs 
+              value={activeAudience} 
               onValueChange={(value) => setActiveAudience(value as "sellers" | "shoppers")}
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-2 p-1 bg-card border shadow-sm">
-                <TabsTrigger
-                  value="sellers"
+                <TabsTrigger 
+                  value="sellers" 
                   className="data-[state=active]:bg-primary data-[state=active]:text-white transition-all"
                 >
                   <Store className="w-4 h-4 mr-2" />
                   <span className="font-medium">For Sellers</span>
                 </TabsTrigger>
-                <TabsTrigger
-                  value="shoppers"
+                <TabsTrigger 
+                  value="shoppers" 
                   className="data-[state=active]:bg-primary data-[state=active]:text-white transition-all"
                 >
                   <ShoppingBag className="w-4 h-4 mr-2" />
@@ -96,17 +96,17 @@ const Index = () => {
               <Sparkles className="w-4 h-4 mr-2" />
               Trusted by 5,000+ Nigerian businesses
             </div>
-
+            
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
               {activeAudience === "sellers" ? (
                 <>
                   Sell online.
                   <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
-                    <TypewriterEffect
-                      texts={sellerMilestones}
-                      typingSpeed={80}
-                      deletingSpeed={40}
+                    <TypewriterEffect 
+                      texts={sellerMilestones} 
+                      typingSpeed={80} 
+                      deletingSpeed={40} 
                       pauseDuration={2000}
                     />
                   </span>
@@ -116,23 +116,23 @@ const Index = () => {
                   Shop unique.
                   <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
-                    <TypewriterEffect
-                      texts={shopperDiscoveries}
-                      typingSpeed={80}
-                      deletingSpeed={40}
+                    <TypewriterEffect 
+                      texts={shopperDiscoveries} 
+                      typingSpeed={80} 
+                      deletingSpeed={40} 
                       pauseDuration={2000}
                     />
                   </span>
                 </>
               )}
             </h1>
-
+            
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              {activeAudience === "sellers"
+              {activeAudience === "sellers" 
                 ? "Create a professional store in minutes. Share one link. Receive orders via WhatsApp. No tech skills needed."
                 : "Browse authentic products from Nigerian entrepreneurs. Chat directly with sellers. Enjoy personalized service."}
             </p>
-
+            
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Link to={activeAudience === "sellers" ? "/auth/signup" : "/shops"}>
                 <Button size="lg" className="bg-primary hover:bg-primary/90 text-white text-lg px-8 py-6 shadow-lg transition-all">
@@ -147,7 +147,7 @@ const Index = () => {
                 </Button>
               </Link>
             </div>
-
+            
             <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground pt-4">
               <div className="flex items-center">
                 <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
@@ -183,8 +183,8 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              {activeAudience === "sellers"
-                ? "Everything you need to sell online"
+              {activeAudience === "sellers" 
+                ? "Everything you need to sell online" 
                 : "Why shop with independent sellers"}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -263,7 +263,7 @@ const Index = () => {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="font-display text-3xl font-bold mb-6">
-                Join 5,000+ businesses growing with Storefront
+                Join 5,000+ businesses growing with SteerSolo
               </h2>
               <div className="space-y-6">
                 <StatItem
@@ -294,7 +294,7 @@ const Index = () => {
                 </div>
               </div>
               <p className="italic mb-6">
-                "Storefront helped us move from chaotic WhatsApp orders to a proper business.
+                "SteerSolo helped us move from chaotic WhatsApp orders to a proper business. 
                 Sales increased by 300% in 3 months."
               </p>
               <div className="flex items-center">
@@ -312,9 +312,7 @@ const Index = () => {
       </section>
 
       {/* SECTION 6: FEATURED SHOPS */}
-      <div>
-        <FeaturedShopsBanner />
-      </div>
+      <FeaturedShopsBanner />
 
       {/* SECTION 7: PRICING/DISCOVERY CTA */}
       {activeAudience === "sellers" ? <PricingSection /> : <DiscoveryCTASection />}
@@ -331,14 +329,14 @@ const Index = () => {
 };
 
 /* ================= VALUE CARD COMPONENT ================= */
-const ValueCard = ({
-  icon: Icon,
-  title,
-  description,
+const ValueCard = ({ 
+  icon: Icon, 
+  title, 
+  description, 
   color = "blue",
   linkText,
-  linkTo
-}: {
+  linkTo 
+}: { 
   icon: any;
   title: string;
   description: string;
@@ -414,7 +412,7 @@ const PricingSection = () => (
             </Link>
           </CardContent>
         </Card>
-
+        
         <Card className="border-2 border-primary relative">
           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
             <span className="bg-primary text-primary-foreground text-sm font-medium px-4 py-1 rounded-full">
@@ -483,7 +481,7 @@ const DiscoveryCTASection = () => (
 const FinalCTA = ({ activeAudience, onSwitch }: { activeAudience: string, onSwitch: () => void }) => (
   <section className="relative py-20 overflow-hidden bg-primary">
     <AdirePattern variant="circles" className="text-white" opacity={0.1} />
-
+    
     <div className="container mx-auto px-4 text-center relative z-10">
       <div className="max-w-3xl mx-auto">
         <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-6">
@@ -501,9 +499,9 @@ const FinalCTA = ({ activeAudience, onSwitch }: { activeAudience: string, onSwit
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
           </Link>
-          <Button
-            size="lg"
-            variant="outline"
+          <Button 
+            size="lg" 
+            variant="outline" 
             className="text-lg px-10 py-6 border-white/30 text-white hover:bg-white/10"
             onClick={onSwitch}
           >
@@ -511,7 +509,7 @@ const FinalCTA = ({ activeAudience, onSwitch }: { activeAudience: string, onSwit
           </Button>
         </div>
         <p className="text-white/70 text-sm">
-          {activeAudience === "sellers"
+          {activeAudience === "sellers" 
             ? "7-day free trial • Cancel anytime • No setup fees"
             : "No account required • Secure payments • Direct seller support"}
         </p>
