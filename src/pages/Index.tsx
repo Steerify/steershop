@@ -1,12 +1,38 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowRight,
   Store,
+  Zap,
+  Shield,
+  ShoppingBag,
   CheckCircle,
+  Clock,
   MessageCircle,
+  DollarSign,
+  Layers,
+  ChevronRight,
+  Star,
+  Users,
+  Check,
+  AlertCircle,
   Search,
+  Building,
+  MessageSquare,
+  Rocket,
   Sparkles,
+  Heart,
+  Globe,
+  Target,
+  Award,
+  TrendingUp,
+  Palette,
+  BarChart,
+  Share2,
+  Tag,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -18,13 +44,8 @@ import { UrgencyBanner } from "@/components/UrgencyBanner";
 import { HomepageReviews } from "@/components/HomepageReviews";
 import { HowItWorks } from "@/components/HowItWorks";
 import { TrustBadgesSection } from "@/components/TrustBadgesSection";
-import { SEOSchemas } from "@/components/SEOSchemas";
-import { TransformationCards } from "@/components/TransformationCards";
-import { SimplePricing } from "@/components/SimplePricing";
-import { FinalCTASection } from "@/components/FinalCTASection";
 
 const Index = () => {
-<<<<<<< HEAD
   const [activeAudience, setActiveAudience] = useState<"entrepreneurs" | "customers">("entrepreneurs");
 
   const entrepreneurMilestones = [
@@ -34,17 +55,8 @@ const Index = () => {
     "From Price Negotiations to Transparent Pricing",
     "From Casual Vendor to Established Brand",
     "From Daily Hustle to Structured Business Growth"
-=======
-  const heroMessages = [
-    "From WhatsApp Chaos to Professional Store",
-    "From Price Haggling to Clear Confidence",
-    "From Blurry Photos to Stunning Showcases",
-    "From Lost Customers to Loyal Fans",
-    "From Hustle to Structured Success"
->>>>>>> 2f8ccce5c4993fa4fe2094a71bb0bc2651194730
   ];
 
-<<<<<<< HEAD
   const customerDiscoveries = [
     "Discover Unique Products from Dedicated Entrepreneurs",
     "Shop Securely from Verified Businesses",
@@ -54,89 +66,43 @@ const Index = () => {
     "Experience Convenient and Reliable Shopping"
   ];
 
-=======
->>>>>>> 2f8ccce5c4993fa4fe2094a71bb0bc2651194730
   return (
     <div className="min-h-screen bg-background">
-      {/* SEO Schemas */}
-      <SEOSchemas />
-      
-      {/* Urgency Banner */}
       <UrgencyBanner />
-      
-      {/* Navigation */}
       <Navbar />
       
-      {/* HERO SECTION - Simplified, Single Focus */}
-      <section className="relative pt-20 md:pt-28 pb-16 md:pb-24 overflow-hidden">
-        <AdirePattern variant="geometric" className="text-primary" opacity={0.5} />
+      {/* SECTION 1: HERO WITH AUDIENCE TOGGLE */}
+      <section className="relative pt-20 md:pt-24 pb-8 overflow-hidden">
+        <AdirePattern variant="geometric" className="text-primary" opacity={0.6} />
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            {/* Main Headline with Typewriter */}
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary">
-                <TypewriterEffect 
-                  texts={heroMessages} 
-                  typingSpeed={70} 
-                  deletingSpeed={35} 
-                  pauseDuration={2500}
-                />
-              </span>
-            </h1>
-            
-            {/* Subheadline - Clear Value Prop */}
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-              Create your professional online store in <span className="font-semibold text-foreground">60 seconds</span>. 
-              Share one link. Get orders on WhatsApp.
-            </p>
-            
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Link to="/auth/signup">
-                <Button 
-                  size="lg" 
-                  className="bg-gradient-to-r from-accent to-primary text-white text-lg px-8 py-7 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 w-full sm:w-auto"
+          {/* Audience Toggle */}
+          <div className="max-w-md mx-auto mb-8">
+            <Tabs 
+              value={activeAudience} 
+              onValueChange={(value) => setActiveAudience(value as "entrepreneurs" | "customers")}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-2 p-1.5 bg-card border shadow-lg backdrop-blur-sm">
+                <TabsTrigger 
+                  value="entrepreneurs" 
+                  className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/20 data-[state=active]:to-primary/20 data-[state=active]:shadow-inner transition-all"
                 >
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Start Your Free Store
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-              <Link to="/demo">
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="text-lg px-8 py-7 w-full sm:w-auto border-2"
+                  <Store className="w-4 h-4" />
+                  <span className="font-semibold">I'm a Seller</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="customers" 
+                  className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/20 data-[state=active]:to-primary/20 data-[state=active]:shadow-inner transition-all"
                 >
-                  <Search className="w-5 h-5 mr-2" />
-                  View Demo Store
-                </Button>
-              </Link>
-            </div>
-            
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap items-center justify-center gap-6 pt-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>7-day free trial</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>No card required</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Store className="w-4 h-4 text-primary" />
-                <span className="font-semibold text-foreground">500+ stores</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MessageCircle className="w-4 h-4 text-green-600" />
-                <span>WhatsApp integrated</span>
-              </div>
-            </div>
+                  <ShoppingBag className="w-4 h-4" />
+                  <span className="font-semibold">I'm a Shopper</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
 
-<<<<<<< HEAD
           {/* Dynamic Hero Content */}
           {activeAudience === "entrepreneurs" ? (
             <EntrepreneurHero milestones={entrepreneurMilestones} />
@@ -158,52 +124,38 @@ const Index = () => {
                 ? "Streamline your sales process for Nigerian businesses." 
                 : "Enjoy reliable and personalized shopping."}
             </p>
-=======
-            {/* Paystack Badge */}
-            <div className="flex justify-center pt-2">
-              <div className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full">
-                <div className="w-6 h-6 bg-[#00C3F7]/20 rounded flex items-center justify-center">
-                  <span className="text-[#00C3F7] font-bold text-xs">PS</span>
-                </div>
-                <span className="text-sm text-muted-foreground">Powered by Paystack</span>
-              </div>
-            </div>
->>>>>>> 2f8ccce5c4993fa4fe2094a71bb0bc2651194730
           </div>
+          <DynamicProblemSolution activeAudience={activeAudience} />
         </div>
       </section>
 
-      {/* SOCIAL PROOF - Streamlined Stats */}
+      {/* SECTION 3: HOW IT WORKS */}
+      <HowItWorks audience={activeAudience} />
+
+      {/* SECTION 4: FEATURED SHOPS / GROWTH STORIES */}
+      <FeaturedShopsBanner />
       <SocialProofStats />
 
-      {/* HOW IT WORKS - 3 Simple Steps */}
-      <HowItWorks audience="entrepreneurs" />
+      {/* SECTION 5: BENEFITS / OUTCOMES */}
+      <DynamicBenefitsSection activeAudience={activeAudience} />
 
-      {/* FEATURED SHOPS - Visual Showcase */}
-      <FeaturedShopsBanner />
+      {/* SECTION 6: REVIEWS */}
+      <HomepageReviews audience={activeAudience} />
 
-      {/* TRANSFORMATION - Before/After Cards */}
-      <TransformationCards />
+      {/* SECTION 7: PRICING / DISCOVERY CTA */}
+      {activeAudience === "entrepreneurs" ? <PricingSection /> : <DiscoveryCTASection />}
 
-      {/* SIMPLE PRICING */}
-      <SimplePricing />
-
-      {/* TESTIMONIALS */}
-      <HomepageReviews audience="entrepreneurs" />
-
-      {/* TRUST BADGES */}
+      {/* SECTION 8: TRUST BADGES */}
       <TrustBadgesSection />
 
-      {/* FINAL CTA */}
-      <FinalCTASection />
+      {/* SECTION 9: FINAL CTA */}
+      <FinalCTA activeAudience={activeAudience} onSwitch={() => setActiveAudience(activeAudience === "entrepreneurs" ? "customers" : "entrepreneurs")} />
 
-      {/* FOOTER */}
       <Footer />
     </div>
   );
 };
 
-<<<<<<< HEAD
 /* ================= ENTREPRENEUR HERO ================= */
 const EntrepreneurHero = ({ milestones }: { milestones: string[] }) => (
   <div className="max-w-3xl mx-auto text-center space-y-6">
@@ -458,7 +410,6 @@ const FinalCTA = ({ activeAudience, onSwitch }: { activeAudience: string, onSwit
             ? "Create a professional presence for lasting customer relationships."
             : "Find reliable products with excellent service."}
         </p>
-        
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
           <Link to={activeAudience === "entrepreneurs" ? "/auth/signup" : "/shops"}>
             <Button size="lg" variant="secondary" className="text-lg px-10 py-6 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-0.5">
@@ -480,6 +431,4 @@ const FinalCTA = ({ activeAudience, onSwitch }: { activeAudience: string, onSwit
   </section>
 );
 
-=======
->>>>>>> 2f8ccce5c4993fa4fe2094a71bb0bc2651194730
 export default Index;
