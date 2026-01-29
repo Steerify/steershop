@@ -12,7 +12,11 @@ interface Review {
   created_at: string;
 }
 
-export const HomepageReviews = () => {
+interface HomepageReviewsProps {
+  audience?: "entrepreneurs" | "customers";
+}
+
+export const HomepageReviews = ({ audience = "entrepreneurs" }: HomepageReviewsProps) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -83,16 +87,24 @@ export const HomepageReviews = () => {
     );
   }
 
+  const sectionTitle = audience === "entrepreneurs" 
+    ? "What Our Sellers Say" 
+    : "What Shoppers Love";
+  
+  const sectionDescription = audience === "entrepreneurs"
+    ? "Join hundreds of Nigerian entrepreneurs who are growing their businesses with SteerSolo"
+    : "See why customers love shopping from SteerSolo stores";
+
   return (
     <section className="py-16 bg-muted/30">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-            What Our Users Say
+            {sectionTitle}
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Join hundreds of Nigerian entrepreneurs who are growing their businesses with SteerSolo
+            {sectionDescription}
           </p>
         </div>
 

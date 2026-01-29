@@ -29,8 +29,10 @@ interface CanvasElement {
 
 interface CanvasEditorProps {
   initialData?: { elements: CanvasElement[]; background: string };
+  onChange?: (data: { elements: CanvasElement[]; background: string }) => void;
   onSave: (data: { elements: CanvasElement[]; background: string }) => void;
   shopName: string;
+  shopLogo?: string;
 }
 
 const fonts = [
@@ -53,12 +55,19 @@ const layouts = [
   { id: "bold", name: "Bold", preview: "Big text impact" },
 ];
 
-export const CanvasEditor = ({ initialData, onSave, shopName }: CanvasEditorProps) => {
+export const CanvasEditor = ({ initialData, onChange, onSave, shopName, shopLogo }: CanvasEditorProps) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [elements, setElements] = useState<CanvasElement[]>(initialData?.elements || []);
   const [background, setBackground] = useState(initialData?.background || "#ffffff");
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("text");
+
+  // Call onChange whenever elements or background change
+  const handleChange = (newElements: CanvasElement[], newBackground: string) => {
+    if (onChange) {
+      onChange({ elements: newElements, background: newBackground });
+    }
+  };
 
   const selectedEl = elements.find((el) => el.id === selectedElement);
 
@@ -80,7 +89,14 @@ export const CanvasEditor = ({ initialData, onSave, shopName }: CanvasEditorProp
   };
 
   const updateElement = (id: string, updates: Partial<CanvasElement>) => {
-    setElements(elements.map((el) => (el.id === id ? { ...el, ...updates } : el)));
+    const newElements = elements.map((el) => (el.id === id ? { ...el, ...updates } : el));
+    setElements(newElements);
+    handleChange(newElements, background);
+  };
+
+  const updateBackground = (newBackground: string) => {
+    setBackground(newBackground);
+    handleChange(elements, newBackground);
   };
 
   const handleExport = () => {
@@ -175,7 +191,7 @@ export const CanvasEditor = ({ initialData, onSave, shopName }: CanvasEditorProp
             color: "#000000",
           },
         ];
-        setBackground("#f5f5f5");
+        updateBackground("#f5f5f5");
         break;
       case "bold":
         newElements = [
@@ -204,7 +220,7 @@ export const CanvasEditor = ({ initialData, onSave, shopName }: CanvasEditorProp
             color: "#eab308",
           },
         ];
-        setBackground("#000000");
+        updateBackground("#000000");
         break;
     }
 
@@ -361,14 +377,14 @@ export const CanvasEditor = ({ initialData, onSave, shopName }: CanvasEditorProp
                       background === color ? "ring-2 ring-primary" : ""
                     }`}
                     style={{ backgroundColor: color }}
-                    onClick={() => setBackground(color)}
+                    onClick={() => updateBackground(color)}
                   />
                 ))}
               </div>
               <Input
                 type="color"
                 value={background}
-                onChange={(e) => setBackground(e.target.value)}
+                onChange={(e) => updateBackground(e.target.value)}
                 className="w-full h-8 mt-2"
               />
             </div>
