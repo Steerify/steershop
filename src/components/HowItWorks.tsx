@@ -1,9 +1,13 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { UserPlus, Palette, Rocket, ArrowRight } from "lucide-react";
+import { UserPlus, Palette, Rocket, ArrowRight, Search, ShoppingBag, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
-const steps = [
+interface HowItWorksProps {
+  audience?: "entrepreneurs" | "customers";
+}
+
+const entrepreneurSteps = [
   {
     number: "01",
     title: "Sign Up Free",
@@ -27,7 +31,34 @@ const steps = [
   },
 ];
 
-export const HowItWorks = () => {
+const customerSteps = [
+  {
+    number: "01",
+    title: "Discover Shops",
+    description: "Browse unique products from passionate Nigerian entrepreneurs.",
+    icon: Search,
+    color: "from-blue-500 to-cyan-500",
+  },
+  {
+    number: "02",
+    title: "Shop with Ease",
+    description: "Add items to cart, chat with sellers on WhatsApp, and pay securely.",
+    icon: ShoppingBag,
+    color: "from-primary to-accent",
+  },
+  {
+    number: "03",
+    title: "Enjoy & Repeat",
+    description: "Receive quality products and earn rewards for loyal shopping.",
+    icon: Heart,
+    color: "from-green-500 to-emerald-500",
+  },
+];
+
+export const HowItWorks = ({ audience = "entrepreneurs" }: HowItWorksProps) => {
+  const steps = audience === "entrepreneurs" ? entrepreneurSteps : customerSteps;
+  const ctaText = audience === "entrepreneurs" ? "Start Your Free Trial" : "Start Shopping";
+  const ctaLink = audience === "entrepreneurs" ? "/auth/signup" : "/shops";
   return (
     <section className="py-16 md:py-24 bg-background">
       <div className="container mx-auto px-4">
@@ -78,14 +109,14 @@ export const HowItWorks = () => {
 
         {/* CTA */}
         <div className="text-center">
-          <Link to="/auth/signup">
+          <Link to={ctaLink}>
             <Button size="lg" className="bg-gradient-to-r from-primary to-accent text-white px-8 py-6 text-lg">
-              Start Your Free Trial
+              {ctaText}
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
           </Link>
           <p className="text-sm text-muted-foreground mt-4">
-            No credit card required • Setup in 60 seconds
+            {audience === "entrepreneurs" ? "No credit card required • Setup in 60 seconds" : "Free to browse • Secure payments"}
           </p>
         </div>
       </div>
