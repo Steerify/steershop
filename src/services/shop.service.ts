@@ -64,7 +64,7 @@ const shopService = {
       .from('shops')
       .select(`
         *,
-        owner:profiles(subscription_plan_id)
+        owner:profiles(subscription_plan_id, subscription_expires_at, is_subscribed)
       `, { count: 'exact' })
       .eq('is_active', true);
 
@@ -80,6 +80,41 @@ const shopService = {
       throw new Error(error.message);
     }
 
+    // Filter shops that have valid subscription/trial and at least one product
+    const now = new Date();
+    const validShops = (shops || []).filter((shop: any) => {
+      const owner = shop.owner;
+      if (!owner) return false;
+      
+      // Check if has valid subscription or trial
+      const expiresAt = owner.subscription_expires_at ? new Date(owner.subscription_expires_at) : null;
+      const hasValidSubscription = expiresAt && expiresAt > now;
+      
+      return hasValidSubscription;
+    });
+
+    // Now check which shops have products - do this in a separate query
+    const shopIds = validShops.map((s: any) => s.id);
+    
+    let shopsWithProducts: string[] = [];
+    if (shopIds.length > 0) {
+      const { data: productCounts } = await supabase
+        .from('products')
+        .select('shop_id')
+        .in('shop_id', shopIds)
+        .eq('is_available', true);
+      
+      shopsWithProducts = [...new Set((productCounts || []).map((p: any) => p.shop_id))];
+    }
+
+    // Final filter - only shops with products
+    const finalShops = validShops.filter((shop: any) => shopsWithProducts.includes(shop.id));
+
+    if (error) {
+      console.error('Get shops error:', error);
+      throw new Error(error.message);
+    }
+
     // Fetch subscription plans to determine priority
     const { data: plans } = await supabase
       .from('subscription_plans')
@@ -88,9 +123,9 @@ const shopService = {
     const planMap = new Map(plans?.map(p => [p.id, p]) || []);
 
     // Sort shops: Business first (highest display_order), then Pro, then Basic
-    const sortedShops = [...(shops || [])].sort((a, b) => {
-      const planA = planMap.get((a as any).owner?.subscription_plan_id);
-      const planB = planMap.get((b as any).owner?.subscription_plan_id);
+    const sortedShops = [...finalShops].sort((a: any, b: any) => {
+      const planA = planMap.get(a.owner?.subscription_plan_id);
+      const planB = planMap.get(b.owner?.subscription_plan_id);
       const orderA = planA?.display_order || 0;
       const orderB = planB?.display_order || 0;
       return orderB - orderA; // Higher display_order first (business)
@@ -125,8 +160,8 @@ const shopService = {
       meta: {
         page,
         limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
+        total: mappedShops.length,
+        totalPages: Math.ceil(mappedShops.length / limit),
       }
     };
   },

@@ -13,10 +13,13 @@ interface Review {
 }
 
 interface HomepageReviewsProps {
-  audience?: "entrepreneurs" | "customers";
+  audience?: "entrepreneurs" | "customers" | "sellers" | "shoppers";
 }
 
 export const HomepageReviews = ({ audience = "entrepreneurs" }: HomepageReviewsProps) => {
+  // Map sellers -> entrepreneurs, shoppers -> customers
+  const mappedAudience = audience === "sellers" ? "entrepreneurs" : 
+                         audience === "shoppers" ? "customers" : audience;
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -87,11 +90,11 @@ export const HomepageReviews = ({ audience = "entrepreneurs" }: HomepageReviewsP
     );
   }
 
-  const sectionTitle = audience === "entrepreneurs" 
+  const sectionTitle = mappedAudience === "entrepreneurs" 
     ? "What Our Sellers Say" 
     : "What Shoppers Love";
   
-  const sectionDescription = audience === "entrepreneurs"
+  const sectionDescription = mappedAudience === "entrepreneurs"
     ? "Join hundreds of Nigerian entrepreneurs who are growing their businesses with SteerSolo"
     : "See why customers love shopping from SteerSolo stores";
 

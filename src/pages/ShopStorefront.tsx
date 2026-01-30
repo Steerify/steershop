@@ -257,18 +257,41 @@ const ShopStorefront = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
-        <div className="flex-1 container mx-auto px-4 pt-32 text-center">
-          <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
-            <Store className="w-10 h-10 text-muted-foreground" />
+        <div className="flex-1 container mx-auto px-4 pt-32">
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="w-24 h-24 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
+              <Store className="w-12 h-12 text-muted-foreground" />
+            </div>
+            <h1 className="font-display text-3xl font-bold mb-3">Shop Unavailable</h1>
+            <p className="text-muted-foreground mb-8 text-lg">
+              This shop may be temporarily closed, still setting up, or the link might be incorrect.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <Link to="/shops">
+                <Button size="lg" className="bg-gradient-to-r from-accent to-primary">
+                  <Store className="w-4 h-4 mr-2" />
+                  Browse All Shops
+                </Button>
+              </Link>
+              <Link to="/">
+                <Button size="lg" variant="outline">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Go Home
+                </Button>
+              </Link>
+            </div>
+
+            {/* Helpful suggestions */}
+            <div className="bg-muted/50 rounded-xl p-6 text-left">
+              <h3 className="font-semibold mb-3">Looking for something specific?</h3>
+              <ul className="space-y-2 text-muted-foreground text-sm">
+                <li>• Check if the shop URL is correct</li>
+                <li>• The shop owner may be updating their store</li>
+                <li>• Browse our <Link to="/shops" className="text-primary hover:underline">active shops</Link> to find great products</li>
+              </ul>
+            </div>
           </div>
-          <h1 className="font-display text-2xl font-bold mb-2">Shop Not Found</h1>
-          <p className="text-muted-foreground mb-6">This shop doesn't exist or is not available</p>
-          <Link to="/shops">
-            <Button className="bg-gradient-to-r from-accent to-primary">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Shops
-            </Button>
-          </Link>
         </div>
         <Footer />
       </div>

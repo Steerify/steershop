@@ -143,7 +143,7 @@ export const PlatformReviewPopup = ({ onClose }: PlatformReviewPopupProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleDismiss()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md mx-4 sm:mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-center mb-4">
             <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl flex items-center justify-center">

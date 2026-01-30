@@ -36,6 +36,7 @@ import { UrgencyBanner } from "@/components/UrgencyBanner";
 import { HomepageReviews } from "@/components/HomepageReviews";
 import { HowItWorks } from "@/components/HowItWorks";
 import { TrustBadgesSection } from "@/components/TrustBadgesSection";
+import { DynamicPricing } from "@/components/DynamicPricing";
 
 const Index = () => {
   const [activeAudience, setActiveAudience] = useState<"sellers" | "shoppers">("sellers");
@@ -315,7 +316,7 @@ const Index = () => {
       <FeaturedShopsBanner />
 
       {/* SECTION 7: PRICING/DISCOVERY CTA */}
-      {activeAudience === "sellers" ? <PricingSection /> : <DiscoveryCTASection />}
+      {activeAudience === "sellers" ? <DynamicPricing /> : <DiscoveryCTASection />}
 
       {/* SECTION 8: REVIEWS */}
       <HomepageReviews audience={activeAudience} />
