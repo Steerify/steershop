@@ -63,6 +63,14 @@ const MarketingServices = lazy(() => import("./pages/entrepreneur/MarketingServi
 const PosterEditor = lazy(() => import("./pages/entrepreneur/PosterEditor"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 
+// Feature pages
+const WhatsAppFeature = lazy(() => import("./pages/features/WhatsAppFeature"));
+const GrowthFeature = lazy(() => import("./pages/features/GrowthFeature"));
+const TrustFeature = lazy(() => import("./pages/features/TrustFeature"));
+const PaymentsFeature = lazy(() => import("./pages/features/PaymentsFeature"));
+const HowItWorksPage = lazy(() => import("./pages/HowItWorksPage"));
+const SecurityPage = lazy(() => import("./pages/SecurityPage"));
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -101,6 +109,14 @@ const App = () => (
             <Route path="/setup-service" element={<SetupService />} />
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/faq" element={<FAQ />} />
+            
+            {/* Feature pages */}
+            <Route path="/features/whatsapp" element={<WhatsAppFeature />} />
+            <Route path="/features/growth" element={<GrowthFeature />} />
+            <Route path="/features/trust" element={<TrustFeature />} />
+            <Route path="/features/payments" element={<PaymentsFeature />} />
+            <Route path="/how-it-works" element={<HowItWorksPage />} />
+            <Route path="/security" element={<SecurityPage />} />
             
             {/* Shop owner routes */}
             <Route path="/onboarding" element={

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 interface HowItWorksProps {
-  audience?: "entrepreneurs" | "customers";
+  audience?: "entrepreneurs" | "customers" | "sellers" | "shoppers";
 }
 
 const entrepreneurSteps = [
@@ -56,9 +56,12 @@ const customerSteps = [
 ];
 
 export const HowItWorks = ({ audience = "entrepreneurs" }: HowItWorksProps) => {
-  const steps = audience === "entrepreneurs" ? entrepreneurSteps : customerSteps;
-  const ctaText = audience === "entrepreneurs" ? "Start Your Free Trial" : "Start Shopping";
-  const ctaLink = audience === "entrepreneurs" ? "/auth/signup" : "/shops";
+  // Map sellers -> entrepreneurs, shoppers -> customers
+  const mappedAudience = audience === "sellers" ? "entrepreneurs" : 
+                         audience === "shoppers" ? "customers" : audience;
+  const steps = mappedAudience === "entrepreneurs" ? entrepreneurSteps : customerSteps;
+  const ctaText = mappedAudience === "entrepreneurs" ? "Start Your Free Trial" : "Start Shopping";
+  const ctaLink = mappedAudience === "entrepreneurs" ? "/auth/signup" : "/shops";
   return (
     <section className="py-16 md:py-24 bg-background">
       <div className="container mx-auto px-4">
