@@ -123,9 +123,9 @@ const shopService = {
     const planMap = new Map(plans?.map(p => [p.id, p]) || []);
 
     // Sort shops: Business first (highest display_order), then Pro, then Basic
-    const sortedShops = [...finalShops].sort((a: any, b: any) => {
-      const planA = planMap.get(a.owner?.subscription_plan_id);
-      const planB = planMap.get(b.owner?.subscription_plan_id);
+  const sortedShops = [...(shops || [])].sort((a, b) => {
+      const planA = planMap.get((a as any).owner?.subscription_plan_id);
+      const planB = planMap.get((b as any).owner?.subscription_plan_id);
       const orderA = planA?.display_order || 0;
       const orderB = planB?.display_order || 0;
       return orderB - orderA; // Higher display_order first (business)
@@ -160,8 +160,8 @@ const shopService = {
       meta: {
         page,
         limit,
-        total: mappedShops.length,
-        totalPages: Math.ceil(mappedShops.length / limit),
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit),
       }
     };
   },
