@@ -64,7 +64,7 @@ const shopService = {
       .from('shops')
       .select(`
         *,
-        owner:profiles(subscription_plan_id, subscription_expires_at, is_subscribed)
+        owner:profiles(subscription_plan_id)
       `, { count: 'exact' })
       .eq('is_active', true);
 
