@@ -128,7 +128,7 @@ const ShopStorefront = () => {
         inputRef.current?.focus();
       }, 100);
     }
-  }, []);
+  }, [isSearchExpanded]);
   const loadShopData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
