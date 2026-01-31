@@ -59,111 +59,182 @@ const shopService = {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    // Fetch shops with owner profile to get subscription info
-    let query = supabase
-      .from('shops')
-      .select(`
-        *,
-        owner:profiles(subscription_plan_id)
-      `, { count: 'exact' })
-      .eq('is_active', true);
+    try {
+      // First, get ALL active shops to filter
+      let baseQuery = supabase
+        .from('shops')
+        .select(`
+          *,
+          owner:profiles(subscription_plan_id, subscription_status, subscription_expires_at)
+        `, { count: 'exact' })
+        .eq('is_active', true);
 
-    // Apply verified filter if specified
-    if (filters?.verified !== undefined) {
-      query = query.eq('is_verified', filters.verified);
-    }
-
-    const { data: shops, error, count } = await query.range(from, to);
-
-    if (error) {
-      console.error('Get shops error:', error);
-      throw new Error(error.message);
-    }
-
-    // Filter shops that have valid subscription/trial and at least one product
-    const now = new Date();
-    const validShops = (shops || []).filter((shop: any) => {
-      const owner = shop.owner;
-      if (!owner) return false;
-      
-      // Check if has valid subscription or trial
-      const expiresAt = owner.subscription_expires_at ? new Date(owner.subscription_expires_at) : null;
-      const hasValidSubscription = expiresAt && expiresAt > now;
-      
-      return hasValidSubscription;
-    });
-
-    // Now check which shops have products - do this in a separate query
-    const shopIds = validShops.map((s: any) => s.id);
-    
-    let shopsWithProducts: string[] = [];
-    if (shopIds.length > 0) {
-      const { data: productCounts } = await supabase
-        .from('products')
-        .select('shop_id')
-        .in('shop_id', shopIds)
-        .eq('is_available', true);
-      
-      shopsWithProducts = [...new Set((productCounts || []).map((p: any) => p.shop_id))];
-    }
-
-    // Final filter - only shops with products
-    const finalShops = validShops.filter((shop: any) => shopsWithProducts.includes(shop.id));
-
-    if (error) {
-      console.error('Get shops error:', error);
-      throw new Error(error.message);
-    }
-
-    // Fetch subscription plans to determine priority
-    const { data: plans } = await supabase
-      .from('subscription_plans')
-      .select('id, slug, display_order');
-
-    const planMap = new Map(plans?.map(p => [p.id, p]) || []);
-
-    // Sort shops: Business first (highest display_order), then Pro, then Basic
-  const sortedShops = [...(shops || [])].sort((a, b) => {
-      const planA = planMap.get((a as any).owner?.subscription_plan_id);
-      const planB = planMap.get((b as any).owner?.subscription_plan_id);
-      const orderA = planA?.display_order || 0;
-      const orderB = planB?.display_order || 0;
-      return orderB - orderA; // Higher display_order first (business)
-    });
-
-    // Map database fields to include both naming conventions
-    const mappedShops: Shop[] = sortedShops.map(s => ({
-      id: s.id,
-      name: s.shop_name,
-      slug: s.shop_slug,
-      shop_name: s.shop_name,
-      shop_slug: s.shop_slug,
-      description: s.description,
-      whatsapp_number: s.whatsapp_number,
-      payment_method: s.payment_method,
-      bank_name: s.bank_name,
-      bank_account_name: s.bank_account_name,
-      bank_account_number: s.bank_account_number,
-      paystack_public_key: s.paystack_public_key,
-      logo_url: s.logo_url,
-      banner_url: s.banner_url,
-      is_active: s.is_active,
-      average_rating: s.average_rating,
-      total_reviews: s.total_reviews,
-      owner_id: s.owner_id,
-      is_verified: s.is_verified,
-    }));
-
-    return {
-      success: true,
-      data: mappedShops,
-      meta: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
+      // Apply verified filter if specified
+      if (filters?.verified !== undefined) {
+        baseQuery = baseQuery.eq('is_verified', filters.verified);
       }
-    };
+
+      const { data: allShops, error, count } = await baseQuery.range(from, to);
+
+      if (error) {
+        console.error('Get shops error:', error);
+        throw new Error(error.message);
+      }
+
+      if (!allShops || allShops.length === 0) {
+        return {
+          success: true,
+          data: [],
+          meta: {
+            page,
+            limit,
+            total: 0,
+            totalPages: 0,
+          }
+        };
+      }
+
+      // Filter shops that have valid subscription/trial
+      const now = new Date();
+      const shopsWithValidSubscription = allShops.filter((shop: any) => {
+        const owner = shop.owner;
+        if (!owner) return false;
+        
+        // Check subscription status
+        const subscriptionStatus = owner.subscription_status;
+        const expiresAt = owner.subscription_expires_at ? new Date(owner.subscription_expires_at) : null;
+        
+        // Shop must have either 'active' or 'trial' status AND subscription not expired
+        const hasValidStatus = subscriptionStatus === 'active' || subscriptionStatus === 'trial';
+        const isNotExpired = expiresAt && expiresAt > now;
+        
+        return hasValidStatus && isNotExpired;
+      });
+
+      if (shopsWithValidSubscription.length === 0) {
+        return {
+          success: true,
+          data: [],
+          meta: {
+            page,
+            limit,
+            total: 0,
+            totalPages: 0,
+          }
+        };
+      }
+
+      // Get shop IDs with valid subscriptions
+      const validShopIds = shopsWithValidSubscription.map((s: any) => s.id);
+      
+      // Check which shops have products (including services)
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('shop_id, is_available')
+        .in('shop_id', validShopIds)
+        .eq('is_available', true);
+
+      if (productsError) {
+        console.error('Error fetching products:', productsError);
+        throw new Error(productsError.message);
+      }
+
+      // Get unique shop IDs that have at least one available product/service
+      const shopIdsWithProducts = [...new Set((productsData || []).map(p => p.shop_id))];
+      
+      if (shopIdsWithProducts.length === 0) {
+        return {
+          success: true,
+          data: [],
+          meta: {
+            page,
+            limit,
+            total: 0,
+            totalPages: 0,
+          }
+        };
+      }
+
+      // Filter shops to only include those with products/services
+      const shopsWithProducts = shopsWithValidSubscription.filter((shop: any) => 
+        shopIdsWithProducts.includes(shop.id)
+      );
+
+      // Fetch subscription plans for sorting
+      const { data: plans } = await supabase
+        .from('subscription_plans')
+        .select('id, slug, display_order');
+
+      const planMap = new Map(plans?.map(p => [p.id, p]) || []);
+
+      // Sort shops: Business first (highest display_order), then Pro, then Basic
+      const sortedShops = [...shopsWithProducts].sort((a: any, b: any) => {
+        const planA = planMap.get(a.owner?.subscription_plan_id);
+        const planB = planMap.get(b.owner?.subscription_plan_id);
+        const orderA = planA?.display_order || 0;
+        const orderB = planB?.display_order || 0;
+        return orderB - orderA; // Higher display_order first (business)
+      });
+
+      // Map database fields to include both naming conventions
+      const mappedShops: Shop[] = sortedShops.map(s => ({
+        id: s.id,
+        name: s.shop_name,
+        slug: s.shop_slug,
+        shop_name: s.shop_name,
+        shop_slug: s.shop_slug,
+        description: s.description,
+        whatsapp_number: s.whatsapp_number,
+        payment_method: s.payment_method,
+        bank_name: s.bank_name,
+        bank_account_name: s.bank_account_name,
+        bank_account_number: s.bank_account_number,
+        paystack_public_key: s.paystack_public_key,
+        logo_url: s.logo_url,
+        banner_url: s.banner_url,
+        is_active: s.is_active,
+        average_rating: s.average_rating,
+        total_reviews: s.total_reviews,
+        owner_id: s.owner_id,
+        is_verified: s.is_verified,
+        // Add subscription info for the frontend
+        subscription_status: s.owner?.subscription_status || 'unknown',
+        subscription_expires_at: s.owner?.subscription_expires_at,
+      }));
+
+      // IMPORTANT: We need to get the total count of shops that meet all criteria
+      // Let's do a separate count query for shops with products and valid subscriptions
+      const { count: totalShopsCount } = await supabase
+        .from('shops')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .in('id', shopIdsWithProducts);
+
+      return {
+        success: true,
+        data: mappedShops,
+        meta: {
+          page,
+          limit,
+          total: totalShopsCount || mappedShops.length,
+          totalPages: Math.ceil((totalShopsCount || mappedShops.length) / limit),
+        }
+      };
+
+    } catch (error: any) {
+      console.error('Error in getShops:', error);
+      return {
+        success: false,
+        data: [],
+        error: error.message,
+        meta: {
+          page,
+          limit,
+          total: 0,
+          totalPages: 0,
+        }
+      };
+    }
   },
 
   getShopByOwner: async (ownerId: string) => {
@@ -208,44 +279,80 @@ const shopService = {
   },
 
   getShopBySlug: async (slug: string) => {
-    const { data: shop, error } = await supabase
-      .from('shops')
-      .select('*')
-      .eq('shop_slug', slug)
-      .single();
+    try {
+      const { data: shop, error } = await supabase
+        .from('shops')
+        .select(`
+          *,
+          owner:profiles(subscription_status, subscription_expires_at)
+        `)
+        .eq('shop_slug', slug)
+        .single();
 
-    if (error) {
-      console.error('Get shop by slug error:', error);
-      throw new Error(error.message);
+      if (error) {
+        console.error('Get shop by slug error:', error);
+        throw new Error(error.message);
+      }
+
+      // Check if owner has valid subscription
+      const now = new Date();
+      const owner = shop.owner;
+      const subscriptionStatus = owner?.subscription_status;
+      const expiresAt = owner?.subscription_expires_at ? new Date(owner.subscription_expires_at) : null;
+      
+      const hasValidStatus = subscriptionStatus === 'active' || subscriptionStatus === 'trial';
+      const isNotExpired = expiresAt && expiresAt > now;
+      
+      if (!hasValidStatus || !isNotExpired) {
+        throw new Error('Shop owner does not have an active subscription or trial');
+      }
+
+      // Check if shop has at least one available product or service
+      const { count: productCount } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+        .eq('shop_id', shop.id)
+        .eq('is_available', true);
+
+      if ((productCount || 0) === 0) {
+        throw new Error('This shop has no available products or services');
+      }
+
+      const mappedShop: Shop = {
+        id: shop.id,
+        name: shop.shop_name,
+        slug: shop.shop_slug,
+        shop_name: shop.shop_name,
+        shop_slug: shop.shop_slug,
+        description: shop.description,
+        whatsapp_number: shop.whatsapp_number,
+        payment_method: shop.payment_method,
+        bank_name: shop.bank_name,
+        bank_account_name: shop.bank_account_name,
+        bank_account_number: shop.bank_account_number,
+        paystack_public_key: shop.paystack_public_key,
+        logo_url: shop.logo_url,
+        banner_url: shop.banner_url,
+        is_active: shop.is_active,
+        average_rating: shop.average_rating,
+        total_reviews: shop.total_reviews,
+        owner_id: shop.owner_id,
+        is_verified: shop.is_verified,
+      };
+
+      return {
+        success: true,
+        data: mappedShop,
+        message: 'Shop fetched successfully'
+      };
+    } catch (error: any) {
+      console.error('Error in getShopBySlug:', error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to fetch shop'
+      };
     }
-
-    const mappedShop: Shop = {
-      id: shop.id,
-      name: shop.shop_name,
-      slug: shop.shop_slug,
-      shop_name: shop.shop_name,
-      shop_slug: shop.shop_slug,
-      description: shop.description,
-      whatsapp_number: shop.whatsapp_number,
-      payment_method: shop.payment_method,
-      bank_name: shop.bank_name,
-      bank_account_name: shop.bank_account_name,
-      bank_account_number: shop.bank_account_number,
-      paystack_public_key: shop.paystack_public_key,
-      logo_url: shop.logo_url,
-      banner_url: shop.banner_url,
-      is_active: shop.is_active,
-      average_rating: shop.average_rating,
-      total_reviews: shop.total_reviews,
-      owner_id: shop.owner_id,
-      is_verified: shop.is_verified,
-    };
-
-    return {
-      success: true,
-      data: mappedShop,
-      message: 'Shop fetched successfully'
-    };
   },
 
   updateShop: async (id: string, data: Partial<Shop>) => {
