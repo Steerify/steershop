@@ -1,308 +1,643 @@
 
-
 # SteerSolo Comprehensive Enhancement Plan
+## Logistics Integration + Bug Fixes + UX Improvements
+
+---
 
 ## Overview
 
-This plan addresses all the issues identified and optimizes SteerSolo for maximum conversion and user experience:
-
-1. **Build Error Fix** - Type mismatch between `"sellers" | "shoppers"` and `"entrepreneurs" | "customers"`
-2. **Homepage Redesign** - Backend data-driven, conversion-focused redesign
-3. **Shop Visibility Improvements** - Filter shops to show only those with active subscriptions AND products
-4. **Shop Not Found Handling** - Graceful handling with helpful suggestions
-5. **Pricing Section Fix** - Use real subscription plans from database (excluding Starter)
-6. **Learn More Pages** - Create feature-focused pages for WhatsApp, Growth, Trust features
-7. **Background Patterns** - Add subtle patterns throughout the frontend
-8. **Google Popup Margin Fix** - Fix the PlatformReviewPopup dialog margins
+This plan addresses **5 major areas**:
+1. **Nigeria Logistics Integration** - Research, API integration, database schema, and fallback workflows
+2. **Shops Page Bug Fix** - Debug and fix why valid shops aren't showing
+3. **Email Verification Notification** - Add post-signup notification for email-based signups
+4. **Unique Store Slug Enforcement** - Validate and prevent duplicate slugs
+5. **Minor Fixes** - Various UX improvements
 
 ---
 
-## Part 1: Build Error Fix
+## Part 1: Nigeria Logistics Integration
 
-### Issue
-`Index.tsx` uses `"sellers" | "shoppers"` but passes to components expecting `"entrepreneurs" | "customers"`
+### 1.1 Recommended Logistics Providers
 
-### Solution
-Update `HowItWorks` and `HomepageReviews` components to accept **both** naming conventions:
+| Provider | API Available | Coverage | Pricing | Best For |
+|----------|--------------|----------|---------|----------|
+| **Terminal Africa** | Yes (RESTful) | Multi-carrier aggregator (GIG, DHL, UPS, FedEx) | Pay-per-use | Primary choice - single API for multiple carriers |
+| **Sendbox** | Yes (RESTful) | Lagos, nationwide | Competitive | Urban deliveries, e-commerce |
+| **GIG Logistics** | Yes (API) | Nationwide | Variable | Established carrier, same-day options |
+| **Kobo360** | Limited API | B2B focused | Enterprise | Large cargo, not ideal for e-commerce |
+| **SendStack** | Yes (RESTful) | Lagos, urban areas | Low cost | Budget option, smaller parcels |
 
-```typescript
-// Map sellers -> entrepreneurs, shoppers -> customers
-const mappedAudience = audience === "sellers" ? "entrepreneurs" : 
-                       audience === "shoppers" ? "customers" : audience;
+**Recommendation**: Use **Terminal Africa** as primary (aggregates 10+ carriers) with **Sendbox** as fallback.
+
+### 1.2 API Integration Examples
+
+**Terminal Africa (Primary):**
+```javascript
+// Edge Function: supabase/functions/logistics-get-rates/index.ts
+const TERMINAL_API_KEY = Deno.env.get('TERMINAL_API_KEY');
+const BASE_URL = 'https://api.terminal.africa/v1';
+
+// Get shipping rates
+const getRates = async (parcel_id: string, pickup_address_id: string, delivery_address_id: string) => {
+  const response = await fetch(`${BASE_URL}/rates/shipment`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${TERMINAL_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      parcel_id,
+      pickup_address: pickup_address_id,
+      delivery_address: delivery_address_id,
+      currency: 'NGN'
+    })
+  });
+  return response.json();
+};
+
+// Create shipment
+const createShipment = async (data: ShipmentData) => {
+  const response = await fetch(`${BASE_URL}/shipments`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${TERMINAL_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      rate_id: data.rate_id,  // Selected rate from getRates
+      parcel_id: data.parcel_id,
+      pickup_address: data.pickup_address_id,
+      delivery_address: data.delivery_address_id,
+      metadata: { order_id: data.order_id }
+    })
+  });
+  return response.json();
+};
+
+// Track shipment
+const trackShipment = async (shipment_id: string) => {
+  const response = await fetch(`${BASE_URL}/shipments/${shipment_id}/tracking`, {
+    headers: { 'Authorization': `Bearer ${TERMINAL_API_KEY}` }
+  });
+  return response.json();
+};
 ```
 
----
+**Sendbox (Secondary):**
+```javascript
+// Edge Function: supabase/functions/sendbox-integration/index.ts
+const SENDBOX_API_KEY = Deno.env.get('SENDBOX_API_KEY');
+const BASE_URL = 'https://api.sendbox.co';
 
-## Part 2: Homepage Redesign with Backend Data
-
-### Current State
-- Stats show hardcoded fallback values ("500+", "10,000+")
-- Actual database has: 7 shops, 15 products
-
-### Changes
-
-#### 2.1 Dynamic Stats from Database
-Enhance `SocialProofStats` to show REAL data with smart fallbacks:
-- If shops < 10: Show "Growing community"
-- Calculate actual sales from `orders` table
-- Get average rating from `reviews` table
-
-#### 2.2 Simplified Homepage Structure
-```text
-1. Navbar (sticky)
-2. Hero Section
-   - Powerful headline about WhatsApp chaos → professional store
-   - Single CTA: "Start Free Trial"
-   - Trust badges: Paystack, Nigerian-owned
-3. Social Proof Stats (dynamic)
-4. How It Works (3 steps, visual)
-5. Featured Shops Banner
-6. Transformation Cards (Before/After visual)
-7. Real Pricing (from subscription_plans)
-8. Testimonials (from platform_feedback)
-9. Trust Badges Section
-10. Final CTA
-11. Footer
+// Request shipping quote
+const getQuote = async (origin: Address, destination: Address, weight: number) => {
+  const response = await fetch(`${BASE_URL}/shipping/quotes`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SENDBOX_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      origin: {
+        first_name: origin.name.split(' ')[0],
+        last_name: origin.name.split(' ').slice(1).join(' '),
+        street: origin.address,
+        city: origin.city,
+        state: origin.state,
+        country: 'NG',
+        phone: origin.phone
+      },
+      destination: {
+        first_name: destination.name.split(' ')[0],
+        last_name: destination.name.split(' ').slice(1).join(' '),
+        street: destination.address,
+        city: destination.city,
+        state: destination.state,
+        country: 'NG',
+        phone: destination.phone
+      },
+      weight: { value: weight, unit: 'kg' }
+    })
+  });
+  return response.json();
+};
 ```
 
-#### 2.3 Nigerian-Focused Messaging
-- "From WhatsApp Chaos to Professional Store"
-- "Less than cost of a plate of jollof rice"
-- "Made for Nigerian entrepreneurs"
+### 1.3 Database Schema
 
----
-
-## Part 3: Shop Visibility Logic
-
-### Current Problem
-- Shops page shows ALL active shops
-- Some shops have no products or expired subscriptions
-- Causes "shop not found" errors when visiting
-
-### Solution
-Update `shop.service.ts` to filter shops:
+**New Tables:**
 
 ```sql
--- Only show shops where:
--- 1. Shop is active
--- 2. Owner has valid trial OR paid subscription (expires_at > now)
--- 3. Shop has at least 1 available product
-SELECT s.* FROM shops s
-JOIN profiles p ON s.owner_id = p.id
-WHERE s.is_active = true
-AND (p.subscription_expires_at > now() OR p.is_subscribed = true)
-AND EXISTS (
-  SELECT 1 FROM products pr 
-  WHERE pr.shop_id = s.id AND pr.is_available = true
-)
+-- Delivery orders table
+CREATE TABLE IF NOT EXISTS delivery_orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  shop_id UUID NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL, -- 'terminal', 'sendbox', 'manual'
+  provider_shipment_id TEXT, -- External shipment ID
+  provider_tracking_code TEXT,
+  
+  -- Addresses
+  pickup_address JSONB NOT NULL,
+  delivery_address JSONB NOT NULL,
+  
+  -- Parcel info
+  weight_kg NUMERIC(10,2),
+  dimensions JSONB, -- {length, width, height}
+  
+  -- Pricing
+  delivery_fee NUMERIC(10,2) NOT NULL,
+  currency TEXT DEFAULT 'NGN',
+  
+  -- Status tracking
+  status TEXT NOT NULL DEFAULT 'pending', 
+  -- pending, confirmed, picked_up, in_transit, out_for_delivery, delivered, failed, cancelled
+  
+  -- Timestamps
+  estimated_delivery_date TIMESTAMPTZ,
+  picked_up_at TIMESTAMPTZ,
+  delivered_at TIMESTAMPTZ,
+  cancelled_at TIMESTAMPTZ,
+  
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Delivery tracking events (audit log)
+CREATE TABLE IF NOT EXISTS delivery_tracking_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  delivery_order_id UUID NOT NULL REFERENCES delivery_orders(id) ON DELETE CASCADE,
+  
+  status TEXT NOT NULL,
+  description TEXT,
+  location TEXT,
+  provider_event_id TEXT,
+  
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Saved addresses for shops (pickup locations)
+CREATE TABLE IF NOT EXISTS shop_addresses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  shop_id UUID NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+  
+  label TEXT NOT NULL, -- 'Main Warehouse', 'Lagos Office'
+  contact_name TEXT NOT NULL,
+  contact_phone TEXT NOT NULL,
+  address_line_1 TEXT NOT NULL,
+  address_line_2 TEXT,
+  city TEXT NOT NULL,
+  state TEXT NOT NULL,
+  postal_code TEXT,
+  country TEXT DEFAULT 'NG',
+  lat NUMERIC(10,8),
+  lng NUMERIC(11,8),
+  
+  is_default BOOLEAN DEFAULT false,
+  
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  
+  UNIQUE(shop_id, label)
+);
+
+-- RLS Policies
+ALTER TABLE delivery_orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE delivery_tracking_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shop_addresses ENABLE ROW LEVEL SECURITY;
+
+-- Shop owners can manage their delivery orders
+CREATE POLICY "Shop owners can manage delivery orders"
+  ON delivery_orders FOR ALL
+  USING (EXISTS (
+    SELECT 1 FROM shops WHERE shops.id = delivery_orders.shop_id 
+    AND shops.owner_id = auth.uid()
+  ));
+
+-- Customers can view their order deliveries
+CREATE POLICY "Customers can view their deliveries"
+  ON delivery_orders FOR SELECT
+  USING (EXISTS (
+    SELECT 1 FROM orders WHERE orders.id = delivery_orders.order_id 
+    AND orders.customer_id = auth.uid()
+  ));
+
+-- Tracking events viewable by order parties
+CREATE POLICY "View tracking events"
+  ON delivery_tracking_events FOR SELECT
+  USING (EXISTS (
+    SELECT 1 FROM delivery_orders d
+    JOIN orders o ON o.id = d.order_id
+    JOIN shops s ON s.id = d.shop_id
+    WHERE d.id = delivery_tracking_events.delivery_order_id
+    AND (o.customer_id = auth.uid() OR s.owner_id = auth.uid())
+  ));
+
+-- Shop owners manage their addresses
+CREATE POLICY "Shop owners manage addresses"
+  ON shop_addresses FOR ALL
+  USING (EXISTS (
+    SELECT 1 FROM shops WHERE shops.id = shop_addresses.shop_id 
+    AND shops.owner_id = auth.uid()
+  ));
+```
+
+### 1.4 Implementation Plan
+
+| Step | Description | Effort |
+|------|-------------|--------|
+| 1 | Create database tables & RLS policies | 2h |
+| 2 | Create `logistics-get-rates` edge function | 3h |
+| 3 | Create `logistics-book-delivery` edge function | 3h |
+| 4 | Create `logistics-track-shipment` edge function | 2h |
+| 5 | Create `logistics-webhook` for status updates | 2h |
+| 6 | Create `delivery.service.ts` frontend service | 2h |
+| 7 | Build "Arrange Delivery" UI in order management | 4h |
+| 8 | Build delivery tracking component | 3h |
+| 9 | Add delivery status to order timeline | 2h |
+| 10 | Testing and error handling | 3h |
+
+**Total Estimated Effort: 26 hours**
+
+### 1.5 Edge Function Endpoints
+
+```text
+POST /logistics-get-rates
+  - Input: { order_id, pickup_address, delivery_address, weight }
+  - Output: { rates: [{ carrier, price, estimated_days }] }
+
+POST /logistics-book-delivery
+  - Input: { order_id, rate_id, pickup_address_id }
+  - Output: { delivery_order_id, tracking_code, estimated_delivery }
+
+GET /logistics-track/:delivery_order_id
+  - Output: { status, events: [...], estimated_delivery }
+
+POST /logistics-webhook
+  - Receives callbacks from Terminal/Sendbox
+  - Updates delivery_orders status
+  - Inserts delivery_tracking_events
+```
+
+### 1.6 Error Handling Recommendations
+
+```typescript
+// Retry logic for transient failures
+const fetchWithRetry = async (url: string, options: RequestInit, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) return response;
+      if (response.status >= 500 && i < retries - 1) {
+        await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+        continue;
+      }
+      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+    } catch (error) {
+      if (i === retries - 1) throw error;
+    }
+  }
+};
+
+// Error categories
+const handleLogisticsError = (error: any) => {
+  if (error.code === 'RATE_NOT_FOUND') {
+    return { userMessage: 'Delivery not available for this route', fallback: true };
+  }
+  if (error.code === 'PICKUP_UNAVAILABLE') {
+    return { userMessage: 'Pickup location not serviceable', fallback: true };
+  }
+  return { userMessage: 'Unable to arrange delivery. Please try again.', fallback: true };
+};
+```
+
+### 1.7 Manual Fallback Workflow
+
+For vendors without API access or when APIs fail:
+
+```text
+MANUAL DELIVERY BOOKING FLOW:
+1. Vendor selects "Manual Delivery" option
+2. Form collects:
+   - Delivery company name
+   - Tracking number (if available)
+   - Estimated delivery date
+   - Delivery fee charged
+3. Vendor manually updates status:
+   - Picked up → In Transit → Delivered
+4. Customer receives email/WhatsApp notifications
+5. System records all updates for order history
+```
+
+**Manual UI Components:**
+- ManualDeliveryForm.tsx - Booking form
+- ManualStatusUpdater.tsx - Status change dropdown
+- Delivery timeline shows manual entries distinctly
+
+---
+
+## Part 2: Shops Page Bug Fix
+
+### Issue Analysis
+The current `getShops` service logic is correct, but the issue is that:
+1. Only 2 shops meet ALL criteria (valid subscription + products > 0)
+2. The owner relationship JOIN might fail if profile doesn't exist
+
+### Identified Shops That Should Show:
+| Shop | Valid Subscription | Products | Should Show |
+|------|-------------------|----------|-------------|
+| greenace | Yes (2032) | 1 | Yes |
+| steersoloshop | Yes (2026-02-06) | 4 | Yes |
+| canada-bar | Yes (2026-02-14) | 0 | No (no products) |
+| collintins | Yes (2026-02-08) | 0 | No (no products) |
+| my-store | No (null) | 6 | No (no subscription) |
+
+### Fix Required
+The logic appears correct. The issue is likely that the user expects shops with products to show regardless of subscription. 
+
+**Clarification needed:** Should shops with expired trials but with products still be visible to customers (read-only mode)?
+
+### Proposed Enhancement
+Add logging to debug production issues:
+
+```typescript
+// In shop.service.ts getShops
+console.log('Raw shops fetched:', shops?.length);
+console.log('Valid subscription shops:', validShops.length);
+console.log('Shops with products:', shopsWithProducts.length);
+console.log('Final shops:', finalShops.length);
 ```
 
 ---
 
-## Part 4: Graceful "Shop Not Found" Handling
+## Part 3: Email Verification Notification
 
 ### Current Issue
-Shows generic error: "This shop doesn't exist or is not available"
+After email/password signup, users are not notified to check their email for verification.
 
-### Enhanced Solution
-Create informative fallback UI:
-
-1. **Check WHY shop is not available:**
-   - Shop doesn't exist → "Shop not found"
-   - Shop exists but no subscription → "Shop temporarily unavailable"
-   - Shop exists but no products → "Shop is setting up"
-
-2. **Show helpful alternatives:**
-   - Link to browse other shops
-   - Suggest similar shops if any
-   - Show featured shops carousel
+### Solution
+Add a success state in Auth.tsx showing email verification instructions:
 
 ```typescript
-// ShopStorefront.tsx - Enhanced not found state
-if (!shop) {
-  return (
-    <div>
-      <h1>Shop Unavailable</h1>
-      <p>This shop may be temporarily closed or setting up.</p>
+// In Auth.tsx signup success handler
+const [showEmailVerification, setShowEmailVerification] = useState(false);
+const [registeredEmail, setRegisteredEmail] = useState('');
+
+const onSignupSubmit = async (data: SignupFormData) => {
+  // ... existing signup logic
+  
+  if (result.error) {
+    setAuthError(result.error);
+  } else {
+    // Check if email confirmation is required
+    // Supabase returns user but they need to confirm email
+    setRegisteredEmail(data.email);
+    setShowEmailVerification(true);
+    
+    toast({
+      title: "Account created!",
+      description: "Please check your email to verify your account.",
+    });
+  }
+};
+
+// Render email verification notice
+{showEmailVerification && (
+  <Card className="border-primary/20 bg-primary/5">
+    <CardContent className="pt-6 text-center space-y-4">
+      <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+        <Mail className="w-8 h-8 text-primary" />
+      </div>
+      <h3 className="text-xl font-semibold">Check Your Email</h3>
+      <p className="text-muted-foreground">
+        We've sent a verification link to <strong>{registeredEmail}</strong>
+      </p>
+      <p className="text-sm text-muted-foreground">
+        Click the link in the email to activate your account.
+        <br />
+        <span className="text-xs">Check your spam folder if you don't see it.</span>
+      </p>
+      <Button variant="outline" onClick={() => setShowEmailVerification(false)}>
+        Back to Login
+      </Button>
+    </CardContent>
+  </Card>
+)}
+```
+
+---
+
+## Part 4: Unique Store Slug Enforcement
+
+### Current State
+- Database has `UNIQUE` constraint on `shop_slug`
+- No frontend validation before submission
+
+### Solution
+Add real-time slug validation:
+
+```typescript
+// In MyStore.tsx
+const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+const [checkingSlug, setCheckingSlug] = useState(false);
+
+const checkSlugAvailability = useCallback(
+  debounce(async (slug: string) => {
+    if (!slug || slug.length < 2) {
+      setSlugAvailable(null);
+      return;
+    }
+    
+    setCheckingSlug(true);
+    try {
+      const { data, error } = await supabase
+        .from('shops')
+        .select('id')
+        .eq('shop_slug', slug.toLowerCase())
+        .neq('id', shop?.id || '') // Exclude current shop when editing
+        .maybeSingle();
       
-      {/* Suggestions */}
-      <h3>Browse Popular Shops Instead</h3>
-      <FeaturedShopsCarousel />
-      
-      <Button>Explore All Shops</Button>
-    </div>
-  );
+      setSlugAvailable(!data); // Available if no existing shop found
+    } catch (error) {
+      console.error('Slug check error:', error);
+    } finally {
+      setCheckingSlug(false);
+    }
+  }, 500),
+  [shop?.id]
+);
+
+// In the slug input field
+<div className="relative">
+  <Input
+    id="shop_slug"
+    value={formData.shop_slug}
+    onChange={(e) => {
+      const slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+      setFormData({ ...formData, shop_slug: slug });
+      checkSlugAvailability(slug);
+    }}
+    placeholder="my-store"
+    className={cn(
+      errors.shop_slug && "border-red-500",
+      slugAvailable === true && "border-green-500",
+      slugAvailable === false && "border-red-500"
+    )}
+  />
+  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+    {checkingSlug && <Loader2 className="w-4 h-4 animate-spin" />}
+    {slugAvailable === true && <Check className="w-4 h-4 text-green-500" />}
+    {slugAvailable === false && <X className="w-4 h-4 text-red-500" />}
+  </div>
+</div>
+{slugAvailable === false && (
+  <p className="text-sm text-red-500 mt-1">
+    This slug is already taken. Try another one.
+  </p>
+)}
+```
+
+### Also add to shop creation service:
+```typescript
+// In shopService.createShop - add pre-check
+const { data: existing } = await supabase
+  .from('shops')
+  .select('id')
+  .eq('shop_slug', data.slug.toLowerCase())
+  .maybeSingle();
+
+if (existing) {
+  throw new Error('This store URL is already taken. Please choose another.');
 }
 ```
 
 ---
 
-## Part 5: Pricing Section with Real Plans
+## Part 5: Implementation Summary
 
-### Current Issue
-- Homepage shows hardcoded "Starter (₦0)" and "Business (₦1,000)"
-- Doesn't match actual plans: Basic (₦1,000), Pro (₦3,000), Business (₦5,000)
+### Files to Create
 
-### Solution
-Fetch and display real plans from `subscription_plans` table:
+| File | Purpose |
+|------|---------|
+| `supabase/functions/logistics-get-rates/index.ts` | Fetch delivery quotes |
+| `supabase/functions/logistics-book-delivery/index.ts` | Book shipment |
+| `supabase/functions/logistics-track/index.ts` | Track shipment |
+| `supabase/functions/logistics-webhook/index.ts` | Status callbacks |
+| `src/services/delivery.service.ts` | Frontend delivery service |
+| `src/components/delivery/DeliveryBooking.tsx` | Rate selection UI |
+| `src/components/delivery/DeliveryTracking.tsx` | Tracking display |
+| `src/components/delivery/ManualDeliveryForm.tsx` | Manual booking |
 
-```typescript
-// DynamicPricing component
-const DynamicPricing = () => {
-  const [plans, setPlans] = useState([]);
-  
-  useEffect(() => {
-    subscriptionService.getPlans().then(res => {
-      // Filter out any "starter" or "free" plans
-      const paidPlans = res.data.filter(p => p.price_monthly > 0);
-      setPlans(paidPlans);
-    });
-  }, []);
-  
-  return (
-    <div className="grid md:grid-cols-3 gap-6">
-      {plans.map(plan => (
-        <PricingCard key={plan.id} plan={plan} />
-      ))}
-    </div>
-  );
-};
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/pages/Auth.tsx` | Add email verification notice |
+| `src/pages/MyStore.tsx` | Add slug availability check |
+| `src/services/shop.service.ts` | Add slug uniqueness pre-check |
+| `src/pages/Orders.tsx` | Add delivery booking option |
+| `src/components/OrderTimeline.tsx` | Include delivery events |
+
+### Database Migrations
+
+| Migration | Tables/Changes |
+|-----------|---------------|
+| `create_delivery_tables.sql` | delivery_orders, delivery_tracking_events, shop_addresses |
+| `add_delivery_rls.sql` | RLS policies for all delivery tables |
+
+### Secrets Required
+
+| Secret | Provider | Purpose |
+|--------|----------|---------|
+| `TERMINAL_API_KEY` | Terminal Africa | Primary logistics API |
+| `SENDBOX_API_KEY` | Sendbox | Fallback logistics API |
+
+---
+
+## Estimated Total Effort
+
+| Component | Hours |
+|-----------|-------|
+| Logistics Integration | 26h |
+| Email Verification Notice | 1h |
+| Slug Uniqueness Validation | 2h |
+| Shops Page Debug/Fix | 1h |
+| Testing & QA | 4h |
+| **Total** | **34h** |
+
+---
+
+## JSON Summary (as requested)
+
+```json
+{
+  "logistics_providers": [
+    {
+      "name": "Terminal Africa",
+      "type": "aggregator",
+      "api_docs": "https://docs.terminal.africa/tship",
+      "carriers": ["GIG Logistics", "DHL", "UPS", "FedEx", "Kobo360"],
+      "coverage": "Nigeria + International",
+      "pricing": "Pay-per-shipment",
+      "recommended": true
+    },
+    {
+      "name": "Sendbox",
+      "type": "direct",
+      "api_docs": "https://docs.sendbox.co",
+      "coverage": "Nigeria nationwide",
+      "pricing": "Competitive local rates",
+      "recommended": true
+    },
+    {
+      "name": "GIG Logistics",
+      "type": "direct",
+      "api_docs": "https://giglogistics.com/developer",
+      "coverage": "Nigeria nationwide",
+      "pricing": "Variable by zone"
+    },
+    {
+      "name": "SendStack",
+      "type": "direct",
+      "api_docs": "https://docs.sendstackhq.com",
+      "coverage": "Lagos, major cities",
+      "pricing": "Budget-friendly"
+    }
+  ],
+  "backend_models": {
+    "delivery_orders": {
+      "fields": ["id", "order_id", "shop_id", "provider", "status", "tracking_code", "delivery_fee", "estimated_delivery_date"],
+      "relationships": ["orders", "shops"]
+    },
+    "delivery_tracking_events": {
+      "fields": ["id", "delivery_order_id", "status", "description", "location", "created_at"],
+      "purpose": "Audit trail for delivery status changes"
+    },
+    "shop_addresses": {
+      "fields": ["id", "shop_id", "label", "address", "city", "state", "is_default"],
+      "purpose": "Saved pickup locations for vendors"
+    }
+  },
+  "implementation_plan": {
+    "phase_1_database": {"tasks": ["Create tables", "Add RLS policies"], "hours": 2},
+    "phase_2_edge_functions": {"tasks": ["Get rates", "Book delivery", "Track", "Webhook"], "hours": 10},
+    "phase_3_frontend_service": {"tasks": ["Create delivery.service.ts"], "hours": 2},
+    "phase_4_ui_components": {"tasks": ["Booking UI", "Tracking UI", "Manual fallback"], "hours": 9},
+    "phase_5_testing": {"tasks": ["E2E tests", "Error scenarios"], "hours": 3}
+  },
+  "fallback_workflow": {
+    "trigger": "API failure or user preference",
+    "steps": [
+      "Vendor selects 'Manual Delivery'",
+      "Enters carrier name and tracking number",
+      "Manually updates status: Picked Up → In Transit → Delivered",
+      "Customer notified via WhatsApp/Email at each step"
+    ]
+  },
+  "bug_fixes": {
+    "shops_visibility": "Logic is correct; only 2 shops meet criteria currently",
+    "email_verification": "Add post-signup notice with email check instructions",
+    "unique_slugs": "Add real-time availability check with debounced validation"
+  }
+}
 ```
-
-### Price Display Format
-- Basic: ₦1,000/month - "For getting started"
-- Pro: ₦3,000/month - "For growing businesses" (POPULAR)
-- Business: ₦5,000/month - "For scaling enterprises"
-
----
-
-## Part 6: Create "Learn More" Pages
-
-### Pages to Create
-
-| Route | Purpose |
-|-------|---------|
-| `/features/whatsapp` | WhatsApp order management benefits |
-| `/features/growth` | Business growth tools overview |
-| `/features/trust` | Trust & credibility features |
-| `/features/payments` | Paystack & payment options |
-| `/how-it-works` | Detailed onboarding guide |
-| `/security` | Security & data protection |
-
-### Page Template Structure
-```tsx
-// Each feature page includes:
-<FeaturePage
-  title="WhatsApp Order Management"
-  description="Receive and manage orders directly in WhatsApp"
-  benefits={[
-    "Customers don't need to download any app",
-    "Instant order notifications",
-    "Easy order tracking"
-  ]}
-  ctaText="Start Free Trial"
-  ctaLink="/auth/signup"
-/>
-```
-
----
-
-## Part 7: Background Patterns
-
-### Current State
-Some pages have AdirePattern, but inconsistent
-
-### Solution
-Create `PageWrapper` component with subtle patterns:
-
-```tsx
-// Already exists at src/components/PageWrapper.tsx
-// Ensure all major pages use it:
-const Index = () => (
-  <PageWrapper patternVariant="dots" patternOpacity={0.3}>
-    {/* Page content */}
-  </PageWrapper>
-);
-```
-
-### Pattern Distribution
-- Homepage: `dots` pattern, opacity 0.3
-- Auth pages: `geometric` pattern, opacity 0.2
-- Dashboard: `circles` pattern, opacity 0.15
-- Shops page: `lines` pattern, opacity 0.2
-
----
-
-## Part 8: Google Popup Margin Fix
-
-### Issue
-PlatformReviewPopup dialog has margin issues
-
-### Fix
-Update `src/components/PlatformReviewPopup.tsx`:
-
-```tsx
-<DialogContent className="sm:max-w-md mx-4 sm:mx-auto">
-  {/* Add proper margin handling */}
-</DialogContent>
-```
-
-Add responsive padding and proper mobile handling.
-
----
-
-## Files Summary
-
-### New Files (6)
-1. `src/pages/features/WhatsAppFeature.tsx`
-2. `src/pages/features/GrowthFeature.tsx`
-3. `src/pages/features/TrustFeature.tsx`
-4. `src/pages/features/PaymentsFeature.tsx`
-5. `src/pages/HowItWorksPage.tsx`
-6. `src/pages/SecurityPage.tsx`
-
-### Modified Files (9)
-1. `src/pages/Index.tsx` - Full redesign with backend data
-2. `src/components/HowItWorks.tsx` - Accept both audience types
-3. `src/components/HomepageReviews.tsx` - Accept both audience types
-4. `src/services/shop.service.ts` - Filter by subscription + products
-5. `src/pages/ShopStorefront.tsx` - Graceful not found handling
-6. `src/pages/Shops.tsx` - Apply visibility filter
-7. `src/components/SocialProofStats.tsx` - Real backend data
-8. `src/components/PlatformReviewPopup.tsx` - Fix margins
-9. `src/App.tsx` - Add new routes
-
----
-
-## Database Queries for Stats
-
-```sql
--- Active shops with subscription and products
-SELECT COUNT(*) FROM shops s
-JOIN profiles p ON s.owner_id = p.id
-WHERE s.is_active = true
-AND p.subscription_expires_at > now()
-AND EXISTS (SELECT 1 FROM products WHERE shop_id = s.id AND is_available = true);
-
--- Total sales processed
-SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE payment_status = 'paid';
-
--- Average rating
-SELECT ROUND(AVG(rating), 1) FROM reviews;
-```
-
----
-
-## Expected Outcomes
-
-### Conversion Improvements
-- Cleaner homepage with real data builds trust
-- Proper pricing display reduces confusion
-- Graceful error handling improves UX
-
-### Technical Improvements
-- Build errors resolved
-- Type-safe audience props
-- Consistent styling with patterns
-- Proper mobile responsiveness
-
