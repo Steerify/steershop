@@ -48,3 +48,15 @@ verify_jwt = false
 [functions.delete-account]
 verify_jwt = false
 
+[functions.logistics-get-rates]
+verify_jwt = false
+
+[functions.logistics-book-delivery]
+verify_jwt = false
+
+[functions.logistics-track]
+verify_jwt = false
+
+[functions.logistics-webhook]
+verify_jwt = false
+

@@ -327,6 +327,132 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_orders: {
+        Row: {
+          cancelled_at: string | null
+          created_at: string | null
+          currency: string | null
+          delivered_at: string | null
+          delivery_address: Json
+          delivery_fee: number
+          dimensions: Json | null
+          estimated_delivery_date: string | null
+          id: string
+          order_id: string
+          picked_up_at: string | null
+          pickup_address: Json
+          provider: string
+          provider_shipment_id: string | null
+          provider_tracking_code: string | null
+          shop_id: string
+          status: string
+          updated_at: string | null
+          weight_kg: number | null
+        }
+        Insert: {
+          cancelled_at?: string | null
+          created_at?: string | null
+          currency?: string | null
+          delivered_at?: string | null
+          delivery_address: Json
+          delivery_fee: number
+          dimensions?: Json | null
+          estimated_delivery_date?: string | null
+          id?: string
+          order_id: string
+          picked_up_at?: string | null
+          pickup_address: Json
+          provider: string
+          provider_shipment_id?: string | null
+          provider_tracking_code?: string | null
+          shop_id: string
+          status?: string
+          updated_at?: string | null
+          weight_kg?: number | null
+        }
+        Update: {
+          cancelled_at?: string | null
+          created_at?: string | null
+          currency?: string | null
+          delivered_at?: string | null
+          delivery_address?: Json
+          delivery_fee?: number
+          dimensions?: Json | null
+          estimated_delivery_date?: string | null
+          id?: string
+          order_id?: string
+          picked_up_at?: string | null
+          pickup_address?: Json
+          provider?: string
+          provider_shipment_id?: string | null
+          provider_tracking_code?: string | null
+          shop_id?: string
+          status?: string
+          updated_at?: string | null
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_orders_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_tracking_events: {
+        Row: {
+          created_at: string | null
+          delivery_order_id: string
+          description: string | null
+          id: string
+          location: string | null
+          provider_event_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_order_id: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          provider_event_id?: string | null
+          status: string
+        }
+        Update: {
+          created_at?: string | null
+          delivery_order_id?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          provider_event_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_tracking_events_delivery_order_id_fkey"
+            columns: ["delivery_order_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_usage: {
         Row: {
           created_at: string | null
@@ -1384,6 +1510,78 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_addresses: {
+        Row: {
+          address_line_1: string
+          address_line_2: string | null
+          city: string
+          contact_name: string
+          contact_phone: string
+          country: string | null
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          label: string
+          lat: number | null
+          lng: number | null
+          postal_code: string | null
+          shop_id: string
+          state: string
+          updated_at: string | null
+        }
+        Insert: {
+          address_line_1: string
+          address_line_2?: string | null
+          city: string
+          contact_name: string
+          contact_phone: string
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          label: string
+          lat?: number | null
+          lng?: number | null
+          postal_code?: string | null
+          shop_id: string
+          state: string
+          updated_at?: string | null
+        }
+        Update: {
+          address_line_1?: string
+          address_line_2?: string | null
+          city?: string
+          contact_name?: string
+          contact_phone?: string
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          label?: string
+          lat?: number | null
+          lng?: number | null
+          postal_code?: string | null
+          shop_id?: string
+          state?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_addresses_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_addresses_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
             referencedColumns: ["id"]
           },
         ]

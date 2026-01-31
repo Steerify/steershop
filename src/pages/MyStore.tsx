@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +29,7 @@ import {
   Download,
   QrCode,
   ShieldCheck,
+  X,
 } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { QRCodeSVG } from "qrcode.react";
@@ -44,6 +45,9 @@ import { TourTooltip } from "@/components/tours/TourTooltip";
 import { myStoreTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
 import { Shop } from "@/types/api";
+import { supabase } from "@/integrations/supabase/client";
+import { useDebounce } from "@/hooks/use-debounce";
+import { cn } from "@/lib/utils";
 
 
 const shopSchema = z
@@ -126,6 +130,11 @@ const MyStore = () => {
     banner_url: "",
   });
 
+  // Slug availability state
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [checkingSlug, setCheckingSlug] = useState(false);
+  const debouncedSlug = useDebounce(formData.shop_slug, 500);
+
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } =
     useTour("my-store");
 
@@ -134,6 +143,40 @@ const MyStore = () => {
       endTour(data.status === STATUS.FINISHED);
     }
   };
+
+  // Check slug availability when debounced slug changes
+  useEffect(() => {
+    const checkSlugAvailability = async () => {
+      if (!debouncedSlug || debouncedSlug.length < 2) {
+        setSlugAvailable(null);
+        return;
+      }
+
+      setCheckingSlug(true);
+      try {
+        const { data, error } = await supabase
+          .from('shops')
+          .select('id')
+          .eq('shop_slug', debouncedSlug.toLowerCase())
+          .neq('id', shop?.id || '00000000-0000-0000-0000-000000000000')
+          .maybeSingle();
+
+        if (error) {
+          console.error('Slug check error:', error);
+          setSlugAvailable(null);
+        } else {
+          setSlugAvailable(!data); // Available if no existing shop found
+        }
+      } catch (error) {
+        console.error('Slug check error:', error);
+        setSlugAvailable(null);
+      } finally {
+        setCheckingSlug(false);
+      }
+    };
+
+    checkSlugAvailability();
+  }, [debouncedSlug, shop?.id]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -306,22 +349,42 @@ const MyStore = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="shop_slug">Store Slug</Label>
-                <Input
-                  id="shop_slug"
-                  value={formData.shop_slug}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      shop_slug: e.target.value.toLowerCase(),
-                    })
-                  }
-                  placeholder="store-slug"
-                  className={errors.shop_slug ? "border-red-500" : ""}
-                />
-                {errors.shop_slug && (
-                  <p className="text-red-500 text-sm">{errors.shop_slug}</p>
+                <Label htmlFor="shop_slug">Store Slug (URL)</Label>
+                <div className="relative">
+                  <Input
+                    id="shop_slug"
+                    value={formData.shop_slug}
+                    onChange={(e) => {
+                      const slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                      setFormData({ ...formData, shop_slug: slug });
+                      setSlugAvailable(null); // Reset while typing
+                    }}
+                    placeholder="my-store"
+                    className={cn(
+                      "pr-10",
+                      errors.shop_slug && "border-destructive",
+                      slugAvailable === true && "border-green-500 focus-visible:ring-green-500",
+                      slugAvailable === false && "border-destructive focus-visible:ring-destructive"
+                    )}
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {checkingSlug && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                    {!checkingSlug && slugAvailable === true && <Check className="w-4 h-4 text-green-500" />}
+                    {!checkingSlug && slugAvailable === false && <X className="w-4 h-4 text-destructive" />}
+                  </div>
+                </div>
+                {slugAvailable === false && (
+                  <p className="text-destructive text-sm">This slug is already taken. Try another one.</p>
                 )}
+                {slugAvailable === true && (
+                  <p className="text-green-600 text-sm">This slug is available!</p>
+                )}
+                {errors.shop_slug && (
+                  <p className="text-destructive text-sm">{errors.shop_slug}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Your store URL: steersolo.lovable.app/shop/{formData.shop_slug || 'your-store'}
+                </p>
               </div>
 
               <div className="space-y-2">
