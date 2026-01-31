@@ -67,6 +67,8 @@ const Auth = () => {
   const [rememberMe, setRememberMeLocal] = useState(
     localStorage.getItem('rememberMe') === 'true'
   );
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
   const returnUrl = useAppSelector((state) => state.ui.returnUrl);
   const lastRoute = useAppSelector((state) => state.ui.lastRoute);
@@ -134,17 +136,15 @@ const Auth = () => {
       if (result.error) {
         setAuthError(result.error);
       } else {
+        // Show email verification notice instead of immediate redirect
+        // Supabase requires email confirmation before user can log in
+        setRegisteredEmail(data.email);
+        setShowEmailVerification(true);
+        
         toast({
           title: "Account created!",
-          description: "Welcome to SteerSolo!",
+          description: "Please check your email to verify your account.",
         });
-
-        if (result.user) {
-          const redirectPath = result.user.role === UserRole.ENTREPRENEUR && !result.user.onboardingCompleted
-            ? "/onboarding"
-            : getDashboardPath(result.user.role);
-          navigate(redirectPath);
-        }
       }
     } catch (error: any) {
       setAuthError(error.message || "Please try again");
@@ -228,7 +228,34 @@ const Auth = () => {
             </Alert>
           )}
 
-          {showForgotPassword ? (
+          {showEmailVerification ? (
+            <div className="text-center space-y-6 py-4">
+              <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                <Mail className="w-10 h-10 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold">Check Your Email</h3>
+                <p className="text-muted-foreground">
+                  We've sent a verification link to
+                </p>
+                <p className="font-medium text-foreground">{registeredEmail}</p>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
+                <p>Click the link in the email to activate your account.</p>
+                <p className="text-xs">Check your spam folder if you don't see it within a few minutes.</p>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowEmailVerification(false);
+                  setActiveTab("login");
+                }}
+                className="w-full"
+              >
+                Back to Login
+              </Button>
+            </div>
+          ) : showForgotPassword ? (
             <div className="space-y-4">
               <Button variant="ghost" size="sm" onClick={() => setShowForgotPassword(false)} className="mb-2">
                 <ArrowLeft className="mr-2 h-4 w-4" />
