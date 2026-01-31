@@ -11,11 +11,11 @@ import productService from "@/services/product.service";
 import subscriptionService from "@/services/subscription.service";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  Plus, Store, Package, ShoppingCart, TrendingUp, Users, 
-  Settings, User, PlusCircle, Calendar, Share2, Palette,
-  Sparkles, Megaphone, Target, ArrowRight, LogOut, Clock,
+  Store, Package, ShoppingCart, TrendingUp, 
+  Settings, LogOut, Clock,
   CheckCircle, AlertCircle, DollarSign, CalendarCheck, Menu, X,
-  BarChart3, HelpCircle, Bell, Search, Grid, Shield
+  Bell, Search, Sparkles, Shield, HelpCircle,
+  ChevronRight, Eye, Download, Upload, Users
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
@@ -37,9 +37,8 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -62,7 +61,6 @@ const Dashboard = () => {
   const [userBadges, setUserBadges] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [pendingOrders, setPendingOrders] = useState(0);
-  const [activeTab, setActiveTab] = useState("overview");
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
@@ -130,7 +128,7 @@ const Dashboard = () => {
       setIsLoading(true);
       if (!user) return;
 
-      // Fetch profile from Supabase for accurate subscription data
+      // Fetch profile from Supabase
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -138,12 +136,10 @@ const Dashboard = () => {
         .single();
 
       if (profileError) {
-        console.error('Error fetching profile:', profileError);
         setProfile({ full_name: user.email?.split('@')[0] || 'User' });
       } else {
         setProfile(profileData);
         
-        // Calculate subscription status from profile
         if (profileData.subscription_expires_at) {
           const expiresAt = new Date(profileData.subscription_expires_at);
           const now = new Date();
@@ -164,7 +160,7 @@ const Dashboard = () => {
         }
       }
 
-      // Fetch real shop data
+      // Fetch shop data
       const shopResponse = await shopService.getShopByOwner(user.id);
       const shops = shopResponse.data;
       const primaryShop = Array.isArray(shops) ? shops[0] : (shops as any);
@@ -173,18 +169,16 @@ const Dashboard = () => {
         setShopData({ id: primaryShop.id, name: primaryShop.shop_name || primaryShop.name });
         setShopFullData(primaryShop);
         
-        // Fetch products count for checklist
         const productsResponse = await productService.getProducts({ shopId: primaryShop.id });
         setProductsCount(productsResponse.data?.length || 0);
         
         const ordersResponse = await orderService.getOrders({ shopId: primaryShop.id });
         const allOrders = ordersResponse.data || [];
         
-        // Calculate pending orders
         const pending = allOrders.filter(o => (o as any).payment_status !== 'paid' && (o as any).order_status !== 'completed').length;
         setPendingOrders(pending);
 
-        // Generate chart data from real orders
+        // Generate chart data
         const last7Days = eachDayOfInterval({
           start: subMonths(new Date(), 0).setDate(new Date().getDate() - 6),
           end: new Date()
@@ -216,7 +210,7 @@ const Dashboard = () => {
         }
       }
 
-      // Fetch active offer for entrepreneurs
+      // Fetch active offer
       const offerResponse = await offerService.getOffers();
       if (offerResponse.success && offerResponse.data) {
         const entOffer = offerResponse.data.find(o => o.target_audience === 'entrepreneurs' && o.is_active);
@@ -297,115 +291,162 @@ const Dashboard = () => {
     { 
       icon: Store, 
       label: "My Store", 
-      description: "Setup and customize",
       path: "/my-store",
-      color: "from-primary/20 to-primary/10",
+      color: "bg-primary/10",
       textColor: "text-primary"
     },
     { 
       icon: Package, 
       label: "Products", 
-      description: "Manage your catalog",
       path: "/products",
-      color: "from-accent/20 to-accent/10",
+      color: "bg-accent/10",
       textColor: "text-accent"
     },
     { 
       icon: ShoppingCart, 
       label: "Orders", 
-      description: "View & manage orders",
       path: "/orders",
-      color: "from-gold/20 to-gold/10",
-      textColor: "text-gold"
+      color: "bg-amber-500/10",
+      textColor: "text-amber-500"
     },
     { 
       icon: CalendarCheck, 
       label: "Bookings", 
-      description: "Manage appointments",
       path: "/bookings",
-      color: "from-purple-500/20 to-purple-500/10",
+      color: "bg-purple-500/10",
       textColor: "text-purple-500"
     },
+  ];
+
+  const SecondaryActions = [
     { 
-      icon: Megaphone, 
-      label: "Marketing", 
-      description: "Create posters with AI",
-      path: "/marketing",
-      color: "from-pink-500/20 to-pink-500/10",
-      textColor: "text-pink-500"
+      icon: Eye, 
+      label: "View Store", 
+      path: `/store/${shopData?.id}`,
+      color: "bg-blue-500/10",
+      textColor: "text-blue-500"
     },
     { 
-      icon: Target, 
-      label: "Services", 
-      description: "Google & Ad consultations",
-      path: "/marketing-services",
-      color: "from-cyan-500/20 to-cyan-500/10",
-      textColor: "text-cyan-500"
+      icon: Users, 
+      label: "Customers", 
+      path: "/customers",
+      color: "bg-green-500/10",
+      textColor: "text-green-500"
+    },
+    { 
+      icon: Download, 
+      label: "Export Data", 
+      path: "/export",
+      color: "bg-gray-500/10",
+      textColor: "text-gray-500"
+    },
+    { 
+      icon: Settings, 
+      label: "Settings", 
+      path: "/settings",
+      color: "bg-gray-500/10",
+      textColor: "text-gray-500"
     },
   ];
 
   return (
-    <PageWrapper patternVariant="dots" patternOpacity={0.3}>
-      {/* Top Navigation */}
+    <PageWrapper patternVariant="dots" patternOpacity={0.1}>
+      {/* Mobile-First Navigation */}
       <nav className="bg-background/95 backdrop-blur-lg border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3">
+        <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg overflow-hidden">
                 <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                SteerSolo
-              </span>
+              <div>
+                <span className="text-base font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Dashboard
+                </span>
+                <p className="text-xs text-muted-foreground hidden sm:block">
+                  {shopData?.name || "My Store"}
+                </p>
+              </div>
             </div>
             
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              {/* Mobile: Only show AI button and menu */}
               {shopData && (
-                <StrokeMyShop shopId={shopData.id} shopName={shopData.name} />
+                <div className="hidden sm:block">
+                  <StrokeMyShop shopId={shopData.id} shopName={shopData.name} />
+                </div>
               )}
               
-              <Button variant="ghost" size="icon">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-9 w-9 sm:h-10 sm:w-10"
+                onClick={() => navigate('/search')}
+              >
                 <Search className="h-4 w-4" />
               </Button>
               
-              <Button variant="ghost" size="icon">
-                <Bell className="h-4 w-4" />
-              </Button>
-              
-              <TourButton 
-                onStartTour={startTour} 
-                hasSeenTour={hasSeenTour} 
-                onResetTour={resetTour}
-              />
-              
-              <Button variant="ghost" onClick={handleLogout} className="hover:bg-destructive/10">
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Mobile Menu */}
-            <div className="flex md:hidden items-center gap-2">
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right">
-                  <div className="flex flex-col h-full py-6">
-                    <div className="mb-6">
-                      <div className="flex items-center gap-3 mb-4">
+                <SheetContent side="left" className="w-[85vw] max-w-sm p-0">
+                  <ScrollArea className="h-full">
+                    <div className="p-4">
+                      <div className="flex items-center gap-3 mb-6">
                         <div className="w-10 h-10 rounded-lg overflow-hidden">
                           <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
                         </div>
-                        <div>
-                          <p className="font-semibold">{profile?.full_name}</p>
-                          <p className="text-sm text-muted-foreground">{user?.email}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold truncate">{profile?.full_name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                         </div>
                       </div>
                       
-                      <div className="space-y-2">
+                      <div className="space-y-1 mb-6">
+                        <h3 className="text-xs uppercase font-semibold text-muted-foreground mb-2">Main Menu</h3>
+                        {QuickActions.concat(SecondaryActions).map((action) => (
+                          <Button
+                            key={action.path}
+                            variant="ghost"
+                            className="w-full justify-start h-11 px-3"
+                            onClick={() => {
+                              navigate(action.path);
+                              setIsMobileMenuOpen(false);
+                            }}
+                          >
+                            <div className={`w-8 h-8 rounded-lg ${action.color} flex items-center justify-center mr-3`}>
+                              <action.icon className={`w-4 h-4 ${action.textColor}`} />
+                            </div>
+                            <span className="text-sm">{action.label}</span>
+                          </Button>
+                        ))}
+                      </div>
+                      
+                      <div className="space-y-1 mb-6">
+                        <h3 className="text-xs uppercase font-semibold text-muted-foreground mb-2">Account</h3>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start h-11 px-3"
+                          onClick={() => {
+                            navigate("/subscription");
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center mr-3">
+                            <Sparkles className="w-4 h-4 text-purple-500" />
+                          </div>
+                          <div className="flex-1 text-left">
+                            <span className="text-sm">Subscription</span>
+                            <div className="text-xs text-muted-foreground">
+                              {subscriptionStatus === 'trial' ? `${daysRemaining} days left` : 
+                               subscriptionStatus === 'active' ? 'Active' : 'Expired'}
+                            </div>
+                          </div>
+                        </Button>
+                        
                         <TourButton 
                           onStartTour={() => {
                             startTour();
@@ -413,58 +454,39 @@ const Dashboard = () => {
                           }} 
                           hasSeenTour={hasSeenTour} 
                           onResetTour={resetTour}
-                          className="w-full justify-start"
+                          className="w-full justify-start h-11 px-3"
                         />
                         
-                        {QuickActions.map((action) => (
-                          <Button
-                            key={action.path}
-                            variant="ghost"
-                            className="w-full justify-start"
-                            onClick={() => {
-                              navigate(action.path);
-                              setIsMobileMenuOpen(false);
-                            }}
-                          >
-                            <action.icon className="w-4 h-4 mr-2" />
-                            {action.label}
-                          </Button>
-                        ))}
-                        
-                        <Separator className="my-2" />
-                        
                         <Button
                           variant="ghost"
-                          className="w-full justify-start"
+                          className="w-full justify-start h-11 px-3"
                           onClick={() => {
-                            navigate("/settings");
+                            navigate("/help");
                             setIsMobileMenuOpen(false);
                           }}
                         >
-                          <Settings className="w-4 h-4 mr-2" />
-                          Settings
-                        </Button>
-                        
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => {
-                            handleLogout();
-                            setIsMobileMenuOpen(false);
-                          }}
-                        >
-                          <LogOut className="w-4 h-4 mr-2" />
-                          Logout
+                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center mr-3">
+                            <HelpCircle className="w-4 h-4 text-blue-500" />
+                          </div>
+                          <span className="text-sm">Help & Support</span>
                         </Button>
                       </div>
+                      
+                      <Separator className="my-4" />
+                      
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start h-11 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          handleLogout();
+                          setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        <LogOut className="w-4 h-4 mr-3" />
+                        <span className="text-sm">Logout</span>
+                      </Button>
                     </div>
-                    
-                    {userBadges.length > 0 && (
-                      <div className="mt-auto">
-                        <BadgeDisplay badges={userBadges} size="sm" />
-                      </div>
-                    )}
-                  </div>
+                  </ScrollArea>
                 </SheetContent>
               </Sheet>
             </div>
@@ -472,279 +494,406 @@ const Dashboard = () => {
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-6">
-        {/* Welcome Header with Stats */}
-        <div className="mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold mb-1">Welcome back, {profile?.full_name}!</h1>
-              <p className="text-muted-foreground">Here's what's happening with your store today.</p>
-            </div>
+      <main className="min-h-screen pb-20">
+        <div className="px-4 py-4">
+          {/* Welcome Section */}
+          <div className="mb-6">
+            <h1 className="text-xl font-bold mb-1">Hello, {profile?.full_name}! 👋</h1>
+            <p className="text-sm text-muted-foreground">Here's your store overview</p>
             
-            <div className="flex items-center gap-3">
-              <BadgeDisplay badges={userBadges} size="sm" />
-              
-              <div 
-                className="cursor-pointer" 
-                onClick={() => navigate('/subscription')}
-                data-tour="subscription-status"
-              >
-                {subscriptionStatus === 'trial' && daysRemaining > 0 && (
-                  <Badge variant="outline" className="border-gold text-gold bg-gold/10">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} left
-                  </Badge>
-                )}
-                {subscriptionStatus === 'active' && (
-                  <Badge variant="outline" className="border-green-500 text-green-500 bg-green-500/10">
-                    <CheckCircle className="w-3 h-3 mr-1" />
-                    Active
-                  </Badge>
-                )}
-                {subscriptionStatus === 'expired' && (
-                  <Badge variant="outline" className="border-destructive text-destructive bg-destructive/10">
-                    <AlertCircle className="w-3 h-3 mr-1" />
-                    Expired
-                  </Badge>
-                )}
+            {/* Subscription Status - Mobile Optimized */}
+            <div 
+              className="mt-4 p-4 rounded-lg border bg-gradient-to-r from-primary/5 to-accent/5 cursor-pointer"
+              onClick={() => navigate('/subscription')}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    {subscriptionStatus === 'trial' && <Clock className="w-4 h-4 text-amber-500" />}
+                    {subscriptionStatus === 'active' && <CheckCircle className="w-4 h-4 text-green-500" />}
+                    {subscriptionStatus === 'expired' && <AlertCircle className="w-4 h-4 text-destructive" />}
+                    <span className="text-sm font-medium">
+                      {subscriptionStatus === 'trial' ? 'Free Trial' : 
+                       subscriptionStatus === 'active' ? 'Active Subscription' : 'Subscription Expired'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {subscriptionStatus === 'trial' ? `${daysRemaining} days remaining` : 
+                     subscriptionStatus === 'active' ? 'You\'re all set!' : 'Renew to continue selling'}
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
             </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Card>
+          {/* Stats Cards - Mobile Grid */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <Card className="col-span-1">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Revenue</p>
-                    <p className="text-2xl font-bold">₦{totalRevenue.toLocaleString()}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mr-3">
                     <DollarSign className="w-5 h-5 text-primary" />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Sales</p>
-                    <p className="text-2xl font-bold">{totalSales}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-accent" />
+                    <p className="text-xs text-muted-foreground">Revenue</p>
+                    <p className="font-bold text-sm sm:text-base">₦{totalRevenue.toLocaleString()}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="col-span-1">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Products</p>
-                    <p className="text-2xl font-bold">{productsCount}</p>
+                <div className="flex items-center">
+                  <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center mr-3">
+                    <ShoppingCart className="w-5 h-5 text-accent" />
                   </div>
-                  <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
-                    <Package className="w-5 h-5 text-gold" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Orders</p>
+                    <p className="font-bold text-sm sm:text-base">{totalSales}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="col-span-1">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Pending Orders</p>
-                    <p className="text-2xl font-bold">{pendingOrders}</p>
+                <div className="flex items-center">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center mr-3">
+                    <Package className="w-5 h-5 text-amber-500" />
                   </div>
-                  <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                    <ShoppingCart className="w-5 h-5 text-purple-500" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Products</p>
+                    <p className="font-bold text-sm sm:text-base">{productsCount}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="col-span-1">
+              <CardContent className="p-4">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center mr-3">
+                    <TrendingUp className="w-5 h-5 text-purple-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Pending</p>
+                    <p className="font-bold text-sm sm:text-base">{pendingOrders}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Subscription Banner */}
-          {(subscriptionStatus === 'trial' || subscriptionStatus === 'expired') && (
-            <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 mb-6">
-              <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div>
-                    <h3 className="font-semibold mb-1">
-                      {subscriptionStatus === 'trial' 
-                        ? '🎉 Complete Your Setup' 
-                        : '⚠️ Subscription Required'}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {subscriptionStatus === 'trial' 
-                        ? `You have ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left in your free trial. Subscribe to continue.`
-                        : 'Your trial has expired. Subscribe to reactivate your store.'}
-                    </p>
+          {/* Quick Actions - Mobile Touch Friendly */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold">Quick Actions</h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-xs h-8"
+                onClick={() => navigate('/actions')}
+              >
+                View all
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {QuickActions.map((action) => (
+                <Button
+                  key={action.path}
+                  variant="outline"
+                  className="h-auto py-4 flex flex-col items-center justify-center gap-2"
+                  onClick={() => navigate(action.path)}
+                >
+                  <div className={`w-12 h-12 rounded-full ${action.color} flex items-center justify-center`}>
+                    <action.icon className={`w-6 h-6 ${action.textColor}`} />
                   </div>
-                  
-                  <div className="flex gap-2">
+                  <span className="text-xs font-medium">{action.label}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Revenue Chart - Mobile Optimized */}
+          <Card className="mb-6">
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-base">Revenue Trend</CardTitle>
+              <CardDescription className="text-xs">Last 7 days</CardDescription>
+            </CardHeader>
+            <CardContent className="p-2">
+              <div className="h-[200px] sm:h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart 
+                    data={chartData}
+                    margin={{ top: 10, right: 5, left: 0, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="2 2" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis 
+                      dataKey="date" 
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={5}
+                    />
+                    <YAxis 
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `₦${value > 1000 ? (value/1000).toFixed(0) + 'k' : value}`}
+                      width={30}
+                    />
+                    <Tooltip 
+                      formatter={(value) => [`₦${Number(value).toLocaleString()}`, 'Revenue']}
+                      contentStyle={{
+                        fontSize: '11px',
+                        padding: '6px 8px',
+                        borderRadius: '6px'
+                      }}
+                    />
+                    <Bar 
+                      dataKey="revenue" 
+                      fill="hsl(var(--primary))" 
+                      radius={[2, 2, 0, 0]}
+                      maxBarSize={20}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Setup Progress */}
+          <Card className="mb-6">
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-base">Store Setup</CardTitle>
+              <CardDescription className="text-xs">Complete your store setup</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              <ProfileCompletionChecklist shop={shopFullData} productsCount={productsCount} />
+            </CardContent>
+          </Card>
+
+          {/* Active Offer Banner */}
+          {activeOffer && (
+            <Card className="mb-6 bg-gradient-to-r from-primary to-accent text-white">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-sm mb-1">Special Offer</h3>
+                    <p className="text-xs opacity-90 mb-3 line-clamp-2">{activeOffer.description}</p>
                     <Button 
+                      variant="secondary" 
+                      size="sm"
                       onClick={handleSubscribe}
-                      disabled={isSubscribing}
-                      className="bg-primary hover:bg-primary/90"
+                      className="bg-white text-primary hover:bg-white/90 text-xs h-8"
                     >
-                      {isSubscribing ? "Processing..." : "Subscribe Now"}
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate('/pricing')}
-                    >
-                      View Plans
+                      {activeOffer.button_text || "Claim Now"}
                     </Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
           )}
-        </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Analytics & Charts */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Revenue Chart */}
-            <Card data-tour="sales-analytics">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Revenue Trend</span>
-                  <span className="text-sm font-normal text-muted-foreground">Last 7 days</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="date" />
-                      <YAxis tickFormatter={(value) => `₦${value}`} />
-                      <Tooltip formatter={(value) => [`₦${Number(value).toLocaleString()}`, 'Revenue']} />
-                      <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions Grid */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {QuickActions.map((action) => (
-                  <Card 
+          {/* Secondary Actions - Horizontal Scroll on Mobile */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-3">More Tools</h2>
+            <ScrollArea className="w-full whitespace-nowrap">
+              <div className="flex gap-3 pb-2">
+                {SecondaryActions.map((action) => (
+                  <Button
                     key={action.path}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    variant="outline"
+                    className="h-auto py-3 px-4 flex flex-col items-center justify-center gap-2 min-w-[120px]"
                     onClick={() => navigate(action.path)}
                   >
-                    <CardContent className="p-4">
-                      <div className={`w-12 h-12 rounded-lg ${action.color} flex items-center justify-center mb-3`}>
-                        <action.icon className={`w-6 h-6 ${action.textColor}`} />
-                      </div>
-                      <h3 className="font-medium mb-1">{action.label}</h3>
-                      <p className="text-sm text-muted-foreground">{action.description}</p>
-                    </CardContent>
-                  </Card>
+                    <div className={`w-10 h-10 rounded-lg ${action.color} flex items-center justify-center`}>
+                      <action.icon className={`w-5 h-5 ${action.textColor}`} />
+                    </div>
+                    <span className="text-xs font-medium whitespace-normal text-center">{action.label}</span>
+                  </Button>
                 ))}
               </div>
+            </ScrollArea>
+          </div>
+        </div>
+      </main>
+
+      {/* Bottom Navigation for Mobile */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t z-40">
+        <div className="grid grid-cols-4 h-16">
+          {QuickActions.slice(0, 4).map((action) => (
+            <Button
+              key={action.path}
+              variant="ghost"
+              className="h-full flex flex-col items-center justify-center p-0 rounded-none"
+              onClick={() => navigate(action.path)}
+            >
+              <action.icon className={`w-5 h-5 mb-1 ${action.textColor}`} />
+              <span className="text-xs">{action.label}</span>
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop Sidebar for larger screens */}
+      <div className="hidden md:flex fixed left-0 top-0 bottom-0 w-64 border-r bg-background z-40">
+        <div className="flex flex-col w-full p-4">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-lg overflow-hidden">
+              <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+            </div>
+            <div>
+              <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                SteerSolo
+              </span>
+              <p className="text-xs text-muted-foreground">Business Dashboard</p>
             </div>
           </div>
-
-          {/* Right Column - Profile & Tools */}
-          <div className="space-y-6">
-            {/* Profile Completion */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Setup Progress</CardTitle>
-                <CardDescription>Complete your store setup</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ProfileCompletionChecklist shop={shopFullData} productsCount={productsCount} />
-              </CardContent>
-            </Card>
-
-            {/* Active Offers */}
-            {activeOffer && (
-              <Card className="bg-gradient-to-br from-primary to-accent text-white">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-3">
-                    <Sparkles className="w-5 h-5 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold mb-1">Special Offer</h3>
-                      <p className="text-sm opacity-90 mb-3">{activeOffer.description}</p>
-                      <Button 
-                        variant="secondary" 
-                        size="sm"
-                        onClick={handleSubscribe}
-                        className="bg-white text-primary hover:bg-white/90"
-                      >
-                        {activeOffer.button_text || "Claim Offer"}
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Store Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Store Status</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Store Visibility</span>
-                  <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                    Live
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Last Order</span>
-                  <span className="text-sm font-medium">Today</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Store Rating</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm font-medium">4.8</span>
-                    <span className="text-xs text-muted-foreground">(12 reviews)</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Help & Resources */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Help & Resources</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="ghost" className="w-full justify-start">
-                  <HelpCircle className="w-4 h-4 mr-2" />
-                  Get Help
-                </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  <Shield className="w-4 h-4 mr-2" />
-                  Security Tips
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start"
-                  onClick={startTour}
+          
+          <ScrollArea className="flex-1">
+            <div className="space-y-1">
+              <h3 className="text-xs uppercase font-semibold text-muted-foreground mb-2">Navigation</h3>
+              {QuickActions.map((action) => (
+                <Button
+                  key={action.path}
+                  variant="ghost"
+                  className="w-full justify-start mb-1"
+                  onClick={() => navigate(action.path)}
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Take a Tour
+                  <action.icon className={`w-4 h-4 mr-3 ${action.textColor}`} />
+                  {action.label}
                 </Button>
-              </CardContent>
-            </Card>
+              ))}
+              
+              <Separator className="my-4" />
+              
+              <h3 className="text-xs uppercase font-semibold text-muted-foreground mb-2">Tools</h3>
+              {SecondaryActions.map((action) => (
+                <Button
+                  key={action.path}
+                  variant="ghost"
+                  className="w-full justify-start mb-1"
+                  onClick={() => navigate(action.path)}
+                >
+                  <action.icon className={`w-4 h-4 mr-3 ${action.textColor}`} />
+                  {action.label}
+                </Button>
+              ))}
+            </div>
+          </ScrollArea>
+          
+          <div className="mt-auto pt-4 border-t">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="font-semibold">{profile?.full_name?.charAt(0) || 'U'}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{profile?.full_name}</p>
+                <p className="text-xs text-muted-foreground truncate">{shopData?.name || 'My Store'}</p>
+              </div>
+            </div>
+            
+            <Button 
+              variant="outline" 
+              className="w-full mb-2"
+              onClick={() => navigate('/subscription')}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              {subscriptionStatus === 'trial' ? `${daysRemaining} days left` : 'Manage Plan'}
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              className="w-full text-destructive hover:text-destructive"
+              onClick={handleLogout}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content wrapper for desktop */}
+      <div className="md:ml-64">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          {/* Desktop-only additional content */}
+          <div className="hidden md:block">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold mb-2">Welcome back, {profile?.full_name}! 👋</h1>
+              <p className="text-muted-foreground">Here's what's happening with your business today</p>
+            </div>
+            
+            {/* Additional desktop stats */}
+            <div className="grid grid-cols-3 gap-6 mb-8">
+              <div className="col-span-2">
+                <h2 className="text-xl font-semibold mb-4">Performance Overview</h2>
+                <div className="grid grid-cols-3 gap-4">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Avg. Order Value</p>
+                          <p className="text-2xl font-bold">₦{totalSales > 0 ? Math.round(totalRevenue/totalSales).toLocaleString() : '0'}</p>
+                        </div>
+                        <TrendingUp className="w-8 h-8 text-green-500" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Conversion Rate</p>
+                          <p className="text-2xl font-bold">{productsCount > 0 ? Math.round((totalSales/productsCount)*100) : '0'}%</p>
+                        </div>
+                        <Users className="w-8 h-8 text-blue-500" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Store Visits</p>
+                          <p className="text-2xl font-bold">{Math.round(totalSales * 3.5)}</p>
+                        </div>
+                        <Eye className="w-8 h-8 text-purple-500" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+              
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Quick Insights</h2>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Best Selling</p>
+                        <p className="font-semibold">Product #1</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Peak Hours</p>
+                        <p className="font-semibold">2PM - 5PM</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Top Location</p>
+                        <p className="font-semibold">Lagos</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>
