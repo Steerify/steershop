@@ -55,18 +55,21 @@ const shopService = {
     };
   },
 
-  getShops: async (page = 1, limit = 10, filters?: { verified?: boolean }) => {
+  getShops: async (page = 1, limit = 10, filters?: { verified?: boolean; includeAll?: boolean; activeOnly?: boolean }) => {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    // Fetch shops with owner profile to get subscription info
     let query = supabase
       .from('shops')
       .select(`
         *,
-        owner:profiles(subscription_plan_id)
-      `, { count: 'exact' })
-      .eq('is_active', true);
+        owner:profiles(subscription_plan_id, subscription_expires_at)
+      `, { count: 'exact' });
+
+    // Default to active shops only, unless includeAll is true
+    if (filters?.activeOnly !== false) {
+      query = query.eq('is_active', true);
+    }
 
     // Apply verified filter if specified
     if (filters?.verified !== undefined) {
@@ -80,7 +83,44 @@ const shopService = {
       throw new Error(error.message);
     }
 
-    // Filter shops that have valid subscription/trial and at least one product
+    // If includeAll flag is set, return all shops without subscription check
+    if (filters?.includeAll) {
+      // Map database fields to include both naming conventions
+      const mappedShops: Shop[] = (shops || []).map(s => ({
+        id: s.id,
+        name: s.shop_name,
+        slug: s.shop_slug,
+        shop_name: s.shop_name,
+        shop_slug: s.shop_slug,
+        description: s.description,
+        whatsapp_number: s.whatsapp_number,
+        payment_method: s.payment_method,
+        bank_name: s.bank_name,
+        bank_account_name: s.bank_account_name,
+        bank_account_number: s.bank_account_number,
+        paystack_public_key: s.paystack_public_key,
+        logo_url: s.logo_url,
+        banner_url: s.banner_url,
+        is_active: s.is_active,
+        average_rating: s.average_rating,
+        total_reviews: s.total_reviews,
+        owner_id: s.owner_id,
+        is_verified: s.is_verified,
+      }));
+
+      return {
+        success: true,
+        data: mappedShops,
+        meta: {
+          page,
+          limit,
+          total: count || 0,
+          totalPages: Math.ceil((count || 0) / limit),
+        }
+      };
+    }
+
+    // Original filtering logic for non-search scenarios (subscription check)
     const now = new Date();
     const validShops = (shops || []).filter((shop: any) => {
       const owner = shop.owner;
@@ -93,7 +133,7 @@ const shopService = {
       return hasValidSubscription;
     });
 
-    // Now check which shops have products - do this in a separate query
+    // Check which shops have products
     const shopIds = validShops.map((s: any) => s.id);
     
     let shopsWithProducts: string[] = [];
@@ -110,11 +150,6 @@ const shopService = {
     // Final filter - only shops with products
     const finalShops = validShops.filter((shop: any) => shopsWithProducts.includes(shop.id));
 
-    if (error) {
-      console.error('Get shops error:', error);
-      throw new Error(error.message);
-    }
-
     // Fetch subscription plans to determine priority
     const { data: plans } = await supabase
       .from('subscription_plans')
@@ -123,9 +158,9 @@ const shopService = {
     const planMap = new Map(plans?.map(p => [p.id, p]) || []);
 
     // Sort shops: Business first (highest display_order), then Pro, then Basic
-  const sortedShops = [...(shops || [])].sort((a, b) => {
-      const planA = planMap.get((a as any).owner?.subscription_plan_id);
-      const planB = planMap.get((b as any).owner?.subscription_plan_id);
+    const sortedShops = finalShops.sort((a: any, b: any) => {
+      const planA = planMap.get(a.owner?.subscription_plan_id);
+      const planB = planMap.get(b.owner?.subscription_plan_id);
       const orderA = planA?.display_order || 0;
       const orderB = planB?.display_order || 0;
       return orderB - orderA; // Higher display_order first (business)

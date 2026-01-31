@@ -113,6 +113,76 @@ const productService = {
     };
   },
 
+  // NEW: Search products method
+  searchProducts: async (params: { 
+    query: string; 
+    shopId?: string; 
+    page?: number; 
+    limit?: number; 
+    includeUnavailable?: boolean 
+  }) => {
+    console.log('searchProducts called with params:', params);
+    
+    const page = params?.page || 1;
+    const limit = params?.limit || 50;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let query = supabase
+      .from('products')
+      .select('*', { count: 'exact' })
+      .ilike('name', `%${params.query}%`)
+      .range(from, to);
+
+    if (!params?.includeUnavailable) {
+      query = query.eq('is_available', true);
+    }
+
+    if (params?.shopId) {
+      query = query.eq('shop_id', params.shopId);
+    }
+
+    const { data: products, error, count } = await query;
+
+    if (error) {
+      console.error('Search products error:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('Search products results:', products?.length, 'items found');
+
+    // Map database fields to API types
+    const mappedProducts: Product[] = (products || []).map(p => ({
+      id: p.id,
+      shopId: p.shop_id,
+      categoryId: '',
+      name: p.name,
+      slug: p.name.toLowerCase().replace(/\s+/g, '-'),
+      description: p.description || '',
+      price: Number(p.price),
+      comparePrice: undefined,
+      inventory: p.stock_quantity,
+      images: p.image_url ? [{ url: p.image_url, alt: p.name, position: 0 }] : [],
+      averageRating: p.average_rating ? Number(p.average_rating) : undefined,
+      totalReviews: p.total_reviews || 0,
+      type: p.type as 'product' | 'service' | undefined,
+      is_available: p.is_available,
+      duration_minutes: p.duration_minutes,
+      booking_required: p.booking_required,
+    }));
+
+    return {
+      success: true,
+      data: mappedProducts,
+      meta: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit),
+      }
+    };
+  },
+
   getProductById: async (id: string) => {
     const { data: product, error } = await supabase
       .from('products')
