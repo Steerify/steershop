@@ -55,7 +55,7 @@ const shopService = {
     };
   },
 
-  getShops: async (page = 1, limit = 10, filters?: { verified?: boolean }) => {
+  getShops: async (page = 1, limit = 10, filters?: { verified?: boolean; includeAll?: boolean; activeOnly?: boolean }) => {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
@@ -64,7 +64,7 @@ const shopService = {
       .from('shops')
       .select(`
         *,
-        owner:profiles(subscription_plan_id)
+        owner:profiles(subscription_plan_id, subscription_expires_at, is_subscribed)
       `, { count: 'exact' })
       .eq('is_active', true);
 
@@ -78,6 +78,43 @@ const shopService = {
     if (error) {
       console.error('Get shops error:', error);
       throw new Error(error.message);
+    }
+
+    // If includeAll is true (for search), skip subscription/product filtering
+    if (filters?.includeAll) {
+      // Map and return all shops without filtering
+      const mappedShops: Shop[] = (shops || []).map(s => ({
+        id: s.id,
+        name: s.shop_name,
+        slug: s.shop_slug,
+        shop_name: s.shop_name,
+        shop_slug: s.shop_slug,
+        description: s.description,
+        whatsapp_number: s.whatsapp_number,
+        payment_method: s.payment_method,
+        bank_name: s.bank_name,
+        bank_account_name: s.bank_account_name,
+        bank_account_number: s.bank_account_number,
+        paystack_public_key: s.paystack_public_key,
+        logo_url: s.logo_url,
+        banner_url: s.banner_url,
+        is_active: s.is_active,
+        average_rating: s.average_rating,
+        total_reviews: s.total_reviews,
+        owner_id: s.owner_id,
+        is_verified: s.is_verified,
+      }));
+
+      return {
+        success: true,
+        data: mappedShops,
+        meta: {
+          page,
+          limit,
+          total: count || 0,
+          totalPages: Math.ceil((count || 0) / limit),
+        }
+      };
     }
 
     // Filter shops that have valid subscription/trial and at least one product

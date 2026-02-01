@@ -200,6 +200,60 @@ const productService = {
       message: 'Product deleted successfully'
     };
   },
+
+  searchProducts: async (params: { query: string; page?: number; limit?: number }) => {
+    const page = params.page || 1;
+    const limit = params.limit || 12;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    // Search products by name or description across all shops with valid subscriptions
+    const { data: products, error, count } = await supabase
+      .from('products')
+      .select(`
+        *,
+        shops!inner(shop_slug, shop_name, owner_id)
+      `, { count: 'exact' })
+      .eq('is_available', true)
+      .or(`name.ilike.%${params.query}%,description.ilike.%${params.query}%`)
+      .range(from, to);
+
+    if (error) {
+      console.error('Search products error:', error);
+      throw new Error(error.message);
+    }
+
+    // Map to Product type with shop_slug and image_url for display
+    const mappedProducts = (products || []).map((p: any) => ({
+      id: p.id,
+      shopId: p.shop_id,
+      categoryId: '',
+      name: p.name,
+      slug: p.name.toLowerCase().replace(/\s+/g, '-'),
+      description: p.description || '',
+      price: Number(p.price),
+      inventory: p.stock_quantity,
+      stock_quantity: p.stock_quantity,
+      images: p.image_url ? [{ url: p.image_url, alt: p.name, position: 0 }] : [],
+      image_url: p.image_url,
+      shop_slug: p.shops?.shop_slug,
+      is_available: p.is_available,
+      type: p.type as 'product' | 'service' | undefined,
+      averageRating: p.average_rating ? Number(p.average_rating) : undefined,
+      totalReviews: p.total_reviews || 0,
+    }));
+
+    return {
+      success: true,
+      data: mappedProducts,
+      meta: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit),
+      }
+    };
+  },
 };
 
 export default productService;

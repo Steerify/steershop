@@ -105,6 +105,10 @@ export interface Product {
   is_available?: boolean;
   duration_minutes?: number;
   booking_required?: boolean;
+  // Additional fields for search results
+  shop_slug?: string;
+  image_url?: string;
+  stock_quantity?: number;
 }
 
 export interface OrderItem {
