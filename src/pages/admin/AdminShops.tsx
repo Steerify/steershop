@@ -18,8 +18,10 @@ import {
   Edit, 
   User,
   RefreshCw,
-  Shield
+  Shield,
+  Trash2
 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -35,9 +37,12 @@ export default function AdminShops() {
   const [extendDialogOpen, setExtendDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedShop, setSelectedShop] = useState<any>(null);
+  const [shopToDelete, setShopToDelete] = useState<any>(null);
   const [extensionDays, setExtensionDays] = useState("30");
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
     shop_name: "",
     description: "",
@@ -328,6 +333,41 @@ export default function AdminShops() {
     }
   };
 
+  const handleDeleteShop = (shop: any) => {
+    setShopToDelete(shop);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteShop = async () => {
+    if (!shopToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('shops')
+        .delete()
+        .eq('id', shopToDelete.id);
+
+      if (error) throw error;
+
+      toast({ 
+        title: "🗑️ Shop Deleted", 
+        description: `${shopToDelete.shop_name} has been permanently deleted.` 
+      });
+      setDeleteDialogOpen(false);
+      setShopToDelete(null);
+      fetchShops();
+    } catch (error: any) {
+      toast({ 
+        title: "Error deleting shop", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const saveShopChanges = async () => {
     if (!selectedShop) return;
     setIsSaving(true);
@@ -606,6 +646,14 @@ export default function AdminShops() {
                                     Activate Shop
                                   </>
                                 )}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteShop(shop)}
+                                className="text-red-600 focus:text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Shop
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -915,6 +963,39 @@ export default function AdminShops() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Shop Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-red-600">Delete Shop</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete <span className="font-semibold">{shopToDelete?.shop_name}</span>? 
+                This action cannot be undone. All products and orders associated with this shop will also be affected.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDeleteShop}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Shop
+                  </>
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
