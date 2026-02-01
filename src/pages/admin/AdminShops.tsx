@@ -531,7 +531,7 @@ export default function AdminShops() {
                           <div className="flex items-center gap-2">
                             <div className="font-medium">{getOwnerName(shop)}</div>
                             {!shop.profiles && (
-                              <Badge variant="outline" size="sm" className="text-xs">
+                              <Badge variant="outline" className="text-xs">
                                 No Profile
                               </Badge>
                             )}
