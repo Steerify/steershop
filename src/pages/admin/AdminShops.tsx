@@ -13,12 +13,12 @@ import {
   Calendar, 
   AlertCircle, 
   Store, 
-  Eye, 
   MoreHorizontal, 
   Loader2, 
   Edit, 
   User,
-  RefreshCw 
+  RefreshCw,
+  Shield
 } from "lucide-react";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -51,36 +51,89 @@ export default function AdminShops() {
 
   const fetchShops = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from("shops")
-      .select(`
-        *,
-        profiles (
+    
+    try {
+      // First, let's debug what tables we have
+      console.log("Fetching shops data...");
+      
+      // Try different query approaches
+      const { data: shopsData, error: shopsError } = await supabase
+        .from("shops")
+        .select(`
           id,
-          full_name,
-          email,
-          phone,
-          is_subscribed,
-          subscription_expires_at,
+          shop_name,
+          description,
+          logo_url,
+          whatsapp_number,
+          is_active,
           created_at,
-          role,
-          subscription_plan_id
-        )
-      `)
-      .order("created_at", { ascending: false });
+          updated_at,
+          owner_id
+        `)
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Fetch error:", error);
+      if (shopsError) {
+        console.error("Shops fetch error:", shopsError);
+        toast({ 
+          title: "Error loading shops", 
+          description: shopsError.message,
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      console.log("Fetched shops:", shopsData?.length || 0);
+
+      // Now fetch profiles separately and join them
+      const ownerIds = shopsData?.map(shop => shop.owner_id).filter(id => id) || [];
+      
+      let profilesData: any[] = [];
+      if (ownerIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from("profiles")
+          .select(`
+            id,
+            full_name,
+            email,
+            phone,
+            is_subscribed,
+            subscription_expires_at,
+            created_at,
+            role,
+            subscription_plan_id
+          `)
+          .in("id", ownerIds);
+
+        if (profilesError) {
+          console.error("Profiles fetch error:", profilesError);
+        } else {
+          profilesData = profiles || [];
+          console.log("Fetched profiles:", profilesData.length);
+        }
+      }
+
+      // Combine shops with their profiles
+      const combinedShops = shopsData?.map(shop => {
+        const profile = profilesData.find(p => p.id === shop.owner_id);
+        return {
+          ...shop,
+          profiles: profile || null
+        };
+      }) || [];
+
+      console.log("Combined shops:", combinedShops);
+      setShops(combinedShops);
+      
+    } catch (error: any) {
+      console.error("Unexpected error:", error);
       toast({ 
-        title: "Error loading shops", 
+        title: "Error loading data", 
         description: error.message,
         variant: "destructive" 
       });
-      return;
+    } finally {
+      setIsLoading(false);
     }
-
-    setShops(data || []);
-    setIsLoading(false);
   };
 
   const toggleShopStatus = async (shopId: string, currentStatus: boolean) => {
@@ -106,6 +159,18 @@ export default function AdminShops() {
   };
 
   const handleExtendTrial = (shop: any) => {
+    console.log("Extending trial for shop:", shop);
+    console.log("Shop profile data:", shop.profiles);
+    
+    if (!shop.profiles) {
+      toast({
+        title: "No Profile Found",
+        description: "This shop doesn't have a linked profile. Please check the owner data.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setSelectedShop(shop);
     setExtendDialogOpen(true);
   };
@@ -121,15 +186,28 @@ export default function AdminShops() {
   };
 
   const handleViewOwner = (shop: any) => {
+    console.log("Viewing owner for shop:", shop);
+    
+    if (!shop.profiles) {
+      toast({
+        title: "No Owner Data",
+        description: "This shop doesn't have owner information.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setSelectedShop(shop);
     setOwnerDialogOpen(true);
   };
 
   const confirmExtendTrial = async () => {
+    console.log("Selected shop for extension:", selectedShop);
+    
     if (!selectedShop?.profiles?.id) {
       toast({ 
         title: "Error", 
-        description: "No profile found for this shop",
+        description: "No profile ID found for this shop owner",
         variant: "destructive" 
       });
       return;
@@ -144,6 +222,8 @@ export default function AdminShops() {
       // Get current expiry from profile
       if (selectedShop.profiles.subscription_expires_at) {
         const currentExpiry = new Date(selectedShop.profiles.subscription_expires_at);
+        console.log("Current expiry:", currentExpiry);
+        
         // Use whichever is later: current date or expiry date
         const baseDate = currentExpiry > now ? currentExpiry : now;
         newExpiry = new Date(baseDate.getTime() + parseInt(extensionDays) * 24 * 60 * 60 * 1000);
@@ -152,13 +232,20 @@ export default function AdminShops() {
         newExpiry = new Date(now.getTime() + parseInt(extensionDays) * 24 * 60 * 60 * 1000);
       }
 
-      const { error } = await supabase
+      console.log("New expiry date:", newExpiry);
+
+      // First, let's check what we're updating
+      console.log("Updating profile ID:", selectedShop.profiles.id);
+      console.log("Setting expiry to:", newExpiry.toISOString());
+
+      const { data, error } = await supabase
         .from("profiles")
         .update({ 
           subscription_expires_at: newExpiry.toISOString(),
-          is_subscribed: true // Also set as subscribed if extending
+          is_subscribed: true
         })
-        .eq("id", selectedShop.profiles.id);
+        .eq("id", selectedShop.profiles.id)
+        .select();
 
       if (error) {
         console.error("Update error:", error);
@@ -170,8 +257,10 @@ export default function AdminShops() {
         return;
       }
 
+      console.log("Update successful:", data);
+
       toast({ 
-        title: "Subscription extended", 
+        title: "✅ Subscription Extended", 
         description: `Added ${extensionDays} days to ${selectedShop.shop_name}'s subscription. New expiry: ${newExpiry.toLocaleDateString()}` 
       });
       
@@ -224,7 +313,7 @@ export default function AdminShops() {
       }
 
       toast({ 
-        title: "Trial reset", 
+        title: "🔄 Trial Reset", 
         description: `Reset ${shop.shop_name}'s trial to 30 days. New expiry: ${newExpiry.toLocaleDateString()}` 
       });
       fetchShops();
@@ -262,7 +351,7 @@ export default function AdminShops() {
       return;
     }
 
-    toast({ title: "Shop updated successfully" });
+    toast({ title: "✅ Shop updated successfully" });
     setEditDialogOpen(false);
     setSelectedShop(null);
     setIsSaving(false);
@@ -270,23 +359,57 @@ export default function AdminShops() {
   };
 
   const getSubscriptionBadge = (profile: any) => {
-    if (!profile) return <Badge variant="secondary">No Profile</Badge>;
+    if (!profile) {
+      return (
+        <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300">
+          <Shield className="w-3 h-3 mr-1" />
+          No Profile
+        </Badge>
+      );
+    }
     
     const status = calculateSubscriptionStatus(profile);
     
     if (status.status === 'active') {
-      return <Badge className="bg-green-600 hover:bg-green-700">Active ({status.daysRemaining}d)</Badge>;
+      return (
+        <Badge className="bg-green-600 hover:bg-green-700">
+          <Check className="w-3 h-3 mr-1" />
+          Active ({status.daysRemaining}d)
+        </Badge>
+      );
     } else if (status.status === 'trial') {
-      return <Badge className="bg-blue-600 hover:bg-blue-700">Trial ({status.daysRemaining}d)</Badge>;
+      return (
+        <Badge className="bg-blue-600 hover:bg-blue-700">
+          <Calendar className="w-3 h-3 mr-1" />
+          Trial ({status.daysRemaining}d)
+        </Badge>
+      );
     } else {
-      return <Badge variant="destructive">Expired</Badge>;
+      return (
+        <Badge variant="destructive">
+          <X className="w-3 h-3 mr-1" />
+          Expired
+        </Badge>
+      );
     }
   };
 
+  const getOwnerName = (shop: any) => {
+    if (!shop.profiles) return "No Owner";
+    if (shop.profiles.full_name) return shop.profiles.full_name;
+    if (shop.profiles.email) return shop.profiles.email.split('@')[0];
+    return "Unknown Owner";
+  };
+
+  const getOwnerEmail = (shop: any) => {
+    if (!shop.profiles) return "No Email";
+    return shop.profiles.email || "No Email";
+  };
+
   const filteredShops = shops.filter(shop =>
-    shop.shop_name.toLowerCase().includes(search.toLowerCase()) ||
-    shop.profiles?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    shop.profiles?.email?.toLowerCase().includes(search.toLowerCase()) ||
+    shop.shop_name?.toLowerCase().includes(search.toLowerCase()) ||
+    getOwnerName(shop).toLowerCase().includes(search.toLowerCase()) ||
+    getOwnerEmail(shop).toLowerCase().includes(search.toLowerCase()) ||
     shop.whatsapp_number?.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -307,6 +430,16 @@ export default function AdminShops() {
               <p className="text-muted-foreground">Manage all shops on the platform</p>
             </div>
             <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={fetchShops}
+                disabled={isLoading}
+                className="gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
               <Badge variant="outline" className="px-3 py-1 bg-green-500/10 border-green-500/30 text-green-600">
                 <Store className="w-4 h-4 mr-1" />
                 {activeCount} Active
@@ -327,6 +460,9 @@ export default function AdminShops() {
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10 border-primary/20"
               />
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {filteredShops.length} of {shops.length} shops
             </div>
           </div>
 
@@ -392,10 +528,17 @@ export default function AdminShops() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium">{shop.profiles?.full_name || "N/A"}</div>
+                          <div className="flex items-center gap-2">
+                            <div className="font-medium">{getOwnerName(shop)}</div>
+                            {!shop.profiles && (
+                              <Badge variant="outline" size="sm" className="text-xs">
+                                No Profile
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {shop.profiles?.email || "N/A"}
+                          {getOwnerEmail(shop)}
                         </TableCell>
                         <TableCell>
                           {getSubscriptionBadge(shop.profiles)}
@@ -416,24 +559,38 @@ export default function AdminShops() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem onClick={() => handleViewOwner(shop)}>
-                                <User className="w-4 h-4 mr-2" />
-                                View Owner
-                              </DropdownMenuItem>
+                              {shop.profiles && (
+                                <>
+                                  <DropdownMenuItem onClick={() => handleViewOwner(shop)}>
+                                    <User className="w-4 h-4 mr-2" />
+                                    View Owner
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                </>
+                              )}
                               <DropdownMenuItem onClick={() => handleEditShop(shop)}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit Shop
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleExtendTrial(shop)}>
-                                <Calendar className="w-4 h-4 mr-2" />
-                                Extend Subscription
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => resetTrial(shop)}>
-                                <RefreshCw className="w-4 h-4 mr-2" />
-                                Reset Trial (30 days)
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
+                              {shop.profiles ? (
+                                <>
+                                  <DropdownMenuItem onClick={() => handleExtendTrial(shop)}>
+                                    <Calendar className="w-4 h-4 mr-2" />
+                                    Extend Subscription
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => resetTrial(shop)}>
+                                    <RefreshCw className="w-4 h-4 mr-2" />
+                                    Reset Trial (30 days)
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                </>
+                              ) : (
+                                <DropdownMenuItem disabled>
+                                  <AlertCircle className="w-4 h-4 mr-2" />
+                                  No Profile for Subscription
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem 
                                 onClick={() => toggleShopStatus(shop.id, shop.is_active)}
                                 className={shop.is_active ? "text-red-600" : "text-green-600"}
@@ -472,14 +629,19 @@ export default function AdminShops() {
               </DialogDescription>
             </DialogHeader>
             
-            {selectedShop?.profiles && (
+            {selectedShop?.profiles ? (
               <div className="space-y-4">
                 <div className="p-4 bg-muted rounded-lg space-y-3">
                   <div className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Current Status</span>
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Owner Information</span>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="space-y-1">
+                    <p className="font-medium">{selectedShop.profiles.full_name || "No Name"}</p>
+                    <p className="text-sm text-muted-foreground">{selectedShop.profiles.email}</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 pt-2 border-t border-border/50">
                     {getSubscriptionBadge(selectedShop.profiles)}
                     <span className="text-sm px-2 py-1 bg-muted-foreground/10 rounded">
                       {selectedShop.profiles.is_subscribed ? "Paid Subscription" : "Trial Period"}
@@ -487,7 +649,7 @@ export default function AdminShops() {
                   </div>
                   
                   {selectedShop.profiles.subscription_expires_at ? (
-                    <div className="space-y-1 pt-2 border-t border-border/50">
+                    <div className="space-y-1 pt-2">
                       <div className="text-sm">
                         <span className="font-medium">Current expiry:</span>{" "}
                         {new Date(selectedShop.profiles.subscription_expires_at).toLocaleDateString()}
@@ -496,12 +658,9 @@ export default function AdminShops() {
                           ({new Date(selectedShop.profiles.subscription_expires_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})
                         </span>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        Profile created: {new Date(selectedShop.profiles.created_at).toLocaleDateString()}
-                      </div>
                     </div>
                   ) : (
-                    <div className="text-sm text-muted-foreground pt-2 border-t border-border/50">
+                    <div className="text-sm text-muted-foreground pt-2">
                       No subscription expiry date set
                     </div>
                   )}
@@ -556,6 +715,18 @@ export default function AdminShops() {
                   </div>
                 </div>
               </div>
+            ) : (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  <div>
+                    <p className="font-medium text-red-700 dark:text-red-300">No Profile Found</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                      This shop doesn't have a linked profile. Please check if the owner exists in the profiles table.
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
 
             <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -568,7 +739,7 @@ export default function AdminShops() {
               </Button>
               <Button 
                 onClick={confirmExtendTrial} 
-                disabled={isSaving}
+                disabled={isSaving || !selectedShop?.profiles}
                 className="w-full sm:w-auto"
               >
                 {isSaving ? (
@@ -650,7 +821,7 @@ export default function AdminShops() {
                 Shop owner information for {selectedShop?.shop_name}
               </DialogDescription>
             </DialogHeader>
-            {selectedShop?.profiles && (
+            {selectedShop?.profiles ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-4 p-4 bg-gradient-to-br from-primary/5 to-accent/5 rounded-lg border">
                   <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center flex-shrink-0">
@@ -723,6 +894,18 @@ export default function AdminShops() {
                     </div>
                   </div>
                 )}
+              </div>
+            ) : (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  <div>
+                    <p className="font-medium text-red-700 dark:text-red-300">No Profile Data</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                      This shop doesn't have owner information in the profiles table.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
             <DialogFooter>
