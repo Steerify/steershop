@@ -74,7 +74,6 @@ const Shops = () => {
 
   const ITEMS_PER_PAGE = 12;
 
-  // Clean fetchShops function
   const fetchShops = useCallback(async (page: number = 1, reset: boolean = false, searchTerm: string = '') => {
     try {
       if (reset) {
@@ -88,7 +87,6 @@ const Shops = () => {
 
       const response = await shopService.getShops(page, ITEMS_PER_PAGE, { 
         verified: showVerifiedOnly || undefined,
-        includeAll: searchTerm.trim() !== '',
         activeOnly: true
       });
       
@@ -136,7 +134,37 @@ const Shops = () => {
     }
   }, [showVerifiedOnly]);
 
-  // Clean searchProducts function
+  // Search when query changes
+  useEffect(() => {
+    if (debouncedSearchQuery.trim()) {
+      console.log('Search triggered:', debouncedSearchQuery);
+      setIsSearching(true);
+      setSearchType('all');
+      setShopsPage(1);
+      setProductsPage(1);
+      setHasMoreShops(true);
+      setHasMoreProducts(true);
+      
+      // Search for both shops and products
+      Promise.all([
+        fetchShops(1, true, debouncedSearchQuery),
+        searchProducts(1, true)
+      ]).finally(() => {
+        setIsSearching(false);
+        console.log('Search complete');
+      });
+    } else {
+      // Clear product results when search is empty
+      console.log('Clearing search');
+      setProductResults([]);
+      setSearchType('all');
+      setShopsPage(1);
+      setProductsPage(1);
+      // Fetch regular shops without including all
+      fetchShops(1, true, '');
+    }
+  }, [debouncedSearchQuery, fetchShops]);
+
   const searchProducts = useCallback(async (page: number = 1, reset: boolean = false) => {
     if (!debouncedSearchQuery.trim()) {
       if (reset) setProductResults([]);
@@ -192,69 +220,43 @@ const Shops = () => {
     }
   }, [debouncedSearchQuery]);
 
-  // Initial load of shops when component mounts
-  useEffect(() => {
-    fetchShops(1, true);
-  }, []);
-
-  // Main search effect - consolidated from multiple effects
-  useEffect(() => {
-    let isMounted = true;
-    let searchController: AbortController | null = null;
-
-    const performSearch = async () => {
-      if (!isMounted) return;
-
-      if (debouncedSearchQuery.trim()) {
-        console.log('Search triggered:', debouncedSearchQuery);
-        setIsSearching(true);
-        setSearchType('all');
-        setShopsPage(1);
-        setProductsPage(1);
-        setHasMoreShops(true);
-        setHasMoreProducts(true);
-        
-        // Use Promise.all for parallel search
-        try {
-          await Promise.all([
-            fetchShops(1, true, debouncedSearchQuery),
-            searchProducts(1, true)
-          ]);
-        } catch (error) {
-          console.error('Search error:', error);
-        } finally {
-          if (isMounted) {
-            setIsSearching(false);
-            console.log('Search complete');
-          }
-        }
-      } else {
-        // Clear product results when search is empty
-        console.log('Clearing search');
-        setProductResults([]);
-        setSearchType('all');
-        setShopsPage(1);
-        setProductsPage(1);
-        fetchShops(1, true);
-      }
-    };
-
-    performSearch();
-
-    return () => {
-      isMounted = false;
-      if (searchController) {
-        searchController.abort();
-      }
-    };
-  }, [debouncedSearchQuery, fetchShops, searchProducts]);
-
-  // Effect for verified filter
+  // Initial load of shops
   useEffect(() => {
     if (!debouncedSearchQuery.trim()) {
+      console.log('Initial load of shops');
       fetchShops(1, true);
     }
-  }, [showVerifiedOnly, debouncedSearchQuery, fetchShops]);
+  }, [debouncedSearchQuery, fetchShops, showVerifiedOnly]);
+
+  // Search when query changes
+  useEffect(() => {
+    if (debouncedSearchQuery.trim()) {
+      console.log('Search triggered:', debouncedSearchQuery);
+      setIsSearching(true);
+      setSearchType('all');
+      setShopsPage(1);
+      setProductsPage(1);
+      setHasMoreShops(true);
+      setHasMoreProducts(true);
+      
+      // Search for both shops and products
+      Promise.all([
+        fetchShops(1, true, debouncedSearchQuery),
+        searchProducts(1, true)
+      ]).finally(() => {
+        setIsSearching(false);
+        console.log('Search complete');
+      });
+    } else {
+      // Clear product results when search is empty
+      console.log('Clearing search');
+      setProductResults([]);
+      setSearchType('all');
+      setShopsPage(1);
+      setProductsPage(1);
+      fetchShops(1, true);
+    }
+  }, [debouncedSearchQuery, fetchShops, searchProducts]);
 
   const handleSearchTypeChange = (type: 'all' | 'shops' | 'products') => {
     setSearchType(type);
@@ -272,11 +274,6 @@ const Shops = () => {
         setProductResults([]);
       }
       return;
-    }
-    
-    // Cancel any pending requests
-    if (searchType !== type) {
-      setIsSearching(true);
     }
     
     if (type === 'shops') {
@@ -299,11 +296,6 @@ const Shops = () => {
   const loadMore = useCallback(() => {
     console.log('Load more called, searchType:', searchType);
     
-    if (isSearching || isLoading) {
-      console.log('Skip load more - still searching/loading');
-      return;
-    }
-    
     if (searchType === 'shops' && hasMoreShops && !loadingMoreShops) {
       console.log('Loading more shops, page:', shopsPage + 1);
       fetchShops(shopsPage + 1, false, debouncedSearchQuery);
@@ -311,36 +303,26 @@ const Shops = () => {
       console.log('Loading more products, page:', productsPage + 1);
       searchProducts(productsPage + 1, false);
     } else if (searchType === 'all') {
-      // Load both shops and products for 'all' search
-      const promises = [];
       if (hasMoreShops && !loadingMoreShops) {
         console.log('Loading more shops for "all", page:', shopsPage + 1);
-        promises.push(fetchShops(shopsPage + 1, false, debouncedSearchQuery));
+        fetchShops(shopsPage + 1, false, debouncedSearchQuery);
       }
       if (hasMoreProducts && !loadingMoreProducts) {
         console.log('Loading more products for "all", page:', productsPage + 1);
-        promises.push(searchProducts(productsPage + 1, false));
-      }
-      
-      if (promises.length > 0) {
-        Promise.all(promises).catch(console.error);
+        searchProducts(productsPage + 1, false);
       }
     }
   }, [
     searchType, hasMoreShops, hasMoreProducts, 
-    loadingMoreShops, loadingMoreProducts, isSearching, isLoading,
+    loadingMoreShops, loadingMoreProducts,
     shopsPage, productsPage, fetchShops, searchProducts, debouncedSearchQuery
   ]);
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
-    if (!sentinelRef.current || isSearching || isLoading) {
-      return;
-    }
-
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
+        if (entries[0].isIntersecting && !isSearching && !isLoading) {
           console.log('Sentinel visible, loading more');
           loadMore();
         }
@@ -349,7 +331,10 @@ const Shops = () => {
     );
 
     observerRef.current = observer;
-    observer.observe(sentinelRef.current);
+
+    if (sentinelRef.current) {
+      observer.observe(sentinelRef.current);
+    }
 
     return () => {
       if (observerRef.current) {
@@ -410,7 +395,6 @@ const Shops = () => {
                             src={product.image_url || product.images?.[0]?.url} 
                             alt={product.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
                           />
                         </div>
                       ) : (
@@ -485,7 +469,7 @@ const Shops = () => {
                 <p className="text-muted-foreground max-w-md mx-auto">
                   {hasSearchQuery 
                     ? `No shops found for "${debouncedSearchQuery}"`
-                    : "Shops appear here when their owners have active subscriptions or trials"}
+                    : "No active shops found"}
                 </p>
               </div>
             ) : (
@@ -505,7 +489,6 @@ const Shops = () => {
                                   src={shop.logo_url} 
                                   alt={shop.name || shop.shop_name}
                                   className="w-full h-full object-cover"
-                                  loading="lazy"
                                 />
                               ) : (
                                 <Store className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground" />
