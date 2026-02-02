@@ -74,98 +74,69 @@ const Shops = () => {
 
   const ITEMS_PER_PAGE = 12;
 
+  // Clean fetchShops function
   const fetchShops = useCallback(async (page: number = 1, reset: boolean = false, searchTerm: string = '') => {
-  try {
-    if (reset) {
-      setIsLoading(true);
-      setHasMoreShops(true);
-    } else {
-      setLoadingMoreShops(true);
-    }
+    try {
+      if (reset) {
+        setIsLoading(true);
+        setHasMoreShops(true);
+      } else {
+        setLoadingMoreShops(true);
+      }
 
-    console.log('Fetching shops with search term:', searchTerm);
+      console.log('Fetching shops with search term:', searchTerm);
 
-    const response = await shopService.getShops(page, ITEMS_PER_PAGE, { 
-      verified: showVerifiedOnly || undefined,
-      includeAll: searchTerm.trim() !== '', // Include all shops when searching
-      activeOnly: true
-    });
-    
-    console.log('Shops fetched:', response.data?.length, 'page:', page);
-    
-    if (!response.success) {
+      const response = await shopService.getShops(page, ITEMS_PER_PAGE, { 
+        verified: showVerifiedOnly || undefined,
+        includeAll: searchTerm.trim() !== '',
+        activeOnly: true
+      });
+      
+      console.log('Shops fetched:', response.data?.length, 'page:', page);
+      
+      if (!response.success) {
+        setHasMoreShops(false);
+        if (reset) setShops([]);
+        return;
+      }
+
+      let filteredShops = response.data || [];
+      
+      // If there's a search term, filter locally for additional search criteria
+      if (searchTerm.trim()) {
+        filteredShops = filteredShops.filter(shop => 
+          shop.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          shop.shop_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          shop.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          shop.shop_slug?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      // Check if we have more pages
+      const totalShops = response.meta?.total || 0;
+      const hasMore = filteredShops.length === ITEMS_PER_PAGE && 
+                     page < Math.ceil(totalShops / ITEMS_PER_PAGE);
+      
+      setHasMoreShops(hasMore);
+
+      setShops(prev => {
+        if (reset) return filteredShops;
+        const existingIds = new Set(prev.map(s => s.id));
+        return [...prev, ...filteredShops.filter(s => !existingIds.has(s.id))];
+      });
+      
+      setShopsPage(page);
+    } catch (error) {
+      console.error('Error fetching shops:', error);
       setHasMoreShops(false);
       if (reset) setShops([]);
-      return;
+    } finally {
+      setIsLoading(false);
+      setLoadingMoreShops(false);
     }
+  }, [showVerifiedOnly]);
 
-    let filteredShops = response.data || [];
-    
-    // If there's a search term, filter locally for additional search criteria
-    if (searchTerm.trim()) {
-      filteredShops = filteredShops.filter(shop => 
-        shop.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        shop.shop_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        shop.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        shop.shop_slug?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Check if we have more pages
-    const totalShops = response.meta?.total || 0;
-    const hasMore = filteredShops.length === ITEMS_PER_PAGE && 
-                   page < Math.ceil(totalShops / ITEMS_PER_PAGE);
-    
-    setHasMoreShops(hasMore);
-
-    setShops(prev => {
-      if (reset) return filteredShops;
-      const existingIds = new Set(prev.map(s => s.id));
-      return [...prev, ...filteredShops.filter(s => !existingIds.has(s.id))];
-    });
-    
-    setShopsPage(page);
-  } catch (error) {
-    console.error('Error fetching shops:', error);
-    setHasMoreShops(false);
-    if (reset) setShops([]);
-  } finally {
-    setIsLoading(false);
-    setLoadingMoreShops(false);
-  }
-}, [showVerifiedOnly]);
-
-// Search when query changes
-useEffect(() => {
-  if (debouncedSearchQuery.trim()) {
-    console.log('Search triggered:', debouncedSearchQuery);
-    setIsSearching(true);
-    setSearchType('all');
-    setShopsPage(1);
-    setProductsPage(1);
-    setHasMoreShops(true);
-    setHasMoreProducts(true);
-    
-    // Search for both shops and products
-    Promise.all([
-      fetchShops(1, true, debouncedSearchQuery),
-      searchProducts(1, true)
-    ]).finally(() => {
-      setIsSearching(false);
-      console.log('Search complete');
-    });
-  } else {
-    // Clear product results when search is empty
-    console.log('Clearing search');
-    setProductResults([]);
-    setSearchType('all');
-    setShopsPage(1);
-    setProductsPage(1);
-    // Fetch regular shops without including all
-    fetchShops(1, true, '');
-  }
-}, [debouncedSearchQuery, fetchShops]);
-
+  // Clean searchProducts function
   const searchProducts = useCallback(async (page: number = 1, reset: boolean = false) => {
     if (!debouncedSearchQuery.trim()) {
       if (reset) setProductResults([]);
@@ -221,43 +192,69 @@ useEffect(() => {
     }
   }, [debouncedSearchQuery]);
 
-  // Initial load of shops
+  // Initial load of shops when component mounts
+  useEffect(() => {
+    fetchShops(1, true);
+  }, []);
+
+  // Main search effect - consolidated from multiple effects
+  useEffect(() => {
+    let isMounted = true;
+    let searchController: AbortController | null = null;
+
+    const performSearch = async () => {
+      if (!isMounted) return;
+
+      if (debouncedSearchQuery.trim()) {
+        console.log('Search triggered:', debouncedSearchQuery);
+        setIsSearching(true);
+        setSearchType('all');
+        setShopsPage(1);
+        setProductsPage(1);
+        setHasMoreShops(true);
+        setHasMoreProducts(true);
+        
+        // Use Promise.all for parallel search
+        try {
+          await Promise.all([
+            fetchShops(1, true, debouncedSearchQuery),
+            searchProducts(1, true)
+          ]);
+        } catch (error) {
+          console.error('Search error:', error);
+        } finally {
+          if (isMounted) {
+            setIsSearching(false);
+            console.log('Search complete');
+          }
+        }
+      } else {
+        // Clear product results when search is empty
+        console.log('Clearing search');
+        setProductResults([]);
+        setSearchType('all');
+        setShopsPage(1);
+        setProductsPage(1);
+        fetchShops(1, true);
+      }
+    };
+
+    performSearch();
+
+    return () => {
+      isMounted = false;
+      if (searchController) {
+        searchController.abort();
+      }
+    };
+  }, [debouncedSearchQuery, fetchShops, searchProducts]);
+
+  // Effect for verified filter
   useEffect(() => {
     if (!debouncedSearchQuery.trim()) {
-      console.log('Initial load of shops');
       fetchShops(1, true);
     }
-  }, [debouncedSearchQuery, fetchShops, showVerifiedOnly]);
-
-  // Search when query changes
-  useEffect(() => {
-    if (debouncedSearchQuery.trim()) {
-      console.log('Search triggered:', debouncedSearchQuery);
-      setIsSearching(true);
-      setSearchType('all');
-      setShopsPage(1);
-      setProductsPage(1);
-      setHasMoreShops(true);
-      setHasMoreProducts(true);
-      
-      // Search for both shops and products
-      Promise.all([
-        fetchShops(1, true, debouncedSearchQuery),
-        searchProducts(1, true)
-      ]).finally(() => {
-        setIsSearching(false);
-        console.log('Search complete');
-      });
-    } else {
-      // Clear product results when search is empty
-      console.log('Clearing search');
-      setProductResults([]);
-      setSearchType('all');
-      setShopsPage(1);
-      setProductsPage(1);
-      fetchShops(1, true);
-    }
-  }, [debouncedSearchQuery, fetchShops, searchProducts]);
+  }, [showVerifiedOnly, debouncedSearchQuery, fetchShops]);
 
   const handleSearchTypeChange = (type: 'all' | 'shops' | 'products') => {
     setSearchType(type);
@@ -275,6 +272,11 @@ useEffect(() => {
         setProductResults([]);
       }
       return;
+    }
+    
+    // Cancel any pending requests
+    if (searchType !== type) {
+      setIsSearching(true);
     }
     
     if (type === 'shops') {
@@ -297,6 +299,11 @@ useEffect(() => {
   const loadMore = useCallback(() => {
     console.log('Load more called, searchType:', searchType);
     
+    if (isSearching || isLoading) {
+      console.log('Skip load more - still searching/loading');
+      return;
+    }
+    
     if (searchType === 'shops' && hasMoreShops && !loadingMoreShops) {
       console.log('Loading more shops, page:', shopsPage + 1);
       fetchShops(shopsPage + 1, false, debouncedSearchQuery);
@@ -304,26 +311,36 @@ useEffect(() => {
       console.log('Loading more products, page:', productsPage + 1);
       searchProducts(productsPage + 1, false);
     } else if (searchType === 'all') {
+      // Load both shops and products for 'all' search
+      const promises = [];
       if (hasMoreShops && !loadingMoreShops) {
         console.log('Loading more shops for "all", page:', shopsPage + 1);
-        fetchShops(shopsPage + 1, false, debouncedSearchQuery);
+        promises.push(fetchShops(shopsPage + 1, false, debouncedSearchQuery));
       }
       if (hasMoreProducts && !loadingMoreProducts) {
         console.log('Loading more products for "all", page:', productsPage + 1);
-        searchProducts(productsPage + 1, false);
+        promises.push(searchProducts(productsPage + 1, false));
+      }
+      
+      if (promises.length > 0) {
+        Promise.all(promises).catch(console.error);
       }
     }
   }, [
     searchType, hasMoreShops, hasMoreProducts, 
-    loadingMoreShops, loadingMoreProducts,
+    loadingMoreShops, loadingMoreProducts, isSearching, isLoading,
     shopsPage, productsPage, fetchShops, searchProducts, debouncedSearchQuery
   ]);
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
+    if (!sentinelRef.current || isSearching || isLoading) {
+      return;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !isSearching && !isLoading) {
+        if (entries[0].isIntersecting) {
           console.log('Sentinel visible, loading more');
           loadMore();
         }
@@ -332,10 +349,7 @@ useEffect(() => {
     );
 
     observerRef.current = observer;
-
-    if (sentinelRef.current) {
-      observer.observe(sentinelRef.current);
-    }
+    observer.observe(sentinelRef.current);
 
     return () => {
       if (observerRef.current) {
@@ -396,6 +410,7 @@ useEffect(() => {
                             src={product.image_url || product.images?.[0]?.url} 
                             alt={product.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
                           />
                         </div>
                       ) : (
@@ -490,6 +505,7 @@ useEffect(() => {
                                   src={shop.logo_url} 
                                   alt={shop.name || shop.shop_name}
                                   className="w-full h-full object-cover"
+                                  loading="lazy"
                                 />
                               ) : (
                                 <Store className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground" />
