@@ -160,7 +160,8 @@ const shopService = {
     const planMap = new Map(plans?.map(p => [p.id, p]) || []);
 
     // Sort shops: Business first (highest display_order), then Pro, then Basic
-  const sortedShops = [...(shops || [])].sort((a, b) => {
+    // IMPORTANT: Use finalShops (filtered by valid subscription and products), not raw shops
+    const sortedShops = [...finalShops].sort((a, b) => {
       const planA = planMap.get((a as any).owner?.subscription_plan_id);
       const planB = planMap.get((b as any).owner?.subscription_plan_id);
       const orderA = planA?.display_order || 0;

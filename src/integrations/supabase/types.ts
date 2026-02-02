@@ -268,6 +268,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           reward_points: number | null
+          target_audience: string
           title: string
           updated_at: string | null
         }
@@ -280,6 +281,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           reward_points?: number | null
+          target_audience?: string
           title: string
           updated_at?: string | null
         }
@@ -292,6 +294,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           reward_points?: number | null
+          target_audience?: string
           title?: string
           updated_at?: string | null
         }

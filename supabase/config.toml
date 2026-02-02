@@ -60,3 +60,9 @@ verify_jwt = false
 [functions.logistics-webhook]
 verify_jwt = false
 
+[functions.shop-og-meta]
+verify_jwt = false
+
+[functions.subscription-reminder]
+verify_jwt = false
+
