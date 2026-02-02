@@ -2,11 +2,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { Course, Enrollment } from '@/types/api';
 
 export const courseService = {
-  getCourses: async () => {
-    const { data, error } = await supabase
+  getCourses: async (targetAudience?: 'customer' | 'shop_owner' | 'all') => {
+    let query = supabase
       .from('courses')
       .select('*')
       .eq('is_active', true);
+    
+    // Filter by target audience if specified
+    if (targetAudience) {
+      query = query.or(`target_audience.eq.${targetAudience},target_audience.eq.all`);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Get courses error:', error);

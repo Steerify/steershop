@@ -58,8 +58,8 @@ const CustomerCourses = () => {
     try {
       if (!user) return;
 
-      // Load courses
-      const coursesData = await courseService.getCourses();
+      // Load courses for customers only
+      const coursesData = await courseService.getCourses('customer');
 
       // Load enrollments
       const enrollmentsData = await courseService.getEnrollments();

@@ -27,6 +27,7 @@ export default function AdminCourses() {
     image_url: "",
     reward_points: "",
     is_active: true,
+    target_audience: "customer" as "customer" | "shop_owner" | "all",
   });
 
   useEffect(() => {
@@ -64,6 +65,7 @@ export default function AdminCourses() {
       ...formData,
       content: sanitizedContent,
       reward_points: parseInt(formData.reward_points) || 0,
+      target_audience: formData.target_audience,
     };
 
     if (editingCourse) {
@@ -104,6 +106,7 @@ export default function AdminCourses() {
       image_url: course.image_url || "",
       reward_points: course.reward_points?.toString() || "0",
       is_active: course.is_active,
+      target_audience: course.target_audience || "customer",
     });
     setIsDialogOpen(true);
   };
@@ -148,9 +151,21 @@ export default function AdminCourses() {
       image_url: "",
       reward_points: "",
       is_active: true,
+      target_audience: "customer",
     });
     setEditingCourse(null);
     setIsDialogOpen(false);
+  };
+
+  const getAudienceBadge = (audience: string) => {
+    switch (audience) {
+      case "shop_owner":
+        return <Badge className="bg-purple-100 text-purple-700 border-purple-300">Shop Owners</Badge>;
+      case "all":
+        return <Badge className="bg-green-100 text-green-700 border-green-300">Everyone</Badge>;
+      default:
+        return <Badge className="bg-blue-100 text-blue-700 border-blue-300">Customers</Badge>;
+    }
   };
 
   return (
@@ -231,6 +246,20 @@ export default function AdminCourses() {
                   />
                 </div>
 
+                <div>
+                  <Label htmlFor="target_audience">Target Audience</Label>
+                  <select
+                    id="target_audience"
+                    value={formData.target_audience}
+                    onChange={(e) => setFormData({ ...formData, target_audience: e.target.value as any })}
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                  >
+                    <option value="customer">Customers Only</option>
+                    <option value="shop_owner">Shop Owners Only</option>
+                    <option value="all">Everyone</option>
+                  </select>
+                </div>
+
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -261,6 +290,7 @@ export default function AdminCourses() {
               <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead>Description</TableHead>
+                <TableHead>Target Audience</TableHead>
                 <TableHead>Reward Points</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
@@ -271,6 +301,9 @@ export default function AdminCourses() {
                 <TableRow key={course.id}>
                   <TableCell className="font-medium">{course.title}</TableCell>
                   <TableCell className="max-w-xs truncate">{course.description}</TableCell>
+                  <TableCell>
+                    {getAudienceBadge(course.target_audience)}
+                  </TableCell>
                   <TableCell>
                     <Badge variant="secondary">{course.reward_points} pts</Badge>
                   </TableCell>
