@@ -1,305 +1,193 @@
 
 
-# Implementation Plan: Shop Visibility, OG Meta Tags, Subscription Reminders & Admin Enhancements
+# Implementation Plan: Platform Transaction Fees (2-3%)
 
-## Summary of Requested Features
+## Current State
 
-1. **Shop Visibility Based on Subscription** - Expired subscription shops should not appear on `/shops` page
-2. **Dynamic Open Graph Meta Tags for Shop Storefronts** - When sharing shop links, show shop logo/description instead of SteerSolo branding
-3. **Email Reminder for Subscription Expiration** - Send reminder 3 days before trial/subscription expires
-4. **Admin Panel Enhancements**:
-   - Show subscription plan name (Basic/Pro/Business) for each shop owner
-   - View marketing consultation requests (YouTube Ads, Google Ads, etc.)
-   - Allow adding courses for shop owners (not just customers)
+The platform currently:
+- Records revenue transactions when orders are paid
+- Full order amount goes to shop owners
+- No platform commission is collected or tracked
 
----
+## Feature Overview
 
-## Part 1: Shop Visibility Based on Subscription
-
-### Current State
-The filtering logic in `shop.service.ts` already checks for valid subscriptions (lines 120-148), but there's a bug in the sorting - it uses the original `shops` array instead of the filtered `finalShops` array.
-
-### Fix Required
-Update `shop.service.ts` to sort the correct filtered array:
-
-```typescript
-// Line 163: Change from 'shops' to 'finalShops'
-const sortedShops = [...finalShops].sort((a, b) => { ... });
-```
-
-This ensures only shops with valid subscriptions AND products are displayed and sorted.
+Add a platform transaction fee (configurable 2-3%) on all order payments that:
+1. Automatically calculates the platform fee on each transaction
+2. Records both shop revenue (net) and platform fee (commission)
+3. Provides admin visibility into platform earnings
+4. Supports configurable fee percentage
 
 ---
 
-## Part 2: Dynamic Open Graph Meta Tags for Shop Storefronts
+## Database Changes
 
-### Challenge
-Static HTML (`index.html`) cannot include dynamic shop data. Social media crawlers don't execute JavaScript, so React components can't inject OG meta tags.
+### Add Platform Fee Columns to Revenue Transactions
 
-### Solution
-Create an Edge Function that generates HTML with proper OG meta tags for shop URLs. Configure the server to route `/shop/:slug` requests through this function for social media crawlers while serving the SPA for regular users.
+```sql
+ALTER TABLE public.revenue_transactions
+ADD COLUMN gross_amount numeric,
+ADD COLUMN platform_fee_percentage numeric DEFAULT 2.5,
+ADD COLUMN platform_fee numeric DEFAULT 0;
 
-### Implementation
+-- Add platform earnings table for admin reporting
+CREATE TABLE public.platform_earnings (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  transaction_id uuid REFERENCES revenue_transactions(id),
+  shop_id uuid NOT NULL,
+  order_id uuid,
+  gross_amount numeric NOT NULL,
+  fee_percentage numeric NOT NULL DEFAULT 2.5,
+  fee_amount numeric NOT NULL,
+  net_to_shop numeric NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
 
-#### 2.1 Create Edge Function: `shop-og-meta`
+-- RLS: Only admins can view platform earnings
+ALTER TABLE public.platform_earnings ENABLE ROW LEVEL SECURITY;
 
-```typescript
-// supabase/functions/shop-og-meta/index.ts
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
+CREATE POLICY "Admins can view platform earnings"
+  ON public.platform_earnings FOR SELECT
+  USING (has_role(auth.uid(), 'admin'::app_role));
 
-serve(async (req) => {
-  const url = new URL(req.url);
-  const slug = url.searchParams.get('slug');
-  
-  if (!slug) {
-    // Return default SteerSolo OG tags
-    return generateDefaultHTML();
-  }
-  
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!
-  );
-  
-  const { data: shop } = await supabase
-    .from('shops')
-    .select('shop_name, description, logo_url, banner_url')
-    .eq('shop_slug', slug)
-    .single();
-  
-  if (!shop) {
-    return generateDefaultHTML();
-  }
-  
-  // Generate HTML with shop-specific OG meta tags
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>${shop.shop_name} | SteerSolo</title>
-  <meta property="og:title" content="${shop.shop_name}" />
-  <meta property="og:description" content="${shop.description || 'Shop on SteerSolo'}" />
-  <meta property="og:image" content="${shop.logo_url || shop.banner_url || DEFAULT_IMAGE}" />
-  <meta property="og:url" content="https://steersolo.com/shop/${slug}" />
-  <meta property="og:type" content="website" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${shop.shop_name}" />
-  <meta name="twitter:description" content="${shop.description || 'Shop on SteerSolo'}" />
-  <meta name="twitter:image" content="${shop.logo_url || shop.banner_url || DEFAULT_IMAGE}" />
-  <meta http-equiv="refresh" content="0;url=https://steersolo.com/shop/${slug}">
-</head>
-<body>
-  <p>Redirecting to ${shop.shop_name}...</p>
-</body>
-</html>`;
-
-  return new Response(html, {
-    headers: { 'Content-Type': 'text/html' }
-  });
-});
+CREATE POLICY "System can insert earnings"
+  ON public.platform_earnings FOR INSERT
+  WITH CHECK (true);
 ```
 
-#### 2.2 Update Vercel Rewrites (vercel.json)
+### Add Platform Settings Table (Optional)
 
-```json
-{
-  "rewrites": [
-    {
-      "source": "/shop/:slug",
-      "has": [{ "type": "header", "key": "user-agent", "value": "(facebookexternalhit|Twitterbot|WhatsApp|Slackbot|LinkedInBot|Discordbot)" }],
-      "destination": "https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/shop-og-meta?slug=:slug"
+```sql
+CREATE TABLE public.platform_settings (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  key text UNIQUE NOT NULL,
+  value jsonb NOT NULL,
+  updated_at timestamptz DEFAULT now(),
+  updated_by uuid
+);
+
+INSERT INTO platform_settings (key, value) 
+VALUES ('transaction_fee_percentage', '{"value": 2.5}'::jsonb);
+```
+
+---
+
+## Edge Function Updates
+
+### Update `paystack-webhook/index.ts`
+
+When recording order payment revenue, calculate and store platform fee:
+
+```typescript
+// In charge.success handler for order payments
+if (order_id && shop_id) {
+  const grossAmount = event.data.amount / 100; // Paystack sends in kobo
+  const feePercentage = 2.5; // Platform fee %
+  const platformFee = Math.round(grossAmount * (feePercentage / 100) * 100) / 100;
+  const netToShop = grossAmount - platformFee;
+
+  // Record full revenue transaction with fee breakdown
+  await supabase.from('revenue_transactions').insert({
+    shop_id,
+    order_id,
+    amount: netToShop,       // Shop receives net amount
+    gross_amount: grossAmount,
+    platform_fee_percentage: feePercentage,
+    platform_fee: platformFee,
+    currency: event.data.currency || 'NGN',
+    payment_reference: event.data.reference,
+    payment_method: 'paystack',
+    transaction_type: 'order_payment',
+    metadata: {
+      customer: event.data.customer,
+      paystack_fees: event.data.fees,
     },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  });
+
+  // Record platform earnings
+  await supabase.from('platform_earnings').insert({
+    transaction_id: null, // Will link after insert if needed
+    shop_id,
+    order_id,
+    gross_amount: grossAmount,
+    fee_percentage: feePercentage,
+    fee_amount: platformFee,
+    net_to_shop: netToShop,
+  });
 }
 ```
 
----
+### Update `CheckoutDialog.tsx`
 
-## Part 3: Email Reminder for Subscription Expiration
-
-### Strategy
-Create a scheduled Edge Function (via pg_cron) that runs daily to find users whose subscriptions expire in exactly 3 days.
-
-### Implementation
-
-#### 3.1 Create Edge Function: `subscription-reminder`
+When recording manual payments or Paystack frontend callbacks:
 
 ```typescript
-// supabase/functions/subscription-reminder/index.ts
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
+// Calculate platform fee
+const PLATFORM_FEE_PERCENTAGE = 2.5;
+const platformFee = Math.round(totalAmount * (PLATFORM_FEE_PERCENTAGE / 100) * 100) / 100;
+const netToShop = totalAmount - platformFee;
 
-serve(async (req) => {
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  );
-  const resendApiKey = Deno.env.get('RESEND_API_KEY')!;
-  
-  // Find users whose subscription expires in 3 days
-  const threeDaysFromNow = new Date();
-  threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
-  
-  const startOfDay = new Date(threeDaysFromNow);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(threeDaysFromNow);
-  endOfDay.setHours(23, 59, 59, 999);
-  
-  const { data: expiringUsers, error } = await supabase
-    .from('profiles')
-    .select('id, email, full_name, subscription_expires_at, is_subscribed')
-    .gte('subscription_expires_at', startOfDay.toISOString())
-    .lte('subscription_expires_at', endOfDay.toISOString());
-  
-  if (error) throw error;
-  
-  // Check if notification already sent today
-  for (const user of expiringUsers || []) {
-    const { data: existing } = await supabase
-      .from('subscription_notifications')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('notification_type', 'subscription_expiring')
-      .gte('sent_at', new Date().toISOString().split('T')[0])
-      .maybeSingle();
-    
-    if (!existing) {
-      // Send email via send-notification-email function
-      await supabase.functions.invoke('send-notification-email', {
-        body: {
-          type: 'subscription_expiring',
-          user_id: user.id,
-          data: {
-            daysRemaining: 3,
-            subscription_expires_at: user.subscription_expires_at,
-            pricingUrl: 'https://steersolo.com/pricing'
-          }
-        }
-      });
-    }
-  }
-  
-  return new Response(JSON.stringify({ 
-    success: true, 
-    notified: expiringUsers?.length || 0 
-  }));
+// Record revenue with fee breakdown
+await supabase.from("revenue_transactions").insert({
+  shop_id: shop.id,
+  order_id: orderId,
+  amount: netToShop,
+  gross_amount: totalAmount,
+  platform_fee_percentage: PLATFORM_FEE_PERCENTAGE,
+  platform_fee: platformFee,
+  currency: 'NGN',
+  payment_reference: response.reference,
+  payment_method: 'paystack',
+  transaction_type: 'order_payment',
 });
 ```
 
-#### 3.2 Schedule via pg_cron
+---
 
-Execute this SQL to create a daily cron job:
+## Admin Dashboard Updates
 
-```sql
-SELECT cron.schedule(
-  'subscription-reminder-daily',
-  '0 8 * * *',  -- 8 AM daily
-  $$
-  SELECT net.http_post(
-    url:='https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/subscription-reminder',
-    headers:='{"Authorization": "Bearer YOUR_ANON_KEY"}'::jsonb
-  );
-  $$
-);
+### Create Admin Platform Earnings Page
+
+New file: `src/pages/admin/AdminPlatformEarnings.tsx`
+
+Features:
+- Total platform earnings (all time, this month, today)
+- Earnings chart over time
+- Transaction breakdown by shop
+- Export functionality
+
+```typescript
+// Key metrics to display
+const metrics = {
+  totalEarnings: sum of platform_fee from revenue_transactions,
+  thisMonthEarnings: filtered by current month,
+  todayEarnings: filtered by today,
+  transactionCount: count of transactions,
+  averageFee: average platform_fee,
+};
+```
+
+### Add to Admin Sidebar
+
+```typescript
+{ title: "Platform Earnings", url: "/admin/earnings", icon: DollarSign }
 ```
 
 ---
 
-## Part 4: Admin Panel Enhancements
+## Shop Owner Dashboard Updates
 
-### 4.1 Show Subscription Plan Name in Admin Shops
+### Update Revenue Display
 
-**Current Issue:** Admin fetches `subscription_plan_id` but doesn't display plan name.
-
-**Fix:** Update `AdminShops.tsx` to:
-1. Fetch subscription plans on load
-2. Display plan name (Basic/Pro/Business) next to subscription badge
+Show shop owners their net earnings (after platform fee):
 
 ```typescript
-// Add to fetchShops function
-const { data: plans } = await supabase
-  .from('subscription_plans')
-  .select('id, name, slug');
-
-const planMap = new Map(plans?.map(p => [p.id, p]) || []);
-
-// In table display
-const getPlanName = (planId: string | null) => {
-  if (!planId) return 'No Plan';
-  const plan = planMap.get(planId);
-  return plan?.name || 'Unknown';
-};
-
-// Add column in table:
-<TableCell>
-  <Badge variant="outline" className={
-    plan?.slug === 'business' ? 'bg-purple-100 text-purple-700' :
-    plan?.slug === 'pro' ? 'bg-blue-100 text-blue-700' :
-    'bg-gray-100 text-gray-700'
-  }>
-    {getPlanName(shop.profiles?.subscription_plan_id)}
-  </Badge>
-</TableCell>
+// In Dashboard.tsx revenue section
+// Display: "Your Earnings: ₦X (after 2.5% platform fee)"
+// Or show breakdown:
+// Gross: ₦X
+// Platform Fee (2.5%): -₦Y
+// Your Earnings: ₦Z
 ```
-
-### 4.2 Add Admin Marketing Consultations Page
-
-**New File:** `src/pages/admin/AdminMarketingConsultations.tsx`
-
-This page will:
-- Fetch all records from `marketing_services` table with shop and owner details
-- Display service type, status, consultation date, and shop owner info
-- Allow admin to update status and schedule consultations
-
-```typescript
-const AdminMarketingConsultations = () => {
-  const [consultations, setConsultations] = useState([]);
-  
-  const fetchConsultations = async () => {
-    const { data } = await supabase
-      .from('marketing_services')
-      .select(`
-        *,
-        shops(shop_name, owner_id),
-        shops.profiles:owner_id(full_name, email, phone)
-      `)
-      .order('created_at', { ascending: false });
-    
-    setConsultations(data || []);
-  };
-  
-  // Table with columns:
-  // - Shop Name | Owner | Contact | Service Type | Status | Date | Actions
-};
-```
-
-**Add to Admin Sidebar:**
-```typescript
-{ title: "Marketing Requests", url: "/admin/marketing", icon: Megaphone }
-```
-
-### 4.3 Add Target Audience to Courses
-
-**Database Change:** Add `target_audience` column to `courses` table
-
-```sql
-ALTER TABLE public.courses 
-ADD COLUMN target_audience text NOT NULL DEFAULT 'customer'
-CHECK (target_audience IN ('customer', 'shop_owner', 'all'));
-
--- Update existing courses
-UPDATE public.courses SET target_audience = 'customer';
-```
-
-**Update AdminCourses.tsx:**
-- Add target audience dropdown in course form
-- Display target audience badge in table
-
-**Update Course Display Logic:**
-- `CustomerCourses.tsx`: Filter courses where `target_audience IN ('customer', 'all')`
-- Create new `ShopOwnerCourses.tsx` (or add to Dashboard): Filter where `target_audience IN ('shop_owner', 'all')`
 
 ---
 
@@ -307,28 +195,47 @@ UPDATE public.courses SET target_audience = 'customer';
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/services/shop.service.ts` | Modify | Fix sorting to use filtered shops array |
-| `supabase/functions/shop-og-meta/index.ts` | Create | Dynamic OG meta tags for shop URLs |
-| `supabase/config.toml` | Modify | Add `[functions.shop-og-meta]` config |
-| `vercel.json` | Modify | Add rewrite rules for social crawlers |
-| `supabase/functions/subscription-reminder/index.ts` | Create | Daily subscription expiry reminder |
-| `src/pages/admin/AdminShops.tsx` | Modify | Display subscription plan name |
-| `src/pages/admin/AdminMarketingConsultations.tsx` | Create | Marketing consultation requests page |
-| `src/components/AdminSidebar.tsx` | Modify | Add Marketing Requests menu item |
-| `src/App.tsx` | Modify | Add route for AdminMarketingConsultations |
-| Database Migration | Create | Add `target_audience` column to courses |
-| `src/pages/admin/AdminCourses.tsx` | Modify | Add target audience selector |
-| `src/pages/customer/CustomerCourses.tsx` | Modify | Filter by target audience |
+| Database Migration | Create | Add fee columns and platform_earnings table |
+| `supabase/functions/paystack-webhook/index.ts` | Modify | Calculate and record platform fees |
+| `src/components/CheckoutDialog.tsx` | Modify | Include fee calculation on frontend callbacks |
+| `src/pages/admin/AdminPlatformEarnings.tsx` | Create | Admin earnings dashboard |
+| `src/components/AdminSidebar.tsx` | Modify | Add earnings menu item |
+| `src/App.tsx` | Modify | Add route for earnings page |
+| `src/pages/Dashboard.tsx` | Modify | Show net earnings to shop owners |
 
 ---
 
-## Technical Notes
+## Fee Structure Options
 
-1. **Open Graph Meta Tags**: The edge function approach works because social media crawlers execute HTTP requests but don't run JavaScript. We detect crawlers via User-Agent and return pre-rendered HTML.
+| Tier | Fee | Notes |
+|------|-----|-------|
+| Flat Rate | 2.5% | Simple, consistent |
+| Volume-Based | 2-3% | Lower fees for high-volume shops |
+| Plan-Based | Basic 3%, Pro 2.5%, Business 2% | Incentivizes upgrades |
 
-2. **Cron Job Setup**: The pg_cron extension must be enabled. The job runs daily at 8 AM UTC.
+Recommendation: Start with a **flat 2.5%** fee and iterate based on feedback.
 
-3. **Subscription Plans**: Already exist in database with IDs for Basic, Pro, and Business tiers.
+---
 
-4. **Marketing Services Data**: Currently has 2 consultation requests (YouTube Ads, General Consultation) from "SteerSolo" shop.
+## Technical Considerations
+
+1. **Backward Compatibility**: Existing transactions without fee columns will show `null` - they represent the old system where 100% went to shops
+
+2. **Paystack Fees**: Note that Paystack also charges ~1.5% + ₦100. Total fees to customer would be:
+   - Customer pays: ₦10,000
+   - Paystack takes: ~₦250
+   - Platform takes: ₦250 (2.5%)
+   - Shop receives: ~₦9,500 net
+
+3. **Display to Customers**: Whether to show the platform fee on checkout is a business decision. Many platforms hide it (included in price) while others show it transparently.
+
+---
+
+## Summary
+
+This implementation adds a sustainable revenue model by collecting 2-3% on every transaction while:
+- Maintaining transparency with shop owners
+- Providing admin visibility into earnings
+- Supporting future tiered pricing models
+- Recording full audit trail
 
