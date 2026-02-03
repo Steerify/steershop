@@ -853,6 +853,50 @@ export type Database = {
           },
         ]
       }
+      platform_earnings: {
+        Row: {
+          created_at: string | null
+          fee_amount: number
+          fee_percentage: number
+          gross_amount: number
+          id: string
+          net_to_shop: number
+          order_id: string | null
+          shop_id: string
+          transaction_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          fee_amount: number
+          fee_percentage?: number
+          gross_amount: number
+          id?: string
+          net_to_shop: number
+          order_id?: string | null
+          shop_id: string
+          transaction_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          fee_amount?: number
+          fee_percentage?: number
+          gross_amount?: number
+          id?: string
+          net_to_shop?: number
+          order_id?: string | null
+          shop_id?: string
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_earnings_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "revenue_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_feedback: {
         Row: {
           created_at: string
@@ -895,6 +939,30 @@ export type Database = {
           subject?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      platform_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string | null
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: Json
         }
         Relationships: []
       }
@@ -1275,11 +1343,14 @@ export type Database = {
           amount: number
           created_at: string
           currency: string
+          gross_amount: number | null
           id: string
           metadata: Json | null
           order_id: string | null
           payment_method: string
           payment_reference: string | null
+          platform_fee: number | null
+          platform_fee_percentage: number | null
           recorded_at: string
           shop_id: string
           transaction_type: string
@@ -1288,11 +1359,14 @@ export type Database = {
           amount: number
           created_at?: string
           currency?: string
+          gross_amount?: number | null
           id?: string
           metadata?: Json | null
           order_id?: string | null
           payment_method?: string
           payment_reference?: string | null
+          platform_fee?: number | null
+          platform_fee_percentage?: number | null
           recorded_at?: string
           shop_id: string
           transaction_type?: string
@@ -1301,11 +1375,14 @@ export type Database = {
           amount?: number
           created_at?: string
           currency?: string
+          gross_amount?: number | null
           id?: string
           metadata?: Json | null
           order_id?: string | null
           payment_method?: string
           payment_reference?: string | null
+          platform_fee?: number | null
+          platform_fee_percentage?: number | null
           recorded_at?: string
           shop_id?: string
           transaction_type?: string

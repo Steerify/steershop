@@ -49,6 +49,7 @@ const AdminTopSeller = lazy(() => import("./pages/admin/AdminTopSeller"));
 const AdminFeaturedShops = lazy(() => import("./pages/admin/AdminFeaturedShops"));
 const AdminActivityLogs = lazy(() => import("./pages/admin/AdminActivityLogs"));
 const AdminMarketingConsultations = lazy(() => import("./pages/admin/AdminMarketingConsultations"));
+const AdminPlatformEarnings = lazy(() => import("./pages/admin/AdminPlatformEarnings"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const DemoStoreFront = lazy(() => import("./pages/DemoStoreFront"));
 const Onboarding = lazy(() => import("./pages/entrepreneur/Onboarding"));
@@ -272,6 +273,11 @@ const App = () => (
             <Route path="/admin/marketing" element={
               <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
                 <AdminMarketingConsultations />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/earnings" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminPlatformEarnings />
               </ProtectedRoute>
             } />
             
