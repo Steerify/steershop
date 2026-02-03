@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Minus, Plus, ShoppingCart, Trash2, CreditCard, MessageCircle, Copy, Check, Upload, Camera, User, Building2 } from "lucide-react";
+import { Loader2, Minus, Plus, ShoppingCart, Trash2, CreditCard, MessageCircle, Copy, Check, Upload, Camera, User } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { z } from "zod";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -255,8 +254,6 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   const checkoutDraft = useAppSelector((state) => state.forms.checkoutDraft);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentChoice, setPaymentChoice] = useState<"pay_before" | "delivery_before">("delivery_before");
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"paystack" | "bank_transfer" | null>(null);
-  const [showPaymentMethodDialog, setShowPaymentMethodDialog] = useState(false);
   const [formData, setFormData] = useState({
     customer_name: checkoutDraft?.customerName || "",
     customer_email: checkoutDraft?.customerEmail || "",
@@ -270,11 +267,6 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   const [isInitializingPayment, setIsInitializingPayment] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [proofSent, setProofSent] = useState(false);
-
-  // Check what payment methods are available
-  const hasPaystack = shop.payment_method?.includes("paystack") && shop.paystack_public_key?.startsWith("pk_");
-  const hasBankTransfer = shop.payment_method?.includes("bank_transfer") && shop.bank_account_number;
-  const hasBothPaymentMethods = hasPaystack && hasBankTransfer;
 
   // Save form data to Redux on change
   const handleFormChange = (field: string, value: string) => {
@@ -327,8 +319,6 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       setCurrentOrderId(null);
       setProofSent(false);
       setIsInitializingPayment(false);
-      setSelectedPaymentMethod(null);
-      setShowPaymentMethodDialog(false);
     }
   }, [isOpen]);
 
@@ -569,8 +559,6 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     setOrderCreated(false);
     setCurrentOrderId(null);
     setProofSent(false);
-    setSelectedPaymentMethod(null);
-    setShowPaymentMethodDialog(false);
   };
 
   const handleCheckout = async (e: React.FormEvent) => {
@@ -638,13 +626,10 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
         await handleDeliveryBeforeService(orderId);
       } else {
         // Handle payment before service
-        if (hasBothPaymentMethods) {
-          // Show payment method selection dialog
-          setShowPaymentMethodDialog(true);
-        } else if (hasPaystack) {
+        if (shop.payment_method === "paystack") {
           await handlePaystackPayment(orderId, formData.customer_email);
         }
-        // For bank transfer only, the UI will show bank details and require proof
+        // For bank transfer, the UI will show bank details and require proof
       }
       
     } catch (error: any) {
@@ -679,11 +664,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   };
 
   const handleCompleteOrder = () => {
-    // Check if proof is required for bank transfer
-    const isBankTransferFlow = selectedPaymentMethod === "bank_transfer" || 
-      (paymentChoice === "pay_before" && !hasPaystack && hasBankTransfer);
-    
-    if (!proofSent && paymentChoice === "pay_before" && isBankTransferFlow) {
+    if (!proofSent && paymentChoice === "pay_before" && shop.payment_method === "bank_transfer") {
       toast({
         title: "Please send payment proof first",
         description: "You must send your payment proof via WhatsApp before completing the order.",
@@ -702,17 +683,6 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     });
   };
 
-  // Handle payment method selection when both are available
-  const handlePaymentMethodSelection = async (method: "paystack" | "bank_transfer") => {
-    setSelectedPaymentMethod(method);
-    setShowPaymentMethodDialog(false);
-    
-    if (method === "paystack" && currentOrderId) {
-      await handlePaystackPayment(currentOrderId, formData.customer_email);
-    }
-    // For bank_transfer, the UI will show bank details automatically
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
@@ -722,9 +692,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
             <span className="truncate">Checkout - {shop.shop_name}</span>
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
-            {showPaymentMethodDialog 
-              ? "Choose how you'd like to pay"
-              : orderCreated && paymentChoice === "pay_before" && (selectedPaymentMethod === "bank_transfer" || (!hasPaystack && hasBankTransfer))
+            {orderCreated && paymentChoice === "pay_before" && shop.payment_method === "bank_transfer" 
               ? "Make payment and send proof via WhatsApp"
               : isInitializingPayment
               ? "Initializing payment gateway..."
@@ -876,9 +844,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                         <span>Pay Before Service</span>
                       </Label>
                       <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                        {hasBothPaymentMethods 
-                          ? "Choose Paystack or Bank Transfer at checkout"
-                          : hasPaystack 
+                        {shop.payment_method === "paystack" 
                           ? "Complete payment via Paystack before delivery"
                           : "Transfer to shop's bank account before delivery"}
                       </p>
@@ -900,8 +866,8 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 </RadioGroup>
               </div>
 
-              {/* Show bank details preview for "Pay Before" with bank transfer only (not both methods) */}
-              {paymentChoice === "pay_before" && !hasPaystack && hasBankTransfer && (
+              {/* Show bank details preview for "Pay Before" with bank transfer */}
+              {paymentChoice === "pay_before" && shop.payment_method === "bank_transfer" && (
                 <div className="p-4 bg-muted rounded-lg space-y-2">
                   <h4 className="font-semibold">Bank Transfer Details (Preview)</h4>
                   <div className="text-sm space-y-1">
@@ -912,15 +878,6 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                       After placing the order, you'll need to transfer and send proof via WhatsApp.
                     </p>
                   </div>
-                </div>
-              )}
-
-              {/* Show info when both payment methods are available */}
-              {paymentChoice === "pay_before" && hasBothPaymentMethods && (
-                <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
-                  <p className="text-sm text-primary font-medium">
-                    💳 You'll choose between Paystack or Bank Transfer after placing your order
-                  </p>
                 </div>
               )}
 
@@ -956,59 +913,11 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
               <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
               <p className="text-muted-foreground">Initializing payment gateway...</p>
             </div>
-          ) : showPaymentMethodDialog ? (
-            /* Payment Method Selection Dialog */
-            <div className="space-y-4">
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-950/20 dark:border-green-900">
-                <h4 className="font-semibold text-green-800 dark:text-green-400 mb-2">Order Created Successfully!</h4>
-                <p className="text-sm text-green-700 dark:text-green-300">
-                  Now choose how you'd like to pay.
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="font-semibold text-center">Select Payment Method</h4>
-                
-                <Button
-                  variant="outline"
-                  className="w-full h-auto p-4 flex items-start gap-4 justify-start hover:border-primary hover:bg-primary/5"
-                  onClick={() => handlePaymentMethodSelection("paystack")}
-                >
-                  <div className="p-2 rounded-full bg-primary/10">
-                    <CreditCard className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-semibold">Pay with Paystack</p>
-                    <p className="text-sm text-muted-foreground">Use card, bank transfer, or USSD</p>
-                  </div>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full h-auto p-4 flex items-start gap-4 justify-start hover:border-primary hover:bg-primary/5"
-                  onClick={() => handlePaymentMethodSelection("bank_transfer")}
-                >
-                  <div className="p-2 rounded-full bg-primary/10">
-                    <Building2 className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-semibold">Bank Transfer</p>
-                    <p className="text-sm text-muted-foreground">Transfer directly to shop's bank account</p>
-                  </div>
-                </Button>
-              </div>
-
-              <Button variant="ghost" className="w-full" onClick={onClose}>
-                Cancel
-              </Button>
-            </div>
-          ) : (selectedPaymentMethod === "bank_transfer" || (!hasPaystack && hasBankTransfer)) ? (
+          ) : (
             /* Bank Transfer Payment + Proof Section */
             <div className="space-y-4">
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-950/20 dark:border-green-900">
-                <h4 className="font-semibold text-green-800 dark:text-green-400 mb-2">
-                  {selectedPaymentMethod === "bank_transfer" ? "Bank Transfer Selected" : "Order Created Successfully!"}
-                </h4>
+                <h4 className="font-semibold text-green-800 dark:text-green-400 mb-2">Order Created Successfully!</h4>
                 <p className="text-sm text-green-700 dark:text-green-300">
                   Please complete your bank transfer and send proof via WhatsApp.
                 </p>
@@ -1139,7 +1048,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 )}
               </div>
             </div>
-          ) : null}
+          )}
         </div>
       </DialogContent>
     </Dialog>
