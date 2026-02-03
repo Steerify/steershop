@@ -400,18 +400,43 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
 
             if (updateError) throw updateError;
 
-            // Record revenue transaction
-            await supabase
+            // Calculate platform fee (2.5%)
+            const PLATFORM_FEE_PERCENTAGE = 2.5;
+            const platformFee = Math.round(totalAmount * (PLATFORM_FEE_PERCENTAGE / 100) * 100) / 100;
+            const netToShop = totalAmount - platformFee;
+
+            // Record revenue transaction with platform fee breakdown
+            const { data: revenueData } = await supabase
               .from("revenue_transactions")
               .insert({
                 shop_id: shop.id,
                 order_id: orderId,
-                amount: totalAmount,
+                amount: netToShop,
+                gross_amount: totalAmount,
+                platform_fee_percentage: PLATFORM_FEE_PERCENTAGE,
+                platform_fee: platformFee,
                 currency: 'NGN',
                 payment_reference: response.reference,
                 payment_method: 'paystack',
                 transaction_type: 'order_payment',
-              });
+              })
+              .select()
+              .single();
+
+            // Record platform earnings
+            if (revenueData) {
+              await supabase
+                .from("platform_earnings")
+                .insert({
+                  transaction_id: revenueData.id,
+                  shop_id: shop.id,
+                  order_id: orderId,
+                  gross_amount: totalAmount,
+                  fee_percentage: PLATFORM_FEE_PERCENTAGE,
+                  fee_amount: platformFee,
+                  net_to_shop: netToShop,
+                });
+            }
 
             toast({
               title: "Payment Successful! 🎉",

@@ -134,17 +134,23 @@ serve(async (req) => {
         }
       }
 
-      // If this is an order payment (has order_id and shop_id) - record revenue
+      // If this is an order payment (has order_id and shop_id) - record revenue with platform fee
       if (order_id && shop_id) {
-        const amount = event.data.amount / 100; // Paystack sends amount in kobo
+        const grossAmount = event.data.amount / 100; // Paystack sends amount in kobo
+        const feePercentage = 2.5; // Platform fee percentage
+        const platformFee = Math.round(grossAmount * (feePercentage / 100) * 100) / 100;
+        const netToShop = grossAmount - platformFee;
 
-        // Record revenue transaction
-        const { error: revenueError } = await supabase
+        // Record revenue transaction with fee breakdown
+        const { data: revenueData, error: revenueError } = await supabase
           .from('revenue_transactions')
           .insert({
             shop_id,
             order_id,
-            amount,
+            amount: netToShop, // Shop receives net amount
+            gross_amount: grossAmount,
+            platform_fee_percentage: feePercentage,
+            platform_fee: platformFee,
             currency: event.data.currency || 'NGN',
             payment_reference: event.data.reference,
             payment_method: 'paystack',
@@ -154,12 +160,37 @@ serve(async (req) => {
               channel: event.data.channel,
               paystack_fees: event.data.fees,
             },
-          });
+          })
+          .select()
+          .single();
 
         if (revenueError) {
           console.error('Error recording revenue:', revenueError);
         } else {
-          console.log('Revenue recorded:', { shop_id, order_id, amount });
+          console.log('Revenue recorded with platform fee:', { 
+            shop_id, 
+            order_id, 
+            grossAmount, 
+            platformFee, 
+            netToShop 
+          });
+
+          // Record platform earnings
+          const { error: earningsError } = await supabase
+            .from('platform_earnings')
+            .insert({
+              transaction_id: revenueData?.id || null,
+              shop_id,
+              order_id,
+              gross_amount: grossAmount,
+              fee_percentage: feePercentage,
+              fee_amount: platformFee,
+              net_to_shop: netToShop,
+            });
+
+          if (earningsError) {
+            console.error('Error recording platform earnings:', earningsError);
+          }
         }
 
         // Update order payment status

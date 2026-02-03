@@ -23,7 +23,8 @@ import {
   UserPlus,
   Crown,
   Sparkles,
-  Megaphone
+  Megaphone,
+  DollarSign
 } from "lucide-react";
 import logo from "@/assets/steersolo-logo.jpg";
 
@@ -32,6 +33,7 @@ import { Activity } from "lucide-react";
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Activity Logs", url: "/admin/activity-logs", icon: Activity },
+  { title: "Platform Earnings", url: "/admin/earnings", icon: DollarSign },
   { title: "Shops", url: "/admin/shops", icon: Store },
   { title: "Featured Shops", url: "/admin/featured-shops", icon: Sparkles },
   { title: "Products", url: "/admin/products", icon: Package },
