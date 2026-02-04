@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Minus, Plus, ShoppingCart, Trash2, CreditCard, MessageCircle, Copy, Check, Upload, Camera, User } from "lucide-react";
+import { Loader2, Minus, Plus, ShoppingCart, Trash2, CreditCard, MessageCircle, Copy, Check, Upload, Camera, User, Building2 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { z } from "zod";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -267,6 +267,8 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   const [isInitializingPayment, setIsInitializingPayment] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [proofSent, setProofSent] = useState(false);
+  const [showPaymentMethodSelection, setShowPaymentMethodSelection] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'paystack' | 'bank_transfer' | null>(null);
 
   // Save form data to Redux on change
   const handleFormChange = (field: string, value: string) => {
@@ -319,6 +321,8 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       setCurrentOrderId(null);
       setProofSent(false);
       setIsInitializingPayment(false);
+      setShowPaymentMethodSelection(false);
+      setSelectedPaymentMethod(null);
     }
   }, [isOpen]);
 
@@ -578,11 +582,20 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       return;
     }
 
+    // If paying before service and both methods enabled, show selection first
+    if (paymentChoice === "pay_before" && shop.payment_method === "both" && !selectedPaymentMethod) {
+      setShowPaymentMethodSelection(true);
+      return;
+    }
+
+    await createOrderAndProcessPayment(selectedPaymentMethod || undefined);
+  };
+
+  // New function to handle order creation and payment
+  const createOrderAndProcessPayment = async (paymentMethod?: 'paystack' | 'bank_transfer') => {
     setIsProcessing(true);
 
     try {
-      // Use user from context
-
       const orderId = crypto.randomUUID();
 
       const { error: orderError } = await supabase
@@ -620,13 +633,17 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
 
       setCurrentOrderId(orderId);
       setOrderCreated(true);
+      setShowPaymentMethodSelection(false);
 
       // Handle payment choice
       if (paymentChoice === "delivery_before") {
         await handleDeliveryBeforeService(orderId);
       } else {
-        // Handle payment before service
-        if (shop.payment_method === "paystack") {
+        // Determine which payment method to use
+        const effectivePaymentMethod = paymentMethod || shop.payment_method;
+        
+        // Handle payment before service - trigger Paystack for paystack or when selected via "both"
+        if (effectivePaymentMethod === "paystack" || (shop.payment_method === "both" && paymentMethod === "paystack")) {
           await handlePaystackPayment(orderId, formData.customer_email);
         }
         // For bank transfer, the UI will show bank details and require proof
@@ -642,6 +659,12 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Handler for when user confirms payment method choice
+  const handlePaymentMethodConfirm = async () => {
+    if (!selectedPaymentMethod) return;
+    await createOrderAndProcessPayment(selectedPaymentMethod);
   };
 
   const handleSendProofViaWhatsApp = () => {
@@ -664,7 +687,11 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   };
 
   const handleCompleteOrder = () => {
-    if (!proofSent && paymentChoice === "pay_before" && shop.payment_method === "bank_transfer") {
+    // Check if bank transfer proof is required
+    const isBankTransferPayment = selectedPaymentMethod === 'bank_transfer' || 
+      (shop.payment_method === 'bank_transfer' && !selectedPaymentMethod);
+
+    if (!proofSent && paymentChoice === "pay_before" && isBankTransferPayment) {
       toast({
         title: "Please send payment proof first",
         description: "You must send your payment proof via WhatsApp before completing the order.",
@@ -692,7 +719,9 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
             <span className="truncate">Checkout - {shop.shop_name}</span>
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
-            {orderCreated && paymentChoice === "pay_before" && shop.payment_method === "bank_transfer" 
+            {showPaymentMethodSelection && !orderCreated
+              ? "Choose how you'd like to pay"
+              : orderCreated && paymentChoice === "pay_before" && (shop.payment_method === "bank_transfer" || selectedPaymentMethod === "bank_transfer")
               ? "Make payment and send proof via WhatsApp"
               : isInitializingPayment
               ? "Initializing payment gateway..."
@@ -846,6 +875,8 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                       <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                         {shop.payment_method === "paystack" 
                           ? "Complete payment via Paystack before delivery"
+                          : shop.payment_method === "both"
+                          ? "Choose Paystack or Bank Transfer"
                           : "Transfer to shop's bank account before delivery"}
                       </p>
                     </div>
@@ -866,8 +897,63 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 </RadioGroup>
               </div>
 
-              {/* Show bank details preview for "Pay Before" with bank transfer */}
-              {paymentChoice === "pay_before" && shop.payment_method === "bank_transfer" && (
+              {/* Payment Method Selection - shown when 'both' methods available */}
+              {showPaymentMethodSelection && paymentChoice === "pay_before" && shop.payment_method === "both" && !orderCreated && (
+                <div className="space-y-4 p-4 bg-muted rounded-lg">
+                  <h4 className="font-semibold">Choose Payment Method</h4>
+                  <div className="space-y-3">
+                    {/* Paystack Option */}
+                    <div 
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                        selectedPaymentMethod === 'paystack' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                      }`}
+                      onClick={() => setSelectedPaymentMethod('paystack')}
+                    >
+                      <div className="flex items-center gap-3">
+                        <CreditCard className="w-5 h-5" />
+                        <div>
+                          <p className="font-medium">Pay with Paystack</p>
+                          <p className="text-sm text-muted-foreground">Card, Bank Transfer, USSD</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Bank Transfer Option */}
+                    <div 
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                        selectedPaymentMethod === 'bank_transfer' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                      }`}
+                      onClick={() => setSelectedPaymentMethod('bank_transfer')}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Building2 className="w-5 h-5" />
+                        <div>
+                          <p className="font-medium">Manual Bank Transfer</p>
+                          <p className="text-sm text-muted-foreground">Transfer to seller's account</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    onClick={handlePaymentMethodConfirm}
+                    disabled={!selectedPaymentMethod || isProcessing}
+                    className="w-full"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      `Continue with ${selectedPaymentMethod === 'paystack' ? 'Paystack' : selectedPaymentMethod === 'bank_transfer' ? 'Bank Transfer' : '...'}`
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {/* Show bank details preview for "Pay Before" with bank transfer only */}
+              {paymentChoice === "pay_before" && shop.payment_method === "bank_transfer" && !showPaymentMethodSelection && (
                 <div className="p-4 bg-muted rounded-lg space-y-2">
                   <h4 className="font-semibold">Bank Transfer Details (Preview)</h4>
                   <div className="text-sm space-y-1">
@@ -881,39 +967,42 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 </div>
               )}
 
-              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-4 pt-3 sm:pt-4">
-                <Button type="button" variant="outline" onClick={onClose} disabled={isProcessing || isInitializingPayment} className="min-h-[48px] w-full sm:w-auto">
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isProcessing || cart.length === 0 || isInitializingPayment} 
-                  className="flex-1 min-h-[48px] text-sm sm:text-base"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : isInitializingPayment ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Initializing...
-                    </>
-                  ) : paymentChoice === "delivery_before" ? (
-                    <span className="truncate">Place Order - ₦{totalAmount.toLocaleString()}</span>
-                  ) : (
-                    <span className="truncate">Pay ₦{totalAmount.toLocaleString()}</span>
-                  )}
-                </Button>
-              </div>
+              {/* Hide submit buttons when payment method selection is shown */}
+              {!showPaymentMethodSelection && (
+                <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-4 pt-3 sm:pt-4">
+                  <Button type="button" variant="outline" onClick={onClose} disabled={isProcessing || isInitializingPayment} className="min-h-[48px] w-full sm:w-auto">
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isProcessing || cart.length === 0 || isInitializingPayment} 
+                    className="flex-1 min-h-[48px] text-sm sm:text-base"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : isInitializingPayment ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Initializing...
+                      </>
+                    ) : paymentChoice === "delivery_before" ? (
+                      <span className="truncate">Place Order - ₦{totalAmount.toLocaleString()}</span>
+                    ) : (
+                      <span className="truncate">Pay ₦{totalAmount.toLocaleString()}</span>
+                    )}
+                  </Button>
+                </div>
+              )}
             </form>
           ) : isInitializingPayment ? (
             <div className="text-center py-8">
               <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
               <p className="text-muted-foreground">Initializing payment gateway...</p>
             </div>
-          ) : (
+          ) : orderCreated && (shop.payment_method === "bank_transfer" || selectedPaymentMethod === "bank_transfer") ? (
             /* Bank Transfer Payment + Proof Section */
             <div className="space-y-4">
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-950/20 dark:border-green-900">
@@ -1048,7 +1137,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 )}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>
