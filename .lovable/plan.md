@@ -1,241 +1,271 @@
 
+# Fix Payment Method Selection Popup & Paystack Integration
 
-# Implementation Plan: Platform Transaction Fees (2-3%)
+## Problem Summary
 
-## Current State
+When a shop has **both** Paystack and Bank Transfer payment methods enabled (`payment_method = 'both'`), the current checkout flow has two critical bugs:
 
-The platform currently:
-- Records revenue transactions when orders are paid
-- Full order amount goes to shop owners
-- No platform commission is collected or tracked
+### Bug 1: No Payment Method Selection Popup
+When the customer selects "Pay Before Service" and the shop supports both payment methods, there's no UI to let the customer choose between Paystack or Bank Transfer. The code only checks for `shop.payment_method === "paystack"` which fails when the value is `'both'`.
 
-## Feature Overview
-
-Add a platform transaction fee (configurable 2-3%) on all order payments that:
-1. Automatically calculates the platform fee on each transaction
-2. Records both shop revenue (net) and platform fee (commission)
-3. Provides admin visibility into platform earnings
-4. Supports configurable fee percentage
-
----
-
-## Database Changes
-
-### Add Platform Fee Columns to Revenue Transactions
-
-```sql
-ALTER TABLE public.revenue_transactions
-ADD COLUMN gross_amount numeric,
-ADD COLUMN platform_fee_percentage numeric DEFAULT 2.5,
-ADD COLUMN platform_fee numeric DEFAULT 0;
-
--- Add platform earnings table for admin reporting
-CREATE TABLE public.platform_earnings (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  transaction_id uuid REFERENCES revenue_transactions(id),
-  shop_id uuid NOT NULL,
-  order_id uuid,
-  gross_amount numeric NOT NULL,
-  fee_percentage numeric NOT NULL DEFAULT 2.5,
-  fee_amount numeric NOT NULL,
-  net_to_shop numeric NOT NULL,
-  created_at timestamptz DEFAULT now()
-);
-
--- RLS: Only admins can view platform earnings
-ALTER TABLE public.platform_earnings ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admins can view platform earnings"
-  ON public.platform_earnings FOR SELECT
-  USING (has_role(auth.uid(), 'admin'::app_role));
-
-CREATE POLICY "System can insert earnings"
-  ON public.platform_earnings FOR INSERT
-  WITH CHECK (true);
-```
-
-### Add Platform Settings Table (Optional)
-
-```sql
-CREATE TABLE public.platform_settings (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  key text UNIQUE NOT NULL,
-  value jsonb NOT NULL,
-  updated_at timestamptz DEFAULT now(),
-  updated_by uuid
-);
-
-INSERT INTO platform_settings (key, value) 
-VALUES ('transaction_fee_percentage', '{"value": 2.5}'::jsonb);
-```
-
----
-
-## Edge Function Updates
-
-### Update `paystack-webhook/index.ts`
-
-When recording order payment revenue, calculate and store platform fee:
-
+### Bug 2: Paystack Popup Not Appearing
+The Paystack payment is never triggered when `payment_method = 'both'` because:
 ```typescript
-// In charge.success handler for order payments
-if (order_id && shop_id) {
-  const grossAmount = event.data.amount / 100; // Paystack sends in kobo
-  const feePercentage = 2.5; // Platform fee %
-  const platformFee = Math.round(grossAmount * (feePercentage / 100) * 100) / 100;
-  const netToShop = grossAmount - platformFee;
-
-  // Record full revenue transaction with fee breakdown
-  await supabase.from('revenue_transactions').insert({
-    shop_id,
-    order_id,
-    amount: netToShop,       // Shop receives net amount
-    gross_amount: grossAmount,
-    platform_fee_percentage: feePercentage,
-    platform_fee: platformFee,
-    currency: event.data.currency || 'NGN',
-    payment_reference: event.data.reference,
-    payment_method: 'paystack',
-    transaction_type: 'order_payment',
-    metadata: {
-      customer: event.data.customer,
-      paystack_fees: event.data.fees,
-    },
-  });
-
-  // Record platform earnings
-  await supabase.from('platform_earnings').insert({
-    transaction_id: null, // Will link after insert if needed
-    shop_id,
-    order_id,
-    gross_amount: grossAmount,
-    fee_percentage: feePercentage,
-    fee_amount: platformFee,
-    net_to_shop: netToShop,
-  });
+// Current code (line 629):
+if (shop.payment_method === "paystack") {
+  await handlePaystackPayment(orderId, formData.customer_email);
 }
-```
-
-### Update `CheckoutDialog.tsx`
-
-When recording manual payments or Paystack frontend callbacks:
-
-```typescript
-// Calculate platform fee
-const PLATFORM_FEE_PERCENTAGE = 2.5;
-const platformFee = Math.round(totalAmount * (PLATFORM_FEE_PERCENTAGE / 100) * 100) / 100;
-const netToShop = totalAmount - platformFee;
-
-// Record revenue with fee breakdown
-await supabase.from("revenue_transactions").insert({
-  shop_id: shop.id,
-  order_id: orderId,
-  amount: netToShop,
-  gross_amount: totalAmount,
-  platform_fee_percentage: PLATFORM_FEE_PERCENTAGE,
-  platform_fee: platformFee,
-  currency: 'NGN',
-  payment_reference: response.reference,
-  payment_method: 'paystack',
-  transaction_type: 'order_payment',
-});
+// When payment_method is 'both', this condition is false!
 ```
 
 ---
 
-## Admin Dashboard Updates
+## Solution Overview
 
-### Create Admin Platform Earnings Page
+Add a **payment method selection step** that appears when:
+1. Customer selects "Pay Before Service"
+2. Shop has `payment_method = 'both'`
 
-New file: `src/pages/admin/AdminPlatformEarnings.tsx`
+The flow will become:
+```text
+Customer Info Form → Payment Option (Pay Before/After) → [If Both Methods] Payment Method Selection → Payment Processing
+```
 
-Features:
-- Total platform earnings (all time, this month, today)
-- Earnings chart over time
-- Transaction breakdown by shop
-- Export functionality
+---
+
+## Implementation Details
+
+### Part 1: Add Payment Method Selection State
+
+Add new state variables to track the selected payment gateway:
 
 ```typescript
-// Key metrics to display
-const metrics = {
-  totalEarnings: sum of platform_fee from revenue_transactions,
-  thisMonthEarnings: filtered by current month,
-  todayEarnings: filtered by today,
-  transactionCount: count of transactions,
-  averageFee: average platform_fee,
+// New state
+const [showPaymentMethodSelection, setShowPaymentMethodSelection] = useState(false);
+const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'paystack' | 'bank_transfer' | null>(null);
+```
+
+### Part 2: Create Payment Method Selection UI Component
+
+Create an inline selection component (not a separate dialog) that appears after clicking "Pay" when both methods are available:
+
+```typescript
+{/* Payment Method Selection - shown when 'both' methods available */}
+{showPaymentMethodSelection && !orderCreated && (
+  <div className="space-y-4 p-4 bg-muted rounded-lg">
+    <h4 className="font-semibold">Choose Payment Method</h4>
+    <div className="space-y-3">
+      {/* Paystack Option */}
+      <div 
+        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+          selectedPaymentMethod === 'paystack' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+        }`}
+        onClick={() => setSelectedPaymentMethod('paystack')}
+      >
+        <div className="flex items-center gap-3">
+          <CreditCard className="w-5 h-5" />
+          <div>
+            <p className="font-medium">Pay with Paystack</p>
+            <p className="text-sm text-muted-foreground">Card, Bank Transfer, USSD</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Bank Transfer Option */}
+      <div 
+        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+          selectedPaymentMethod === 'bank_transfer' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+        }`}
+        onClick={() => setSelectedPaymentMethod('bank_transfer')}
+      >
+        <div className="flex items-center gap-3">
+          <Building2 className="w-5 h-5" />
+          <div>
+            <p className="font-medium">Manual Bank Transfer</p>
+            <p className="text-sm text-muted-foreground">Transfer to seller's account</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <Button 
+      onClick={handlePaymentMethodConfirm}
+      disabled={!selectedPaymentMethod}
+      className="w-full"
+    >
+      Continue with {selectedPaymentMethod === 'paystack' ? 'Paystack' : 'Bank Transfer'}
+    </Button>
+  </div>
+)}
+```
+
+### Part 3: Update handleCheckout Logic
+
+Modify the checkout handler to detect when both methods are available and show the selection:
+
+```typescript
+const handleCheckout = async (e: React.FormEvent) => {
+  e.preventDefault();
+  // ... validation ...
+
+  // If paying before service and both methods enabled, show selection
+  if (paymentChoice === "pay_before" && shop.payment_method === "both") {
+    // Don't create order yet - first let user choose payment method
+    setShowPaymentMethodSelection(true);
+    return;
+  }
+
+  // Otherwise proceed with order creation
+  await createOrderAndProcessPayment();
+};
+
+// New function to handle order creation and payment
+const createOrderAndProcessPayment = async (paymentMethod?: 'paystack' | 'bank_transfer') => {
+  setIsProcessing(true);
+  try {
+    // ... create order ...
+    
+    // Determine which payment method to use
+    const effectivePaymentMethod = paymentMethod || shop.payment_method;
+    
+    if (paymentChoice === "delivery_before") {
+      await handleDeliveryBeforeService(orderId);
+    } else {
+      // Handle payment before service
+      if (effectivePaymentMethod === "paystack" || effectivePaymentMethod === "both" && paymentMethod === "paystack") {
+        await handlePaystackPayment(orderId, formData.customer_email);
+      }
+      // For bank transfer, the UI will show bank details
+    }
+  } catch (error) {
+    // ... error handling ...
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
+// Handler for when user confirms payment method choice
+const handlePaymentMethodConfirm = async () => {
+  if (!selectedPaymentMethod) return;
+  await createOrderAndProcessPayment(selectedPaymentMethod);
 };
 ```
 
-### Add to Admin Sidebar
+### Part 4: Update UI Text to Handle "Both" Case
+
+Update the radio button description text:
 
 ```typescript
-{ title: "Platform Earnings", url: "/admin/earnings", icon: DollarSign }
+// Current (line 847-850):
+{shop.payment_method === "paystack" 
+  ? "Complete payment via Paystack before delivery"
+  : "Transfer to shop's bank account before delivery"}
+
+// Updated:
+{shop.payment_method === "paystack" 
+  ? "Complete payment via Paystack before delivery"
+  : shop.payment_method === "both"
+  ? "Choose Paystack or Bank Transfer"
+  : "Transfer to shop's bank account before delivery"}
+```
+
+### Part 5: Fix Bank Transfer Proof Check
+
+Update the condition that checks for bank transfer proof requirement:
+
+```typescript
+// Current (line 667):
+if (!proofSent && paymentChoice === "pay_before" && shop.payment_method === "bank_transfer") {
+
+// Updated to include 'both' case when bank transfer was selected:
+const isBankTransferPayment = selectedPaymentMethod === 'bank_transfer' || 
+  (shop.payment_method === 'bank_transfer' && !selectedPaymentMethod);
+
+if (!proofSent && paymentChoice === "pay_before" && isBankTransferPayment) {
+```
+
+### Part 6: Reset States When Dialog Closes
+
+Add the new states to the reset logic:
+
+```typescript
+useEffect(() => {
+  if (!isOpen) {
+    setOrderCreated(false);
+    setCurrentOrderId(null);
+    setProofSent(false);
+    setIsInitializingPayment(false);
+    setShowPaymentMethodSelection(false);  // Add this
+    setSelectedPaymentMethod(null);         // Add this
+  }
+}, [isOpen]);
 ```
 
 ---
 
-## Shop Owner Dashboard Updates
+## Files to Modify
 
-### Update Revenue Display
+| File | Changes |
+|------|---------|
+| `src/components/CheckoutDialog.tsx` | Add payment method selection UI and logic |
 
-Show shop owners their net earnings (after platform fee):
+---
 
-```typescript
-// In Dashboard.tsx revenue section
-// Display: "Your Earnings: ₦X (after 2.5% platform fee)"
-// Or show breakdown:
-// Gross: ₦X
-// Platform Fee (2.5%): -₦Y
-// Your Earnings: ₦Z
+## User Flow After Implementation
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                        CHECKOUT DIALOG                          │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. Fill customer info (auto-filled if logged in)               │
+│                                                                 │
+│ 2. Select: ○ Pay Before Service                                │
+│            ○ Pay on Delivery                                   │
+│                                                                 │
+│ 3. Click "Pay ₦X"                                               │
+├─────────────────────────────────────────────────────────────────┤
+│ IF shop.payment_method === 'both':                              │
+│                                                                 │
+│   ┌──────────────────────────────────────────────────────────┐  │
+│   │ Choose Payment Method                                    │  │
+│   │                                                          │  │
+│   │  ┌─────────────────────────────────────────────────────┐ │  │
+│   │  │ 💳 Pay with Paystack                                │ │  │
+│   │  │    Card, Bank Transfer, USSD                        │ │  │
+│   │  └─────────────────────────────────────────────────────┘ │  │
+│   │                                                          │  │
+│   │  ┌─────────────────────────────────────────────────────┐ │  │
+│   │  │ 🏦 Manual Bank Transfer                             │ │  │
+│   │  │    Transfer to seller's account                     │ │  │
+│   │  └─────────────────────────────────────────────────────┘ │  │
+│   │                                                          │  │
+│   │  [Continue with Paystack]                                │  │
+│   └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│ IF Paystack selected → Opens Paystack popup                     │
+│ IF Bank Transfer selected → Shows bank details + proof step     │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Files to Create/Modify
+## Technical Notes
 
-| File | Action | Description |
-|------|--------|-------------|
-| Database Migration | Create | Add fee columns and platform_earnings table |
-| `supabase/functions/paystack-webhook/index.ts` | Modify | Calculate and record platform fees |
-| `src/components/CheckoutDialog.tsx` | Modify | Include fee calculation on frontend callbacks |
-| `src/pages/admin/AdminPlatformEarnings.tsx` | Create | Admin earnings dashboard |
-| `src/components/AdminSidebar.tsx` | Modify | Add earnings menu item |
-| `src/App.tsx` | Modify | Add route for earnings page |
-| `src/pages/Dashboard.tsx` | Modify | Show net earnings to shop owners |
+1. **Paystack Script Loading**: The existing `loadPaystackScript()` function is already robust with error handling and retry logic
+
+2. **CSP Configuration**: The `index.html` already includes Paystack domains in the Content Security Policy
+
+3. **Key Validation**: The code already validates the Paystack key format (must start with `pk_`)
+
+4. **Platform Fees**: Both payment paths (Paystack callback and frontend recording) already include the 2.5% platform fee calculation
 
 ---
 
-## Fee Structure Options
+## Expected Outcomes
 
-| Tier | Fee | Notes |
-|------|-----|-------|
-| Flat Rate | 2.5% | Simple, consistent |
-| Volume-Based | 2-3% | Lower fees for high-volume shops |
-| Plan-Based | Basic 3%, Pro 2.5%, Business 2% | Incentivizes upgrades |
-
-Recommendation: Start with a **flat 2.5%** fee and iterate based on feedback.
-
----
-
-## Technical Considerations
-
-1. **Backward Compatibility**: Existing transactions without fee columns will show `null` - they represent the old system where 100% went to shops
-
-2. **Paystack Fees**: Note that Paystack also charges ~1.5% + ₦100. Total fees to customer would be:
-   - Customer pays: ₦10,000
-   - Paystack takes: ~₦250
-   - Platform takes: ₦250 (2.5%)
-   - Shop receives: ~₦9,500 net
-
-3. **Display to Customers**: Whether to show the platform fee on checkout is a business decision. Many platforms hide it (included in price) while others show it transparently.
-
----
-
-## Summary
-
-This implementation adds a sustainable revenue model by collecting 2-3% on every transaction while:
-- Maintaining transparency with shop owners
-- Providing admin visibility into earnings
-- Supporting future tiered pricing models
-- Recording full audit trail
-
+After implementation:
+1. Shops with both payment methods will show a selection popup
+2. Customers can choose between Paystack or Bank Transfer
+3. Paystack popup will appear correctly when selected
+4. Bank transfer flow will work as before with proof requirement
+5. All edge cases handled (single method shops work unchanged)
