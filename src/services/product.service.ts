@@ -15,7 +15,6 @@ export interface CreateProductRequest {
   duration_minutes?: number;
   booking_required?: boolean;
   is_available?: boolean;
-  video_url?: string | null;
 }
 
 const productService = {
@@ -35,7 +34,6 @@ const productService = {
         price: data.price,
         stock_quantity: data.inventory,
         image_url: primaryImage,
-        video_url: data.video_url || null,
         type: data.type || 'product',
         is_available: data.is_available !== undefined ? data.is_available : true,
         duration_minutes: data.duration_minutes || null,
@@ -101,7 +99,6 @@ const productService = {
       is_available: p.is_available,
       duration_minutes: p.duration_minutes,
       booking_required: p.booking_required,
-      video_url: p.video_url || undefined,
     }));
 
     return {
@@ -145,7 +142,6 @@ const productService = {
       is_available: product.is_available,
       duration_minutes: product.duration_minutes,
       booking_required: product.booking_required,
-      video_url: product.video_url || undefined,
     };
 
     return {
@@ -163,7 +159,6 @@ const productService = {
     if (data.price !== undefined) updateData.price = data.price;
     if (data.inventory !== undefined) updateData.stock_quantity = data.inventory;
     if (data.images && data.images.length > 0) updateData.image_url = data.images[0].url;
-    if (data.video_url !== undefined) updateData.video_url = data.video_url;
     if (data.type) updateData.type = data.type;
     if (data.duration_minutes !== undefined) updateData.duration_minutes = data.duration_minutes;
     if (data.booking_required !== undefined) updateData.booking_required = data.booking_required;
@@ -241,7 +236,6 @@ const productService = {
       stock_quantity: p.stock_quantity,
       images: p.image_url ? [{ url: p.image_url, alt: p.name, position: 0 }] : [],
       image_url: p.image_url,
-      video_url: p.video_url || undefined,
       shop_slug: p.shops?.shop_slug,
       is_available: p.is_available,
       type: p.type as 'product' | 'service' | undefined,

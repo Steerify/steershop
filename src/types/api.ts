@@ -105,7 +105,6 @@ export interface Product {
   is_available?: boolean;
   duration_minutes?: number;
   booking_required?: boolean;
-  video_url?: string;
   // Additional fields for search results
   shop_slug?: string;
   image_url?: string;

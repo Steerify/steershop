@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle } from "lucide-react";
-import { MediaUpload } from "@/components/MediaUpload";
+import { ImageUpload } from "@/components/ImageUpload";
 import { z } from "zod";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Switch } from "@/components/ui/switch";
@@ -68,7 +68,6 @@ const Products = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [imageUrl, setImageUrl] = useState<string>("");
-  const [videoUrl, setVideoUrl] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"all" | "products" | "services">("all");
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [productLimitInfo, setProductLimitInfo] = useState<{
@@ -151,7 +150,6 @@ const Products = () => {
       booking_required: false,
     });
     setImageUrl("");
-    setVideoUrl("");
     setEditingProduct(null);
     setErrors({});
   };
@@ -171,7 +169,6 @@ const Products = () => {
         booking_required: product.booking_required ?? false,
       });
       setImageUrl(product.images?.[0]?.url || "");
-      setVideoUrl(product.video_url || "");
       setIsDialogOpen(true);
     } else {
       // Creating new product - check limits first
@@ -236,7 +233,6 @@ const Products = () => {
         price: parseFloat(formData.price),
         inventory: parseInt(formData.inventory),
         images: images,
-        video_url: videoUrl || null,
         type: formData.type,
         duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : undefined,
         booking_required: formData.booking_required,
@@ -393,18 +389,7 @@ const Products = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredProducts.map((product, index) => (
               <Card key={product.id} className="overflow-hidden group hover:shadow-xl hover:shadow-primary/10 transition-all border-primary/10 hover:border-primary/30" data-tour={index === 0 ? "product-card" : undefined}>
-                {product.video_url ? (
-                  <div className="relative h-48 overflow-hidden">
-                    <video
-                      src={product.video_url}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                ) : product.images && product.images.length > 0 ? (
+                {product.images && product.images.length > 0 ? (
                   <div className="relative h-48 overflow-hidden">
                     <img
                       src={product.images[0].url}
@@ -602,18 +587,10 @@ const Products = () => {
             )}
 
             <div className="space-y-2">
-              <MediaUpload
-                label={formData.type === 'service' ? 'Service Media' : 'Product Media'}
-                imageValue={imageUrl}
-                videoValue={videoUrl}
-                onImageChange={(url) => {
-                  setImageUrl(url);
-                  if (url) setVideoUrl("");
-                }}
-                onVideoChange={(url) => {
-                  setVideoUrl(url);
-                  if (url) setImageUrl("");
-                }}
+              <ImageUpload
+                label={formData.type === 'service' ? 'Service Image' : 'Product Image'}
+                value={imageUrl}
+                onChange={(url) => setImageUrl(url)}
                 folder="product-images"
               />
             </div>

@@ -1146,7 +1146,6 @@ export type Database = {
           total_reviews: number | null
           type: string | null
           updated_at: string
-          video_url: string | null
         }
         Insert: {
           average_rating?: number | null
@@ -1164,7 +1163,6 @@ export type Database = {
           total_reviews?: number | null
           type?: string | null
           updated_at?: string
-          video_url?: string | null
         }
         Update: {
           average_rating?: number | null
@@ -1182,7 +1180,6 @@ export type Database = {
           total_reviews?: number | null
           type?: string | null
           updated_at?: string
-          video_url?: string | null
         }
         Relationships: [
           {

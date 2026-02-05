@@ -48,7 +48,6 @@ interface Product {
   stock_quantity: number;
   is_available: boolean;
   image_url: string | null;
-  video_url: string | null;
   average_rating: number;
   total_reviews: number;
   type: 'product' | 'service';
@@ -557,16 +556,7 @@ const ShopStorefront = () => {
                 >
                   <Link to={`/shop/${slug}/product/${product.id}`}>
                     <div className="aspect-square overflow-hidden bg-muted relative">
-                      {product.video_url ? (
-                        <video
-                          src={product.video_url}
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : product.image_url ? (
+                      {product.image_url ? (
                         <img
                           src={product.image_url}
                           alt={product.name}
