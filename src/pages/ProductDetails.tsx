@@ -184,9 +184,21 @@ const ProductDetails = () => {
         </Link>
 
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
-          {/* Product Image */}
+          {/* Product Image/Video */}
           <div className="relative">
-            {product.images && product.images.length > 0 ? (
+            {product.video_url ? (
+              <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-xl">
+                <video
+                  src={product.video_url}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  controls
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : product.images && product.images.length > 0 ? (
               <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-xl">
                 <img
                   src={product.images[0].url}
@@ -362,7 +374,18 @@ const ProductDetails = () => {
               {relatedProducts.map((relProduct) => (
                 <Link key={relProduct.id} to={`/shop/${slug}/product/${relProduct.id}`}>
                   <Card className="card-african overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1">
-                    {relProduct.images && relProduct.images.length > 0 ? (
+                    {relProduct.video_url ? (
+                      <div className="aspect-square overflow-hidden bg-muted">
+                        <video
+                          src={relProduct.video_url}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    ) : relProduct.images && relProduct.images.length > 0 ? (
                       <div className="aspect-square overflow-hidden bg-muted">
                         <img
                           src={relProduct.images[0].url}

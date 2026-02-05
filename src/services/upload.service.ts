@@ -149,6 +149,86 @@ export const uploadService = {
     };
   },
 
+  uploadVideo: async (
+    file: File,
+    folder: 'product-videos' = 'product-videos',
+    onProgress?: (progress: number) => void
+  ): Promise<UploadResponse> => {
+    // Validate file size (20MB max for videos)
+    const maxSize = 20 * 1024 * 1024;
+    if (file.size > maxSize) {
+      throw new Error('Video size must be less than 20MB');
+    }
+
+    // Validate file type
+    const validTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+    if (!validTypes.includes(file.type)) {
+      throw new Error('Invalid video type. Please upload MP4, WebM, or MOV.');
+    }
+
+    onProgress?.(5);
+
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('Please log in to upload videos');
+    }
+
+    onProgress?.(10);
+
+    // Get user's shop for file path organization
+    const { data: shop, error: shopError } = await supabase
+      .from('shops')
+      .select('id')
+      .eq('owner_id', user.id)
+      .maybeSingle();
+
+    if (shopError) {
+      console.error('Error fetching shop:', shopError);
+      throw new Error('Failed to verify shop ownership');
+    }
+
+    if (!shop?.id) {
+      throw new Error('You need to create a shop first before uploading videos');
+    }
+
+    onProgress?.(15);
+
+    // Create unique file path: {shop_id}/{timestamp}_{sanitized_filename}
+    const timestamp = Date.now();
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filePath = `${shop.id}/${timestamp}_${sanitizedName}`;
+
+    onProgress?.(20);
+
+    // Upload to Supabase Storage
+    const { data, error: uploadError } = await supabase.storage
+      .from(folder)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    onProgress?.(80);
+
+    if (uploadError) {
+      console.error('Supabase video upload error:', uploadError);
+      throw new Error(uploadError.message || 'Failed to upload video');
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from(folder)
+      .getPublicUrl(data.path);
+
+    onProgress?.(100);
+
+    return {
+      url: publicUrl,
+      publicId: data.path,
+    };
+  },
+
   deleteImage: async (publicId: string, folder: 'shop-images' | 'product-images' = 'product-images'): Promise<void> => {
     if (!publicId) return;
 
