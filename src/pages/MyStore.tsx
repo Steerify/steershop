@@ -30,6 +30,9 @@ import {
   QrCode,
   ShieldCheck,
   X,
+  HelpCircle,
+  ChevronDown,
+  AlertTriangle,
 } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { QRCodeSVG } from "qrcode.react";
@@ -114,6 +117,7 @@ const MyStore = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPaystackGuide, setShowPaystackGuide] = useState(false);
 
   const [formData, setFormData] = useState({
     shop_name: "",
@@ -560,19 +564,65 @@ const MyStore = () => {
 
               {/* Paystack Details */}
               {formData.enable_paystack && (
-                <div className="space-y-4">
+                <div className="space-y-4 border border-border/50 p-3 sm:p-4 rounded-lg bg-muted/30">
+                  <Label className="text-base sm:text-lg font-semibold">Paystack Integration</Label>
+                  
+                  {/* Manual Input */}
                   <div className="space-y-2">
-                    <Label htmlFor="paystack_public_key">Paystack Public Key</Label>
+                    <Label htmlFor="paystack_public_key" className="text-sm">Paystack Public Key</Label>
                     <Input
                       id="paystack_public_key"
                       value={formData.paystack_public_key}
                       onChange={(e) =>
                         setFormData({ ...formData, paystack_public_key: e.target.value })
                       }
-                      placeholder="pk_live_xxxxxxxx"
+                      placeholder="pk_live_xxxxxxxx or pk_test_xxxxxxxx"
+                      className="min-h-[44px]"
                     />
                   </div>
 
+                  {/* Expandable Guide */}
+                  <div className="rounded-lg border border-primary/20 bg-primary/5">
+                    <button
+                      type="button"
+                      className="w-full p-3 flex items-center justify-between text-left"
+                      onClick={() => setShowPaystackGuide(!showPaystackGuide)}
+                    >
+                      <span className="text-sm font-medium flex items-center gap-2">
+                        <HelpCircle className="w-4 h-4 text-primary" />
+                        How to get your Paystack Public Key
+                      </span>
+                      <ChevronDown className={cn(
+                        "w-4 h-4 transition-transform duration-200",
+                        showPaystackGuide && "rotate-180"
+                      )} />
+                    </button>
+                    
+                    {showPaystackGuide && (
+                      <div className="px-3 pb-3 space-y-3 text-sm">
+                        <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+                          <li>Go to your <a href="https://dashboard.paystack.com/#/settings/developers" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline">Paystack Dashboard → Settings → API Keys & Webhooks</a></li>
+                          <li>Under "API Keys", find your <strong>Public Key</strong> (starts with pk_live_ or pk_test_)</li>
+                          <li>Click the copy icon next to it</li>
+                          <li>Paste it in the field above</li>
+                        </ol>
+                        <div className="flex items-start gap-2 p-2 bg-amber-500/10 rounded text-amber-700 dark:text-amber-400">
+                          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                          <p className="text-xs">Use your <strong>Test Key</strong> (pk_test_) for testing, and <strong>Live Key</strong> (pk_live_) when you're ready to accept real payments.</p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => window.open('https://dashboard.paystack.com/#/settings/developers', '_blank')}
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Open Paystack Dashboard
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
