@@ -15,7 +15,7 @@ import {
   Settings, User, PlusCircle, Calendar, Share2, Palette,
   Sparkles, Megaphone, Target, ArrowRight, LogOut, Clock,
   CheckCircle, AlertCircle, DollarSign, CalendarCheck, Menu, X,
-  BarChart3, HelpCircle, Bell, Search, Grid, Shield
+  BarChart3, HelpCircle, Bell, Search, Grid, Shield, BookOpen
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
@@ -342,6 +342,14 @@ const Dashboard = () => {
       path: "/marketing-services",
       color: "from-cyan-500/20 to-cyan-500/10",
       textColor: "text-cyan-500"
+    },
+    { 
+      icon: BookOpen, 
+      label: "Tutorials", 
+      description: "Learn & earn points",
+      path: "/courses",
+      color: "from-blue-500/20 to-blue-500/10",
+      textColor: "text-blue-500"
     },
   ];
 
