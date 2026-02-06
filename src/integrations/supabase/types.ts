@@ -330,6 +330,27 @@ export type Database = {
         }
         Relationships: []
       }
+      deleted_accounts: {
+        Row: {
+          deleted_at: string
+          email: string
+          id: string
+          role: string | null
+        }
+        Insert: {
+          deleted_at?: string
+          email: string
+          id?: string
+          role?: string | null
+        }
+        Update: {
+          deleted_at?: string
+          email?: string
+          id?: string
+          role?: string | null
+        }
+        Relationships: []
+      }
       delivery_orders: {
         Row: {
           cancelled_at: string | null

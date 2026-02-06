@@ -13,7 +13,7 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!; // Need service_role to delete from auth.users
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -29,9 +29,35 @@ serve(async (req) => {
 
     console.log('Account deletion request for user:', user.id);
 
-    // 1. Delete user from auth.users (this should cascade to profiles if triggers are set, 
-    // but we'll be safer and handle important deletions manually or rely on DB FK cascades)
-    // Supabase auth.users deletion is permanent and clears all provider links (Google etc.)
+    // 1. Fetch user's email and role BEFORE deletion
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('email, role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching profile for deletion:', profileError);
+    }
+
+    // 2. Record the email in deleted_accounts to permanently block re-registration
+    if (profile?.email) {
+      const { error: insertError } = await supabase
+        .from('deleted_accounts')
+        .insert({
+          email: profile.email,
+          role: profile.role,
+        });
+
+      if (insertError) {
+        console.error('Error recording deleted account:', insertError);
+        // Don't block deletion if this fails, but log it
+      } else {
+        console.log('Email recorded in deleted_accounts:', profile.email);
+      }
+    }
+
+    // 3. Delete user from auth.users (cascades to profiles, etc.)
     const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
 
     if (deleteError) {
