@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
@@ -13,6 +13,7 @@ import { ProductReviewForm } from "@/components/ProductReviewForm";
 import { format } from "date-fns";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
+import reviewService from "@/services/review.service";
 import { Shop, Product } from "@/types/api";
 import { handleApiError } from "@/lib/api-error-handler";
 
@@ -23,6 +24,9 @@ interface Review {
   comment: string | null;
   customer_name: string | null;
   created_at: string;
+  reviewer?: {
+    kyc_level: number;
+  } | null;
 }
 
 const ProductDetails = () => {
@@ -79,9 +83,15 @@ const ProductDetails = () => {
         setRelatedProducts(relatedResponse.data.filter(p => p.id !== productId));
       }
 
-      // Reviews handled by ProductReviewForm or separate call if needed
-      // For now we'll set empty or keep mock if backend review endpoint isn't ready
-      setReviews([]);
+      // Load reviews with verification data
+      try {
+        const reviewResponse = await reviewService.getProductReviews(productId);
+        if (reviewResponse.success) {
+          setReviews(reviewResponse.data as unknown as Review[]);
+        }
+      } catch (e) {
+        console.error("Failed to load reviews:", e);
+      }
 
     } catch (error: any) {
       // Error already handled by services or handleApiError
@@ -332,9 +342,17 @@ const ProductDetails = () => {
                           {(review.customer_name || "A")[0].toUpperCase()}
                         </div>
                         <div>
-                          <CardTitle className="text-sm font-medium">
-                            {review.customer_name || "Anonymous"}
-                          </CardTitle>
+                          <div className="flex items-center gap-1">
+                            <CardTitle className="text-sm font-medium">
+                              {review.customer_name || "Anonymous"}
+                            </CardTitle>
+                            {review.reviewer?.kyc_level != null && review.reviewer.kyc_level >= 2 && (
+                              <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 text-xs px-1.5 py-0">
+                                <BadgeCheck className="w-3 h-3 mr-0.5" />
+                                Verified
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             {format(new Date(review.created_at), "MMM dd, yyyy")}
                           </p>

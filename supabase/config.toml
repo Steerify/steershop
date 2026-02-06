@@ -66,3 +66,6 @@ verify_jwt = false
 [functions.subscription-reminder]
 verify_jwt = false
 
+[functions.engagement-reminders]
+verify_jwt = false
+
