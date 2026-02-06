@@ -1,131 +1,134 @@
 
+# Fix Engagement Reminders, Add Video Support, WhatsApp Community Notification, and Fix Storefront Buttons
 
-# Fix Auto Marketing Tool
+## 1. Engagement Reminders -- Verify and Harden
 
-## Problems Found
+The engagement reminders edge function has 5 scenarios that are structurally correct. However, there are reliability issues to fix:
 
-1. **Template data format mismatch**: The poster templates stored in the database use a completely different data structure than what the CanvasEditor expects. Templates use center-based coordinates, `fontWeight`, `textAlign`, and a `canvas` wrapper object -- but the editor expects top-left coordinates, `fontFamily`, and a flat structure with `background` at root level. This means every template loads broken or blank.
+- **Scenario 2 (No Shop Created)**: Currently queries ALL `shop_owner` profiles older than 48h, then checks for shops one-by-one in a loop. This is inefficient and could time out with many users. Will optimize with a single query using a LEFT JOIN approach.
+- **Scenario 4 (No Sales)**: The store link in the email uses `shop.id` instead of `shop_slug`, so links won't work. Will fix to use the shop slug.
+- **General**: Add a try/catch around each scenario so one failure doesn't block all others.
 
-2. **Unsupported element types**: Templates reference `qrcode` and `shape` types that the editor doesn't render.
+## 2. Video Support for Tutorials/Courses
 
-3. **Placeholder variables not resolved**: Templates use `{{shop_name}}`, `{{discount}}`, `{{code}}` etc. but the editor never substitutes them.
+The `courses` table currently has no `video_url` column. Will add one.
 
-4. **Mobile responsiveness issues**: The PosterEditor page uses a fixed `h-[calc(100vh-56px)]` layout that doesn't work on mobile. The AI assistant panel overlaps the canvas. The tools panel is cramped.
+**Database:**
+- Add `video_url` TEXT column to `courses` table
 
-5. **Touch support missing**: Canvas drag only uses mouse events -- no touch support for mobile users.
+**Admin Courses page (`AdminCourses.tsx`):**
+- Add a `video_url` text input field in the form for pasting a video URL (YouTube, direct MP4, etc.)
+- Display a video indicator in the courses table
 
-6. **No default canvas data for new posters**: Creating a new poster shows a blank canvas with no elements and no guidance.
+**Course display pages (`EntrepreneurCourses.tsx`, `CustomerCourses.tsx`):**
+- In the course content modal, if `video_url` exists, render a `<video>` element (for direct URLs) or an iframe (for YouTube) above the HTML content
+- For direct video files: autoplay muted, loop, max 10 seconds enforced via `timeupdate` event listener that pauses at 10s
 
-## Solution
+## 3. Video Support for Products
 
-### 1. Fix template data transformation (PosterEditor.tsx)
+The `products` table already has a `video_url` column. However, it's not used anywhere in the UI.
 
-Add a `transformTemplateData()` function that converts the database template format into CanvasEditor format when loading a template:
-- Extract `background` from `canvas.backgroundColor`
-- Extract `canvasSize` from `canvas.width/height`  
-- Convert center-based `x/y` to top-left `x/y`
-- Add default `width/height` to text elements that lack them
-- Map `fontWeight: "bold"` to appropriate `fontFamily` (e.g., Montserrat)
-- Replace `{{shop_name}}` placeholders with actual shop name
-- Skip unsupported types (`qrcode`, `shape`)
+**Product creation (`Products.tsx`):**
+- Add a video upload section below the image upload using a new `VideoUpload` component
+- Accept MP4, WebM, MOV files up to 20MB
+- Client-side duration check: if video > 10 seconds, reject with an error message (browser-side compression of video is not reliably possible, so we enforce the limit instead)
+- Upload to a `product-videos` storage bucket
 
-### 2. Update all 12 database templates
+**Product display (Storefront + ProductDetails):**
+- In `ShopStorefront.tsx` product cards: if `video_url` exists, show a looping muted video instead of the static image
+- In `ProductDetails.tsx`: show the video player prominently with controls
 
-Replace all template_data in the `poster_templates` table with data that matches the CanvasEditor format directly. Each template will have:
-- Proper `elements` array with `x`, `y`, `width`, `height`, `fontSize`, `fontFamily`, `color`
-- Root-level `background` string
-- Root-level `canvasSize` object
-- Better, more varied designs suited for Nigerian market (Naira prices, WhatsApp CTAs, vibrant colors)
+**Product service (`product.service.ts`):**
+- Include `video_url` in create and update operations
 
-### 3. Make CanvasEditor mobile responsive
+## 4. WhatsApp Community Notification
 
-- Change the layout to stack vertically on mobile (canvas on top, tools panel below)
-- Make the tools panel a collapsible bottom sheet on mobile
-- Reduce MAX_DISPLAY dynamically based on screen width
-- Add touch event handlers (`onTouchStart`, `onTouchMove`, `onTouchEnd`) for drag support
+Add a dismissible banner/notification prompting users to join the SteerSolo WhatsApp community.
 
-### 4. Make PosterEditor page mobile responsive
+- Create a `WhatsAppCommunityBanner` component shown at the top of authenticated pages (Dashboard, CustomerDashboard)
+- Uses `localStorage` to track dismissal so it doesn't reappear after closed 3 times
+- Shows a WhatsApp icon, message about joining the community, and a "Join Now" button linking to the WhatsApp group invite URL
+- Dismissible with an X button
 
-- Change from fixed height to min-height with scroll
-- AI Assistant panel: show as a slide-over/modal on mobile instead of side panel
-- Toolbar: ensure all buttons fit on small screens (already partially done with hidden text)
+## 5. Fix Storefront Buttons (from screenshot)
 
-### 5. Add default starter content for new posters
+The storefront header buttons ("Contact Us", "Take Tour", cart) have inconsistent styling and don't wrap well on mobile.
 
-When no template or existing poster ID is provided, initialize with a simple starter layout so users aren't staring at a blank canvas.
+**Fix in `ShopStorefront.tsx`:**
+- Make all three buttons consistent: same size, same variant style
+- On mobile, stack "Contact Us" and "Take Tour" below the shop info, and keep the cart button floating or in the header
+- Ensure proper `flex-wrap` and `gap` so buttons don't overlap on small screens
+- Give all buttons `min-h-[44px]` for touch targets
 
-## Files to Modify
+## Files to Create/Modify
 
-| File | Changes |
-|------|---------|
-| `src/components/marketing/CanvasEditor.tsx` | Add touch support, responsive MAX_DISPLAY, mobile layout, collapsible tools panel |
-| `src/pages/entrepreneur/PosterEditor.tsx` | Add `transformTemplateData()`, default starter content, mobile-friendly AI panel, responsive layout |
-| `src/components/marketing/TemplateCard.tsx` | Minor: improve touch targets for mobile |
-| `src/components/marketing/PosterLibrary.tsx` | Minor: make category tabs horizontally scrollable on mobile |
-| Database migration | Update all 12 poster_templates with correct format template_data |
+| File | Action | Description |
+|------|--------|-------------|
+| Database migration | CREATE | Add `video_url` to `courses`, create `product-videos` bucket |
+| `supabase/functions/engagement-reminders/index.ts` | MODIFY | Add per-scenario error handling, fix shop link URL, optimize queries |
+| `src/pages/admin/AdminCourses.tsx` | MODIFY | Add video_url field to course form |
+| `src/pages/entrepreneur/EntrepreneurCourses.tsx` | MODIFY | Render video in course content modal |
+| `src/pages/customer/CustomerCourses.tsx` | MODIFY | Render video in course content modal |
+| `src/components/VideoUpload.tsx` | CREATE | New component for uploading short videos with duration validation |
+| `src/pages/Products.tsx` | MODIFY | Add video upload to product form |
+| `src/services/product.service.ts` | MODIFY | Include video_url in create/update |
+| `src/pages/ShopStorefront.tsx` | MODIFY | Show video on product cards, fix button layout |
+| `src/pages/ProductDetails.tsx` | MODIFY | Show video player on product detail page |
+| `src/components/WhatsAppCommunityBanner.tsx` | CREATE | Dismissible banner for WhatsApp community |
+| `src/pages/Dashboard.tsx` | MODIFY | Add WhatsAppCommunityBanner |
+| `src/pages/customer/CustomerDashboard.tsx` | MODIFY | Add WhatsAppCommunityBanner |
 
 ## Technical Details
 
-### Template Data Transformation
-
+### Video Duration Validation (Client-side)
 ```typescript
-const transformTemplateData = (raw: any, shopName: string): CanvasData => {
-  // Handle already-correct format
-  if (raw.background && Array.isArray(raw.elements) && raw.elements[0]?.width) {
-    return raw as CanvasData;
-  }
-  
-  // Transform from DB format
-  const canvas = raw.canvas || {};
-  const background = canvas.backgroundColor || raw.background || "#ffffff";
-  const canvasSize = {
-    width: canvas.width || 1080,
-    height: canvas.height || 1080,
-    label: "Custom",
-  };
-  
-  const elements = (raw.elements || [])
-    .filter(el => el.type === "text" || el.type === "image")
-    .map(el => ({
-      id: el.id,
-      type: el.type,
-      content: el.content?.replace(/\{\{shop_name\}\}/g, shopName) || "",
-      x: el.x - (el.width || 400) / 2,  // center to top-left
-      y: el.y - (el.height || 60) / 2,
-      width: el.width || 400,
-      height: el.height || (el.fontSize || 24) * 1.5,
-      fontSize: el.fontSize,
-      fontFamily: el.fontWeight === "bold" ? "Montserrat" : "Inter",
-      color: el.color,
-    }));
-  
-  return { elements, background, canvasSize };
+const validateVideoDuration = (file: File, maxSeconds: number): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(video.src);
+      resolve(video.duration <= maxSeconds);
+    };
+    video.onerror = () => resolve(false);
+    video.src = URL.createObjectURL(file);
+  });
 };
 ```
 
-### Touch Events for Canvas
-
+### Course Video Rendering
 ```typescript
-const handleTouchStart = (e: React.TouchEvent, elId: string) => {
-  e.stopPropagation();
-  const touch = e.touches[0];
-  // Same logic as handleMouseDown but using touch coordinates
-};
-const handleTouchMove = (e: React.TouchEvent) => {
-  const touch = e.touches[0];
-  // Same logic as handleMouseMove
-};
+// If video_url exists, show above content
+{course.video_url && (
+  <video 
+    src={course.video_url} 
+    controls 
+    className="w-full rounded-lg"
+    controlsList="nodownload"
+  />
+)}
 ```
 
-### Responsive Canvas Display
-
+### Storefront Button Fix
 ```typescript
-const [screenWidth, setScreenWidth] = useState(window.innerWidth);
-useEffect(() => {
-  const handler = () => setScreenWidth(window.innerWidth);
-  window.addEventListener('resize', handler);
-  return () => window.removeEventListener('resize', handler);
-}, []);
-
-const MAX_DISPLAY = screenWidth < 640 ? Math.min(screenWidth - 32, 360) : 420;
+// Wrap buttons properly with consistent styling
+<div className="flex flex-wrap items-center gap-2">
+  {shop.whatsapp_number && (
+    <Button variant="outline" size="sm" onClick={...}>
+      <MessageCircle className="w-4 h-4 mr-2" />
+      Contact Us
+    </Button>
+  )}
+  <TourButton ... />
+  {getTotalItems() > 0 && (
+    <Button size="sm" onClick={...}>
+      <ShoppingCart className="w-4 h-4 mr-2" />
+      Cart ({getTotalItems()})
+    </Button>
+  )}
+</div>
 ```
+
+### Engagement Reminders Fix
+- Wrap each scenario in its own try/catch so failures are isolated
+- Fix Scenario 4 store link: change `shop/${shop.id}` to use shop slug (query `shop_slug` from shops table)
