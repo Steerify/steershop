@@ -40,13 +40,13 @@ export const TemplateCard = ({ template, onPreview, onEdit }: TemplateCardProps)
           </div>
         )}
         
-        {/* Overlay with actions */}
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+        {/* Overlay with actions - always visible on mobile via active state */}
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 active:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
           <Button
             size="sm"
             variant="secondary"
             onClick={() => onPreview(template.id)}
-            className="h-9"
+            className="h-10 min-w-[80px]"
           >
             <Eye className="w-4 h-4 mr-1" />
             Preview
@@ -54,7 +54,7 @@ export const TemplateCard = ({ template, onPreview, onEdit }: TemplateCardProps)
           <Button
             size="sm"
             onClick={() => onEdit(template.id)}
-            className="h-9 bg-primary hover:bg-primary/90"
+            className="h-10 min-w-[80px] bg-primary hover:bg-primary/90"
           >
             <Edit className="w-4 h-4 mr-1" />
             Use

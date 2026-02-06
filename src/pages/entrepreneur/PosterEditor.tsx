@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CanvasEditor, exportCanvasToBlob } from "@/components/marketing/CanvasEditor";
 import type { CanvasElement, CanvasSize } from "@/components/marketing/CanvasEditor";
 import { AIAssistant } from "@/components/marketing/AIAssistant";
+import { transformTemplateData, getDefaultStarterContent } from "@/utils/transformTemplateData";
 import {
   ArrowLeft, Loader2, Save, Sparkles, X, Download,
   Share2, Undo, Redo
@@ -20,6 +21,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 const formatUUID = (id: string) => {
   if (!id) return id;
@@ -77,22 +84,32 @@ const PosterEditor = () => {
   const loadPosterData = async () => {
     setIsLoading(true);
     try {
+      const shopName = shopData?.shop_name || "My Shop";
+
       if (formattedPosterId) {
         const { data } = await supabase.from("user_posters").select("*").eq("id", formattedPosterId).single();
         if (data) {
           setPosterName(data.name);
-          setCanvasData(data.canvas_data as unknown as CanvasData);
-          setHistory([data.canvas_data as unknown as CanvasData]);
+          const transformed = transformTemplateData(data.canvas_data, shopName);
+          setCanvasData(transformed);
+          setHistory([transformed]);
           setHistoryIndex(0);
         }
       } else if (formattedTemplateId) {
         const { data } = await supabase.from("poster_templates").select("*").eq("id", formattedTemplateId).single();
         if (data) {
           setPosterName(`${data.name} - Copy`);
-          setCanvasData(data.template_data as unknown as CanvasData);
-          setHistory([data.template_data as unknown as CanvasData]);
+          const transformed = transformTemplateData(data.template_data, shopName);
+          setCanvasData(transformed);
+          setHistory([transformed]);
           setHistoryIndex(0);
         }
+      } else {
+        // New poster — use default starter content
+        const starter = getDefaultStarterContent(shopName);
+        setCanvasData(starter);
+        setHistory([starter]);
+        setHistoryIndex(0);
       }
     } catch {
       toast({ title: "Failed to load", variant: "destructive" });
@@ -100,6 +117,14 @@ const PosterEditor = () => {
       setIsLoading(false);
     }
   };
+
+  // Re-load when shopData arrives (for template name substitution)
+  useEffect(() => {
+    if (shopData && !formattedPosterId && !formattedTemplateId && canvasData) {
+      const starter = getDefaultStarterContent(shopData.shop_name || "My Shop");
+      setCanvasData(starter);
+    }
+  }, [shopData]);
 
   const pushToHistory = useCallback((newData: CanvasData) => {
     setCanvasData(newData);
@@ -203,7 +228,6 @@ const PosterEditor = () => {
           files: [file],
         });
       } else {
-        // Fallback: download + open WhatsApp
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -239,39 +263,39 @@ const PosterEditor = () => {
     <PageWrapper>
       {/* Top Toolbar */}
       <div className="border-b bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-14 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/marketing")}>
+        <div className="container mx-auto px-2 sm:px-4 h-14 flex items-center justify-between gap-1 sm:gap-2">
+          <div className="flex items-center gap-1 sm:gap-4 min-w-0">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/marketing")} className="shrink-0">
               <ArrowLeft />
             </Button>
             <Input
               value={posterName}
               onChange={e => setPosterName(e.target.value)}
-              className="font-medium w-40 sm:w-80"
+              className="font-medium w-28 sm:w-80"
             />
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            <Button variant="outline" size="sm" onClick={handleUndo} disabled={historyIndex <= 0}>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Button variant="outline" size="sm" onClick={handleUndo} disabled={historyIndex <= 0} className="h-8 w-8 p-0 sm:w-auto sm:px-3">
               <Undo className="w-4 h-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={handleRedo} disabled={historyIndex >= history.length - 1}>
+            <Button variant="outline" size="sm" onClick={handleRedo} disabled={historyIndex >= history.length - 1} className="h-8 w-8 p-0 sm:w-auto sm:px-3">
               <Redo className="w-4 h-4" />
             </Button>
 
-            <Button variant="outline" size="sm" onClick={() => setShowAI(!showAI)}>
+            <Button variant="outline" size="sm" onClick={() => setShowAI(!showAI)} className="h-8">
               <Sparkles className="w-4 h-4 sm:mr-1" />
               <span className="hidden sm:inline">AI</span>
             </Button>
 
-            <Button variant="outline" size="sm" onClick={handleShare} disabled={isExporting || !canvasData}>
+            <Button variant="outline" size="sm" onClick={handleShare} disabled={isExporting || !canvasData} className="h-8">
               <Share2 className="w-4 h-4 sm:mr-1" />
               <span className="hidden sm:inline">Share</span>
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="outline" disabled={isExporting || !canvasData}>
+                <Button size="sm" variant="outline" disabled={isExporting || !canvasData} className="h-8">
                   {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4 sm:mr-1" />}
                   <span className="hidden sm:inline">Download</span>
                 </Button>
@@ -282,7 +306,7 @@ const PosterEditor = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button size="sm" onClick={() => canvasData && handleSave(canvasData)} disabled={isSaving}>
+            <Button size="sm" onClick={() => canvasData && handleSave(canvasData)} disabled={isSaving} className="h-8">
               {isSaving ? <Loader2 className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4 sm:mr-1" />}
               <span className="hidden sm:inline">Save</span>
             </Button>
@@ -290,8 +314,9 @@ const PosterEditor = () => {
         </div>
       </div>
 
-      <div className="flex h-[calc(100vh-56px)]">
-        <div className="flex-1 relative">
+      {/* Main content area - responsive */}
+      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-56px)]">
+        <div className="flex-1 relative p-2 sm:p-4">
           <CanvasEditor
             initialData={canvasData || undefined}
             onChange={pushToHistory}
@@ -301,14 +326,31 @@ const PosterEditor = () => {
           />
         </div>
 
-        {showAI && (
-          <div className="w-80 sm:w-96 border-l bg-card relative">
-            <Button variant="ghost" size="icon" className="absolute -left-3 top-4 z-10" onClick={() => setShowAI(false)}>
-              <X />
-            </Button>
-            <AIAssistant shopName={shopData?.shop_name} />
-          </div>
-        )}
+        {/* AI Assistant - Sheet on mobile, side panel on desktop */}
+        <div className="hidden lg:block">
+          {showAI && (
+            <div className="w-80 xl:w-96 border-l bg-card relative h-[calc(100vh-56px)] overflow-y-auto">
+              <Button variant="ghost" size="icon" className="absolute right-2 top-2 z-10" onClick={() => setShowAI(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+              <AIAssistant shopName={shopData?.shop_name} />
+            </div>
+          )}
+        </div>
+
+        <Sheet open={showAI && typeof window !== 'undefined' && window.innerWidth < 1024} onOpenChange={setShowAI}>
+          <SheetContent side="bottom" className="h-[70vh] p-0">
+            <SheetHeader className="p-4 pb-2">
+              <SheetTitle className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                AI Marketing Assistant
+              </SheetTitle>
+            </SheetHeader>
+            <div className="overflow-y-auto h-[calc(100%-60px)]">
+              <AIAssistant shopName={shopData?.shop_name} />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </PageWrapper>
   );
