@@ -7,6 +7,10 @@ export interface Review {
   rating: number;
   comment: string;
   createdAt: string;
+  customer_name?: string;
+  reviewer?: {
+    kyc_level: number;
+  } | null;
   user?: {
     firstName: string;
     lastName: string;
@@ -62,9 +66,38 @@ const reviewService = {
       throw new Error(error.message);
     }
 
+    const reviews = data || [];
+
+    // Fetch reviewer verification status for reviews with customer_id
+    const customerIds = reviews
+      .map((r: any) => r.customer_id)
+      .filter((id: string | null) => id != null);
+
+    let verificationMap: Record<string, number> = {};
+    if (customerIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, kyc_level')
+        .in('id', customerIds);
+      
+      if (profiles) {
+        verificationMap = Object.fromEntries(
+          profiles.map((p: any) => [p.id, p.kyc_level || 0])
+        );
+      }
+    }
+
+    // Attach reviewer info
+    const enrichedReviews = reviews.map((r: any) => ({
+      ...r,
+      reviewer: r.customer_id && verificationMap[r.customer_id] != null
+        ? { kyc_level: verificationMap[r.customer_id] }
+        : null,
+    }));
+
     return {
       success: true,
-      data: (data || []) as unknown as Review[],
+      data: enrichedReviews as unknown as Review[],
       meta: {
         page,
         limit,
