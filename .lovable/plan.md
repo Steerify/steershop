@@ -1,152 +1,215 @@
 
-# Trial Days Algorithm Audit - Findings & Fixes
+# Code Audit & Responsiveness Enhancement Plan
 
 ## Executive Summary
 
-The **core trial algorithm is working correctly** at the database and security levels. However, there are **text inconsistencies** across the UI that need to be fixed to match the official 15-day trial period.
+I've completed a thorough audit of the codebase and identified **inactive/unused code** that should be removed, **duplicate logic** that should be consolidated, and **responsiveness issues** across admin pages that need fixing.
 
 ---
 
-## Algorithm Analysis
+## Part 1: Inactive/Unused Code to Remove
 
-### What's Working Correctly
+### 1.1 Unused Components
 
-| Component | Location | Status |
-|-----------|----------|--------|
-| **Database Trigger** | `handle_new_user()` function | Sets `subscription_expires_at = now() + interval '15 days'` for shop owners |
-| **Subscription Utility** | `src/utils/subscription.ts` | Correctly calculates days remaining using `Math.ceil()` for accurate rounding |
-| **RLS Enforcement** | `shop_has_valid_subscription()` function | Properly checks both trial and paid subscriptions |
-| **DynamicPricing** | `src/components/DynamicPricing.tsx:119` | Correctly states "15-day free trial" |
+| Component | File | Reason |
+|-----------|------|--------|
+| `SimplePricing` | `src/components/SimplePricing.tsx` | Not imported anywhere; mentions outdated "7-day trial" |
+| `TransformationCards` | `src/components/TransformationCards.tsx` | Not imported anywhere in the app |
+| `ProgressToGoal` & `ProfileCompletion` | `src/components/ProgressToGoal.tsx` | Not imported anywhere |
+| `CelebrationAnimation` & `SuccessCheckmark` | `src/components/CelebrationAnimation.tsx` | Not imported anywhere |
 
-### Core Algorithm Logic (Verified Working)
+### 1.2 Unused Services
 
-```text
-Database Level:
-┌─────────────────────────────────────────────────────────────┐
-│ User Signs Up (shop_owner role)                             │
-│                    ↓                                        │
-│ handle_new_user() trigger fires                             │
-│                    ↓                                        │
-│ subscription_expires_at = now() + 15 days                   │
-│ is_subscribed = false                                       │
-└─────────────────────────────────────────────────────────────┘
+| Service | File | Reason |
+|---------|------|--------|
+| `payment.service.ts` | `src/services/payment.service.ts` | Not imported; payment logic duplicated in `CheckoutDialog.tsx` and `subscription.service.ts` |
 
-Frontend Level:
-┌─────────────────────────────────────────────────────────────┐
-│ calculateSubscriptionStatus(profileData)                    │
-│                    ↓                                        │
-│ IF is_subscribed = false AND expires_at > now()            │
-│   → status: 'trial', daysRemaining: Math.ceil(diff)        │
-│                    ↓                                        │
-│ IF is_subscribed = true AND expires_at > now()             │
-│   → status: 'active', daysRemaining: Math.ceil(diff)       │
-│                    ↓                                        │
-│ ELSE → status: 'expired', daysRemaining: 0                 │
-└─────────────────────────────────────────────────────────────┘
+### 1.3 Dead Code in Active Files
 
-RLS Enforcement:
-┌─────────────────────────────────────────────────────────────┐
-│ shop_has_valid_subscription(shop_id)                        │
-│                    ↓                                        │
-│ Returns TRUE if:                                            │
-│ - (is_subscribed = true AND expires_at > now()) OR         │
-│ - (is_subscribed = false AND expires_at > now())           │
-│                    ↓                                        │
-│ Shops/Products hidden if function returns FALSE            │
-└─────────────────────────────────────────────────────────────┘
-```
+| File | Location | Issue |
+|------|----------|-------|
+| `Index.tsx` | Lines 382-448 | `PricingSection` component defined but never rendered (replaced by `DynamicPricing`) |
 
 ---
 
-## Issues Found - Text Inconsistencies
+## Part 2: Code Consolidation
 
-### Issue 1: Hardcoded Fallback Values (7 days instead of 15)
+### 2.1 WhatsApp Logic Duplication
 
-**Location 1: `src/pages/Dashboard.tsx` (line 163)**
-```typescript
-// Current (incorrect fallback):
-setDaysRemaining(7);
+**Problem**: `CheckoutDialog.tsx` contains a full WhatsApp implementation (lines 133-230) that duplicates the logic now centralized in `src/utils/whatsapp.ts`.
 
-// Should be:
-setDaysRemaining(15);
-```
-
-**Location 2: `src/hooks/use-shop-owner-auth.ts` (line 55)**
-```typescript
-// Current (incorrect fallback):
-setDaysRemaining(7);
-
-// Should be:
-setDaysRemaining(15);
-```
-
-### Issue 2: UI Copy Mentions Wrong Trial Duration
-
-**Location 1: `src/pages/FAQ.tsx` (line 52)**
-```text
-Current: "SteerSolo offers a 14-day free trial..."
-Should be: "SteerSolo offers a 15-day free trial..."
-```
-
-**Location 2: `src/pages/Index.tsx` (line 441)**
-```text
-Current: "Start 7-Day Free Trial"
-Should be: "Start 15-Day Free Trial"
-```
-
-**Location 3: `src/components/SimplePricing.tsx` (if still in use)**
-```text
-Any references to 7-day trials should be updated to 15-day
-```
+**Solution**: Refactor `CheckoutDialog.tsx` to use the `openWhatsAppContact` utility from `src/utils/whatsapp.ts` and extend it with order-specific message templates.
 
 ---
 
-## Files to Modify
+## Part 3: Responsiveness Improvements
 
-| File | Line | Change |
-|------|------|--------|
-| `src/pages/Dashboard.tsx` | 163 | Change fallback from `7` to `15` |
-| `src/hooks/use-shop-owner-auth.ts` | 55 | Change fallback from `7` to `15` |
-| `src/pages/FAQ.tsx` | 52 | Change "14-day" to "15-day" |
-| `src/pages/Index.tsx` | 441 | Change "7-Day" to "15-Day" |
+### 3.1 Admin Pages - Table Overflow Issues
+
+The following admin pages have tables without responsive scroll containers, causing horizontal overflow on mobile:
+
+| Page | Issue | Fix |
+|------|-------|-----|
+| `AdminShops.tsx` | Table overflows on mobile | Wrap in `<div className="overflow-x-auto">` |
+| `AdminProducts.tsx` | Table overflows on mobile | Wrap in `<div className="overflow-x-auto">` |
+| `AdminOrders.tsx` | Table overflows on mobile | Wrap in `<div className="overflow-x-auto">` |
+| `AdminUsers.tsx` | Has `overflow-x-auto` but buttons stack poorly | Add responsive button groups |
+
+### 3.2 Settings Page - UX Issue
+
+**Problem**: The Security card (lines 67-91) has `opacity-60` and `pointer-events-none`, which dims the entire section and confuses users.
+
+**Solution**: Only apply disabled styling to the buttons, not the entire card. Add a proper "Coming Soon" badge instead of dimming.
+
+### 3.3 Dialog Responsiveness
+
+Some dialogs need mobile optimization:
+- `AdminShops.tsx` - Create Shop dialog needs better mobile layout
+- `AdminUsers.tsx` - Extend dialog needs responsive calendar picker
 
 ---
 
-## Implementation
+## Part 4: Implementation
 
-### Step 1: Fix Dashboard.tsx Fallback
-Update line 163 to use 15 days instead of 7:
+### Phase 1: Remove Unused Code
+1. Delete `src/components/SimplePricing.tsx`
+2. Delete `src/components/TransformationCards.tsx`
+3. Delete `src/components/ProgressToGoal.tsx`
+4. Delete `src/components/CelebrationAnimation.tsx`
+5. Delete `src/services/payment.service.ts`
+6. Remove `PricingSection` component from `Index.tsx` (lines 382-448)
+
+### Phase 2: Admin Table Responsiveness
+Add responsive wrappers to all admin tables:
+
 ```typescript
-setDaysRemaining(15);
+// Before
+<Table>...</Table>
+
+// After
+<div className="overflow-x-auto">
+  <Table className="min-w-[800px]">...</Table>
+</div>
 ```
 
-### Step 2: Fix use-shop-owner-auth.ts Fallback
-Update line 55 to use 15 days instead of 7:
+Apply to:
+- `AdminShops.tsx` - Line ~600
+- `AdminProducts.tsx` - Line ~135
+- `AdminOrders.tsx` - Line ~221
+
+### Phase 3: Settings Page Fix
+Update the Security card to remove confusing dimming:
+- Remove `opacity-60` from the card
+- Add proper "Coming Soon" badge
+- Keep buttons disabled but visible
+
+### Phase 4: WhatsApp Consolidation
+Extend `src/utils/whatsapp.ts` with order-specific functions and refactor `CheckoutDialog.tsx` to use them.
+
+---
+
+## Files to Modify/Delete
+
+| Action | File |
+|--------|------|
+| **DELETE** | `src/components/SimplePricing.tsx` |
+| **DELETE** | `src/components/TransformationCards.tsx` |
+| **DELETE** | `src/components/ProgressToGoal.tsx` |
+| **DELETE** | `src/components/CelebrationAnimation.tsx` |
+| **DELETE** | `src/services/payment.service.ts` |
+| **MODIFY** | `src/pages/Index.tsx` - Remove unused PricingSection |
+| **MODIFY** | `src/pages/admin/AdminShops.tsx` - Add responsive table wrapper |
+| **MODIFY** | `src/pages/admin/AdminProducts.tsx` - Add responsive table wrapper |
+| **MODIFY** | `src/pages/admin/AdminOrders.tsx` - Add responsive table wrapper |
+| **MODIFY** | `src/pages/Settings.tsx` - Fix Security section UX |
+| **MODIFY** | `src/utils/whatsapp.ts` - Add order message templates |
+| **MODIFY** | `src/components/CheckoutDialog.tsx` - Use whatsapp utility |
+
+---
+
+## Technical Details
+
+### Admin Table Responsive Pattern
+
+For each admin table, apply this pattern:
+
 ```typescript
-setDaysRemaining(15);
+<div className="border rounded-lg border-primary/10 bg-card/50 backdrop-blur overflow-hidden">
+  {isLoading ? (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  ) : (
+    <div className="overflow-x-auto">
+      <Table className="min-w-[800px]">
+        {/* Table content */}
+      </Table>
+    </div>
+  )}
+</div>
 ```
 
-### Step 3: Fix FAQ.tsx Text
-Update line 52 to mention 15-day trial:
+### Settings Security Card Fix
+
 ```typescript
-answer: "SteerSolo offers a 15-day free trial that gives you full access to all features..."
+// Before
+<Card className="border-border/50 shadow-sm opacity-60">
+  ...
+  <CardContent className="space-y-3 pointer-events-none">
+
+// After
+<Card className="border-border/50 shadow-sm">
+  <CardHeader className="pb-3">
+    <div className="flex items-center gap-2">
+      <Shield className="w-5 h-5 text-primary" />
+      <CardTitle className="text-lg">Security</CardTitle>
+      <Badge variant="outline" className="text-xs">Coming Soon</Badge>
+    </div>
+    <CardDescription>Manage password and authentication</CardDescription>
+  </CardHeader>
+  <CardContent className="space-y-3">
+    {/* Buttons remain disabled but visible */}
+  </CardContent>
+</Card>
 ```
 
-### Step 4: Fix Index.tsx Button Text
-Update line 441 to show correct trial duration:
+### Extended WhatsApp Utility
+
+Add order-specific message function to `whatsapp.ts`:
+
 ```typescript
-<Button className="w-full bg-primary hover:bg-primary/90">Start 15-Day Free Trial</Button>
+export const openWhatsAppWithOrder = (
+  phoneNumber: string,
+  orderDetails: {
+    orderId: string;
+    customerName: string;
+    cart: Array<{ name: string; quantity: number; price: number }>;
+    totalAmount: number;
+    shopName: string;
+    paymentMethod: 'paid' | 'unpaid' | 'proof_required';
+    paymentReference?: string;
+  }
+) => {
+  // Build appropriate message based on payment method
+  // Use existing openWhatsAppContact pattern
+};
 ```
 
 ---
 
 ## Summary
 
-| Aspect | Status |
-|--------|--------|
-| **Database trigger (15 days)** | Working correctly |
-| **Subscription calculation** | Working correctly |
-| **RLS enforcement** | Working correctly |
-| **UI text consistency** | **Needs fixing** - 4 locations have wrong trial duration |
+| Category | Items | Action |
+|----------|-------|--------|
+| Unused Components | 4 files | Delete |
+| Unused Services | 1 file | Delete |
+| Dead Code Blocks | 1 block | Remove |
+| Tables Needing Responsive Fix | 3 pages | Modify |
+| UX Issues | 1 page | Fix |
+| Duplicate Logic | 1 component | Consolidate |
 
-The trial algorithm itself is solid. The fixes are purely cosmetic text updates to ensure the UI matches the actual 15-day trial period configured in the database.
+This cleanup will:
+- Reduce bundle size by removing ~500 lines of unused code
+- Improve mobile experience for admin users
+- Create a cleaner, more maintainable codebase
+- Fix confusing UX in Settings page
