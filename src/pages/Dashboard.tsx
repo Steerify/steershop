@@ -160,7 +160,7 @@ const Dashboard = () => {
           }
         } else {
           setSubscriptionStatus('trial');
-          setDaysRemaining(7);
+          setDaysRemaining(15);
         }
       }
 

@@ -438,7 +438,7 @@ const PricingSection = () => (
               ))}
             </ul>
             <Link to="/auth/signup">
-              <Button className="w-full bg-primary hover:bg-primary/90">Start 7-Day Free Trial</Button>
+              <Button className="w-full bg-primary hover:bg-primary/90">Start 15-Day Free Trial</Button>
             </Link>
           </CardContent>
         </Card>

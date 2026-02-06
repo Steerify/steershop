@@ -49,7 +49,7 @@ const faqCategories: FAQCategory[] = [
       },
       {
         question: "Is SteerSolo free to use?",
-        answer: "SteerSolo offers a 14-day free trial that gives you full access to all features. After your trial ends, you'll need an active subscription (starting at ₦1,000/month) to keep your store visible and operational. Your store data is preserved even if your subscription lapses."
+        answer: "SteerSolo offers a 15-day free trial that gives you full access to all features. After your trial ends, you'll need an active subscription (starting at ₦1,000/month) to keep your store visible and operational. Your store data is preserved even if your subscription lapses."
       },
       {
         question: "What do I need to start selling?",
