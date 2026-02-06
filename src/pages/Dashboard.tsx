@@ -654,15 +654,7 @@ const Dashboard = () => {
           {/* Right Column - Profile & Tools */}
           <div className="space-y-6">
             {/* Profile Completion */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Setup Progress</CardTitle>
-                <CardDescription>Complete your store setup</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ProfileCompletionChecklist shop={shopFullData} productsCount={productsCount} />
-              </CardContent>
-            </Card>
+            <ProfileCompletionChecklist shop={shopFullData} productsCount={productsCount} />
 
             {/* Active Offers */}
             {activeOffer && (
@@ -695,19 +687,31 @@ const Dashboard = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Store Visibility</span>
-                  <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                    Live
+                  <Badge variant="outline" className={
+                    subscriptionStatus === 'expired'
+                      ? "bg-red-500/10 text-red-500 border-red-500/20"
+                      : "bg-green-500/10 text-green-500 border-green-500/20"
+                  }>
+                    {subscriptionStatus === 'expired' ? 'Hidden' : 'Live'}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Last Order</span>
-                  <span className="text-sm font-medium">Today</span>
+                  <span className="text-sm">Subscription</span>
+                  <span className="text-sm font-medium capitalize">{subscriptionStatus}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Products Listed</span>
+                  <span className="text-sm font-medium">{productsCount}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Store Rating</span>
                   <div className="flex items-center gap-1">
-                    <span className="text-sm font-medium">4.8</span>
-                    <span className="text-xs text-muted-foreground">(12 reviews)</span>
+                    <span className="text-sm font-medium">
+                      {shopFullData?.average_rating?.toFixed(1) || 'N/A'}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      ({shopFullData?.total_reviews || 0} reviews)
+                    </span>
                   </div>
                 </div>
               </CardContent>
