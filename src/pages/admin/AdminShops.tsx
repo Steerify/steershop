@@ -19,7 +19,8 @@ import {
   User,
   RefreshCw,
   Shield,
-  Trash2
+  Trash2,
+  Plus
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
@@ -38,12 +39,21 @@ export default function AdminShops() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedShop, setSelectedShop] = useState<any>(null);
   const [shopToDelete, setShopToDelete] = useState<any>(null);
   const [extensionDays, setExtensionDays] = useState("30");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [usersWithoutShops, setUsersWithoutShops] = useState<any[]>([]);
   const [formData, setFormData] = useState({
+    shop_name: "",
+    description: "",
+    whatsapp_number: "",
+  });
+  const [newShopData, setNewShopData] = useState({
+    owner_id: "",
     shop_name: "",
     description: "",
     whatsapp_number: "",
@@ -456,6 +466,84 @@ export default function AdminShops() {
   const activeCount = shops.filter(s => s.is_active).length;
   const inactiveCount = shops.filter(s => !s.is_active).length;
 
+  // Fetch users without shops for admin shop creation
+  const fetchUsersWithoutShops = async () => {
+    try {
+      // Get all shop owners from profiles
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, role")
+        .eq("role", "shop_owner");
+
+      // Get all shop owner_ids
+      const { data: existingShops } = await supabase
+        .from("shops")
+        .select("owner_id");
+
+      const shopOwnerIds = new Set(existingShops?.map(s => s.owner_id) || []);
+      
+      // Filter users without shops
+      const usersWithout = profiles?.filter(p => !shopOwnerIds.has(p.id)) || [];
+      setUsersWithoutShops(usersWithout);
+    } catch (error) {
+      console.error("Error fetching users without shops:", error);
+    }
+  };
+
+  // Generate unique slug from shop name
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .substring(0, 50) + '-' + Date.now().toString(36).slice(-4);
+  };
+
+  // Handle creating a new shop for a user
+  const handleCreateShop = async () => {
+    if (!newShopData.owner_id || !newShopData.shop_name) {
+      toast({ title: "Please fill required fields", variant: "destructive" });
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      const slug = generateSlug(newShopData.shop_name);
+      
+      const { error } = await supabase
+        .from("shops")
+        .insert({
+          owner_id: newShopData.owner_id,
+          shop_name: newShopData.shop_name,
+          shop_slug: slug,
+          description: newShopData.description || null,
+          whatsapp_number: newShopData.whatsapp_number || null,
+          is_active: true,
+        });
+
+      if (error) throw error;
+
+      toast({ 
+        title: "✅ Shop Created", 
+        description: `Shop "${newShopData.shop_name}" created successfully` 
+      });
+      
+      setCreateDialogOpen(false);
+      setNewShopData({ owner_id: "", shop_name: "", description: "", whatsapp_number: "" });
+      fetchShops();
+      
+    } catch (error: any) {
+      toast({ 
+        title: "Error creating shop", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6 relative">
@@ -470,6 +558,16 @@ export default function AdminShops() {
               <p className="text-muted-foreground">Manage all shops on the platform</p>
             </div>
             <div className="flex gap-2">
+              <Button 
+                onClick={() => {
+                  setCreateDialogOpen(true);
+                  fetchUsersWithoutShops();
+                }}
+                className="gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Create Shop
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -996,6 +1094,93 @@ export default function AdminShops() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Create Shop Dialog */}
+        <Dialog open={createDialogOpen} onOpenChange={(open) => {
+          setCreateDialogOpen(open);
+          if (open) fetchUsersWithoutShops();
+        }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create Shop for User</DialogTitle>
+              <DialogDescription>
+                Create a shop for an existing user who hasn't set one up yet
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              {/* User Selection */}
+              <div className="space-y-2">
+                <Label>Select User *</Label>
+                <Select
+                  value={newShopData.owner_id}
+                  onValueChange={(value) => setNewShopData(prev => ({ ...prev, owner_id: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a user without a shop" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {usersWithoutShops.length === 0 ? (
+                      <div className="p-2 text-sm text-muted-foreground text-center">
+                        All shop owners have shops
+                      </div>
+                    ) : (
+                      usersWithoutShops.map(user => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.full_name || user.email} ({user.email})
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Shop Name */}
+              <div className="space-y-2">
+                <Label>Shop Name *</Label>
+                <Input
+                  value={newShopData.shop_name}
+                  onChange={(e) => setNewShopData(prev => ({ ...prev, shop_name: e.target.value }))}
+                  placeholder="e.g., Adire Collections"
+                />
+              </div>
+              
+              {/* Description */}
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea
+                  value={newShopData.description}
+                  onChange={(e) => setNewShopData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Brief description of the shop"
+                  rows={3}
+                />
+              </div>
+              
+              {/* WhatsApp */}
+              <div className="space-y-2">
+                <Label>WhatsApp Number</Label>
+                <Input
+                  value={newShopData.whatsapp_number}
+                  onChange={(e) => setNewShopData(prev => ({ ...prev, whatsapp_number: e.target.value }))}
+                  placeholder="+234 800 000 0000"
+                />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleCreateShop} 
+                disabled={isCreating || !newShopData.owner_id || !newShopData.shop_name}
+              >
+                {isCreating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Create Shop
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

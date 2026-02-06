@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X, Briefcase, Clock, Calendar, BadgeCheck } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X, Briefcase, Clock, Calendar, BadgeCheck, MessageCircle } from "lucide-react";
+import { openWhatsAppContact } from "@/utils/whatsapp";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireAccent } from "@/components/patterns/AdirePattern";
@@ -348,6 +349,16 @@ const ShopStorefront = () => {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
+                      {shop.whatsapp_number && (
+                        <Button
+                          variant="outline"
+                          onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
+                          className="border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Contact Us
+                        </Button>
+                      )}
                       <TourButton
                         onStartTour={startTour}
                         hasSeenTour={hasSeenTour}
