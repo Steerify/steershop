@@ -1,181 +1,129 @@
 
 
-# Verified Badges + Automated Email Reminders
+# Marketing Mastery Courses for Shop Owners + Admin Engagement Button Confirmation
 
-## Part 1: Verified Buyer Badges
+## Admin Engagement Reminders Button -- CONFIRMED WORKING
 
-### Current State
-- **Shops page**: Already shows "Verified" badge for shops with `is_verified = true` (green BadgeCheck icon + text badge)
-- **Storefront page**: Already shows "Verified Business" badge on the shop header
-- **Buyer verification**: The `profiles` table tracks `kyc_level`, `bvn_verified`, and `bank_verified`, but this info is **never shown** on reviews or anywhere buyers appear
+The "Run Engagement Reminders Now" button already exists on the Admin Dashboard (`/admin`). When clicked, it:
 
-### Changes
+1. Calls the `engagement-reminders` backend function
+2. Scans ALL users for: incomplete registrations (24h+), no shop created (48h+), no products (72h+), no sales (7 days+)
+3. Sends appropriate reminder emails (with AI-generated tips for no-sales scenario)
+4. Shows results summary with counts for each category
+5. Prevents duplicate emails (same type not re-sent within 7 days)
 
-**1.1 Show Verified Buyer badge on product reviews**
-
-Update `src/services/review.service.ts` to join `product_reviews` with `profiles` via `customer_id` to fetch the reviewer's `kyc_level`.
-
-Update `src/pages/ProductDetails.tsx` review cards to show a small "Verified Buyer" badge (blue BadgeCheck icon) next to the reviewer's name when `kyc_level >= 2`.
-
-**1.2 Enhance Shop Cards with rating/review count**
-
-The shop cards on `src/pages/Shops.tsx` already show ratings via a star icon at the bottom. The verified badge is already prominent. No further changes needed here -- it's already well-implemented.
+No changes needed here -- it is fully functional.
 
 ---
 
-## Part 2: Automated Email Reminder System
+## New Courses: Shop Owner Marketing Masterclass Series
 
-### Current State
-- `subscription-reminder` edge function: Fully coded, sends 3-day expiry warnings. Needs `pg_cron` scheduling.
-- `send-notification-email` edge function: Has templates for `profile_incomplete`, `subscription_expiring`, `milestone_achieved`, `setup_complete`. But no automated trigger calls it.
-- Auto-subscription via `paystack-webhook`: Working correctly.
+I will insert 5 comprehensive courses into the database via the admin courses system, all targeted at `shop_owner` audience. These courses cover every marketing tool available on the platform.
 
-### New Edge Function: `engagement-reminders`
+### Course 1: "WhatsApp Marketing Mastery"
+**Reward Points:** 40
 
-Create a single comprehensive edge function that handles ALL engagement scenarios, using AI-generated tips where appropriate.
+Covers:
+- Setting up your WhatsApp business number on SteerSolo
+- How the storefront "Contact Seller" button drives WhatsApp conversations
+- Crafting compelling WhatsApp Status posts to promote products
+- Using order confirmation messages as a re-engagement tool
+- Best times to post WhatsApp Status updates in Nigeria
+- Creating a WhatsApp broadcast list from your customer base
+- Responding quickly to boost your shop's reputation
 
-**Scenarios covered:**
+### Course 2: "Create Eye-Catching Marketing Posters with AI"
+**Reward Points:** 50
 
-| Scenario | Detection Logic | Email Content |
-|----------|----------------|---------------|
-| Incomplete registration (24h+) | `profiles` where `needs_role_selection = true` AND `created_at < now() - 24h` | "Complete your account setup" |
-| No shop created (48h+) | `profiles` with `role = 'shop_owner'` but no matching `shops` entry, created 48h+ ago | "Create your first store" with tips |
-| No products added (72h+) | `shops` with 0 products, created 72h+ ago | "Add your first product" with step-by-step guide |
-| No sales for 7 days | `shops` where latest order is older than 7 days (or no orders ever) | AI-generated marketing tips |
-| Subscription expiring (3 days) | Already handled by `subscription-reminder` | Already implemented |
+Covers:
+- Navigating the Marketing Hub and Poster Library
+- Choosing the right template for your campaign (Instagram Story, WhatsApp Status, etc.)
+- Using the AI Assistant to generate headlines and promotional copy
+- Customizing colors, text, and branding on the canvas editor
+- Downloading and sharing posters across social media
+- Creating seasonal and holiday-themed promotions
+- Step-by-step: Making your first "Flash Sale" poster in under 5 minutes
 
-**AI-Generated Tips**: For the "no sales" scenario, the function will call the Lovable AI (google/gemini-2.5-flash) to generate personalized marketing tips based on the shop's category and product types.
+### Course 3: "Boost Your Sales with Product Listings That Convert"
+**Reward Points:** 35
 
-**Duplicate Prevention**: Each notification type per user is logged in `subscription_notifications` table (reusing existing table) with a check to avoid sending the same type within 7 days.
+Covers:
+- Writing product titles that catch attention and rank in search
+- Crafting descriptions that answer buyer questions before they ask
+- Taking great product photos with just your phone
+- Using the image upload and compression features effectively
+- Setting competitive prices in the Nigerian market
+- Managing stock quantities to create urgency
+- Adding services with booking features to expand your offerings
+
+### Course 4: "Build Trust & Get Verified on SteerSolo"
+**Reward Points:** 45
+
+Covers:
+- Why verification badges increase sales (trust psychology)
+- How to complete KYC Level 2 verification (BVN + Bank)
+- How shop verification works (rating 4.0+ and consistent sales)
+- Encouraging customers to leave reviews after purchase
+- Responding to reviews professionally (positive and negative)
+- Setting up your bank details and Paystack for seamless payments
+- How the "Verified Business" badge appears on your storefront
+
+### Course 5: "Growing Your Customer Base: The Complete Guide"
+**Reward Points:** 50
+
+Covers:
+- Sharing your unique store link on social media platforms
+- Using the referral system to grow organically
+- Understanding your shop analytics and what metrics matter
+- Google Business Profile setup via Marketing Services
+- Booking a free marketing consultation session
+- Leveraging featured shop placements for visibility
+- Creating special offers and discount codes
+- Re-engagement: how the platform automatically reminds inactive buyers
+- Tips for Nigerian market: local trends, payment preferences, delivery expectations
 
 ---
 
-## Part 3: Database Changes
-
-### Add notification types to support new scenarios
-
-No schema changes needed -- the `subscription_notifications` table already has a flexible `notification_type` text column that can store any type string.
-
----
-
-## Files to Create/Modify
+## Files to Modify
 
 | File | Action | Description |
 |------|--------|-------------|
-| `supabase/functions/engagement-reminders/index.ts` | **CREATE** | Comprehensive engagement reminder function |
-| `src/services/review.service.ts` | **MODIFY** | Join with profiles to get reviewer kyc_level |
-| `src/pages/ProductDetails.tsx` | **MODIFY** | Show "Verified Buyer" badge on reviews |
+| `src/pages/admin/AdminDashboard.tsx` | No change | Already has the engagement reminders button |
+| Database (courses table) | INSERT | Add 5 new courses via code that runs on admin page or direct insert |
 
----
+Since courses are created through the admin UI (which writes to the database), I will create a one-time seed script that inserts these 5 courses directly into the `courses` table. This is cleaner than requiring you to manually type each course through the admin form.
 
-## Technical Details
+## Technical Approach
 
-### Review Service Update
+I will create a utility component/page or a simple function that the admin can trigger once to seed these courses. Alternatively, I can insert them via a database migration. The migration approach is cleaner since it's a one-time operation.
 
-```typescript
-// Join product_reviews with profiles to get verification status
-const { data, error, count } = await supabase
-  .from('product_reviews')
-  .select(`
-    *,
-    reviewer:profiles!customer_id(kyc_level)
-  `, { count: 'exact' })
-  .eq('product_id', productId)
-  .order('created_at', { ascending: false })
-  .range(from, to);
-```
-
-### Verified Buyer Badge in Reviews
-
-```typescript
-<div className="flex items-center gap-1">
-  <CardTitle className="text-sm font-medium">
-    {review.customer_name || "Anonymous"}
-  </CardTitle>
-  {review.reviewer?.kyc_level >= 2 && (
-    <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 text-xs px-1.5 py-0">
-      <BadgeCheck className="w-3 h-3 mr-0.5" />
-      Verified
-    </Badge>
-  )}
-</div>
-```
-
-### Engagement Reminders Edge Function
-
-The function will:
-
-1. Query for each scenario (incomplete registration, no shop, no products, no sales)
-2. Check `subscription_notifications` for recent sends of the same type per user
-3. Generate AI tips for "no sales" scenario using Lovable AI
-4. Send emails via Resend
-5. Log each notification sent
-
-```text
-Flow:
-  Function invoked (daily via pg_cron)
-       |
-       +-- Check incomplete registrations (24h+)
-       |     +-- Send "Complete your account" email
-       |
-       +-- Check no shop created (48h+)
-       |     +-- Send "Create your store" email with tips
-       |
-       +-- Check no products (72h+)
-       |     +-- Send "Add products" email with guide
-       |
-       +-- Check no sales (7 days+)
-             +-- Call AI for personalized tips
-             +-- Send "Boost your sales" email with AI tips
-```
-
-### Scheduling (Manual Step Required)
-
-After deployment, the following SQL must be run manually in the backend SQL editor to schedule both reminder functions daily:
+### Database Insert (Migration)
 
 ```sql
--- Schedule engagement reminders daily at 9 AM UTC
-SELECT cron.schedule(
-  'engagement-reminders-daily',
-  '0 9 * * *',
-  $$
-  SELECT net.http_post(
-    url := 'https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/engagement-reminders',
-    headers := jsonb_build_object(
-      'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key'),
-      'Content-Type', 'application/json'
-    )
-  );
-  $$
-);
-
--- Schedule subscription reminders daily at 8 AM UTC
-SELECT cron.schedule(
-  'subscription-reminder-daily',
-  '0 8 * * *',
-  $$
-  SELECT net.http_post(
-    url := 'https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/subscription-reminder',
-    headers := jsonb_build_object(
-      'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key'),
-      'Content-Type', 'application/json'
-    )
-  );
-  $$
-);
+INSERT INTO courses (title, description, content, image_url, reward_points, is_active, target_audience) VALUES
+  ('WhatsApp Marketing Mastery', '...', '<detailed HTML content>', 'unsplash-url', 40, true, 'shop_owner'),
+  ('Create Eye-Catching Marketing Posters with AI', '...', '<detailed HTML content>', 'unsplash-url', 50, true, 'shop_owner'),
+  -- ... 3 more courses
 ```
+
+Each course will have rich HTML content with:
+- Structured headings (h2, h3)
+- Ordered step-by-step lists
+- Bold key terms
+- Practical tips and examples specific to the Nigerian market
+- Links to relevant platform pages (e.g., /marketing, /identity-verification)
 
 ---
 
 ## Expected Outcomes
 
-| Feature | Result |
-|---------|--------|
-| Verified Buyer badges | Blue "Verified" badge shown on reviews from KYC Level 2+ users |
-| Subscription reminders | Automated 3-day expiry emails (after cron setup) |
-| Incomplete registration | Auto-email after 24 hours of inactivity |
-| No shop created | Auto-email with tips after 48 hours |
-| No products added | Auto-email with guide after 72 hours |
-| No sales for a week | AI-generated marketing tips sent via email |
-| Duplicate prevention | Same notification type not resent within 7 days per user |
+| Item | Result |
+|------|--------|
+| Admin engagement button | Already working -- confirmed |
+| Course 1: WhatsApp Marketing | Teaches WhatsApp selling strategies |
+| Course 2: AI Poster Creation | Teaches the Marketing Hub + Poster Editor |
+| Course 3: Product Listings | Teaches product optimization |
+| Course 4: Trust & Verification | Teaches KYC and review management |
+| Course 5: Customer Growth | Comprehensive growth guide |
+| All courses | Targeted to shop_owner, active, with reward points |
 
