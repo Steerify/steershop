@@ -1020,10 +1020,10 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 </h4>
                 
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-background rounded border">
-                    <div>
-                      <p className="font-medium text-sm">Account Name</p>
-                      <p className="text-lg">{shop.bank_account_name}</p>
+                  <div className="flex justify-between items-center p-2 sm:p-3 bg-background rounded border">
+                    <div className="min-w-0 flex-1 mr-2">
+                      <p className="font-medium text-xs sm:text-sm">Account Name</p>
+                      <p className="text-sm sm:text-lg truncate">{shop.bank_account_name}</p>
                     </div>
                     <Button
                       size="sm"
@@ -1034,10 +1034,10 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                     </Button>
                   </div>
 
-                  <div className="flex justify-between items-center p-3 bg-background rounded border">
-                    <div>
-                      <p className="font-medium text-sm">Bank Name</p>
-                      <p className="text-lg">{shop.bank_name}</p>
+                  <div className="flex justify-between items-center p-2 sm:p-3 bg-background rounded border">
+                    <div className="min-w-0 flex-1 mr-2">
+                      <p className="font-medium text-xs sm:text-sm">Bank Name</p>
+                      <p className="text-sm sm:text-lg truncate">{shop.bank_name}</p>
                     </div>
                     <Button
                       size="sm"
@@ -1048,10 +1048,10 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                     </Button>
                   </div>
 
-                  <div className="flex justify-between items-center p-3 bg-background rounded border">
-                    <div>
-                      <p className="font-medium text-sm">Account Number</p>
-                      <p className="text-lg">{shop.bank_account_number}</p>
+                  <div className="flex justify-between items-center p-2 sm:p-3 bg-background rounded border">
+                    <div className="min-w-0 flex-1 mr-2">
+                      <p className="font-medium text-xs sm:text-sm">Account Number</p>
+                      <p className="text-sm sm:text-lg truncate">{shop.bank_account_number}</p>
                     </div>
                     <Button
                       size="sm"
@@ -1062,10 +1062,10 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                     </Button>
                   </div>
 
-                  <div className="flex justify-between items-center p-3 bg-background rounded border">
-                    <div>
-                      <p className="font-medium text-sm">Amount to Transfer</p>
-                      <p className="text-lg font-bold">₦{totalAmount.toLocaleString()}</p>
+                  <div className="flex justify-between items-center p-2 sm:p-3 bg-background rounded border">
+                    <div className="min-w-0 flex-1 mr-2">
+                      <p className="font-medium text-xs sm:text-sm">Amount to Transfer</p>
+                      <p className="text-sm sm:text-lg font-bold">₦{totalAmount.toLocaleString()}</p>
                     </div>
                     <Button
                       size="sm"
