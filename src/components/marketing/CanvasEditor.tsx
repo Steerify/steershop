@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Type, ImageIcon, Palette, Layout, Trash2, Move, Upload } from "lucide-react";
+import { Type, ImageIcon, Palette, Layout, Trash2, Move, Upload, ChevronUp, ChevronDown } from "lucide-react";
 
 export interface CanvasElement {
   id: string;
@@ -76,9 +76,6 @@ const layouts = [
   { id: "ig-story", name: "📸 Instagram Story", preview: "Story-optimized vertical" },
 ];
 
-// Scale factor for display (actual canvas dimensions are large, display is smaller)
-const MAX_DISPLAY = 420;
-
 export const CanvasEditor = ({ initialData, onChange, onSave, shopName, shopLogo }: CanvasEditorProps) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -88,7 +85,17 @@ export const CanvasEditor = ({ initialData, onChange, onSave, shopName, shopLogo
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("text");
   const [dragging, setDragging] = useState<{ id: string; offsetX: number; offsetY: number } | null>(null);
+  const [toolsExpanded, setToolsExpanded] = useState(true);
+  const [screenWidth, setScreenWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
+  // Responsive screen width
+  useEffect(() => {
+    const handler = () => setScreenWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
+  const MAX_DISPLAY = screenWidth < 640 ? Math.min(screenWidth - 32, 360) : 420;
   const scale = Math.min(MAX_DISPLAY / canvasSize.width, MAX_DISPLAY / canvasSize.height);
   const displayW = canvasSize.width * scale;
   const displayH = canvasSize.height * scale;
@@ -169,30 +176,50 @@ export const CanvasEditor = ({ initialData, onChange, onSave, shopName, shopLogo
     onSave({ elements, background, canvasSize });
   };
 
-  // Drag handlers (coordinates in canvas-space)
-  const handleMouseDown = (e: React.MouseEvent, elId: string) => {
-    e.stopPropagation();
+  // Shared drag logic
+  const startDrag = (clientX: number, clientY: number, elId: string) => {
     const el = elements.find(x => x.id === elId);
     if (!el || !canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left) / scale;
-    const mouseY = (e.clientY - rect.top) / scale;
+    const mouseX = (clientX - rect.left) / scale;
+    const mouseY = (clientY - rect.top) / scale;
     setDragging({ id: elId, offsetX: mouseX - el.x, offsetY: mouseY - el.y });
     setSelectedElement(elId);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const moveDrag = (clientX: number, clientY: number) => {
     if (!dragging || !canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left) / scale;
-    const mouseY = (e.clientY - rect.top) / scale;
+    const mouseX = (clientX - rect.left) / scale;
+    const mouseY = (clientY - rect.top) / scale;
     updateElement(dragging.id, {
       x: Math.max(0, mouseX - dragging.offsetX),
       y: Math.max(0, mouseY - dragging.offsetY),
     });
   };
 
-  const handleMouseUp = () => setDragging(null);
+  const endDrag = () => setDragging(null);
+
+  // Mouse handlers
+  const handleMouseDown = (e: React.MouseEvent, elId: string) => {
+    e.stopPropagation();
+    startDrag(e.clientX, e.clientY, elId);
+  };
+  const handleMouseMove = (e: React.MouseEvent) => moveDrag(e.clientX, e.clientY);
+  const handleMouseUp = () => endDrag();
+
+  // Touch handlers
+  const handleTouchStart = (e: React.TouchEvent, elId: string) => {
+    e.stopPropagation();
+    const touch = e.touches[0];
+    startDrag(touch.clientX, touch.clientY, elId);
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault(); // prevent scroll while dragging
+    const touch = e.touches[0];
+    moveDrag(touch.clientX, touch.clientY);
+  };
+  const handleTouchEnd = () => endDrag();
 
   const applyLayout = (layoutId: string) => {
     let newElements: CanvasElement[] = [];
@@ -247,7 +274,7 @@ export const CanvasEditor = ({ initialData, onChange, onSave, shopName, shopLogo
         newBg = "#f8fafc";
         break;
       case "whatsapp-promo":
-        newSize = sizePresets[1]; // 1080x1920
+        newSize = sizePresets[1];
         newElements = [
           { id: "shop", type: "text", content: shopName, x: 80, y: 200, width: 920, height: 80, fontSize: 48, fontFamily: "Montserrat", color: "#ffffff" },
           { id: "offer", type: "text", content: "Special Offer!", x: 80, y: 600, width: 920, height: 120, fontSize: 80, fontFamily: "Oswald", color: "#ffffff" },
@@ -257,7 +284,7 @@ export const CanvasEditor = ({ initialData, onChange, onSave, shopName, shopLogo
         newBg = "#065f46";
         break;
       case "ig-story":
-        newSize = sizePresets[1]; // 1080x1920
+        newSize = sizePresets[1];
         newElements = [
           { id: "top", type: "text", content: shopName.toUpperCase(), x: 80, y: 150, width: 920, height: 50, fontSize: 24, fontFamily: "Inter", color: "#a855f7" },
           { id: "main", type: "text", content: "Don't Miss Out!", x: 80, y: 600, width: 920, height: 120, fontSize: 72, fontFamily: "Playfair Display", color: "#1e1b4b" },
@@ -279,15 +306,17 @@ export const CanvasEditor = ({ initialData, onChange, onSave, shopName, shopLogo
     <div className="flex flex-col lg:flex-row gap-4 h-full">
       {/* Canvas Area */}
       <div
-        className="flex-1 flex items-center justify-center bg-muted/30 rounded-lg p-4 overflow-auto"
+        className="flex-1 flex items-center justify-center bg-muted/30 rounded-lg p-2 sm:p-4 overflow-auto"
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <div
           ref={canvasRef}
-          className="relative shadow-2xl select-none"
-          style={{ width: displayW, height: displayH, backgroundColor: background }}
+          className="relative shadow-2xl select-none touch-none"
+          style={{ width: displayW, height: displayH, backgroundColor: background, background: background }}
           onClick={() => setSelectedElement(null)}
         >
           {elements.map((el) => (
@@ -311,6 +340,7 @@ export const CanvasEditor = ({ initialData, onChange, onSave, shopName, shopLogo
                 lineHeight: 1.2,
               }}
               onMouseDown={(e) => handleMouseDown(e, el.id)}
+              onTouchStart={(e) => handleTouchStart(e, el.id)}
               onClick={(e) => { e.stopPropagation(); setSelectedElement(el.id); }}
             >
               {el.type === "image" ? (
@@ -323,174 +353,185 @@ export const CanvasEditor = ({ initialData, onChange, onSave, shopName, shopLogo
         </div>
       </div>
 
-      {/* Tools Panel */}
-      <div className="w-full lg:w-72 bg-card rounded-lg border p-4 space-y-4 overflow-y-auto max-h-[500px] lg:max-h-none">
-        {/* Canvas Size Selector */}
-        <div>
-          <Label className="text-xs font-medium">Canvas Size</Label>
-          <Select value={canvasSize.label} onValueChange={changeCanvasSize}>
-            <SelectTrigger className="mt-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {sizePresets.map((s) => (
-                <SelectItem key={s.label} value={s.label}>
-                  {s.label} ({s.width}×{s.height})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Tools Panel - collapsible on mobile */}
+      <div className="w-full lg:w-72 bg-card rounded-lg border overflow-hidden">
+        {/* Mobile toggle header */}
+        <button
+          className="w-full flex items-center justify-between p-3 lg:hidden border-b"
+          onClick={() => setToolsExpanded(!toolsExpanded)}
+        >
+          <span className="font-medium text-sm">Tools & Settings</span>
+          {toolsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+        </button>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="text" className="px-2"><Type className="w-4 h-4" /></TabsTrigger>
-            <TabsTrigger value="layout" className="px-2"><Layout className="w-4 h-4" /></TabsTrigger>
-            <TabsTrigger value="colors" className="px-2"><Palette className="w-4 h-4" /></TabsTrigger>
-            <TabsTrigger value="image" className="px-2"><ImageIcon className="w-4 h-4" /></TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="text" className="space-y-4 mt-4">
-            <Button onClick={addTextElement} className="w-full" variant="outline">
-              <Type className="w-4 h-4 mr-2" />
-              Add Text
-            </Button>
-
-            {selectedEl && selectedEl.type === "text" && (
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-xs">Text Content</Label>
-                  <Input value={selectedEl.content} onChange={(e) => updateElement(selectedEl.id, { content: e.target.value })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Font</Label>
-                  <Select value={selectedEl.fontFamily} onValueChange={(v) => updateElement(selectedEl.id, { fontFamily: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {fonts.map((font) => (
-                        <SelectItem key={font.value} value={font.value}>{font.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Font Size: {selectedEl.fontSize}px</Label>
-                  <Slider value={[selectedEl.fontSize || 24]} min={12} max={200} step={2} onValueChange={([v]) => updateElement(selectedEl.id, { fontSize: v })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Text Color</Label>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {colorPresets.map((color) => (
-                      <button key={color} className={`w-6 h-6 rounded border ${selectedEl.color === color ? "ring-2 ring-primary" : ""}`} style={{ backgroundColor: color }} onClick={() => updateElement(selectedEl.id, { color })} />
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs">Background Color</Label>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    <button className={`w-6 h-6 rounded border text-[8px] ${!selectedEl.backgroundColor ? "ring-2 ring-primary" : ""}`} onClick={() => updateElement(selectedEl.id, { backgroundColor: undefined })}>✕</button>
-                    {colorPresets.map((color) => (
-                      <button key={color} className={`w-6 h-6 rounded border ${selectedEl.backgroundColor === color ? "ring-2 ring-primary" : ""}`} style={{ backgroundColor: color }} onClick={() => updateElement(selectedEl.id, { backgroundColor: color })} />
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs">Width</Label>
-                  <Slider value={[selectedEl.width]} min={50} max={canvasSize.width} step={10} onValueChange={([v]) => updateElement(selectedEl.id, { width: v })} />
-                </div>
-              </div>
-            )}
-
-            {selectedEl && selectedEl.type === "image" && (
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-xs">Width</Label>
-                  <Slider value={[selectedEl.width]} min={50} max={canvasSize.width} step={10} onValueChange={([v]) => updateElement(selectedEl.id, { width: v })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Height</Label>
-                  <Slider value={[selectedEl.height]} min={50} max={canvasSize.height} step={10} onValueChange={([v]) => updateElement(selectedEl.id, { height: v })} />
-                </div>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="layout" className="space-y-3 mt-4">
-            <p className="text-xs text-muted-foreground">Quick start with a layout:</p>
-            {layouts.map((layout) => (
-              <Button key={layout.id} variant="outline" className="w-full justify-start h-auto py-2" onClick={() => applyLayout(layout.id)}>
-                <div className="text-left">
-                  <p className="font-medium">{layout.name}</p>
-                  <p className="text-xs text-muted-foreground">{layout.preview}</p>
-                </div>
-              </Button>
-            ))}
-          </TabsContent>
-
-          <TabsContent value="colors" className="space-y-3 mt-4">
-            <div>
-              <Label className="text-xs">Background Color</Label>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {colorPresets.map((color) => (
-                  <button key={color} className={`w-6 h-6 rounded border ${background === color ? "ring-2 ring-primary" : ""}`} style={{ backgroundColor: color }} onClick={() => updateBackground(color)} />
+        <div className={`p-4 space-y-4 overflow-y-auto max-h-[400px] lg:max-h-none ${toolsExpanded ? 'block' : 'hidden lg:block'}`}>
+          {/* Canvas Size Selector */}
+          <div>
+            <Label className="text-xs font-medium">Canvas Size</Label>
+            <Select value={canvasSize.label} onValueChange={changeCanvasSize}>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {sizePresets.map((s) => (
+                  <SelectItem key={s.label} value={s.label}>
+                    {s.label} ({s.width}×{s.height})
+                  </SelectItem>
                 ))}
-              </div>
-              <Input type="color" value={background} onChange={(e) => updateBackground(e.target.value)} className="w-full h-8 mt-2" />
-            </div>
-
-            <div>
-              <Label className="text-xs">Gradient Backgrounds</Label>
-              <div className="grid grid-cols-3 gap-1 mt-1">
-                {[
-                  "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                  "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                  "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-                  "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-                  "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-                  "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
-                ].map((grad) => (
-                  <button key={grad} className={`w-full h-8 rounded border ${background === grad ? "ring-2 ring-primary" : ""}`} style={{ background: grad }} onClick={() => updateBackground(grad)} />
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="image" className="space-y-3 mt-4">
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-            <Button onClick={() => fileInputRef.current?.click()} className="w-full" variant="outline">
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Image
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Upload product photos or logos to add to your poster. Supported: JPG, PNG, WebP.
-            </p>
-            <div className="text-xs text-muted-foreground">
-              <p className="font-medium mb-1">Tips:</p>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Use high-quality product photos</li>
-                <li>Drag images to reposition them</li>
-                <li>Adjust size with the sliders</li>
-              </ul>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Delete Button */}
-        {selectedElement && (
-          <Button onClick={() => deleteElement(selectedElement)} variant="destructive" size="sm" className="w-full">
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete Element
-          </Button>
-        )}
-
-        <div className="pt-4 border-t space-y-2">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Move className="w-3 h-3" />
-            <span>Drag elements to reposition</span>
+              </SelectContent>
+            </Select>
           </div>
-          <Button onClick={handleExport} className="w-full">
-            Save Poster
-          </Button>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-4 w-full">
+              <TabsTrigger value="text" className="px-2"><Type className="w-4 h-4" /></TabsTrigger>
+              <TabsTrigger value="layout" className="px-2"><Layout className="w-4 h-4" /></TabsTrigger>
+              <TabsTrigger value="colors" className="px-2"><Palette className="w-4 h-4" /></TabsTrigger>
+              <TabsTrigger value="image" className="px-2"><ImageIcon className="w-4 h-4" /></TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="text" className="space-y-4 mt-4">
+              <Button onClick={addTextElement} className="w-full" variant="outline">
+                <Type className="w-4 h-4 mr-2" />
+                Add Text
+              </Button>
+
+              {selectedEl && selectedEl.type === "text" && (
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs">Text Content</Label>
+                    <Input value={selectedEl.content} onChange={(e) => updateElement(selectedEl.id, { content: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Font</Label>
+                    <Select value={selectedEl.fontFamily} onValueChange={(v) => updateElement(selectedEl.id, { fontFamily: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {fonts.map((font) => (
+                          <SelectItem key={font.value} value={font.value}>{font.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Font Size: {selectedEl.fontSize}px</Label>
+                    <Slider value={[selectedEl.fontSize || 24]} min={12} max={200} step={2} onValueChange={([v]) => updateElement(selectedEl.id, { fontSize: v })} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Text Color</Label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {colorPresets.map((color) => (
+                        <button key={color} className={`w-6 h-6 rounded border ${selectedEl.color === color ? "ring-2 ring-primary" : ""}`} style={{ backgroundColor: color }} onClick={() => updateElement(selectedEl.id, { color })} />
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Background Color</Label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <button className={`w-6 h-6 rounded border text-[8px] ${!selectedEl.backgroundColor ? "ring-2 ring-primary" : ""}`} onClick={() => updateElement(selectedEl.id, { backgroundColor: undefined })}>✕</button>
+                      {colorPresets.map((color) => (
+                        <button key={color} className={`w-6 h-6 rounded border ${selectedEl.backgroundColor === color ? "ring-2 ring-primary" : ""}`} style={{ backgroundColor: color }} onClick={() => updateElement(selectedEl.id, { backgroundColor: color })} />
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Width</Label>
+                    <Slider value={[selectedEl.width]} min={50} max={canvasSize.width} step={10} onValueChange={([v]) => updateElement(selectedEl.id, { width: v })} />
+                  </div>
+                </div>
+              )}
+
+              {selectedEl && selectedEl.type === "image" && (
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs">Width</Label>
+                    <Slider value={[selectedEl.width]} min={50} max={canvasSize.width} step={10} onValueChange={([v]) => updateElement(selectedEl.id, { width: v })} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Height</Label>
+                    <Slider value={[selectedEl.height]} min={50} max={canvasSize.height} step={10} onValueChange={([v]) => updateElement(selectedEl.id, { height: v })} />
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="layout" className="space-y-3 mt-4">
+              <p className="text-xs text-muted-foreground">Quick start with a layout:</p>
+              {layouts.map((layout) => (
+                <Button key={layout.id} variant="outline" className="w-full justify-start h-auto py-2" onClick={() => applyLayout(layout.id)}>
+                  <div className="text-left">
+                    <p className="font-medium">{layout.name}</p>
+                    <p className="text-xs text-muted-foreground">{layout.preview}</p>
+                  </div>
+                </Button>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="colors" className="space-y-3 mt-4">
+              <div>
+                <Label className="text-xs">Background Color</Label>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {colorPresets.map((color) => (
+                    <button key={color} className={`w-6 h-6 rounded border ${background === color ? "ring-2 ring-primary" : ""}`} style={{ backgroundColor: color }} onClick={() => updateBackground(color)} />
+                  ))}
+                </div>
+                <Input type="color" value={background.startsWith('#') ? background : '#ffffff'} onChange={(e) => updateBackground(e.target.value)} className="w-full h-8 mt-2" />
+              </div>
+
+              <div>
+                <Label className="text-xs">Gradient Backgrounds</Label>
+                <div className="grid grid-cols-3 gap-1 mt-1">
+                  {[
+                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                    "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                    "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+                    "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+                    "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
+                  ].map((grad) => (
+                    <button key={grad} className={`w-full h-8 rounded border ${background === grad ? "ring-2 ring-primary" : ""}`} style={{ background: grad }} onClick={() => updateBackground(grad)} />
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="image" className="space-y-3 mt-4">
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+              <Button onClick={() => fileInputRef.current?.click()} className="w-full" variant="outline">
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Image
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Upload product photos or logos to add to your poster. Supported: JPG, PNG, WebP.
+              </p>
+              <div className="text-xs text-muted-foreground">
+                <p className="font-medium mb-1">Tips:</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>Use high-quality product photos</li>
+                  <li>Drag elements to reposition them</li>
+                  <li>Adjust size with the sliders</li>
+                </ul>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          {/* Delete Button */}
+          {selectedElement && (
+            <Button onClick={() => deleteElement(selectedElement)} variant="destructive" size="sm" className="w-full">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Element
+            </Button>
+          )}
+
+          <div className="pt-4 border-t space-y-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Move className="w-3 h-3" />
+              <span>Drag elements to reposition</span>
+            </div>
+            <Button onClick={handleExport} className="w-full">
+              Save Poster
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -512,7 +553,6 @@ export const exportCanvasToBlob = async (
   // Draw background
   if (background.startsWith("linear-gradient") || background.startsWith("#")) {
     if (background.startsWith("linear-gradient")) {
-      // Parse simple gradient
       const colors = background.match(/#[a-f0-9]{6}/gi) || ["#ffffff", "#ffffff"];
       const gradient = ctx.createLinearGradient(0, 0, canvasSize.width, canvasSize.height);
       gradient.addColorStop(0, colors[0]);
@@ -529,7 +569,6 @@ export const exportCanvasToBlob = async (
     if (el.type === "text") {
       if (el.backgroundColor) {
         ctx.fillStyle = el.backgroundColor;
-        const px = 16, py = 8;
         ctx.beginPath();
         ctx.roundRect(el.x, el.y, el.width, el.height, 4);
         ctx.fill();

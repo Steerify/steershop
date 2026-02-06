@@ -96,13 +96,15 @@ export const PosterLibrary = ({ onSelectTemplate, onPreviewTemplate }: PosterLib
           />
         </div>
         <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-          <TabsList className="h-10">
-            {categories.map((cat) => (
-              <TabsTrigger key={cat.value} value={cat.value} className="text-xs sm:text-sm">
-                {cat.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="overflow-x-auto -mx-2 px-2">
+            <TabsList className="h-10 w-max">
+              {categories.map((cat) => (
+                <TabsTrigger key={cat.value} value={cat.value} className="text-xs sm:text-sm whitespace-nowrap">
+                  {cat.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
         </Tabs>
       </div>
 
