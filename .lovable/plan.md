@@ -1,89 +1,123 @@
 
 
-# Fix: Entrepreneur Button Redirecting to Customer Dashboard
+# Fix Settings for Shop Owners + Permanent Account Deletion
 
 ## Problem
 
-When a user clicks "Sign up with Google" on the signup tab (with "Entrepreneur/Sell" selected), they end up on the customer dashboard instead of being registered as an entrepreneur. This happens due to a **race condition** between two redirect mechanisms:
-
-1. **GoogleSignInButton** checks `needs_role_selection` and tries to navigate to `/select-role`
-2. **Auth.tsx useEffect** detects the user is now logged in and immediately redirects based on the current role (which defaults to `customer`)
-
-The Auth.tsx redirect fires first and wins the race, sending the user to `/customer_dashboard`.
-
-## Solution
-
-### 1. Fix Auth.tsx redirect to check `needs_role_selection` (Primary Fix)
-
-Before redirecting in the `useEffect`, check if the user's profile has `needs_role_selection = true`. If so, redirect to `/select-role` instead of the dashboard.
-
-**File:** `src/pages/Auth.tsx` (lines 94-105)
-
-```typescript
-useEffect(() => {
-  if (user && !authLoading) {
-    // Check if this user needs role selection first (Google OAuth new signups)
-    const checkRoleSelection = async () => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('needs_role_selection')
-        .eq('id', user.id)
-        .single();
-      
-      if (profile?.needs_role_selection) {
-        navigate('/select-role', { replace: true });
-        return;
-      }
-      
-      const defaultPath = getDashboardPath(user.role);
-      const redirectPath = returnUrl || locationState?.from?.pathname || lastRoute || defaultPath;
-      
-      dispatch(clearSessionExpired());
-      dispatch(setReturnUrl(null));
-      dispatch(resetSession());
-      
-      navigate(redirectPath, { replace: true });
-    };
-    
-    checkRoleSelection();
-  }
-}, [user, authLoading, navigate, returnUrl, lastRoute, locationState, dispatch]);
-```
-
-### 2. Fix ProtectedRoute to also check `needs_role_selection`
-
-If a user somehow bypasses Auth.tsx and lands on a protected route while still needing role selection, the ProtectedRoute should catch this too.
-
-**File:** `src/components/ProtectedRoute.tsx`
-
-Add an async check: if the user's profile has `needs_role_selection = true`, redirect to `/select-role`.
-
-### 3. Fix URL parameter handling in Auth.tsx
-
-The route is `/auth/:type` but the component reads `searchParams.get("tab")` instead. This means navigating to `/auth/signup` shows the login tab. Fix it to also check the URL path parameter.
-
-**File:** `src/pages/Auth.tsx` (line 57)
-
-```typescript
-// Use the URL path param (:type) as primary, query param as fallback
-const { type } = useParams();
-const defaultTab = type === 'signup' ? 'signup' : (searchParams.get("tab") || "login");
-```
-
-This requires adding `useParams` to the imports from `react-router-dom`.
+1. **Settings page is generic** -- shop owners see the same basic page as customers, with no links to their store, subscription status, or identity verification.
+2. **Deleted accounts can re-register** -- the current `delete-account` edge function removes the user from the auth system but does not record their email, so they can sign up again with the same email (potentially abusing free trials).
 
 ---
 
-## Files to Modify
+## Solution
 
-| File | Change |
-|------|--------|
-| `src/pages/Auth.tsx` | Check `needs_role_selection` before redirecting; fix URL param handling |
-| `src/components/ProtectedRoute.tsx` | Add `needs_role_selection` check as safety net |
+### Part 1: Block Re-registration After Deletion
 
-## Why This Fixes It
+**1.1 New database table: `deleted_accounts`**
 
-- New Google users: Auth.tsx will detect `needs_role_selection = true` and send them to `/select-role` where they can pick Entrepreneur
-- Existing users: The flag is `false`, so normal redirect logic applies
-- URL fix: Going to `/auth/signup` will correctly show the signup tab with the role selector visible
+A table to permanently record emails of deleted users.
+
+```text
+deleted_accounts
+  id         UUID (PK, auto)
+  email      TEXT (unique, not null)
+  role       TEXT (what role they had)
+  deleted_at TIMESTAMPTZ (default now)
+```
+
+- RLS: no public access (only service role inserts via edge function)
+
+**1.2 Database trigger on `profiles` table**
+
+A `BEFORE INSERT` trigger on `public.profiles` that checks if the email exists in `deleted_accounts`. If it does, it raises an exception, which blocks the signup (since the `handle_new_user` trigger inserts into profiles).
+
+This blocks both email/password and Google OAuth signups because all signups flow through the `handle_new_user` trigger which inserts into `profiles`.
+
+**1.3 Update `delete-account` edge function**
+
+Before deleting the user, fetch their email and role from `profiles`, then insert into `deleted_accounts`. This ensures the email is recorded before the cascade delete removes the profile.
+
+**1.4 Update `DeleteAccountDialog` warning text**
+
+Add a clear warning that the email can never be used again to create a new account.
+
+---
+
+### Part 2: Enhanced Shop Owner Settings
+
+**Updated `Settings.tsx` to show role-specific sections for entrepreneurs:**
+
+- **Shop Settings card** -- links to "Manage Store" (`/my-store`), "Identity Verification" (`/identity-verification`), and "View Public Store" (shop slug link)
+- **Subscription card** -- shows current subscription/trial status using `ShopStatusBadge`, with link to `/subscription`
+- **Security card** -- remove "Coming Soon" badge, enable password reset (calls `resetPassword` from AuthContext), show notification preferences link
+- **Enhanced Danger Zone** -- extra warning for shop owners that their store, products, orders, and customer data will all be permanently deleted
+
+The page will fetch the user's shop data and subscription status on mount.
+
+---
+
+## Files to Create/Modify
+
+| File | Action | Description |
+|------|--------|-------------|
+| Database migration | CREATE | `deleted_accounts` table + trigger on `profiles` |
+| `supabase/functions/delete-account/index.ts` | MODIFY | Record email in `deleted_accounts` before deleting user |
+| `src/pages/Settings.tsx` | MODIFY | Add shop settings, subscription status, working security section |
+| `src/components/auth/DeleteAccountDialog.tsx` | MODIFY | Add permanent ban warning text |
+
+## Technical Details
+
+### Edge Function Update
+
+```typescript
+// Before deleting, record the email
+const { data: profile } = await supabase
+  .from('profiles')
+  .select('email, role')
+  .eq('id', user.id)
+  .single();
+
+if (profile?.email) {
+  await supabase
+    .from('deleted_accounts')
+    .insert({ 
+      email: profile.email, 
+      role: profile.role 
+    });
+}
+
+// Then delete
+await supabase.auth.admin.deleteUser(user.id);
+```
+
+### Signup Block Trigger
+
+```sql
+CREATE OR REPLACE FUNCTION public.block_deleted_email()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM public.deleted_accounts 
+    WHERE email = NEW.email
+  ) THEN
+    RAISE EXCEPTION 'This email address has been permanently blocked.';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE TRIGGER check_deleted_email
+BEFORE INSERT ON public.profiles
+FOR EACH ROW EXECUTE FUNCTION public.block_deleted_email();
+```
+
+### Settings Page Shop Owner Section
+
+The page will:
+1. Detect `user.role === UserRole.ENTREPRENEUR`
+2. Fetch shop data from `shops` table and profile subscription info from `profiles`
+3. Show a "Shop Settings" card with store management links
+4. Show subscription status using the existing `ShopStatusBadge` component
+5. Enable password reset functionality in the Security card
+6. Show enhanced deletion warning for shop owners mentioning store/products/orders loss
 
