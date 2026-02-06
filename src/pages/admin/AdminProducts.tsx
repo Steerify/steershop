@@ -181,7 +181,8 @@ export default function AdminProducts() {
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
             ) : (
-              <Table>
+              <div className="overflow-x-auto">
+              <Table className="min-w-[800px]">
                 <TableHeader>
                   <TableRow className="hover:bg-muted/50">
                     <TableHead>Name</TableHead>
@@ -252,6 +253,7 @@ export default function AdminProducts() {
                   )}
                 </TableBody>
               </Table>
+              </div>
             )}
           </div>
         </div>

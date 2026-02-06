@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteAccountDialog } from "@/components/auth/DeleteAccountDialog";
 import { ArrowLeft, User, Shield, Bell, Key } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 const Settings = () => {
@@ -64,28 +65,29 @@ const Settings = () => {
           </Card>
 
           {/* Security & Privacy */}
-          <Card className="border-border/50 shadow-sm opacity-60">
+          <Card className="border-border/50 shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
                 <CardTitle className="text-lg">Security</CardTitle>
+                <Badge variant="outline" className="text-xs">Coming Soon</Badge>
               </div>
-              <CardDescription>Manage password and authentication (Coming soon)</CardDescription>
+              <CardDescription>Manage password and authentication</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3 pointer-events-none">
+            <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Key className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm">Change Password</span>
                 </div>
-                <Button variant="ghost" size="sm" disabled>Update</Button>
+                <Button variant="ghost" size="sm" disabled className="opacity-50">Update</Button>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Bell className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm">Notifications</span>
                 </div>
-                <Button variant="ghost" size="sm" disabled>Manage</Button>
+                <Button variant="ghost" size="sm" disabled className="opacity-50">Manage</Button>
               </div>
             </CardContent>
           </Card>
