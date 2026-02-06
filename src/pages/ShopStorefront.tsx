@@ -49,6 +49,7 @@ interface Product {
   stock_quantity: number;
   is_available: boolean;
   image_url: string | null;
+  video_url: string | null;
   average_rating: number;
   total_reviews: number;
   type: 'product' | 'service';
@@ -348,12 +349,13 @@ const ShopStorefront = () => {
                         <p className="text-muted-foreground mt-2 line-clamp-2">{shop.description}</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       {shop.whatsapp_number && (
                         <Button
                           variant="outline"
+                          size="sm"
                           onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
-                          className="border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
+                          className="border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950 min-h-[44px]"
                         >
                           <MessageCircle className="w-4 h-4 mr-2" />
                           Contact Us
@@ -366,8 +368,9 @@ const ShopStorefront = () => {
                       />
                       {getTotalItems() > 0 && (
                         <Button
+                          size="sm"
                           onClick={() => setIsCheckoutOpen(true)}
-                          className="bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/25"
+                          className="bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/25 min-h-[44px]"
                           data-tour="cart-button"
                         >
                           <ShoppingCart className="w-4 h-4 mr-2" />
@@ -567,7 +570,16 @@ const ShopStorefront = () => {
                 >
                   <Link to={`/shop/${slug}/product/${product.id}`}>
                     <div className="aspect-square overflow-hidden bg-muted relative">
-                      {product.image_url ? (
+                      {product.video_url ? (
+                        <video
+                          src={product.video_url}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                        />
+                      ) : product.image_url ? (
                         <img
                           src={product.image_url}
                           alt={product.name}

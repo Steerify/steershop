@@ -25,6 +25,7 @@ export default function AdminCourses() {
     description: "",
     content: "",
     image_url: "",
+    video_url: "",
     reward_points: "",
     is_active: true,
     target_audience: "customer" as "customer" | "shop_owner" | "all",
@@ -104,6 +105,7 @@ export default function AdminCourses() {
       description: course.description || "",
       content: course.content,
       image_url: course.image_url || "",
+      video_url: course.video_url || "",
       reward_points: course.reward_points?.toString() || "0",
       is_active: course.is_active,
       target_audience: course.target_audience || "customer",
@@ -149,6 +151,7 @@ export default function AdminCourses() {
       description: "",
       content: "",
       image_url: "",
+      video_url: "",
       reward_points: "",
       is_active: true,
       target_audience: "customer",
@@ -235,6 +238,17 @@ export default function AdminCourses() {
                 </div>
 
                 <div>
+                  <Label htmlFor="video_url">Video URL (YouTube or direct MP4 link)</Label>
+                  <Input
+                    id="video_url"
+                    value={formData.video_url}
+                    onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                    placeholder="https://www.youtube.com/watch?v=... or https://example.com/video.mp4"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Optional tutorial video shown above the course content</p>
+                </div>
+
+                <div>
                   <Label htmlFor="reward_points">Reward Points</Label>
                   <Input
                     id="reward_points"
@@ -290,6 +304,7 @@ export default function AdminCourses() {
               <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead>Description</TableHead>
+                <TableHead>Video</TableHead>
                 <TableHead>Target Audience</TableHead>
                 <TableHead>Reward Points</TableHead>
                 <TableHead>Status</TableHead>
@@ -301,6 +316,13 @@ export default function AdminCourses() {
                 <TableRow key={course.id}>
                   <TableCell className="font-medium">{course.title}</TableCell>
                   <TableCell className="max-w-xs truncate">{course.description}</TableCell>
+                  <TableCell>
+                    {course.video_url ? (
+                      <Badge className="bg-blue-100 text-blue-700 border-blue-300">🎬 Video</Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">—</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     {getAudienceBadge(course.target_audience)}
                   </TableCell>

@@ -15,6 +15,7 @@ export interface CreateProductRequest {
   duration_minutes?: number;
   booking_required?: boolean;
   is_available?: boolean;
+  video_url?: string;
 }
 
 const productService = {
@@ -38,6 +39,7 @@ const productService = {
         is_available: data.is_available !== undefined ? data.is_available : true,
         duration_minutes: data.duration_minutes || null,
         booking_required: data.booking_required || false,
+        video_url: data.video_url || null,
       })
       .select()
       .single();
@@ -99,6 +101,7 @@ const productService = {
       is_available: p.is_available,
       duration_minutes: p.duration_minutes,
       booking_required: p.booking_required,
+      video_url: p.video_url || undefined,
     }));
 
     return {
@@ -142,6 +145,7 @@ const productService = {
       is_available: product.is_available,
       duration_minutes: product.duration_minutes,
       booking_required: product.booking_required,
+      video_url: product.video_url || undefined,
     };
 
     return {
@@ -163,6 +167,7 @@ const productService = {
     if (data.duration_minutes !== undefined) updateData.duration_minutes = data.duration_minutes;
     if (data.booking_required !== undefined) updateData.booking_required = data.booking_required;
     if (data.is_available !== undefined) updateData.is_available = data.is_available;
+    if (data.video_url !== undefined) updateData.video_url = data.video_url || null;
 
     const { data: product, error } = await supabase
       .from('products')

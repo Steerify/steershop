@@ -18,6 +18,7 @@ import { TourTooltip } from "@/components/tours/TourTooltip";
 import { customerDashboardTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
 import { ReferralCard } from "@/components/ReferralCard";
+import { WhatsAppCommunityBanner } from "@/components/WhatsAppCommunityBanner";
 
 const CustomerDashboard = () => {
   const navigate = useNavigate();
@@ -127,6 +128,9 @@ const CustomerDashboard = () => {
           </header>
 
           <main className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+            {/* WhatsApp Community Banner */}
+            <WhatsAppCommunityBanner />
+
             {/* Welcome Section */}
             <div className="mb-2">
               <h2 className="text-2xl sm:text-3xl font-heading font-bold mb-1">

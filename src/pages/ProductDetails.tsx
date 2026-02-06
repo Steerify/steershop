@@ -194,9 +194,21 @@ const ProductDetails = () => {
         </Link>
 
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
-          {/* Product Image */}
+          {/* Product Media */}
           <div className="relative">
-            {product.images && product.images.length > 0 ? (
+            {product.video_url ? (
+              <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-xl">
+                <video
+                  src={product.video_url}
+                  className="w-full h-full object-cover"
+                  controls
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
+              </div>
+            ) : product.images && product.images.length > 0 ? (
               <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-xl">
                 <img
                   src={product.images[0].url}

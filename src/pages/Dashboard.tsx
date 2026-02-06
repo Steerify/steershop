@@ -33,6 +33,7 @@ import { StrokeMyShop } from "@/components/ai/StrokeMyShop";
 import { ProfileCompletionChecklist } from "@/components/ProfileCompletionChecklist";
 import { ShopStatusBadge } from "@/components/ShopStatusBadge";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
+import { WhatsAppCommunityBanner } from "@/components/WhatsAppCommunityBanner";
 import {
   Sheet,
   SheetContent,
@@ -355,6 +356,10 @@ const Dashboard = () => {
 
   return (
     <PageWrapper patternVariant="dots" patternOpacity={0.3}>
+      {/* WhatsApp Community Banner */}
+      <div className="container mx-auto px-4 pt-2">
+        <WhatsAppCommunityBanner />
+      </div>
       {/* Top Navigation */}
       <nav className="bg-background/95 backdrop-blur-lg border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
