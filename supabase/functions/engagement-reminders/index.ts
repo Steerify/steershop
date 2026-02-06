@@ -26,6 +26,7 @@ serve(async (req) => {
       no_shop: 0,
       no_products: 0,
       no_sales: 0,
+      expired_subscription: 0,
       errors: [] as string[],
     };
 
@@ -305,6 +306,54 @@ serve(async (req) => {
       if (sent) {
         await logNotification(shop.owner_id, "no_sales_week");
         results.no_sales++;
+      }
+    }
+
+    // ── Scenario 5: Expired Subscription Winback (10+ days expired) ──
+    const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: expiredUsers } = await supabase
+      .from("profiles")
+      .select("id, email, full_name")
+      .eq("role", "shop_owner")
+      .eq("is_subscribed", false)
+      .lt("subscription_expires_at", tenDaysAgo);
+
+    for (const user of expiredUsers || []) {
+      if (!user.email || await wasRecentlySent(user.id, "expired_subscription_winback")) continue;
+
+      const sent = await sendEmail(
+        user.email,
+        "Your Store Is Hidden — Customers Can't Find You 😢",
+        `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">
+          <h1 style="color:#DC2626">Your Store Is Currently Invisible</h1>
+          <p>Hi ${user.full_name || "there"},</p>
+          <p>Since your subscription expired, your store has been <strong>hidden from all customers</strong>. That means:</p>
+          <ul style="color:#DC2626">
+            <li>❌ Customers cannot find your store</li>
+            <li>❌ Your products are invisible in search</li>
+            <li>❌ You're missing potential sales every day</li>
+            <li>❌ No new orders can come in</li>
+          </ul>
+          <h3 style="color:#16A349">Here's what you'll get back instantly when you resubscribe:</h3>
+          <ul>
+            <li>🏪 <strong>Live storefront</strong> — your store becomes visible to all customers again</li>
+            <li>📱 <strong>WhatsApp order notifications</strong> — never miss an order</li>
+            <li>📊 <strong>Sales analytics & dashboard</strong> — track your growth</li>
+            <li>🎨 <strong>Marketing poster editor</strong> — create professional promos</li>
+            <li>🤖 <strong>AI-powered sales tips</strong> — personalized advice to boost sales</li>
+            <li>📚 <strong>Business courses</strong> — learn and earn reward points</li>
+            <li>💳 <strong>Secure payments</strong> — Paystack & bank transfer support</li>
+          </ul>
+          <p style="font-size:16px"><strong>Plans start at just ₦1,500/month</strong> — less than the cost of one customer you could be losing every day.</p>
+          <p style="text-align:center;margin:24px 0">
+            <a href="https://steersolo.lovable.app/subscription" style="display:inline-block;padding:14px 32px;background:#16A349;color:white;text-decoration:none;border-radius:8px;font-weight:bold;font-size:16px">Reactivate My Store →</a>
+          </p>
+          <p style="color:#666;font-size:12px">You're receiving this because your SteerSolo subscription has expired. Resubscribe to stop receiving these reminders.</p>
+        </div>`
+      );
+      if (sent) {
+        await logNotification(user.id, "expired_subscription_winback");
+        results.expired_subscription++;
       }
     }
 
