@@ -51,6 +51,7 @@ import { Shop } from "@/types/api";
 import { supabase } from "@/integrations/supabase/client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
+import { ShopStatusBadge, getShopStatusFromProfile } from "@/components/ShopStatusBadge";
 
 
 const shopSchema = z
@@ -118,6 +119,7 @@ const MyStore = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPaystackGuide, setShowPaystackGuide] = useState(false);
+  const [shopStatus, setShopStatus] = useState<{ status: 'active' | 'trial' | 'expired'; daysRemaining: number }>({ status: 'trial', daysRemaining: 15 });
 
   const [formData, setFormData] = useState({
     shop_name: "",
@@ -193,6 +195,17 @@ const MyStore = () => {
       // Format the user ID to ensure it has hyphens for UUID
       const formattedUserId = formatUUIDWithHyphens(user.id);
       console.log("Formatted User ID for API call:", formattedUserId);
+      
+      // Fetch profile to get subscription status
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('is_subscribed, subscription_expires_at')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileData) {
+        setShopStatus(getShopStatusFromProfile(profileData));
+      }
       
       const res = await shopService.getShopByOwner(formattedUserId);
       const data = Array.isArray(res.data) ? res.data[0] : res.data;
@@ -327,6 +340,15 @@ const MyStore = () => {
           <ArrowLeft className="w-4 h-4 sm:mr-2" />
           <span className="hidden sm:inline">Back to Dashboard</span>
         </Button>
+
+        {/* Shop Status Card */}
+        <ShopStatusBadge 
+          status={shopStatus.status} 
+          daysRemaining={shopStatus.daysRemaining} 
+          showUpgradeAction={true}
+          variant="card"
+          className="mb-4"
+        />
 
         <Card className="border-primary/10">
           <CardHeader className="p-4 sm:p-6">

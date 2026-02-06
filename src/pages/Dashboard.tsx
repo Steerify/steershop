@@ -31,6 +31,7 @@ import { dashboardTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
 import { StrokeMyShop } from "@/components/ai/StrokeMyShop";
 import { ProfileCompletionChecklist } from "@/components/ProfileCompletionChecklist";
+import { ShopStatusBadge } from "@/components/ShopStatusBadge";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
 import {
   Sheet,
@@ -481,35 +482,26 @@ const Dashboard = () => {
               <p className="text-muted-foreground">Here's what's happening with your store today.</p>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3" data-tour="subscription-status">
               <BadgeDisplay badges={userBadges} size="sm" />
-              
-              <div 
-                className="cursor-pointer" 
-                onClick={() => navigate('/subscription')}
-                data-tour="subscription-status"
-              >
-                {subscriptionStatus === 'trial' && daysRemaining > 0 && (
-                  <Badge variant="outline" className="border-gold text-gold bg-gold/10">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} left
-                  </Badge>
-                )}
-                {subscriptionStatus === 'active' && (
-                  <Badge variant="outline" className="border-green-500 text-green-500 bg-green-500/10">
-                    <CheckCircle className="w-3 h-3 mr-1" />
-                    Active
-                  </Badge>
-                )}
-                {subscriptionStatus === 'expired' && (
-                  <Badge variant="outline" className="border-destructive text-destructive bg-destructive/10">
-                    <AlertCircle className="w-3 h-3 mr-1" />
-                    Expired
-                  </Badge>
-                )}
-              </div>
+              <ShopStatusBadge 
+                status={subscriptionStatus} 
+                daysRemaining={daysRemaining} 
+                showUpgradeAction={true}
+              />
             </div>
           </div>
+
+          {/* Shop Status Card - Prominent display for expired/trial */}
+          {(subscriptionStatus === 'expired' || subscriptionStatus === 'trial') && (
+            <ShopStatusBadge 
+              status={subscriptionStatus} 
+              daysRemaining={daysRemaining} 
+              showUpgradeAction={true}
+              variant="card"
+              className="mb-6"
+            />
+          )}
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

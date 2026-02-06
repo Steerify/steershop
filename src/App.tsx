@@ -20,16 +20,18 @@ import NotFound from "./pages/NotFound";
 // Add RoleSelection import
 import RoleSelection from "./pages/auth/RoleSelection";
 
+// Eager load frequently accessed pages for faster navigation
+import Dashboard from "./pages/Dashboard";
+import MyStore from "./pages/MyStore";
+import Products from "./pages/Products";
+import Orders from "./pages/Orders";
+import Shops from "./pages/Shops";
+
 // Lazy load other pages for performance
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const Shops = lazy(() => import("./pages/Shops"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ShopStorefront = lazy(() => import("./pages/ShopStorefront"));
 const ProductDetails = lazy(() => import("./pages/ProductDetails"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const MyStore = lazy(() => import("./pages/MyStore"));
-const Products = lazy(() => import("./pages/Products"));
-const Orders = lazy(() => import("./pages/Orders"));
 const Bookings = lazy(() => import("./pages/Bookings"));
 const CustomerDashboard = lazy(() => import("./pages/customer/CustomerDashboard"));
 const CustomerOrders = lazy(() => import("./pages/customer/CustomerOrders"));
@@ -73,7 +75,16 @@ const PaymentsFeature = lazy(() => import("./pages/features/PaymentsFeature"));
 const HowItWorksPage = lazy(() => import("./pages/HowItWorksPage"));
 const SecurityPage = lazy(() => import("./pages/SecurityPage"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
+      gcTime: 10 * 60 * 1000,   // Cache retained for 10 minutes
+      refetchOnWindowFocus: false, // Prevent refetch on tab focus
+      retry: 1, // Only retry once on failure
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
