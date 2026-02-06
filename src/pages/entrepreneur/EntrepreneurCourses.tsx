@@ -19,6 +19,7 @@ interface Course {
   description: string;
   content: string;
   image_url: string;
+  video_url?: string;
   reward_points: number;
   is_active: boolean;
 }
@@ -301,7 +302,10 @@ const EntrepreneurCourses = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {selectedCourse.image_url && (
+              {selectedCourse.video_url && (
+                <CourseVideo url={selectedCourse.video_url} />
+              )}
+              {selectedCourse.image_url && !selectedCourse.video_url && (
                 <img src={selectedCourse.image_url} alt={selectedCourse.title} className="w-full h-48 object-cover rounded-lg" />
               )}
               <SanitizedContent content={selectedCourse.content} />
@@ -326,6 +330,29 @@ const EntrepreneurCourses = () => {
         </div>
       )}
     </PageWrapper>
+  );
+};
+
+const isYouTubeUrl = (url: string) => /(?:youtube\.com|youtu\.be)/.test(url);
+
+const getYouTubeEmbedUrl = (url: string) => {
+  const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match ? `https://www.youtube.com/embed/${match[1]}` : url;
+};
+
+const CourseVideo = ({ url }: { url: string }) => {
+  if (isYouTubeUrl(url)) {
+    return (
+      <iframe
+        src={getYouTubeEmbedUrl(url)}
+        className="w-full aspect-video rounded-lg"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    );
+  }
+  return (
+    <video src={url} controls className="w-full rounded-lg" controlsList="nodownload" playsInline />
   );
 };
 

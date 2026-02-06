@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
+import { VideoUpload } from "@/components/VideoUpload";
 import { z } from "zod";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Switch } from "@/components/ui/switch";
@@ -68,6 +69,7 @@ const Products = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [imageUrl, setImageUrl] = useState<string>("");
+  const [videoUrl, setVideoUrl] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"all" | "products" | "services">("all");
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [productLimitInfo, setProductLimitInfo] = useState<{
@@ -150,6 +152,7 @@ const Products = () => {
       booking_required: false,
     });
     setImageUrl("");
+    setVideoUrl("");
     setEditingProduct(null);
     setErrors({});
   };
@@ -169,6 +172,7 @@ const Products = () => {
         booking_required: product.booking_required ?? false,
       });
       setImageUrl(product.images?.[0]?.url || "");
+      setVideoUrl(product.video_url || "");
       setIsDialogOpen(true);
     } else {
       // Creating new product - check limits first
@@ -237,6 +241,7 @@ const Products = () => {
         duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : undefined,
         booking_required: formData.booking_required,
         is_available: formData.is_available,
+        video_url: videoUrl || undefined,
       };
 
       let response;
@@ -592,6 +597,15 @@ const Products = () => {
                 value={imageUrl}
                 onChange={(url) => setImageUrl(url)}
                 folder="product-images"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <VideoUpload
+                label="Short Video (max 10 seconds)"
+                value={videoUrl}
+                onChange={(url) => setVideoUrl(url)}
+                maxDurationSeconds={10}
               />
             </div>
 
