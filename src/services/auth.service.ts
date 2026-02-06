@@ -20,14 +20,14 @@ export interface ResetPasswordRequest {
 }
 
 const authService = {
-  // Forgot password - sends reset email via fast Resend edge function
+  // Forgot password - sends reset email
   forgotPassword: async (email: string) => {
-    const { error } = await supabase.functions.invoke('send-password-reset', {
-      body: { email },
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
     });
      
     if (error) {
-      throw new Error('Failed to send reset email. Please try again.');
+      throw new Error(error.message);
     }
     
     return { success: true, message: 'Password reset email sent' };

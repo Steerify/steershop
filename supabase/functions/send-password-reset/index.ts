@@ -1,17 +1,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    "authorization, x-client-info, apikey, content-type",
 };
 
 interface PasswordResetRequest {
   email: string;
+  name?: string;
+  resetLink: string;
 }
 
 const generateEmailHtml = (name: string, resetLink: string): string => {
@@ -125,76 +126,38 @@ const generateEmailHtml = (name: string, resetLink: string): string => {
 const handler = async (req: Request): Promise<Response> => {
   console.log("Password reset email function called");
   
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email }: PasswordResetRequest = await req.json();
+    const { email, name, resetLink }: PasswordResetRequest = await req.json();
     
-    if (!email) {
-      throw new Error("Email is required");
-    }
+    console.log(`Sending password reset email to: ${email}`);
 
-    console.log(`Processing password reset for: ${email}`);
-
-    // Create Supabase admin client to generate the reset link
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    // Look up user name for personalized email
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('full_name')
-      .eq('email', email)
-      .maybeSingle();
-
-    // Generate the password reset link via Supabase Admin API
-    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email: email,
-      options: {
-        redirectTo: `${req.headers.get('origin') || 'https://steersolo.lovable.app'}/reset-password`,
-      },
-    });
-
-    if (linkError) {
-      console.error("Error generating reset link:", linkError);
-      // Don't reveal if user exists or not
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    }
-
-    // Build the reset link from the generated token
-    const resetUrl = linkData.properties?.action_link || '';
-    
-    console.log("Reset link generated, sending email via Resend...");
-
-    // Send email via Resend (fast delivery)
     const emailResponse = await resend.emails.send({
       from: "SteerSolo <noreply@steersolo.com>",
       to: [email],
       subject: "Reset Your Password - SteerSolo",
-      html: generateEmailHtml(profile?.full_name || "", resetUrl),
+      html: generateEmailHtml(name || "", resetLink),
     });
 
     console.log("Password reset email sent successfully:", emailResponse);
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, ...emailResponse }), {
       status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders,
+      },
     });
   } catch (error: any) {
     console.error("Error in send-password-reset function:", error);
-    // Always return success to prevent email enumeration
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ error: error.message }),
       {
-        status: 200,
+        status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );

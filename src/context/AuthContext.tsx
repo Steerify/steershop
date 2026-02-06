@@ -221,19 +221,14 @@ const fetchUserProfile = async (supabaseUser: User): Promise<AppUser | null> => 
 
   const resetPassword = async (email: string) => {
     try {
-      // Use custom Resend-powered edge function for fast email delivery
-      const response = await supabase.functions.invoke('send-password-reset', {
-        body: { email },
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
-
-      if (response.error) {
-        console.error('Reset password edge function error:', response.error);
-        return { error: 'Failed to send reset email. Please try again.' };
+      if (error) {
+        return { error: error.message };
       }
-
       return { error: null };
     } catch (err: any) {
-      console.error('Reset password error:', err);
       return { error: err.message || 'An error occurred' };
     }
   };

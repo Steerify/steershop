@@ -28,7 +28,7 @@ import Orders from "./pages/Orders";
 import Shops from "./pages/Shops";
 
 // Lazy load other pages for performance
-import ResetPassword from "./pages/ResetPassword";
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ShopStorefront = lazy(() => import("./pages/ShopStorefront"));
 const ProductDetails = lazy(() => import("./pages/ProductDetails"));
