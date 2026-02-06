@@ -1,129 +1,193 @@
 
 
-# Marketing Mastery Courses for Shop Owners + Admin Engagement Button Confirmation
+# Enhanced Marketing Canvas + Dashboard Tutorials
 
-## Admin Engagement Reminders Button -- CONFIRMED WORKING
+## Overview
 
-The "Run Engagement Reminders Now" button already exists on the Admin Dashboard (`/admin`). When clicked, it:
-
-1. Calls the `engagement-reminders` backend function
-2. Scans ALL users for: incomplete registrations (24h+), no shop created (48h+), no products (72h+), no sales (7 days+)
-3. Sends appropriate reminder emails (with AI-generated tips for no-sales scenario)
-4. Shows results summary with counts for each category
-5. Prevents duplicate emails (same type not re-sent within 7 days)
-
-No changes needed here -- it is fully functional.
+Two main improvements: (1) upgrade the marketing poster editor with real download, image support, better templates, and social sharing; (2) add a "Tutorials" quick action on the shop owner dashboard linking to a new entrepreneur courses page.
 
 ---
 
-## New Courses: Shop Owner Marketing Masterclass Series
+## Part 1: Enhanced Canvas Editor
 
-I will insert 5 comprehensive courses into the database via the admin courses system, all targeted at `shop_owner` audience. These courses cover every marketing tool available on the platform.
+### Current Gaps
+- Image tab shows "coming soon"
+- Export button only saves to database, no actual file download
+- No social media sharing
+- Limited template variety
+- No drag-and-drop element repositioning
 
-### Course 1: "WhatsApp Marketing Mastery"
-**Reward Points:** 40
+### Changes to `src/components/marketing/CanvasEditor.tsx`
 
-Covers:
-- Setting up your WhatsApp business number on SteerSolo
-- How the storefront "Contact Seller" button drives WhatsApp conversations
-- Crafting compelling WhatsApp Status posts to promote products
-- Using order confirmation messages as a re-engagement tool
-- Best times to post WhatsApp Status updates in Nigeria
-- Creating a WhatsApp broadcast list from your customer base
-- Responding quickly to boost your shop's reputation
+**1.1 Real Canvas Export via html-to-canvas approach**
+- Use the native `HTMLCanvasElement` API to render the poster div to a canvas, then export as PNG/JPG
+- Add an `exportAsImage` method that uses `document.createElement('canvas')` and manually draws elements (no external library needed since elements are simple text + images)
+- Alternative simpler approach: use a hidden `<canvas>` element and draw text/images programmatically, OR use the browser's built-in `toDataURL` after rendering to an offscreen canvas
 
-### Course 2: "Create Eye-Catching Marketing Posters with AI"
-**Reward Points:** 50
+**1.2 Image Element Support**
+- Enable the "image" tab to allow uploading images via the existing `ImageUpload` component or a file input
+- Add image elements to the canvas that render as `<img>` tags with positioning
+- Store image URLs (uploaded to storage via existing `upload.service.ts`)
 
-Covers:
-- Navigating the Marketing Hub and Poster Library
-- Choosing the right template for your campaign (Instagram Story, WhatsApp Status, etc.)
-- Using the AI Assistant to generate headlines and promotional copy
-- Customizing colors, text, and branding on the canvas editor
-- Downloading and sharing posters across social media
-- Creating seasonal and holiday-themed promotions
-- Step-by-step: Making your first "Flash Sale" poster in under 5 minutes
+**1.3 Drag-and-Drop Repositioning**
+- Add `onMouseDown`/`onMouseMove`/`onMouseUp` handlers to canvas elements for basic drag support
+- Track dragging state and update element x/y coordinates in real time
 
-### Course 3: "Boost Your Sales with Product Listings That Convert"
-**Reward Points:** 35
+**1.4 More Pre-built Layouts/Templates**
+- Add "Flash Sale", "New Arrival", "WhatsApp Status", "Instagram Story" layout presets
+- Each layout will set canvas dimensions appropriate for the platform (e.g., 1080x1920 for Instagram Story, 400x400 for WhatsApp Status)
 
-Covers:
-- Writing product titles that catch attention and rank in search
-- Crafting descriptions that answer buyer questions before they ask
-- Taking great product photos with just your phone
-- Using the image upload and compression features effectively
-- Setting competitive prices in the Nigerian market
-- Managing stock quantities to create urgency
-- Adding services with booking features to expand your offerings
+**1.5 Canvas Size Presets**
+- Add a size selector: Instagram Post (1080x1080), Instagram Story (1080x1920), WhatsApp Status (1080x1920), Facebook Post (1200x630), Custom
 
-### Course 4: "Build Trust & Get Verified on SteerSolo"
-**Reward Points:** 45
+**1.6 Delete Selected Element**
+- Add a "Delete" button when an element is selected
 
-Covers:
-- Why verification badges increase sales (trust psychology)
-- How to complete KYC Level 2 verification (BVN + Bank)
-- How shop verification works (rating 4.0+ and consistent sales)
-- Encouraging customers to leave reviews after purchase
-- Responding to reviews professionally (positive and negative)
-- Setting up your bank details and Paystack for seamless payments
-- How the "Verified Business" badge appears on your storefront
+### Changes to `src/pages/entrepreneur/PosterEditor.tsx`
 
-### Course 5: "Growing Your Customer Base: The Complete Guide"
-**Reward Points:** 50
+**1.7 Real Download Implementation**
+- Implement `handleExport` to convert the canvas div to an image blob using a utility function
+- Trigger browser download with the correct filename and format (PNG/JPG)
 
-Covers:
-- Sharing your unique store link on social media platforms
-- Using the referral system to grow organically
-- Understanding your shop analytics and what metrics matter
-- Google Business Profile setup via Marketing Services
-- Booking a free marketing consultation session
-- Leveraging featured shop placements for visibility
-- Creating special offers and discount codes
-- Re-engagement: how the platform automatically reminds inactive buyers
-- Tips for Nigerian market: local trends, payment preferences, delivery expectations
+**1.8 Social Media Share Button**
+- Add a "Share" button next to Export
+- Use `navigator.share()` API (Web Share API) when available (mobile browsers, some desktop)
+- Fallback: show share links for WhatsApp (`https://api.whatsapp.com/send?text=...`), Twitter, Facebook
+- For WhatsApp specifically: download the image first, then open WhatsApp with a pre-filled message prompting the user to attach it
 
 ---
 
-## Files to Modify
+## Part 2: Shop Owner Tutorials on Dashboard
+
+### 2.1 New Page: `src/pages/entrepreneur/EntrepreneurCourses.tsx`
+- Adapted from `CustomerCourses.tsx` pattern
+- Fetches courses with `target_audience = 'shop_owner'`
+- Shows Available / In Progress / Completed tabs
+- Course content modal with sanitized HTML rendering
+- Points display and "Mark as Complete" functionality
+- Uses the shop owner navigation pattern (back to dashboard button) instead of customer sidebar
+
+### 2.2 New Route in `src/App.tsx`
+- Add `/courses` route protected for `ENTREPRENEUR` role
+- Lazy-load `EntrepreneurCourses`
+
+### 2.3 Dashboard Quick Action in `src/pages/Dashboard.tsx`
+- Add a 7th quick action card:
+  ```
+  icon: BookOpen
+  label: "Tutorials"
+  description: "Learn & earn points"
+  path: "/courses"
+  color: "from-blue-500/20 to-blue-500/10"
+  textColor: "text-blue-500"
+  ```
+- Also add it to the mobile menu items
+
+---
+
+## Files to Create/Modify
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/pages/admin/AdminDashboard.tsx` | No change | Already has the engagement reminders button |
-| Database (courses table) | INSERT | Add 5 new courses via code that runs on admin page or direct insert |
-
-Since courses are created through the admin UI (which writes to the database), I will create a one-time seed script that inserts these 5 courses directly into the `courses` table. This is cleaner than requiring you to manually type each course through the admin form.
-
-## Technical Approach
-
-I will create a utility component/page or a simple function that the admin can trigger once to seed these courses. Alternatively, I can insert them via a database migration. The migration approach is cleaner since it's a one-time operation.
-
-### Database Insert (Migration)
-
-```sql
-INSERT INTO courses (title, description, content, image_url, reward_points, is_active, target_audience) VALUES
-  ('WhatsApp Marketing Mastery', '...', '<detailed HTML content>', 'unsplash-url', 40, true, 'shop_owner'),
-  ('Create Eye-Catching Marketing Posters with AI', '...', '<detailed HTML content>', 'unsplash-url', 50, true, 'shop_owner'),
-  -- ... 3 more courses
-```
-
-Each course will have rich HTML content with:
-- Structured headings (h2, h3)
-- Ordered step-by-step lists
-- Bold key terms
-- Practical tips and examples specific to the Nigerian market
-- Links to relevant platform pages (e.g., /marketing, /identity-verification)
+| `src/components/marketing/CanvasEditor.tsx` | MODIFY | Add image support, drag-and-drop, real export, canvas size presets, delete element, more layouts |
+| `src/pages/entrepreneur/PosterEditor.tsx` | MODIFY | Implement real download, add share button with Web Share API |
+| `src/pages/entrepreneur/EntrepreneurCourses.tsx` | CREATE | Shop owner courses/tutorials page |
+| `src/pages/Dashboard.tsx` | MODIFY | Add "Tutorials" to QuickActions array |
+| `src/App.tsx` | MODIFY | Add `/courses` route for entrepreneurs |
 
 ---
 
-## Expected Outcomes
+## Technical Details
 
-| Item | Result |
-|------|--------|
-| Admin engagement button | Already working -- confirmed |
-| Course 1: WhatsApp Marketing | Teaches WhatsApp selling strategies |
-| Course 2: AI Poster Creation | Teaches the Marketing Hub + Poster Editor |
-| Course 3: Product Listings | Teaches product optimization |
-| Course 4: Trust & Verification | Teaches KYC and review management |
-| Course 5: Customer Growth | Comprehensive growth guide |
-| All courses | Targeted to shop_owner, active, with reward points |
+### Canvas Export (No External Library)
+
+```typescript
+const exportCanvas = async (format: 'png' | 'jpg'): Promise<Blob> => {
+  const canvasEl = canvasRef.current;
+  if (!canvasEl) throw new Error('Canvas not found');
+  
+  // Use html2canvas-like approach with native canvas
+  const rect = canvasEl.getBoundingClientRect();
+  const canvas = document.createElement('canvas');
+  canvas.width = rect.width * 2; // 2x for retina
+  canvas.height = rect.height * 2;
+  const ctx = canvas.getContext('2d')!;
+  ctx.scale(2, 2);
+  
+  // Draw background
+  ctx.fillStyle = background;
+  ctx.fillRect(0, 0, rect.width, rect.height);
+  
+  // Draw each element
+  for (const el of elements) {
+    if (el.type === 'text') {
+      if (el.backgroundColor) {
+        ctx.fillStyle = el.backgroundColor;
+        ctx.fillRect(el.x, el.y, el.width, el.height);
+      }
+      ctx.fillStyle = el.color || '#000';
+      ctx.font = `${el.fontSize}px ${el.fontFamily}`;
+      ctx.fillText(el.content, el.x + (el.backgroundColor ? 16 : 0), el.y + (el.fontSize || 24));
+    } else if (el.type === 'image' && el.content) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      await new Promise(r => { img.onload = r; img.src = el.content; });
+      ctx.drawImage(img, el.x, el.y, el.width, el.height);
+    }
+  }
+  
+  return new Promise(resolve => {
+    canvas.toBlob(blob => resolve(blob!), 
+      format === 'jpg' ? 'image/jpeg' : 'image/png', 0.95);
+  });
+};
+```
+
+### Drag-and-Drop
+
+```typescript
+const [dragging, setDragging] = useState<{id: string; offsetX: number; offsetY: number} | null>(null);
+
+const handleMouseDown = (e: React.MouseEvent, elId: string) => {
+  const el = elements.find(e => e.id === elId);
+  if (!el) return;
+  setDragging({ id: elId, offsetX: e.clientX - el.x, offsetY: e.clientY - el.y });
+  setSelectedElement(elId);
+};
+
+const handleMouseMove = (e: React.MouseEvent) => {
+  if (!dragging) return;
+  const canvasRect = canvasRef.current?.getBoundingClientRect();
+  if (!canvasRect) return;
+  updateElement(dragging.id, {
+    x: e.clientX - canvasRect.left - dragging.offsetX + canvasRect.left,
+    y: e.clientY - canvasRect.top - dragging.offsetY + canvasRect.top,
+  });
+};
+```
+
+### Web Share API
+
+```typescript
+const handleShare = async (blob: Blob) => {
+  const file = new File([blob], 'poster.png', { type: 'image/png' });
+  
+  if (navigator.canShare?.({ files: [file] })) {
+    await navigator.share({
+      title: posterName,
+      text: `Check out this poster from ${shopData?.shop_name}!`,
+      files: [file],
+    });
+  } else {
+    // Fallback: download and show share links
+    // Open WhatsApp with message
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent('Check out my latest promotion!')}`, '_blank');
+  }
+};
+```
+
+### Entrepreneur Courses Page
+- Same pattern as `CustomerCourses.tsx` but without `CustomerSidebar`
+- Uses a simple top nav with back button (matching Marketing page pattern)
+- Calls `courseService.getCourses('shop_owner')` instead of `'customer'`
 
