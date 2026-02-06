@@ -52,7 +52,7 @@ export const useShopOwnerAuth = () => {
         };
         setProfile(basicProfile);
         setSubscriptionStatus('trial');
-        setDaysRemaining(7);
+        setDaysRemaining(15);
         setCanAccess(true);
       } else {
         setProfile(profileData);
