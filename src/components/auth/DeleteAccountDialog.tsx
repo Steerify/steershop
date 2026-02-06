@@ -16,9 +16,14 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Trash2, AlertTriangle } from "lucide-react";
+import { Loader2, Trash2, AlertTriangle, ShieldAlert } from "lucide-react";
+import { UserRole } from "@/types/api";
 
-export function DeleteAccountDialog() {
+interface DeleteAccountDialogProps {
+  isShopOwner?: boolean;
+}
+
+export function DeleteAccountDialog({ isShopOwner = false }: DeleteAccountDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [phrase, setPhrase] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -33,13 +38,10 @@ export function DeleteAccountDialog() {
 
     setIsDeleting(true);
     try {
-      // Disable Google auto-select BEFORE deleting account
-      // This prevents Google from remembering and auto-suggesting this account
       if (window.google?.accounts?.id) {
         window.google.accounts.id.disableAutoSelect();
       }
 
-      // Call the edge function to delete the account
       const { data, error } = await supabase.functions.invoke("delete-account");
 
       if (error) throw error;
@@ -49,7 +51,6 @@ export function DeleteAccountDialog() {
         description: "Your account and data have been permanently removed.",
       });
 
-      // Log out and redirect
       await signOut();
       navigate("/");
     } catch (error: any) {
@@ -79,28 +80,48 @@ export function DeleteAccountDialog() {
             <AlertTriangle className="w-6 h-6" />
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           </div>
-          <AlertDialogDescription className="space-y-4">
-            <p className="text-foreground font-medium">
-              This action is permanent and cannot be undone.
-            </p>
-            <p className="text-sm">
-              All your data, including your profile, shop information, products, 
-              and order history will be permanently deleted from our servers. 
-              You will no longer be able to log in with this account or use Google login 
-              to access this specific identity.
-            </p>
-            <div className="space-y-3 pt-2">
-              <Label htmlFor="phrase" className="text-sm font-semibold">
-                Type <span className="text-destructive font-mono">"{CONFIRMATION_PHRASE}"</span> to confirm:
-              </Label>
-              <Input
-                id="phrase"
-                placeholder={CONFIRMATION_PHRASE}
-                value={phrase}
-                onChange={(e) => setPhrase(e.target.value)}
-                autoComplete="off"
-                className="font-mono"
-              />
+          <AlertDialogDescription className="space-y-4" asChild>
+            <div>
+              <p className="text-foreground font-medium">
+                This action is permanent and cannot be undone.
+              </p>
+              <p className="text-sm">
+                All your data, including your profile, shop information, products, 
+                and order history will be permanently deleted from our servers.
+              </p>
+
+              {isShopOwner && (
+                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg space-y-1">
+                  <p className="text-sm font-semibold text-destructive flex items-center gap-1.5">
+                    <ShieldAlert className="w-4 h-4" />
+                    Shop Owner Warning
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Your store, all products, customer orders, revenue history, and booking data 
+                    will be permanently deleted. Customers will no longer be able to access your store.
+                  </p>
+                </div>
+              )}
+
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/20 dark:border-amber-900">
+                <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+                  ⚠️ You will never be able to create a new account with this email address.
+                </p>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <Label htmlFor="phrase" className="text-sm font-semibold">
+                  Type <span className="text-destructive font-mono">"{CONFIRMATION_PHRASE}"</span> to confirm:
+                </Label>
+                <Input
+                  id="phrase"
+                  placeholder={CONFIRMATION_PHRASE}
+                  value={phrase}
+                  onChange={(e) => setPhrase(e.target.value)}
+                  autoComplete="off"
+                  className="font-mono"
+                />
+              </div>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
