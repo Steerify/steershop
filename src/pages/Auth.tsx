@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation, useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,7 +55,8 @@ type LoginFormData = z.infer<typeof loginSchema>;
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const defaultTab = searchParams.get("tab") || "login";
+  const { type } = useParams();
+  const defaultTab = type === 'signup' ? 'signup' : (searchParams.get("tab") || "login");
   const navigate = useNavigate();
   const { toast } = useToast();
   const dispatch = useAppDispatch();
@@ -93,14 +95,29 @@ const Auth = () => {
 
   useEffect(() => {
     if (user && !authLoading) {
-      const defaultPath = getDashboardPath(user.role);
-      const redirectPath = returnUrl || locationState?.from?.pathname || lastRoute || defaultPath;
-      
-      dispatch(clearSessionExpired());
-      dispatch(setReturnUrl(null));
-      dispatch(resetSession());
-      
-      navigate(redirectPath, { replace: true });
+      const checkRoleSelection = async () => {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('needs_role_selection')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.needs_role_selection) {
+          navigate('/select-role', { replace: true });
+          return;
+        }
+
+        const defaultPath = getDashboardPath(user.role);
+        const redirectPath = returnUrl || locationState?.from?.pathname || lastRoute || defaultPath;
+
+        dispatch(clearSessionExpired());
+        dispatch(setReturnUrl(null));
+        dispatch(resetSession());
+
+        navigate(redirectPath, { replace: true });
+      };
+
+      checkRoleSelection();
     }
   }, [user, authLoading, navigate, returnUrl, lastRoute, locationState, dispatch]);
 
