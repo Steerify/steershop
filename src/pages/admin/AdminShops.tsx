@@ -611,7 +611,8 @@ export default function AdminShops() {
                 <p className="text-muted-foreground">Loading shops...</p>
               </div>
             ) : (
-              <Table>
+              <div className="overflow-x-auto">
+              <Table className="min-w-[800px]">
                 <TableHeader>
                   <TableRow className="hover:bg-muted/50 bg-muted/30">
                     <TableHead className="font-semibold">Shop Name</TableHead>
@@ -761,6 +762,7 @@ export default function AdminShops() {
                   )}
                 </TableBody>
               </Table>
+              </div>
             )}
           </div>
         </div>

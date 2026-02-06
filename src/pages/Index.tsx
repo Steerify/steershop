@@ -378,74 +378,7 @@ const StatItem = ({ icon, value, label }: { icon: React.ReactNode; value: string
   </div>
 );
 
-/* ================= PRICING SECTION ================= */
-const PricingSection = () => (
-  <section className="py-20">
-    <div className="container mx-auto px-4">
-      <div className="text-center mb-12">
-        <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Simple, transparent pricing</h2>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Start free. Grow with our business tools.
-        </p>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        <Card className="border-2">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-2xl">Starter</CardTitle>
-            <CardDescription>Perfect for getting started</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-6">
-              <span className="text-4xl font-bold">₦0</span>
-              <span className="text-muted-foreground">/month</span>
-            </div>
-            <ul className="space-y-3 mb-8">
-              {["1 storefront", "50 products", "Basic WhatsApp orders", "Email support"].map((feature) => (
-                <li key={feature} className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-            <Link to="/auth/signup">
-              <Button variant="outline" className="w-full">Start Free</Button>
-            </Link>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-2 border-primary relative">
-          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-            <span className="bg-primary text-primary-foreground text-sm font-medium px-4 py-1 rounded-full">
-              Most Popular
-            </span>
-          </div>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-2xl">Business</CardTitle>
-            <CardDescription>For growing businesses</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-6">
-              <span className="text-4xl font-bold">₦1,000</span>
-              <span className="text-muted-foreground">/month</span>
-            </div>
-            <ul className="space-y-3 mb-8">
-              {["Unlimited products", "Advanced analytics", "Paystack integration", "Priority support", "Custom domain", "Customer management"].map((feature) => (
-                <li key={feature} className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-primary mr-3" />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-            <Link to="/auth/signup">
-              <Button className="w-full bg-primary hover:bg-primary/90">Start 15-Day Free Trial</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  </section>
-);
+/* ================= PRICING SECTION - REMOVED (using DynamicPricing instead) ================= */
 
 /* ================= DISCOVERY CTA SECTION ================= */
 const DiscoveryCTASection = () => (

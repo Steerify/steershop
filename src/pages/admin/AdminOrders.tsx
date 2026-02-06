@@ -224,7 +224,8 @@ export default function AdminOrders() {
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
             ) : (
-              <Table>
+              <div className="overflow-x-auto">
+              <Table className="min-w-[800px]">
                 <TableHeader>
                   <TableRow className="hover:bg-muted/50">
                     <TableHead>Order ID</TableHead>
@@ -300,6 +301,7 @@ export default function AdminOrders() {
                   )}
                 </TableBody>
               </Table>
+              </div>
             )}
           </div>
         </div>
