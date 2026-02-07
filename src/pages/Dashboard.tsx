@@ -368,6 +368,14 @@ const Dashboard = () => {
       color: "from-blue-500/20 to-blue-500/10",
       textColor: "text-blue-500"
     },
+    { 
+      icon: Users, 
+      label: "Customers", 
+      description: "View customer records",
+      path: "/customers",
+      color: "from-emerald-500/20 to-emerald-500/10",
+      textColor: "text-emerald-500"
+    },
   ];
 
   return (

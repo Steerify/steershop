@@ -1317,6 +1317,67 @@ export type Database = {
           },
         ]
       }
+      promoted_listings: {
+        Row: {
+          amount_paid: number
+          created_at: string | null
+          expires_at: string
+          id: string
+          is_active: boolean | null
+          listing_type: string
+          payment_ref: string | null
+          product_id: string | null
+          shop_id: string
+          starts_at: string
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          is_active?: boolean | null
+          listing_type?: string
+          payment_ref?: string | null
+          product_id?: string | null
+          shop_id: string
+          starts_at?: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          is_active?: boolean | null
+          listing_type?: string
+          payment_ref?: string | null
+          product_id?: string | null
+          shop_id?: string
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promoted_listings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promoted_listings_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promoted_listings_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referral_codes: {
         Row: {
           code: string

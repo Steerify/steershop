@@ -72,3 +72,6 @@ verify_jwt = false
 [functions.order-notifications]
 verify_jwt = false
 
+[functions.ai-product-description]
+verify_jwt = false
+

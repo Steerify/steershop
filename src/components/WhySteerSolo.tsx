@@ -114,7 +114,7 @@ export const WhySteerSolo = () => {
             {/* Callout */}
             <div className="mt-8 text-center">
               <p className="text-lg font-semibold mb-4">
-                Use social media for <span className="text-muted-foreground">marketing</span>. Use SteerSolo for <span className="text-primary">selling</span>.
+                Use social media for <span className="text-muted-foreground">marketing</span>. Use SteerSolo for <span className="text-primary">everything else</span>.
               </p>
               <Link to="/auth/signup">
                 <Button size="lg" className="bg-primary hover:bg-primary/90">
