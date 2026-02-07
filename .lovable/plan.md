@@ -1,103 +1,172 @@
 
 
-# Homepage + FAQ + Shop SEO + Social Proof Enhancements
+# SteerSolo: From Tool to Commerce Infrastructure -- Phase 1 Implementation
 
-## Overview
-Five changes across 3 files, with 1 new component file.
+## Vision
+Transform SteerSolo from "online store builder" to "the operating system for small businesses in Nigeria" by adding the missing infrastructure layers that increase stickiness, revenue per user, and investor appeal.
 
----
+## What Already Exists (No Work Needed)
+- Store creation and management
+- Payments (Paystack integration with webhook verification)
+- Orders and order tracking
+- WhatsApp order flow
+- Logistics (Terminal Africa + Sendbox + manual fallback)
+- AI features (Stroke My Shop, Know This Shop, Marketing AI Assistant)
+- Subscription billing (Basic/Pro/Business tiers)
+- Analytics dashboard with revenue charts
+- Courses and rewards system
+- KYC verification
+- Referral system
+- Payout management
+- Product reviews and ratings
+- Featured shops and top seller banners
+- SEO structured data
 
-## 1. Replace City Names Section with "What is SteerSolo?" + "Why Not Social Media?"
-
-**File: `src/pages/Index.tsx`**
-
-Replace the city names section (lines 170-180) with two new sections:
-
-**Section A: "What is SteerSolo?"** -- A concise explainer with 3 cards (Your Own Store, WhatsApp-Powered, Secure Payments) that immediately tells visitors what the platform does.
-
-**Section B: "Why not just sell on social media?"** -- A comparison table showing features side by side (Social Media vs SteerSolo). Features compared:
-- Professional product catalog (Social: No, SteerSolo: Yes)
-- Automatic order tracking (Social: No, SteerSolo: Yes)
-- Secure online payments (Social: No, SteerSolo: Yes)
-- One shareable store link (Social: No, SteerSolo: Yes)
-- Customer order history (Social: No, SteerSolo: Yes)
-- Sales analytics (Social: No, SteerSolo: Yes)
-- Free to start posting (Both: Yes)
-- Large existing audience (Social: Yes, SteerSolo: Coming soon)
-
-Ends with a callout: "Use social media for marketing. Use SteerSolo for selling."
-
-This will be implemented as a `WhyNotSocialMedia` component defined in the same file.
+## What's Missing (This Plan)
+This plan covers **Phase 1** -- the highest-impact features that move SteerSolo toward platform status. Each feature is scoped to be implementable.
 
 ---
 
-## 2. Add Social Media Comparison FAQs
+## Phase 1: Core Commerce Infrastructure Gaps
 
-**File: `src/pages/FAQ.tsx`**
+### 1. AI Product Description Generator
+**What:** When sellers add/edit products, an "AI Generate" button auto-writes a compelling product description based on the product name, category, and price.
 
-Add a new FAQ category "SteerSolo vs Social Media" (id: `social-comparison`, icon: `Target`) with these questions:
+**Why:** Removes the biggest friction point for sellers -- writing copy. Makes listings more professional, which increases buyer trust and conversion.
 
-- "Why should I use SteerSolo instead of selling on Instagram/WhatsApp?"
-- "Can I still use social media with SteerSolo?"
-- "How is SteerSolo different from a regular website builder?"
-- "What if I already have customers on WhatsApp?"
+**Implementation:**
+- Add a "Generate with AI" button to the product creation form in `src/pages/Products.tsx`
+- Create a new edge function `supabase/functions/ai-product-description/index.ts` that uses Lovable AI (gemini-2.5-flash) to generate descriptions
+- Track usage in `marketing_ai_usage` table (already exists) with `feature_type: 'product_description'`
+- Respect subscription limits (Basic: blocked, Pro: 10/month, Business: unlimited)
 
----
+### 2. AI Price Suggestions
+**What:** Alongside the AI description, suggest a competitive price range based on the product name and category.
 
-## 3. Add Structured Data to Shop Storefront Pages
+**Why:** New sellers struggle with pricing. This reduces decision paralysis and speeds up store setup.
 
-**File: `src/pages/ShopStorefront.tsx`**
+**Implementation:**
+- Add to the same `ai-product-description` edge function -- return both description and price suggestion
+- Display as a subtle hint below the price field: "Suggested range: N2,000 - N5,000"
+- Non-intrusive, purely advisory
 
-Add a `useEffect` that injects JSON-LD structured data when a shop loads. The schema will be `LocalBusiness` type including:
-- Shop name, description, URL
-- Logo image
-- Aggregate rating (from shop's `average_rating` and `total_reviews`)
-- Product catalog count
+### 3. Invoice Generation
+**What:** Auto-generate downloadable PDF-style invoices for completed orders.
 
-The script element will be cleaned up on unmount. This makes individual shop pages discoverable by Google and AI search engines.
+**Why:** Adds business legitimacy. Nigerian SMEs need invoices for record-keeping and B2B sales. This is a "stickiness" feature -- once sellers depend on it, they won't leave.
 
----
+**Implementation:**
+- Create `src/components/InvoiceTemplate.tsx` -- a styled HTML invoice component
+- Add "Download Invoice" button to the order detail view in `src/pages/Orders.tsx`
+- Use browser's `window.print()` with a print-optimized CSS layout (no backend needed)
+- Include: shop name/logo, order items, quantities, prices, totals, payment status, date, unique invoice number
 
-## 4. Enhance Social Proof with Dynamic Numbers
+### 4. Promoted Listings / Boost Store Visibility
+**What:** Allow sellers to pay to have their shop or products appear first in the `/shops` discovery page and homepage featured section.
 
-**File: `src/components/SocialProofStats.tsx`**
+**Why:** This is a critical revenue layer beyond subscriptions. Transaction-based income that scales with the platform.
 
-The stats are already dynamic (fetching from database). Enhancements:
-- Add a 5th stat: "Orders Completed" using a count of orders with `status = 'completed'`
-- Add animated count-up effect on the numbers
-- Add a subtle "Live data" indicator badge
+**Implementation:**
+- Create `promoted_listings` database table (shop_id, amount_paid, starts_at, expires_at, is_active, listing_type)
+- Add "Boost My Store" button on the seller dashboard
+- Create edge function `supabase/functions/paystack-promote/index.ts` for payment
+- Modify `src/pages/Shops.tsx` to show promoted shops first (with a subtle "Promoted" badge)
+- Admin view to manage promotions in `src/pages/admin/AdminPromotedListings.tsx`
+
+### 5. Customer Records / CRM Lite
+**What:** A simple customer list on the seller dashboard showing everyone who has ordered, with order history and total spend per customer.
+
+**Why:** Transforms SteerSolo from one-off transactions to relationship management. Sellers see repeat buyers, high-value customers, and can reach out via WhatsApp.
+
+**Implementation:**
+- Create `src/pages/Customers.tsx` -- a new page showing aggregated customer data from the `orders` table
+- Group by `customer_email` or `customer_phone` to build customer profiles
+- Show: name, phone, email, total orders, total spent, last order date, WhatsApp link
+- Add route `/customers` to `App.tsx` (entrepreneur-protected)
+- Add "Customers" quick action to the Dashboard
+
+### 6. Homepage Repositioning
+**What:** Update the hero section and homepage messaging to reflect the new positioning: "The operating system for small businesses in Africa."
+
+**Why:** The current messaging says "Sell online." The new messaging must communicate the full commerce stack to attract both users and investors.
+
+**Implementation:**
+- Update hero tagline in `src/pages/Index.tsx` from "Sell online" to "Run your business. All in one place."
+- Update the typewriter texts to reflect the full stack: "Sell products", "Track orders", "Get paid securely", "Grow with AI", "Manage customers"
+- Update the value proposition cards to include invoicing, customer management, and AI tools
+- Update the `WhySteerSolo` component callout from "Use social media for marketing. Use SteerSolo for selling." to "Use social media for marketing. Use SteerSolo for everything else."
 
 ---
 
 ## Technical Details
 
-### New imports needed in Index.tsx
-- `Target` from lucide-react (already partially imported)
-- The `WhyNotSocialMedia` component will be defined inline in the same file
-
-### JSON-LD Schema for ShopStorefront (injected via useEffect)
+### New Database Table: `promoted_listings`
 ```text
-{
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": shop.shop_name,
-  "description": shop.description,
-  "url": "https://steersolo.lovable.app/shop/{slug}",
-  "image": shop.logo_url,
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": shop.average_rating,
-    "reviewCount": shop.total_reviews
-  }
-}
+id              uuid        PRIMARY KEY DEFAULT gen_random_uuid()
+shop_id         uuid        NOT NULL REFERENCES shops(id)
+product_id      uuid        NULL (for future product-level boosts)
+listing_type    text        NOT NULL DEFAULT 'shop' (shop | product)
+amount_paid     numeric     NOT NULL
+payment_ref     text        NULL
+starts_at       timestamptz NOT NULL DEFAULT now()
+expires_at      timestamptz NOT NULL
+is_active       boolean     DEFAULT true
+created_at      timestamptz DEFAULT now()
 ```
 
-### Files to Modify
+RLS: Shop owners can insert/view their own. Admins can manage all. Public can view active ones (for display).
 
+### New Edge Function: `ai-product-description`
+- Accepts: product_name, category, price (optional)
+- Returns: { description: string, price_suggestion: { min: number, max: number } }
+- Uses Lovable AI (gemini-2.5-flash for speed and cost)
+- Enforces subscription limits via `marketing_ai_usage` table
+
+### New Route: `/customers`
+- Protected for ENTREPRENEUR role
+- Added to Dashboard quick actions and mobile menu
+
+### Files to Create
+| File | Purpose |
+|------|---------|
+| `supabase/functions/ai-product-description/index.ts` | AI description + price suggestion |
+| `src/pages/Customers.tsx` | Customer records/CRM page |
+| `src/components/InvoiceTemplate.tsx` | Printable invoice component |
+
+### Files to Modify
 | File | Change |
 |------|--------|
-| `src/pages/Index.tsx` | Replace city section with "What is SteerSolo" + comparison table |
-| `src/pages/FAQ.tsx` | Add "SteerSolo vs Social Media" category |
-| `src/pages/ShopStorefront.tsx` | Add JSON-LD structured data |
-| `src/components/SocialProofStats.tsx` | Add orders completed stat + live indicator |
+| `src/pages/Products.tsx` | Add AI generate button to product form |
+| `src/pages/Orders.tsx` | Add "Download Invoice" button |
+| `src/pages/Shops.tsx` | Sort promoted shops first |
+| `src/pages/Dashboard.tsx` | Add Customers quick action |
+| `src/pages/Index.tsx` | Repositioned hero messaging |
+| `src/components/WhySteerSolo.tsx` | Updated callout copy |
+| `src/App.tsx` | Add `/customers` route |
+
+### Migration
+- Create `promoted_listings` table with RLS policies
+
+---
+
+## What This Achieves
+
+After Phase 1, SteerSolo becomes:
+- **Store creation** (already exists)
+- **Payments** (already exists)
+- **Orders + Invoicing** (NEW)
+- **Customer records** (NEW)
+- **AI-powered listings** (NEW)
+- **Paid visibility/ads** (NEW -- new revenue stream)
+- **Analytics** (already exists)
+- **Logistics** (already exists)
+
+This moves the platform from 4/8 commerce stack pillars to 7/8 -- a meaningful leap toward "commerce operating system."
+
+---
+
+## Future Phases (Not in This Plan)
+- Phase 2: Marketplace discovery features, category browsing, seller verification badges on search
+- Phase 3: Multi-country expansion, currency support
+- Phase 4: Offline agent onboarding portal, telco partnerships
 
