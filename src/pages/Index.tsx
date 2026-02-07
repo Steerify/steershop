@@ -32,6 +32,7 @@ import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { TypewriterEffect } from "@/components/TypewriterEffect";
 import { FeaturedShopsBanner } from "@/components/FeaturedShopsBanner";
 import { SocialProofStats } from "@/components/SocialProofStats";
+import { WhySteerSolo } from "@/components/WhySteerSolo";
 import { UrgencyBanner } from "@/components/UrgencyBanner";
 import { HomepageReviews } from "@/components/HomepageReviews";
 import { HowItWorks } from "@/components/HowItWorks";
@@ -167,17 +168,8 @@ const Index = () => {
         </div>
       </section>
 
-      {/* SECTION 2: TRUST LOGOS */}
-      <section className="py-12 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <p className="text-center text-muted-foreground text-sm font-medium mb-8">TRUSTED BY BUSINESSES ACROSS NIGERIA</p>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 items-center justify-items-center">
-            {["Lagos", "Abuja", "Port Harcourt", "Ibadan", "Kano"].map((city) => (
-              <div key={city} className="text-foreground font-semibold">{city}</div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* SECTION 2: WHAT IS STEERSOLO + WHY NOT SOCIAL MEDIA */}
+      <WhySteerSolo />
 
       {/* SECTION 3: VALUE PROPOSITION */}
       <section className="py-20">

@@ -89,6 +89,39 @@ const ShopStorefront = () => {
   useEffect(() => {
     loadShopData();
   }, [slug]);
+
+  // Inject JSON-LD structured data for SEO
+  useEffect(() => {
+    if (!shop) return;
+    const schemaData = {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": shop.shop_name,
+      "description": shop.description || `Shop at ${shop.shop_name} on SteerSolo`,
+      "url": `https://steersolo.lovable.app/shop/${shop.shop_slug}`,
+      "image": shop.logo_url || undefined,
+      ...(shop.total_reviews > 0 && {
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": shop.average_rating,
+          "reviewCount": shop.total_reviews
+        }
+      }),
+      "numberOfEmployees": "1-10",
+      "address": { "@type": "PostalAddress", "addressCountry": "NG" },
+    };
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.text = JSON.stringify(schemaData);
+    script.id = "shop-jsonld";
+    document.head.appendChild(script);
+    // Update page title
+    document.title = `${shop.shop_name} | SteerSolo`;
+    return () => {
+      const el = document.getElementById("shop-jsonld");
+      if (el) el.remove();
+    };
+  }, [shop]);
   useEffect(() => {
     let filtered = products;
    

@@ -10,7 +10,8 @@ import {
   HelpCircle,
   MessageCircle,
   ArrowRight,
-  ChevronDown
+  ChevronDown,
+  Target
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -166,6 +167,29 @@ const faqCategories: FAQCategory[] = [
       {
         question: "How do I report a problem or suspicious activity?",
         answer: "Use the 'Feedback' page to report any issues, suspicious shops, or concerns. Our team reviews all reports and takes appropriate action. You can also contact us directly via WhatsApp (+234 905 994 7055) or email (steerifygroup@gmail.com)."
+      }
+    ]
+  },
+  {
+    id: "social-comparison",
+    name: "SteerSolo vs Social Media",
+    icon: Target,
+    faqs: [
+      {
+        question: "Why should I use SteerSolo instead of selling on Instagram or WhatsApp?",
+        answer: "Instagram and WhatsApp are great for reaching people, but they weren't built for selling. You can't track orders, manage stock, accept secure payments, or give customers a professional catalog. SteerSolo gives you all of that with a single shareable link — and your customers still reach you on WhatsApp."
+      },
+      {
+        question: "Can I still use social media with SteerSolo?",
+        answer: "Absolutely! In fact, that's the recommended approach. Use Instagram, WhatsApp Status, TikTok, and Twitter to market your products, then direct customers to your SteerSolo store link to browse, order, and pay. Social media for awareness, SteerSolo for sales."
+      },
+      {
+        question: "How is SteerSolo different from a regular website builder?",
+        answer: "Website builders like WordPress or Wix are general-purpose tools that require technical setup and hosting. SteerSolo is purpose-built for Nigerian small businesses: it's mobile-first, integrates WhatsApp ordering, supports Paystack and bank transfers in Naira, and you can set up a complete store in under 5 minutes — no coding needed."
+      },
+      {
+        question: "What if I already have customers on WhatsApp?",
+        answer: "Perfect — SteerSolo is designed to work alongside WhatsApp, not replace it. When a customer places an order on your SteerSolo store, you get notified on WhatsApp with full order details. Your customers keep chatting with you on WhatsApp, but now you also have order tracking, payment records, and analytics."
       }
     ]
   },
