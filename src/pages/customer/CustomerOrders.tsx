@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { OrderReviewPrompt } from "@/components/OrderReviewPrompt";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
+import { OrderTimeline } from "@/components/OrderTimeline";
 import logo from "@/assets/steersolo-logo.jpg";
 
 const CustomerOrders = () => {
@@ -156,7 +157,10 @@ const CustomerOrders = () => {
                           </div>
                         </div>
                       </CardHeader>
-                      <CardContent className="pt-4">
+                      <CardContent className="pt-4 space-y-4">
+                        {/* Order Timeline */}
+                        <OrderTimeline order={order} />
+                        
                         <div className="border border-border/50 rounded-lg divide-y divide-border/50">
                           {order.order_items?.map((item: any) => (
                             <div key={item.id} className="p-4 flex items-center gap-4 hover:bg-muted/30 transition-colors">

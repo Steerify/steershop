@@ -95,7 +95,7 @@ const Index = () => {
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               <Sparkles className="w-4 h-4 mr-2" />
-              Trusted by 5,000+ Nigerian businesses
+              Trusted by Nigerian businesses
             </div>
             
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
@@ -264,7 +264,7 @@ const Index = () => {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="font-display text-3xl font-bold mb-6">
-                Join 5,000+ businesses growing with SteerSolo
+                Growing businesses trust SteerSolo
               </h2>
               <div className="space-y-6">
                 <StatItem
@@ -273,14 +273,14 @@ const Index = () => {
                   label="Average seller rating"
                 />
                 <StatItem
-                  icon={<DollarSign className="w-5 h-5 text-green-500" />}
-                  value="₦2.8B+"
-                  label="Total sales processed"
+                  icon={<Shield className="w-5 h-5 text-green-500" />}
+                  value="Secure"
+                  label="Paystack-powered payments"
                 />
                 <StatItem
                   icon={<UsersIcon className="w-5 h-5 text-blue-500" />}
-                  value="98%"
-                  label="Customer satisfaction rate"
+                  value="24/7"
+                  label="WhatsApp order management"
                 />
               </div>
             </div>

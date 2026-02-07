@@ -215,25 +215,13 @@ const Orders = () => {
     setUpdatingOrderId(orderId);
 
     try {
-      const updateData: any = {
-        status,
-        updated_at: new Date().toISOString()
-      };
+      const extraFields: Record<string, any> = {};
 
-      if (status === "cancelled") {
-        if (user) {
-          // You might need a profile service here or assume user context has name
-          // For now, let's use a placeholder or partial update
-           updateData.cancelled_by = user.email || "Shop Owner"; // Fallback to email as name might not be in user object
-           updateData.cancelled_at = new Date().toISOString();
-        }
+      if (status === "cancelled" && user) {
+        extraFields.cancelled_by = user.email || "Shop Owner";
       }
 
-      if (status === "delivered") {
-        updateData.delivered_at = new Date().toISOString();
-      }
-
-      await orderService.updateOrderStatus(orderId, status);
+      await orderService.updateOrderStatus(orderId, status, extraFields);
 
       toast({
         title: "Success!",
@@ -258,20 +246,23 @@ const Orders = () => {
     setUpdatingOrderId(order.id);
 
     try {
-      await orderService.updateOrderStatus(order.id, "confirmed");
+      // Update order status and payment status
+      await orderService.updateOrderStatus(order.id, "confirmed", {
+        payment_status: "paid",
+        paid_at: new Date().toISOString(),
+      });
 
-
+      // Record revenue — manual payments go directly to shop owner,
+      // so record full amount (no platform fee for manual/bank transfers)
       await revenueService.createTransaction({
-          shop_id: shop.id,
-          order_id: order.id,
-          amount: parseFloat(order.total_amount),
-          currency: 'NGN',
-          payment_reference: `MANUAL_${order.id}_${Date.now()}`,
-          payment_method: 'manual',
-          transaction_type: 'order_payment',
-        });
-
-      // Error handling is now in catch block
+        shop_id: shop.id,
+        order_id: order.id,
+        amount: parseFloat(order.total_amount),
+        currency: 'NGN',
+        payment_reference: `MANUAL_${order.id}_${Date.now()}`,
+        payment_method: 'manual',
+        transaction_type: 'order_payment',
+      });
 
       toast({
         title: "Payment Recorded! 💰",
