@@ -1,134 +1,171 @@
 
-# Fix Engagement Reminders, Add Video Support, WhatsApp Community Notification, and Fix Storefront Buttons
 
-## 1. Engagement Reminders -- Verify and Harden
+# SteerSolo Platform Audit and Revenue System Renovation
 
-The engagement reminders edge function has 5 scenarios that are structurally correct. However, there are reliability issues to fix:
+## Executive Summary
 
-- **Scenario 2 (No Shop Created)**: Currently queries ALL `shop_owner` profiles older than 48h, then checks for shops one-by-one in a loop. This is inefficient and could time out with many users. Will optimize with a single query using a LEFT JOIN approach.
-- **Scenario 4 (No Sales)**: The store link in the email uses `shop.id` instead of `shop_slug`, so links won't work. Will fix to use the shop slug.
-- **General**: Add a try/catch around each scenario so one failure doesn't block all others.
+After a deep audit of the codebase, database, revenue flows, and user journeys, I've identified critical gaps that are costing SteerSolo growth, revenue, and user retention. This plan addresses what the platform is missing, doing wrong, and needs to do differently -- benchmarked against global e-commerce marketplace standards (Shopify, Jumia, Etsy) and Nigerian market realities.
 
-## 2. Video Support for Tutorials/Courses
+---
 
-The `courses` table currently has no `video_url` column. Will add one.
+## Part 1: What SteerSolo Is NOT Doing (Critical Missing Features)
 
-**Database:**
-- Add `video_url` TEXT column to `courses` table
+### 1.1 No Order Tracking for Customers
+Customers place orders and have zero visibility into what happens next. There's no real-time status updates, no push/email notifications when order status changes. This is the #1 reason for customer churn on marketplaces globally.
 
-**Admin Courses page (`AdminCourses.tsx`):**
-- Add a `video_url` text input field in the form for pasting a video URL (YouTube, direct MP4, etc.)
-- Display a video indicator in the courses table
+**Fix:** Add an order status notification system -- when a shop owner updates an order status (confirmed, processing, out_for_delivery, delivered), the customer receives an email notification automatically. Add a visual order timeline on the customer orders page.
 
-**Course display pages (`EntrepreneurCourses.tsx`, `CustomerCourses.tsx`):**
-- In the course content modal, if `video_url` exists, render a `<video>` element (for direct URLs) or an iframe (for YouTube) above the HTML content
-- For direct video files: autoplay muted, loop, max 10 seconds enforced via `timeupdate` event listener that pauses at 10s
+### 1.2 No Delivery Fee / Location Management
+The `orders` table has no `delivery_city`, `delivery_state`, `delivery_fee`, or `notes` columns despite the order service code referencing them. Orders are created with these fields but they silently fail/get ignored at the database level.
 
-## 3. Video Support for Products
+**Fix:** Add missing columns to the `orders` table via migration.
 
-The `products` table already has a `video_url` column. However, it's not used anywhere in the UI.
+### 1.3 No Wishlist / Save for Later
+Customers cannot save products they're interested in. This is standard on every marketplace worldwide and is critical for conversion.
 
-**Product creation (`Products.tsx`):**
-- Add a video upload section below the image upload using a new `VideoUpload` component
-- Accept MP4, WebM, MOV files up to 20MB
-- Client-side duration check: if video > 10 seconds, reject with an error message (browser-side compression of video is not reliably possible, so we enforce the limit instead)
-- Upload to a `product-videos` storage bucket
+**Fix:** Add a `wishlists` table and UI for customers to save and revisit products.
 
-**Product display (Storefront + ProductDetails):**
-- In `ShopStorefront.tsx` product cards: if `video_url` exists, show a looping muted video instead of the static image
-- In `ProductDetails.tsx`: show the video player prominently with controls
+### 1.4 No Automated Email on Order Placement
+When a customer places an order, neither the customer nor the shop owner gets an email confirmation. Shop owners only know about orders if they check their dashboard or receive a WhatsApp message.
 
-**Product service (`product.service.ts`):**
-- Include `video_url` in create and update operations
+**Fix:** Add an `order-notification` edge function triggered on order creation that emails both the customer (confirmation) and the shop owner (new order alert).
 
-## 4. WhatsApp Community Notification
+### 1.5 No Discount / Coupon System for Shop Owners
+Shop owners have no way to create discount codes or run promotions for their own products. This is essential for customer acquisition and retention.
 
-Add a dismissible banner/notification prompting users to join the SteerSolo WhatsApp community.
+**Fix:** Add a `shop_coupons` table and coupon application during checkout.
 
-- Create a `WhatsAppCommunityBanner` component shown at the top of authenticated pages (Dashboard, CustomerDashboard)
-- Uses `localStorage` to track dismissal so it doesn't reappear after closed 3 times
-- Shows a WhatsApp icon, message about joining the community, and a "Join Now" button linking to the WhatsApp group invite URL
-- Dismissible with an X button
+---
 
-## 5. Fix Storefront Buttons (from screenshot)
+## Part 2: What SteerSolo Is Doing WRONG
 
-The storefront header buttons ("Contact Us", "Take Tour", cart) have inconsistent styling and don't wrap well on mobile.
+### 2.1 Revenue System Has No Payouts / Settlement Mechanism
+The biggest flaw: SteerSolo collects 2.5% platform fees and records revenue, but there is **no mechanism for shop owners to actually receive their money**. The `revenue_transactions` table tracks net-to-shop amounts, but there's no:
+- Payout request system
+- Settlement schedule
+- Bank account verification for payouts
+- Payout history
+- Minimum withdrawal threshold
 
-**Fix in `ShopStorefront.tsx`:**
-- Make all three buttons consistent: same size, same variant style
-- On mobile, stack "Contact Us" and "Take Tour" below the shop info, and keep the cart button floating or in the header
-- Ensure proper `flex-wrap` and `gap` so buttons don't overlap on small screens
-- Give all buttons `min-h-[44px]` for touch targets
+Shop owners see revenue on their dashboard but cannot withdraw it. This is a fundamental trust and legal issue.
 
-## Files to Create/Modify
+### 2.2 Revenue Dashboard Shows Orders Total, Not Actual Revenue
+The Dashboard calculates `totalRevenue` by summing ALL order amounts (line 209), not just paid orders. This inflates the revenue figure with unpaid/cancelled orders.
+
+### 2.3 Manual "Mark as Paid" Records Revenue Without Platform Fee
+When shop owners use "Mark as Paid" on manual orders (Orders.tsx line 264), the revenue is recorded WITHOUT the 2.5% platform fee deduction. This means the platform loses its commission on all cash/bank transfer orders.
+
+### 2.4 Order Status Flow is Broken
+- `updateOrderStatus` only updates the `status` field but the service function doesn't pass through the extra fields like `cancelled_by`, `cancelled_at`, `delivered_at` (Orders.tsx lines 218-234 prepare updateData but then only call `orderService.updateOrderStatus(orderId, status)` which ignores all the extra fields).
+- Order status `confirmed` is overloaded -- used both for order confirmation AND as a "paid manually" indicator.
+
+### 2.5 Homepage Stats Are Hardcoded/Fake
+The homepage claims "5,000+ businesses" and "2.8B+ in sales" (Index.tsx lines 98, 278) but the actual database has **7 shops** and **4,600 in total paid revenue**. This destroys trust if customers investigate.
+
+### 2.6 WhatsApp Community Link is Placeholder
+The `WhatsAppCommunityBanner` component has `YOUR_COMMUNITY_LINK` as the URL. It's live but broken.
+
+---
+
+## Part 3: What SteerSolo Is Not Doing RIGHT
+
+### 3.1 No Refund Policy or Dispute Resolution
+There is no refund mechanism, no dispute flow, no cancellation policy for customers. Globally, this is a legal requirement and a trust signal.
+
+### 3.2 No Email Receipts
+After payment (Paystack or manual), customers receive no email receipt. This is required by Nigerian consumer protection regulations and is standard globally.
+
+### 3.3 Search is Client-Side Only
+Shop search filters locally after fetching all shops. With scale, this will break. Product search exists but shop search doesn't use server-side filtering.
+
+---
+
+## Part 4: The Revenue System Renovation
+
+This is the full overhaul of how money flows through the platform.
+
+### 4.1 New Database Tables
+
+**`shop_payouts`** - Track withdrawal requests and settlements:
+- id, shop_id, amount, status (pending/processing/completed/failed), bank_name, account_number, account_name, requested_at, processed_at, reference, notes
+
+**`shop_coupons`** - Shop-specific discount codes:
+- id, shop_id, code, discount_type (percentage/fixed), discount_value, min_order_amount, max_uses, used_count, valid_from, valid_until, is_active
+
+**`wishlists`** - Customer saved products:
+- id, user_id, product_id, created_at
+
+**Missing columns on `orders`:**
+- delivery_city, delivery_state, delivery_fee (numeric default 0), notes
+
+### 4.2 Fix Revenue Recording
+
+1. **Dashboard revenue calculation**: Only sum orders where `payment_status = 'paid'`
+2. **Manual "Mark as Paid"**: Apply 2.5% platform fee deduction same as Paystack flow
+3. **Order status update service**: Accept and persist all status-related fields (timestamps, cancelled_by)
+
+### 4.3 Add Payout System
+
+Shop owners should be able to:
+1. View their available balance (total net revenue minus already-withdrawn amounts)
+2. Request a payout (minimum threshold: 5,000 Naira)
+3. See payout history and status
+4. Have bank details verified before first payout
+
+Admin should be able to:
+1. View all pending payout requests
+2. Approve/process/reject payouts
+3. See platform earnings summary
+
+### 4.4 Fix the Order Lifecycle
+
+Standardize the order status flow:
+```text
+pending -> confirmed -> processing -> out_for_delivery -> delivered -> completed
+                                                                    \-> cancelled
+```
+
+Each transition triggers:
+- Database timestamp update
+- Customer email notification
+- Dashboard real-time update
+
+### 4.5 Add Order Notification Edge Function
+
+New `order-notifications` edge function that sends emails:
+- **To customer**: Order confirmation, status updates, delivery confirmation
+- **To shop owner**: New order alert, payment received confirmation
+
+---
+
+## Part 5: Files to Create/Modify
 
 | File | Action | Description |
 |------|--------|-------------|
-| Database migration | CREATE | Add `video_url` to `courses`, create `product-videos` bucket |
-| `supabase/functions/engagement-reminders/index.ts` | MODIFY | Add per-scenario error handling, fix shop link URL, optimize queries |
-| `src/pages/admin/AdminCourses.tsx` | MODIFY | Add video_url field to course form |
-| `src/pages/entrepreneur/EntrepreneurCourses.tsx` | MODIFY | Render video in course content modal |
-| `src/pages/customer/CustomerCourses.tsx` | MODIFY | Render video in course content modal |
-| `src/components/VideoUpload.tsx` | CREATE | New component for uploading short videos with duration validation |
-| `src/pages/Products.tsx` | MODIFY | Add video upload to product form |
-| `src/services/product.service.ts` | MODIFY | Include video_url in create/update |
-| `src/pages/ShopStorefront.tsx` | MODIFY | Show video on product cards, fix button layout |
-| `src/pages/ProductDetails.tsx` | MODIFY | Show video player on product detail page |
-| `src/components/WhatsAppCommunityBanner.tsx` | CREATE | Dismissible banner for WhatsApp community |
-| `src/pages/Dashboard.tsx` | MODIFY | Add WhatsAppCommunityBanner |
-| `src/pages/customer/CustomerDashboard.tsx` | MODIFY | Add WhatsAppCommunityBanner |
+| Database migration | CREATE | Add `shop_payouts`, `shop_coupons`, `wishlists` tables; add missing `orders` columns |
+| `supabase/functions/order-notifications/index.ts` | CREATE | Email notifications for order lifecycle events |
+| `src/services/order.service.ts` | MODIFY | Fix updateOrderStatus to accept all fields; add proper revenue calculation |
+| `src/services/revenue.service.ts` | MODIFY | Add getBalance, requestPayout, getPayoutHistory methods |
+| `src/pages/Dashboard.tsx` | MODIFY | Fix revenue calculation to only count paid orders |
+| `src/pages/Orders.tsx` | MODIFY | Fix "Mark as Paid" to include platform fee; fix status update to pass all fields |
+| `src/components/CheckoutDialog.tsx` | MODIFY | Add delivery fee field, coupon code input, trigger order notification |
+| `src/pages/Index.tsx` | MODIFY | Replace hardcoded stats with dynamic real data from database |
+| `src/components/WhatsAppCommunityBanner.tsx` | MODIFY | Fix placeholder link |
+| `src/components/OrderTimeline.tsx` | MODIFY | Add to customer order view for visual tracking |
+| `src/pages/customer/CustomerOrders.tsx` | MODIFY | Add order timeline, delivery tracking visibility |
+| `src/pages/admin/AdminPlatformEarnings.tsx` | MODIFY | Add payout management section |
 
-## Technical Details
+---
 
-### Video Duration Validation (Client-side)
-```typescript
-const validateVideoDuration = (file: File, maxSeconds: number): Promise<boolean> => {
-  return new Promise((resolve) => {
-    const video = document.createElement('video');
-    video.preload = 'metadata';
-    video.onloadedmetadata = () => {
-      URL.revokeObjectURL(video.src);
-      resolve(video.duration <= maxSeconds);
-    };
-    video.onerror = () => resolve(false);
-    video.src = URL.createObjectURL(file);
-  });
-};
-```
+## Priority Order
 
-### Course Video Rendering
-```typescript
-// If video_url exists, show above content
-{course.video_url && (
-  <video 
-    src={course.video_url} 
-    controls 
-    className="w-full rounded-lg"
-    controlsList="nodownload"
-  />
-)}
-```
+1. **Database migration** (foundation for everything)
+2. **Revenue fixes** (money accuracy is non-negotiable)
+3. **Order notification emails** (immediate customer satisfaction impact)
+4. **Payout system** (shop owner trust and retention)
+5. **Homepage dynamic stats** (credibility)
+6. **WhatsApp link fix** (quick win)
+7. **Wishlist and coupons** (growth features)
 
-### Storefront Button Fix
-```typescript
-// Wrap buttons properly with consistent styling
-<div className="flex flex-wrap items-center gap-2">
-  {shop.whatsapp_number && (
-    <Button variant="outline" size="sm" onClick={...}>
-      <MessageCircle className="w-4 h-4 mr-2" />
-      Contact Us
-    </Button>
-  )}
-  <TourButton ... />
-  {getTotalItems() > 0 && (
-    <Button size="sm" onClick={...}>
-      <ShoppingCart className="w-4 h-4 mr-2" />
-      Cart ({getTotalItems()})
-    </Button>
-  )}
-</div>
-```
-
-### Engagement Reminders Fix
-- Wrap each scenario in its own try/catch so failures are isolated
-- Fix Scenario 4 store link: change `shop/${shop.id}` to use shop slug (query `shop_slug` from shops table)
+This is a significant renovation. Given the scope, I recommend implementing it in 2-3 phases. Should I proceed with Phase 1 (items 1-3: database migration, revenue fixes, and order notifications)?
+pls consider the fact that the manual transfer is going straight to their account and not to us in anyway...the charts are just to see the flow of money into their account 
