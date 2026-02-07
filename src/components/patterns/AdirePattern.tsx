@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 interface AdirePatternProps {
-  variant?: "dots" | "circles" | "lines" | "geometric" | "dense";
+  variant?: "dots" | "circles" | "lines" | "geometric" | "dense" | "waves";
   className?: string;
   opacity?: number;
 }
@@ -42,6 +42,12 @@ export const AdirePattern = ({
         <circle cx="5" cy="5" r="1.5" fill="currentColor" opacity="0.08" />
         <circle cx="15" cy="15" r="1.5" fill="currentColor" opacity="0.06" />
         <circle cx="10" cy="10" r="1" fill="currentColor" opacity="0.04" />
+      </pattern>
+    ),
+    waves: (
+      <pattern id="adire-waves" width="60" height="20" patternUnits="userSpaceOnUse">
+        <path d="M0 10 Q15 0 30 10 Q45 20 60 10" fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.06" />
+        <path d="M0 15 Q15 5 30 15 Q45 25 60 15" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.04" />
       </pattern>
     ),
   };

@@ -30,7 +30,7 @@ const TermsOfService = () => {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <Card className="max-w-4xl mx-auto border-primary/10">
-            <CardContent className="p-6 md:p-10 prose prose-slate dark:prose-invert max-w-none">
+            <CardContent className="p-4 sm:p-6 md:p-10 prose prose-slate dark:prose-invert max-w-none leading-relaxed">
               
               <h2 className="font-heading text-2xl font-bold text-primary mb-4">1. Introduction and Acceptance of Terms</h2>
               <p className="text-muted-foreground mb-6">

@@ -65,7 +65,7 @@ const TrustFeature = () => {
             <span className="font-medium">Trust & Credibility</span>
           </div>
           
-          <h1 className="font-display text-4xl md:text-5xl font-bold mb-6">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
             Build Trust,
             <span className="text-purple-600"> Win Customers</span>
           </h1>
@@ -75,7 +75,7 @@ const TrustFeature = () => {
           </p>
           
           <Link to="/auth/signup">
-            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white">
+            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white min-h-[48px]">
               Build Your Credibility
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>

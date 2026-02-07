@@ -52,7 +52,7 @@ const GrowthFeature = () => {
             <span className="font-medium">Business Growth</span>
           </div>
           
-          <h1 className="font-display text-4xl md:text-5xl font-bold mb-6">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
             Tools to
             <span className="text-primary"> Grow Your Business</span>
           </h1>
@@ -62,7 +62,7 @@ const GrowthFeature = () => {
           </p>
           
           <Link to="/auth/signup">
-            <Button size="lg" className="bg-primary hover:bg-primary/90">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 min-h-[48px]">
               Start Growing Today
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
@@ -71,7 +71,7 @@ const GrowthFeature = () => {
 
         {/* Tools Grid */}
         <section className="container mx-auto px-4 mb-16">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {tools.map((tool) => (
               <Card key={tool.title} className="hover:shadow-lg transition-all hover:-translate-y-1">
                 <CardContent className="p-6">

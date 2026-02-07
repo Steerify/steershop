@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { X, MessageCircle } from 'lucide-react';
 
 const STORAGE_KEY = 'steersolo_wa_community_dismissed';
+const JOINED_KEY = 'steersolo_wa_community_joined';
 const MAX_DISMISSALS = 3;
 const WHATSAPP_COMMUNITY_LINK = 'https://chat.whatsapp.com/FyWvIDxOlv74vvcDv7qS8j';
 
@@ -10,6 +11,9 @@ export const WhatsAppCommunityBanner = () => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    // If user already joined, never show again
+    if (localStorage.getItem(JOINED_KEY) === 'true') return;
+    
     const count = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
     if (count < MAX_DISMISSALS) {
       setVisible(true);
@@ -19,6 +23,12 @@ export const WhatsAppCommunityBanner = () => {
   const handleDismiss = () => {
     const count = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
     localStorage.setItem(STORAGE_KEY, String(count + 1));
+    setVisible(false);
+  };
+
+  const handleJoinClick = () => {
+    localStorage.setItem(JOINED_KEY, 'true');
+    window.open(WHATSAPP_COMMUNITY_LINK, '_blank', 'noopener,noreferrer');
     setVisible(false);
   };
 
@@ -34,11 +44,14 @@ export const WhatsAppCommunityBanner = () => {
         <p className="text-xs text-white/80 mt-0.5">Get updates, tips, and connect with other SteerSolo users</p>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
-        <a href={WHATSAPP_COMMUNITY_LINK} target="_blank" rel="noopener noreferrer">
-          <Button size="sm" variant="secondary" className="bg-white text-green-700 hover:bg-white/90 font-semibold min-h-[36px]">
-            Join Now
-          </Button>
-        </a>
+        <Button
+          size="sm"
+          variant="secondary"
+          className="bg-white text-green-700 hover:bg-white/90 font-semibold min-h-[36px]"
+          onClick={handleJoinClick}
+        >
+          Join Now
+        </Button>
         <button
           onClick={handleDismiss}
           className="p-1.5 rounded-full hover:bg-white/20 transition-colors"

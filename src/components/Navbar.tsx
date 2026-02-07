@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   User, Menu, X, Gift, Moon, Sun, Star, 
-  Heart, Flag, Ghost, Egg, Sparkles 
+  Heart, Flag, Ghost, Egg, Sparkles, Store, MessageSquare
 } from "lucide-react";
 import { AdireAccent } from "./patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
@@ -202,13 +202,13 @@ const Navbar = () => {
       </div>
 
       {/* Mobile Menu - Updated typography */}
-      <div className={`md:hidden bg-card/95 backdrop-blur-xl border-b border-border overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
-        <div className="container mx-auto px-4 py-4 space-y-4 font-display">
+      <div className={`md:hidden bg-card/95 backdrop-blur-xl border-b border-border overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}>
+        <div className="container mx-auto px-4 py-4 space-y-1 font-display">
           {/* Mobile Theme Toggle */}
           {mounted && (
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="flex items-center gap-3 w-full py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium"
+              className="flex items-center gap-3 w-full min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium"
             >
               {theme === 'dark' ? (
                 <>
@@ -223,15 +223,27 @@ const Navbar = () => {
               )}
             </button>
           )}
-          <Link to="/shops" className="block py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">Explore Shops</Link>
-          <Link to="/about" className="block py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">About</Link>
-          <Link to="/feedback" className="block py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">Feedback</Link>
+          <div className="section-divider my-1" />
+          <Link to="/shops" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
+            <Store className="w-5 h-5" />
+            Explore Shops
+          </Link>
+          <div className="section-divider my-1" />
+          <Link to="/about" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
+            <Star className="w-5 h-5" />
+            About
+          </Link>
+          <div className="section-divider my-1" />
+          <Link to="/feedback" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
+            <MessageSquare className="w-5 h-5" />
+            Feedback
+          </Link>
           <div className="pt-4 border-t border-border space-y-3">
             <Link to="/auth/login">
-              <Button variant="outline" className="w-full border-primary/30 font-display">Login</Button>
+              <Button variant="outline" className="w-full min-h-[48px] border-primary/30 font-display">Login</Button>
             </Link>
             <Link to="/auth/login?tab=signup">
-              <Button className="w-full bg-gradient-to-r from-primary to-accent font-display">Get Started</Button>
+              <Button className="w-full min-h-[48px] bg-gradient-to-r from-primary to-accent font-display">Get Started</Button>
             </Link>
           </div>
         </div>
