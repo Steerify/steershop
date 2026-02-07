@@ -69,3 +69,6 @@ verify_jwt = false
 [functions.engagement-reminders]
 verify_jwt = false
 
+[functions.order-notifications]
+verify_jwt = false
+

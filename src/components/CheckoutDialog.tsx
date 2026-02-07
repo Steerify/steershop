@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { couponService } from "@/services/coupon.service";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Minus, Plus, ShoppingCart, Trash2, CreditCard, MessageCircle, Copy, Check, Upload, Camera, User, Building2 } from "lucide-react";
@@ -269,6 +270,12 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   const [proofSent, setProofSent] = useState(false);
   const [showPaymentMethodSelection, setShowPaymentMethodSelection] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'paystack' | 'bank_transfer' | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
+  const effectiveTotal = Math.max(0, totalAmount - couponDiscount);
 
   // Save form data to Redux on change
   const handleFormChange = (field: string, value: string) => {
@@ -323,8 +330,56 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       setIsInitializingPayment(false);
       setShowPaymentMethodSelection(false);
       setSelectedPaymentMethod(null);
+      setCouponCode("");
+      setCouponDiscount(0);
+      setAppliedCoupon(null);
     }
   }, [isOpen]);
+
+  // Send order notification (fire-and-forget)
+  const sendOrderNotification = async (orderId: string, eventType: string, extra?: Record<string, any>) => {
+    try {
+      await supabase.functions.invoke('order-notifications', {
+        body: {
+          orderId,
+          eventType,
+          shopName: shop.shop_name,
+          customerEmail: formData.customer_email,
+          customerName: formData.customer_name,
+          totalAmount: effectiveTotal,
+          items: cart.map(item => ({ name: item.product.name, quantity: item.quantity, price: item.product.price })),
+          ...extra,
+        },
+      });
+    } catch (e) {
+      console.error('Notification failed (non-blocking):', e);
+    }
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setIsApplyingCoupon(true);
+    try {
+      const result = await couponService.validateCoupon(couponCode, shop.id, totalAmount);
+      if (result.valid) {
+        setCouponDiscount(result.discount);
+        setAppliedCoupon(result.coupon);
+        toast({ title: "Coupon Applied! 🎉", description: `You saved ₦${result.discount.toLocaleString()}` });
+      } else {
+        toast({ title: "Invalid Coupon", description: result.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to validate coupon", variant: "destructive" });
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setCouponCode("");
+    setCouponDiscount(0);
+    setAppliedCoupon(null);
+  };
 
   const copyToClipboard = async (text: string, field: string) => {
     try {
@@ -608,7 +663,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
           customer_email: formData.customer_email,
           customer_phone: formData.customer_phone,
           delivery_address: formData.delivery_address,
-          total_amount: totalAmount,
+          total_amount: effectiveTotal,
           status: paymentChoice === "delivery_before" ? "awaiting_approval" : "pending",
           payment_status: paymentChoice === "pay_before" ? "pending" : "unpaid",
         });
@@ -634,6 +689,14 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       setCurrentOrderId(orderId);
       setOrderCreated(true);
       setShowPaymentMethodSelection(false);
+
+      // Increment coupon usage if applied
+      if (appliedCoupon) {
+        couponService.incrementUsage(appliedCoupon.id).catch(console.error);
+      }
+
+      // Send order notification (fire-and-forget)
+      sendOrderNotification(orderId, "order_placed");
 
       // Handle payment choice
       if (paymentChoice === "delivery_before") {
@@ -779,9 +842,41 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
               ))}
             </div>
             
-            <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t flex justify-between items-center">
-              <span className="text-base sm:text-lg font-semibold">Total:</span>
-              <span className="text-xl sm:text-2xl font-bold">₦{totalAmount.toLocaleString()}</span>
+            <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Subtotal:</span>
+                <span className="text-sm">₦{totalAmount.toLocaleString()}</span>
+              </div>
+              {couponDiscount > 0 && (
+                <div className="flex justify-between items-center text-green-600">
+                  <span className="text-sm">Coupon ({appliedCoupon?.code}):</span>
+                  <span className="text-sm">-₦{couponDiscount.toLocaleString()}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-base sm:text-lg font-semibold">Total:</span>
+                <span className="text-xl sm:text-2xl font-bold">₦{effectiveTotal.toLocaleString()}</span>
+              </div>
+
+              {/* Coupon Input */}
+              {!appliedCoupon ? (
+                <div className="flex gap-2">
+                  <Input
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="Coupon code"
+                    className="min-h-[40px] text-sm"
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={handleApplyCoupon} disabled={isApplyingCoupon || !couponCode.trim()} className="min-h-[40px] whitespace-nowrap">
+                    {isApplyingCoupon ? "..." : "Apply"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-2 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <span className="text-sm text-green-700 dark:text-green-400 font-medium">✓ {appliedCoupon.code}</span>
+                  <Button type="button" variant="ghost" size="sm" onClick={removeCoupon} className="text-xs h-7">Remove</Button>
+                </div>
+              )}
             </div>
           </div>
 

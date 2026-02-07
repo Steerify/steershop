@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck } from "lucide-react";
+import { WishlistButton } from "@/components/WishlistButton";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
@@ -307,6 +308,7 @@ const ProductDetails = () => {
                 <ShoppingCart className="w-5 h-5 mr-2" />
                 Add to Cart - ₦{(product.price * quantity).toLocaleString()}
               </Button>
+              <WishlistButton productId={product.id} size="sm" className="h-12 w-12" />
             </div>
 
             {/* Review Form */}

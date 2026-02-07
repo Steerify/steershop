@@ -1,4 +1,4 @@
-import { Home, ShoppingBag, Sparkles, GraduationCap, LogOut, Users, Settings } from "lucide-react";
+import { Home, ShoppingBag, Sparkles, GraduationCap, LogOut, Users, Settings, Heart } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -19,6 +19,7 @@ import logo from "@/assets/steersolo-logo.jpg";
 const items = [
   { title: "Dashboard", url: "/customer_dashboard", icon: Home },
   { title: "My Orders", url: "/customer/orders", icon: ShoppingBag },
+  { title: "Wishlist", url: "/customer/wishlist", icon: Heart },
   { title: "Courses", url: "/customer/courses", icon: GraduationCap },
   { title: "Rewards", url: "/customer/rewards", icon: Sparkles },
   { title: "Settings", url: "/settings", icon: Settings },
