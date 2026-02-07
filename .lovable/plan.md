@@ -1,65 +1,103 @@
 
-# Add Auth-Style Background Patterns to Strategic Pages
 
-## What the Auth Page Has
-The Auth page uses three decorative background elements:
-1. `AdirePattern variant="geometric"` at `opacity-5` covering the full page
-2. A top-right gradient blur circle (`w-64 h-64`, primary color)
-3. A bottom-left gradient blur circle (`w-64 h-64`, accent color)
+# Homepage + FAQ + Shop SEO + Social Proof Enhancements
 
-These create a subtle, polished feel that's currently missing from 14 pages.
-
-## Strategy: Maximum Coverage with Minimum Changes
-
-Instead of editing all 14 pages individually, the smartest approach is:
-
-1. **AdminLayout.tsx** -- Add the pattern + blur circles to the shared layout wrapper. This instantly covers **all 12 admin pages** with a single edit.
-2. **ResetPassword.tsx** -- Add the same treatment as the Auth page (same auth flow, should match visually).
-3. **auth/Callback.tsx** -- Add a subtle pattern to the loading/redirect screen for visual consistency.
-
-That's **3 file edits** covering **14 pages**.
+## Overview
+Five changes across 3 files, with 1 new component file.
 
 ---
 
-## Changes
+## 1. Replace City Names Section with "What is SteerSolo?" + "Why Not Social Media?"
 
-### 1. AdminLayout.tsx
-Add to the `<main>` wrapper area:
-- `AdirePattern variant="dots"` with `opacity-5` as a background layer (using "dots" to differentiate from auth's "geometric" -- admin feels more structured)
-- Top-right and bottom-left gradient blur circles
-- Add `relative overflow-hidden` to the main container so patterns stay contained
+**File: `src/pages/Index.tsx`**
 
-### 2. ResetPassword.tsx
-Mirror the Auth page treatment exactly:
-- Add `AdirePattern variant="geometric"` with `opacity-5`
-- Add the two gradient blur circles (top-right primary, bottom-left accent)
-- Add `relative overflow-hidden` to the outer container
-- Add `relative z-10` to the Card so it stays above the pattern
+Replace the city names section (lines 170-180) with two new sections:
 
-### 3. auth/Callback.tsx
-- Add `AdirePattern variant="geometric"` with `opacity-5` as background
-- Add the two gradient blur circles
-- Keeps visual continuity during the auth redirect flow
+**Section A: "What is SteerSolo?"** -- A concise explainer with 3 cards (Your Own Store, WhatsApp-Powered, Secure Payments) that immediately tells visitors what the platform does.
+
+**Section B: "Why not just sell on social media?"** -- A comparison table showing features side by side (Social Media vs SteerSolo). Features compared:
+- Professional product catalog (Social: No, SteerSolo: Yes)
+- Automatic order tracking (Social: No, SteerSolo: Yes)
+- Secure online payments (Social: No, SteerSolo: Yes)
+- One shareable store link (Social: No, SteerSolo: Yes)
+- Customer order history (Social: No, SteerSolo: Yes)
+- Sales analytics (Social: No, SteerSolo: Yes)
+- Free to start posting (Both: Yes)
+- Large existing audience (Social: Yes, SteerSolo: Coming soon)
+
+Ends with a callout: "Use social media for marketing. Use SteerSolo for selling."
+
+This will be implemented as a `WhyNotSocialMedia` component defined in the same file.
+
+---
+
+## 2. Add Social Media Comparison FAQs
+
+**File: `src/pages/FAQ.tsx`**
+
+Add a new FAQ category "SteerSolo vs Social Media" (id: `social-comparison`, icon: `Target`) with these questions:
+
+- "Why should I use SteerSolo instead of selling on Instagram/WhatsApp?"
+- "Can I still use social media with SteerSolo?"
+- "How is SteerSolo different from a regular website builder?"
+- "What if I already have customers on WhatsApp?"
+
+---
+
+## 3. Add Structured Data to Shop Storefront Pages
+
+**File: `src/pages/ShopStorefront.tsx`**
+
+Add a `useEffect` that injects JSON-LD structured data when a shop loads. The schema will be `LocalBusiness` type including:
+- Shop name, description, URL
+- Logo image
+- Aggregate rating (from shop's `average_rating` and `total_reviews`)
+- Product catalog count
+
+The script element will be cleaned up on unmount. This makes individual shop pages discoverable by Google and AI search engines.
+
+---
+
+## 4. Enhance Social Proof with Dynamic Numbers
+
+**File: `src/components/SocialProofStats.tsx`**
+
+The stats are already dynamic (fetching from database). Enhancements:
+- Add a 5th stat: "Orders Completed" using a count of orders with `status = 'completed'`
+- Add animated count-up effect on the numbers
+- Add a subtle "Live data" indicator badge
 
 ---
 
 ## Technical Details
 
-The pattern added to each page follows this structure:
+### New imports needed in Index.tsx
+- `Target` from lucide-react (already partially imported)
+- The `WhyNotSocialMedia` component will be defined inline in the same file
+
+### JSON-LD Schema for ShopStorefront (injected via useEffect)
 ```text
-<div className="... relative overflow-hidden">
-  <AdirePattern variant="geometric" className="absolute inset-0 opacity-5" />
-  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl" />
-  <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-accent/20 to-transparent rounded-full blur-3xl" />
-  
-  {/* existing content with relative z-10 */}
-</div>
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": shop.shop_name,
+  "description": shop.description,
+  "url": "https://steersolo.lovable.app/shop/{slug}",
+  "image": shop.logo_url,
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": shop.average_rating,
+    "reviewCount": shop.total_reviews
+  }
+}
 ```
 
 ### Files to Modify
 
-| File | Pages Covered | Pattern Variant |
-|------|--------------|-----------------|
-| `src/components/AdminLayout.tsx` | All 12 admin pages | `dots` |
-| `src/pages/ResetPassword.tsx` | Reset password | `geometric` |
-| `src/pages/auth/Callback.tsx` | Auth callback/redirect | `geometric` |
+| File | Change |
+|------|--------|
+| `src/pages/Index.tsx` | Replace city section with "What is SteerSolo" + comparison table |
+| `src/pages/FAQ.tsx` | Add "SteerSolo vs Social Media" category |
+| `src/pages/ShopStorefront.tsx` | Add JSON-LD structured data |
+| `src/components/SocialProofStats.tsx` | Add orders completed stat + live indicator |
+
