@@ -10,6 +10,7 @@ import { z } from "zod";
 import authService from "@/services/auth.service";
 import { supabase } from "@/integrations/supabase/client";
 import steersolologo from "@/assets/steersolo-logo.jpg";
+import { AdirePattern } from "@/components/patterns/AdirePattern";
 
 const passwordSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -150,8 +151,11 @@ const ResetPassword = () => {
 
   if (isChecking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10">
-        <div className="text-center space-y-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 relative overflow-hidden">
+        <AdirePattern variant="geometric" className="text-primary" opacity={0.05} />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-accent/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="text-center space-y-4 relative z-10">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
           <p className="text-muted-foreground">Verifying your reset link...</p>
         </div>
@@ -164,8 +168,11 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-xl border-2">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 flex items-center justify-center p-4 relative overflow-hidden">
+      <AdirePattern variant="geometric" className="text-primary" opacity={0.05} />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-accent/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <Card className="w-full max-w-md shadow-xl border-2 relative z-10">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg">

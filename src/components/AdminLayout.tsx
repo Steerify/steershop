@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "@/types/api";
+import { AdirePattern } from "./patterns/AdirePattern";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -104,8 +105,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               Logout
             </Button>
           </header>
-          <main className="flex-1 p-6 bg-background overflow-auto">
-            {children}
+          <main className="flex-1 p-6 bg-background overflow-auto relative">
+            <AdirePattern variant="dots" className="text-primary" opacity={0.05} />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-accent/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10">
+              {children}
+            </div>
           </main>
         </div>
       </div>

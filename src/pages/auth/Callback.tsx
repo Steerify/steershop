@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { AdirePattern } from "@/components/patterns/AdirePattern";
 
 const Callback = () => {
   const navigate = useNavigate();
@@ -108,8 +109,11 @@ const Callback = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
-      <div className="text-center space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 relative overflow-hidden">
+      <AdirePattern variant="geometric" className="text-primary" opacity={0.05} />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-accent/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="text-center space-y-6 relative z-10">
         <div className="relative">
           <div className="absolute inset-0 blur-3xl bg-gradient-to-r from-primary/20 to-accent/20 rounded-full" />
           <Loader2 className="w-16 h-16 animate-spin mx-auto mb-4 text-primary relative z-10" />
