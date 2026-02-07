@@ -796,7 +796,11 @@ export type Database = {
           customer_phone: string | null
           delivered_at: string | null
           delivery_address: string | null
+          delivery_city: string | null
+          delivery_fee: number | null
+          delivery_state: string | null
           id: string
+          notes: string | null
           out_for_delivery_at: string | null
           paid_at: string | null
           payment_reference: string | null
@@ -819,7 +823,11 @@ export type Database = {
           customer_phone?: string | null
           delivered_at?: string | null
           delivery_address?: string | null
+          delivery_city?: string | null
+          delivery_fee?: number | null
+          delivery_state?: string | null
           id?: string
+          notes?: string | null
           out_for_delivery_at?: string | null
           paid_at?: string | null
           payment_reference?: string | null
@@ -842,7 +850,11 @@ export type Database = {
           customer_phone?: string | null
           delivered_at?: string | null
           delivery_address?: string | null
+          delivery_city?: string | null
+          delivery_fee?: number | null
+          delivery_state?: string | null
           id?: string
+          notes?: string | null
           out_for_delivery_at?: string | null
           paid_at?: string | null
           payment_reference?: string | null
@@ -1693,6 +1705,99 @@ export type Database = {
           },
         ]
       }
+      shop_coupons: {
+        Row: {
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          min_order_amount: number | null
+          shop_id: string
+          updated_at: string
+          used_count: number
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          discount_type?: string
+          discount_value: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_amount?: number | null
+          shop_id: string
+          updated_at?: string
+          used_count?: number
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_amount?: number | null
+          shop_id?: string
+          updated_at?: string
+          used_count?: number
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      shop_payouts: {
+        Row: {
+          account_name: string
+          account_number: string
+          admin_notes: string | null
+          amount: number
+          bank_name: string
+          created_at: string
+          id: string
+          processed_at: string | null
+          reference: string | null
+          requested_at: string
+          shop_id: string
+          status: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          admin_notes?: string | null
+          amount: number
+          bank_name: string
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          reference?: string | null
+          requested_at?: string
+          shop_id: string
+          status?: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          admin_notes?: string | null
+          amount?: number
+          bank_name?: string
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          reference?: string | null
+          requested_at?: string
+          shop_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       shop_reactions: {
         Row: {
           created_at: string | null
@@ -2180,6 +2285,27 @@ export type Database = {
           created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
           user_id?: string
         }
         Relationships: []

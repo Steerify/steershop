@@ -113,10 +113,28 @@ const orderService = {
     return data || [];
   },
 
-  updateOrderStatus: async (id: string, status: string) => {
+  updateOrderStatus: async (id: string, status: string, extraFields?: Record<string, any>) => {
+    const updateData: Record<string, any> = { 
+      status,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Add timestamp for specific status transitions
+    if (status === 'confirmed') updateData.confirmed_at = new Date().toISOString();
+    if (status === 'processing') updateData.processing_at = new Date().toISOString();
+    if (status === 'out_for_delivery') updateData.out_for_delivery_at = new Date().toISOString();
+    if (status === 'delivered') updateData.delivered_at = new Date().toISOString();
+    if (status === 'completed') updateData.completed_at = new Date().toISOString();
+    if (status === 'cancelled') updateData.cancelled_at = new Date().toISOString();
+
+    // Merge any extra fields (cancelled_by, payment_status, etc.)
+    if (extraFields) {
+      Object.assign(updateData, extraFields);
+    }
+
     const { error } = await supabase
       .from('orders')
-      .update({ status })
+      .update(updateData)
       .eq('id', id);
 
     if (error) throw error;

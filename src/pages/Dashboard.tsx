@@ -192,22 +192,25 @@ const Dashboard = () => {
           end: new Date()
         });
 
+        // Only count paid orders for revenue accuracy
+        const paidOrders = allOrders.filter(o => (o as any).payment_status === 'paid');
+
         const dailyData = last7Days.map(day => {
           const dateStr = format(day, 'yyyy-MM-dd');
-          const dayOrders = allOrders.filter(o => 
+          const dayPaidOrders = paidOrders.filter(o => 
             o.created_at && format(new Date(o.created_at), 'yyyy-MM-dd') === dateStr
           );
           
           return {
             date: format(day, 'MMM dd'),
-            revenue: dayOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0),
-            sales: dayOrders.length
+            revenue: dayPaidOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0),
+            sales: dayPaidOrders.length
           };
         });
 
         setChartData(dailyData);
-        setTotalRevenue(allOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0));
-        setTotalSales(allOrders.filter(o => (o as any).payment_status === 'paid').length || allOrders.length);
+        setTotalRevenue(paidOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0));
+        setTotalSales(paidOrders.length);
       }
 
       // Fetch user badges
