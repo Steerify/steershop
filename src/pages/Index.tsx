@@ -259,58 +259,7 @@ const Index = () => {
       <HowItWorks audience={activeAudience} />
 
       {/* SECTION 5: SOCIAL PROOF & STATS */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="font-display text-3xl font-bold mb-6">
-                Growing businesses trust SteerSolo
-              </h2>
-              <div className="space-y-6">
-                <StatItem
-                  icon={<Star className="w-5 h-5 text-yellow-500 fill-current" />}
-                  value="4.9/5"
-                  label="Average seller rating"
-                />
-                <StatItem
-                  icon={<Shield className="w-5 h-5 text-green-500" />}
-                  value="Secure"
-                  label="Paystack-powered payments"
-                />
-                <StatItem
-                  icon={<UsersIcon className="w-5 h-5 text-blue-500" />}
-                  value="24/7"
-                  label="WhatsApp order management"
-                />
-              </div>
-            </div>
-            <div className="bg-card p-8 rounded-xl shadow-sm border">
-              <div className="flex items-start mb-6">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mr-4">
-                  <Users className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <p className="font-semibold mb-1">Chidinma's Boutique</p>
-                  <p className="text-muted-foreground text-sm">Fashion & Apparel, Lagos</p>
-                </div>
-              </div>
-              <p className="italic mb-6">
-                "SteerSolo helped us move from chaotic WhatsApp orders to a proper business. 
-                Sales increased by 300% in 3 months."
-              </p>
-              <div className="flex items-center">
-                <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
-                  <img src="https://i.pravatar.cc/40?img=1" alt="Customer" className="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold">Chidinma Okoro</p>
-                  <p className="text-xs text-muted-foreground">Business Owner</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <SocialProofStats />
 
       {/* SECTION 6: FEATURED SHOPS */}
       <FeaturedShopsBanner />
