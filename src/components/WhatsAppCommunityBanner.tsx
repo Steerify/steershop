@@ -4,7 +4,7 @@ import { X, MessageCircle } from 'lucide-react';
 
 const STORAGE_KEY = 'steersolo_wa_community_dismissed';
 const MAX_DISMISSALS = 3;
-const WHATSAPP_COMMUNITY_LINK = 'https://chat.whatsapp.com/steersolo-community'; // Update with actual community link
+const WHATSAPP_COMMUNITY_LINK = 'https://chat.whatsapp.com/FyWvIDxOlv74vvcDv7qS8j';
 
 export const WhatsAppCommunityBanner = () => {
   const [visible, setVisible] = useState(false);
