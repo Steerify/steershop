@@ -67,6 +67,7 @@ const Marketing = lazy(() => import("./pages/entrepreneur/Marketing"));
 const MarketingServices = lazy(() => import("./pages/entrepreneur/MarketingServices"));
 const PosterEditor = lazy(() => import("./pages/entrepreneur/PosterEditor"));
 const EntrepreneurCourses = lazy(() => import("./pages/entrepreneur/EntrepreneurCourses"));
+const Customers = lazy(() => import("./pages/Customers"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 
 // Feature pages
@@ -197,6 +198,11 @@ const App = () => (
             <Route path="/courses" element={
               <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
                 <EntrepreneurCourses />
+              </ProtectedRoute>
+            } />
+            <Route path="/customers" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <Customers />
               </ProtectedRoute>
             } />
             

@@ -43,10 +43,11 @@ const Index = () => {
   const [activeAudience, setActiveAudience] = useState<"sellers" | "shoppers">("sellers");
 
   const sellerMilestones = [
-    "Create store in minutes",
-    "Share one link to sell",
-    "Get WhatsApp orders",
-    "Grow your business"
+    "Sell products",
+    "Track orders",
+    "Get paid securely",
+    "Grow with AI",
+    "Manage customers"
   ];
 
   const shopperDiscoveries = [
@@ -102,7 +103,7 @@ const Index = () => {
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
               {activeAudience === "sellers" ? (
                 <>
-                  Sell online.
+                  Run your business. All in one place.
                   <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
                     <TypewriterEffect 
@@ -131,7 +132,7 @@ const Index = () => {
             
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               {activeAudience === "sellers" 
-                ? "Create a professional store in minutes. Share one link. Receive orders via WhatsApp. No tech skills needed."
+                ? "Store. Payments. Orders. Invoices. Customers. AI tools. Everything your business needs — in one platform."
                 : "Browse authentic products from Nigerian entrepreneurs. Chat directly with sellers. Enjoy personalized service."}
             </p>
             

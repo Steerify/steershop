@@ -9,7 +9,7 @@ import orderService from "@/services/order.service";
 import { supabase } from "@/integrations/supabase/client";
 import shopService from "@/services/shop.service";
 import { revenueService } from "@/services/revenue.service";
-import { ArrowLeft, Loader2, ShoppingCart, Package, Clock, CheckCircle, XCircle, MessageCircle, ThumbsUp, Truck, Banknote, CalendarCheck } from "lucide-react";
+import { ArrowLeft, Loader2, ShoppingCart, Package, Clock, CheckCircle, XCircle, MessageCircle, ThumbsUp, Truck, Banknote, CalendarCheck, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { PageWrapper } from "@/components/PageWrapper";
 import OrderApprovalDialog from "@/components/OrderApprovalDialog";
@@ -20,6 +20,7 @@ import { useTour } from "@/hooks/useTour";
 import { TourTooltip } from "@/components/tours/TourTooltip";
 import { ordersTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
+import { InvoiceTemplate } from "@/components/InvoiceTemplate";
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const [invoiceOrder, setInvoiceOrder] = useState<any>(null);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('orders');
@@ -567,6 +569,16 @@ const Orders = () => {
                           WhatsApp
                         </Button>
                       )}
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setInvoiceOrder(order)}
+                        className="border-primary/30 text-primary hover:bg-primary/10"
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Invoice
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -583,6 +595,16 @@ const Orders = () => {
           isOpen={isApprovalDialogOpen}
           onClose={handleCloseApprovalDialog}
           onStatusUpdate={() => loadOrders(shop.id)}
+        />
+      )}
+
+      {/* Invoice Dialog */}
+      {invoiceOrder && shop && (
+        <InvoiceTemplate
+          isOpen={!!invoiceOrder}
+          onClose={() => setInvoiceOrder(null)}
+          order={invoiceOrder}
+          shop={shop}
         />
       )}
 

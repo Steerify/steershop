@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle, Sparkles } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { VideoUpload } from "@/components/VideoUpload";
 import { z } from "zod";
@@ -28,6 +28,7 @@ import { handleApiError } from "@/lib/api-error-handler";
 import { useAuth } from "@/context/AuthContext";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
+import { supabase } from "@/integrations/supabase/client";
 
 // Helper function to format UUID with hyphens
 const formatUUIDWithHyphens = (uuid: string): string => {
@@ -88,6 +89,8 @@ const Products = () => {
     booking_required: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [priceSuggestion, setPriceSuggestion] = useState<{ min: number; max: number } | null>(null);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('products');
@@ -155,6 +158,41 @@ const Products = () => {
     setVideoUrl("");
     setEditingProduct(null);
     setErrors({});
+    setPriceSuggestion(null);
+  };
+
+  const handleAIGenerate = async () => {
+    if (!formData.name.trim()) {
+      toast({ title: "Enter a name first", description: "AI needs the product/service name to generate a description.", variant: "destructive" });
+      return;
+    }
+    setIsGeneratingAI(true);
+    setPriceSuggestion(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-product-description", {
+        body: { product_name: formData.name, category: formData.type, price: formData.price || undefined },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        if (data.upgrade_required) {
+          toast({ title: "Upgrade Required", description: data.error, variant: "destructive" });
+          return;
+        }
+        throw new Error(data.error);
+      }
+      if (data?.description) {
+        setFormData(prev => ({ ...prev, description: data.description }));
+      }
+      if (data?.price_suggestion) {
+        setPriceSuggestion(data.price_suggestion);
+      }
+      toast({ title: "AI Generated! ✨", description: "Description and price suggestion ready." });
+    } catch (err: any) {
+      console.error("AI generation error:", err);
+      toast({ title: "AI Error", description: err.message || "Failed to generate. Try again.", variant: "destructive" });
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   const handleOpenDialog = async (product?: Product) => {
@@ -525,12 +563,28 @@ const Products = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="description">Description</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAIGenerate}
+                  disabled={isGeneratingAI || !formData.name.trim()}
+                  className="border-primary/30 text-primary hover:bg-primary/10 text-xs"
+                >
+                  {isGeneratingAI ? (
+                    <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Generating...</>
+                  ) : (
+                    <><Sparkles className="w-3 h-3 mr-1" />Generate with AI</>
+                  )}
+                </Button>
+              </div>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe your item..."
+                placeholder="Describe your item... or click 'Generate with AI'"
                 rows={3}
               />
             </div>
@@ -547,6 +601,11 @@ const Products = () => {
                     className={errors.price ? "border-destructive" : ""}
                   />
                   {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
+                  {priceSuggestion && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      💡 Suggested: ₦{priceSuggestion.min.toLocaleString()} – ₦{priceSuggestion.max.toLocaleString()}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="inventory">
