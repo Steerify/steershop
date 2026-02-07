@@ -126,7 +126,7 @@ export const FeaturedShopsBanner = () => {
   }
 
   return (
-    <div className="w-full relative group">
+    <div className="w-full relative group container mx-auto px-4">
       {/* Section Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
