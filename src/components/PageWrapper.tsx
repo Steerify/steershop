@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 interface PageWrapperProps {
   children: React.ReactNode;
   className?: string;
-  patternVariant?: "dots" | "circles" | "lines" | "geometric" | "dense";
+  patternVariant?: "dots" | "circles" | "lines" | "geometric" | "dense" | "waves";
   patternOpacity?: number;
 }
 

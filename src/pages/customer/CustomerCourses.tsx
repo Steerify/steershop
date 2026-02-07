@@ -146,11 +146,11 @@ const CustomerCourses = () => {
         <div className="min-h-screen flex w-full">
           <CustomerSidebar />
           <div className="flex-1">
-          <header className="h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center px-6 justify-between">
+          <header className="h-14 sm:h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center px-4 sm:px-6 justify-between">
             <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-primary via-accent to-primary" />
             <div className="flex items-center">
-              <SidebarTrigger className="mr-4" />
-              <h1 className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <SidebarTrigger className="mr-2 sm:mr-4" />
+              <h1 className="text-xl sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Learning Courses
               </h1>
             </div>
@@ -161,7 +161,7 @@ const CustomerCourses = () => {
             </div>
           </header>
 
-          <main className="p-6 space-y-6">
+          <main className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Learning Progress Hero */}
             <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 overflow-hidden relative">
               <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-accent/20 to-transparent rounded-full blur-3xl" />

@@ -70,15 +70,15 @@ const CustomerWishlist = () => {
         <CustomerSidebar />
 
         <div className="flex-1 relative z-10">
-          <header className="h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center px-6">
+          <header className="h-14 sm:h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center px-4 sm:px-6">
             <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-primary via-accent to-primary" />
-            <SidebarTrigger className="mr-4" />
-            <h1 className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <SidebarTrigger className="mr-2 sm:mr-4" />
+            <h1 className="text-xl sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               My Wishlist
             </h1>
           </header>
 
-          <main className="p-6">
+          <main className="p-4 sm:p-6">
             {wishlistItems.length === 0 ? (
               <Card className="border-primary/10">
                 <CardContent className="py-16 text-center">

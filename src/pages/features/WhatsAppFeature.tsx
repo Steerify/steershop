@@ -49,7 +49,7 @@ const WhatsAppFeature = () => {
             <span className="font-medium">WhatsApp Integration</span>
           </div>
           
-          <h1 className="font-display text-4xl md:text-5xl font-bold mb-6">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
             Manage Orders on
             <span className="text-green-500"> WhatsApp</span>
           </h1>
@@ -60,7 +60,7 @@ const WhatsAppFeature = () => {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/auth/signup">
-              <Button size="lg" className="bg-green-500 hover:bg-green-600 text-white">
+              <Button size="lg" className="bg-green-500 hover:bg-green-600 text-white min-h-[48px]">
                 Start Free Trial
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
@@ -79,7 +79,7 @@ const WhatsAppFeature = () => {
             Why Nigerian Sellers Love This
           </h2>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {benefits.map((benefit) => (
               <Card key={benefit.title} className="text-center hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">

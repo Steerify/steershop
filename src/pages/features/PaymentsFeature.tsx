@@ -51,7 +51,7 @@ const PaymentsFeature = () => {
             <span className="font-medium">Secure Payments</span>
           </div>
           
-          <h1 className="font-display text-4xl md:text-5xl font-bold mb-6">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
             Get Paid
             <span className="text-blue-600"> Securely & Instantly</span>
           </h1>
@@ -67,7 +67,7 @@ const PaymentsFeature = () => {
           </div>
           
           <Link to="/auth/signup">
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white min-h-[48px]">
               Start Accepting Payments
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
@@ -76,7 +76,7 @@ const PaymentsFeature = () => {
 
         {/* Payment Methods */}
         <section className="container mx-auto px-4 mb-16">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {paymentMethods.map((method) => (
               <Card key={method.title} className="text-center hover:shadow-lg transition-all">
                 <CardContent className="p-6">

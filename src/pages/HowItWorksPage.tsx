@@ -72,7 +72,7 @@ const HowItWorksPage = () => {
       <main className="pt-24 pb-16">
         {/* Hero */}
         <section className="container mx-auto px-4 text-center mb-16">
-          <h1 className="font-display text-4xl md:text-5xl font-bold mb-6">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
             How SteerSolo Works
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -92,7 +92,7 @@ const HowItWorksPage = () => {
             </h2>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {sellerSteps.map((item) => (
               <Card key={item.step} className="relative hover:shadow-lg transition-all">
                 <CardContent className="p-6">
@@ -112,7 +112,7 @@ const HowItWorksPage = () => {
           
           <div className="text-center mt-8">
             <Link to="/auth/signup">
-              <Button size="lg" className="bg-primary hover:bg-primary/90">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 min-h-[48px]">
                 Start Selling Now
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
@@ -132,7 +132,7 @@ const HowItWorksPage = () => {
             </h2>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {buyerSteps.map((item) => (
               <Card key={item.step} className="relative hover:shadow-lg transition-all">
                 <CardContent className="p-6">
