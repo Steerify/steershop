@@ -41,10 +41,10 @@ export const WhySteerSolo = () => {
           <div className="text-center mb-12">
             <p className="text-sm font-semibold text-primary mb-2 tracking-wide uppercase">WHAT IS STEERSOLO?</p>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              Your business deserves more than a WhatsApp Status
+              Your business deserves its own home
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              SteerSolo gives Nigerian entrepreneurs a professional online store — set up in minutes, powered by WhatsApp, and built for trust.
+              SteerSolo gives Nigerian entrepreneurs a professional online store — set up in minutes, built for trust, and designed to grow with you.
             </p>
           </div>
 
