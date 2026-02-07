@@ -1,171 +1,197 @@
 
 
-# SteerSolo Platform Audit and Revenue System Renovation
+# Phase 2: Wishlist, Coupons, Order Notifications Integration, and Payout Request UI
 
-## Executive Summary
+## What's Already Done (Phase 1)
+- Database tables: `shop_payouts`, `shop_coupons`, `wishlists` + missing `orders` columns
+- Revenue calculation fixed (only paid orders)
+- Manual "Mark as Paid" records full amount (no platform fee for manual transfers)
+- Order service supports extra fields (timestamps, cancelled_by)
+- Payout service with balance/withdrawal logic
+- Admin payout management tab
+- Order timeline component on customer orders page
+- `order-notifications` edge function code exists
 
-After a deep audit of the codebase, database, revenue flows, and user journeys, I've identified critical gaps that are costing SteerSolo growth, revenue, and user retention. This plan addresses what the platform is missing, doing wrong, and needs to do differently -- benchmarked against global e-commerce marketplace standards (Shopify, Jumia, Etsy) and Nigerian market realities.
+## What's Broken / Not Connected (Phase 1 Gaps)
+1. **order-notifications edge function is NOT registered in config.toml** -- it will fail to deploy
+2. **order-notifications is never called from frontend** -- no emails are sent on order placement or status updates
+3. **Wishlist table exists but no UI** -- customers cannot save or view wishlist items
+4. **Shop coupons table exists but no UI** -- shop owners cannot create coupons, customers cannot apply them at checkout
+5. **Shop owners have no payout request page** -- only admin can see payouts, shop owners cannot request withdrawals
+6. **SocialProofStats still has hardcoded "5M+" for sales** -- needs to query actual paid order totals
 
----
+## Implementation Plan
 
-## Part 1: What SteerSolo Is NOT Doing (Critical Missing Features)
+### 1. Register and Wire Order Notifications
 
-### 1.1 No Order Tracking for Customers
-Customers place orders and have zero visibility into what happens next. There's no real-time status updates, no push/email notifications when order status changes. This is the #1 reason for customer churn on marketplaces globally.
-
-**Fix:** Add an order status notification system -- when a shop owner updates an order status (confirmed, processing, out_for_delivery, delivered), the customer receives an email notification automatically. Add a visual order timeline on the customer orders page.
-
-### 1.2 No Delivery Fee / Location Management
-The `orders` table has no `delivery_city`, `delivery_state`, `delivery_fee`, or `notes` columns despite the order service code referencing them. Orders are created with these fields but they silently fail/get ignored at the database level.
-
-**Fix:** Add missing columns to the `orders` table via migration.
-
-### 1.3 No Wishlist / Save for Later
-Customers cannot save products they're interested in. This is standard on every marketplace worldwide and is critical for conversion.
-
-**Fix:** Add a `wishlists` table and UI for customers to save and revisit products.
-
-### 1.4 No Automated Email on Order Placement
-When a customer places an order, neither the customer nor the shop owner gets an email confirmation. Shop owners only know about orders if they check their dashboard or receive a WhatsApp message.
-
-**Fix:** Add an `order-notification` edge function triggered on order creation that emails both the customer (confirmation) and the shop owner (new order alert).
-
-### 1.5 No Discount / Coupon System for Shop Owners
-Shop owners have no way to create discount codes or run promotions for their own products. This is essential for customer acquisition and retention.
-
-**Fix:** Add a `shop_coupons` table and coupon application during checkout.
-
----
-
-## Part 2: What SteerSolo Is Doing WRONG
-
-### 2.1 Revenue System Has No Payouts / Settlement Mechanism
-The biggest flaw: SteerSolo collects 2.5% platform fees and records revenue, but there is **no mechanism for shop owners to actually receive their money**. The `revenue_transactions` table tracks net-to-shop amounts, but there's no:
-- Payout request system
-- Settlement schedule
-- Bank account verification for payouts
-- Payout history
-- Minimum withdrawal threshold
-
-Shop owners see revenue on their dashboard but cannot withdraw it. This is a fundamental trust and legal issue.
-
-### 2.2 Revenue Dashboard Shows Orders Total, Not Actual Revenue
-The Dashboard calculates `totalRevenue` by summing ALL order amounts (line 209), not just paid orders. This inflates the revenue figure with unpaid/cancelled orders.
-
-### 2.3 Manual "Mark as Paid" Records Revenue Without Platform Fee
-When shop owners use "Mark as Paid" on manual orders (Orders.tsx line 264), the revenue is recorded WITHOUT the 2.5% platform fee deduction. This means the platform loses its commission on all cash/bank transfer orders.
-
-### 2.4 Order Status Flow is Broken
-- `updateOrderStatus` only updates the `status` field but the service function doesn't pass through the extra fields like `cancelled_by`, `cancelled_at`, `delivered_at` (Orders.tsx lines 218-234 prepare updateData but then only call `orderService.updateOrderStatus(orderId, status)` which ignores all the extra fields).
-- Order status `confirmed` is overloaded -- used both for order confirmation AND as a "paid manually" indicator.
-
-### 2.5 Homepage Stats Are Hardcoded/Fake
-The homepage claims "5,000+ businesses" and "2.8B+ in sales" (Index.tsx lines 98, 278) but the actual database has **7 shops** and **4,600 in total paid revenue**. This destroys trust if customers investigate.
-
-### 2.6 WhatsApp Community Link is Placeholder
-The `WhatsAppCommunityBanner` component has `YOUR_COMMUNITY_LINK` as the URL. It's live but broken.
-
----
-
-## Part 3: What SteerSolo Is Not Doing RIGHT
-
-### 3.1 No Refund Policy or Dispute Resolution
-There is no refund mechanism, no dispute flow, no cancellation policy for customers. Globally, this is a legal requirement and a trust signal.
-
-### 3.2 No Email Receipts
-After payment (Paystack or manual), customers receive no email receipt. This is required by Nigerian consumer protection regulations and is standard globally.
-
-### 3.3 Search is Client-Side Only
-Shop search filters locally after fetching all shops. With scale, this will break. Product search exists but shop search doesn't use server-side filtering.
-
----
-
-## Part 4: The Revenue System Renovation
-
-This is the full overhaul of how money flows through the platform.
-
-### 4.1 New Database Tables
-
-**`shop_payouts`** - Track withdrawal requests and settlements:
-- id, shop_id, amount, status (pending/processing/completed/failed), bank_name, account_number, account_name, requested_at, processed_at, reference, notes
-
-**`shop_coupons`** - Shop-specific discount codes:
-- id, shop_id, code, discount_type (percentage/fixed), discount_value, min_order_amount, max_uses, used_count, valid_from, valid_until, is_active
-
-**`wishlists`** - Customer saved products:
-- id, user_id, product_id, created_at
-
-**Missing columns on `orders`:**
-- delivery_city, delivery_state, delivery_fee (numeric default 0), notes
-
-### 4.2 Fix Revenue Recording
-
-1. **Dashboard revenue calculation**: Only sum orders where `payment_status = 'paid'`
-2. **Manual "Mark as Paid"**: Apply 2.5% platform fee deduction same as Paystack flow
-3. **Order status update service**: Accept and persist all status-related fields (timestamps, cancelled_by)
-
-### 4.3 Add Payout System
-
-Shop owners should be able to:
-1. View their available balance (total net revenue minus already-withdrawn amounts)
-2. Request a payout (minimum threshold: 5,000 Naira)
-3. See payout history and status
-4. Have bank details verified before first payout
-
-Admin should be able to:
-1. View all pending payout requests
-2. Approve/process/reject payouts
-3. See platform earnings summary
-
-### 4.4 Fix the Order Lifecycle
-
-Standardize the order status flow:
-```text
-pending -> confirmed -> processing -> out_for_delivery -> delivered -> completed
-                                                                    \-> cancelled
+**config.toml** -- Add the missing function registration:
+```toml
+[functions.order-notifications]
+verify_jwt = false
 ```
 
-Each transition triggers:
-- Database timestamp update
-- Customer email notification
-- Dashboard real-time update
+**CheckoutDialog.tsx** -- After order creation, call the edge function to send confirmation email to the customer. Add a fire-and-forget call after `createOrderAndProcessPayment` succeeds.
 
-### 4.5 Add Order Notification Edge Function
+**Orders.tsx** -- After `updateOrderStatus` succeeds, call the edge function with `eventType: "status_update"` so customers get notified of every status change.
 
-New `order-notifications` edge function that sends emails:
-- **To customer**: Order confirmation, status updates, delivery confirmation
-- **To shop owner**: New order alert, payment received confirmation
+### 2. Wishlist UI
 
----
+**New file: `src/services/wishlist.service.ts`**
+- `addToWishlist(productId)` -- insert into wishlists table
+- `removeFromWishlist(productId)` -- delete from wishlists table
+- `getWishlist()` -- fetch user's wishlist with product details
+- `isInWishlist(productId)` -- check if product is wishlisted
 
-## Part 5: Files to Create/Modify
+**New file: `src/components/WishlistButton.tsx`**
+- Heart icon button (outline = not saved, filled = saved)
+- Toggle on click with optimistic UI
+- Requires auth -- show toast prompting login if not authenticated
+
+**ShopStorefront.tsx** -- Add WishlistButton to each product card (next to the Eye/view button)
+
+**ProductDetails.tsx** -- Add WishlistButton on the product detail page
+
+**New file: `src/pages/customer/CustomerWishlist.tsx`**
+- List all wishlisted products with images, prices, and "Add to Cart" / "Remove" actions
+- Link to the product's shop storefront page
+
+**App.tsx** -- Add route `/customer/wishlist` protected for CUSTOMER role
+
+**CustomerSidebar.tsx** -- Add "Wishlist" nav item with Heart icon
+
+### 3. Shop Coupon System
+
+**New file: `src/services/coupon.service.ts`**
+- `createCoupon(data)` -- shop owner creates a discount code
+- `getCoupons(shopId)` -- list all coupons for a shop
+- `toggleCoupon(couponId, active)` -- enable/disable
+- `deleteCoupon(couponId)` -- remove
+- `validateCoupon(code, shopId)` -- check if coupon is valid, not expired, within usage limits
+
+**Products.tsx or new Coupons section on Dashboard** -- Add a "Coupons" tab or section where shop owners can:
+- Create coupons with: code, discount type (percentage/fixed), value, min order, max uses, valid dates
+- View list of existing coupons with usage stats
+- Toggle active/inactive
+
+**CheckoutDialog.tsx** -- Add a coupon code input field:
+- Text input + "Apply" button below the cart total
+- On apply: call `validateCoupon`, if valid show discount line and adjusted total
+- Pass coupon_id to the order record
+
+### 4. Shop Owner Payout Request Page
+
+**Dashboard.tsx** -- Add a "Payouts" card/section showing:
+- Available balance (from payoutService.getBalance)
+- "Request Payout" button (disabled if below 5,000 Naira minimum)
+- Recent payout history
+
+**New file: `src/components/PayoutRequestDialog.tsx`**
+- Dialog/modal for requesting a payout
+- Pre-fills bank details from shop's existing bank info
+- Amount input (max = available balance, min = 5,000)
+- Confirmation step before submitting
+- Calls `payoutService.requestPayout`
+
+### 5. Fix SocialProofStats
+
+**SocialProofStats.tsx** -- Replace the hardcoded "5M+" sales figure:
+- Query `orders` table for `SUM(total_amount)` where `payment_status = 'paid'`
+- Format with appropriate suffix (K+, M+, B+)
+- Also make avgRating dynamic by querying aggregate from `reviews` table
+
+### 6. Test Phase 1 + Phase 2
+
+After implementation, verify with browser testing:
+- Place a test order and confirm the notification email function is invoked
+- Update order status and verify status_update notification fires
+- Add/remove products from wishlist as a customer
+- Create a coupon as a shop owner, apply it during checkout
+- Request a payout as a shop owner and verify it appears in admin panel
+- Confirm dashboard revenue only shows paid orders
+- Check homepage stats pull real data
+
+## Files to Create/Modify
 
 | File | Action | Description |
 |------|--------|-------------|
-| Database migration | CREATE | Add `shop_payouts`, `shop_coupons`, `wishlists` tables; add missing `orders` columns |
-| `supabase/functions/order-notifications/index.ts` | CREATE | Email notifications for order lifecycle events |
-| `src/services/order.service.ts` | MODIFY | Fix updateOrderStatus to accept all fields; add proper revenue calculation |
-| `src/services/revenue.service.ts` | MODIFY | Add getBalance, requestPayout, getPayoutHistory methods |
-| `src/pages/Dashboard.tsx` | MODIFY | Fix revenue calculation to only count paid orders |
-| `src/pages/Orders.tsx` | MODIFY | Fix "Mark as Paid" to include platform fee; fix status update to pass all fields |
-| `src/components/CheckoutDialog.tsx` | MODIFY | Add delivery fee field, coupon code input, trigger order notification |
-| `src/pages/Index.tsx` | MODIFY | Replace hardcoded stats with dynamic real data from database |
-| `src/components/WhatsAppCommunityBanner.tsx` | MODIFY | Fix placeholder link |
-| `src/components/OrderTimeline.tsx` | MODIFY | Add to customer order view for visual tracking |
-| `src/pages/customer/CustomerOrders.tsx` | MODIFY | Add order timeline, delivery tracking visibility |
-| `src/pages/admin/AdminPlatformEarnings.tsx` | MODIFY | Add payout management section |
+| `supabase/config.toml` | MODIFY | Add `[functions.order-notifications]` registration |
+| `src/components/CheckoutDialog.tsx` | MODIFY | Call order-notifications after order creation |
+| `src/pages/Orders.tsx` | MODIFY | Call order-notifications after status update |
+| `src/services/wishlist.service.ts` | CREATE | CRUD operations for wishlists table |
+| `src/components/WishlistButton.tsx` | CREATE | Heart toggle button for products |
+| `src/pages/customer/CustomerWishlist.tsx` | CREATE | Wishlist page for customers |
+| `src/pages/ShopStorefront.tsx` | MODIFY | Add WishlistButton to product cards |
+| `src/pages/ProductDetails.tsx` | MODIFY | Add WishlistButton to product detail |
+| `src/components/CustomerSidebar.tsx` | MODIFY | Add Wishlist nav link |
+| `src/App.tsx` | MODIFY | Add /customer/wishlist route |
+| `src/services/coupon.service.ts` | CREATE | Coupon CRUD + validation |
+| `src/components/CouponManager.tsx` | CREATE | Shop owner UI for managing coupons |
+| `src/components/CheckoutDialog.tsx` | MODIFY | Add coupon input + discount calculation |
+| `src/components/PayoutRequestDialog.tsx` | CREATE | Payout request modal for shop owners |
+| `src/pages/Dashboard.tsx` | MODIFY | Add payout balance card + request button |
+| `src/components/SocialProofStats.tsx` | MODIFY | Query real sales + rating data |
 
----
+## Technical Details
 
-## Priority Order
+### Order Notification Call Pattern
+```typescript
+// Fire-and-forget after order creation
+const sendOrderNotification = async (orderId: string, eventType: string, extra?: Record<string, any>) => {
+  try {
+    await supabase.functions.invoke('order-notifications', {
+      body: { orderId, eventType, ...extra }
+    });
+  } catch (e) {
+    console.error('Notification failed (non-blocking):', e);
+  }
+};
+```
 
-1. **Database migration** (foundation for everything)
-2. **Revenue fixes** (money accuracy is non-negotiable)
-3. **Order notification emails** (immediate customer satisfaction impact)
-4. **Payout system** (shop owner trust and retention)
-5. **Homepage dynamic stats** (credibility)
-6. **WhatsApp link fix** (quick win)
-7. **Wishlist and coupons** (growth features)
+### Wishlist Service
+```typescript
+export const wishlistService = {
+  toggle: async (productId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Login required');
+    
+    const { data: existing } = await supabase
+      .from('wishlists')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('product_id', productId)
+      .maybeSingle();
+    
+    if (existing) {
+      await supabase.from('wishlists').delete().eq('id', existing.id);
+      return false; // removed
+    } else {
+      await supabase.from('wishlists').insert({ user_id: user.id, product_id: productId });
+      return true; // added
+    }
+  },
+};
+```
 
-This is a significant renovation. Given the scope, I recommend implementing it in 2-3 phases. Should I proceed with Phase 1 (items 1-3: database migration, revenue fixes, and order notifications)?
-pls consider the fact that the manual transfer is going straight to their account and not to us in anyway...the charts are just to see the flow of money into their account 
+### Coupon Validation
+```typescript
+validateCoupon: async (code: string, shopId: string, orderTotal: number) => {
+  const { data, error } = await supabase
+    .from('shop_coupons')
+    .select('*')
+    .eq('shop_id', shopId)
+    .eq('code', code.toUpperCase())
+    .eq('is_active', true)
+    .single();
+  
+  if (!data) return { valid: false, error: 'Invalid coupon code' };
+  if (data.valid_until && new Date(data.valid_until) < new Date()) return { valid: false, error: 'Coupon expired' };
+  if (data.max_uses && data.used_count >= data.max_uses) return { valid: false, error: 'Coupon fully redeemed' };
+  if (data.min_order_amount && orderTotal < data.min_order_amount) return { valid: false, error: `Minimum order ₦${data.min_order_amount}` };
+  
+  const discount = data.discount_type === 'percentage' 
+    ? Math.round(orderTotal * data.discount_value / 100) 
+    : data.discount_value;
+  
+  return { valid: true, discount, coupon: data };
+};
+```
