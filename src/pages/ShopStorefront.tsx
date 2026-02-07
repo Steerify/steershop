@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X, Briefcase, Clock, Calendar, BadgeCheck, MessageCircle } from "lucide-react";
+import { WishlistButton } from "@/components/WishlistButton";
 import { openWhatsAppContact } from "@/utils/whatsapp";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -684,6 +685,7 @@ const ShopStorefront = () => {
                           <Eye className="w-4 h-4" />
                         </Button>
                       </Link>
+                      <WishlistButton productId={product.id} />
                     </div>
                     <ProductReviewForm
                       productId={product.id}

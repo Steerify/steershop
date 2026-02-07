@@ -30,33 +30,44 @@ export const SocialProofStats = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Fetch actual counts from database
-        const [shopsResult, productsResult] = await Promise.all([
+        const [shopsResult, productsResult, salesResult, ratingsResult] = await Promise.all([
           supabase.from("shops").select("id", { count: "exact" }).eq("is_active", true),
           supabase.from("products").select("id", { count: "exact" }).eq("is_available", true),
+          supabase.from("orders").select("total_amount").eq("payment_status", "paid"),
+          supabase.from("reviews").select("rating"),
         ]);
 
         const shopCount = shopsResult.count || 0;
         const productCount = productsResult.count || 0;
+        const totalSales = (salesResult.data || []).reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+        const ratings = ratingsResult.data || [];
+        const avgRating = ratings.length > 0
+          ? (ratings.reduce((sum, r) => sum + Number(r.rating), 0) / ratings.length).toFixed(1)
+          : "4.8";
 
-        // Format numbers with appropriate suffixes
         const formatNumber = (num: number): string => {
+          if (num >= 1_000_000_000) return `₦${(num / 1_000_000_000).toFixed(1)}B+`;
+          if (num >= 1_000_000) return `₦${(num / 1_000_000).toFixed(1)}M+`;
+          if (num >= 1_000) return `₦${(num / 1_000).toFixed(1)}K+`;
+          if (num > 0) return `₦${num.toLocaleString()}+`;
+          return "Growing";
+        };
+
+        const formatCount = (num: number): string => {
           if (num >= 10000) return `${Math.floor(num / 1000)}K+`;
           if (num >= 1000) return `${(num / 1000).toFixed(1)}K+`;
-          if (num >= 100) return `${Math.floor(num / 100) * 100}+`;
           if (num > 0) return `${num}+`;
-          return "500+"; // Fallback minimum
+          return "Growing";
         };
 
         setStats({
-          activeStores: shopCount > 0 ? formatNumber(shopCount) : "500+",
-          productsListed: productCount > 0 ? formatNumber(productCount) : "10,000+",
-          salesProcessed: "₦5M+", // This would need transaction data
-          avgRating: "4.8★", // Aggregate from reviews
+          activeStores: shopCount > 0 ? formatCount(shopCount) : "Growing",
+          productsListed: productCount > 0 ? formatCount(productCount) : "Growing",
+          salesProcessed: totalSales > 0 ? formatNumber(totalSales) : "Growing",
+          avgRating: `${avgRating}★`,
         });
       } catch (error) {
         console.error("Error fetching stats:", error);
-        // Keep default values on error
       } finally {
         setIsLoading(false);
       }

@@ -37,6 +37,7 @@ const CustomerDashboard = lazy(() => import("./pages/customer/CustomerDashboard"
 const CustomerOrders = lazy(() => import("./pages/customer/CustomerOrders"));
 const CustomerCourses = lazy(() => import("./pages/customer/CustomerCourses"));
 const CustomerRewards = lazy(() => import("./pages/customer/CustomerRewards"));
+const CustomerWishlist = lazy(() => import("./pages/customer/CustomerWishlist"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminShops = lazy(() => import("./pages/admin/AdminShops"));
 const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
@@ -218,6 +219,11 @@ const App = () => (
             <Route path="/customer/rewards" element={
               <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
                 <CustomerRewards />
+              </ProtectedRoute>
+            } />
+            <Route path="/customer/wishlist" element={
+              <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
+                <CustomerWishlist />
               </ProtectedRoute>
             } />
             

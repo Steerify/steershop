@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import orderService from "@/services/order.service";
+import { supabase } from "@/integrations/supabase/client";
 import shopService from "@/services/shop.service";
 import { revenueService } from "@/services/revenue.service";
 import { ArrowLeft, Loader2, ShoppingCart, Package, Clock, CheckCircle, XCircle, MessageCircle, ThumbsUp, Truck, Banknote, CalendarCheck } from "lucide-react";
@@ -222,6 +223,22 @@ const Orders = () => {
       }
 
       await orderService.updateOrderStatus(orderId, status, extraFields);
+
+      // Send notification to customer (fire-and-forget)
+      const order = orders.find(o => o.id === orderId);
+      if (order?.customer_email) {
+        supabase.functions.invoke('order-notifications', {
+          body: {
+            orderId,
+            eventType: 'status_update',
+            shopName: shop?.shop_name,
+            customerEmail: order.customer_email,
+            customerName: order.customer_name,
+            totalAmount: order.total_amount,
+            statusUpdate: status,
+          },
+        }).catch(e => console.error('Notification failed:', e));
+      }
 
       toast({
         title: "Success!",

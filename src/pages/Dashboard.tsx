@@ -9,13 +9,14 @@ import orderService from "@/services/order.service";
 import offerService from "@/services/offer.service";
 import productService from "@/services/product.service";
 import subscriptionService from "@/services/subscription.service";
+import { payoutService } from "@/services/payout.service";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, Store, Package, ShoppingCart, TrendingUp, Users, 
   Settings, User, PlusCircle, Calendar, Share2, Palette,
   Sparkles, Megaphone, Target, ArrowRight, LogOut, Clock,
   CheckCircle, AlertCircle, DollarSign, CalendarCheck, Menu, X,
-  BarChart3, HelpCircle, Bell, Search, Grid, Shield, BookOpen
+  BarChart3, HelpCircle, Bell, Search, Grid, Shield, BookOpen, Banknote, Wallet
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
@@ -42,6 +43,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { PayoutRequestDialog } from "@/components/PayoutRequestDialog";
+import { CouponManager } from "@/components/CouponManager";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -65,6 +68,8 @@ const Dashboard = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [pendingOrders, setPendingOrders] = useState(0);
   const [activeTab, setActiveTab] = useState("overview");
+  const [payoutBalance, setPayoutBalance] = useState({ totalRevenue: 0, totalWithdrawn: 0, totalPending: 0, availableBalance: 0 });
+  const [isPayoutDialogOpen, setIsPayoutDialogOpen] = useState(false);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
@@ -211,6 +216,14 @@ const Dashboard = () => {
         setChartData(dailyData);
         setTotalRevenue(paidOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0));
         setTotalSales(paidOrders.length);
+
+        // Fetch payout balance
+        try {
+          const balance = await payoutService.getBalance(primaryShop.id);
+          setPayoutBalance(balance);
+        } catch (e) {
+          console.error('Payout balance error:', e);
+        }
       }
 
       // Fetch user badges
@@ -672,6 +685,37 @@ const Dashboard = () => {
             {/* Profile Completion */}
             <ProfileCompletionChecklist shop={shopFullData} productsCount={productsCount} />
 
+            {/* Payout Balance Card */}
+            {shopData && (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Wallet className="w-4 h-4" />
+                      Paystack Earnings
+                    </h3>
+                  </div>
+                  <p className="text-2xl font-bold text-primary mb-1">₦{payoutBalance.availableBalance.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground mb-4">Available for withdrawal</p>
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    disabled={payoutBalance.availableBalance < 5000}
+                    onClick={() => setIsPayoutDialogOpen(true)}
+                  >
+                    <Banknote className="w-4 h-4 mr-2" />
+                    Request Payout
+                  </Button>
+                  {payoutBalance.totalPending > 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">₦{payoutBalance.totalPending.toLocaleString()} pending</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Coupons Manager */}
+            {shopData && <CouponManager shopId={shopData.id} />}
+
             {/* Active Offers */}
             {activeOffer && (
               <Card className="bg-gradient-to-br from-primary to-accent text-white">
@@ -777,6 +821,18 @@ const Dashboard = () => {
         }}
       />
       <FeatureDiscoveryPopup featureId="stroke_my_shop" />
+      {shopData && (
+        <PayoutRequestDialog
+          isOpen={isPayoutDialogOpen}
+          onClose={() => setIsPayoutDialogOpen(false)}
+          shopId={shopData.id}
+          availableBalance={payoutBalance.availableBalance}
+          bankName={shopFullData?.bank_name}
+          accountNumber={shopFullData?.bank_account_number}
+          accountName={shopFullData?.bank_account_name}
+          onSuccess={() => loadData()}
+        />
+      )}
     </PageWrapper>
   );
 };
