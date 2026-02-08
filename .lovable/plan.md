@@ -1,172 +1,82 @@
 
+# Fix Multiple Issues: Empty Profile, Entrepreneur Routing, Shop Location, Homepage Link
 
-# SteerSolo: From Tool to Commerce Infrastructure -- Phase 1 Implementation
+## Issues Identified
 
-## Vision
-Transform SteerSolo from "online store builder" to "the operating system for small businesses in Nigeria" by adding the missing infrastructure layers that increase stickiness, revenue per user, and investor appeal.
+### 1. Empty Profile After Manual Email Signup (Screenshot: "Welcome back, !")
+The `handle_new_user()` trigger reads `full_name` from `raw_user_meta_data`, but during simplified signup (Auth.tsx), firstName and lastName are sent as empty strings. The trigger stores `null` for `full_name`, causing "Welcome back, !" on the dashboard.
 
-## What Already Exists (No Work Needed)
-- Store creation and management
-- Payments (Paystack integration with webhook verification)
-- Orders and order tracking
-- WhatsApp order flow
-- Logistics (Terminal Africa + Sendbox + manual fallback)
-- AI features (Stroke My Shop, Know This Shop, Marketing AI Assistant)
-- Subscription billing (Basic/Pro/Business tiers)
-- Analytics dashboard with revenue charts
-- Courses and rewards system
-- KYC verification
-- Referral system
-- Payout management
-- Product reviews and ratings
-- Featured shops and top seller banners
-- SEO structured data
+**Fix:** Update Dashboard.tsx to gracefully handle missing names -- show email-based greeting instead. Also update the `handle_new_user` trigger to fall back to email prefix when full_name is empty.
 
-## What's Missing (This Plan)
-This plan covers **Phase 1** -- the highest-impact features that move SteerSolo toward platform status. Each feature is scoped to be implementable.
+### 2. Entrepreneur Role Redirects to Customer Dashboard Instead of Onboarding Survey
+The issue is in Auth.tsx line 110: after login, `getDashboardPath(user.role)` returns `/dashboard` for entrepreneurs. But this goes straight to the Dashboard -- it never checks whether onboarding was completed. New entrepreneurs who haven't created a shop should be redirected to `/onboarding` first.
 
----
+**Fix:** In Auth.tsx, after login, check `user.onboardingCompleted`. If the user is an ENTREPRENEUR and `onboardingCompleted === false`, redirect to `/onboarding` instead of `/dashboard`. The `onboardingCompleted` field already exists in AuthContext (checks if user has a shop).
 
-## Phase 1: Core Commerce Infrastructure Gaps
+### 3. Add Logistics Question to Onboarding Survey
+**Fix:** Add a 5th required question to the onboarding survey in Onboarding.tsx asking about delivery/logistics preferences: "Do you handle delivery yourself?", "I use a logistics company", "I need delivery help", "Pickup only".
 
-### 1. AI Product Description Generator
-**What:** When sellers add/edit products, an "AI Generate" button auto-writes a compelling product description based on the product name, category, and price.
+### 4. Shop Location (Country + State) and Location Search
+The `shops` table currently has no `country` or `state` columns.
 
-**Why:** Removes the biggest friction point for sellers -- writing copy. Makes listings more professional, which increases buyer trust and conversion.
+**Fix:**
+- Add `country` and `state` columns to the shops table via migration (default country to 'Nigeria')
+- Update MyStore.tsx shop creation/edit form to include state selection
+- Update Shops.tsx search to filter by location
+- Update shop.service.ts to support location fields
 
-**Implementation:**
-- Add a "Generate with AI" button to the product creation form in `src/pages/Products.tsx`
-- Create a new edge function `supabase/functions/ai-product-description/index.ts` that uses Lovable AI (gemini-2.5-flash) to generate descriptions
-- Track usage in `marketing_ai_usage` table (already exists) with `feature_type: 'product_description'`
-- Respect subscription limits (Basic: blocked, Pro: 10/month, Business: unlimited)
+### 5. Direct Link to "For Shoppers" Section
+The homepage already has a sellers/shoppers toggle (Tabs component). Adding `id="for-shoppers"` to the section and providing a link `/#for-shoppers` in the Navbar will allow direct navigation.
 
-### 2. AI Price Suggestions
-**What:** Alongside the AI description, suggest a competitive price range based on the product name and category.
-
-**Why:** New sellers struggle with pricing. This reduces decision paralysis and speeds up store setup.
-
-**Implementation:**
-- Add to the same `ai-product-description` edge function -- return both description and price suggestion
-- Display as a subtle hint below the price field: "Suggested range: N2,000 - N5,000"
-- Non-intrusive, purely advisory
-
-### 3. Invoice Generation
-**What:** Auto-generate downloadable PDF-style invoices for completed orders.
-
-**Why:** Adds business legitimacy. Nigerian SMEs need invoices for record-keeping and B2B sales. This is a "stickiness" feature -- once sellers depend on it, they won't leave.
-
-**Implementation:**
-- Create `src/components/InvoiceTemplate.tsx` -- a styled HTML invoice component
-- Add "Download Invoice" button to the order detail view in `src/pages/Orders.tsx`
-- Use browser's `window.print()` with a print-optimized CSS layout (no backend needed)
-- Include: shop name/logo, order items, quantities, prices, totals, payment status, date, unique invoice number
-
-### 4. Promoted Listings / Boost Store Visibility
-**What:** Allow sellers to pay to have their shop or products appear first in the `/shops` discovery page and homepage featured section.
-
-**Why:** This is a critical revenue layer beyond subscriptions. Transaction-based income that scales with the platform.
-
-**Implementation:**
-- Create `promoted_listings` database table (shop_id, amount_paid, starts_at, expires_at, is_active, listing_type)
-- Add "Boost My Store" button on the seller dashboard
-- Create edge function `supabase/functions/paystack-promote/index.ts` for payment
-- Modify `src/pages/Shops.tsx` to show promoted shops first (with a subtle "Promoted" badge)
-- Admin view to manage promotions in `src/pages/admin/AdminPromotedListings.tsx`
-
-### 5. Customer Records / CRM Lite
-**What:** A simple customer list on the seller dashboard showing everyone who has ordered, with order history and total spend per customer.
-
-**Why:** Transforms SteerSolo from one-off transactions to relationship management. Sellers see repeat buyers, high-value customers, and can reach out via WhatsApp.
-
-**Implementation:**
-- Create `src/pages/Customers.tsx` -- a new page showing aggregated customer data from the `orders` table
-- Group by `customer_email` or `customer_phone` to build customer profiles
-- Show: name, phone, email, total orders, total spent, last order date, WhatsApp link
-- Add route `/customers` to `App.tsx` (entrepreneur-protected)
-- Add "Customers" quick action to the Dashboard
-
-### 6. Homepage Repositioning
-**What:** Update the hero section and homepage messaging to reflect the new positioning: "The operating system for small businesses in Africa."
-
-**Why:** The current messaging says "Sell online." The new messaging must communicate the full commerce stack to attract both users and investors.
-
-**Implementation:**
-- Update hero tagline in `src/pages/Index.tsx` from "Sell online" to "Run your business. All in one place."
-- Update the typewriter texts to reflect the full stack: "Sell products", "Track orders", "Get paid securely", "Grow with AI", "Manage customers"
-- Update the value proposition cards to include invoicing, customer management, and AI tools
-- Update the `WhySteerSolo` component callout from "Use social media for marketing. Use SteerSolo for selling." to "Use social media for marketing. Use SteerSolo for everything else."
+**Fix:** Add an `id` to the shoppers section, add a "For Shoppers" link in the Navbar, and auto-switch the tab when the hash is present.
 
 ---
 
 ## Technical Details
 
-### New Database Table: `promoted_listings`
+### Database Migration
 ```text
-id              uuid        PRIMARY KEY DEFAULT gen_random_uuid()
-shop_id         uuid        NOT NULL REFERENCES shops(id)
-product_id      uuid        NULL (for future product-level boosts)
-listing_type    text        NOT NULL DEFAULT 'shop' (shop | product)
-amount_paid     numeric     NOT NULL
-payment_ref     text        NULL
-starts_at       timestamptz NOT NULL DEFAULT now()
-expires_at      timestamptz NOT NULL
-is_active       boolean     DEFAULT true
-created_at      timestamptz DEFAULT now()
+ALTER TABLE public.shops ADD COLUMN country text DEFAULT 'Nigeria';
+ALTER TABLE public.shops ADD COLUMN state text;
 ```
 
-RLS: Shop owners can insert/view their own. Admins can manage all. Public can view active ones (for display).
+### File Changes
 
-### New Edge Function: `ai-product-description`
-- Accepts: product_name, category, price (optional)
-- Returns: { description: string, price_suggestion: { min: number, max: number } }
-- Uses Lovable AI (gemini-2.5-flash for speed and cost)
-- Enforces subscription limits via `marketing_ai_usage` table
-
-### New Route: `/customers`
-- Protected for ENTREPRENEUR role
-- Added to Dashboard quick actions and mobile menu
-
-### Files to Create
-| File | Purpose |
-|------|---------|
-| `supabase/functions/ai-product-description/index.ts` | AI description + price suggestion |
-| `src/pages/Customers.tsx` | Customer records/CRM page |
-| `src/components/InvoiceTemplate.tsx` | Printable invoice component |
-
-### Files to Modify
 | File | Change |
 |------|--------|
-| `src/pages/Products.tsx` | Add AI generate button to product form |
-| `src/pages/Orders.tsx` | Add "Download Invoice" button |
-| `src/pages/Shops.tsx` | Sort promoted shops first |
-| `src/pages/Dashboard.tsx` | Add Customers quick action |
-| `src/pages/Index.tsx` | Repositioned hero messaging |
-| `src/components/WhySteerSolo.tsx` | Updated callout copy |
-| `src/App.tsx` | Add `/customers` route |
+| `src/pages/Auth.tsx` | Redirect new entrepreneurs to `/onboarding` instead of `/dashboard` |
+| `src/pages/Dashboard.tsx` | Handle empty name gracefully (show email prefix) |
+| `src/pages/entrepreneur/Onboarding.tsx` | Add logistics/delivery question as Q5 |
+| `src/services/onboarding.service.ts` | Add `deliveryMethod` field to OnboardingData |
+| `src/pages/MyStore.tsx` | Add state dropdown to shop creation/edit form |
+| `src/services/shop.service.ts` | Include country/state in shop creation |
+| `src/pages/Shops.tsx` | Add location filter dropdown + search by state |
+| `src/pages/Index.tsx` | Add `id="for-shoppers"` and hash-based auto-switch |
+| `src/components/Navbar.tsx` | Add "For Shoppers" nav link pointing to `/#for-shoppers` |
+| Database migration | Add `country` and `state` columns to shops table |
+| `supabase/functions/handle_new_user` | Update trigger to fallback to email prefix for full_name |
 
-### Migration
-- Create `promoted_listings` table with RLS policies
+### Onboarding New Question
+```text
+Q5: "How do you handle delivery?"
+Options: 
+- "I deliver myself"
+- "I use a logistics company (e.g., GIG, DHL)"
+- "I need help with delivery"  
+- "Customers pick up from me"
+```
 
----
+Also update the `onboarding_responses` table to add a `delivery_method` column.
 
-## What This Achieves
+### Location Search in Shops Page
+Add a state dropdown filter alongside the existing search bar. Nigerian states will be a hardcoded list (36 states + FCT). When selected, shops are filtered by state.
 
-After Phase 1, SteerSolo becomes:
-- **Store creation** (already exists)
-- **Payments** (already exists)
-- **Orders + Invoicing** (NEW)
-- **Customer records** (NEW)
-- **AI-powered listings** (NEW)
-- **Paid visibility/ads** (NEW -- new revenue stream)
-- **Analytics** (already exists)
-- **Logistics** (already exists)
+### Entrepreneur Redirect Fix (Auth.tsx)
+```text
+// In getDashboardPath or the redirect logic:
+if (user.role === UserRole.ENTREPRENEUR && !user.onboardingCompleted) {
+  return "/onboarding";
+}
+```
 
-This moves the platform from 4/8 commerce stack pillars to 7/8 -- a meaningful leap toward "commerce operating system."
-
----
-
-## Future Phases (Not in This Plan)
-- Phase 2: Marketplace discovery features, category browsing, seller verification badges on search
-- Phase 3: Multi-country expansion, currency support
-- Phase 4: Offline agent onboarding portal, telco partnerships
-
+This also needs to be applied in the ProtectedRoute for `/dashboard` -- if user hasn't completed onboarding, redirect to `/onboarding`.
