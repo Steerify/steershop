@@ -2,7 +2,8 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Store, Package, Sparkles, BadgeCheck } from "lucide-react";
+import { Search, Store, Package, Sparkles, BadgeCheck, MapPin } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { TopSellerBanner } from "@/components/TopSellerBanner";
@@ -15,6 +16,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
 import { Shop, Product } from "@/types/api";
+import { NIGERIAN_STATES } from "@/utils/nigerianStates";
 
 // Types updated from @/types/api
 
@@ -68,6 +70,7 @@ const Shops = () => {
   const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
   const [searchType, setSearchType] = useState<'all' | 'shops' | 'products'>('all');
   const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
+  const [selectedState, setSelectedState] = useState<string>("");
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -100,14 +103,17 @@ const Shops = () => {
 
       let filteredShops = response.data || [];
       
-      // If there's a search term, filter locally for additional search criteria
-      if (searchTerm.trim()) {
-        filteredShops = filteredShops.filter(shop => 
-          shop.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          shop.shop_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          shop.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          shop.shop_slug?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+      // If there's a search term or state filter, filter locally
+      if (searchTerm.trim() || selectedState) {
+        filteredShops = filteredShops.filter(shop => {
+          const matchesSearch = !searchTerm.trim() || 
+            shop.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            shop.shop_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            shop.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            shop.shop_slug?.toLowerCase().includes(searchTerm.toLowerCase());
+          const matchesState = !selectedState || (shop as any).state === selectedState;
+          return matchesSearch && matchesState;
+        });
       }
 
       // Check if we have more pages
@@ -132,7 +138,7 @@ const Shops = () => {
       setIsLoading(false);
       setLoadingMoreShops(false);
     }
-  }, [showVerifiedOnly]);
+  }, [showVerifiedOnly, selectedState]);
 
   // Search when query changes
   useEffect(() => {
@@ -226,7 +232,7 @@ const Shops = () => {
       console.log('Initial load of shops');
       fetchShops(1, true);
     }
-  }, [debouncedSearchQuery, fetchShops, showVerifiedOnly]);
+  }, [debouncedSearchQuery, fetchShops, showVerifiedOnly, selectedState]);
 
   // Search when query changes
   useEffect(() => {
@@ -589,17 +595,34 @@ const Shops = () => {
               )}
             </div>
 
-            {/* Verified Filter */}
-            <div className="mt-4 inline-flex items-center gap-2 bg-green-50 dark:bg-green-950/20 px-3 py-2 rounded-lg border border-green-200 dark:border-green-900/30">
-              <Switch 
-                id="verified-filter"
-                checked={showVerifiedOnly} 
-                onCheckedChange={setShowVerifiedOnly}
-              />
-              <Label htmlFor="verified-filter" className="flex items-center gap-1.5 cursor-pointer">
-                <BadgeCheck className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-green-700 dark:text-green-400">Verified Only</span>
-              </Label>
+            {/* Filters Row */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              {/* State Filter */}
+              <Select value={selectedState} onValueChange={(val) => setSelectedState(val === 'all' ? '' : val)}>
+                <SelectTrigger className="w-[180px] bg-card/80 backdrop-blur-sm border-border/50">
+                  <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="All States" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All States</SelectItem>
+                  {NIGERIAN_STATES.map(state => (
+                    <SelectItem key={state} value={state}>{state}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Verified Filter */}
+              <div className="inline-flex items-center gap-2 bg-green-50 dark:bg-green-950/20 px-3 py-2 rounded-lg border border-green-200 dark:border-green-900/30">
+                <Switch 
+                  id="verified-filter"
+                  checked={showVerifiedOnly} 
+                  onCheckedChange={setShowVerifiedOnly}
+                />
+                <Label htmlFor="verified-filter" className="flex items-center gap-1.5 cursor-pointer">
+                  <BadgeCheck className="w-4 h-4 text-green-600" />
+                  <span className="text-sm font-medium text-green-700 dark:text-green-400">Verified Only</span>
+                </Label>
+              </div>
             </div>
           </div>
         </div>

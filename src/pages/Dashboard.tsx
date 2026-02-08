@@ -515,7 +515,7 @@ const Dashboard = () => {
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold mb-1">Welcome back, {profile?.full_name}!</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold mb-1">Welcome back, {profile?.full_name || user?.email?.split('@')[0] || 'there'}!</h1>
               <p className="text-muted-foreground">Here's what's happening with your store today.</p>
             </div>
             

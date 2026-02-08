@@ -5,6 +5,7 @@ export interface OnboardingData {
   customerSource: string;
   biggestStruggle: string;
   paymentMethod: string;
+  deliveryMethod: string;
   perfectFeature?: string;
 }
 
@@ -23,6 +24,7 @@ const onboardingService = {
       customer_source: data.customerSource,
       biggest_struggle: data.biggestStruggle,
       payment_method: data.paymentMethod,
+      delivery_method: data.deliveryMethod,
       perfect_feature: data.perfectFeature || null,
     });
     
@@ -46,6 +48,7 @@ const onboardingService = {
       customer_source: data.customerSource,
       biggest_struggle: data.biggestStruggle,
       payment_method: data.paymentMethod,
+      delivery_method: data.deliveryMethod,
       perfect_feature: data.perfectFeature || null,
     });
     if (error) throw error;
