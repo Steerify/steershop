@@ -11,6 +11,7 @@ export interface CreateShopRequest {
   address?: string;
   city?: string;
   state?: string;
+  country?: string;
 }
 
 const shopService = {
@@ -24,11 +25,13 @@ const shopService = {
     const { data: shop, error } = await supabase
       .from('shops')
       .insert({
-        owner_id: user.id,
+      owner_id: user.id,
         shop_name: data.name,
         shop_slug: data.slug,
         description: data.description,
         whatsapp_number: data.whatsapp,
+        country: data.country || 'Nigeria',
+        state: data.state || null,
         is_active: true,
       })
       .select()
@@ -215,6 +218,8 @@ const shopService = {
     if (data.bank_account_number) updateData.bank_account_number = data.bank_account_number;
     if (data.paystack_public_key) updateData.paystack_public_key = data.paystack_public_key;
     if (data.is_active !== undefined) updateData.is_active = data.is_active;
+    if ((data as any).country) updateData.country = (data as any).country;
+    if ((data as any).state !== undefined) updateData.state = (data as any).state;
 
     const { data: shop, error } = await supabase
       .from('shops')
