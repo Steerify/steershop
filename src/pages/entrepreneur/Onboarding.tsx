@@ -162,7 +162,7 @@ const Onboarding = () => {
       .single();
       
     if (profile?.role === 'shop_owner') {
-      navigate("/dashboard");
+      navigate("/my-store");
     } else {
       navigate("/customer_dashboard");
     }
@@ -183,7 +183,7 @@ const Onboarding = () => {
       
       toast({
         title: "Setup Complete!",
-        description: "Welcome to SteerSolo.",
+        description: "Welcome to SteerSolo. Let's create your store!",
       });
 
       // Redirect based on actual database role
@@ -194,7 +194,7 @@ const Onboarding = () => {
         .single();
         
       if (profile?.role === 'shop_owner') {
-        navigate("/dashboard");
+        navigate("/my-store");
       } else {
         navigate("/customer_dashboard");
       }
