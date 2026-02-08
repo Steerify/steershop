@@ -59,11 +59,6 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/select-role" replace />;
   }
 
-  // Redirect entrepreneurs who haven't completed onboarding (except if already on /onboarding)
-  if (user.role === UserRole.ENTREPRENEUR && !user.onboardingCompleted && location.pathname !== '/onboarding') {
-    return <Navigate to="/onboarding" replace />;
-  }
-
   // Check role-based access if roles are specified
   if (allowedRoles && allowedRoles.length > 0) {
     const userRole = user.role;

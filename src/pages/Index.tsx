@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -42,20 +42,6 @@ import { DynamicPricing } from "@/components/DynamicPricing";
 const Index = () => {
   const [activeAudience, setActiveAudience] = useState<"sellers" | "shoppers">("sellers");
 
-  // Handle hash-based tab switching for direct links
-  useEffect(() => {
-    const handleHash = () => {
-      if (window.location.hash === '#for-shoppers') {
-        setActiveAudience('shoppers');
-        const el = document.getElementById('audience-toggle');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      }
-    };
-    handleHash();
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
-  }, []);
-
   const sellerMilestones = [
     "Sell products",
     "Track orders",
@@ -82,7 +68,7 @@ const Index = () => {
         
         <div className="container mx-auto px-4 relative z-10">
           {/* Simplified Audience Toggle */}
-          <div id="audience-toggle" className="max-w-sm mx-auto mb-10">
+          <div className="max-w-sm mx-auto mb-10">
             <Tabs 
               value={activeAudience} 
               onValueChange={(value) => setActiveAudience(value as "sellers" | "shoppers")}

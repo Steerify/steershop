@@ -706,7 +706,6 @@ export type Database = {
           business_type: string | null
           created_at: string | null
           customer_source: string | null
-          delivery_method: string | null
           id: string
           payment_method: string | null
           perfect_feature: string | null
@@ -717,7 +716,6 @@ export type Database = {
           business_type?: string | null
           created_at?: string | null
           customer_source?: string | null
-          delivery_method?: string | null
           id?: string
           payment_method?: string | null
           perfect_feature?: string | null
@@ -728,7 +726,6 @@ export type Database = {
           business_type?: string | null
           created_at?: string | null
           customer_source?: string | null
-          delivery_method?: string | null
           id?: string
           payment_method?: string | null
           perfect_feature?: string | null
@@ -1909,7 +1906,6 @@ export type Database = {
           bank_account_number: string | null
           bank_name: string | null
           banner_url: string | null
-          country: string | null
           created_at: string
           description: string | null
           font_style: string | null
@@ -1927,7 +1923,6 @@ export type Database = {
           settlement_bank_code: string | null
           shop_name: string
           shop_slug: string
-          state: string | null
           theme_mode: string | null
           total_reviews: number | null
           updated_at: string
@@ -1940,7 +1935,6 @@ export type Database = {
           bank_account_number?: string | null
           bank_name?: string | null
           banner_url?: string | null
-          country?: string | null
           created_at?: string
           description?: string | null
           font_style?: string | null
@@ -1958,7 +1952,6 @@ export type Database = {
           settlement_bank_code?: string | null
           shop_name: string
           shop_slug: string
-          state?: string | null
           theme_mode?: string | null
           total_reviews?: number | null
           updated_at?: string
@@ -1971,7 +1964,6 @@ export type Database = {
           bank_account_number?: string | null
           bank_name?: string | null
           banner_url?: string | null
-          country?: string | null
           created_at?: string
           description?: string | null
           font_style?: string | null
@@ -1989,7 +1981,6 @@ export type Database = {
           settlement_bank_code?: string | null
           shop_name?: string
           shop_slug?: string
-          state?: string | null
           theme_mode?: string | null
           total_reviews?: number | null
           updated_at?: string

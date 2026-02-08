@@ -118,7 +118,6 @@ const Onboarding = () => {
     customerSource: "",
     biggestStruggle: "",
     paymentMethod: "",
-    deliveryMethod: "",
     perfectFeature: "",
   });
 
@@ -131,10 +130,9 @@ const Onboarding = () => {
     formData.customerSource,
     formData.biggestStruggle,
     formData.paymentMethod,
-    formData.deliveryMethod,
   ].filter(Boolean).length;
 
-  const isFormValid = () => answeredCount === 5;
+  const isFormValid = () => answeredCount === 4;
 
   const handleSkipPhone = () => {
     toast({
@@ -162,7 +160,7 @@ const Onboarding = () => {
       .single();
       
     if (profile?.role === 'shop_owner') {
-      navigate("/my-store");
+      navigate("/dashboard");
     } else {
       navigate("/customer_dashboard");
     }
@@ -183,7 +181,7 @@ const Onboarding = () => {
       
       toast({
         title: "Setup Complete!",
-        description: "Welcome to SteerSolo. Let's create your store!",
+        description: "Welcome to SteerSolo.",
       });
 
       // Redirect based on actual database role
@@ -194,7 +192,7 @@ const Onboarding = () => {
         .single();
         
       if (profile?.role === 'shop_owner') {
-        navigate("/my-store");
+        navigate("/dashboard");
       } else {
         navigate("/customer_dashboard");
       }
@@ -259,7 +257,7 @@ const Onboarding = () => {
                 )}
               />
               {/* Questions steps */}
-              {[1, 2, 3, 4, 5].map((stepNum) => (
+              {[1, 2, 3, 4].map((stepNum) => (
                 <div 
                   key={stepNum}
                   className={cn(
@@ -280,7 +278,7 @@ const Onboarding = () => {
               ) : (
                 <>
                   <Shield className="w-4 h-4 text-green-500" />
-                  Step 2: {answeredCount} of 5 questions answered
+                  Step 2: {answeredCount} of 4 questions answered
                 </>
               )}
             </p>
@@ -382,28 +380,9 @@ const Onboarding = () => {
                 </RadioGroup>
               </div>
 
-               {/* Question 5 - Delivery */}
+              {/* Question 5 */}
               <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-400">
-                <Label className="text-base font-semibold">5. How do you handle delivery?</Label>
-                <RadioGroup value={formData.deliveryMethod} onValueChange={(val) => handleChange("deliveryMethod", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {["I deliver myself", "I use a logistics company (e.g., GIG, DHL)", "I need help with delivery", "Customers pick up from me"].map((opt) => (
-                    <div key={opt}>
-                      <RadioGroupItem value={opt} id={`q5-${opt}`} className="peer sr-only" />
-                      <Label
-                         htmlFor={`q5-${opt}`}
-                         className="flex items-center justify-between p-3 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
-                      >
-                        {opt}
-                        {formData.deliveryMethod === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
-
-              {/* Question 6 - Optional */}
-              <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500">
-                <Label className="text-base font-semibold">6. What would make SteerSolo perfect for your business? <span className="text-muted-foreground font-normal text-sm">(Optional)</span></Label>
+                <Label className="text-base font-semibold">5. What would make SteerSolo perfect for your business? <span className="text-muted-foreground font-normal text-sm">(Optional)</span></Label>
                 <Textarea 
                   placeholder="Tell us what you'd love to see" 
                   value={formData.perfectFeature}

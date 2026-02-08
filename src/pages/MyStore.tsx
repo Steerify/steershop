@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
 import { useAuth } from "@/context/AuthContext";
@@ -34,7 +33,6 @@ import {
   HelpCircle,
   ChevronDown,
   AlertTriangle,
-  MapPin,
 } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { QRCodeSVG } from "qrcode.react";
@@ -54,7 +52,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 import { ShopStatusBadge, getShopStatusFromProfile } from "@/components/ShopStatusBadge";
-import { NIGERIAN_STATES } from "@/utils/nigerianStates";
 
 
 const shopSchema = z
@@ -137,7 +134,6 @@ const MyStore = () => {
     paystack_public_key: "",
     logo_url: "",
     banner_url: "",
-    state: "",
   });
 
   // Slug availability state
@@ -240,7 +236,6 @@ const MyStore = () => {
         paystack_public_key: data.paystack_public_key || "",
         logo_url: data.logo_url || "",
         banner_url: data.banner_url || "",
-        state: data.state || "",
       });
 
       // Also format the shop ID when fetching products
@@ -298,10 +293,6 @@ const MyStore = () => {
         bank_account_number: formData.bank_account_number,
         paystack_public_key: formData.paystack_public_key,
       };
-
-      // Add location fields
-      (shopData as any).country = 'Nigeria';
-      (shopData as any).state = formData.state || null;
 
       let currentShopId: string;
 
@@ -449,25 +440,6 @@ const MyStore = () => {
                 {errors.whatsapp_number && (
                   <p className="text-red-500 text-sm">{errors.whatsapp_number}</p>
                 )}
-              </div>
-
-              {/* State / Location */}
-              <div className="space-y-2">
-                <Label htmlFor="state">
-                  <MapPin className="w-4 h-4 inline mr-1" />
-                  State / Location
-                </Label>
-                <Select value={formData.state} onValueChange={(val) => setFormData({ ...formData, state: val })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NIGERIAN_STATES.map(state => (
-                      <SelectItem key={state} value={state}>{state}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">Helps customers find your shop by location</p>
               </div>
 
               {/* LOGO */}

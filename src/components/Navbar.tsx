@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   User, Menu, X, Gift, Moon, Sun, Star, 
-  Heart, Flag, Ghost, Egg, Sparkles, Store, MessageSquare, ShoppingBag
+  Heart, Flag, Ghost, Egg, Sparkles, Store, MessageSquare
 } from "lucide-react";
 import { AdireAccent } from "./patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
@@ -157,18 +157,6 @@ const Navbar = () => {
                   Explore {label}
                 </Link>
               ))}
-              <Link 
-                to="/#for-shoppers" 
-                onClick={(e) => {
-                  if (window.location.pathname === '/') {
-                    e.preventDefault();
-                    window.location.hash = 'for-shoppers';
-                  }
-                }}
-                className="text-foreground/80 hover:text-primary transition-colors font-medium relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full"
-              >
-                For Shoppers
-              </Link>
             </div>
 
             {/* Desktop Auth - Updated typography */}
@@ -249,21 +237,6 @@ const Navbar = () => {
           <Link to="/feedback" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
             <MessageSquare className="w-5 h-5" />
             Feedback
-          </Link>
-          <div className="section-divider my-1" />
-          <Link 
-            to="/#for-shoppers" 
-            onClick={(e) => {
-              setIsMobileMenuOpen(false);
-              if (window.location.pathname === '/') {
-                e.preventDefault();
-                window.location.hash = 'for-shoppers';
-              }
-            }}
-            className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium"
-          >
-            <ShoppingBag className="w-5 h-5" />
-            For Shoppers
           </Link>
           <div className="pt-4 border-t border-border space-y-3">
             <Link to="/auth/login">
