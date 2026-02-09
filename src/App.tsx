@@ -69,6 +69,7 @@ const PosterEditor = lazy(() => import("./pages/entrepreneur/PosterEditor"));
 const EntrepreneurCourses = lazy(() => import("./pages/entrepreneur/EntrepreneurCourses"));
 const Customers = lazy(() => import("./pages/Customers"));
 const FAQ = lazy(() => import("./pages/FAQ"));
+const Ambassador = lazy(() => import("./pages/Ambassador"));
 
 // Feature pages
 const WhatsAppFeature = lazy(() => import("./pages/features/WhatsAppFeature"));
@@ -133,6 +134,11 @@ const App = () => (
             <Route path="/features/payments" element={<PaymentsFeature />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />
             <Route path="/security" element={<SecurityPage />} />
+            <Route path="/ambassador" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR, UserRole.CUSTOMER]}>
+                <Ambassador />
+              </ProtectedRoute>
+            } />
             
             {/* Shop owner routes */}
             <Route path="/onboarding" element={

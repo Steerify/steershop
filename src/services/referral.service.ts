@@ -191,5 +191,81 @@ export const referralService = {
     }
 
     return { success: true, data: (data || []) as Referral[], message: 'All referrals fetched' };
+  },
+
+  // Get user's ambassador tiers
+  getAmbassadorTiers: async (): Promise<{ success: boolean; data: any[]; message: string }> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, data: [], message: 'Not authenticated' };
+
+    const { data, error } = await supabase
+      .from('ambassador_tiers')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (error) return { success: false, data: [], message: error.message };
+    return { success: true, data: data || [], message: 'Tiers fetched' };
+  },
+
+  // Claim ambassador rewards via edge function
+  claimAmbassadorReward: async (): Promise<{ success: boolean; message: string; rewards_granted: string[]; tiers_reached: string[] }> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return { success: false, message: 'Not authenticated', rewards_granted: [], tiers_reached: [] };
+
+    const response = await supabase.functions.invoke('check-ambassador-tier', {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    });
+
+    if (response.error) {
+      return { success: false, message: response.error.message, rewards_granted: [], tiers_reached: [] };
+    }
+
+    return {
+      success: true,
+      message: 'Rewards checked',
+      rewards_granted: response.data?.rewards_granted || [],
+      tiers_reached: response.data?.tiers_reached || []
+    };
+  },
+
+  // Get leaderboard (top referrers)
+  getLeaderboard: async (): Promise<{ success: boolean; data: any[]; message: string }> => {
+    const { data, error } = await supabase
+      .from('referrals')
+      .select('referrer_id')
+      .eq('status', 'rewarded');
+
+    if (error) return { success: false, data: [], message: error.message };
+
+    // Count per referrer
+    const counts: Record<string, number> = {};
+    (data || []).forEach((r: any) => {
+      counts[r.referrer_id] = (counts[r.referrer_id] || 0) + 1;
+    });
+
+    // Sort and get top 5
+    const sorted = Object.entries(counts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5);
+
+    // Get anonymized names
+    const leaderboard = await Promise.all(
+      sorted.map(async ([userId, count], index) => {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, email')
+          .eq('id', userId)
+          .single();
+
+        const name = profile?.full_name || profile?.email?.split('@')[0] || 'User';
+        const anonymized = name.length > 2
+          ? name[0] + '***' + name[name.length - 1]
+          : '***';
+
+        return { rank: index + 1, name: anonymized, count };
+      })
+    );
+
+    return { success: true, data: leaderboard, message: 'Leaderboard fetched' };
   }
 };
