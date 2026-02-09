@@ -16,7 +16,7 @@ import {
   Settings, User, PlusCircle, Calendar, Share2, Palette,
   Sparkles, Megaphone, Target, ArrowRight, LogOut, Clock,
   CheckCircle, AlertCircle, DollarSign, CalendarCheck, Menu, X,
-  BarChart3, HelpCircle, Bell, Search, Grid, Shield, BookOpen, Banknote, Wallet
+  BarChart3, HelpCircle, Bell, Search, Grid, Shield, BookOpen, Banknote, Wallet, Crown
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
@@ -375,6 +375,14 @@ const Dashboard = () => {
       path: "/customers",
       color: "from-emerald-500/20 to-emerald-500/10",
       textColor: "text-emerald-500"
+    },
+    { 
+      icon: Crown, 
+      label: "Ambassador", 
+      description: "Refer & earn rewards",
+      path: "/ambassador",
+      color: "from-yellow-500/20 to-yellow-500/10",
+      textColor: "text-yellow-600"
     },
   ];
 

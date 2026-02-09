@@ -75,3 +75,6 @@ verify_jwt = false
 [functions.ai-product-description]
 verify_jwt = false
 
+[functions.check-ambassador-tier]
+verify_jwt = false
+
