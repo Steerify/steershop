@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle2, SkipForward, Phone, Shield } from "lucide-react";
+import { Loader2, CheckCircle2, SkipForward, Phone, Shield, Sparkles, Truck } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
 import { cn } from "@/lib/utils";
@@ -118,8 +119,12 @@ const Onboarding = () => {
     customerSource: "",
     biggestStruggle: "",
     paymentMethod: "",
+    deliveryMethod: "",
     perfectFeature: "",
+    setupPreference: "",
   });
+
+  const [wantsDoneForYou, setWantsDoneForYou] = useState(false);
 
   const handleChange = (field: keyof OnboardingData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -130,9 +135,10 @@ const Onboarding = () => {
     formData.customerSource,
     formData.biggestStruggle,
     formData.paymentMethod,
+    formData.deliveryMethod,
   ].filter(Boolean).length;
 
-  const isFormValid = () => answeredCount === 4;
+  const isFormValid = () => answeredCount === 5;
 
   const handleSkipPhone = () => {
     toast({
@@ -171,13 +177,18 @@ const Onboarding = () => {
 
     setIsLoading(true);
     try {
+      const submitData = {
+        ...formData,
+        setupPreference: wantsDoneForYou ? 'done_for_you' : 'self_setup',
+      };
+
       // Store to Supabase for analytics
       if (user?.id) {
-        await onboardingService.storeOnboardingResponse(user.id, formData);
+        await onboardingService.storeOnboardingResponse(user.id, submitData);
       }
 
       // Also submit to Render backend
-      await onboardingService.submitOnboarding(formData);
+      await onboardingService.submitOnboarding(submitData);
       
       toast({
         title: "Setup Complete!",
@@ -256,18 +267,18 @@ const Onboarding = () => {
                   currentStep !== "phone" ? "bg-primary w-10" : "bg-primary/50 w-10 animate-pulse"
                 )}
               />
-              {/* Questions steps */}
-              {[1, 2, 3, 4].map((stepNum) => (
-                <div 
-                  key={stepNum}
-                  className={cn(
-                    "h-2 rounded-full transition-all duration-300",
-                    currentStep === "questions" && answeredCount >= stepNum 
-                      ? "bg-primary w-10" 
-                      : "bg-muted w-8"
-                  )}
-                />
-              ))}
+               {/* Questions steps */}
+               {[1, 2, 3, 4, 5].map((stepNum) => (
+                 <div 
+                   key={stepNum}
+                   className={cn(
+                     "h-2 rounded-full transition-all duration-300",
+                     currentStep === "questions" && answeredCount >= stepNum 
+                       ? "bg-primary w-10" 
+                       : "bg-muted w-8"
+                   )}
+                 />
+               ))}
             </div>
             <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
               {currentStep === "phone" ? (
@@ -278,7 +289,7 @@ const Onboarding = () => {
               ) : (
                 <>
                   <Shield className="w-4 h-4 text-green-500" />
-                  Step 2: {answeredCount} of 4 questions answered
+                  Step 2: {answeredCount} of 5 questions answered
                 </>
               )}
             </p>
@@ -310,6 +321,31 @@ const Onboarding = () => {
             </div>
           ) : (
             <div className="space-y-8">
+              {/* Done-For-You Toggle Card */}
+              <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-5 space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Sparkles className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">Want us to set up your store for you?</p>
+                      <p className="text-sm text-muted-foreground">Our team handles everything — you just sell</p>
+                    </div>
+                  </div>
+                  <Switch 
+                    checked={wantsDoneForYou} 
+                    onCheckedChange={setWantsDoneForYou} 
+                  />
+                </div>
+                {wantsDoneForYou && (
+                  <div className="bg-background rounded-lg p-3 text-sm text-muted-foreground border">
+                    <CheckCircle2 className="w-4 h-4 text-primary inline mr-2" />
+                    Our team will set up your store within 24 hours. We'll WhatsApp you when it's ready.
+                  </div>
+                )}
+              </div>
+
               {/* Question 1 */}
               <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <Label className="text-base font-semibold">1. What best describes your business?</Label>
@@ -380,9 +416,31 @@ const Onboarding = () => {
                 </RadioGroup>
               </div>
 
-              {/* Question 5 */}
+              {/* Question 5 - Delivery */}
               <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-400">
-                <Label className="text-base font-semibold">5. What would make SteerSolo perfect for your business? <span className="text-muted-foreground font-normal text-sm">(Optional)</span></Label>
+                <Label className="text-base font-semibold flex items-center gap-2">
+                  <Truck className="w-4 h-4" />
+                  5. How do you handle delivery?
+                </Label>
+                <RadioGroup value={formData.deliveryMethod || ""} onValueChange={(val) => handleChange("deliveryMethod", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {["I deliver myself", "I use a logistics company", "I need help with delivery", "Customers pick up from me"].map((opt) => (
+                    <div key={opt}>
+                      <RadioGroupItem value={opt} id={`q5-${opt}`} className="peer sr-only" />
+                      <Label
+                         htmlFor={`q5-${opt}`}
+                         className="flex items-center justify-between p-3 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
+                      >
+                        {opt}
+                        {formData.deliveryMethod === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+
+              {/* Question 6 - Optional */}
+              <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500">
+                <Label className="text-base font-semibold">6. What would make SteerSolo perfect for your business? <span className="text-muted-foreground font-normal text-sm">(Optional)</span></Label>
                 <Textarea 
                   placeholder="Tell us what you'd love to see" 
                   value={formData.perfectFeature}

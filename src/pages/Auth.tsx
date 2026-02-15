@@ -107,7 +107,11 @@ const Auth = () => {
           return;
         }
 
-        const defaultPath = getDashboardPath(user.role);
+        // Entrepreneurs who haven't completed onboarding go to /onboarding
+        let defaultPath = getDashboardPath(user.role);
+        if (user.role === UserRole.ENTREPRENEUR && user.onboardingCompleted === false) {
+          defaultPath = '/onboarding';
+        }
         const redirectPath = returnUrl || locationState?.from?.pathname || lastRoute || defaultPath;
 
         dispatch(clearSessionExpired());

@@ -740,6 +740,7 @@ export type Database = {
           id: string
           payment_method: string | null
           perfect_feature: string | null
+          setup_preference: string | null
           user_id: string | null
         }
         Insert: {
@@ -751,6 +752,7 @@ export type Database = {
           id?: string
           payment_method?: string | null
           perfect_feature?: string | null
+          setup_preference?: string | null
           user_id?: string | null
         }
         Update: {
@@ -762,6 +764,7 @@ export type Database = {
           id?: string
           payment_method?: string | null
           perfect_feature?: string | null
+          setup_preference?: string | null
           user_id?: string | null
         }
         Relationships: [

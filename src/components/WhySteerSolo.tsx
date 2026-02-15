@@ -41,10 +41,10 @@ export const WhySteerSolo = () => {
           <div className="text-center mb-12">
             <p className="text-sm font-semibold text-primary mb-2 tracking-wide uppercase">WHAT IS STEERSOLO?</p>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              Your business deserves its own home
+              From WhatsApp chats to a real store
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              SteerSolo gives Nigerian entrepreneurs a professional online store — set up in minutes, built for trust, and designed to grow with you.
+              SteerSolo gives WhatsApp sellers a professional storefront — set up in minutes, built for trust, designed to close more sales.
             </p>
           </div>
 
@@ -69,10 +69,10 @@ export const WhySteerSolo = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              Why not just sell on social media?
+              Why not just sell on WhatsApp alone?
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Social media is great for marketing. But selling needs structure.
+              WhatsApp is great for chatting. But selling needs structure, trust, and tracking.
             </p>
           </div>
 
