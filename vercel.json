@@ -1,8 +1,12 @@
 {
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/generate-sitemap"
+    },
+    {
       "source": "/shop/:slug",
-      "has": [{ "type": "header", "key": "user-agent", "value": ".*(facebookexternalhit|Twitterbot|WhatsApp|Slackbot|LinkedInBot|Discordbot|TelegramBot).*" }],
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(Googlebot|bingbot|facebookexternalhit|Twitterbot|WhatsApp|Slackbot|LinkedInBot|Discordbot|TelegramBot).*" }],
       "destination": "https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/shop-og-meta?slug=:slug"
     },
     {

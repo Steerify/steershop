@@ -102,9 +102,6 @@ export const GoogleSignInButton = ({
     <div 
       ref={buttonRef} 
       className="google-sign-in-container w-full flex justify-center items-center [&>div]:!w-full [&>div>div]:!w-full [&>div>div>iframe]:!w-full"
-      style={{ 
-        minHeight: size === 'large' ? '44px' : size === 'medium' ? '36px' : '28px',
-      }}
     />
   );
 };

@@ -564,6 +564,33 @@ const Dashboard = () => {
             />
           )}
 
+          {/* Verification Nudge */}
+          {shopData && profile && !profile.bank_verified && !localStorage.getItem('verification_nudge_dismissed') && (
+            <Card className="mb-6 border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-yellow-500/5">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                      <Shield className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-sm">Get Verified</h3>
+                      <p className="text-xs text-muted-foreground">Verify your identity to receive payouts and earn the Verified Seller badge.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button size="sm" onClick={() => navigate('/identity-verification')}>
+                      Verify Now
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => { localStorage.setItem('verification_nudge_dismissed', 'true'); loadData(); }}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* First-Sale Momentum Card */}
           {shopData && totalSales === 0 && (
             <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">

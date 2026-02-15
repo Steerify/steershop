@@ -18,6 +18,10 @@ function escapeHtml(text: string): string {
     .replace(/'/g, "&#039;");
 }
 
+function escapeJsonLd(text: string): string {
+  return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+}
+
 function generateDefaultHTML(): Response {
   const html = `<!DOCTYPE html>
 <html>
@@ -45,7 +49,6 @@ function generateDefaultHTML(): Response {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -65,7 +68,7 @@ serve(async (req) => {
     
     const { data: shop, error } = await supabase
       .from('shops')
-      .select('shop_name, description, logo_url, banner_url')
+      .select('shop_name, description, logo_url, banner_url, whatsapp_number, average_rating, total_reviews')
       .eq('shop_slug', slug)
       .eq('is_active', true)
       .single();
@@ -74,16 +77,81 @@ serve(async (req) => {
       console.log("Shop not found for slug:", slug);
       return generateDefaultHTML();
     }
+
+    // Fetch products for JSON-LD
+    const { data: products } = await supabase
+      .from('products')
+      .select('id, name, description, price, image_url')
+      .eq('shop_id', slug)
+      .eq('is_available', true)
+      .limit(20);
+
+    // We need the shop ID to query products properly
+    const { data: shopWithId } = await supabase
+      .from('shops')
+      .select('id')
+      .eq('shop_slug', slug)
+      .single();
+
+    let shopProducts: any[] = [];
+    if (shopWithId) {
+      const { data: prods } = await supabase
+        .from('products')
+        .select('id, name, description, price, image_url')
+        .eq('shop_id', shopWithId.id)
+        .eq('is_available', true)
+        .limit(20);
+      shopProducts = prods || [];
+    }
     
     const shopName = escapeHtml(shop.shop_name || 'Shop');
     const description = escapeHtml(shop.description || `Shop at ${shopName} on SteerSolo`);
     const imageUrl = shop.logo_url || shop.banner_url || DEFAULT_IMAGE;
     const shopUrl = `${SITE_URL}/shop/${slug}`;
+
+    // Build JSON-LD
+    const jsonLd: any = {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": shop.shop_name || 'Shop',
+      "description": shop.description || `Shop at ${shop.shop_name} on SteerSolo`,
+      "url": shopUrl,
+      "image": imageUrl,
+    };
+
+    if (shop.average_rating && shop.total_reviews) {
+      jsonLd.aggregateRating = {
+        "@type": "AggregateRating",
+        "ratingValue": shop.average_rating,
+        "reviewCount": shop.total_reviews,
+      };
+    }
+
+    if (shopProducts.length > 0) {
+      jsonLd.makesOffer = shopProducts.map(p => ({
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Product",
+          "name": p.name,
+          "description": p.description || '',
+          "image": p.image_url || DEFAULT_IMAGE,
+          "url": `${shopUrl}/product/${p.id}`,
+          "offers": {
+            "@type": "Offer",
+            "price": p.price,
+            "priceCurrency": "NGN",
+            "availability": "https://schema.org/InStock",
+          }
+        }
+      }));
+    }
     
     const html = `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <title>${shopName} | SteerSolo</title>
+  <meta name="description" content="${description}" />
+  <link rel="canonical" href="${shopUrl}" />
   <meta property="og:title" content="${shopName}" />
   <meta property="og:description" content="${description}" />
   <meta property="og:image" content="${imageUrl}" />
@@ -94,9 +162,13 @@ serve(async (req) => {
   <meta name="twitter:title" content="${shopName}" />
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image" content="${imageUrl}" />
+  <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
   <meta http-equiv="refresh" content="0;url=${shopUrl}">
 </head>
 <body>
+  <h1>${shopName}</h1>
+  <p>${description}</p>
+  ${shopProducts.map(p => `<div><h2>${escapeHtml(p.name)}</h2><p>₦${p.price}</p></div>`).join('\n  ')}
   <p>Redirecting to ${shopName}...</p>
 </body>
 </html>`;
