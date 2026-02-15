@@ -9,6 +9,9 @@ import orderService from "@/services/order.service";
 import { supabase } from "@/integrations/supabase/client";
 import shopService from "@/services/shop.service";
 import { revenueService } from "@/services/revenue.service";
+import deliveryService from "@/services/delivery.service";
+import { DeliveryTracking } from "@/components/delivery/DeliveryTracking";
+import { ManualDeliveryForm } from "@/components/delivery/ManualDeliveryForm";
 import { ArrowLeft, Loader2, ShoppingCart, Package, Clock, CheckCircle, XCircle, MessageCircle, ThumbsUp, Truck, Banknote, CalendarCheck, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { PageWrapper } from "@/components/PageWrapper";
@@ -33,6 +36,8 @@ const Orders = () => {
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<any>(null);
+  const [deliveryDialogOrder, setDeliveryDialogOrder] = useState<any>(null);
+  const [deliveryStatuses, setDeliveryStatuses] = useState<Record<string, string | null>>({});
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('orders');
@@ -202,8 +207,22 @@ const Orders = () => {
   const loadOrders = async (shopId: string) => {
     try {
       const response: any = await orderService.getOrders({ shopId });
-      // Assuming response.data is the array of orders
-      setOrders(response.data || []);
+      const ordersData = response.data || [];
+      setOrders(ordersData);
+      
+      // Check delivery status for each order
+      const statuses: Record<string, string | null> = {};
+      await Promise.all(
+        ordersData.map(async (order: any) => {
+          try {
+            const delivery = await deliveryService.getDeliveryByOrderId(order.id);
+            statuses[order.id] = delivery ? delivery.status : null;
+          } catch {
+            statuses[order.id] = null;
+          }
+        })
+      );
+      setDeliveryStatuses(statuses);
     } catch (error: any) {
       console.error('Error in loadOrders:', error);
       toast({
@@ -479,6 +498,25 @@ const Orders = () => {
                       ))}
                     </div>
 
+                    {/* Delivery Section */}
+                    <div className="border-t border-border/50 pt-4">
+                      {deliveryStatuses[order.id] !== undefined && deliveryStatuses[order.id] !== null ? (
+                        <DeliveryTracking orderId={order.id} isShopOwner={true} />
+                      ) : (
+                        order.status !== "cancelled" && order.status !== "awaiting_approval" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setDeliveryDialogOrder(order)}
+                            className="border-indigo-500/30 text-indigo-600 hover:bg-indigo-500/10"
+                          >
+                            <Truck className="w-4 h-4 mr-2" />
+                            Set Up Delivery
+                          </Button>
+                        )
+                      )}
+                    </div>
+
                     {/* Order Actions */}
                     <div className="flex flex-wrap gap-2" data-tour={index === 0 ? "order-actions" : undefined}>
                       {order.status === "awaiting_approval" && (
@@ -605,6 +643,27 @@ const Orders = () => {
           onClose={() => setInvoiceOrder(null)}
           order={invoiceOrder}
           shop={shop}
+        />
+      )}
+
+      {/* Manual Delivery Dialog */}
+      {deliveryDialogOrder && shop && (
+        <ManualDeliveryForm
+          open={!!deliveryDialogOrder}
+          onOpenChange={(open) => !open && setDeliveryDialogOrder(null)}
+          orderId={deliveryDialogOrder.id}
+          shopId={shop.id}
+          customerAddress={{
+            name: deliveryDialogOrder.customer_name || 'Customer',
+            phone: deliveryDialogOrder.customer_phone || '',
+            address: deliveryDialogOrder.delivery_address || '',
+            city: deliveryDialogOrder.delivery_city || '',
+            state: deliveryDialogOrder.delivery_state || '',
+          }}
+          onSuccess={() => {
+            setDeliveryDialogOrder(null);
+            loadOrders(shop.id);
+          }}
         />
       )}
 

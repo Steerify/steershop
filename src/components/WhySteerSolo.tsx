@@ -1,4 +1,4 @@
-import { Store, MessageCircle, Shield, CheckCircle, X, ArrowRight } from "lucide-react";
+import { Store, MessageCircle, Shield, CheckCircle, ArrowRight, Handshake } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,15 +21,19 @@ const explainerCards = [
   },
 ];
 
-const comparisonFeatures = [
-  { feature: "Professional product catalog", social: false, steersolo: true },
-  { feature: "Automatic order tracking", social: false, steersolo: true },
-  { feature: "Secure online payments", social: false, steersolo: true },
-  { feature: "One shareable store link", social: false, steersolo: true },
-  { feature: "Customer order history", social: false, steersolo: true },
-  { feature: "Sales analytics & insights", social: false, steersolo: true },
-  { feature: "Free to start posting", social: true, steersolo: true },
-  { feature: "Large existing audience", social: true, steersolo: false, steersololabel: "You bring yours" },
+const whatsappBrings = [
+  "Direct customer chat",
+  "Personal relationships",
+  "Instant communication",
+  "Status updates for marketing",
+];
+
+const steersoloAdds = [
+  "Professional product catalog",
+  "Secure online payments",
+  "Automatic order tracking",
+  "Customer order history",
+  "Sales analytics & insights",
 ];
 
 export const WhySteerSolo = () => {
@@ -64,65 +68,75 @@ export const WhySteerSolo = () => {
         </div>
       </section>
 
-      {/* Why not just sell on social media? */}
+      {/* WhatsApp + SteerSolo = Better Together */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-full mb-4">
+              <Handshake className="w-4 h-4 text-green-600" />
+              <span className="text-green-600 font-semibold text-sm">BETTER TOGETHER</span>
+            </div>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              Why not just sell on WhatsApp alone?
+              WhatsApp + SteerSolo: Your selling superpower
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              WhatsApp is great for chatting. But selling needs structure, trust, and tracking.
+              You keep selling on WhatsApp. SteerSolo handles payments, catalogs, and tracking.
             </p>
           </div>
 
-          <div className="max-w-3xl mx-auto">
-            {/* Comparison Table */}
-            <div className="rounded-xl border overflow-hidden">
-              {/* Header */}
-              <div className="grid grid-cols-3 bg-muted/50 font-semibold text-sm">
-                <div className="p-4">Feature</div>
-                <div className="p-4 text-center">Social Media</div>
-                <div className="p-4 text-center text-primary">SteerSolo</div>
-              </div>
-              
-              {/* Rows */}
-              {comparisonFeatures.map((row, idx) => (
-                <div 
-                  key={row.feature} 
-                  className={`grid grid-cols-3 text-sm ${idx % 2 === 0 ? "bg-background" : "bg-muted/20"} border-t`}
-                >
-                  <div className="p-4 font-medium">{row.feature}</div>
-                  <div className="p-4 flex justify-center">
-                    {row.social ? (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                    ) : (
-                      <X className="w-5 h-5 text-destructive/60" />
-                    )}
+          <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 mb-10">
+            {/* WhatsApp Brings */}
+            <Card className="border-green-500/20 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 text-green-600" />
                   </div>
-                  <div className="p-4 flex justify-center">
-                    {row.steersolo ? (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">{row.steersololabel}</span>
-                    )}
-                  </div>
+                  <h3 className="text-lg font-semibold">What WhatsApp does best</h3>
                 </div>
-              ))}
-            </div>
+                <ul className="space-y-3">
+                  {whatsappBrings.map((item) => (
+                    <li key={item} className="flex items-center gap-3 text-sm">
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
 
-            {/* Callout */}
-            <div className="mt-8 text-center">
-              <p className="text-lg font-semibold mb-4">
-                Use social media for <span className="text-muted-foreground">marketing</span>. Use SteerSolo for <span className="text-primary">everything else</span>.
-              </p>
-              <Link to="/auth/signup">
-                <Button size="lg" className="bg-primary hover:bg-primary/90">
-                  Start Your Store Free
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-            </div>
+            {/* SteerSolo Adds */}
+            <Card className="border-primary/20 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Store className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold">What SteerSolo adds</h3>
+                </div>
+                <ul className="space-y-3">
+                  {steersoloAdds.map((item) => (
+                    <li key={item} className="flex items-center gap-3 text-sm">
+                      <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Callout */}
+          <div className="text-center">
+            <p className="text-lg font-semibold mb-4">
+              Keep selling on WhatsApp. Let SteerSolo handle <span className="text-primary">payments, catalogs, and tracking</span>.
+            </p>
+            <Link to="/auth/signup">
+              <Button size="lg" className="bg-primary hover:bg-primary/90">
+                Start Your Store Free
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
