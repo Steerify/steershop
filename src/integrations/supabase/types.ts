@@ -1038,6 +1038,39 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_updates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          target_audience: string
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          target_audience?: string
+          title: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          target_audience?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       poster_templates: {
         Row: {
           category: string

@@ -19,6 +19,7 @@ import { customerDashboardTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
 import { ReferralCard } from "@/components/ReferralCard";
 import { WhatsAppCommunityBanner } from "@/components/WhatsAppCommunityBanner";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const CustomerDashboard = () => {
   const navigate = useNavigate();
@@ -120,11 +121,14 @@ const CustomerDashboard = () => {
                 Dashboard
               </h1>
             </div>
-            <TourButton 
-              onStartTour={startTour} 
-              hasSeenTour={hasSeenTour} 
-              onResetTour={resetTour}
-            />
+            <div className="flex items-center gap-1">
+              <NotificationBell audience="customers" />
+              <TourButton 
+                onStartTour={startTour} 
+                hasSeenTour={hasSeenTour} 
+                onResetTour={resetTour}
+              />
+            </div>
           </header>
 
           <main className="p-4 sm:p-6 space-y-4 sm:space-y-6">

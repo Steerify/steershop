@@ -99,6 +99,11 @@ export const Footer = () => {
                   Contact
                 </Link>
               </li>
+              <li>
+                <Link to="/growth" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                  Our Growth
+                </Link>
+              </li>
             </ul>
           </div>
           
