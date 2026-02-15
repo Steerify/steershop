@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { TypewriterEffect } from "@/components/TypewriterEffect";
 import { Footer } from "@/components/Footer";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { FeaturedShopsBanner } from "@/components/FeaturedShopsBanner";
@@ -34,9 +35,10 @@ const Index = () => {
             
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
               Turn your WhatsApp business into a{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
-                professional store
-              </span>{" "}
+              <TypewriterEffect
+                texts={["professional store", "trusted brand", "money-making machine", "customer magnet"]}
+                className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent"
+              />{" "}
               in 10 minutes.
             </h1>
             
