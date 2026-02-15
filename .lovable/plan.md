@@ -1,169 +1,164 @@
 
 
-# AI-Powered "Done-For-You" Store + Product Setup
+# Fix Verification, Onboarding Redirect, Google Button Margins, and SEO Discoverability
 
-## Overview
+## Issues Found
 
-When a new entrepreneur lands on the Dashboard without a shop, a premium popup walks them through creating their store AND adding their first products/services — all with AI assistance. The user provides only the essentials; AI handles descriptions, slugs, and professional copy.
+### 1. User Verification Not Working
+The identity verification page (`/identity-verification`) exists and the KYC Level 2 (bank account) form works via the `verify-identity` edge function. However, there is no prominent pathway to reach it. Users don't know it exists. The verification flow itself (Paystack bank account resolve API) is functional -- it just needs better discoverability and a nudge after onboarding.
 
-## The Complete Flow
+### 2. Onboarding Does Not Redirect to Dashboard (Critical Bug)
+**Root cause:** In `AuthContext.tsx` (lines 90-97), `onboardingCompleted` is determined by whether the user **has a shop**. But after completing the onboarding survey, the user still has no shop. So:
+- `onboardingCompleted = false` even after survey completion
+- `ProtectedRoute` (line 63) keeps redirecting to `/onboarding`
+- `/onboarding` shows the survey again (no check for existing responses)
+- Result: infinite redirect loop
 
-### Step 1: Welcome Popup (No Shop Detected)
-A dialog appears explaining what happens:
+**Fix:** Change `onboardingCompleted` to check for **onboarding_responses** in the database, not just shops. Also add a check in `Onboarding.tsx` to skip to dashboard if responses already exist.
 
-**"Let us build your store in 60 seconds"**
+### 3. Google Login Button Margins
+The `GoogleSignInButton` container has `minHeight` styling and the Auth page has spacing that creates unnecessary gaps around the Google button.
 
-What you provide:
-- Business name
-- WhatsApp number  
-- Business category (pre-filled from onboarding)
+### 4. SEO / AI Discoverability for Shop Storefronts
+Currently:
+- The `shop-og-meta` edge function serves OG tags for social media crawlers only (via `vercel.json` rewrite matching User-Agent)
+- Shop pages use client-side rendered JSON-LD (injected via `useEffect`) which Google **cannot read** because the SPA doesn't render for Googlebot
+- No `sitemap.xml` exists
+- `robots.txt` doesn't reference a sitemap
 
-What AI creates for you:
-- Professional shop description
-- Custom store link
-- Everything configured and ready
+**Fix:** Create a dynamic `sitemap.xml` edge function that lists all active shops and products. Enhance the `shop-og-meta` function to also serve full SEO HTML (title, meta description, canonical, JSON-LD) for Googlebot. Add proper `robots.txt` with sitemap reference.
 
-**Price: N5,000 one-time setup fee**
+### 5. Build Error in `done-for-you-setup` Edge Function
+The `var shopDescription` is declared multiple times with `var` causing a TypeScript error about subsequent variable declarations having different types.
 
-User can accept ("Pay & Create My Store") or decline ("I'll do it myself").
+---
 
-### Step 2: Paystack Payment (N5,000)
-- Uses existing `paystack-initialize` edge function
-- Callback redirects to `/dashboard?dfy=verify&reference=XXX`
-- Business details stored in localStorage during redirect
+## Changes
 
-### Step 3: AI Creates the Shop (Edge Function)
-New `done-for-you-setup` edge function:
-1. Verifies Paystack payment
-2. AI generates shop description + slug from business name and category
-3. Creates shop in database
-4. Returns success
+### File: `supabase/functions/done-for-you-setup/index.ts`
+- Fix the `var` redeclaration build error by using `let` declarations at the top of the block and assigning in each branch
 
-### Step 4: Add Products/Services (NEW - The AI-Assisted Part)
-After shop creation succeeds, instead of just redirecting, the popup transitions to a **product addition step**:
+### File: `src/context/AuthContext.tsx`
+- Change `onboardingCompleted` logic: check `onboarding_responses` table instead of `shops` table
+- An entrepreneur has completed onboarding if they have at least 1 row in `onboarding_responses`
 
-**"Now let's add your first products"**
+### File: `src/pages/entrepreneur/Onboarding.tsx`
+- Add a check on mount: if user already has `onboarding_responses`, redirect to `/dashboard` immediately (prevents re-showing survey)
 
-For each product/service, the user provides ONLY:
-- **Name** (required) -- e.g. "Ankara dress"
-- **Price** (required) -- e.g. "15000"
-- **Type** -- Product or Service (toggle)
-- **Image** (optional) -- upload one photo
+### File: `src/components/ProtectedRoute.tsx`
+- No changes needed (logic is correct, just depends on `onboardingCompleted` being accurate)
 
-AI automatically generates:
-- Professional product description (using existing `ai-product-description` edge function)
-- Price suggestion shown as guidance
+### File: `src/pages/Auth.tsx` (Google button margins)
+- Remove extra spacing/margins around the GoogleSignInButton in both login and signup tabs
+- Reduce the `minHeight` in GoogleSignInButton container
 
-The UI shows a simple repeatable card:
-- "Add another item" button to add more (up to 5 in DFY flow)
-- "Done — Launch my store" button to finish
-- Each item shows a small preview with the AI-generated description
-- User can edit the AI description before confirming
+### File: `src/components/auth/GoogleSignInButton.tsx`
+- Remove unnecessary `minHeight` style and simplify the container CSS to eliminate extra margins
 
-### Step 5: Subscription Plan Selection
-After products are added, redirect to `/subscription` so the user picks a plan.
+### File: `src/pages/Settings.tsx` or `src/pages/Dashboard.tsx`
+- Add a visible "Verify Your Identity" card/link nudging users toward `/identity-verification` when `bank_verified` is false
 
-## Technical Implementation
+### File: `supabase/functions/generate-sitemap/index.ts` (New)
+- New edge function that generates a dynamic `sitemap.xml`
+- Queries all active shops and their products from the database
+- Outputs XML sitemap with `<url>` entries for each shop (`/shop/{slug}`) and product page
+- Includes `lastmod`, `changefreq`, and `priority` attributes
 
-### New Files
+### File: `supabase/functions/shop-og-meta/index.ts`
+- Extend to detect Googlebot (not just social crawlers) via User-Agent
+- Add full SEO meta tags: `<meta name="description">`, `<link rel="canonical">`, JSON-LD structured data (LocalBusiness schema with products) directly in the HTML
+- This ensures Google indexes shop pages with proper metadata
 
-| File | Purpose |
-|------|---------|
-| `src/components/DoneForYouPopup.tsx` | Multi-step popup: shop info -> payment -> product addition |
-| `supabase/functions/done-for-you-setup/index.ts` | Verify payment, AI-generate shop data, create shop |
+### File: `public/robots.txt`
+- Add `Sitemap: https://steersolo.lovable.app/sitemap.xml` directive
 
-### Modified Files
+### File: `vercel.json`
+- Add Googlebot to the User-Agent matching pattern for the `/shop/:slug` rewrite
+- Add a rewrite rule for `/sitemap.xml` pointing to the `generate-sitemap` edge function
+- Add `/s/:slug` short URL pattern for Googlebot as well
 
-| File | Change |
-|------|--------|
-| `src/pages/Dashboard.tsx` | Show DFY popup when no shop exists; handle `?dfy=verify` callback |
-| `supabase/config.toml` | Add `done-for-you-setup` function config |
+### File: `supabase/config.toml`
+- Register the new `generate-sitemap` function
 
-### DoneForYouPopup Component Structure
+---
 
-A multi-step dialog with 3 states:
+## Technical Details
 
-**Step "intro"**: Explains the service, shows value, collects business name + WhatsApp + category. Two buttons: "Pay N5,000 & Create My Store" and "I'll do it myself."
+### Onboarding Redirect Fix (AuthContext)
 
-**Step "products"**: Appears after successful shop creation. Shows a simple form to add products one at a time:
-- Name input + Price input + Type toggle + Image upload
-- "Generate with AI" button auto-fills description (calls existing `ai-product-description` edge function)
-- "Add this item" saves it via `productService.createProduct()`
-- List of added items shown below
-- "Skip" or "Done -- Launch my store" to finish
+```text
+// Before (broken):
+onboardingCompleted = (shops && shops.length > 0)
 
-**Step "complete"**: Success screen with confetti-style celebration. "View My Store" button navigates to `/my-store`. "Choose a Plan" button navigates to `/subscription`.
-
-### Edge Function: `done-for-you-setup`
-
-**Input:**
-```
-{
-  reference: string,        // Paystack payment reference
-  business_name: string,
-  whatsapp_number: string,
-  business_category: string
-}
+// After (correct):
+const { data: onboardingData } = await supabase
+  .from('onboarding_responses')
+  .select('id')
+  .eq('user_id', supabaseUser.id)
+  .limit(1);
+onboardingCompleted = (onboardingData && onboardingData.length > 0);
 ```
 
-**Logic:**
-1. Validate auth token
-2. Verify Paystack payment (amount = 500000 kobo = N5,000)
-3. Call Lovable AI (google/gemini-3-flash-preview) to generate:
-   - `shop_description`: 2-3 professional sentences for Nigerian market
-   - `shop_slug`: URL-safe version of business name
-4. Create shop in `shops` table using service role client
-5. Record payment in `subscription_history` (event_type: 'dfy_setup')
-6. Update profile `setup_preference` to 'done_for_you'
-7. Return `{ success: true, shop_id, shop_slug, shop_name }`
+### Onboarding.tsx Guard
 
-### Product Addition (Reuses Existing Infrastructure)
-
-The product step in the popup reuses:
-- `ai-product-description` edge function (already built) for AI descriptions
-- `productService.createProduct()` for saving products
-- `ImageUpload` component for product images
-
-The user provides name + price + type + optional image. Clicking "Generate with AI" calls the existing edge function and fills in the description. The product is then created normally.
-
-### Dashboard Integration
-
-```
-// In Dashboard.tsx loadData():
-if (shopData === null && !localStorage.getItem('dfy_popup_dismissed')) {
-  setShowDfyPopup(true);
-}
-
-// Handle ?dfy=verify callback:
+At the top of the component, before showing the survey:
+```text
+// Check if already completed onboarding
 useEffect(() => {
-  if (searchParams.get('dfy') === 'verify') {
-    const reference = searchParams.get('reference');
-    // Call done-for-you-setup edge function
-    // On success, transition popup to "products" step
+  if (user?.id && hasCheckedAccess) {
+    supabase.from('onboarding_responses')
+      .select('id').eq('user_id', user.id).limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          // Already completed, redirect to dashboard
+          navigate('/dashboard', { replace: true });
+        }
+      });
   }
-}, [searchParams]);
+}, [user, hasCheckedAccess]);
 ```
 
-### Payment Flow
+### Dynamic Sitemap Edge Function
 
-Uses existing `paystack-initialize`:
-- amount: 500000 (N5,000)
-- email: user's email
-- metadata: `{ type: 'done_for_you_setup' }`
-- callback_url: `{origin}/dashboard?dfy=verify`
-
-### Config.toml Addition
-
+```text
+GET /sitemap.xml ->
+  Query all active shops from shops table
+  Query all available products
+  Generate XML:
+    - Homepage: https://steersolo.lovable.app/
+    - Each shop: https://steersolo.lovable.app/shop/{slug}
+    - Each product: https://steersolo.lovable.app/shop/{slug}/product/{product_id}
+    - Static pages: /about, /pricing, /faq, /how-it-works
+  Return with Content-Type: application/xml
 ```
-[functions.done-for-you-setup]
-verify_jwt = false
+
+### Shop OG Meta Enhancement for Google
+
+The edge function will detect Googlebot alongside social crawlers and serve enriched HTML with:
+- Standard meta description tag
+- Canonical URL
+- JSON-LD LocalBusiness schema embedded in HTML (not client-side JS)
+- Product listing schema for shops with products
+
+### Verification Nudge
+
+On the Dashboard, when `bank_verified === false`, show a small card:
+- "Get verified to receive payouts and earn the Verified Seller badge"
+- Links to `/identity-verification`
+- Dismissible (localStorage)
+
+### done-for-you-setup Build Fix
+
+Replace the multiple `var` declarations with a single `let` declaration pattern:
+```text
+let shopDescription: string;
+let shopSlug: string;
+
+if (!aiResponse.ok) {
+  shopDescription = `Welcome to ${business_name}!...`;
+  shopSlug = business_name.toLowerCase()...;
+} else {
+  // ... assign from AI result
+}
 ```
-
-### Security
-
-- Edge function manually validates auth token before proceeding
-- Paystack payment verified server-side before creating any shop
-- AI prompts are entirely backend-side (no client-side injection)
-- Shop creation uses service role since the user has no existing shop (RLS would block)
-- Product creation after shop exists uses normal user auth (RLS allows shop owners)
 
