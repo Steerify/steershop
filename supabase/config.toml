@@ -78,3 +78,9 @@ verify_jwt = false
 [functions.check-ambassador-tier]
 verify_jwt = false
 
+[functions.done-for-you-setup]
+verify_jwt = false
+
+[functions.done-for-you-initialize]
+verify_jwt = false
+
