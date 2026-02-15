@@ -110,7 +110,7 @@ serve(async (req) => {
         business_name: business_name,
         settlement_bank: bank_code,
         account_number: account_number,
-        percentage_charge: 0, // No platform fee
+        percentage_charge: 1, // 1% platform commission to Steerify
         primary_contact_email: user.email,
       }),
     });

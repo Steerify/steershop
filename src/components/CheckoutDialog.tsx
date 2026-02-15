@@ -403,157 +403,47 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     setIsInitializingPayment(true);
 
     try {
-      // Validate Paystack key exists and is not empty
-      if (!shop.paystack_public_key?.trim()) {
-        throw new Error("This shop hasn't set up online payments yet. Please choose 'Pay on Delivery' or contact the seller directly.");
-      }
-
-      // Validate key format (should start with pk_)
-      if (!shop.paystack_public_key.startsWith('pk_')) {
-        console.error("Invalid Paystack key format:", shop.paystack_public_key.substring(0, 10));
-        throw new Error("Invalid payment configuration. Please contact the seller or use 'Pay on Delivery'.");
-      }
-
       if (!customerEmail?.trim()) {
-        throw new Error("Email is required for Paystack payment");
+        throw new Error("Email is required for payment");
       }
 
-      console.log("Initializing Paystack payment:", {
-        hasKey: !!shop.paystack_public_key,
-        keyPrefix: shop.paystack_public_key?.substring(0, 7),
-        amount: totalAmount,
-        email: customerEmail
-      });
-
-      const scriptLoaded = await loadPaystackScript();
-      
-      if (!scriptLoaded) {
-        throw new Error("Failed to load payment processor. Please check your internet connection.");
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      if (typeof window.PaystackPop === 'undefined') {
-        throw new Error("Payment system not ready. Please try again.");
-      }
-
-      const paymentReference = `ORDER_${orderId}_${Date.now()}`;
-      
-      const paymentSuccess = initializePaystackPayment({
-        key: shop.paystack_public_key,
+      console.log("Initializing split payment via backend:", {
+        order_id: orderId,
+        shop_id: shop.id,
+        amount: effectiveTotal,
         email: customerEmail,
-        amount: totalAmount,
-        currency: 'NGN',
-        ref: paymentReference,
-        callback: async (response: any) => {
-          try {
-            const { error: updateError } = await supabase
-              .from("orders")
-              .update({
-                payment_status: "paid",
-                status: "paid_awaiting_delivery",
-                payment_reference: response.reference,
-                paid_at: new Date().toISOString()
-              })
-              .eq("id", orderId);
-
-            if (updateError) throw updateError;
-
-            // Calculate platform fee (2.5%)
-            const PLATFORM_FEE_PERCENTAGE = 2.5;
-            const platformFee = Math.round(totalAmount * (PLATFORM_FEE_PERCENTAGE / 100) * 100) / 100;
-            const netToShop = totalAmount - platformFee;
-
-            // Record revenue transaction with platform fee breakdown
-            const { data: revenueData } = await supabase
-              .from("revenue_transactions")
-              .insert({
-                shop_id: shop.id,
-                order_id: orderId,
-                amount: netToShop,
-                gross_amount: totalAmount,
-                platform_fee_percentage: PLATFORM_FEE_PERCENTAGE,
-                platform_fee: platformFee,
-                currency: 'NGN',
-                payment_reference: response.reference,
-                payment_method: 'paystack',
-                transaction_type: 'order_payment',
-              })
-              .select()
-              .single();
-
-            // Record platform earnings
-            if (revenueData) {
-              await supabase
-                .from("platform_earnings")
-                .insert({
-                  transaction_id: revenueData.id,
-                  shop_id: shop.id,
-                  order_id: orderId,
-                  gross_amount: totalAmount,
-                  fee_percentage: PLATFORM_FEE_PERCENTAGE,
-                  fee_amount: platformFee,
-                  net_to_shop: netToShop,
-                });
-            }
-
-            toast({
-              title: "Payment Successful! 🎉",
-              description: "Your order has been confirmed and payment received.",
-              action: (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    openWhatsAppWithOrderDetails(shop.whatsapp_number || '', {
-                      orderId,
-                      customerName: formData.customer_name,
-                      customerEmail: formData.customer_email,
-                      customerPhone: formData.customer_phone,
-                      deliveryAddress: formData.delivery_address,
-                      cart,
-                      totalAmount,
-                      paymentReference: response.reference,
-                      shopName: shop.shop_name,
-                      paymentMethod: "pay_before"
-                    });
-                  }}
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Contact Seller
-                </Button>
-              ),
-              duration: 10000,
-            });
-
-            cart.forEach((item) => onUpdateQuantity(item.product.id, 0));
-            resetForm();
-            onClose();
-
-          } catch (error: any) {
-            console.error("Error updating order after payment:", error);
-            toast({
-              title: "Payment Verification Failed",
-              description: `Payment was successful but we encountered an issue. Contact support with reference: ${response.reference}`,
-              variant: "destructive",
-            });
-          }
-        },
-        onClose: () => {
-          setIsInitializingPayment(false);
-          toast({
-            title: "Payment Cancelled",
-            description: "You can complete the payment later. Your order has been saved.",
-          });
-        }
       });
 
-      if (!paymentSuccess) {
-        throw new Error("Failed to initialize payment gateway. Please try again.");
+      // Call the backend edge function to initialize split payment
+      const { data, error: fnError } = await supabase.functions.invoke('paystack-initialize-order', {
+        body: {
+          order_id: orderId,
+          shop_id: shop.id,
+          amount: effectiveTotal,
+          customer_email: customerEmail,
+          callback_url: window.location.origin + '/customer/orders',
+        },
+      });
+
+      if (fnError || !data?.success) {
+        const errorMsg = data?.error || fnError?.message || 'Failed to initialize payment';
+        if (data?.code === 'NO_SUBACCOUNT') {
+          throw new Error("This shop hasn't set up their bank details for receiving payments yet. Please choose 'Pay on Delivery' or contact the seller.");
+        }
+        throw new Error(errorMsg);
       }
+
+      // Update order with payment reference
+      await supabase
+        .from("orders")
+        .update({ payment_reference: data.data.reference })
+        .eq("id", orderId);
+
+      // Redirect to Paystack checkout page
+      window.location.href = data.data.authorization_url;
 
     } catch (error: any) {
-      console.error("Paystack payment initialization error:", error);
+      console.error("Payment initialization error:", error);
       setIsInitializingPayment(false);
       toast({
         title: "Payment Failed",

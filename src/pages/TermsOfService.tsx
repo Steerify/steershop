@@ -116,7 +116,7 @@ const TermsOfService = () => {
               
               <h3 className="font-heading text-xl font-semibold mb-3">6.2 Platform Commission</h3>
               <p className="text-muted-foreground mb-4">
-                SteerSolo charges a platform commission of <strong>2.5%</strong> on each successful transaction processed through the Platform. This commission is automatically deducted from the transaction amount before settlement to the Entrepreneur. The commission covers platform maintenance, payment processing infrastructure, and ongoing feature development. We reserve the right to modify this rate with at least 30 days' notice to Entrepreneurs.
+                SteerSolo charges a platform commission of <strong>1%</strong> on each successful transaction processed through the Platform via Paystack split payments. This commission is automatically deducted from the transaction amount before settlement to the Entrepreneur's bank account. The commission covers platform maintenance, payment processing infrastructure, and ongoing feature development. We reserve the right to modify this rate with at least 30 days' notice to Entrepreneurs.
               </p>
 
               <h3 className="font-heading text-xl font-semibold mb-3">6.3 Payment Processing</h3>

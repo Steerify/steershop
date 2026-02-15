@@ -183,10 +183,10 @@ const Index = () => {
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
             {[
-              { src: "https://images.unsplash.com/photo-1560264280-88b68371db39?w=400&h=300&fit=crop&q=80", alt: "Nigerian woman entrepreneur at her shop" },
-              { src: "https://images.unsplash.com/photo-1556740758-90de374c12ad?w=400&h=300&fit=crop&q=80", alt: "Hands packaging products for delivery" },
-              { src: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop&q=80", alt: "Entrepreneur using phone for business" },
-              { src: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400&h=300&fit=crop&q=80", alt: "Colorful product display at a market" },
+              { src: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&h=300&fit=crop&q=80", alt: "Nigerian woman entrepreneur selling at her market stall" },
+              { src: "https://images.unsplash.com/photo-1573497019236-17f8177b81e8?w=400&h=300&fit=crop&q=80", alt: "Young African man packaging orders for delivery" },
+              { src: "https://images.unsplash.com/photo-1589156229687-496a31ad1d1f?w=400&h=300&fit=crop&q=80", alt: "African woman using smartphone for business" },
+              { src: "https://images.unsplash.com/photo-1590845947670-c009801ffa74?w=400&h=300&fit=crop&q=80", alt: "Vibrant African market with colorful goods on display" },
             ].map((img, i) => (
               <div key={i} className="relative overflow-hidden rounded-xl aspect-[4/3] shadow-sm">
                 <img
@@ -281,11 +281,49 @@ const Index = () => {
         </div>
       </section>
 
+      {/* BANNER: Built for businesses like yours */}
+      <section className="py-0">
+        <div className="relative w-full h-48 md:h-64 overflow-hidden">
+          <img
+            src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1200&h=400&fit=crop&q=80"
+            alt="African entrepreneur working confidently at a modern desk"
+            loading="lazy"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-primary/60 flex items-center justify-center">
+            <p className="text-white text-2xl md:text-3xl font-bold tracking-tight text-center px-4">
+              Built for businesses like yours
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* SECTION 4: HOW IT WORKS */}
       <HowItWorks audience={activeAudience} />
 
       {/* SECTION 5: SOCIAL PROOF & STATS */}
       <SocialProofStats />
+
+      {/* TESTIMONIAL AVATARS */}
+      <section className="py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center gap-6 flex-wrap">
+            {[
+              { src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face&q=80", name: "Chidi O." },
+              { src: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=120&h=120&fit=crop&crop=face&q=80", name: "Amara K." },
+              { src: "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=120&h=120&fit=crop&crop=face&q=80", name: "Tunde A." },
+            ].map((person, i) => (
+              <div key={i} className="flex flex-col items-center gap-2">
+                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary/30 shadow-sm">
+                  <img src={person.src} alt={person.name} loading="lazy" className="w-full h-full object-cover" />
+                </div>
+                <span className="text-xs text-muted-foreground font-medium">{person.name}</span>
+              </div>
+            ))}
+            <p className="text-sm text-muted-foreground ml-2">...and hundreds more</p>
+          </div>
+        </div>
+      </section>
 
       {/* SECTION 6: FEATURED SHOPS */}
       <FeaturedShopsBanner />
