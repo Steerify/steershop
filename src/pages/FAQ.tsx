@@ -171,25 +171,25 @@ const faqCategories: FAQCategory[] = [
     ]
   },
   {
-    id: "social-comparison",
-    name: "SteerSolo vs Social Media",
+    id: "whatsapp-integration",
+    name: "Using WhatsApp with SteerSolo",
     icon: Target,
     faqs: [
       {
-        question: "Why should I use SteerSolo instead of selling on Instagram or WhatsApp?",
-        answer: "Instagram and WhatsApp are great for reaching people, but they weren't built for selling. You can't track orders, manage stock, accept secure payments, or give customers a professional catalog. SteerSolo gives you all of that with a single shareable link — and your customers still reach you on WhatsApp."
+        question: "How does SteerSolo work with WhatsApp?",
+        answer: "SteerSolo is your backend engine for WhatsApp selling. When a customer orders from your SteerSolo store, you get notified on WhatsApp with full order details. You keep chatting with customers on WhatsApp while SteerSolo handles payments, catalogs, and order tracking behind the scenes."
       },
       {
-        question: "Can I still use social media with SteerSolo?",
-        answer: "Absolutely! In fact, that's the recommended approach. Use Instagram, WhatsApp Status, TikTok, and Twitter to market your products, then direct customers to your SteerSolo store link to browse, order, and pay. Social media for awareness, SteerSolo for sales."
+        question: "Can I keep selling on WhatsApp and social media?",
+        answer: "Absolutely — that's exactly how SteerSolo is designed! Use WhatsApp, Instagram, TikTok, and Twitter to connect with customers, then share your SteerSolo store link so they can browse, order, and pay securely. WhatsApp for relationships, SteerSolo for the business side."
       },
       {
         question: "How is SteerSolo different from a regular website builder?",
-        answer: "Website builders like WordPress or Wix are general-purpose tools that require technical setup and hosting. SteerSolo is purpose-built for Nigerian small businesses: it's mobile-first, integrates WhatsApp ordering, supports Paystack and bank transfers in Naira, and you can set up a complete store in under 5 minutes — no coding needed."
+        answer: "Website builders like WordPress or Wix are general-purpose tools that require technical setup and hosting. SteerSolo is purpose-built for Nigerian small businesses: it's mobile-first, integrates with WhatsApp, supports Paystack and bank transfers in Naira, and you can set up a complete store in under 5 minutes — no coding needed."
       },
       {
         question: "What if I already have customers on WhatsApp?",
-        answer: "Perfect — SteerSolo is designed to work alongside WhatsApp, not replace it. When a customer places an order on your SteerSolo store, you get notified on WhatsApp with full order details. Your customers keep chatting with you on WhatsApp, but now you also have order tracking, payment records, and analytics."
+        answer: "That's perfect — SteerSolo is built to complement your existing WhatsApp relationships. Your customers keep chatting with you on WhatsApp as usual, but now you also have a professional product catalog, secure payment processing, order tracking, and sales analytics powering your business."
       }
     ]
   },

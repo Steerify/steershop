@@ -175,7 +175,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* SECTION 2: WHAT IS STEERSOLO + WHY NOT SOCIAL MEDIA */}
+      {/* SECTION 2: WHAT IS STEERSOLO */}
       <WhySteerSolo />
 
       {/* SECTION 3: VALUE PROPOSITION */}
