@@ -137,7 +137,7 @@ serve(async (req) => {
       // If this is an order payment (has order_id and shop_id) - record revenue with platform fee
       if (order_id && shop_id) {
         const grossAmount = event.data.amount / 100; // Paystack sends amount in kobo
-        const feePercentage = 2.5; // Platform fee percentage
+        const feePercentage = 1; // Platform fee percentage (1% via split payments)
         const platformFee = Math.round(grossAmount * (feePercentage / 100) * 100) / 100;
         const netToShop = grossAmount - platformFee;
 
