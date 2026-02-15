@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth, SignUpData } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, ArrowLeft, Store, ShoppingBag } from "lucide-react";
+import { Loader2, Mail, ArrowLeft, Store, ShoppingBag, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
@@ -32,6 +32,29 @@ import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { clearSessionExpired, setReturnUrl } from "@/store/slices/uiSlice";
 import { resetSession, setRememberMe } from "@/store/slices/activitySlice";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+
+// Password input component with eye toggle
+const PasswordInput = ({ field, placeholder }: { field: any; placeholder?: string }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <div className="relative">
+      <Input
+        type={showPassword ? "text" : "password"}
+        placeholder={placeholder}
+        {...field}
+        className="pr-10"
+      />
+      <button
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
+  );
+};
 
 // Simplified signup - only email, password, role
 const signupSchema = z.object({
@@ -345,7 +368,7 @@ const Auth = () => {
                             </Button>
                           </div>
                           <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} />
+                            <PasswordInput field={field} placeholder="••••••••" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -408,7 +431,7 @@ const Auth = () => {
                         <FormItem>
                           <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="Min 8 chars, 1 upper, 1 number" {...field} />
+                            <PasswordInput field={field} placeholder="Min 8 chars, 1 upper, 1 number" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

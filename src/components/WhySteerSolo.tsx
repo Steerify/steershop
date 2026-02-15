@@ -45,7 +45,7 @@ export const WhySteerSolo = () => {
           <div className="text-center mb-12">
             <p className="text-sm font-semibold text-primary mb-2 tracking-wide uppercase">WHAT IS STEERSOLO?</p>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              From WhatsApp chats to a real store
+              From excessive chats to a real store
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               SteerSolo gives WhatsApp sellers a professional storefront — set up in minutes, built for trust, designed to close more sales.
