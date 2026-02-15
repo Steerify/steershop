@@ -12,14 +12,7 @@ interface Review {
   created_at: string;
 }
 
-interface HomepageReviewsProps {
-  audience?: "entrepreneurs" | "customers" | "sellers" | "shoppers";
-}
-
-export const HomepageReviews = ({ audience = "entrepreneurs" }: HomepageReviewsProps) => {
-  // Map sellers -> entrepreneurs, shoppers -> customers
-  const mappedAudience = audience === "sellers" ? "entrepreneurs" : 
-                         audience === "shoppers" ? "customers" : audience;
+export const HomepageReviews = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -47,73 +40,23 @@ export const HomepageReviews = ({ audience = "entrepreneurs" }: HomepageReviewsP
     }
   };
 
-  // Fallback reviews if none in database
-  const fallbackReviews: Review[] = [
-    {
-      id: '1',
-      customer_name: 'Chioma A.',
-      message: 'SteerSolo transformed how I run my fashion business. No more endless WhatsApp back-and-forth!',
-      rating: 5,
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      customer_name: 'Emeka O.',
-      message: 'Finally, a platform that understands Nigerian businesses. The Paystack integration is seamless.',
-      rating: 5,
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: '3',
-      customer_name: 'Aisha M.',
-      message: 'My customers love how professional my store looks now. Sales have increased by 40%!',
-      rating: 5,
-      created_at: new Date().toISOString(),
-    },
-  ];
-
-  const displayReviews = reviews.length > 0 ? reviews : fallbackReviews;
-
-  if (isLoading) {
-    return (
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-6 h-48 bg-muted rounded-lg" />
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  const sectionTitle = mappedAudience === "entrepreneurs" 
-    ? "What Our Sellers Say" 
-    : "What Shoppers Love";
-  
-  const sectionDescription = mappedAudience === "entrepreneurs"
-    ? "Join hundreds of Nigerian entrepreneurs who are growing their businesses with SteerSolo"
-    : "See why customers love shopping from SteerSolo stores";
+  // Hide entire section if no real reviews
+  if (isLoading || reviews.length === 0) return null;
 
   return (
     <section className="py-16 bg-muted/30">
       <div className="container mx-auto px-4">
-        {/* Section Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-            {sectionTitle}
+            What Our Sellers Say
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            {sectionDescription}
+            Join hundreds of Nigerian entrepreneurs who are growing their businesses with SteerSolo
           </p>
         </div>
 
-        {/* Reviews Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayReviews.map((review, index) => (
+          {reviews.map((review, index) => (
             <Card
               key={review.id}
               className={cn(
@@ -122,10 +65,7 @@ export const HomepageReviews = ({ audience = "entrepreneurs" }: HomepageReviewsP
               )}
             >
               <CardContent className="p-6">
-                {/* Quote Icon */}
                 <Quote className="w-8 h-8 text-primary/20 mb-4" />
-
-                {/* Rating Stars */}
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
                     <Star
@@ -139,13 +79,9 @@ export const HomepageReviews = ({ audience = "entrepreneurs" }: HomepageReviewsP
                     />
                   ))}
                 </div>
-
-                {/* Review Text */}
                 <p className="text-foreground mb-4 line-clamp-4">
                   "{review.message}"
                 </p>
-
-                {/* Reviewer */}
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold">
                     {review.customer_name.charAt(0)}
@@ -155,8 +91,6 @@ export const HomepageReviews = ({ audience = "entrepreneurs" }: HomepageReviewsP
                     <p className="text-sm text-muted-foreground">SteerSolo User</p>
                   </div>
                 </div>
-
-                {/* Decorative Element */}
                 <div className="absolute bottom-0 right-0 w-24 h-24 bg-gradient-to-tl from-primary/5 to-transparent rounded-tl-full" />
               </CardContent>
             </Card>
