@@ -118,11 +118,13 @@ You MUST call the generate_shop_branding function with the results.`;
       }),
     });
 
+    let shopDescription: string;
+    let shopSlug: string;
+
     if (!aiResponse.ok) {
       console.error("AI gateway error:", aiResponse.status, await aiResponse.text());
-      // Fallback: generate slug manually, use a simple description
-      var shopDescription = `Welcome to ${business_name}! We offer quality ${business_category || "products and services"} for our valued customers across Nigeria. Shop with confidence.`;
-      var shopSlug = business_name
+      shopDescription = `Welcome to ${business_name}! We offer quality ${business_category || "products and services"} for our valued customers across Nigeria. Shop with confidence.`;
+      shopSlug = business_name
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, "")
         .replace(/\s+/g, "-")
@@ -132,17 +134,16 @@ You MUST call the generate_shop_branding function with the results.`;
       const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
 
       if (!toolCall?.function?.arguments) {
-        // Fallback
-        var shopDescription = `Welcome to ${business_name}! Quality ${business_category || "products and services"} you can trust.`;
-        var shopSlug = business_name
+        shopDescription = `Welcome to ${business_name}! Quality ${business_category || "products and services"} you can trust.`;
+        shopSlug = business_name
           .toLowerCase()
           .replace(/[^a-z0-9\s-]/g, "")
           .replace(/\s+/g, "-")
           .slice(0, 30);
       } else {
         const result = JSON.parse(toolCall.function.arguments);
-        var shopDescription = result.description;
-        var shopSlug = result.slug;
+        shopDescription = result.description;
+        shopSlug = result.slug;
       }
     }
 

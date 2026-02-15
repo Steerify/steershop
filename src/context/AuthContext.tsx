@@ -86,15 +86,15 @@ const fetchUserProfile = async (supabaseUser: User): Promise<AppUser | null> => 
 
     console.log('Mapped UserRole:', role);
 
-    // Check if entrepreneur has completed onboarding by checking if they have a shop
+    // Check if entrepreneur has completed onboarding by checking onboarding_responses
     let onboardingCompleted = false;
     if (role === UserRole.ENTREPRENEUR) {
-      const { data: shops } = await supabase
-        .from('shops')
+      const { data: onboardingData } = await supabase
+        .from('onboarding_responses')
         .select('id')
-        .eq('owner_id', supabaseUser.id)
+        .eq('user_id', supabaseUser.id)
         .limit(1);
-      onboardingCompleted = (shops && shops.length > 0) || false;
+      onboardingCompleted = !!(onboardingData && onboardingData.length > 0);
     }
 
     return {

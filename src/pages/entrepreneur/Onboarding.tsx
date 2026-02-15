@@ -76,6 +76,22 @@ const Onboarding = () => {
     }
   }, [user, navigate, toast, hasCheckedAccess]);
 
+  // Check if onboarding already completed — redirect to dashboard
+  useEffect(() => {
+    if (user?.id && hasCheckedAccess) {
+      supabase
+        .from('onboarding_responses')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            navigate('/dashboard', { replace: true });
+          }
+        });
+    }
+  }, [user, hasCheckedAccess, navigate]);
+
   // Check if phone is already verified
   useEffect(() => {
     const checkPhoneVerification = async () => {
