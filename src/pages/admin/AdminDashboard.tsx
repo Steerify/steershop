@@ -42,10 +42,11 @@ export default function AdminDashboard() {
     try {
       const { data, error } = await supabase.functions.invoke("engagement-reminders");
       if (error) throw error;
-      setReminderResults(data);
+      const results = data?.results || data;
+      setReminderResults(results);
       toast({
         title: "Engagement Reminders Complete ✅",
-        description: `Incomplete reg: ${data?.incomplete_registration || 0}, No shop: ${data?.no_shop || 0}, No products: ${data?.no_products || 0}, No sales: ${data?.no_sales || 0}`,
+        description: `Incomplete reg: ${results?.incomplete_registration || 0}, No shop: ${results?.no_shop || 0}, No products: ${results?.no_products || 0}, No sales: ${results?.no_sales || 0}`,
       });
     } catch (error: any) {
       console.error("Error running reminders:", error);

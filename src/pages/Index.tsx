@@ -175,6 +175,33 @@ const Index = () => {
         </div>
       </section>
 
+      {/* NIGERIAN BUSINESS SHOWCASE */}
+      <section className="py-10 bg-muted/20">
+        <div className="container mx-auto px-4">
+          <p className="text-center text-sm font-medium text-muted-foreground mb-6 tracking-wide uppercase">
+            Real businesses. Real results.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+            {[
+              { src: "https://images.unsplash.com/photo-1560264280-88b68371db39?w=400&h=300&fit=crop&q=80", alt: "Nigerian woman entrepreneur at her shop" },
+              { src: "https://images.unsplash.com/photo-1556740758-90de374c12ad?w=400&h=300&fit=crop&q=80", alt: "Hands packaging products for delivery" },
+              { src: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop&q=80", alt: "Entrepreneur using phone for business" },
+              { src: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400&h=300&fit=crop&q=80", alt: "Colorful product display at a market" },
+            ].map((img, i) => (
+              <div key={i} className="relative overflow-hidden rounded-xl aspect-[4/3] shadow-sm">
+                <img
+                  src={img.src}
+                  alt={img.alt}
+                  loading="lazy"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* SECTION 2: WHAT IS STEERSOLO */}
       <WhySteerSolo />
 
