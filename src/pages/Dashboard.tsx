@@ -45,6 +45,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { PayoutRequestDialog } from "@/components/PayoutRequestDialog";
 import { CouponManager } from "@/components/CouponManager";
+import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -70,6 +71,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [payoutBalance, setPayoutBalance] = useState({ totalRevenue: 0, totalWithdrawn: 0, totalPending: 0, availableBalance: 0 });
   const [isPayoutDialogOpen, setIsPayoutDialogOpen] = useState(false);
+  const [showDfyPopup, setShowDfyPopup] = useState(false);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
@@ -120,6 +122,13 @@ const Dashboard = () => {
       verifyPayment();
     }
   }, [searchParams, user]);
+
+  // Handle DFY verify callback - show popup when returning from Paystack
+  useEffect(() => {
+    if (searchParams.get('dfy') === 'verify' && searchParams.get('reference')) {
+      setShowDfyPopup(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!isAuthLoading) {
@@ -223,6 +232,11 @@ const Dashboard = () => {
           setPayoutBalance(balance);
         } catch (e) {
           console.error('Payout balance error:', e);
+        }
+      } else {
+        // No shop — show DFY popup if not dismissed and not already returning from payment
+        if (!localStorage.getItem('dfy_popup_dismissed') && !searchParams.get('dfy')) {
+          setShowDfyPopup(true);
         }
       }
 
@@ -896,6 +910,13 @@ const Dashboard = () => {
           onSuccess={() => loadData()}
         />
       )}
+      <DoneForYouPopup
+        open={showDfyPopup}
+        onClose={() => setShowDfyPopup(false)}
+        onShopCreated={(newShopId) => {
+          loadData();
+        }}
+      />
     </PageWrapper>
   );
 };
