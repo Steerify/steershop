@@ -1,124 +1,127 @@
+# Dashboard Notifications, Public Growth Page, and Nigerian-Only Images
 
+## Overview
 
-# Nigerian/African Images, 1% Split Payments via Paystack Subaccounts
-
-## 1. Replace Images with Nigerian/African Business Photos
-
-The current Unsplash images are generic. Replace them with photos featuring Nigerian/African/brown-skinned people in business settings, and distribute images strategically across multiple sections of the Index page -- not just one block.
-
-### Image Placement Strategy
-
-**Location A -- Hero showcase (below hero, above WhySteerSolo):** 4 images of African entrepreneurs
-- A smiling Nigerian woman selling at her shop/market stall
-- A young African man packaging orders at a desk
-- An African woman using a smartphone for business
-- A vibrant Nigerian market/shop display with colorful goods
-
-**Location B -- Between "Value Proposition" and "How It Works" sections:** A single wide banner-style image of an African entrepreneur working confidently (with a subtle text overlay like "Built for businesses like yours")
-
-**Location C -- Between "Social Proof" and "Featured Shops" sections:** 3 small circular profile-style photos of diverse Nigerian/African business owners, styled as testimonial avatars
-
-All images will use curated Unsplash URLs specifically filtered for African/Nigerian subjects (e.g., `unsplash.com/photos/...` showing black/brown business owners, Lagos markets, African entrepreneurs).
-
-### Files Modified
-- `src/pages/Index.tsx` -- Replace existing image URLs and add 2 new small image sections
+Three changes: (1) a notification system in dashboards showing platform updates, (2) a public "Growth & Expansion" page for investors, and (3) replacing all Index page images with Nigerian-focused photos and using real shop owner data for the testimonial avatars section.
 
 ---
 
-## 2. Implement 1% Automatic Commission via Paystack Split Payments
+## 1. Platform Update Notifications (Dashboard)
 
-### How It Works (Current vs New)
+### New Database Table: `platform_updates`
 
-**Currently:** Each shop uses their OWN Paystack public key. Money goes 100% to the shop. The "2.5% commission" is only recorded in the database -- never actually collected.
+A new table to store platform announcements/updates that admins create and users see in their dashboards.
 
-**New (Split Payments):** ALL order payments use Steerify's single Paystack secret key on the backend. Paystack automatically splits each payment: 99% settles into the shop owner's bank account (via their subaccount), 1% stays in Steerify's Paystack account. Instant, automatic, no manual collection.
 
-### Technical Changes
+| Column          | Type        | Description                                             |
+| --------------- | ----------- | ------------------------------------------------------- |
+| id              | uuid (PK)   | Auto-generated                                          |
+| title           | text        | Update title (e.g. "New: 1% commission on all orders")  |
+| description     | text        | Short description                                       |
+| type            | text        | "feature", "improvement", "announcement", "maintenance" |
+| target_audience | text        | "all", "entrepreneurs", "customers"                     |
+| is_active       | boolean     | Whether to show it                                      |
+| created_at      | timestamptz | When created                                            |
+| created_by      | uuid        | Admin who created it                                    |
 
-#### A. Update Subaccount Creation (1% fee)
-**File:** `supabase/functions/paystack-create-subaccount/index.ts`
-- Change `percentage_charge: 0` to `percentage_charge: 1`
-- This tells Paystack: "On every transaction through this subaccount, keep 1% for the main account (Steerify)"
 
-#### B. New Edge Function: `paystack-initialize-order`
-Create a new backend function that initializes order payments using Steerify's PAYSTACK_SECRET_KEY with the shop's subaccount code for split settlement.
+RLS: Public read for active updates. Admin-only insert/update/delete.
 
-**Logic:**
-1. Receive order details (order_id, shop_id, amount, customer_email)
-2. Look up the shop's `paystack_subaccount_code`
-3. If no subaccount exists, reject (shop must set up bank details first)
-4. Call Paystack "Initialize Transaction" API with:
-   - Steerify's secret key (platform is the main merchant)
-   - `subaccount: shop.paystack_subaccount_code` (99% goes to shop)
-   - `bearer: "subaccount"` (Paystack fees charged to subaccount/shop)
-5. Return the authorization URL for the customer to pay
+### Admin Side: Manage Updates
 
-#### C. Update CheckoutDialog.tsx
-- Remove the shop's own `paystack_public_key` usage for order payments
-- Instead, call the new `paystack-initialize-order` edge function
-- Redirect customer to the returned Paystack authorization URL
-- On callback, verify payment via the existing webhook
+- Add a "Platform Updates" menu item in the AdminSidebar
+- New page `src/pages/admin/AdminPlatformUpdates.tsx` where admins can create/edit/delete platform updates and a functionality that sends it to the steersolo whatsapp community
+- Simple form: title, description, type (dropdown), target audience (dropdown)
+- Add route `/admin/updates` in App.tsx
 
-#### D. Update Webhook (fee percentage)
-**File:** `supabase/functions/paystack-webhook/index.ts`
-- Change `feePercentage` from `2.5` to `1`
-- The webhook already records revenue and platform earnings -- just update the percentage
+### Entrepreneur Dashboard: Notification Bell
 
-#### E. Update Frontend Revenue Display
-**File:** `src/components/CheckoutDialog.tsx`
-- Change `PLATFORM_FEE_PERCENTAGE` from `2.5` to `1`
+- The Bell icon in the Dashboard navbar (line 432) already exists but does nothing
+- Make it open a dropdown/sheet showing recent platform updates from the `platform_updates` table
+- Filter by `target_audience = 'all' OR target_audience = 'entrepreneurs'`
+- Track which updates the user has "seen" via localStorage (simple approach -- store last seen timestamp)
+- Show a red dot badge on the Bell when there are unseen updates
 
-#### F. Update Terms of Service
-**File:** `src/pages/TermsOfService.tsx`
-- Change "2.5%" to "1%" in the commission disclosure
+### Customer Dashboard: Notification Section
 
-#### G. Update Config
-**File:** `supabase/config.toml`
-- Register the new `paystack-initialize-order` function
+- Add a similar notification display in the CustomerDashboard
+- Filter by `target_audience = 'all' OR target_audience = 'customers'`
 
-### Payment Flow (New)
+---
 
-```text
-Customer clicks "Pay Now"
-    |
-    v
-Frontend calls paystack-initialize-order edge function
-    |
-    v
-Edge function uses Steerify's PAYSTACK_SECRET_KEY
-+ shop's subaccount_code to create transaction
-    |
-    v
-Customer redirected to Paystack checkout page
-    |
-    v
-Customer pays
-    |
-    v
-Paystack splits automatically:
-  - 99% -> Shop owner's bank (via subaccount)
-  - 1% -> Steerify's Paystack balance
-    |
-    v
-Webhook fires -> records revenue + platform earnings in DB
-```
+## 2. Public Growth Page (for Investors)
 
-### What Shop Owners Need To Do
+### New Page: `src/pages/GrowthPage.tsx`
 
-Shop owners no longer need their own Paystack public key. Instead, they need to:
-1. Add their bank account details (bank name, account number)
-2. The system creates a Paystack subaccount for them (already built)
-3. Payments are automatically split
+A public page at `/growth` showcasing SteerSolo's expansion metrics, pulled live from the database. This page is designed to impress investors with real data.
 
-### Files Created/Modified
+**Sections:**
 
-| File | Change |
-|------|--------|
-| `supabase/functions/paystack-initialize-order/index.ts` | NEW -- initializes split payment transactions |
-| `supabase/functions/paystack-create-subaccount/index.ts` | Change percentage_charge from 0 to 1 |
-| `supabase/functions/paystack-webhook/index.ts` | Change fee from 2.5% to 1% |
-| `src/components/CheckoutDialog.tsx` | Use new edge function instead of shop's Paystack key |
-| `src/pages/TermsOfService.tsx` | Update 2.5% to 1% |
-| `src/pages/Index.tsx` | Replace images with African/Nigerian business photos |
-| `supabase/config.toml` | Register paystack-initialize-order function |
+1. **Hero:** "Our Growth Story" with a tagline about empowering Nigerian SMEs
+2. **Live Metrics Dashboard:** Same data as SocialProofStats but presented in a more detailed, investor-friendly format:
+  - Total registered users (from profiles count)
+  - Active shops (from shops where is_active=true)
+  - Total products listed
+  - Total orders processed
+  - Total GMV (Gross Merchandise Value -- sum of paid order amounts)
+  - Platform revenue (1% of GMV)
+3. **Growth Timeline:** A visual timeline of key milestones (hardcoded initially, e.g. "Jan 2026 -- Platform launched", "Feb 2026 -- 500+ shops onboarded")
+4. **Categories Served:** Show the variety of business types using the platform
+5. **CTA:** "Partner with us" or "Invest in SteerSolo" with a contact email
 
+- Add route `/growth` in App.tsx (public, no auth required)
+- Add a "Growth" link in the Footer
+
+---
+
+## 3. Nigerian-Only Images on Index Page
+
+### Testimonial Avatars Section (lines 308-326): Use Real Users
+
+Instead of hardcoded Unsplash stock photos, query real shops from the database and display their `logo_url` and `shop_name`. The query already confirmed real shops with logos exist (Greenace, Collintins Collections, Solo kicks, etc.).
+
+**Implementation:**
+
+- Make the testimonial avatars section a small component that queries `shops` table for active shops with `logo_url IS NOT NULL`, limited to 5
+- Display shop logos as circular avatars with the shop name below
+- Fallback to a default avatar if no shops have logos yet
+
+### Hero Showcase Images (lines 178-203): Better Nigerian Photos
+
+Replace the current Unsplash URLs with more specifically Nigerian/African business imagery:
+
+- Woman at a Nigerian market stall with colorful goods
+- Young Nigerian man/woman packaging products
+- African entrepreneur on phone managing business
+- Lagos/Nigerian market scene with vibrant products
+
+Use carefully selected Unsplash photos that feature Nigerian/African subjects specifically.
+
+### Banner Image (lines 284-299): Nigerian Entrepreneur
+
+Replace the current generic desk photo with one showing a Nigerian business owner in their workspace or shop.
+
+---
+
+## Files to Create/Modify
+
+
+| File                                       | Action                                            |
+| ------------------------------------------ | ------------------------------------------------- |
+| **Database migration**                     | Create `platform_updates` table with RLS          |
+| `src/pages/admin/AdminPlatformUpdates.tsx` | NEW -- admin CRUD for platform updates            |
+| `src/components/AdminSidebar.tsx`          | Add "Platform Updates" menu item                  |
+| `src/App.tsx`                              | Add routes for `/admin/updates` and `/growth`     |
+| `src/pages/GrowthPage.tsx`                 | NEW -- public investor-facing growth page         |
+| `src/pages/Dashboard.tsx`                  | Wire up Bell icon to show notifications dropdown  |
+| `src/pages/customer/CustomerDashboard.tsx` | Add notifications display                         |
+| `src/pages/Index.tsx`                      | Replace images + make testimonial avatars dynamic |
+| `src/components/Footer.tsx`                | Add "Growth" link                                 |
+
+
+## Technical Notes
+
+- The `platform_updates` table uses public SELECT RLS so all users can read active updates. Only authenticated admins (role = 'admin') can INSERT/UPDATE/DELETE.
+- The Growth page queries the same data as `SocialProofStats` but presents it in a more detailed format with additional metrics like total GMV and platform revenue.
+- For the testimonial avatars, the component will query `shops` with `logo_url` not null, `is_active = true`, ordered by `created_at` to show the most established shops first, limited to 5.
+- localStorage key `steersolo_last_seen_updates` stores a timestamp to determine which updates are "new" for the notification badge.
