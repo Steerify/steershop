@@ -16,7 +16,7 @@ import {
   Settings, User, PlusCircle, Calendar, Share2, Palette,
   Sparkles, Megaphone, Target, ArrowRight, LogOut, Clock,
   CheckCircle, AlertCircle, DollarSign, CalendarCheck, Menu, X,
-  BarChart3, HelpCircle, Bell, Search, Grid, Shield, BookOpen, Banknote, Wallet, Crown
+  BarChart3, HelpCircle, Bell, Search, Grid, Shield, BookOpen, Banknote, Wallet, Crown, MessageCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
@@ -523,7 +523,9 @@ const Dashboard = () => {
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold mb-1">Welcome back, {profile?.full_name}!</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold mb-1">
+                Welcome back, {(profile?.full_name && profile.full_name.trim()) ? profile.full_name.trim() : (user?.email?.split('@')[0] || 'there')}!
+              </h1>
               <p className="text-muted-foreground">Here's what's happening with your store today.</p>
             </div>
             
@@ -546,6 +548,51 @@ const Dashboard = () => {
               variant="card"
               className="mb-6"
             />
+          )}
+
+          {/* First-Sale Momentum Card */}
+          {shopData && totalSales === 0 && (
+            <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Share2 className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg mb-1">Your first sale is closer than you think! 🚀</h3>
+                    <p className="text-muted-foreground text-sm">
+                      Sellers who share their store link usually get their first sale within 48 hours. Share yours now!
+                    </p>
+                  </div>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button 
+                      size="sm" 
+                      className="flex-1 sm:flex-none"
+                      onClick={() => {
+                        const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
+                        navigator.clipboard.writeText(url);
+                        toast({ title: "Link copied!", description: "Share it with your customers" });
+                      }}
+                    >
+                      Copy Store Link
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="flex-1 sm:flex-none"
+                      onClick={() => {
+                        const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
+                        const text = `Check out my store on SteerSolo! ${url}`;
+                        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                      }}
+                    >
+                      <MessageCircle className="w-4 h-4 mr-1" />
+                      WhatsApp
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Quick Stats */}

@@ -43,11 +43,11 @@ const Index = () => {
   const [activeAudience, setActiveAudience] = useState<"sellers" | "shoppers">("sellers");
 
   const sellerMilestones = [
-    "Sell products",
-    "Track orders",
-    "Get paid securely",
-    "Grow with AI",
-    "Manage customers"
+    "Get a store link",
+    "Accept payments securely",
+    "Send orders to WhatsApp",
+    "Build customer trust",
+    "Grow with AI tools"
   ];
 
   const shopperDiscoveries = [
@@ -103,7 +103,7 @@ const Index = () => {
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
               {activeAudience === "sellers" ? (
                 <>
-                  Run your business. All in one place.
+                  Turn your WhatsApp business into a professional store in 10 minutes.
                   <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
                     <TypewriterEffect 
@@ -132,7 +132,7 @@ const Index = () => {
             
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               {activeAudience === "sellers" 
-                ? "Store. Payments. Orders. Invoices. Customers. AI tools. Everything your business needs — in one platform."
+                ? "SteerSolo helps WhatsApp sellers look professional, build trust instantly, and close sales faster — without building a website."
                 : "Browse authentic products from Nigerian entrepreneurs. Chat directly with sellers. Enjoy personalized service."}
             </p>
             
@@ -154,17 +154,23 @@ const Index = () => {
             <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground pt-4">
               <div className="flex items-center">
                 <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-                No credit card required
+                10-minute setup
               </div>
               <div className="flex items-center">
                 <Clock className="w-5 h-5 text-blue-500 mr-2" />
-                Set up in 5 minutes
+                No website needed
               </div>
               <div className="flex items-center">
-                <Shield className="w-5 h-5 text-purple-500 mr-2" />
-                Secure payments
+                <MessageCircle className="w-5 h-5 text-green-600 mr-2" />
+                WhatsApp-powered
               </div>
             </div>
+            
+            {activeAudience === "sellers" && (
+              <p className="text-sm text-muted-foreground italic pt-2">
+                "If SteerSolo doesn't make your business look more professional, you don't pay."
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -178,12 +184,12 @@ const Index = () => {
           <div className="text-center mb-16">
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
               {activeAudience === "sellers" 
-                ? "Everything you need to sell online" 
+                ? "Everything you need to sell smarter" 
                 : "Why shop with independent sellers"}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               {activeAudience === "sellers"
-                ? "From your first sale to scaling your business"
+                ? "From your first sale to scaling your business — no tech skills needed"
                 : "Get more than just products—get stories and service"}
             </p>
           </div>
