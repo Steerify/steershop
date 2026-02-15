@@ -176,32 +176,8 @@ const Index = () => {
         </div>
       </section>
 
-      {/* NIGERIAN BUSINESS SHOWCASE */}
-      <section className="py-10 bg-muted/20">
-        <div className="container mx-auto px-4">
-          <p className="text-center text-sm font-medium text-muted-foreground mb-6 tracking-wide uppercase">
-            Real businesses. Real results.
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
-            {[
-              { src: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&h=300&fit=crop&q=80", alt: "Nigerian woman entrepreneur selling at her market stall" },
-              { src: "https://images.unsplash.com/photo-1573497019236-17f8177b81e8?w=400&h=300&fit=crop&q=80", alt: "Young African man packaging orders for delivery" },
-              { src: "https://images.unsplash.com/photo-1589156229687-496a31ad1d1f?w=400&h=300&fit=crop&q=80", alt: "African woman using smartphone for business" },
-              { src: "https://images.unsplash.com/photo-1590845947670-c009801ffa74?w=400&h=300&fit=crop&q=80", alt: "Vibrant African market with colorful goods on display" },
-            ].map((img, i) => (
-              <div key={i} className="relative overflow-hidden rounded-xl aspect-[4/3] shadow-sm">
-                <img
-                  src={img.src}
-                  alt={img.alt}
-                  loading="lazy"
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* FEATURED SHOPS */}
+      <FeaturedShopsBanner />
 
       {/* SECTION 2: WHAT IS STEERSOLO */}
       <WhySteerSolo />
@@ -282,23 +258,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* BANNER: Built for businesses like yours */}
-      <section className="py-0">
-        <div className="relative w-full h-48 md:h-64 overflow-hidden">
-          <img
-            src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1200&h=400&fit=crop&q=80"
-            alt="African entrepreneur working confidently at a modern desk"
-            loading="lazy"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-primary/60 flex items-center justify-center">
-            <p className="text-white text-2xl md:text-3xl font-bold tracking-tight text-center px-4">
-              Built for businesses like yours
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* SECTION 4: HOW IT WORKS */}
       <HowItWorks audience={activeAudience} />
 
@@ -307,9 +266,6 @@ const Index = () => {
 
       {/* TESTIMONIAL AVATARS - Real Shop Data */}
       <ShopAvatars />
-
-      {/* SECTION 6: FEATURED SHOPS */}
-      <FeaturedShopsBanner />
 
       {/* SECTION 7: PRICING/DISCOVERY CTA */}
       {activeAudience === "sellers" ? <DynamicPricing /> : <DiscoveryCTASection />}
