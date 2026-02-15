@@ -38,6 +38,7 @@ import { HomepageReviews } from "@/components/HomepageReviews";
 import { HowItWorks } from "@/components/HowItWorks";
 import { TrustBadgesSection } from "@/components/TrustBadgesSection";
 import { DynamicPricing } from "@/components/DynamicPricing";
+import { ShopAvatars } from "@/components/ShopAvatars";
 
 const Index = () => {
   const [activeAudience, setActiveAudience] = useState<"sellers" | "shoppers">("sellers");
@@ -304,26 +305,8 @@ const Index = () => {
       {/* SECTION 5: SOCIAL PROOF & STATS */}
       <SocialProofStats />
 
-      {/* TESTIMONIAL AVATARS */}
-      <section className="py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-6 flex-wrap">
-            {[
-              { src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face&q=80", name: "Chidi O." },
-              { src: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=120&h=120&fit=crop&crop=face&q=80", name: "Amara K." },
-              { src: "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=120&h=120&fit=crop&crop=face&q=80", name: "Tunde A." },
-            ].map((person, i) => (
-              <div key={i} className="flex flex-col items-center gap-2">
-                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary/30 shadow-sm">
-                  <img src={person.src} alt={person.name} loading="lazy" className="w-full h-full object-cover" />
-                </div>
-                <span className="text-xs text-muted-foreground font-medium">{person.name}</span>
-              </div>
-            ))}
-            <p className="text-sm text-muted-foreground ml-2">...and hundreds more</p>
-          </div>
-        </div>
-      </section>
+      {/* TESTIMONIAL AVATARS - Real Shop Data */}
+      <ShopAvatars />
 
       {/* SECTION 6: FEATURED SHOPS */}
       <FeaturedShopsBanner />

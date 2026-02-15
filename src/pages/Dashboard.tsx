@@ -46,6 +46,7 @@ import { Separator } from "@/components/ui/separator";
 import { PayoutRequestDialog } from "@/components/PayoutRequestDialog";
 import { CouponManager } from "@/components/CouponManager";
 import { DoneForYouPopup } from "@/components/DoneForYouPopup";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -429,9 +430,7 @@ const Dashboard = () => {
                 <Search className="h-4 w-4" />
               </Button>
               
-              <Button variant="ghost" size="icon">
-                <Bell className="h-4 w-4" />
-              </Button>
+              <NotificationBell audience="entrepreneurs" />
               
               <TourButton 
                 onStartTour={startTour} 

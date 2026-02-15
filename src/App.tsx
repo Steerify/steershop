@@ -53,6 +53,8 @@ const AdminFeaturedShops = lazy(() => import("./pages/admin/AdminFeaturedShops")
 const AdminActivityLogs = lazy(() => import("./pages/admin/AdminActivityLogs"));
 const AdminMarketingConsultations = lazy(() => import("./pages/admin/AdminMarketingConsultations"));
 const AdminPlatformEarnings = lazy(() => import("./pages/admin/AdminPlatformEarnings"));
+const AdminPlatformUpdates = lazy(() => import("./pages/admin/AdminPlatformUpdates"));
+const GrowthPage = lazy(() => import("./pages/GrowthPage"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const DemoStoreFront = lazy(() => import("./pages/DemoStoreFront"));
 const Onboarding = lazy(() => import("./pages/entrepreneur/Onboarding"));
@@ -126,6 +128,7 @@ const App = () => (
             <Route path="/setup-service" element={<SetupService />} />
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/growth" element={<GrowthPage />} />
             
             {/* Feature pages */}
             <Route path="/features/whatsapp" element={<WhatsAppFeature />} />
@@ -313,6 +316,11 @@ const App = () => (
             <Route path="/admin/earnings" element={
               <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
                 <AdminPlatformEarnings />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/updates" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminPlatformUpdates />
               </ProtectedRoute>
             } />
             

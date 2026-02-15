@@ -28,10 +28,11 @@ import {
 } from "lucide-react";
 import logo from "@/assets/steersolo-logo.jpg";
 
-import { Activity } from "lucide-react";
+import { Activity, Bell } from "lucide-react";
 
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+  { title: "Platform Updates", url: "/admin/updates", icon: Bell },
   { title: "Activity Logs", url: "/admin/activity-logs", icon: Activity },
   { title: "Platform Earnings", url: "/admin/earnings", icon: DollarSign },
   { title: "Shops", url: "/admin/shops", icon: Store },
