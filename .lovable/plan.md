@@ -1,89 +1,124 @@
 
-# Update Terms of Service, Privacy Policy, Index Page Images, and Fix Engagement Reminders
 
-## 1. Fix Engagement Reminders Display (Bug)
+# Nigerian/African Images, 1% Split Payments via Paystack Subaccounts
 
-The engagement reminders edge function works correctly, but the Admin Dashboard reads the response incorrectly.
+## 1. Replace Images with Nigerian/African Business Photos
 
-**The bug:** The edge function returns `{ success: true, results: { incomplete_registration: 0, ... } }` but the dashboard reads `data?.incomplete_registration` instead of `data?.results?.incomplete_registration`.
+The current Unsplash images are generic. Replace them with photos featuring Nigerian/African/brown-skinned people in business settings, and distribute images strategically across multiple sections of the Index page -- not just one block.
 
-**File:** `src/pages/admin/AdminDashboard.tsx`
-- Change `setReminderResults(data)` to `setReminderResults(data?.results || data)`
-- Update the toast to read from `data?.results` as well
+### Image Placement Strategy
 
-This is a one-line fix that makes the results display correctly.
+**Location A -- Hero showcase (below hero, above WhySteerSolo):** 4 images of African entrepreneurs
+- A smiling Nigerian woman selling at her shop/market stall
+- A young African man packaging orders at a desk
+- An African woman using a smartphone for business
+- A vibrant Nigerian market/shop display with colorful goods
 
-## 2. Update Terms of Service
+**Location B -- Between "Value Proposition" and "How It Works" sections:** A single wide banner-style image of an African entrepreneur working confidently (with a subtle text overlay like "Built for businesses like yours")
 
+**Location C -- Between "Social Proof" and "Featured Shops" sections:** 3 small circular profile-style photos of diverse Nigerian/African business owners, styled as testimonial avatars
+
+All images will use curated Unsplash URLs specifically filtered for African/Nigerian subjects (e.g., `unsplash.com/photos/...` showing black/brown business owners, Lagos markets, African entrepreneurs).
+
+### Files Modified
+- `src/pages/Index.tsx` -- Replace existing image URLs and add 2 new small image sections
+
+---
+
+## 2. Implement 1% Automatic Commission via Paystack Split Payments
+
+### How It Works (Current vs New)
+
+**Currently:** Each shop uses their OWN Paystack public key. Money goes 100% to the shop. The "2.5% commission" is only recorded in the database -- never actually collected.
+
+**New (Split Payments):** ALL order payments use Steerify's single Paystack secret key on the backend. Paystack automatically splits each payment: 99% settles into the shop owner's bank account (via their subaccount), 1% stays in Steerify's Paystack account. Instant, automatic, no manual collection.
+
+### Technical Changes
+
+#### A. Update Subaccount Creation (1% fee)
+**File:** `supabase/functions/paystack-create-subaccount/index.ts`
+- Change `percentage_charge: 0` to `percentage_charge: 1`
+- This tells Paystack: "On every transaction through this subaccount, keep 1% for the main account (Steerify)"
+
+#### B. New Edge Function: `paystack-initialize-order`
+Create a new backend function that initializes order payments using Steerify's PAYSTACK_SECRET_KEY with the shop's subaccount code for split settlement.
+
+**Logic:**
+1. Receive order details (order_id, shop_id, amount, customer_email)
+2. Look up the shop's `paystack_subaccount_code`
+3. If no subaccount exists, reject (shop must set up bank details first)
+4. Call Paystack "Initialize Transaction" API with:
+   - Steerify's secret key (platform is the main merchant)
+   - `subaccount: shop.paystack_subaccount_code` (99% goes to shop)
+   - `bearer: "subaccount"` (Paystack fees charged to subaccount/shop)
+5. Return the authorization URL for the customer to pay
+
+#### C. Update CheckoutDialog.tsx
+- Remove the shop's own `paystack_public_key` usage for order payments
+- Instead, call the new `paystack-initialize-order` edge function
+- Redirect customer to the returned Paystack authorization URL
+- On callback, verify payment via the existing webhook
+
+#### D. Update Webhook (fee percentage)
+**File:** `supabase/functions/paystack-webhook/index.ts`
+- Change `feePercentage` from `2.5` to `1`
+- The webhook already records revenue and platform earnings -- just update the percentage
+
+#### E. Update Frontend Revenue Display
+**File:** `src/components/CheckoutDialog.tsx`
+- Change `PLATFORM_FEE_PERCENTAGE` from `2.5` to `1`
+
+#### F. Update Terms of Service
 **File:** `src/pages/TermsOfService.tsx`
+- Change "2.5%" to "1%" in the commission disclosure
 
-Update the date to February 15, 2026 and enhance the content to be more comprehensive and protective:
+#### G. Update Config
+**File:** `supabase/config.toml`
+- Register the new `paystack-initialize-order` function
 
-- **Section 6 (Payments):** Add platform commission clause (2.5% fee on transactions), clarify that SteerSolo is a marketplace facilitator and not responsible for product quality
-- **Section 9 (Disputes):** Add a clear escalation process -- seller-buyer first, then SteerSolo mediation, then arbitration
-- **Section 10 (Limitation of Liability):** Strengthen the "marketplace only" position -- SteerSolo provides the platform, sellers are responsible for their products/services
-- **New Section: AI-Generated Content Disclaimer** -- clarify that AI tools (product descriptions, shop descriptions) are provided as suggestions and the user is responsible for reviewing and approving them
-- **New Section: Account Deletion** -- clarify data retention after account deletion (deleted_accounts table blocks re-registration)
-- **New Section: Done-For-You Service** -- N5,000 fee is non-refundable once shop is created
-- **Update contact info:** Use steerifygroup@gmail.com and the WhatsApp number (2349059947055)
+### Payment Flow (New)
 
-## 3. Update Privacy Policy
-
-**File:** `src/pages/PrivacyPolicy.tsx`
-
-Update the date to February 15, 2026 and enhance:
-
-- **Section 2 (Information We Collect):** Add AI interaction data (prompts sent to AI features like Stroke My Shop, Know This Shop, AI product descriptions)
-- **Section 3 (How We Use):** Add "AI-powered features" -- generating descriptions, marketing tips, shop analysis
-- **Section 5 (Data Sharing):** Add Lovable AI as a service provider for AI-powered features, add Resend for email communications, add Termii for SMS/phone verification
-- **Section 8 (Third-Party Services):** Add Lovable AI (AI features), Resend (email), Termii (SMS verification) alongside existing Paystack and WhatsApp entries
-- **New Section: AI Data Processing** -- explain that prompts to AI features may be processed by third-party AI providers, no personal data is included in AI prompts beyond business context
-- **Update contact info:** Use steerifygroup@gmail.com and the WhatsApp number
-
-## 4. Add Nigerian Business Images to Index Page
-
-**File:** `src/pages/Index.tsx`
-
-Add a subtle image showcase section between the Hero (Section 1) and the WhySteerSolo component (Section 2). This will be a horizontal strip of 3-4 curated stock images using Unsplash URLs showing:
-
-- A Nigerian woman at a market/shop smiling
-- Hands packaging products for delivery
-- Someone using a phone for business
-- A colorful product display
-
-Implementation:
-- A simple horizontal scroll/grid of rounded images with a soft overlay
-- Small section, not overwhelming -- just enough to set the vibe
-- Use `aspect-ratio` for consistent sizing
-- Add a subtle tagline like "Real businesses. Real results."
-- Images will use Unsplash URLs (free, no API key needed)
-- Responsive: 2 images on mobile, 4 on desktop
-
-## Technical Details
-
-### AdminDashboard.tsx Fix
 ```text
-// Before:
-setReminderResults(data);
-toast({ description: `Incomplete reg: ${data?.incomplete_registration || 0}...` });
-
-// After:
-const results = data?.results || data;
-setReminderResults(results);
-toast({ description: `Incomplete reg: ${results?.incomplete_registration || 0}...` });
+Customer clicks "Pay Now"
+    |
+    v
+Frontend calls paystack-initialize-order edge function
+    |
+    v
+Edge function uses Steerify's PAYSTACK_SECRET_KEY
++ shop's subaccount_code to create transaction
+    |
+    v
+Customer redirected to Paystack checkout page
+    |
+    v
+Customer pays
+    |
+    v
+Paystack splits automatically:
+  - 99% -> Shop owner's bank (via subaccount)
+  - 1% -> Steerify's Paystack balance
+    |
+    v
+Webhook fires -> records revenue + platform earnings in DB
 ```
 
-### Index.tsx Image Section
-A new `NigerianBusinessShowcase` component added between the hero and WhySteerSolo sections. Uses 4 Unsplash images of Nigerian entrepreneurs/markets with rounded corners, subtle shadows, and a "Real businesses. Real results." tagline. Keeps it minimal -- no carousel, just a clean grid.
+### What Shop Owners Need To Do
 
-### Terms of Service Key Additions
-- Platform commission disclosure (2.5%)
-- AI content disclaimer
-- Done-For-You service terms (non-refundable)
-- Marketplace facilitator liability protection
-- Account deletion and data retention terms
+Shop owners no longer need their own Paystack public key. Instead, they need to:
+1. Add their bank account details (bank name, account number)
+2. The system creates a Paystack subaccount for them (already built)
+3. Payments are automatically split
 
-### Privacy Policy Key Additions
-- AI data processing transparency
-- Complete third-party service provider list (Paystack, WhatsApp, Lovable AI, Resend, Termii)
-- NDPR-compliant AI processing disclosure
+### Files Created/Modified
+
+| File | Change |
+|------|--------|
+| `supabase/functions/paystack-initialize-order/index.ts` | NEW -- initializes split payment transactions |
+| `supabase/functions/paystack-create-subaccount/index.ts` | Change percentage_charge from 0 to 1 |
+| `supabase/functions/paystack-webhook/index.ts` | Change fee from 2.5% to 1% |
+| `src/components/CheckoutDialog.tsx` | Use new edge function instead of shop's Paystack key |
+| `src/pages/TermsOfService.tsx` | Update 2.5% to 1% |
+| `src/pages/Index.tsx` | Replace images with African/Nigerian business photos |
+| `supabase/config.toml` | Register paystack-initialize-order function |
+
