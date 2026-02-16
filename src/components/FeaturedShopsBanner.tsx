@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
-import { Sparkles, Store, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sparkles, Store, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +18,8 @@ interface FeaturedShop {
     shop_slug: string;
     logo_url: string | null;
     description: string | null;
+    state: string | null;
+    country: string | null;
   };
 }
 
@@ -81,7 +83,9 @@ export const FeaturedShopsBanner = () => {
             shop_name,
             shop_slug,
             logo_url,
-            description
+            description,
+            state,
+            country
           )
         `)
         .eq("is_active", true)
@@ -204,6 +208,14 @@ export const FeaturedShopsBanner = () => {
                     <p className="text-xs text-muted-foreground line-clamp-1">
                       {featured.tagline || featured.shop.description || "Discover amazing products"}
                     </p>
+                    {(featured.shop.state || featured.shop.country) && (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-[10px] text-muted-foreground">
+                          {[featured.shop.state, featured.shop.country].filter(Boolean).join(", ")}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Featured Badge */}

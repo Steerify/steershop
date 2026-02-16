@@ -12,6 +12,7 @@ import { TypewriterEffect } from "@/components/TypewriterEffect";
 import { Footer } from "@/components/Footer";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { FeaturedShopsBanner } from "@/components/FeaturedShopsBanner";
+import { ShopperDiscovery } from "@/components/ShopperDiscovery";
 import { WhySteerSolo } from "@/components/WhySteerSolo";
 import { HomepageReviews } from "@/components/HomepageReviews";
 import { HowItWorks } from "@/components/HowItWorks";
@@ -80,7 +81,10 @@ const Index = () => {
       {/* SECTION 2: FEATURED SHOPS */}
       <FeaturedShopsBanner />
 
-      {/* SECTION 3: PROBLEM/SOLUTION */}
+      {/* SECTION 3: SHOPPER DISCOVERY */}
+      <ShopperDiscovery />
+
+      {/* SECTION 4: PROBLEM/SOLUTION */}
       <WhySteerSolo />
 
       {/* SECTION 4: HOW IT WORKS */}
