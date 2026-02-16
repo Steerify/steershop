@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -144,11 +144,6 @@ const Dashboard = () => {
   const [payoutBalance, setPayoutBalance] = useState({ totalRevenue: 0, totalWithdrawn: 0, totalPending: 0, availableBalance: 0 });
   const [isPayoutDialogOpen, setIsPayoutDialogOpen] = useState(false);
   const [showDfyPopup, setShowDfyPopup] = useState(false);
-  
-  // Carousel state
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const bannerIntervalRef = useRef<NodeJS.Timeout>();
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
@@ -159,205 +154,6 @@ const Dashboard = () => {
       endTour(status === STATUS.FINISHED);
     }
   };
-
-  // Function to get all active banners
-  const getActiveBanners = () => {
-    const banners = [];
-    
-    // WhatsApp Community Banner - Always show this
-    banners.push({
-      id: 'whatsapp-community',
-      component: (
-        <div className="w-full">
-          <WhatsAppCommunityBanner />
-        </div>
-      )
-    });
-    
-    // Shop Status Card
-    if (subscriptionStatus === 'expired' || subscriptionStatus === 'trial') {
-      banners.push({
-        id: 'shop-status',
-        component: (
-          <ShopStatusBadge 
-            status={subscriptionStatus} 
-            daysRemaining={daysRemaining} 
-            showUpgradeAction={true}
-            variant="card"
-            className="w-full"
-          />
-        )
-      });
-    }
-    
-    // Verification Nudge
-    if (shopData && profile && !profile.bank_verified && !localStorage.getItem('verification_nudge_dismissed')) {
-      banners.push({
-        id: 'verification',
-        component: (
-          <Card className="border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-yellow-500/5 w-full">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                    <Shield className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-sm">Get Verified</h3>
-                    <p className="text-xs text-muted-foreground">Verify your identity to receive payouts and earn the Verified Seller badge.</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button size="sm" onClick={() => navigate('/identity-verification')}>
-                    Verify Now
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => { 
-                    localStorage.setItem('verification_nudge_dismissed', 'true'); 
-                    loadData();
-                    // Remove this banner from rotation
-                    setCurrentBannerIndex(prev => Math.max(0, prev - 1));
-                  }}>
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )
-      });
-    }
-    
-    // First-Sale Momentum Card
-    if (shopData && totalSales === 0) {
-      banners.push({
-        id: 'first-sale',
-        component: (
-          <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5 w-full">
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <Share2 className="w-6 h-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-1">Your first sale is closer than you think! 🚀</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Sellers who share their store link usually get their first sale within 48 hours. Share yours now!
-                  </p>
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button 
-                    size="sm" 
-                    className="flex-1 sm:flex-none"
-                    onClick={() => {
-                      const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
-                      navigator.clipboard.writeText(url);
-                      toast({ title: "Link copied!", description: "Share it with your customers" });
-                    }}
-                  >
-                    Copy Store Link
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="flex-1 sm:flex-none"
-                    onClick={() => {
-                      const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
-                      const text = `Check out my store on SteerSolo! ${url}`;
-                      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-                    }}
-                  >
-                    <MessageCircle className="w-4 h-4 mr-1" />
-                    WhatsApp
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )
-      });
-    }
-    
-    // Subscription Banner
-    if (subscriptionStatus === 'trial' || subscriptionStatus === 'expired') {
-      banners.push({
-        id: 'subscription',
-        component: (
-          <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 w-full">
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                  <h3 className="font-semibold mb-1">
-                    {subscriptionStatus === 'trial' 
-                      ? '🎉 Complete Your Setup' 
-                      : '⚠️ Subscription Required'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {subscriptionStatus === 'trial' 
-                      ? `You have ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left in your free trial. Subscribe to continue.`
-                      : 'Your trial has expired. Subscribe to reactivate your store.'}
-                  </p>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={handleSubscribe}
-                    disabled={isSubscribing}
-                    className="bg-primary hover:bg-primary/90"
-                  >
-                    {isSubscribing ? "Processing..." : "Subscribe Now"}
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => navigate('/pricing')}
-                  >
-                    View Plans
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )
-      });
-    }
-    
-    return banners;
-  };
-
-  // Auto-slide functionality
-  useEffect(() => {
-    const banners = getActiveBanners();
-    if (banners.length <= 1) return;
-
-    const startSlideTimer = () => {
-      if (bannerIntervalRef.current) {
-        clearInterval(bannerIntervalRef.current);
-      }
-      
-      bannerIntervalRef.current = setInterval(() => {
-        if (!isPaused) {
-          setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
-        }
-      }, 5000); // Change slide every 5 seconds
-    };
-
-    startSlideTimer();
-
-    return () => {
-      if (bannerIntervalRef.current) {
-        clearInterval(bannerIntervalRef.current);
-      }
-    };
-  }, [subscriptionStatus, shopData, totalSales, profile, isPaused, daysRemaining]);
-
-  // Update when banners change
-  useEffect(() => {
-    const banners = getActiveBanners();
-    if (currentBannerIndex >= banners.length) {
-      setCurrentBannerIndex(0);
-    }
-  }, [subscriptionStatus, shopData, totalSales, profile]);
-
-  const activeBanners = getActiveBanners();
 
   // Handle payment verification from Paystack redirect
   useEffect(() => {
@@ -690,6 +486,10 @@ const Dashboard = () => {
 
   return (
     <PageWrapper patternVariant="dots" patternOpacity={0.3}>
+      {/* WhatsApp Community Banner */}
+      <div className="container mx-auto px-4 pt-2">
+        <WhatsAppCommunityBanner />
+      </div>
       {/* Top Navigation */}
       <nav className="bg-background/95 backdrop-blur-lg border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
@@ -835,68 +635,87 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Carousel Banners Section */}
-          {activeBanners.length > 0 && (
-            <div className="mb-6">
-              <div 
-                className="relative"
-                onMouseEnter={() => setIsPaused(true)}
-                onMouseLeave={() => setIsPaused(false)}
-              >
-                {/* Banner Carousel */}
-                <div className="overflow-hidden rounded-lg">
-                  <div 
-                    className="flex transition-transform duration-500 ease-in-out"
-                    style={{ transform: `translateX(-${currentBannerIndex * 100}%)` }}
-                  >
-                    {activeBanners.map((banner) => (
-                      <div key={banner.id} className="w-full flex-shrink-0">
-                        {banner.component}
-                      </div>
-                    ))}
+          {/* Shop Status Card - Prominent display for expired/trial */}
+          {(subscriptionStatus === 'expired' || subscriptionStatus === 'trial') && (
+            <ShopStatusBadge 
+              status={subscriptionStatus} 
+              daysRemaining={daysRemaining} 
+              showUpgradeAction={true}
+              variant="card"
+              className="mb-6"
+            />
+          )}
+
+          {/* Verification Nudge */}
+          {shopData && profile && !profile.bank_verified && !localStorage.getItem('verification_nudge_dismissed') && (
+            <Card className="mb-6 border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-yellow-500/5">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                      <Shield className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-sm">Get Verified</h3>
+                      <p className="text-xs text-muted-foreground">Verify your identity to receive payouts and earn the Verified Seller badge.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button size="sm" onClick={() => navigate('/identity-verification')}>
+                      Verify Now
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => { localStorage.setItem('verification_nudge_dismissed', 'true'); loadData(); }}>
+                      <X className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          )}
 
-                {/* Navigation Dots */}
-                {activeBanners.length > 1 && (
-                  <div className="flex justify-center gap-2 mt-3">
-                    {activeBanners.map((_, index) => (
-                      <button
-                        key={index}
-                        className={`h-2 rounded-full transition-all ${
-                          index === currentBannerIndex 
-                            ? 'w-6 bg-primary' 
-                            : 'w-2 bg-primary/30 hover:bg-primary/50'
-                        }`}
-                        onClick={() => setCurrentBannerIndex(index)}
-                      />
-                    ))}
+          {/* First-Sale Momentum Card */}
+          {shopData && totalSales === 0 && (
+            <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Share2 className="w-6 h-6 text-primary" />
                   </div>
-                )}
-
-                {/* Previous/Next buttons */}
-                {activeBanners.length > 1 && (
-                  <>
-                    <button
-                      className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm border shadow-sm flex items-center justify-center hover:bg-background transition-colors"
-                      onClick={() => setCurrentBannerIndex(prev => 
-                        prev === 0 ? activeBanners.length - 1 : prev - 1
-                      )}
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg mb-1">Your first sale is closer than you think! 🚀</h3>
+                    <p className="text-muted-foreground text-sm">
+                      Sellers who share their store link usually get their first sale within 48 hours. Share yours now!
+                    </p>
+                  </div>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button 
+                      size="sm" 
+                      className="flex-1 sm:flex-none"
+                      onClick={() => {
+                        const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
+                        navigator.clipboard.writeText(url);
+                        toast({ title: "Link copied!", description: "Share it with your customers" });
+                      }}
                     >
-                      ←
-                    </button>
-                    <button
-                      className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm border shadow-sm flex items-center justify-center hover:bg-background transition-colors"
-                      onClick={() => setCurrentBannerIndex(prev => 
-                        (prev + 1) % activeBanners.length
-                      )}
+                      Copy Store Link
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="flex-1 sm:flex-none"
+                      onClick={() => {
+                        const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
+                        const text = `Check out my store on SteerSolo! ${url}`;
+                        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                      }}
                     >
-                      →
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
+                      <MessageCircle className="w-4 h-4 mr-1" />
+                      WhatsApp
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Quick Stats */}
@@ -965,6 +784,44 @@ const Dashboard = () => {
               shopFullData={shopFullData}
               totalSales={totalSales}
             />
+          )}
+
+          {/* Subscription Banner */}
+          {(subscriptionStatus === 'trial' || subscriptionStatus === 'expired') && (
+            <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 mb-6">
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-semibold mb-1">
+                      {subscriptionStatus === 'trial' 
+                        ? '🎉 Complete Your Setup' 
+                        : '⚠️ Subscription Required'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {subscriptionStatus === 'trial' 
+                        ? `You have ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left in your free trial. Subscribe to continue.`
+                        : 'Your trial has expired. Subscribe to reactivate your store.'}
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleSubscribe}
+                      disabled={isSubscribing}
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      {isSubscribing ? "Processing..." : "Subscribe Now"}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate('/pricing')}
+                    >
+                      View Plans
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
 
