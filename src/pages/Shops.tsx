@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,25 +9,32 @@ import { TopSellerBanner } from "@/components/TopSellerBanner";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { useDebounce } from "@/hooks/use-debounce";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
 import { Shop, Product } from "@/types/api";
-
-// Types updated from @/types/api
+import { ExploreFilters } from "@/components/ExploreFilters";
+import { ShopCardEnhanced } from "@/components/ShopCardEnhanced";
+import { supabase } from "@/integrations/supabase/client";
 
 const ShopCardSkeleton = () => (
   <Card className="h-full">
     <CardHeader>
-      <Skeleton className="w-16 h-16 rounded-xl mb-4" />
-      <Skeleton className="h-6 w-3/4 mb-2" />
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-2/3" />
+      <div className="flex items-start gap-3">
+        <Skeleton className="w-14 h-14 rounded-xl" />
+        <div className="flex-1">
+          <Skeleton className="h-5 w-3/4 mb-2" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-2/3 mt-1" />
+        </div>
+      </div>
     </CardHeader>
     <CardContent>
-      <Skeleton className="h-4 w-24" />
+      <div className="flex gap-1.5">
+        <Skeleton className="w-16 h-16 rounded-lg" />
+        <Skeleton className="w-16 h-16 rounded-lg" />
+        <Skeleton className="w-16 h-16 rounded-lg" />
+      </div>
     </CardContent>
   </Card>
 );
@@ -44,10 +51,7 @@ const ProductCardSkeleton = () => (
     </CardHeader>
     <CardContent>
       <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <Skeleton className="h-8 w-32 mb-1" />
-          <Skeleton className="h-4 w-20" />
-        </div>
+        <Skeleton className="h-8 w-32" />
         <Skeleton className="h-6 w-16 rounded-full" />
       </div>
     </CardContent>
@@ -68,11 +72,59 @@ const Shops = () => {
   const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
   const [searchType, setSearchType] = useState<'all' | 'shops' | 'products'>('all');
   const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedSort, setSelectedSort] = useState('newest');
+  const [selectedState, setSelectedState] = useState('All Locations');
+  const [shopProducts, setShopProducts] = useState<Record<string, { image_url: string; name: string }[]>>({});
+  const [shopProductCounts, setShopProductCounts] = useState<Record<string, number>>({});
+  const [stats, setStats] = useState({ shops: 0, products: 0 });
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   const ITEMS_PER_PAGE = 12;
+
+  // Fetch stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      const [shopsRes, productsRes] = await Promise.all([
+        supabase.from("shops").select("id", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("products").select("id", { count: "exact", head: true }).eq("is_available", true),
+      ]);
+      setStats({ shops: shopsRes.count || 0, products: productsRes.count || 0 });
+    };
+    fetchStats();
+  }, []);
+
+  // Fetch product previews for shops
+  const fetchShopPreviews = useCallback(async (shopIds: string[]) => {
+    if (shopIds.length === 0) return;
+    const newIds = shopIds.filter(id => !shopProducts[id]);
+    if (newIds.length === 0) return;
+
+    const { data } = await supabase
+      .from('products')
+      .select('shop_id, image_url, name')
+      .in('shop_id', newIds)
+      .eq('is_available', true)
+      .not('image_url', 'is', null)
+      .limit(100);
+
+    if (data) {
+      const grouped: Record<string, { image_url: string; name: string }[]> = {};
+      const counts: Record<string, number> = {};
+      data.forEach(p => {
+        if (!grouped[p.shop_id]) grouped[p.shop_id] = [];
+        if (!counts[p.shop_id]) counts[p.shop_id] = 0;
+        counts[p.shop_id]++;
+        if (grouped[p.shop_id].length < 3 && p.image_url) {
+          grouped[p.shop_id].push({ image_url: p.image_url, name: p.name });
+        }
+      });
+      setShopProducts(prev => ({ ...prev, ...grouped }));
+      setShopProductCounts(prev => ({ ...prev, ...counts }));
+    }
+  }, [shopProducts]);
 
   const fetchShops = useCallback(async (page: number = 1, reset: boolean = false, searchTerm: string = '') => {
     try {
@@ -83,14 +135,10 @@ const Shops = () => {
         setLoadingMoreShops(true);
       }
 
-      console.log('Fetching shops with search term:', searchTerm);
-
       const response = await shopService.getShops(page, ITEMS_PER_PAGE, { 
         verified: showVerifiedOnly || undefined,
         activeOnly: true
       });
-      
-      console.log('Shops fetched:', response.data?.length, 'page:', page);
       
       if (!response.success) {
         setHasMoreShops(false);
@@ -100,7 +148,7 @@ const Shops = () => {
 
       let filteredShops = response.data || [];
       
-      // If there's a search term, filter locally for additional search criteria
+      // Local search filter
       if (searchTerm.trim()) {
         filteredShops = filteredShops.filter(shop => 
           shop.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -110,7 +158,11 @@ const Shops = () => {
         );
       }
 
-      // Check if we have more pages
+      // State filter
+      if (selectedState !== 'All Locations') {
+        filteredShops = filteredShops.filter(shop => shop.state === selectedState);
+      }
+
       const totalShops = response.meta?.total || 0;
       const hasMore = filteredShops.length === ITEMS_PER_PAGE && 
                      page < Math.ceil(totalShops / ITEMS_PER_PAGE);
@@ -123,6 +175,9 @@ const Shops = () => {
         return [...prev, ...filteredShops.filter(s => !existingIds.has(s.id))];
       });
       
+      // Fetch product previews for these shops
+      fetchShopPreviews(filteredShops.map(s => s.id));
+      
       setShopsPage(page);
     } catch (error) {
       console.error('Error fetching shops:', error);
@@ -132,39 +187,27 @@ const Shops = () => {
       setIsLoading(false);
       setLoadingMoreShops(false);
     }
-  }, [showVerifiedOnly]);
+  }, [showVerifiedOnly, selectedState, fetchShopPreviews]);
 
-  // Search when query changes
-  useEffect(() => {
-    if (debouncedSearchQuery.trim()) {
-      console.log('Search triggered:', debouncedSearchQuery);
-      setIsSearching(true);
-      setSearchType('all');
-      setShopsPage(1);
-      setProductsPage(1);
-      setHasMoreShops(true);
-      setHasMoreProducts(true);
-      
-      // Search for both shops and products
-      Promise.all([
-        fetchShops(1, true, debouncedSearchQuery),
-        searchProducts(1, true)
-      ]).finally(() => {
-        setIsSearching(false);
-        console.log('Search complete');
-      });
-    } else {
-      // Clear product results when search is empty
-      console.log('Clearing search');
-      setProductResults([]);
-      setSearchType('all');
-      setShopsPage(1);
-      setProductsPage(1);
-      // Fetch regular shops without including all
-      fetchShops(1, true, '');
+  // Sort shops
+  const sortedShops = useMemo(() => {
+    const sorted = [...shops];
+    switch (selectedSort) {
+      case 'rating':
+        sorted.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0));
+        break;
+      case 'name':
+        sorted.sort((a, b) => (a.name || a.shop_name || '').localeCompare(b.name || b.shop_name || ''));
+        break;
+      case 'newest':
+      default:
+        // Already sorted by created_at desc from API
+        break;
     }
-  }, [debouncedSearchQuery, fetchShops]);
+    return sorted;
+  }, [shops, selectedSort]);
 
+  // Search products
   const searchProducts = useCallback(async (page: number = 1, reset: boolean = false) => {
     if (!debouncedSearchQuery.trim()) {
       if (reset) setProductResults([]);
@@ -179,15 +222,11 @@ const Shops = () => {
         setLoadingMoreProducts(true);
       }
 
-      console.log('Searching products for:', debouncedSearchQuery, 'page:', page);
-      
       const response = await productService.searchProducts({
         query: debouncedSearchQuery,
         page,
         limit: ITEMS_PER_PAGE
       });
-
-      console.log('Product search response:', response.data?.length, 'success:', response.success);
 
       if (!response.success || !response.data) {
         setHasMoreProducts(false);
@@ -196,8 +235,6 @@ const Shops = () => {
       }
 
       const results = response.data;
-      
-      // Check if we have more pages
       const hasMore = results.length === ITEMS_PER_PAGE && 
                      page < (response.meta?.totalPages || 1);
       
@@ -220,18 +257,9 @@ const Shops = () => {
     }
   }, [debouncedSearchQuery]);
 
-  // Initial load of shops
-  useEffect(() => {
-    if (!debouncedSearchQuery.trim()) {
-      console.log('Initial load of shops');
-      fetchShops(1, true);
-    }
-  }, [debouncedSearchQuery, fetchShops, showVerifiedOnly]);
-
-  // Search when query changes
+  // Main search/load effect
   useEffect(() => {
     if (debouncedSearchQuery.trim()) {
-      console.log('Search triggered:', debouncedSearchQuery);
       setIsSearching(true);
       setSearchType('all');
       setShopsPage(1);
@@ -239,24 +267,18 @@ const Shops = () => {
       setHasMoreShops(true);
       setHasMoreProducts(true);
       
-      // Search for both shops and products
       Promise.all([
         fetchShops(1, true, debouncedSearchQuery),
         searchProducts(1, true)
-      ]).finally(() => {
-        setIsSearching(false);
-        console.log('Search complete');
-      });
+      ]).finally(() => setIsSearching(false));
     } else {
-      // Clear product results when search is empty
-      console.log('Clearing search');
       setProductResults([]);
       setSearchType('all');
       setShopsPage(1);
       setProductsPage(1);
-      fetchShops(1, true);
+      fetchShops(1, true, '');
     }
-  }, [debouncedSearchQuery, fetchShops, searchProducts]);
+  }, [debouncedSearchQuery, fetchShops, searchProducts, showVerifiedOnly, selectedState]);
 
   const handleSearchTypeChange = (type: 'all' | 'shops' | 'products') => {
     setSearchType(type);
@@ -266,13 +288,8 @@ const Shops = () => {
     setHasMoreProducts(true);
     
     if (!debouncedSearchQuery.trim()) {
-      // If no search query, just fetch regular shops
-      if (type === 'shops' || type === 'all') {
-        fetchShops(1, true);
-      }
-      if (type === 'products') {
-        setProductResults([]);
-      }
+      if (type === 'shops' || type === 'all') fetchShops(1, true);
+      if (type === 'products') setProductResults([]);
       return;
     }
     
@@ -283,7 +300,6 @@ const Shops = () => {
       setShops([]);
       searchProducts(1, true);
     } else {
-      // Reset both arrays for 'all' search
       setShops([]);
       setProductResults([]);
       Promise.all([
@@ -294,56 +310,29 @@ const Shops = () => {
   };
 
   const loadMore = useCallback(() => {
-    console.log('Load more called, searchType:', searchType);
-    
     if (searchType === 'shops' && hasMoreShops && !loadingMoreShops) {
-      console.log('Loading more shops, page:', shopsPage + 1);
       fetchShops(shopsPage + 1, false, debouncedSearchQuery);
     } else if (searchType === 'products' && hasMoreProducts && !loadingMoreProducts) {
-      console.log('Loading more products, page:', productsPage + 1);
       searchProducts(productsPage + 1, false);
     } else if (searchType === 'all') {
-      if (hasMoreShops && !loadingMoreShops) {
-        console.log('Loading more shops for "all", page:', shopsPage + 1);
-        fetchShops(shopsPage + 1, false, debouncedSearchQuery);
-      }
-      if (hasMoreProducts && !loadingMoreProducts) {
-        console.log('Loading more products for "all", page:', productsPage + 1);
-        searchProducts(productsPage + 1, false);
-      }
+      if (hasMoreShops && !loadingMoreShops) fetchShops(shopsPage + 1, false, debouncedSearchQuery);
+      if (hasMoreProducts && !loadingMoreProducts) searchProducts(productsPage + 1, false);
     }
-  }, [
-    searchType, hasMoreShops, hasMoreProducts, 
-    loadingMoreShops, loadingMoreProducts,
-    shopsPage, productsPage, fetchShops, searchProducts, debouncedSearchQuery
-  ]);
+  }, [searchType, hasMoreShops, hasMoreProducts, loadingMoreShops, loadingMoreProducts, shopsPage, productsPage, fetchShops, searchProducts, debouncedSearchQuery]);
 
-  // Intersection Observer for infinite scroll
+  // Intersection Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !isSearching && !isLoading) {
-          console.log('Sentinel visible, loading more');
-          loadMore();
-        }
+        if (entries[0].isIntersecting && !isSearching && !isLoading) loadMore();
       },
       { threshold: 0.1, rootMargin: "100px" }
     );
-
     observerRef.current = observer;
-
-    if (sentinelRef.current) {
-      observer.observe(sentinelRef.current);
-    }
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
+    if (sentinelRef.current) observer.observe(sentinelRef.current);
+    return () => { if (observerRef.current) observerRef.current.disconnect(); };
   }, [loadMore, isSearching, isLoading]);
 
-  // Render content based on search state
   const renderContent = () => {
     const hasSearchQuery = debouncedSearchQuery.trim();
     const showProducts = hasSearchQuery && (searchType === 'all' || searchType === 'products');
@@ -351,27 +340,18 @@ const Shops = () => {
 
     return (
       <>
-        {/* Search Type Tabs - Only show when searching */}
+        {/* Search Type Tabs */}
         {hasSearchQuery && (
           <div className="flex gap-1 sm:gap-2 mb-4 sm:mb-6 border-b pb-3 sm:pb-4 overflow-x-auto">
-            <button
-              onClick={() => handleSearchTypeChange('all')}
-              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm whitespace-nowrap min-h-[40px] ${searchType === 'all' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/10'}`}
-            >
-              All ({shops.length + productResults.length})
-            </button>
-            <button
-              onClick={() => handleSearchTypeChange('shops')}
-              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm whitespace-nowrap min-h-[40px] ${searchType === 'shops' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/10'}`}
-            >
-              Shops ({shops.length})
-            </button>
-            <button
-              onClick={() => handleSearchTypeChange('products')}
-              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm whitespace-nowrap min-h-[40px] ${searchType === 'products' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/10'}`}
-            >
-              Products ({productResults.length})
-            </button>
+            {(['all', 'shops', 'products'] as const).map(type => (
+              <button
+                key={type}
+                onClick={() => handleSearchTypeChange(type)}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm whitespace-nowrap min-h-[40px] ${searchType === type ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/10'}`}
+              >
+                {type === 'all' ? `All (${shops.length + productResults.length})` : type === 'shops' ? `Shops (${shops.length})` : `Products (${productResults.length})`}
+              </button>
+            ))}
           </div>
         )}
 
@@ -385,7 +365,7 @@ const Shops = () => {
               {productResults.map((product, index) => (
                 <Link key={`${product.id}-${index}`} to={`/shop/${product.shop_slug || 'shop'}`}>
                   <Card 
-                    className="h-full card-african hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer group bg-card/80 backdrop-blur-sm"
+                    className="h-full hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer group bg-card/80 backdrop-blur-sm"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     <CardHeader className="p-2 sm:p-4">
@@ -398,7 +378,7 @@ const Shops = () => {
                           />
                         </div>
                       ) : (
-                        <div className="w-full h-32 sm:h-48 mb-2 sm:mb-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg flex items-center justify-center adire-pattern">
+                        <div className="w-full h-32 sm:h-48 mb-2 sm:mb-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg flex items-center justify-center">
                           <Package className="w-10 h-10 sm:w-16 sm:h-16 text-muted-foreground" />
                         </div>
                       )}
@@ -432,7 +412,6 @@ const Shops = () => {
               ))}
             </div>
             
-            {/* Products Loading Skeleton */}
             {loadingMoreProducts && (
               <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mt-4 sm:mt-6">
                 {Array.from({ length: 3 }).map((_, index) => (
@@ -453,98 +432,41 @@ const Shops = () => {
             )}
             
             {(isLoading || isSearching) && !shops.length ? (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {Array.from({ length: 6 }).map((_, index) => (
                   <ShopCardSkeleton key={index} />
                 ))}
               </div>
-            ) : shops.length === 0 ? (
+            ) : sortedShops.length === 0 ? (
               <div className="text-center py-16">
                 <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
                   <Store className="w-10 h-10 text-muted-foreground" />
                 </div>
                 <h3 className="font-display text-xl font-semibold mb-2">
-                  {hasSearchQuery ? "No shops found" : "No active shops"}
+                  {hasSearchQuery ? "No shops found" : selectedState !== 'All Locations' ? `No shops in ${selectedState}` : "No active shops"}
                 </h3>
                 <p className="text-muted-foreground max-w-md mx-auto">
                   {hasSearchQuery 
                     ? `No shops found for "${debouncedSearchQuery}"`
-                    : "No active shops found"}
+                    : "Try adjusting your filters or check back later."}
                 </p>
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                  {shops.map((shop, index) => (
-                    <Link key={`${shop.id}-${index}`} to={`/shop/${shop.slug || shop.shop_slug}`}>
-                      <Card 
-                        className="h-full card-african hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer group bg-card/80 backdrop-blur-sm animate-fade-up"
-                        style={{ animationDelay: `${index * 0.05}s` }}
-                      >
-                        <CardHeader className="p-3 sm:p-6">
-                          <div className="relative">
-                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-transform shadow-lg overflow-hidden">
-                              {shop.logo_url ? (
-                                <img 
-                                  src={shop.logo_url} 
-                                  alt={shop.name || shop.shop_name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <Store className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground" />
-                              )}
-                            </div>
-                            {shop.is_verified && (
-                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-sm">
-                                <BadgeCheck className="w-3 h-3 text-white" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <CardTitle className="group-hover:text-accent transition-colors font-display text-base sm:text-lg line-clamp-1">
-                              {shop.name || shop.shop_name}
-                            </CardTitle>
-                            {shop.is_verified && (
-                              <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800 text-xs">
-                                <BadgeCheck className="w-3 h-3 mr-1" />
-                                Verified
-                              </Badge>
-                            )}
-                          </div>
-                          <CardDescription className="line-clamp-2 text-xs sm:text-sm">
-                            {shop.description || "Visit this shop to see their products"}
-                          </CardDescription>
-                          {((shop as any).state || (shop as any).country) && (
-                            <div className="flex items-center gap-1 mt-1">
-                              <MapPin className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                              <span className="text-xs text-muted-foreground truncate">
-                                {[(shop as any).state, (shop as any).country].filter(Boolean).join(", ")}
-                              </span>
-                            </div>
-                          )}
-                        </CardHeader>
-                        <CardContent className="p-3 sm:p-6 pt-0">
-                          <div className="flex items-center justify-between">
-                            <div className="text-xs sm:text-sm text-accent font-medium group-hover:translate-x-1 transition-transform flex items-center gap-1">
-                              Visit Store 
-                              <span className="group-hover:translate-x-1 transition-transform">→</span>
-                            </div>
-                            {shop.total_reviews > 0 && (
-                              <div className="flex items-center gap-1">
-                                <BadgeCheck className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                                <span className="text-xs">{shop.average_rating?.toFixed(1) || '0.0'}</span>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  {sortedShops.map((shop, index) => (
+                    <ShopCardEnhanced
+                      key={`${shop.id}-${index}`}
+                      shop={shop}
+                      productPreviews={shopProducts[shop.id] || []}
+                      productCount={shopProductCounts[shop.id] || 0}
+                      index={index}
+                    />
                   ))}
                 </div>
 
-                {/* Shops Loading Skeleton */}
                 {loadingMoreShops && (
-                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mt-4 sm:mt-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6">
                     {Array.from({ length: 3 }).map((_, index) => (
                       <ShopCardSkeleton key={`shop-skeleton-${index}`} />
                     ))}
@@ -563,7 +485,7 @@ const Shops = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative pt-24 sm:pt-28 pb-8 sm:pb-12 overflow-hidden">
+      <section className="relative pt-24 sm:pt-28 pb-6 sm:pb-8 overflow-hidden">
         <AdirePattern variant="geometric" className="text-primary" opacity={0.5} />
         <div className="absolute inset-0 bg-gradient-to-b from-accent/5 via-transparent to-transparent" />
         
@@ -574,21 +496,21 @@ const Shops = () => {
               <span className="text-accent font-semibold text-xs sm:text-sm">Discover Nigerian Businesses</span>
             </div>
             
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-3">
               Explore <span className="gradient-text">Amazing Shops</span>
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-6 sm:mb-8 px-2">
-              Discover unique products from talented Nigerian entrepreneurs
+            <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mb-4 sm:mb-6 px-2">
+              {stats.shops} shops · {stats.products} products from talented Nigerian entrepreneurs
             </p>
 
             {/* Search */}
-            <div className="relative max-w-md mx-auto px-2">
+            <div className="relative max-w-lg mx-auto px-2">
               <Search className="absolute left-6 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
               <Input
-                placeholder="Search shops or products..."
+                placeholder="Search shops, products, or services..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 sm:pl-12 h-11 sm:h-12 text-sm sm:text-base bg-card/80 backdrop-blur-sm border-border/50 focus:border-accent shadow-lg"
+                className="pl-10 sm:pl-12 h-12 sm:h-14 text-sm sm:text-base bg-card/80 backdrop-blur-sm border-border/50 focus:border-accent shadow-lg rounded-xl"
               />
               {(isSearching || isLoading) && (
                 <div className="absolute right-6 sm:right-4 top-1/2 -translate-y-1/2">
@@ -596,25 +518,24 @@ const Shops = () => {
                 </div>
               )}
             </div>
-
-            {/* Verified Filter */}
-            <div className="mt-4 inline-flex items-center gap-2 bg-green-50 dark:bg-green-950/20 px-3 py-2 rounded-lg border border-green-200 dark:border-green-900/30">
-              <Switch 
-                id="verified-filter"
-                checked={showVerifiedOnly} 
-                onCheckedChange={setShowVerifiedOnly}
-              />
-              <Label htmlFor="verified-filter" className="flex items-center gap-1.5 cursor-pointer">
-                <BadgeCheck className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-green-700 dark:text-green-400">Verified Only</span>
-              </Label>
-            </div>
           </div>
         </div>
       </section>
 
+      {/* Filters */}
+      <ExploreFilters
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        selectedSort={selectedSort}
+        onSortChange={setSelectedSort}
+        selectedState={selectedState}
+        onStateChange={(s) => { setSelectedState(s); setShopsPage(1); }}
+        showVerifiedOnly={showVerifiedOnly}
+        onVerifiedChange={(v) => { setShowVerifiedOnly(v); setShopsPage(1); }}
+      />
+
       {/* Top Seller Banner */}
-      <div className="container mx-auto px-4 mb-6 sm:mb-8">
+      <div className="container mx-auto px-4 mt-6 mb-4">
         <TopSellerBanner />
       </div>
 
@@ -623,7 +544,6 @@ const Shops = () => {
         <div className="max-w-6xl mx-auto">
           {renderContent()}
 
-          {/* Search status */}
           {isSearching && !isLoading && (
             <div className="text-center py-8">
               <div className="inline-flex items-center gap-3">
@@ -633,12 +553,8 @@ const Shops = () => {
             </div>
           )}
 
-          {/* Infinite scroll sentinel */}
           {(hasMoreShops || hasMoreProducts) && !isSearching && (
-            <div 
-              ref={sentinelRef} 
-              className="h-20 flex items-center justify-center"
-            >
+            <div ref={sentinelRef} className="h-20 flex items-center justify-center">
               {(loadingMoreShops || loadingMoreProducts) && (
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
@@ -648,7 +564,6 @@ const Shops = () => {
             </div>
           )}
 
-          {/* Show "No more results" message */}
           {!hasMoreShops && !hasMoreProducts && (shops.length > 0 || productResults.length > 0) && (
             <div className="text-center py-12 border-t">
               <p className="text-muted-foreground">
@@ -657,17 +572,14 @@ const Shops = () => {
             </div>
           )}
 
-          {/* Show empty state when no results at all */}
           {!isLoading && !isSearching && shops.length === 0 && productResults.length === 0 && debouncedSearchQuery.trim() && (
             <div className="text-center py-16">
               <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
                 <Search className="w-10 h-10 text-muted-foreground" />
               </div>
-              <h3 className="font-display text-xl font-semibold mb-2">
-                No results found
-              </h3>
+              <h3 className="font-display text-xl font-semibold mb-2">No results found</h3>
               <p className="text-muted-foreground max-w-md mx-auto">
-                No shops or products found for "{debouncedSearchQuery}". Try searching with different keywords.
+                No shops or products found for "{debouncedSearchQuery}". Try different keywords.
               </p>
             </div>
           )}

@@ -79,6 +79,16 @@ const Products = () => {
     max_allowed: number;
     plan_slug: string;
   } | null>(null);
+  const PRODUCT_CATEGORIES = [
+    'general', 'fashion', 'electronics', 'food-drinks', 'beauty-health', 
+    'home-living', 'art-craft', 'services', 'other'
+  ];
+  const CATEGORY_LABELS: Record<string, string> = {
+    'general': 'General', 'fashion': 'Fashion', 'electronics': 'Electronics',
+    'food-drinks': 'Food & Drinks', 'beauty-health': 'Beauty & Health',
+    'home-living': 'Home & Living', 'art-craft': 'Art & Craft',
+    'services': 'Services', 'other': 'Other'
+  };
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -88,6 +98,7 @@ const Products = () => {
     type: "product" as "product" | "service",
     duration_minutes: "",
     booking_required: false,
+    category: "general",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -161,6 +172,7 @@ const Products = () => {
       type: "product",
       duration_minutes: "",
       booking_required: false,
+      category: "general",
     });
     setImageUrl("");
     setVideoUrl("");
@@ -216,6 +228,7 @@ const Products = () => {
         type: product.type || "product",
         duration_minutes: product.duration_minutes?.toString() || "",
         booking_required: product.booking_required ?? false,
+        category: (product as any).category || "general",
       });
       setImageUrl(product.images?.[0]?.url || "");
       setVideoUrl(product.video_url || "");
@@ -288,6 +301,7 @@ const Products = () => {
         booking_required: formData.booking_required,
         is_available: formData.is_available,
         video_url: videoUrl || undefined,
+        category: formData.category,
       };
 
       let response;
@@ -541,6 +555,21 @@ const Products = () => {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Category Selector */}
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <select
+                id="category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {PRODUCT_CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>
+                ))}
+              </select>
+            </div>
+
             {/* Type Toggle */}
             <div className="flex items-center justify-center gap-4 p-4 bg-muted/50 rounded-lg" data-tour="item-type-toggle">
               <Label className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg transition-all ${formData.type === 'product' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>

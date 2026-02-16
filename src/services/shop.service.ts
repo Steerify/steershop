@@ -103,6 +103,9 @@ const shopService = {
       total_reviews: s.total_reviews,
       owner_id: s.owner_id,
       is_verified: s.is_verified,
+      state: s.state,
+      country: s.country,
+      created_at: s.created_at,
     }));
 
     return {
@@ -149,6 +152,9 @@ const shopService = {
       total_reviews: s.total_reviews,
       owner_id: s.owner_id,
       is_verified: s.is_verified,
+      state: s.state,
+      country: s.country,
+      created_at: s.created_at,
     }));
 
     return {
@@ -190,6 +196,9 @@ const shopService = {
       total_reviews: shop.total_reviews,
       owner_id: shop.owner_id,
       is_verified: shop.is_verified,
+      state: shop.state,
+      country: shop.country,
+      created_at: shop.created_at,
     };
 
     return {
@@ -257,6 +266,9 @@ const shopService = {
       total_reviews: shop.total_reviews,
       owner_id: shop.owner_id,
       is_verified: shop.is_verified,
+      state: shop.state,
+      country: shop.country,
+      created_at: shop.created_at,
     };
 
     return {

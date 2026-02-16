@@ -1238,6 +1238,7 @@ export type Database = {
         Row: {
           average_rating: number | null
           booking_required: boolean | null
+          category: string
           created_at: string
           description: string | null
           duration_minutes: number | null
@@ -1256,6 +1257,7 @@ export type Database = {
         Insert: {
           average_rating?: number | null
           booking_required?: boolean | null
+          category?: string
           created_at?: string
           description?: string | null
           duration_minutes?: number | null
@@ -1274,6 +1276,7 @@ export type Database = {
         Update: {
           average_rating?: number | null
           booking_required?: boolean | null
+          category?: string
           created_at?: string
           description?: string | null
           duration_minutes?: number | null

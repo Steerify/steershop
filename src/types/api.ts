@@ -79,6 +79,8 @@ export interface Shop {
   total_reviews?: number;
   owner_id?: string;
   is_verified?: boolean;
+  country?: string;
+  created_at?: string;
 }
 
 export interface ProductImage {

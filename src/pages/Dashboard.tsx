@@ -16,7 +16,7 @@ import {
   Settings, User, PlusCircle, Calendar, Share2, Palette,
   Sparkles, Megaphone, Target, ArrowRight, LogOut, Clock,
   CheckCircle, AlertCircle, DollarSign, CalendarCheck, Menu, X,
-  BarChart3, HelpCircle, Bell, Search, Grid, Shield, BookOpen, Banknote, Wallet, Crown, MessageCircle, Truck
+  BarChart3, HelpCircle, Bell, Search, Grid, Shield, BookOpen, Banknote, Wallet, Crown, MessageCircle, Truck, BadgeCheck
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
@@ -47,6 +47,77 @@ import { PayoutRequestDialog } from "@/components/PayoutRequestDialog";
 import { CouponManager } from "@/components/CouponManager";
 import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { NotificationBell } from "@/components/NotificationBell";
+import { differenceInDays as diffDays } from "date-fns";
+
+const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profile: any; shopFullData: any; totalSales: number }) => {
+  const navigate = useNavigate();
+  const bankVerified = profile?.bank_verified === true;
+  const completedOrders = totalSales;
+  const avgRating = shopFullData?.average_rating || 0;
+  const shopAge = shopFullData?.created_at ? diffDays(new Date(), new Date(shopFullData.created_at)) : 0;
+  const isVerified = shopFullData?.is_verified === true;
+
+  const criteria = [
+    { label: "Bank account verified", met: bankVerified, detail: bankVerified ? "Verified" : "Not verified", link: "/identity-verification" },
+    { label: "10+ completed orders", met: completedOrders >= 10, detail: `${completedOrders}/10 orders` },
+    { label: "3.5+ average rating", met: avgRating >= 3.5 || avgRating === 0, detail: avgRating > 0 ? `${avgRating.toFixed(1)} rating` : "No reviews yet" },
+    { label: "Shop active 7+ days", met: shopAge >= 7, detail: `${shopAge} days active` },
+  ];
+  const metCount = criteria.filter(c => c.met).length;
+
+  if (isVerified) {
+    return (
+      <Card className="mb-6 border-green-500/20 bg-gradient-to-r from-green-500/5 to-emerald-500/5">
+        <CardContent className="p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+            <BadgeCheck className="w-5 h-5 text-green-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-sm text-green-700 dark:text-green-400">Verified Business ✓</h3>
+            <p className="text-xs text-muted-foreground">Your shop is verified and trusted by customers.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="mb-6 border-primary/20">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-sm flex items-center gap-2">
+            <Shield className="w-4 h-4 text-primary" />
+            Verification Progress
+          </h3>
+          <Badge variant="outline" className="text-xs">{metCount}/4</Badge>
+        </div>
+        <Progress value={(metCount / 4) * 100} className="h-2 mb-3" />
+        <div className="space-y-2">
+          {criteria.map((c, i) => (
+            <div key={i} className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                {c.met ? (
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                )}
+                <span className={c.met ? "text-foreground" : "text-muted-foreground"}>{c.label}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{c.detail}</span>
+                {c.link && !c.met && (
+                  <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => navigate(c.link!)}>
+                    <ArrowRight className="w-3 h-3" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -705,6 +776,15 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Verification Progress Card */}
+          {shopData && shopFullData && (
+            <VerificationProgressCard 
+              profile={profile}
+              shopFullData={shopFullData}
+              totalSales={totalSales}
+            />
+          )}
 
           {/* Subscription Banner */}
           {(subscriptionStatus === 'trial' || subscriptionStatus === 'expired') && (
