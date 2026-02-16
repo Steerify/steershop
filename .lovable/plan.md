@@ -1,87 +1,145 @@
 
 
-# Homepage Enhancement + Shop Location Display + Shopper Section
+# Comprehensive Upgrade: Location, Verification, and Explore Page Redesign
 
-## Summary
+## Overview
 
-The homepage currently targets only sellers. We'll add a subtle but compelling section for shoppers/visitors, show business locations on shop cards, and keep everything professional without overcrowding the page.
+This plan covers four major areas:
+1. Fix shop location data flow (state/country missing from service layer)
+2. Realistic verification logic that actually works for SMEs
+3. Full Explore Shops page redesign with filters, sorting, and categories
+4. Add product categories to the database for filtering
 
-## Changes
+---
 
-### 1. Show Business Location on Shop Cards (Shops Page + Storefront)
+## 1. Fix Location Data in Shop Service
 
-**`src/pages/Shops.tsx`**
-- In the shop card grid (line ~503-516), add the shop's `state` and `country` below the shop name or description
-- Display as a subtle `MapPin` icon + location text (e.g., "Lagos, Nigeria" or "Port Harcourt, Nigeria")
-- The `shops` table already has `state` and `country` columns -- just need to display them
+**Problem:** The `shop.service.ts` maps database fields to the `Shop` type but omits `state` and `country`. The Shops page uses `(shop as any).state` as a workaround.
 
-**`src/pages/ShopStorefront.tsx`**
-- In the shop header card (line ~370-384), add location display next to the shop name/description area
-- Query already fetches `*` from shops, so `state` and `country` are available
-- Add a `MapPin` icon with location text
+**Changes:**
 
-**`src/components/FeaturedShopsBanner.tsx`**
-- Add location to featured shop cards (need to include `state`, `country` in the shops join query)
-- Show as small text below the tagline
+- **`src/types/api.ts`** -- Add `country?: string` to the `Shop` interface (state already exists)
+- **`src/services/shop.service.ts`** -- Add `state: s.state` and `country: s.country` to ALL four mapping blocks (getShops, getShopByOwner, getShopBySlug, updateShop)
+- **`src/pages/Shops.tsx`** -- Remove `(shop as any)` casts, use `shop.state` / `shop.country` directly
 
-### 2. Add a Shopper/Visitor Section on Homepage
+---
 
-**`src/pages/Index.tsx`**
-- Add a new section between Featured Shops and WhySteerSolo (after Section 2, before Section 3)
-- Title: "Shop from Trusted Nigerian Businesses"
-- Subtitle: "Discover verified sellers, browse products, and buy with confidence"
-- Three interactive cards:
-  - "Browse Shops" -- links to /shops with a Store icon and product count stat
-  - "Secure Checkout" -- highlights safe payments with Shield icon  
-  - "Track Orders" -- highlights order tracking with Package icon
-- A CTA button: "Explore Shops" linking to /shops
-- This section is clean, compact (not overwhelming), and gives visitors a reason to explore as buyers
+## 2. Fix Verification Logic (Realistic Thresholds)
 
-### 3. Add a Subtle "Why Create a Store?" Nudge
+**Current problem:** The `check_shop_verification` database function requires 40 completed orders per day for 30 days (1,200 orders/month) AND 4.0 rating. This is impossible for African SMEs.
 
-**`src/pages/Index.tsx`**
-- In the existing WhySteerSolo section area, add a short comparison banner before the final CTA:
-  - A compact "See what sellers are building" strip that links to /shops
-  - Shows 2-3 real stats if available (e.g., "X active stores", "Y products listed") pulled from a simple count query
-- This gives visitors social proof without being pushy
+**New criteria -- a shop is "Verified" when ALL of these are true:**
+- Owner has bank verification completed (`bank_verified = true` in profiles)
+- Shop has at least 10 completed orders total
+- Shop has an average rating of 3.5 or higher (or no reviews yet, which is OK)
+- Shop has been active for at least 7 days
 
-### 4. Homepage Section Order (Updated)
+**Changes:**
 
-1. Hero (TypewriterEffect -- already working on mobile)
-2. Featured Shops Banner (existing)
-3. **NEW: Shopper Discovery Section** -- "Shop from Trusted Businesses"
-4. WhySteerSolo (existing -- targets sellers)
-5. HowItWorks (existing)
-6. Pricing (existing)
-7. Reviews (existing)
-8. Final CTA (existing)
+- **Database migration** -- Update the `check_shop_verification` function with realistic thresholds
+- **Database migration** -- Create a trigger that re-checks verification when an order is completed or a review is added
+- **`src/pages/Dashboard.tsx`** -- Add a "Verification Status" card that shows shop owners their progress toward verification (e.g., "Bank verified: Yes, Completed orders: 7/10, Rating: 4.2")
+- **`src/pages/IdentityVerification.tsx`** -- Add a note explaining that bank verification contributes to the "Verified Business" badge
 
-## Technical Details
+---
 
-### Files Modified
+## 3. Add Product Categories
+
+Products currently have no `category` column. We need this for filtering on the Explore page.
+
+**Changes:**
+
+- **Database migration** -- Add `category` column to `products` table with a default of `'general'`
+- Predefined categories: Fashion, Electronics, Food & Drinks, Beauty & Health, Home & Living, Art & Craft, Services, Other
+- **`src/pages/Products.tsx`** -- Add category dropdown when creating/editing a product
+- **`src/services/product.service.ts`** -- Include category in product CRUD operations
+
+---
+
+## 4. Full Explore Shops Page Redesign
+
+Transform `/shops` from a basic grid into an engaging marketplace experience.
+
+**New layout structure:**
+
+```text
++------------------------------------------+
+| Navbar                                    |
++------------------------------------------+
+| Hero: Search bar (centered, prominent)    |
+| Subtitle + stats (X shops, Y products)   |
++------------------------------------------+
+| Filter Bar (sticky on scroll):            |
+| [All] [Fashion] [Food] [Beauty] [...]     |
+| [Sort: Newest v] [Location v] [Verified]  |
++------------------------------------------+
+| Trending / Featured Shops carousel        |
++------------------------------------------+
+| Shop Grid (improved cards)                |
+| - Larger logo                             |
+| - Product preview thumbnails (3 mini)     |
+| - Location badge                          |
+| - Rating stars                            |
+| - Verified badge                          |
+| - Quick "Visit Shop" CTA                  |
++------------------------------------------+
+| Product Results (when searching)          |
++------------------------------------------+
+| Infinite scroll sentinel                  |
++------------------------------------------+
+| Footer                                    |
++------------------------------------------+
+```
+
+**Specific changes to `src/pages/Shops.tsx`:**
+
+- **Filter bar** -- Horizontal scrollable category chips (Fashion, Food, Beauty, etc.) below the search
+- **Sort dropdown** -- Options: Newest, Highest Rated, Most Products, A-Z
+- **State/Location filter** -- Dropdown with Nigerian states (Lagos, Abuja, Rivers, etc.) pulled from a utility
+- **Verified toggle** -- Keep existing but style better inline with other filters
+- **Improved shop cards:**
+  - Show 2-3 product thumbnail previews below the shop logo (fetch top products per shop)
+  - Larger, cleaner card design with more whitespace
+  - Star rating displayed as actual stars (not just a number)
+  - Location prominently displayed
+  - Product count badge
+- **Empty state** -- Better illustration and CTA for "No shops in this category"
+
+**New files:**
+- `src/components/ExploreFilters.tsx` -- Filter bar component (categories, sort, location, verified)
+- `src/components/ShopCardEnhanced.tsx` -- Redesigned shop card with product previews
+
+---
+
+## 5. Shop Owner Verification Dashboard
+
+Show shop owners their progress toward verification.
+
+**Changes to `src/pages/Dashboard.tsx`:**
+- Add a "Verification Progress" card in the overview section
+- Checklist items:
+  - Bank account verified (links to /identity-verification)
+  - 10+ completed orders (shows current count)
+  - 3.5+ average rating (shows current rating or "No reviews yet")
+  - Account age 7+ days (shows join date)
+- When all criteria are met, show a celebration state with the Verified badge
+
+---
+
+## Technical Summary
 
 | File | Change |
 |------|--------|
-| `src/pages/Index.tsx` | Add ShopperDiscovery section between FeaturedShopsBanner and WhySteerSolo |
-| `src/components/ShopperDiscovery.tsx` | **New file** -- interactive shopper-facing section with browse/checkout/track cards and live stats |
-| `src/pages/Shops.tsx` | Add MapPin + location display to shop cards |
-| `src/pages/ShopStorefront.tsx` | Add MapPin + location display in shop header |
-| `src/components/FeaturedShopsBanner.tsx` | Include state/country in query, show location on featured cards |
+| **Database migration** | Update `check_shop_verification` function, add `category` to products, add verification trigger |
+| `src/types/api.ts` | Add `country` to Shop interface |
+| `src/services/shop.service.ts` | Add `state` and `country` to all 4 mapping blocks |
+| `src/pages/Shops.tsx` | Full redesign with filters, sorting, categories, improved cards |
+| `src/components/ExploreFilters.tsx` | New filter bar component |
+| `src/components/ShopCardEnhanced.tsx` | New enhanced shop card with product previews |
+| `src/pages/Products.tsx` | Add category selector when creating/editing products |
+| `src/services/product.service.ts` | Include category field in CRUD |
+| `src/pages/Dashboard.tsx` | Add Verification Progress card |
+| `src/pages/IdentityVerification.tsx` | Add note about verification badge |
 
-### New Component: `ShopperDiscovery.tsx`
-
-- Fetches live counts from Supabase: active shops count and total products count
-- Displays three interactive cards with hover effects
-- "Explore Shops" CTA links to /shops
-- Compact design -- no more than ~300px vertical space on mobile
-- Uses existing design system (Card, Badge, Button components)
-
-### Location Display Pattern
-
-```
-MapPin icon (14px) + "Lagos, Nigeria" (text-xs text-muted-foreground)
-```
-
-- Falls back to just country if state is null
-- Shows nothing if both are null (graceful degradation)
+**Estimated scope:** This is a significant upgrade touching the database, service layer, and multiple UI components. The result will be a professional, world-standard marketplace experience.
 
