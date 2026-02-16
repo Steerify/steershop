@@ -40,6 +40,7 @@ const productService = {
         duration_minutes: data.duration_minutes || null,
         booking_required: data.booking_required || false,
         video_url: data.video_url || null,
+        category: (data as any).category || 'general',
       })
       .select()
       .single();
@@ -168,6 +169,7 @@ const productService = {
     if (data.booking_required !== undefined) updateData.booking_required = data.booking_required;
     if (data.is_available !== undefined) updateData.is_available = data.is_available;
     if (data.video_url !== undefined) updateData.video_url = data.video_url || null;
+    if ((data as any).category) updateData.category = (data as any).category;
 
     const { data: product, error } = await supabase
       .from('products')

@@ -59,6 +59,15 @@ const IdentityVerification = () => {
           </AlertDescription>
         </Alert>
 
+        {/* Verification Badge Info */}
+        <Alert className="mb-6 border-primary/30 bg-primary/5">
+          <ShieldCheck className="h-4 w-4 text-primary" />
+          <AlertTitle className="text-primary">How to Earn the "Verified Business" Badge</AlertTitle>
+          <AlertDescription className="text-sm">
+            Complete bank verification, receive 10+ completed orders, maintain a 3.5+ rating, and have your shop active for at least 7 days. Track your progress on the Dashboard.
+          </AlertDescription>
+        </Alert>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
