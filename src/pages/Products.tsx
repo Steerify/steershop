@@ -29,6 +29,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { supabase } from "@/integrations/supabase/client";
+import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 
 // Helper function to format UUID with hyphens
 const formatUUIDWithHyphens = (uuid: string): string => {
@@ -91,6 +92,7 @@ const Products = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [priceSuggestion, setPriceSuggestion] = useState<{ min: number; max: number } | null>(null);
+  const [showDfyPopup, setShowDfyPopup] = useState(false);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('products');
@@ -119,6 +121,12 @@ const Products = () => {
       const userShop = shopsResponse.data[0];
 
       if (!userShop) {
+        // No shop — show DFY popup if not dismissed
+        if (!localStorage.getItem('dfy_popup_dismissed')) {
+          setShowDfyPopup(true);
+          setIsLoading(false);
+          return;
+        }
         toast({
           title: "No Store Found",
           description: "Please create your store first",
@@ -347,6 +355,17 @@ const Products = () => {
 
   return (
     <>
+      <DoneForYouPopup
+        open={showDfyPopup}
+        onClose={() => {
+          setShowDfyPopup(false);
+          navigate("/my-store");
+        }}
+        onShopCreated={() => {
+          setShowDfyPopup(false);
+          loadShopAndProducts();
+        }}
+      />
       {/* Upgrade Prompt for Product Limit */}
       <UpgradePrompt
         isOpen={showUpgradePrompt}
