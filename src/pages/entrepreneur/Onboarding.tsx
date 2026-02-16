@@ -219,7 +219,7 @@ const Onboarding = () => {
         .single();
         
       if (profile?.role === 'shop_owner') {
-        navigate("/dashboard");
+        navigate("/dashboard?show_dfy=true");
       } else {
         navigate("/customer_dashboard");
       }

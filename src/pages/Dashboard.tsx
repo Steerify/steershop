@@ -235,9 +235,13 @@ const Dashboard = () => {
           console.error('Payout balance error:', e);
         }
       } else {
-        // No shop — show DFY popup if not dismissed and not already returning from payment
-        if (!localStorage.getItem('dfy_popup_dismissed') && !searchParams.get('dfy')) {
+        // No shop — only show DFY popup if redirected from onboarding with show_dfy param
+        if (searchParams.get('show_dfy') === 'true') {
           setShowDfyPopup(true);
+          // Clean the param from URL
+          const newParams = new URLSearchParams(searchParams);
+          newParams.delete('show_dfy');
+          navigate({ search: newParams.toString() }, { replace: true });
         }
       }
 

@@ -52,7 +52,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 import { ShopStatusBadge, getShopStatusFromProfile } from "@/components/ShopStatusBadge";
-
+import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 
 const shopSchema = z
   .object({
@@ -120,6 +120,8 @@ const MyStore = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPaystackGuide, setShowPaystackGuide] = useState(false);
   const [shopStatus, setShopStatus] = useState<{ status: 'active' | 'trial' | 'expired'; daysRemaining: number }>({ status: 'trial', daysRemaining: 15 });
+
+  const [showDfyPopup, setShowDfyPopup] = useState(false);
 
   const [formData, setFormData] = useState({
     shop_name: "",
@@ -211,6 +213,10 @@ const MyStore = () => {
       const data = Array.isArray(res.data) ? res.data[0] : res.data;
 
       if (!data) {
+        // No shop — show DFY popup if not dismissed
+        if (!localStorage.getItem('dfy_popup_dismissed')) {
+          setShowDfyPopup(true);
+        }
         toast({
           title: "No Store Found",
           description: "You haven't created a store yet",
@@ -335,6 +341,14 @@ const MyStore = () => {
 
   return (
     <PageWrapper patternVariant="dots" patternOpacity={0.5}>
+      <DoneForYouPopup
+        open={showDfyPopup}
+        onClose={() => setShowDfyPopup(false)}
+        onShopCreated={() => {
+          setShowDfyPopup(false);
+          loadShop();
+        }}
+      />
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-3xl">
         <Button variant="ghost" onClick={() => navigate("/dashboard")} className="min-h-[44px] px-2 sm:px-4 mb-4">
           <ArrowLeft className="w-4 h-4 sm:mr-2" />
