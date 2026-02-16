@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Store, Package, Sparkles, BadgeCheck } from "lucide-react";
+import { Search, Store, Package, Sparkles, BadgeCheck, MapPin } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { TopSellerBanner } from "@/components/TopSellerBanner";
@@ -514,6 +514,14 @@ const Shops = () => {
                           <CardDescription className="line-clamp-2 text-xs sm:text-sm">
                             {shop.description || "Visit this shop to see their products"}
                           </CardDescription>
+                          {((shop as any).state || (shop as any).country) && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <MapPin className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                              <span className="text-xs text-muted-foreground truncate">
+                                {[(shop as any).state, (shop as any).country].filter(Boolean).join(", ")}
+                              </span>
+                            </div>
+                          )}
                         </CardHeader>
                         <CardContent className="p-3 sm:p-6 pt-0">
                           <div className="flex items-center justify-between">

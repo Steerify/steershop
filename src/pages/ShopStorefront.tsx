@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X, Briefcase, Clock, Calendar, BadgeCheck, MessageCircle } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X, Briefcase, Clock, Calendar, BadgeCheck, MessageCircle, MapPin } from "lucide-react";
 import { WishlistButton } from "@/components/WishlistButton";
 import { openWhatsAppContact } from "@/utils/whatsapp";
 import Navbar from "@/components/Navbar";
@@ -41,6 +41,8 @@ interface Shop {
   bank_account_number?: string;
   is_verified?: boolean;
   owner_id?: string;
+  state?: string | null;
+  country?: string | null;
 }
 interface Product {
   id: string;
@@ -381,6 +383,14 @@ const ShopStorefront = () => {
                       </div>
                       {shop.description && (
                         <p className="text-muted-foreground mt-2 line-clamp-2">{shop.description}</p>
+                      )}
+                      {(shop.state || shop.country) && (
+                        <div className="flex items-center gap-1 mt-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            {[shop.state, shop.country].filter(Boolean).join(", ")}
+                          </span>
+                        </div>
                       )}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
