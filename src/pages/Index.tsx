@@ -35,12 +35,10 @@ const Index = () => {
 
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
               Turn your WhatsApp business into a{" "}
-              <span className="inline-block min-w-[280px] md:min-w-[320px] text-left">
-                <TypewriterEffect
-                  texts={["professional store", "trusted brand", "money-making machine", "customer magnet"]}
-                  className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent"
-                />
-              </span>{" "}
+              <TypewriterEffect
+                texts={["professional store", "trusted brand", "money-making machine", "customer magnet"]}
+                className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent"
+              />{" "}
               in 10 minutes.
             </h1>
 
