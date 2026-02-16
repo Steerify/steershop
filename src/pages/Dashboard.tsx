@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import shopService from "@/services/shop.service";
@@ -11,17 +11,16 @@ import productService from "@/services/product.service";
 import subscriptionService from "@/services/subscription.service";
 import { payoutService } from "@/services/payout.service";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Plus, Store, Package, ShoppingCart, TrendingUp, Users, 
-  Settings, User, PlusCircle, Calendar, Share2, Palette,
-  Sparkles, Megaphone, Target, ArrowRight, LogOut, Clock,
+import {
+  Store, Package, ShoppingCart, TrendingUp, Users,
+  Settings, LogOut, Share2,
+  Megaphone, Target, ArrowRight, Clock,
   CheckCircle, AlertCircle, DollarSign, CalendarCheck, Menu, X,
-  BarChart3, HelpCircle, Bell, Search, Grid, Shield, BookOpen, Banknote, Wallet, Crown, MessageCircle, Truck, BadgeCheck
+  HelpCircle, Search, Shield, BookOpen, Banknote, Wallet, Crown, MessageCircle, Truck, BadgeCheck, Sparkles
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
-import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { PageWrapper } from "@/components/PageWrapper";
 import { FeatureDiscoveryPopup } from "@/components/FeatureDiscoveryPopup";
 import logo from "@/assets/steersolo-logo.jpg";
@@ -40,21 +39,19 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { PayoutRequestDialog } from "@/components/PayoutRequestDialog";
 import { CouponManager } from "@/components/CouponManager";
 import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { NotificationBell } from "@/components/NotificationBell";
-import { differenceInDays as diffDays } from "date-fns";
 
+// Helper component for verification progress (unchanged)
 const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profile: any; shopFullData: any; totalSales: number }) => {
   const navigate = useNavigate();
   const bankVerified = profile?.bank_verified === true;
   const completedOrders = totalSales;
   const avgRating = shopFullData?.average_rating || 0;
-  const shopAge = shopFullData?.created_at ? diffDays(new Date(), new Date(shopFullData.created_at)) : 0;
+  const shopAge = shopFullData?.created_at ? differenceInDays(new Date(), new Date(shopFullData.created_at)) : 0;
   const isVerified = shopFullData?.is_verified === true;
 
   const criteria = [
@@ -91,7 +88,9 @@ const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profi
           </h3>
           <Badge variant="outline" className="text-xs">{metCount}/4</Badge>
         </div>
-        <Progress value={(metCount / 4) * 100} className="h-2 mb-3" />
+        <div className="h-2 w-full bg-muted rounded-full overflow-hidden mb-3">
+          <div className="h-full bg-primary transition-all" style={{ width: `${(metCount / 4) * 100}%` }} />
+        </div>
         <div className="space-y-2">
           {criteria.map((c, i) => (
             <div key={i} className="flex items-center justify-between text-sm">
@@ -133,17 +132,18 @@ const Dashboard = () => {
   const [totalSales, setTotalSales] = useState(0);
   const [chartData, setChartData] = useState<any[]>([]);
   const [activeOffer, setActiveOffer] = useState<any>(null);
-  const [subscriptionPrice, setSubscriptionPrice] = useState(1000);
   const [shopData, setShopData] = useState<{ id: string; name: string } | null>(null);
   const [shopFullData, setShopFullData] = useState<any>(null);
   const [productsCount, setProductsCount] = useState(0);
   const [userBadges, setUserBadges] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [pendingOrders, setPendingOrders] = useState(0);
-  const [activeTab, setActiveTab] = useState("overview");
   const [payoutBalance, setPayoutBalance] = useState({ totalRevenue: 0, totalWithdrawn: 0, totalPending: 0, availableBalance: 0 });
   const [isPayoutDialogOpen, setIsPayoutDialogOpen] = useState(false);
   const [showDfyPopup, setShowDfyPopup] = useState(false);
+
+  // Carousel state
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
@@ -388,19 +388,166 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
-        <div className="animate-pulse flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-xl overflow-hidden">
-            <img src={logo} alt="Loading" className="w-full h-full object-cover" />
-          </div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // Build carousel slides dynamically based on current data
+  const getCarouselSlides = () => {
+    const slides = [];
 
+    // 1. WhatsApp Community Banner
+    slides.push(
+      <Card key="whatsapp" className="border-primary/20">
+        <CardContent className="p-4">
+          <WhatsAppCommunityBanner />
+        </CardContent>
+      </Card>
+    );
+
+    // 2. Trial / Subscription Status
+    if (subscriptionStatus === 'trial') {
+      slides.push(
+        <Card key="trial" className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Clock className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">Free Trial · {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} left</h3>
+                <p className="text-xs text-muted-foreground">Upgrade to keep your store live.</p>
+              </div>
+            </div>
+            <Button size="sm" onClick={handleSubscribe} disabled={isSubscribing}>
+              Upgrade Now
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    } else if (subscriptionStatus === 'expired') {
+      slides.push(
+        <Card key="expired" className="bg-red-500/5 border-red-500/20">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                <AlertCircle className="w-4 h-4 text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm text-red-600">Subscription Expired</h3>
+                <p className="text-xs text-muted-foreground">Your store is hidden. Reactivate now.</p>
+              </div>
+            </div>
+            <Button size="sm" onClick={handleSubscribe} disabled={isSubscribing}>
+              Reactivate
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // 3. Store visibility
+    slides.push(
+      <Card key="visibility" className="border-green-500/20">
+        <CardContent className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+              <CheckCircle className="w-4 h-4 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">Your store is visible to customers</p>
+              <p className="text-xs text-muted-foreground">Keep up the great work!</p>
+            </div>
+          </div>
+          <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+            Live
+          </Badge>
+        </CardContent>
+      </Card>
+    );
+
+    // 4. Verification nudge (if needed)
+    if (shopData && profile && !profile.bank_verified && !localStorage.getItem('verification_nudge_dismissed')) {
+      slides.push(
+        <Card key="verification" className="border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-yellow-500/5">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm">Get Verified</h3>
+                  <p className="text-xs text-muted-foreground">Verify identity to receive payouts.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button size="sm" onClick={() => navigate('/identity-verification')}>
+                  Verify Now
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => { localStorage.setItem('verification_nudge_dismissed', 'true'); loadData(); }}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // 5. First‑sale momentum (if no sales)
+    if (shopData && totalSales === 0) {
+      slides.push(
+        <Card key="first-sale" className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Share2 className="w-4 h-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-sm mb-1">First sale is closer than you think! 🚀</h3>
+                <p className="text-xs text-muted-foreground truncate">
+                  Share your store link to get your first sale within 48h.
+                </p>
+              </div>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="flex-1 sm:flex-none text-xs h-8 px-2"
+                  onClick={() => {
+                    const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
+                    navigator.clipboard.writeText(url);
+                    toast({ title: "Link copied!" });
+                  }}
+                >
+                  Copy Link
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="flex-1 sm:flex-none text-xs h-8 px-2 bg-green-600 hover:bg-green-700"
+                  onClick={() => {
+                    const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
+                    window.open(`https://wa.me/?text=${encodeURIComponent('Check out my store: ' + url)}`, '_blank');
+                  }}
+                >
+                  <MessageCircle className="w-3 h-3 mr-1" />
+                  WhatsApp
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return slides;
+  };
+
+  const slides = getCarouselSlides();
+  const totalSlides = slides.length;
+
+  const nextSlide = () => setCarouselIndex((prev) => (prev + 1) % totalSlides);
+  const prevSlide = () => setCarouselIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
+  const goToSlide = (index: number) => setCarouselIndex(index);
+
+  // Quick Actions
   const QuickActions = [
     { 
       icon: Store, 
@@ -484,12 +631,21 @@ const Dashboard = () => {
     },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-xl overflow-hidden">
+            <img src={logo} alt="Loading" className="w-full h-full object-cover" />
+          </div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <PageWrapper patternVariant="dots" patternOpacity={0.3}>
-      {/* WhatsApp Community Banner */}
-      <div className="container mx-auto px-4 pt-2">
-        <WhatsAppCommunityBanner />
-      </div>
       {/* Top Navigation */}
       <nav className="bg-background/95 backdrop-blur-lg border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
@@ -615,7 +771,7 @@ const Dashboard = () => {
       </nav>
 
       <div className="container mx-auto px-4 py-6">
-        {/* Welcome Header with Stats */}
+        {/* Welcome Header */}
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
             <div>
@@ -624,98 +780,51 @@ const Dashboard = () => {
               </h1>
               <p className="text-muted-foreground">Here's what's happening with your store today.</p>
             </div>
-            
-            <div className="flex items-center gap-3" data-tour="subscription-status">
+            <div className="flex items-center gap-3">
               <BadgeDisplay badges={userBadges} size="sm" />
-              <ShopStatusBadge 
-                status={subscriptionStatus} 
-                daysRemaining={daysRemaining} 
-                showUpgradeAction={true}
-              />
+              <ShopStatusBadge status={subscriptionStatus} daysRemaining={daysRemaining} />
             </div>
           </div>
 
-          {/* Shop Status Card - Prominent display for expired/trial */}
-          {(subscriptionStatus === 'expired' || subscriptionStatus === 'trial') && (
-            <ShopStatusBadge 
-              status={subscriptionStatus} 
-              daysRemaining={daysRemaining} 
-              showUpgradeAction={true}
-              variant="card"
-              className="mb-6"
-            />
-          )}
-
-          {/* Verification Nudge */}
-          {shopData && profile && !profile.bank_verified && !localStorage.getItem('verification_nudge_dismissed') && (
-            <Card className="mb-6 border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-yellow-500/5">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                      <Shield className="w-5 h-5 text-amber-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-sm">Get Verified</h3>
-                      <p className="text-xs text-muted-foreground">Verify your identity to receive payouts and earn the Verified Seller badge.</p>
-                    </div>
+          {/* ===== CAROUSEL ===== */}
+          {slides.length > 0 && (
+            <div className="relative w-full overflow-hidden mb-6 rounded-lg">
+              <div
+                className="flex transition-transform duration-300 ease-in-out"
+                style={{ transform: `translateX(-${carouselIndex * 100}%)` }}
+              >
+                {slides.map((slide, idx) => (
+                  <div key={idx} className="w-full flex-shrink-0">
+                    {slide}
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Button size="sm" onClick={() => navigate('/identity-verification')}>
-                      Verify Now
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => { localStorage.setItem('verification_nudge_dismissed', 'true'); loadData(); }}>
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* First-Sale Momentum Card */}
-          {shopData && totalSales === 0 && (
-            <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
-              <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <Share2 className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-1">Your first sale is closer than you think! 🚀</h3>
-                    <p className="text-muted-foreground text-sm">
-                      Sellers who share their store link usually get their first sale within 48 hours. Share yours now!
-                    </p>
-                  </div>
-                  <div className="flex gap-2 w-full sm:w-auto">
-                    <Button 
-                      size="sm" 
-                      className="flex-1 sm:flex-none"
-                      onClick={() => {
-                        const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
-                        navigator.clipboard.writeText(url);
-                        toast({ title: "Link copied!", description: "Share it with your customers" });
-                      }}
-                    >
-                      Copy Store Link
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      className="flex-1 sm:flex-none"
-                      onClick={() => {
-                        const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
-                        const text = `Check out my store on SteerSolo! ${url}`;
-                        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-                      }}
-                    >
-                      <MessageCircle className="w-4 h-4 mr-1" />
-                      WhatsApp
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                ))}
+              </div>
+              {/* Navigation Arrows */}
+              <button
+                onClick={prevSlide}
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1 shadow-md hover:bg-background"
+              >
+                <ArrowRight className="w-4 h-4 rotate-180" />
+              </button>
+              <button
+                onClick={nextSlide}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1 shadow-md hover:bg-background"
+              >
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              {/* Dots */}
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                {slides.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => goToSlide(idx)}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                      idx === carouselIndex ? 'bg-primary' : 'bg-muted-foreground/30'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Quick Stats */}
@@ -785,50 +894,34 @@ const Dashboard = () => {
               totalSales={totalSales}
             />
           )}
-
-          {/* Subscription Banner */}
-          {(subscriptionStatus === 'trial' || subscriptionStatus === 'expired') && (
-            <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 mb-6">
-              <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div>
-                    <h3 className="font-semibold mb-1">
-                      {subscriptionStatus === 'trial' 
-                        ? '🎉 Complete Your Setup' 
-                        : '⚠️ Subscription Required'}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {subscriptionStatus === 'trial' 
-                        ? `You have ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left in your free trial. Subscribe to continue.`
-                        : 'Your trial has expired. Subscribe to reactivate your store.'}
-                    </p>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={handleSubscribe}
-                      disabled={isSubscribing}
-                      className="bg-primary hover:bg-primary/90"
-                    >
-                      {isSubscribing ? "Processing..." : "Subscribe Now"}
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate('/pricing')}
-                    >
-                      View Plans
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Analytics & Charts */}
+          {/* Left Column - Quick Actions & Chart */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Quick Actions - now at the top */}
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {QuickActions.map((action) => (
+                  <Card
+                    key={action.path}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(action.path)}
+                  >
+                    <CardContent className="p-4">
+                      <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${action.color} flex items-center justify-center mb-3`}>
+                        <action.icon className={`w-6 h-6 ${action.textColor}`} />
+                      </div>
+                      <h3 className="font-medium text-sm mb-1">{action.label}</h3>
+                      <p className="text-xs text-muted-foreground">{action.description}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
             {/* Revenue Chart */}
             <Card data-tour="sales-analytics">
               <CardHeader>
@@ -851,28 +944,6 @@ const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Quick Actions Grid */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {QuickActions.map((action) => (
-                  <Card 
-                    key={action.path}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => navigate(action.path)}
-                  >
-                    <CardContent className="p-4">
-                      <div className={`w-12 h-12 rounded-lg ${action.color} flex items-center justify-center mb-3`}>
-                        <action.icon className={`w-6 h-6 ${action.textColor}`} />
-                      </div>
-                      <h3 className="font-medium mb-1">{action.label}</h3>
-                      <p className="text-sm text-muted-foreground">{action.description}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Right Column - Profile & Tools */}
