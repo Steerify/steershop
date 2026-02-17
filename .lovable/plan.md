@@ -1,145 +1,159 @@
+# SEO Enhancement, Paystack Fee Pass-through, DFY Product Collection, and Subscription Section Update
 
+## 1. SEO/AEO: Make Stores Discoverable by AI and Search Engines
 
-# Comprehensive Upgrade: Location, Verification, and Explore Page Redesign
+### Problem
 
-## Overview
+The current meta tags use narrow keywords like "steersolo" and "Nigerian e-commerce." People searching broader terms like "online store builder Africa," "sell on WhatsApp Nigeria," or "free online shop" won't find you.
 
-This plan covers four major areas:
-1. Fix shop location data flow (state/country missing from service layer)
-2. Realistic verification logic that actually works for SMEs
-3. Full Explore Shops page redesign with filters, sorting, and categories
-4. Add product categories to the database for filtering
+### Changes
 
----
+`**index.html**` -- Expand meta keywords with high-converting search terms:
 
-## 1. Fix Location Data in Shop Service
+- "create online store Nigeria", "online store for WhatsApp sellers", "WhatsApp store builder Nigeria", "sell on WhatsApp with payment", "Paystack store builder", "accept payments on WhatsApp", "online store with Paystack", "how to collect payments online Nigeria", "online shop link for WhatsApp", "Instagram store with payment link", "one link shop Nigeria", "checkout link for WhatsApp business", "simple ecommerce for small business Nigeria", "online store without website Nigeria", "WhatsApp checkout Nigeria", "customers not paying online Nigeria", "how to stop fake orders online", "how to manage WhatsApp orders", "tracking orders on WhatsApp", "too many DMs selling problem", "how to organize online sales", "selling on Instagram stress", "how to look professional online seller", "order management for WhatsApp business", "small business payment issues Nigeria", "tools for Instagram sellers Nigeria", "WhatsApp selling tools", "sell on Instagram Nigeria", "WhatsApp business tools for vendors", "social commerce Nigeria", "selling on WhatsApp Nigeria", "Instagram DM sales tool", "WhatsApp catalog alternatives", "WhatsApp business store setup", "how to sell online as a beginner Nigeria", "online business ideas Nigeria", "how to start selling online Nigeria", "free tools for online business Nigeria", "how to sell without a website", "online selling tips Nigeria", "best way to sell online Nigeria", "how to start ecommerce Nigeria", "online selling for students Nigeria", "small business ecommerce Nigeria", "online tools for SMEs Nigeria", "digital tools for small businesses", "affordable ecommerce Nigeria", "business website alternative Nigeria", "online sales tools Nigeria", "ecommerce solution for SMEs", "Nigerian business selling tools", "online store builder Africa", "WhatsApp store Africa", "Paystack ecommerce Africa", "sell online Africa", "small business ecommerce Africa", "online selling tools Africa", "African online marketplace alternative", "how to create an online store with Paystack in Nigeria", "how to sell on WhatsApp and receive payments", "best online store for Instagram sellers in Nigeria", "how to accept card payments as small business Nigeria", "online store for vendors without website", "simple online shop for Nigerian vendors", "tools for WhatsApp business owners Nigeria", "how to sell online in Nigeria", "WhatsApp business store", "online shop builder", "ecommerce platform Nigeria", "create online store free", "sell products online", "Nigerian online marketplace", "Paystack online store", "small business website Nigeria", "Instagram seller tools", "how to start online business Nigeria", "free online store builder Africa", "mobile store builder", "sell on social media Nigeria", "online store for beginners"
 
-**Problem:** The `shop.service.ts` maps database fields to the `Shop` type but omits `state` and `country`. The Shops page uses `(shop as any).state` as a workaround.
+`**src/components/SEOSchemas.tsx**` -- Add additional structured data:
 
-**Changes:**
+- Add `alternateName` array with high-discovery terms: "SteerSolo Nigeria", "Steer Solo", "SteerSolo Online Store Builder", "Nigerian Online Store Creator"
+- Add `knowsAbout` to Organization schema: "e-commerce", "online selling", "WhatsApp business", "Nigerian small business"
+- Add a `BreadcrumbList` schema for better search result display
+- Update FAQ schema with new questions targeting high-traffic search terms:
+  - "How do I start selling online in Nigeria?"
+  - "What's the best online store builder for small businesses in Nigeria?"
+  - "How do I create a WhatsApp store?"
 
-- **`src/types/api.ts`** -- Add `country?: string` to the `Shop` interface (state already exists)
-- **`src/services/shop.service.ts`** -- Add `state: s.state` and `country: s.country` to ALL four mapping blocks (getShops, getShopByOwner, getShopBySlug, updateShop)
-- **`src/pages/Shops.tsx`** -- Remove `(shop as any)` casts, use `shop.state` / `shop.country` directly
+`**supabase/functions/shop-og-meta/index.ts**` -- Enhance individual shop SEO:
 
----
+- Add `address` with shop's state/country to the LocalBusiness JSON-LD
+- Add `telephone` (WhatsApp number) for Google business rich results
+- Add individual product `Product` schemas (separate from LocalBusiness offers) for product-level search indexing
+- Add `keywords` meta tag with shop category terms
 
-## 2. Fix Verification Logic (Realistic Thresholds)
+`**supabase/functions/generate-sitemap/index.ts**` -- Improve sitemap:
 
-**Current problem:** The `check_shop_verification` database function requires 40 completed orders per day for 30 days (1,200 orders/month) AND 4.0 rating. This is impossible for African SMEs.
-
-**New criteria -- a shop is "Verified" when ALL of these are true:**
-- Owner has bank verification completed (`bank_verified = true` in profiles)
-- Shop has at least 10 completed orders total
-- Shop has an average rating of 3.5 or higher (or no reviews yet, which is OK)
-- Shop has been active for at least 7 days
-
-**Changes:**
-
-- **Database migration** -- Update the `check_shop_verification` function with realistic thresholds
-- **Database migration** -- Create a trigger that re-checks verification when an order is completed or a review is added
-- **`src/pages/Dashboard.tsx`** -- Add a "Verification Status" card that shows shop owners their progress toward verification (e.g., "Bank verified: Yes, Completed orders: 7/10, Rating: 4.2")
-- **`src/pages/IdentityVerification.tsx`** -- Add a note explaining that bank verification contributes to the "Verified Business" badge
+- Add `<image:image>` tags for shop logos and product images (helps Google Images)
+- Add feature pages (/features/growth, /features/payments, etc.) to static pages list
 
 ---
 
-## 3. Add Product Categories
+## 2. Paystack Fee Pass-through (Add Fees to Customer Amount)
 
-Products currently have no `category` column. We need this for filtering on the Explore page.
+### Problem
 
-**Changes:**
+Paystack charges 1.5% + NGN 100 per transaction (capped at NGN 2,000). Currently, this comes out of the shop owner's money.
 
-- **Database migration** -- Add `category` column to `products` table with a default of `'general'`
-- Predefined categories: Fashion, Electronics, Food & Drinks, Beauty & Health, Home & Living, Art & Craft, Services, Other
-- **`src/pages/Products.tsx`** -- Add category dropdown when creating/editing a product
-- **`src/services/product.service.ts`** -- Include category in product CRUD operations
+### Paystack Fee Formula
 
----
-
-## 4. Full Explore Shops Page Redesign
-
-Transform `/shops` from a basic grid into an engaging marketplace experience.
-
-**New layout structure:**
-
-```text
-+------------------------------------------+
-| Navbar                                    |
-+------------------------------------------+
-| Hero: Search bar (centered, prominent)    |
-| Subtitle + stats (X shops, Y products)   |
-+------------------------------------------+
-| Filter Bar (sticky on scroll):            |
-| [All] [Fashion] [Food] [Beauty] [...]     |
-| [Sort: Newest v] [Location v] [Verified]  |
-+------------------------------------------+
-| Trending / Featured Shops carousel        |
-+------------------------------------------+
-| Shop Grid (improved cards)                |
-| - Larger logo                             |
-| - Product preview thumbnails (3 mini)     |
-| - Location badge                          |
-| - Rating stars                            |
-| - Verified badge                          |
-| - Quick "Visit Shop" CTA                  |
-+------------------------------------------+
-| Product Results (when searching)          |
-+------------------------------------------+
-| Infinite scroll sentinel                  |
-+------------------------------------------+
-| Footer                                    |
-+------------------------------------------+
+```
+fee = (amount * 0.015) + 10000 (in kobo)
+if fee > 200000: fee = 200000 (cap at NGN 2,000)
+total_with_fee = amount + fee
 ```
 
-**Specific changes to `src/pages/Shops.tsx`:**
+### Changes
 
-- **Filter bar** -- Horizontal scrollable category chips (Fashion, Food, Beauty, etc.) below the search
-- **Sort dropdown** -- Options: Newest, Highest Rated, Most Products, A-Z
-- **State/Location filter** -- Dropdown with Nigerian states (Lagos, Abuja, Rivers, etc.) pulled from a utility
-- **Verified toggle** -- Keep existing but style better inline with other filters
-- **Improved shop cards:**
-  - Show 2-3 product thumbnail previews below the shop logo (fetch top products per shop)
-  - Larger, cleaner card design with more whitespace
-  - Star rating displayed as actual stars (not just a number)
-  - Location prominently displayed
-  - Product count badge
-- **Empty state** -- Better illustration and CTA for "No shops in this category"
+`**src/components/CheckoutDialog.tsx**`:
 
-**New files:**
-- `src/components/ExploreFilters.tsx` -- Filter bar component (categories, sort, location, verified)
-- `src/components/ShopCardEnhanced.tsx` -- Redesigned shop card with product previews
+- Add a `calculatePaystackFee(amountInNaira)` utility function
+- When "Pay Before Service" with Paystack is selected, show the fee breakdown:
+  - Subtotal: NGN X
+  - Processing fee: NGN Y
+  - Total: NGN Z
+- Pass the total (amount + fee) to `paystack-initialize-order`
+- Store the original order amount in the `orders` table but charge the customer amount + fee
+
+`**supabase/functions/paystack-initialize-order/index.ts**`:
+
+- Receive the full amount (already includes fee from frontend)
+- No changes needed on the backend since frontend will send the correct total
+
+`**supabase/functions/done-for-you-initialize/index.ts**`:
+
+- Add Paystack fee to the NGN 5,000 DFY price:
+  - Fee: (5000 * 0.015) + 100 = NGN 175
+  - Total: NGN 5,175 (517500 kobo)
+- Update the amount sent to Paystack
+
+`**src/components/DoneForYouPopup.tsx**`:
+
+- Update display text to show: "Pay NGN 5,175 (NGN 5,000 + NGN 175 processing fee)"
+
+**Subscription payment** (`supabase/functions/paystack-initialize/index.ts`):
+
+- Apply same fee calculation to subscription amounts before sending to Paystack
+- Show fee breakdown on the subscription payment page
 
 ---
 
-## 5. Shop Owner Verification Dashboard
+## 3. DFY: Collect Products Before Generating Store
 
-Show shop owners their progress toward verification.
+### Current Flow
 
-**Changes to `src/pages/Dashboard.tsx`:**
-- Add a "Verification Progress" card in the overview section
-- Checklist items:
-  - Bank account verified (links to /identity-verification)
-  - 10+ completed orders (shows current count)
-  - 3.5+ average rating (shows current rating or "No reviews yet")
-  - Account age 7+ days (shows join date)
-- When all criteria are met, show a celebration state with the Verified badge
+1. User enters business name, WhatsApp, category
+2. User pays NGN 5,000
+3. Redirect back, AI creates shop
+4. User then adds products one by one (post-creation)
+
+### New Flow
+
+1. User enters business name, WhatsApp, category
+2. User adds 1-5 products (name, price, type, optional image) -- BEFORE payment
+3. User pays NGN 5,175 (with fee)
+4. Redirect back: AI creates shop AND all products in one batch
+5. User sees completed store with all products ready
+
+### Changes
+
+`**src/components/DoneForYouPopup.tsx**`:
+
+- Restructure steps: "intro" -> "products" -> "creating" -> "complete"
+- After entering business details, show the product collection form (currently Step 3, move to Step 2)
+- Store product data in localStorage alongside business details before payment redirect
+- After payment verification, send all products to the backend in one call
+
+`**supabase/functions/done-for-you-setup/index.ts**`:
+
+- Accept a `products` array in the request body
+- After creating the shop, batch-create all products with AI-generated descriptions
+- Single API call creates everything: shop + all products
+
+---
+
+## 4. Update Homepage Subscription Plans Section
+
+### Problem
+
+The current `DynamicPricing` component on the homepage shows a basic card grid with limited features (max 6 shown). It doesn't show yearly pricing toggle, doesn't highlight all the premium features of Pro/Business plans, and doesn't match the full `SubscriptionCard` component used on `/subscription`.
+
+### Changes
+
+`**src/components/DynamicPricing.tsx**` -- Full upgrade:
+
+- Add monthly/yearly billing toggle (like `SubscriptionCard`)
+- Show yearly savings badge
+- Show ALL features per plan (not truncated to 6)
+- Add plan-specific icons (Zap for Basic, Sparkles for Pro, Crown for Business)
+- Add the extra features from the database: Business Profile setup, Google My Business, SEO, Organic Marketing
+- Show "per day" cost beneath price for psychological anchoring
+- Add comparison highlights:
+  - Basic: "Perfect for getting started"
+  - Pro: "Most Popular" badge + "Includes DFY Business Profile"
+  - Business: "Best Value" badge + "Full Marketing Suite"
+- Add "All plans include: 15-day free trial, WhatsApp integration, Paystack payments" footer
 
 ---
 
 ## Technical Summary
 
-| File | Change |
-|------|--------|
-| **Database migration** | Update `check_shop_verification` function, add `category` to products, add verification trigger |
-| `src/types/api.ts` | Add `country` to Shop interface |
-| `src/services/shop.service.ts` | Add `state` and `country` to all 4 mapping blocks |
-| `src/pages/Shops.tsx` | Full redesign with filters, sorting, categories, improved cards |
-| `src/components/ExploreFilters.tsx` | New filter bar component |
-| `src/components/ShopCardEnhanced.tsx` | New enhanced shop card with product previews |
-| `src/pages/Products.tsx` | Add category selector when creating/editing products |
-| `src/services/product.service.ts` | Include category field in CRUD |
-| `src/pages/Dashboard.tsx` | Add Verification Progress card |
-| `src/pages/IdentityVerification.tsx` | Add note about verification badge |
 
-**Estimated scope:** This is a significant upgrade touching the database, service layer, and multiple UI components. The result will be a professional, world-standard marketplace experience.
-
+| File                                                  | Change                                                                            |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `index.html`                                          | Expand meta keywords with 15+ high-converting search terms                        |
+| `src/components/SEOSchemas.tsx`                       | Add BreadcrumbList, expand FAQ, add alternateName array, knowsAbout               |
+| `supabase/functions/shop-og-meta/index.ts`            | Add address, telephone, product schemas to shop JSON-LD                           |
+| `supabase/functions/generate-sitemap/index.ts`        | Add image tags, feature pages                                                     |
+| `src/components/CheckoutDialog.tsx`                   | Add Paystack fee calculator, show fee breakdown, charge customer total+fee        |
+| `supabase/functions/done-for-you-initialize/index.ts` | Update DFY amount to include Paystack fee                                         |
+| `supabase/functions/done-for-you-setup/index.ts`      | Accept and batch-create products array                                            |
+| `src/components/DoneForYouPopup.tsx`                  | Restructure flow: collect products before payment, store in localStorage          |
+| `src/components/DynamicPricing.tsx`                   | Full upgrade with billing toggle, all features, plan icons, comparison highlights |
