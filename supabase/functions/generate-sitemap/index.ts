@@ -22,13 +22,13 @@ serve(async (req) => {
     // Fetch all active shops
     const { data: shops } = await supabase
       .from('shops')
-      .select('shop_slug, updated_at')
+      .select('shop_slug, updated_at, logo_url')
       .eq('is_active', true);
 
     // Fetch all available products with their shop slugs
     const { data: products } = await supabase
       .from('products')
-      .select('id, updated_at, shop_id, shops!inner(shop_slug, is_active)')
+      .select('id, updated_at, image_url, shops!inner(shop_slug, is_active)')
       .eq('is_available', true);
 
     const now = new Date().toISOString().split('T')[0];
@@ -48,7 +48,10 @@ serve(async (req) => {
   </url>`;
 
     // Static pages
-    const staticPages = ['/about', '/pricing', '/faq', '/how-it-works'];
+    const staticPages = [
+      '/about', '/pricing', '/faq', '/how-it-works',
+      '/features/growth', '/features/payments', '/features/trust', '/features/whatsapp'
+    ];
     for (const page of staticPages) {
       urls += `
   <url>
@@ -59,7 +62,7 @@ serve(async (req) => {
   </url>`;
     }
 
-    // Shop pages
+    // Shop pages with image tags
     if (shops) {
       for (const shop of shops) {
         const lastmod = shop.updated_at ? new Date(shop.updated_at).toISOString().split('T')[0] : now;
@@ -68,12 +71,15 @@ serve(async (req) => {
     <loc>${SITE_URL}/shop/${shop.shop_slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.8</priority>${shop.logo_url ? `
+    <image:image>
+      <image:loc>${shop.logo_url}</image:loc>
+    </image:image>` : ''}
   </url>`;
       }
     }
 
-    // Product pages
+    // Product pages with image tags
     if (products) {
       for (const product of products) {
         const shopData = product.shops as any;
@@ -84,13 +90,16 @@ serve(async (req) => {
     <loc>${SITE_URL}/shop/${shopData.shop_slug}/product/${product.id}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.6</priority>${product.image_url ? `
+    <image:image>
+      <image:loc>${product.image_url}</image:loc>
+    </image:image>` : ''}
   </url>`;
       }
     }
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${urls}
 </urlset>`;
 

@@ -41,7 +41,7 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub as string;
 
-    const { reference, business_name, whatsapp_number, business_category } = await req.json();
+    const { reference, business_name, whatsapp_number, business_category, products } = await req.json();
 
     if (!reference || !business_name || !whatsapp_number) {
       return new Response(
@@ -63,7 +63,7 @@ serve(async (req) => {
       });
     }
 
-    // Verify amount is N5,000 (500000 kobo)
+    // Verify amount is at least N5,000 (500000 kobo) - allow for fee inclusion
     if (paystackData.data.amount < 500000) {
       return new Response(JSON.stringify({ error: "Invalid payment amount" }), {
         status: 400,
@@ -124,22 +124,13 @@ You MUST call the generate_shop_branding function with the results.`;
     if (!aiResponse.ok) {
       console.error("AI gateway error:", aiResponse.status, await aiResponse.text());
       shopDescription = `Welcome to ${business_name}! We offer quality ${business_category || "products and services"} for our valued customers across Nigeria. Shop with confidence.`;
-      shopSlug = business_name
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .slice(0, 30);
+      shopSlug = business_name.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").slice(0, 30);
     } else {
       const aiData = await aiResponse.json();
       const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-
       if (!toolCall?.function?.arguments) {
         shopDescription = `Welcome to ${business_name}! Quality ${business_category || "products and services"} you can trust.`;
-        shopSlug = business_name
-          .toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, "")
-          .replace(/\s+/g, "-")
-          .slice(0, 30);
+        shopSlug = business_name.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").slice(0, 30);
       } else {
         const result = JSON.parse(toolCall.function.arguments);
         shopDescription = result.description;
@@ -147,18 +138,14 @@ You MUST call the generate_shop_branding function with the results.`;
       }
     }
 
-    // 3. Create shop using service role (user has no shop yet, RLS would block)
+    // 3. Create shop using service role
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Check slug uniqueness, append number if needed
+    // Check slug uniqueness
     let finalSlug = shopSlug;
     let slugAttempt = 0;
     while (true) {
-      const { data: existing } = await supabaseAdmin
-        .from("shops")
-        .select("id")
-        .eq("shop_slug", finalSlug)
-        .maybeSingle();
+      const { data: existing } = await supabaseAdmin.from("shops").select("id").eq("shop_slug", finalSlug).maybeSingle();
       if (!existing) break;
       slugAttempt++;
       finalSlug = `${shopSlug}-${slugAttempt}`;
@@ -180,28 +167,108 @@ You MUST call the generate_shop_branding function with the results.`;
     if (shopError) {
       console.error("Shop creation error:", shopError);
       return new Response(JSON.stringify({ error: "Failed to create shop: " + shopError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // 4. Record payment in subscription_history
+    // 4. Batch-create products with AI descriptions
+    let productsCreated = 0;
+    const productList = Array.isArray(products) ? products : [];
+
+    if (productList.length > 0) {
+      // Generate AI descriptions for all products in one call
+      const productPrompt = `You are a product copywriter for Nigerian SMEs. Generate short, compelling descriptions for these products from "${business_name}" (${business_category || "General"} category).
+
+Products:
+${productList.map((p: any, i: number) => `${i + 1}. ${p.name} - ₦${p.price} (${p.type || 'product'})`).join('\n')}
+
+You MUST call the generate_product_descriptions function with the results.`;
+
+      let productDescriptions: string[] = [];
+
+      try {
+        const prodAiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-3-flash-preview",
+            messages: [{ role: "user", content: productPrompt }],
+            tools: [{
+              type: "function",
+              function: {
+                name: "generate_product_descriptions",
+                description: "Generate descriptions for multiple products",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    descriptions: {
+                      type: "array",
+                      items: { type: "string" },
+                      description: "Array of 1-2 sentence product descriptions, one per product in order",
+                    },
+                  },
+                  required: ["descriptions"],
+                  additionalProperties: false,
+                },
+              },
+            }],
+            tool_choice: { type: "function", function: { name: "generate_product_descriptions" } },
+          }),
+        });
+
+        if (prodAiResponse.ok) {
+          const prodAiData = await prodAiResponse.json();
+          const toolCall = prodAiData.choices?.[0]?.message?.tool_calls?.[0];
+          if (toolCall?.function?.arguments) {
+            const result = JSON.parse(toolCall.function.arguments);
+            productDescriptions = result.descriptions || [];
+          }
+        }
+      } catch (e) {
+        console.error("AI product descriptions error:", e);
+      }
+
+      // Insert products
+      const productInserts = productList.map((p: any, i: number) => ({
+        shop_id: shop.id,
+        name: p.name,
+        price: p.price,
+        type: p.type || "product",
+        description: productDescriptions[i] || `Quality ${p.name} available at ${business_name}. Order now!`,
+        image_url: p.imageUrl || null,
+        is_available: true,
+        stock_quantity: 100,
+        category: business_category?.toLowerCase() || "general",
+      }));
+
+      const { error: productsError } = await supabaseAdmin.from("products").insert(productInserts);
+      if (productsError) {
+        console.error("Products creation error:", productsError);
+      } else {
+        productsCreated = productInserts.length;
+      }
+    }
+
+    // 5. Record payment in subscription_history
     await supabaseAdmin.from("subscription_history").insert({
       user_id: userId,
       event_type: "dfy_setup",
       amount: 500000,
       payment_reference: reference,
-      notes: `Done-For-You store setup for "${business_name}"`,
+      notes: `Done-For-You store setup for "${business_name}" with ${productsCreated} products`,
     });
 
-    // 5. Log activity
+    // 6. Log activity
     await supabaseAdmin.from("activity_logs").insert({
       user_id: userId,
       action_type: "create",
       resource_type: "shop",
       resource_id: shop.id,
       resource_name: business_name,
-      details: { method: "done_for_you", payment_reference: reference },
+      details: { method: "done_for_you", payment_reference: reference, products_created: productsCreated },
     });
 
     return new Response(
@@ -211,6 +278,7 @@ You MUST call the generate_shop_branding function with the results.`;
         shop_slug: finalSlug,
         shop_name: business_name,
         shop_description: shopDescription,
+        products_created: productsCreated,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

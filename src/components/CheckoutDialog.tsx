@@ -52,6 +52,12 @@ const checkoutSchema = z.object({
   delivery_address: z.string().trim().min(10, "Address must be at least 10 characters").max(500, "Address too long"),
 });
 
+// Paystack fee calculator: 1.5% + NGN 100, capped at NGN 2,000
+const calculatePaystackFee = (amountInNaira: number): number => {
+  const fee = (amountInNaira * 0.015) + 100;
+  return Math.min(fee, 2000);
+};
+
 // Paystack utilities
 const loadPaystackScript = (): Promise<boolean> => {
   return new Promise((resolve) => {
@@ -276,6 +282,8 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
   const effectiveTotal = Math.max(0, totalAmount - couponDiscount);
+  const paystackFee = calculatePaystackFee(effectiveTotal);
+  const totalWithFee = effectiveTotal + paystackFee;
 
   // Save form data to Redux on change
   const handleFormChange = (field: string, value: string) => {
@@ -410,7 +418,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       console.log("Initializing split payment via backend:", {
         order_id: orderId,
         shop_id: shop.id,
-        amount: effectiveTotal,
+        amount: totalWithFee,
         email: customerEmail,
       });
 
@@ -419,7 +427,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
         body: {
           order_id: orderId,
           shop_id: shop.id,
-          amount: effectiveTotal,
+          amount: totalWithFee,
           customer_email: customerEmail,
           callback_url: window.location.origin + '/customer/orders',
         },
@@ -738,14 +746,22 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 <span className="text-sm">₦{totalAmount.toLocaleString()}</span>
               </div>
               {couponDiscount > 0 && (
-                <div className="flex justify-between items-center text-green-600">
+                <div className="flex justify-between items-center text-primary">
                   <span className="text-sm">Coupon ({appliedCoupon?.code}):</span>
                   <span className="text-sm">-₦{couponDiscount.toLocaleString()}</span>
                 </div>
               )}
+              {paymentChoice === "pay_before" && (
+                <div className="flex justify-between items-center text-muted-foreground">
+                  <span className="text-sm">Processing fee:</span>
+                  <span className="text-sm">₦{Math.round(paystackFee).toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center">
                 <span className="text-base sm:text-lg font-semibold">Total:</span>
-                <span className="text-xl sm:text-2xl font-bold">₦{effectiveTotal.toLocaleString()}</span>
+                <span className="text-xl sm:text-2xl font-bold">
+                  ₦{(paymentChoice === "pay_before" ? totalWithFee : effectiveTotal).toLocaleString()}
+                </span>
               </div>
 
               {/* Coupon Input */}
@@ -974,9 +990,9 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                         Initializing...
                       </>
                     ) : paymentChoice === "delivery_before" ? (
-                      <span className="truncate">Place Order - ₦{totalAmount.toLocaleString()}</span>
+                      <span className="truncate">Place Order - ₦{effectiveTotal.toLocaleString()}</span>
                     ) : (
-                      <span className="truncate">Pay ₦{totalAmount.toLocaleString()}</span>
+                      <span className="truncate">Pay ₦{Math.round(totalWithFee).toLocaleString()}</span>
                     )}
                   </Button>
                 </div>
