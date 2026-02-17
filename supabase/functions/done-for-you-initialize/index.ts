@@ -40,7 +40,8 @@ serve(async (req) => {
 
     const { callback_url } = await req.json();
 
-    // Initialize Paystack transaction for N5,000
+    // Initialize Paystack transaction for N5,000 + processing fee
+    // Fee: (5000 * 0.015) + 100 = N175, Total: N5,175 = 517500 kobo
     const paystackResponse = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
       headers: {
@@ -49,7 +50,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         email: userEmail,
-        amount: 500000, // N5,000 in kobo
+        amount: 517500, // N5,175 in kobo (N5,000 + N175 processing fee)
         currency: "NGN",
         callback_url: callback_url,
         metadata: {

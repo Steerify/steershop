@@ -87,11 +87,18 @@ serve(async (req) => {
       offerCode = activeOffer.code;
     }
 
+    // Apply Paystack fee pass-through: 1.5% + 10000 kobo (NGN 100), capped at 200000 kobo (NGN 2,000)
+    let paystackFee = Math.round(subscriptionAmount * 0.015) + 10000;
+    if (paystackFee > 200000) paystackFee = 200000;
+    const totalWithFee = subscriptionAmount + paystackFee;
+
     console.log('Subscription pricing:', {
       plan: selectedPlan.name,
       billing_cycle,
       original: originalAmount,
-      final: subscriptionAmount,
+      after_discount: subscriptionAmount,
+      paystack_fee: paystackFee,
+      total_with_fee: totalWithFee,
       offer_applied: !!activeOffer,
       offer_code: offerCode,
       days: subscriptionDays,
@@ -105,7 +112,7 @@ serve(async (req) => {
     // Initialize Paystack transaction
     const paystackBody: any = {
       email: profile.email,
-      amount: subscriptionAmount,
+      amount: totalWithFee,
       currency: 'NGN',
       metadata: {
         user_id: user.id,

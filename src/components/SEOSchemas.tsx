@@ -7,11 +7,12 @@ export const SEOSchemas = () => {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "SteerSolo",
-      "alternateName": "Steerify Group",
+      "alternateName": ["Steerify Group", "SteerSolo Nigeria", "Steer Solo", "SteerSolo Online Store Builder", "Nigerian Online Store Creator"],
       "url": "https://steersolo.lovable.app",
       "logo": "https://storage.googleapis.com/gpt-engineer-file-uploads/eBsWWGRw3yXgnjWFFzlewkCjL7c2/uploads/1762513867554-SteerSolo%20icon.jpg",
       "description": "Nigeria's #1 e-commerce platform for solo entrepreneurs. Create your professional online store, receive payments via Paystack, and grow your business.",
       "foundingDate": "2024",
+      "knowsAbout": ["e-commerce", "online selling", "WhatsApp business", "Nigerian small business", "social commerce", "Paystack payments", "Instagram selling", "online store builder"],
       "address": {
         "@type": "PostalAddress",
         "addressCountry": "NG",
@@ -30,10 +31,10 @@ export const SEOSchemas = () => {
         "https://x.com/SteerifyGroup",
         "https://www.threads.net/@steerifygroup"
       ],
-      "areaServed": {
-        "@type": "Country",
-        "name": "Nigeria"
-      }
+      "areaServed": [
+        { "@type": "Country", "name": "Nigeria" },
+        { "@type": "Continent", "name": "Africa" }
+      ]
     };
 
     // Product/Service Schema with NGN pricing
@@ -42,10 +43,7 @@ export const SEOSchemas = () => {
       "@type": "Product",
       "name": "SteerSolo E-Commerce Platform",
       "description": "Professional online store builder for Nigerian entrepreneurs. Create your store, list products, receive payments via Paystack, and grow your business.",
-      "brand": {
-        "@type": "Brand",
-        "name": "SteerSolo"
-      },
+      "brand": { "@type": "Brand", "name": "SteerSolo" },
       "offers": [
         {
           "@type": "Offer",
@@ -53,31 +51,28 @@ export const SEOSchemas = () => {
           "description": "Perfect for new sellers starting their online journey",
           "price": "1000",
           "priceCurrency": "NGN",
-          "priceValidUntil": "2026-12-31",
+          "priceValidUntil": "2027-12-31",
           "availability": "https://schema.org/InStock",
           "url": "https://steersolo.lovable.app/pricing",
-          "seller": {
-            "@type": "Organization",
-            "name": "SteerSolo"
-          }
+          "seller": { "@type": "Organization", "name": "SteerSolo" }
         },
         {
           "@type": "Offer",
           "name": "Pro Plan",
-          "description": "For growing businesses with advanced features",
+          "description": "For growing businesses with advanced features and DFY business profile",
           "price": "3000",
           "priceCurrency": "NGN",
-          "priceValidUntil": "2026-12-31",
+          "priceValidUntil": "2027-12-31",
           "availability": "https://schema.org/InStock",
           "url": "https://steersolo.lovable.app/pricing"
         },
         {
           "@type": "Offer",
           "name": "Business Plan",
-          "description": "Full suite with AI marketing tools and priority support",
+          "description": "Full suite with AI marketing tools, SEO, Google My Business setup, and priority support",
           "price": "5000",
           "priceCurrency": "NGN",
-          "priceValidUntil": "2026-12-31",
+          "priceValidUntil": "2027-12-31",
           "availability": "https://schema.org/InStock",
           "url": "https://steersolo.lovable.app/pricing"
         }
@@ -91,17 +86,41 @@ export const SEOSchemas = () => {
       }
     };
 
-    // FAQ Schema
+    // FAQ Schema - expanded with high-traffic terms
     const faqSchema = {
       "@context": "https://schema.org",
       "@type": "FAQPage",
       "mainEntity": [
         {
           "@type": "Question",
+          "name": "How do I start selling online in Nigeria?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "With SteerSolo, you can start selling online in Nigeria in 60 seconds. Sign up, enter your business name, add your products with photos and prices, and share your unique store link on WhatsApp or Instagram. No coding or website building skills needed. Accept payments via Paystack (card, bank transfer, USSD)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What's the best online store builder for small businesses in Nigeria?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "SteerSolo is built specifically for Nigerian small businesses and solo entrepreneurs. Unlike generic platforms, SteerSolo integrates WhatsApp ordering, Paystack payments, and AI-powered marketing tools. Plans start at just ₦1,000/month with a 15-day free trial."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I create a WhatsApp store?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "SteerSolo lets you create a professional online store with WhatsApp integration. Your customers can browse your products on your store link and place orders that come directly to your WhatsApp. You can also accept payments online via Paystack before delivery."
+          }
+        },
+        {
+          "@type": "Question",
           "name": "How much does SteerSolo cost?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "SteerSolo starts at ₦1,000/month for the Basic plan. We also offer Pro (₦3,000/month) and Business (₦5,000/month) plans with advanced features. All plans include a 7-day free trial."
+            "text": "SteerSolo starts at ₦1,000/month for the Basic plan. We also offer Pro (₦3,000/month) and Business (₦5,000/month) plans with advanced features. All plans include a 15-day free trial. No credit card required."
           }
         },
         {
@@ -122,18 +141,18 @@ export const SEOSchemas = () => {
         },
         {
           "@type": "Question",
-          "name": "How do customers find my store?",
+          "name": "How do I sell on Instagram and receive payments in Nigeria?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "You get a unique store link (e.g., steersolo.lovable.app/s/yourshop) that you can share on WhatsApp, Instagram, Facebook, and anywhere else. Customers can browse your products and order directly."
+            "text": "Instead of managing orders in Instagram DMs, create a SteerSolo store and share your store link in your Instagram bio. Customers can browse, select products, and pay directly via Paystack. Orders are organized automatically — no more lost DMs."
           }
         },
         {
           "@type": "Question",
-          "name": "Is SteerSolo safe for online payments?",
+          "name": "How do customers find my store?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Absolutely! SteerSolo uses Paystack, Nigeria's leading payment processor, for all online transactions. All data is encrypted with SSL, and we never store your card details."
+            "text": "You get a unique store link (e.g., steersolo.lovable.app/shop/yourshop) that you can share on WhatsApp, Instagram, Facebook, and anywhere else. Your store is also indexed by Google and AI search engines for organic discovery."
           }
         },
         {
@@ -147,14 +166,27 @@ export const SEOSchemas = () => {
       ]
     };
 
+    // BreadcrumbList Schema
+    const breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://steersolo.lovable.app" },
+        { "@type": "ListItem", "position": 2, "name": "Explore Shops", "item": "https://steersolo.lovable.app/shops" },
+        { "@type": "ListItem", "position": 3, "name": "Pricing", "item": "https://steersolo.lovable.app/pricing" },
+        { "@type": "ListItem", "position": 4, "name": "How It Works", "item": "https://steersolo.lovable.app/how-it-works" },
+        { "@type": "ListItem", "position": 5, "name": "FAQ", "item": "https://steersolo.lovable.app/faq" }
+      ]
+    };
+
     // WebSite Schema with SearchAction
     const websiteSchema = {
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "SteerSolo",
-      "alternateName": "SteerSolo Nigeria",
+      "alternateName": ["SteerSolo Nigeria", "Steer Solo", "SteerSolo Online Store Builder"],
       "url": "https://steersolo.lovable.app",
-      "description": "Nigeria's e-commerce platform for solo entrepreneurs",
+      "description": "Nigeria's e-commerce platform for solo entrepreneurs. Create your online store, accept WhatsApp orders, and receive Paystack payments.",
       "potentialAction": {
         "@type": "SearchAction",
         "target": {
@@ -186,7 +218,7 @@ export const SEOSchemas = () => {
     };
 
     // Create and inject script
-    const schemas = [organizationSchema, productSchema, faqSchema, websiteSchema, softwareSchema];
+    const schemas = [organizationSchema, productSchema, faqSchema, breadcrumbSchema, websiteSchema, softwareSchema];
     
     const script = document.createElement("script");
     script.type = "application/ld+json";

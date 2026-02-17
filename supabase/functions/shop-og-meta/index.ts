@@ -18,10 +18,6 @@ function escapeHtml(text: string): string {
     .replace(/'/g, "&#039;");
 }
 
-function escapeJsonLd(text: string): string {
-  return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
-}
-
 function generateDefaultHTML(): Response {
   const html = `<!DOCTYPE html>
 <html>
@@ -68,7 +64,7 @@ serve(async (req) => {
     
     const { data: shop, error } = await supabase
       .from('shops')
-      .select('shop_name, description, logo_url, banner_url, whatsapp_number, average_rating, total_reviews')
+      .select('id, shop_name, description, logo_url, banner_url, whatsapp_number, average_rating, total_reviews, state, country')
       .eq('shop_slug', slug)
       .eq('is_active', true)
       .single();
@@ -78,38 +74,26 @@ serve(async (req) => {
       return generateDefaultHTML();
     }
 
-    // Fetch products for JSON-LD
-    const { data: products } = await supabase
+    // Fetch products
+    let shopProducts: any[] = [];
+    const { data: prods } = await supabase
       .from('products')
-      .select('id, name, description, price, image_url')
-      .eq('shop_id', slug)
+      .select('id, name, description, price, image_url, category')
+      .eq('shop_id', shop.id)
       .eq('is_available', true)
       .limit(20);
-
-    // We need the shop ID to query products properly
-    const { data: shopWithId } = await supabase
-      .from('shops')
-      .select('id')
-      .eq('shop_slug', slug)
-      .single();
-
-    let shopProducts: any[] = [];
-    if (shopWithId) {
-      const { data: prods } = await supabase
-        .from('products')
-        .select('id, name, description, price, image_url')
-        .eq('shop_id', shopWithId.id)
-        .eq('is_available', true)
-        .limit(20);
-      shopProducts = prods || [];
-    }
+    shopProducts = prods || [];
     
     const shopName = escapeHtml(shop.shop_name || 'Shop');
     const description = escapeHtml(shop.description || `Shop at ${shopName} on SteerSolo`);
     const imageUrl = shop.logo_url || shop.banner_url || DEFAULT_IMAGE;
     const shopUrl = `${SITE_URL}/shop/${slug}`;
 
-    // Build JSON-LD
+    // Build category keywords from products
+    const categories = [...new Set(shopProducts.map(p => p.category).filter(Boolean))];
+    const keywordsMeta = [shopName, ...(categories.length ? categories : ['online shop']), 'SteerSolo', 'Nigeria', shop.state || ''].filter(Boolean).join(', ');
+
+    // Build LocalBusiness JSON-LD
     const jsonLd: any = {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
@@ -118,6 +102,24 @@ serve(async (req) => {
       "url": shopUrl,
       "image": imageUrl,
     };
+
+    // Add address
+    if (shop.state || shop.country) {
+      jsonLd.address = {
+        "@type": "PostalAddress",
+        ...(shop.state && { "addressRegion": shop.state }),
+        "addressCountry": shop.country || "NG",
+      };
+    }
+
+    // Add telephone (WhatsApp)
+    if (shop.whatsapp_number) {
+      let phone = shop.whatsapp_number.replace(/[^\d+]/g, '');
+      if (!phone.startsWith('+')) {
+        phone = phone.startsWith('234') ? `+${phone}` : `+234${phone.replace(/^0+/, '')}`;
+      }
+      jsonLd.telephone = phone;
+    }
 
     if (shop.average_rating && shop.total_reviews) {
       jsonLd.aggregateRating = {
@@ -145,12 +147,33 @@ serve(async (req) => {
         }
       }));
     }
+
+    // Individual Product schemas for product-level indexing
+    const productSchemas = shopProducts.slice(0, 10).map(p => ({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": p.name,
+      "description": p.description || `${p.name} available at ${shop.shop_name}`,
+      "image": p.image_url || DEFAULT_IMAGE,
+      "url": `${shopUrl}/product/${p.id}`,
+      "brand": { "@type": "Brand", "name": shop.shop_name },
+      "offers": {
+        "@type": "Offer",
+        "price": p.price,
+        "priceCurrency": "NGN",
+        "availability": "https://schema.org/InStock",
+        "seller": { "@type": "Organization", "name": shop.shop_name, "url": shopUrl }
+      }
+    }));
+    
+    const allSchemas = [jsonLd, ...productSchemas];
     
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <title>${shopName} | SteerSolo</title>
   <meta name="description" content="${description}" />
+  <meta name="keywords" content="${escapeHtml(keywordsMeta)}" />
   <link rel="canonical" href="${shopUrl}" />
   <meta property="og:title" content="${shopName}" />
   <meta property="og:description" content="${description}" />
@@ -162,7 +185,7 @@ serve(async (req) => {
   <meta name="twitter:title" content="${shopName}" />
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image" content="${imageUrl}" />
-  <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
+  <script type="application/ld+json">${JSON.stringify(allSchemas)}</script>
   <meta http-equiv="refresh" content="0;url=${shopUrl}">
 </head>
 <body>
