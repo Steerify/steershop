@@ -1,159 +1,194 @@
-# SEO Enhancement, Paystack Fee Pass-through, DFY Product Collection, and Subscription Section Update
+# Massive SEO Expansion, Landing Pages, and Smart Ads Assistant
 
-## 1. SEO/AEO: Make Stores Discoverable by AI and Search Engines
+## Overview
 
-### Problem
+Three major workstreams:
 
-The current meta tags use narrow keywords like "steersolo" and "Nigerian e-commerce." People searching broader terms like "online store builder Africa," "sell on WhatsApp Nigeria," or "free online shop" won't find you.
-
-### Changes
-
-`**index.html**` -- Expand meta keywords with high-converting search terms:
-
-- "create online store Nigeria", "online store for WhatsApp sellers", "WhatsApp store builder Nigeria", "sell on WhatsApp with payment", "Paystack store builder", "accept payments on WhatsApp", "online store with Paystack", "how to collect payments online Nigeria", "online shop link for WhatsApp", "Instagram store with payment link", "one link shop Nigeria", "checkout link for WhatsApp business", "simple ecommerce for small business Nigeria", "online store without website Nigeria", "WhatsApp checkout Nigeria", "customers not paying online Nigeria", "how to stop fake orders online", "how to manage WhatsApp orders", "tracking orders on WhatsApp", "too many DMs selling problem", "how to organize online sales", "selling on Instagram stress", "how to look professional online seller", "order management for WhatsApp business", "small business payment issues Nigeria", "tools for Instagram sellers Nigeria", "WhatsApp selling tools", "sell on Instagram Nigeria", "WhatsApp business tools for vendors", "social commerce Nigeria", "selling on WhatsApp Nigeria", "Instagram DM sales tool", "WhatsApp catalog alternatives", "WhatsApp business store setup", "how to sell online as a beginner Nigeria", "online business ideas Nigeria", "how to start selling online Nigeria", "free tools for online business Nigeria", "how to sell without a website", "online selling tips Nigeria", "best way to sell online Nigeria", "how to start ecommerce Nigeria", "online selling for students Nigeria", "small business ecommerce Nigeria", "online tools for SMEs Nigeria", "digital tools for small businesses", "affordable ecommerce Nigeria", "business website alternative Nigeria", "online sales tools Nigeria", "ecommerce solution for SMEs", "Nigerian business selling tools", "online store builder Africa", "WhatsApp store Africa", "Paystack ecommerce Africa", "sell online Africa", "small business ecommerce Africa", "online selling tools Africa", "African online marketplace alternative", "how to create an online store with Paystack in Nigeria", "how to sell on WhatsApp and receive payments", "best online store for Instagram sellers in Nigeria", "how to accept card payments as small business Nigeria", "online store for vendors without website", "simple online shop for Nigerian vendors", "tools for WhatsApp business owners Nigeria", "how to sell online in Nigeria", "WhatsApp business store", "online shop builder", "ecommerce platform Nigeria", "create online store free", "sell products online", "Nigerian online marketplace", "Paystack online store", "small business website Nigeria", "Instagram seller tools", "how to start online business Nigeria", "free online store builder Africa", "mobile store builder", "sell on social media Nigeria", "online store for beginners"
-
-`**src/components/SEOSchemas.tsx**` -- Add additional structured data:
-
-- Add `alternateName` array with high-discovery terms: "SteerSolo Nigeria", "Steer Solo", "SteerSolo Online Store Builder", "Nigerian Online Store Creator"
-- Add `knowsAbout` to Organization schema: "e-commerce", "online selling", "WhatsApp business", "Nigerian small business"
-- Add a `BreadcrumbList` schema for better search result display
-- Update FAQ schema with new questions targeting high-traffic search terms:
-  - "How do I start selling online in Nigeria?"
-  - "What's the best online store builder for small businesses in Nigeria?"
-  - "How do I create a WhatsApp store?"
-
-`**supabase/functions/shop-og-meta/index.ts**` -- Enhance individual shop SEO:
-
-- Add `address` with shop's state/country to the LocalBusiness JSON-LD
-- Add `telephone` (WhatsApp number) for Google business rich results
-- Add individual product `Product` schemas (separate from LocalBusiness offers) for product-level search indexing
-- Add `keywords` meta tag with shop category terms
-
-`**supabase/functions/generate-sitemap/index.ts**` -- Improve sitemap:
-
-- Add `<image:image>` tags for shop logos and product images (helps Google Images)
-- Add feature pages (/features/growth, /features/payments, etc.) to static pages list
+1. Expand to 1000+ high-converting keywords across meta tags, schemas, and content
+2. Create 6 SEO landing pages targeting top keyword clusters for actual traffic
+3. Build a Smart Ads Assistant that uses AI to generate ad copy/creatives and guides users to publish on Google, Facebook/Instagram, TikTok, and WhatsApp  
+4. Also make sure that all shops are visible through steersolo when they are searched online. VERY IMPORTANT
 
 ---
 
-## 2. Paystack Fee Pass-through (Add Fees to Customer Amount)
+## 1. Keyword Expansion to 1000+ Terms
 
-### Problem
+### Strategy
 
-Paystack charges 1.5% + NGN 100 per transaction (capped at NGN 2,000). Currently, this comes out of the shop owner's money.
+Google ignores the meta keywords tag for ranking, but keywords embedded in structured data, page content, and alt-text DO matter. We will distribute keywords across multiple surfaces:
 
-### Paystack Fee Formula
+`**index.html**` -- Expand meta keywords to 200+ terms organized by intent:
+
+- Pain-point keywords (60+): "customers not paying online Nigeria", "too many DMs selling problem", "how to stop fake orders online", "WhatsApp order confusion", "Instagram DM overwhelm", "managing orders on phone Nigeria", "online payment headache Nigeria", etc.
+- Solution keywords (60+): "online store builder Nigeria", "WhatsApp store builder", "Paystack store builder", "one link shop Nigeria", "checkout link for WhatsApp", "sell on Instagram with payment", etc.
+- Industry/niche keywords (80+): "fashion store online Nigeria", "food delivery store Lagos", "beauty products online store Nigeria", "electronics ecommerce Nigeria", "thrift store online Nigeria", "cake business online Nigeria", "ankara store online", "shoe business online Nigeria", etc.
+- Location keywords (40+): "sell online in Lagos", "online store Abuja", "ecommerce Port Harcourt", "small business Ibadan online", "Kano online marketplace", etc.
+- Long-tail question keywords (60+): "how to create online store with Paystack", "how to sell on WhatsApp and receive payments", "best online store for Instagram sellers Nigeria", "how to accept card payments small business Nigeria", etc.
+- African expansion keywords (30+): "online store builder Africa", "WhatsApp store Africa", "sell online Ghana", "ecommerce East Africa", "African online marketplace", etc.
+
+`**src/components/SEOSchemas.tsx**` -- Expand structured data:
+
+- Add 15+ FAQ entries targeting high-traffic Nigerian search terms
+- Expand `knowsAbout` to 30+ topics
+- Add `WebSite` schema with `SearchAction` for sitelinks search box
+- Add `SoftwareApplication` schema for app store-style rich results
+
+---
+
+## 2. SEO Landing Pages (6 Pages)
+
+Create dedicated content pages that target specific keyword clusters. Each page will have:
+
+- Unique meta title/description optimized for that cluster
+- Rich content with H1/H2/H3 targeting key phrases
+- Internal links to /auth/signup and /shops
+- FAQ section with schema markup
+- CTA to start free trial
+
+### Pages to Create
+
+
+| Route                     | Target Keyword Cluster                                    | Title                                                              |
+| ------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------ |
+| `/sell-on-whatsapp`       | WhatsApp selling, WhatsApp store, WhatsApp checkout       | "How to Sell on WhatsApp in Nigeria -- Create Your WhatsApp Store" |
+| `/sell-on-instagram`      | Instagram selling, Instagram store, DM sales              | "Sell on Instagram Nigeria -- Stop Losing Orders in DMs"           |
+| `/online-store-nigeria`   | Online store builder, ecommerce Nigeria, create store     | "Create Your Online Store in Nigeria -- Free for 15 Days"          |
+| `/accept-payments-online` | Paystack payments, card payments, online checkout         | "Accept Payments Online in Nigeria -- Paystack Integration"        |
+| `/small-business-tools`   | SME tools, digital tools, business website alternative    | "Free Tools for Small Business Owners in Nigeria"                  |
+| `/sell-online-nigeria`    | How to sell online, start online business, beginner guide | "How to Start Selling Online in Nigeria -- Step-by-Step Guide"     |
+
+
+### Files to Create
+
+- `src/pages/seo/SellOnWhatsApp.tsx`
+- `src/pages/seo/SellOnInstagram.tsx`
+- `src/pages/seo/OnlineStoreNigeria.tsx`
+- `src/pages/seo/AcceptPayments.tsx`
+- `src/pages/seo/SmallBusinessTools.tsx`
+- `src/pages/seo/SellOnlineNigeria.tsx`
+
+Each page follows a template pattern:
+
+- Hero section with keyword-rich H1
+- 3-4 content sections addressing user pain points
+- Testimonial/social proof
+- Inline FAQ with JSON-LD
+- CTA to sign up
+
+### Route Registration
+
+- `src/App.tsx` -- Add 6 new routes
+- `supabase/functions/generate-sitemap/index.ts` -- Add all 6 pages to sitemap
+
+---
+
+## 3. Smart Ads Assistant (Phase 1)
+
+Build an AI-powered Ads Assistant that helps shop owners create ads for Google, Facebook/Instagram, TikTok, and WhatsApp Status without requiring API access.
+
+### How It Works
+
+1. Shop owner opens "Ads Assistant" from their dashboard
+2. Selects a platform (Google, Facebook, Instagram, TikTok, WhatsApp)
+3. AI generates:
+  - Ad copy (headline, description, CTA) tailored to the platform
+  - Targeting suggestions (audience, location, interests)
+  - Budget recommendations in Naira
+  - Image/creative guidance
+4. User copies the generated content
+5. "Launch on [Platform]" button deep-links to the platform's ad creation page with pre-filled guidance
+
+### Architecture
+
+```text
+User -> Ads Assistant UI -> Edge Function (AI) -> Lovable AI Gateway
+                                                   (gemini-3-flash-preview)
+```
+
+### Files to Create
+
+**Backend:**
+
+- `supabase/functions/generate-ad-copy/index.ts` -- Edge function that takes shop data, product info, and platform choice, then generates optimized ad content using Lovable AI
+
+**Frontend:**
+
+- `src/pages/entrepreneur/AdsAssistant.tsx` -- Main ads assistant page with platform selection, product picker, and generated results
+- `src/components/ads/PlatformCard.tsx` -- Card component for each ad platform with icon, description, and pricing info
+- `src/components/ads/AdPreview.tsx` -- Preview component showing how the ad will look on the selected platform
+- `src/components/ads/AdCopyResult.tsx` -- Displays generated ad copy with copy-to-clipboard and deep-link buttons
+
+**Service:**
+
+- `src/services/ads.service.ts` -- Service layer for calling the edge function
+
+### Platform Deep Links
+
+
+| Platform        | Action          | Link                                            |
+| --------------- | --------------- | ----------------------------------------------- |
+| Google Ads      | Create campaign | `https://ads.google.com/aw/campaigns/new`       |
+| Facebook Ads    | Create ad       | `https://www.facebook.com/ads/manager/creation` |
+| TikTok Ads      | Create campaign | `https://ads.tiktok.com/i18n/creation`          |
+| WhatsApp Status | Share to status | WhatsApp share API with generated image         |
+
+
+### Edge Function: `generate-ad-copy`
+
+Uses Lovable AI Gateway (gemini-3-flash-preview) with a specialized prompt:
+
+- Input: shop name, product details, target audience, platform, budget range
+- Output: structured JSON with headline, body copy, CTA, targeting suggestions, budget recommendation, hashtags (for social), and image prompt
+
+### Dashboard Integration
+
+- `src/pages/Dashboard.tsx` -- Add "Ads Assistant" card to the dashboard quick actions
+- `src/pages/entrepreneur/MarketingServices.tsx` -- Add "Ads Assistant" as a new tab alongside existing YouTube/Google Ads consultation cards
+
+### Access Control
+
+- Available to Pro and Business plan users
+- Basic plan users see an upgrade prompt
+- Usage tracked via `feature_usage` table (limit: 10 generations/month for Pro, unlimited for Business)
+
+---
+
+## 4. Configuration Updates
+
+`**supabase/config.toml**` -- Add new edge function:
 
 ```
-fee = (amount * 0.015) + 10000 (in kobo)
-if fee > 200000: fee = 200000 (cap at NGN 2,000)
-total_with_fee = amount + fee
+[functions.generate-ad-copy]
+verify_jwt = false
 ```
 
-### Changes
+`**src/App.tsx**` -- Add routes:
 
-`**src/components/CheckoutDialog.tsx**`:
-
-- Add a `calculatePaystackFee(amountInNaira)` utility function
-- When "Pay Before Service" with Paystack is selected, show the fee breakdown:
-  - Subtotal: NGN X
-  - Processing fee: NGN Y
-  - Total: NGN Z
-- Pass the total (amount + fee) to `paystack-initialize-order`
-- Store the original order amount in the `orders` table but charge the customer amount + fee
-
-`**supabase/functions/paystack-initialize-order/index.ts**`:
-
-- Receive the full amount (already includes fee from frontend)
-- No changes needed on the backend since frontend will send the correct total
-
-`**supabase/functions/done-for-you-initialize/index.ts**`:
-
-- Add Paystack fee to the NGN 5,000 DFY price:
-  - Fee: (5000 * 0.015) + 100 = NGN 175
-  - Total: NGN 5,175 (517500 kobo)
-- Update the amount sent to Paystack
-
-`**src/components/DoneForYouPopup.tsx**`:
-
-- Update display text to show: "Pay NGN 5,175 (NGN 5,000 + NGN 175 processing fee)"
-
-**Subscription payment** (`supabase/functions/paystack-initialize/index.ts`):
-
-- Apply same fee calculation to subscription amounts before sending to Paystack
-- Show fee breakdown on the subscription payment page
-
----
-
-## 3. DFY: Collect Products Before Generating Store
-
-### Current Flow
-
-1. User enters business name, WhatsApp, category
-2. User pays NGN 5,000
-3. Redirect back, AI creates shop
-4. User then adds products one by one (post-creation)
-
-### New Flow
-
-1. User enters business name, WhatsApp, category
-2. User adds 1-5 products (name, price, type, optional image) -- BEFORE payment
-3. User pays NGN 5,175 (with fee)
-4. Redirect back: AI creates shop AND all products in one batch
-5. User sees completed store with all products ready
-
-### Changes
-
-`**src/components/DoneForYouPopup.tsx**`:
-
-- Restructure steps: "intro" -> "products" -> "creating" -> "complete"
-- After entering business details, show the product collection form (currently Step 3, move to Step 2)
-- Store product data in localStorage alongside business details before payment redirect
-- After payment verification, send all products to the backend in one call
-
-`**supabase/functions/done-for-you-setup/index.ts**`:
-
-- Accept a `products` array in the request body
-- After creating the shop, batch-create all products with AI-generated descriptions
-- Single API call creates everything: shop + all products
-
----
-
-## 4. Update Homepage Subscription Plans Section
-
-### Problem
-
-The current `DynamicPricing` component on the homepage shows a basic card grid with limited features (max 6 shown). It doesn't show yearly pricing toggle, doesn't highlight all the premium features of Pro/Business plans, and doesn't match the full `SubscriptionCard` component used on `/subscription`.
-
-### Changes
-
-`**src/components/DynamicPricing.tsx**` -- Full upgrade:
-
-- Add monthly/yearly billing toggle (like `SubscriptionCard`)
-- Show yearly savings badge
-- Show ALL features per plan (not truncated to 6)
-- Add plan-specific icons (Zap for Basic, Sparkles for Pro, Crown for Business)
-- Add the extra features from the database: Business Profile setup, Google My Business, SEO, Organic Marketing
-- Show "per day" cost beneath price for psychological anchoring
-- Add comparison highlights:
-  - Basic: "Perfect for getting started"
-  - Pro: "Most Popular" badge + "Includes DFY Business Profile"
-  - Business: "Best Value" badge + "Full Marketing Suite"
-- Add "All plans include: 15-day free trial, WhatsApp integration, Paystack payments" footer
+- `/ads-assistant` -> AdsAssistant page
+- `/sell-on-whatsapp` -> SellOnWhatsApp
+- `/sell-on-instagram` -> SellOnInstagram
+- `/online-store-nigeria` -> OnlineStoreNigeria
+- `/accept-payments-online` -> AcceptPayments
+- `/small-business-tools` -> SmallBusinessTools
+- `/sell-online-nigeria` -> SellOnlineNigeria
 
 ---
 
 ## Technical Summary
 
 
-| File                                                  | Change                                                                            |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `index.html`                                          | Expand meta keywords with 15+ high-converting search terms                        |
-| `src/components/SEOSchemas.tsx`                       | Add BreadcrumbList, expand FAQ, add alternateName array, knowsAbout               |
-| `supabase/functions/shop-og-meta/index.ts`            | Add address, telephone, product schemas to shop JSON-LD                           |
-| `supabase/functions/generate-sitemap/index.ts`        | Add image tags, feature pages                                                     |
-| `src/components/CheckoutDialog.tsx`                   | Add Paystack fee calculator, show fee breakdown, charge customer total+fee        |
-| `supabase/functions/done-for-you-initialize/index.ts` | Update DFY amount to include Paystack fee                                         |
-| `supabase/functions/done-for-you-setup/index.ts`      | Accept and batch-create products array                                            |
-| `src/components/DoneForYouPopup.tsx`                  | Restructure flow: collect products before payment, store in localStorage          |
-| `src/components/DynamicPricing.tsx`                   | Full upgrade with billing toggle, all features, plan icons, comparison highlights |
+| Area          | Files                                                    | Change                                                                              |
+| ------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Keywords      | `index.html`                                             | Expand to 200+ meta keywords (1000 would hurt performance; 200 covers all clusters) |
+| Schemas       | `src/components/SEOSchemas.tsx`                          | Add WebSite, SoftwareApplication schemas; expand FAQ to 15+ entries                 |
+| Landing Pages | 6 new files in `src/pages/seo/`                          | Keyword-rich content pages targeting top search clusters                            |
+| Sitemap       | `supabase/functions/generate-sitemap/index.ts`           | Add landing pages and SEO routes                                                    |
+| Ads Backend   | `supabase/functions/generate-ad-copy/index.ts`           | AI-powered ad copy generation via Lovable AI                                        |
+| Ads Frontend  | `src/pages/entrepreneur/AdsAssistant.tsx` + 3 components | Platform selection, AI generation, preview, deep-link publishing                    |
+| Ads Service   | `src/services/ads.service.ts`                            | Edge function caller                                                                |
+| Routes        | `src/App.tsx`                                            | 7 new routes                                                                        |
+| Dashboard     | `src/pages/Dashboard.tsx`                                | Add Ads Assistant quick action                                                      |
+| Config        | `supabase/config.toml`                                   | Register new edge function                                                          |
+
+
+**Note on keyword count:** Stuffing 1000 keywords into a single meta tag actually hurts SEO (Google may flag it as spam). The strategy distributes keywords across meta tags (200+), schema FAQ entries (100+ phrases), landing page content (500+ natural keyword occurrences), and sitemap entries -- totaling well over 1000 unique keyword phrases across the site.
