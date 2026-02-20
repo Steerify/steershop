@@ -598,6 +598,14 @@ const Dashboard = () => {
       textColor: "text-pink-500"
     },
     { 
+      icon: Sparkles, 
+      label: "Ads Assistant", 
+      description: "AI ad copy generator",
+      path: "/ads-assistant",
+      color: "from-orange-500/20 to-red-500/10",
+      textColor: "text-orange-500"
+    },
+    { 
       icon: Target, 
       label: "Services", 
       description: "Google & Ad consultations",

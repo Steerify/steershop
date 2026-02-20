@@ -7,12 +7,21 @@ export const SEOSchemas = () => {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "SteerSolo",
-      "alternateName": ["Steerify Group", "SteerSolo Nigeria", "Steer Solo", "SteerSolo Online Store Builder", "Nigerian Online Store Creator"],
+      "alternateName": ["Steerify Group", "SteerSolo Nigeria", "Steer Solo", "SteerSolo Online Store Builder", "Nigerian Online Store Creator", "SteerSolo Ecommerce", "SteerSolo WhatsApp Store"],
       "url": "https://steersolo.lovable.app",
       "logo": "https://storage.googleapis.com/gpt-engineer-file-uploads/eBsWWGRw3yXgnjWFFzlewkCjL7c2/uploads/1762513867554-SteerSolo%20icon.jpg",
       "description": "Nigeria's #1 e-commerce platform for solo entrepreneurs. Create your professional online store, receive payments via Paystack, and grow your business.",
       "foundingDate": "2024",
-      "knowsAbout": ["e-commerce", "online selling", "WhatsApp business", "Nigerian small business", "social commerce", "Paystack payments", "Instagram selling", "online store builder"],
+      "knowsAbout": [
+        "e-commerce", "online selling", "WhatsApp business", "Nigerian small business", "social commerce",
+        "Paystack payments", "Instagram selling", "online store builder", "digital marketing Nigeria",
+        "small business tools", "mobile commerce", "African ecommerce", "online payments Nigeria",
+        "WhatsApp store builder", "order management", "inventory management", "product catalog",
+        "online checkout", "payment gateway integration", "customer management", "sales analytics",
+        "business growth", "digital storefront", "social media selling", "online marketplace",
+        "Nigerian entrepreneurs", "solo entrepreneur tools", "business automation", "delivery logistics",
+        "revenue tracking", "subscription commerce", "booking system", "service marketplace"
+      ],
       "address": {
         "@type": "PostalAddress",
         "addressCountry": "NG",
@@ -33,6 +42,9 @@ export const SEOSchemas = () => {
       ],
       "areaServed": [
         { "@type": "Country", "name": "Nigeria" },
+        { "@type": "Country", "name": "Ghana" },
+        { "@type": "Country", "name": "Kenya" },
+        { "@type": "Country", "name": "South Africa" },
         { "@type": "Continent", "name": "Africa" }
       ]
     };
@@ -162,6 +174,78 @@ export const SEOSchemas = () => {
             "@type": "Answer",
             "text": "Yes! SteerSolo supports both products and services. You can create bookable services with custom durations and let customers schedule appointments directly."
           }
+        },
+        {
+          "@type": "Question",
+          "name": "Is SteerSolo better than Jumia or Konga for small sellers?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "SteerSolo is different from Jumia and Konga. Those are marketplaces where your products compete with thousands of others. SteerSolo gives you your OWN online store with your OWN link. You control your branding, pricing, and customer relationships. No marketplace commission fees."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I sell food online in Nigeria?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Create a SteerSolo store, add your food items with photos and prices, and share your link on WhatsApp and Instagram. Customers can order and pay online. Perfect for cake businesses, small chops vendors, meal prep services, and restaurant owners in Lagos, Abuja, and across Nigeria."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I sell fashion and clothing online with SteerSolo?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Absolutely! SteerSolo is perfect for fashion businesses — ankara, ready-to-wear, thrift stores, custom clothing, shoes, bags, and accessories. Add product photos, set sizes, and accept payments via Paystack. Share your store link on Instagram and WhatsApp to start getting orders."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I track orders and manage my online business?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "SteerSolo has a built-in dashboard where you can track all orders, manage products, view revenue analytics, and communicate with customers. You get real-time notifications for new orders and can update order status from pending to delivered."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use SteerSolo on my phone?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! SteerSolo is fully mobile-friendly. You can manage your store, add products, process orders, and track revenue entirely from your phone. No laptop or computer required."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does SteerSolo work outside Lagos?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! SteerSolo works everywhere in Nigeria — Lagos, Abuja, Port Harcourt, Ibadan, Kano, Enugu, Benin City, Warri, Owerri, and all 36 states. We also support sellers in Ghana, Kenya, and across Africa."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I get my first sale online in Nigeria?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "After creating your SteerSolo store, share your unique store link on your WhatsApp status, WhatsApp groups, Instagram bio, and Facebook page. Most sellers get their first sale within 48 hours of sharing their link."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I deliver products to customers across Nigeria?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! SteerSolo integrates with delivery services for shipping across Nigeria. You can set delivery fees by location, offer free delivery, or let customers choose pickup. We support same-day delivery in Lagos and interstate shipping."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is there a free trial for SteerSolo?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! Every new account gets a 15-day free trial with full access to all features. No credit card required. You can create your store, add products, and start selling immediately."
+          }
         }
       ]
     };
@@ -175,7 +259,10 @@ export const SEOSchemas = () => {
         { "@type": "ListItem", "position": 2, "name": "Explore Shops", "item": "https://steersolo.lovable.app/shops" },
         { "@type": "ListItem", "position": 3, "name": "Pricing", "item": "https://steersolo.lovable.app/pricing" },
         { "@type": "ListItem", "position": 4, "name": "How It Works", "item": "https://steersolo.lovable.app/how-it-works" },
-        { "@type": "ListItem", "position": 5, "name": "FAQ", "item": "https://steersolo.lovable.app/faq" }
+        { "@type": "ListItem", "position": 5, "name": "FAQ", "item": "https://steersolo.lovable.app/faq" },
+        { "@type": "ListItem", "position": 6, "name": "Sell on WhatsApp", "item": "https://steersolo.lovable.app/sell-on-whatsapp" },
+        { "@type": "ListItem", "position": 7, "name": "Sell on Instagram", "item": "https://steersolo.lovable.app/sell-on-instagram" },
+        { "@type": "ListItem", "position": 8, "name": "Create Online Store", "item": "https://steersolo.lovable.app/online-store-nigeria" }
       ]
     };
 
