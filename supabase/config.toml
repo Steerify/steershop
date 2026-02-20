@@ -90,3 +90,6 @@ verify_jwt = false
 [functions.paystack-initialize-order]
 verify_jwt = false
 
+[functions.generate-ad-copy]
+verify_jwt = false
+

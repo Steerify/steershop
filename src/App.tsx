@@ -72,6 +72,7 @@ const EntrepreneurCourses = lazy(() => import("./pages/entrepreneur/Entrepreneur
 const Customers = lazy(() => import("./pages/Customers"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Ambassador = lazy(() => import("./pages/Ambassador"));
+const AdsAssistant = lazy(() => import("./pages/entrepreneur/AdsAssistant"));
 
 // Feature pages
 const WhatsAppFeature = lazy(() => import("./pages/features/WhatsAppFeature"));
@@ -80,6 +81,14 @@ const TrustFeature = lazy(() => import("./pages/features/TrustFeature"));
 const PaymentsFeature = lazy(() => import("./pages/features/PaymentsFeature"));
 const HowItWorksPage = lazy(() => import("./pages/HowItWorksPage"));
 const SecurityPage = lazy(() => import("./pages/SecurityPage"));
+
+// SEO Landing Pages
+const SellOnWhatsApp = lazy(() => import("./pages/seo/SellOnWhatsApp"));
+const SellOnInstagram = lazy(() => import("./pages/seo/SellOnInstagram"));
+const OnlineStoreNigeria = lazy(() => import("./pages/seo/OnlineStoreNigeria"));
+const AcceptPayments = lazy(() => import("./pages/seo/AcceptPayments"));
+const SmallBusinessTools = lazy(() => import("./pages/seo/SmallBusinessTools"));
+const SellOnlineNigeria = lazy(() => import("./pages/seo/SellOnlineNigeria"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -137,6 +146,14 @@ const App = () => (
             <Route path="/features/payments" element={<PaymentsFeature />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />
             <Route path="/security" element={<SecurityPage />} />
+            
+            {/* SEO Landing Pages */}
+            <Route path="/sell-on-whatsapp" element={<SellOnWhatsApp />} />
+            <Route path="/sell-on-instagram" element={<SellOnInstagram />} />
+            <Route path="/online-store-nigeria" element={<OnlineStoreNigeria />} />
+            <Route path="/accept-payments-online" element={<AcceptPayments />} />
+            <Route path="/small-business-tools" element={<SmallBusinessTools />} />
+            <Route path="/sell-online-nigeria" element={<SellOnlineNigeria />} />
             <Route path="/ambassador" element={
               <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR, UserRole.CUSTOMER]}>
                 <Ambassador />
@@ -202,6 +219,11 @@ const App = () => (
             <Route path="/marketing-services" element={
               <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
                 <MarketingServices />
+              </ProtectedRoute>
+            } />
+            <Route path="/ads-assistant" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <AdsAssistant />
               </ProtectedRoute>
             } />
             <Route path="/courses" element={

@@ -50,7 +50,9 @@ serve(async (req) => {
     // Static pages
     const staticPages = [
       '/about', '/pricing', '/faq', '/how-it-works',
-      '/features/growth', '/features/payments', '/features/trust', '/features/whatsapp'
+      '/features/growth', '/features/payments', '/features/trust', '/features/whatsapp',
+      '/sell-on-whatsapp', '/sell-on-instagram', '/online-store-nigeria',
+      '/accept-payments-online', '/small-business-tools', '/sell-online-nigeria'
     ];
     for (const page of staticPages) {
       urls += `
