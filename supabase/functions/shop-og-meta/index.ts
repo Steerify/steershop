@@ -44,6 +44,104 @@ function generateDefaultHTML(): Response {
   });
 }
 
+function formatPrice(price: number): string {
+  return `₦${price.toLocaleString()}`;
+}
+
+function generateProductPageHTML(shop: any, product: any, shopUrl: string): Response {
+  const shopName = escapeHtml(shop.shop_name || 'Shop');
+  const productName = escapeHtml(product.name || 'Product');
+  const description = escapeHtml(product.description || `${product.name} available at ${shop.shop_name} on SteerSolo`);
+  const imageUrl = product.image_url || shop.logo_url || DEFAULT_IMAGE;
+  const productUrl = `${shopUrl}/product/${product.id}`;
+
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "description": product.description || `${product.name} available at ${shop.shop_name}`,
+    "image": imageUrl,
+    "url": productUrl,
+    "brand": { "@type": "Brand", "name": shop.shop_name },
+    "offers": {
+      "@type": "Offer",
+      "price": product.price,
+      "priceCurrency": "NGN",
+      "availability": product.is_available ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "seller": { "@type": "Organization", "name": shop.shop_name, "url": shopUrl }
+    },
+    ...(product.average_rating && product.total_reviews && {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": product.average_rating,
+        "reviewCount": product.total_reviews
+      }
+    })
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "SteerSolo", "item": SITE_URL },
+      { "@type": "ListItem", "position": 2, "name": "Shops", "item": `${SITE_URL}/shops` },
+      { "@type": "ListItem", "position": 3, "name": shop.shop_name, "item": shopUrl },
+      { "@type": "ListItem", "position": 4, "name": product.name, "item": productUrl }
+    ]
+  };
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>${productName} | ${shopName} | SteerSolo</title>
+  <meta name="description" content="${description}" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="${productUrl}" />
+  <meta property="og:title" content="${productName} - ${shopName}" />
+  <meta property="og:description" content="${description}" />
+  <meta property="og:image" content="${imageUrl}" />
+  <meta property="og:url" content="${productUrl}" />
+  <meta property="og:type" content="product" />
+  <meta property="og:site_name" content="SteerSolo" />
+  <meta property="product:price:amount" content="${product.price}" />
+  <meta property="product:price:currency" content="NGN" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${productName} - ${shopName}" />
+  <meta name="twitter:description" content="${description}" />
+  <meta name="twitter:image" content="${imageUrl}" />
+  <script type="application/ld+json">${JSON.stringify([productSchema, breadcrumbSchema])}</script>
+  <meta http-equiv="refresh" content="0;url=${productUrl}">
+</head>
+<body>
+  <nav aria-label="breadcrumb">
+    <ol>
+      <li><a href="${SITE_URL}">SteerSolo</a></li>
+      <li><a href="${SITE_URL}/shops">Shops</a></li>
+      <li><a href="${shopUrl}">${shopName}</a></li>
+      <li>${productName}</li>
+    </ol>
+  </nav>
+  <main>
+    <article>
+      <h1>${productName}</h1>
+      ${product.image_url ? `<img src="${product.image_url}" alt="${productName}" />` : ''}
+      <p>${description}</p>
+      <p><strong>Price:</strong> ${formatPrice(product.price)}</p>
+      <p><strong>Availability:</strong> ${product.is_available ? 'In Stock' : 'Out of Stock'}</p>
+      ${product.category ? `<p><strong>Category:</strong> ${escapeHtml(product.category)}</p>` : ''}
+      <p><strong>Sold by:</strong> <a href="${shopUrl}">${shopName}</a></p>
+      ${product.average_rating ? `<p><strong>Rating:</strong> ${product.average_rating}/5 (${product.total_reviews} reviews)</p>` : ''}
+    </article>
+  </main>
+  <p>Redirecting to ${productName}...</p>
+</body>
+</html>`;
+
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html', ...corsHeaders }
+  });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -52,6 +150,7 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const slug = url.searchParams.get('slug');
+    const productId = url.searchParams.get('product');
     
     if (!slug) {
       return generateDefaultHTML();
@@ -74,26 +173,40 @@ serve(async (req) => {
       return generateDefaultHTML();
     }
 
-    // Fetch products
-    let shopProducts: any[] = [];
+    const shopUrl = `${SITE_URL}/shop/${slug}`;
+
+    // If product ID is provided, serve a product-specific page
+    if (productId) {
+      const { data: product } = await supabase
+        .from('products')
+        .select('id, name, description, price, image_url, category, is_available, average_rating, total_reviews')
+        .eq('id', productId)
+        .eq('shop_id', shop.id)
+        .single();
+
+      if (product) {
+        return generateProductPageHTML(shop, product, shopUrl);
+      }
+      // Fall through to shop page if product not found
+    }
+
+    // Fetch products for shop page
     const { data: prods } = await supabase
       .from('products')
       .select('id, name, description, price, image_url, category')
       .eq('shop_id', shop.id)
       .eq('is_available', true)
       .limit(20);
-    shopProducts = prods || [];
+    const shopProducts = prods || [];
     
     const shopName = escapeHtml(shop.shop_name || 'Shop');
     const description = escapeHtml(shop.description || `Shop at ${shopName} on SteerSolo`);
     const imageUrl = shop.logo_url || shop.banner_url || DEFAULT_IMAGE;
-    const shopUrl = `${SITE_URL}/shop/${slug}`;
 
-    // Build category keywords from products
     const categories = [...new Set(shopProducts.map(p => p.category).filter(Boolean))];
     const keywordsMeta = [shopName, ...(categories.length ? categories : ['online shop']), 'SteerSolo', 'Nigeria', shop.state || ''].filter(Boolean).join(', ');
 
-    // Build LocalBusiness JSON-LD
+    // LocalBusiness JSON-LD
     const jsonLd: any = {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
@@ -103,7 +216,6 @@ serve(async (req) => {
       "image": imageUrl,
     };
 
-    // Add address
     if (shop.state || shop.country) {
       jsonLd.address = {
         "@type": "PostalAddress",
@@ -112,7 +224,6 @@ serve(async (req) => {
       };
     }
 
-    // Add telephone (WhatsApp)
     if (shop.whatsapp_number) {
       let phone = shop.whatsapp_number.replace(/[^\d+]/g, '');
       if (!phone.startsWith('+')) {
@@ -148,7 +259,7 @@ serve(async (req) => {
       }));
     }
 
-    // Individual Product schemas for product-level indexing
+    // Individual Product schemas
     const productSchemas = shopProducts.slice(0, 10).map(p => ({
       "@context": "https://schema.org",
       "@type": "Product",
@@ -165,8 +276,21 @@ serve(async (req) => {
         "seller": { "@type": "Organization", "name": shop.shop_name, "url": shopUrl }
       }
     }));
+
+    // Breadcrumb schema
+    const breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "SteerSolo", "item": SITE_URL },
+        { "@type": "ListItem", "position": 2, "name": "Shops", "item": `${SITE_URL}/shops` },
+        { "@type": "ListItem", "position": 3, "name": shop.shop_name, "item": shopUrl }
+      ]
+    };
     
-    const allSchemas = [jsonLd, ...productSchemas];
+    const allSchemas = [jsonLd, breadcrumbSchema, ...productSchemas];
+    
+    const locationText = [shop.state, shop.country].filter(Boolean).join(', ');
     
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -174,6 +298,7 @@ serve(async (req) => {
   <title>${shopName} | SteerSolo</title>
   <meta name="description" content="${description}" />
   <meta name="keywords" content="${escapeHtml(keywordsMeta)}" />
+  <meta name="robots" content="index, follow" />
   <link rel="canonical" href="${shopUrl}" />
   <meta property="og:title" content="${shopName}" />
   <meta property="og:description" content="${description}" />
@@ -189,9 +314,32 @@ serve(async (req) => {
   <meta http-equiv="refresh" content="0;url=${shopUrl}">
 </head>
 <body>
-  <h1>${shopName}</h1>
-  <p>${description}</p>
-  ${shopProducts.map(p => `<div><h2>${escapeHtml(p.name)}</h2><p>₦${p.price}</p></div>`).join('\n  ')}
+  <nav aria-label="breadcrumb">
+    <ol>
+      <li><a href="${SITE_URL}">SteerSolo</a></li>
+      <li><a href="${SITE_URL}/shops">Shops</a></li>
+      <li>${shopName}</li>
+    </ol>
+  </nav>
+  <main>
+    <header>
+      <h1>${shopName}</h1>
+      <p>${description}</p>
+      ${locationText ? `<p><strong>Location:</strong> ${escapeHtml(locationText)}</p>` : ''}
+      ${shop.average_rating && shop.total_reviews ? `<p><strong>Rating:</strong> ${shop.average_rating}/5 (${shop.total_reviews} reviews)</p>` : ''}
+      ${categories.length > 0 ? `<p><strong>Categories:</strong> ${categories.map(c => escapeHtml(c)).join(', ')}</p>` : ''}
+    </header>
+    <section>
+      <h2>Products</h2>
+      ${shopProducts.map(p => `<article>
+        <h3><a href="${shopUrl}/product/${p.id}">${escapeHtml(p.name)}</a></h3>
+        ${p.image_url ? `<img src="${p.image_url}" alt="${escapeHtml(p.name)}" />` : ''}
+        ${p.description ? `<p>${escapeHtml(p.description)}</p>` : ''}
+        <p><strong>Price:</strong> ${formatPrice(p.price)}</p>
+        ${p.category ? `<p><strong>Category:</strong> ${escapeHtml(p.category)}</p>` : ''}
+      </article>`).join('\n      ')}
+    </section>
+  </main>
   <p>Redirecting to ${shopName}...</p>
 </body>
 </html>`;
