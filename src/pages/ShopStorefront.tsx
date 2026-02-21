@@ -92,16 +92,53 @@ const ShopStorefront = () => {
     loadShopData();
   }, [slug]);
 
-  // Inject JSON-LD structured data for SEO
+  // Inject meta tags and JSON-LD structured data for SEO/AEO
   useEffect(() => {
     if (!shop) return;
-    const schemaData = {
+    const shopUrl = `https://steersolo.lovable.app/shop/${shop.shop_slug}`;
+    const imageUrl = shop.logo_url || shop.banner_url || '';
+
+    // Page title
+    document.title = `${shop.shop_name} | SteerSolo`;
+
+    // Helper to set/create meta tags
+    const setMeta = (attr: string, key: string, content: string) => {
+      let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement;
+      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, key); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    };
+
+    setMeta('name', 'description', shop.description || `Shop at ${shop.shop_name} on SteerSolo`);
+    setMeta('name', 'robots', 'index, follow');
+    setMeta('property', 'og:title', shop.shop_name);
+    setMeta('property', 'og:description', shop.description || `Shop at ${shop.shop_name} on SteerSolo`);
+    setMeta('property', 'og:url', shopUrl);
+    setMeta('property', 'og:type', 'website');
+    setMeta('property', 'og:site_name', 'SteerSolo');
+    if (imageUrl) { setMeta('property', 'og:image', imageUrl); setMeta('name', 'twitter:image', imageUrl); }
+    setMeta('name', 'twitter:card', 'summary_large_image');
+    setMeta('name', 'twitter:title', shop.shop_name);
+    setMeta('name', 'twitter:description', shop.description || `Shop at ${shop.shop_name} on SteerSolo`);
+
+    // Canonical link
+    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+    if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
+    canonical.href = shopUrl;
+
+    // JSON-LD
+    const schemaData: any = {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
       "name": shop.shop_name,
       "description": shop.description || `Shop at ${shop.shop_name} on SteerSolo`,
-      "url": `https://steersolo.lovable.app/shop/${shop.shop_slug}`,
-      "image": shop.logo_url || undefined,
+      "url": shopUrl,
+      "image": imageUrl || undefined,
+      "numberOfEmployees": "1-10",
+      "address": {
+        "@type": "PostalAddress",
+        ...(shop.state && { "addressRegion": shop.state }),
+        "addressCountry": shop.country || "NG",
+      },
       ...(shop.total_reviews > 0 && {
         "aggregateRating": {
           "@type": "AggregateRating",
@@ -109,21 +146,33 @@ const ShopStorefront = () => {
           "reviewCount": shop.total_reviews
         }
       }),
-      "numberOfEmployees": "1-10",
-      "address": { "@type": "PostalAddress", "addressCountry": "NG" },
     };
+
+    // Add product offers to JSON-LD
+    if (products.length > 0) {
+      schemaData.makesOffer = products.slice(0, 10).map(p => ({
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Product",
+          "name": p.name,
+          "image": p.image_url || undefined,
+          "url": `${shopUrl}/product/${p.id}`,
+          "offers": { "@type": "Offer", "price": p.price, "priceCurrency": "NGN", "availability": "https://schema.org/InStock" }
+        }
+      }));
+    }
+
     const script = document.createElement("script");
     script.type = "application/ld+json";
     script.text = JSON.stringify(schemaData);
     script.id = "shop-jsonld";
     document.head.appendChild(script);
-    // Update page title
-    document.title = `${shop.shop_name} | SteerSolo`;
+
     return () => {
       const el = document.getElementById("shop-jsonld");
       if (el) el.remove();
     };
-  }, [shop]);
+  }, [shop, products]);
   useEffect(() => {
     let filtered = products;
    

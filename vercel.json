@@ -5,8 +5,13 @@
       "destination": "https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/generate-sitemap"
     },
     {
+      "source": "/shop/:slug/product/:productId",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(Googlebot|bingbot|facebookexternalhit|Twitterbot|WhatsApp|Slackbot|LinkedInBot|Discordbot|TelegramBot|GPTBot|ChatGPT-User|PerplexityBot|ClaudeBot|Claude-Web|Anthropic|Google-Extended|Applebot|Bytespider|CCBot|cohere-ai|Diffbot|YouBot|PetalBot|Amazonbot|meta-externalagent|OAI-SearchBot|AI2Bot|DuckDuckBot|YandexBot|SemrushBot|AhrefsBot|MJ12bot|DotBot).*" }],
+      "destination": "https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/shop-og-meta?slug=:slug&product=:productId"
+    },
+    {
       "source": "/shop/:slug",
-      "has": [{ "type": "header", "key": "user-agent", "value": ".*(Googlebot|bingbot|facebookexternalhit|Twitterbot|WhatsApp|Slackbot|LinkedInBot|Discordbot|TelegramBot).*" }],
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(Googlebot|bingbot|facebookexternalhit|Twitterbot|WhatsApp|Slackbot|LinkedInBot|Discordbot|TelegramBot|GPTBot|ChatGPT-User|PerplexityBot|ClaudeBot|Claude-Web|Anthropic|Google-Extended|Applebot|Bytespider|CCBot|cohere-ai|Diffbot|YouBot|PetalBot|Amazonbot|meta-externalagent|OAI-SearchBot|AI2Bot|DuckDuckBot|YandexBot|SemrushBot|AhrefsBot|MJ12bot|DotBot).*" }],
       "destination": "https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/shop-og-meta?slug=:slug"
     },
     {
