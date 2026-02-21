@@ -50,26 +50,48 @@ serve(async (req) => {
       );
     }
 
-    if (!shop.paystack_subaccount_code) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'This shop has not set up their bank details for receiving payments. Please contact the seller.',
-          code: 'NO_SUBACCOUNT'
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Initialize transaction with Paystack using split payment
     const paymentReference = `ORDER_${order_id}_${Date.now()}`;
     const amountInKobo = Math.round(amount * 100);
+    const hasSubaccount = !!shop.paystack_subaccount_code;
+    const paymentMode = hasSubaccount ? 'split' : 'direct';
 
-    console.log('Initializing split payment:', {
+    console.log(`Initializing ${paymentMode} payment:`, {
       shop_id,
       order_id,
       amount,
-      subaccount: shop.paystack_subaccount_code,
+      subaccount: shop.paystack_subaccount_code || 'none (direct)',
     });
+
+    // Build Paystack payload - include subaccount fields only if shop has one
+    const paystackPayload: Record<string, any> = {
+      email: customer_email,
+      amount: amountInKobo,
+      currency: 'NGN',
+      reference: paymentReference,
+      callback_url: callback_url || undefined,
+      metadata: {
+        order_id,
+        shop_id,
+        payment_mode: paymentMode,
+        custom_fields: [
+          {
+            display_name: "Order ID",
+            variable_name: "order_id",
+            value: order_id,
+          },
+          {
+            display_name: "Shop",
+            variable_name: "shop_name",
+            value: shop.shop_name,
+          },
+        ],
+      },
+    };
+
+    if (hasSubaccount) {
+      paystackPayload.subaccount = shop.paystack_subaccount_code;
+      paystackPayload.bearer = 'subaccount';
+    }
 
     const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
@@ -77,31 +99,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        email: customer_email,
-        amount: amountInKobo,
-        currency: 'NGN',
-        reference: paymentReference,
-        subaccount: shop.paystack_subaccount_code,
-        bearer: 'subaccount', // Paystack fees charged to the subaccount (shop)
-        callback_url: callback_url || undefined,
-        metadata: {
-          order_id,
-          shop_id,
-          custom_fields: [
-            {
-              display_name: "Order ID",
-              variable_name: "order_id",
-              value: order_id,
-            },
-            {
-              display_name: "Shop",
-              variable_name: "shop_name",
-              value: shop.shop_name,
-            },
-          ],
-        },
-      }),
+      body: JSON.stringify(paystackPayload),
     });
 
     const paystackData = await paystackResponse.json();
