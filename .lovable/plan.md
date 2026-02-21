@@ -1,58 +1,77 @@
-# Fix Subscription Update, Paystack Payment Error, and Carousel Auto-slide
 
-## 1. Update User Subscription to Business Plan
+# Make Shops Discoverable by AI Crawlers and Search Engines
 
-**Action:** Run a database update to set this user's subscription to the Business plan.
+## Problem
 
-- Set `is_subscribed = true`
-- Set `subscription_plan_id` to the Business plan ID (`949d3226-c472-4dcf-a234-5d911f282e95`)
-- Extend `subscription_expires_at` by 30 days from now. Ill make sure that is how the algorithm works except the person chooses yearly plan ( 365 days )
-- Insert a record into `subscription_history` for audit trail
+Currently, shop pages are only served as rich HTML to a limited set of bot user agents (Googlebot, Twitterbot, etc.) via `vercel.json`. Modern AI crawlers like **GPTBot** (ChatGPT), **PerplexityBot**, **ClaudeBot**, **Google-Extended** (Gemini), and others are NOT included -- meaning your shops are invisible to AI-powered search and answer engines.
+
+Additionally, the client-side rendered shop and product pages lack proper meta tags for non-JS crawlers, and the shop-og-meta edge function could serve richer, more structured content.
 
 ---
 
-## 2. Fix Paystack "Pay Before Service" Error
+## Changes
 
-**Root Cause:** When a customer selects "Pay Before Service" with Paystack, the `paystack-initialize-order` edge function requires the shop to have a `paystack_subaccount_code` (for split payments). However, **zero shops** in the database have this field set. The function returns a `NO_SUBACCOUNT` error, blocking all Paystack payments.
+### 1. Add AI Crawler User Agents to `vercel.json`
 
-**Fix:** Update the edge function to support a fallback flow when no subaccount exists:
+Expand the bot detection regex to include all major AI crawlers:
 
-- If a shop HAS a `paystack_subaccount_code` -- use split payment as before (shop gets paid directly, platform takes a cut)
-- If a shop does NOT have a subaccount -- initialize a regular Paystack payment using the platform's secret key. The platform collects the full amount and settles with the shop later (via the existing payout system)
+Current bots: `Googlebot|bingbot|facebookexternalhit|Twitterbot|WhatsApp|Slackbot|LinkedInBot|Discordbot|TelegramBot`
 
-**File:** `supabase/functions/paystack-initialize-order/index.ts`
+Add: `GPTBot|ChatGPT-User|PerplexityBot|ClaudeBot|Claude-Web|Anthropic|Google-Extended|Applebot|Bytespider|CCBot|cohere-ai|Diffbot|YouBot|PetalBot|Amazonbot|meta-externalagent|OAI-SearchBot|AI2Bot|Scrapy|DuckDuckBot|YandexBot|SemrushBot|AhrefsBot|MJ12bot|DotBot`
 
-Changes:
+Also add a **product-level rewrite** so individual product pages are also served with rich meta:
 
-- Remove the `NO_SUBACCOUNT` error block
-- When `paystack_subaccount_code` is null, initialize payment WITHOUT the `subaccount` and `bearer` fields
-- Log which flow was used (split vs direct) for debugging
-- Add metadata flag `payment_mode: 'direct' | 'split'` so the webhook knows how to handle it
+```json
+{
+  "source": "/shop/:slug/product/:productId",
+  "has": [{ "type": "header", "key": "user-agent", "value": "...(all bots)..." }],
+  "destination": "https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/shop-og-meta?slug=:slug&product=:productId"
+}
+```
 
----
+### 2. Enhance `supabase/functions/shop-og-meta/index.ts`
 
-## 3. Fix Dashboard Carousel Auto-slide
+- Accept optional `product` query parameter for product-level pages
+- When a product ID is provided, serve a **dedicated product page** with:
+  - Product-specific og:title, og:description, og:image
+  - Individual `Product` JSON-LD schema with price, availability, brand
+  - Richer HTML body with product details for text-based crawlers
+- For shop pages, enhance the HTML body with:
+  - Product listings with names, prices, descriptions, and image tags
+  - Shop location, category, and contact info as visible text
+  - Internal links between products for crawl depth
+  - `<nav>` breadcrumb for semantic structure
 
-**Root Cause:** The carousel in `Dashboard.tsx` has manual navigation (arrows + dots) but no auto-slide timer.
+### 3. Enhance Client-Side Meta Tags in `src/pages/ShopStorefront.tsx`
 
-**Fix:** Add a `useEffect` with `setInterval` that advances the carousel every 5 seconds, pausing when the user hovers over it.
+Update the existing `useEffect` to also set:
+- `og:title`, `og:description`, `og:image`, `og:url` meta tags
+- `canonical` link
+- `description` meta tag
+- Enhanced JSON-LD with products, offers, address with state/region
+- `meta name="robots" content="index, follow"`
 
-**File:** `src/pages/Dashboard.tsx`
+### 4. Add Client-Side Meta Tags to `src/pages/ProductDetails.tsx`
 
-Changes:
+Add a `useEffect` similar to `ShopStorefront.tsx` that sets:
+- Product-specific page title: "Product Name | Shop Name | SteerSolo"
+- `og:title`, `og:description`, `og:image` for the specific product
+- `Product` JSON-LD schema with price, availability, reviews, brand
+- `canonical` link to the product URL
 
-- Add a `useEffect` that runs `setInterval(nextSlide, 5000)` when `slides.length > 1`
-- Track a `isPaused` state that pauses auto-slide on mouse enter and resumes on mouse leave
-- Add `onMouseEnter` and `onMouseLeave` handlers to the carousel container
-- Clean up the interval on unmount
+### 5. Add Shops Directory to `supabase/functions/generate-sitemap/index.ts`
+
+- Already includes shop URLs -- no changes needed here
 
 ---
 
 ## Technical Summary
 
+| File | Change |
+|------|--------|
+| `vercel.json` | Add 25+ AI crawler user agents; add product-level bot rewrite rule |
+| `supabase/functions/shop-og-meta/index.ts` | Support product-level pages; richer HTML body with product listings, breadcrumbs, nav links |
+| `src/pages/ShopStorefront.tsx` | Enhanced meta tags (og, canonical, description, robots); richer JSON-LD with products and address |
+| `src/pages/ProductDetails.tsx` | Add meta tags and Product JSON-LD schema for individual product discoverability |
 
-| File                                                    | Change                                                                               |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Database (data update)                                  | Set user `a58d73f6...` to Business plan, `is_subscribed = true`, extend expiry       |
-| `supabase/functions/paystack-initialize-order/index.ts` | Remove subaccount requirement; fall back to direct payment when no subaccount exists |
-| `src/pages/Dashboard.tsx`                               | Add auto-slide interval (5s) with hover-to-pause for carousel                        |
+This ensures every shop and product on SteerSolo is discoverable by Google, Bing, ChatGPT, Perplexity, Claude, Gemini, and all other AI/search crawlers -- just like Instagram profiles and posts.
