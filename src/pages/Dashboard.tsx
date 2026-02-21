@@ -144,6 +144,7 @@ const Dashboard = () => {
 
   // Carousel state
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
@@ -545,6 +546,13 @@ const Dashboard = () => {
 
   const nextSlide = () => setCarouselIndex((prev) => (prev + 1) % totalSlides);
   const prevSlide = () => setCarouselIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
+
+  // Auto-slide carousel
+  useEffect(() => {
+    if (totalSlides <= 1 || isCarouselPaused) return;
+    const timer = setInterval(nextSlide, 5000);
+    return () => clearInterval(timer);
+  }, [totalSlides, isCarouselPaused]);
   const goToSlide = (index: number) => setCarouselIndex(index);
 
   // Quick Actions
@@ -796,7 +804,11 @@ const Dashboard = () => {
 
           {/* ===== CAROUSEL ===== */}
           {slides.length > 0 && (
-            <div className="relative w-full overflow-hidden mb-6 rounded-lg">
+            <div
+              className="relative w-full overflow-hidden mb-6 rounded-lg"
+              onMouseEnter={() => setIsCarouselPaused(true)}
+              onMouseLeave={() => setIsCarouselPaused(false)}
+            >
               <div
                 className="flex transition-transform duration-300 ease-in-out"
                 style={{ transform: `translateX(-${carouselIndex * 100}%)` }}
