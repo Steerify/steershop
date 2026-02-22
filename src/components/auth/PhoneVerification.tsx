@@ -22,7 +22,6 @@ export const PhoneVerification = ({ onVerified, onSkip }: PhoneVerificationProps
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const [devOtp, setDevOtp] = useState<string | null>(null);
 
   // Cooldown timer
   useEffect(() => {
@@ -91,11 +90,6 @@ export const PhoneVerification = ({ onVerified, onSkip }: PhoneVerificationProps
       }
 
       if (data && data.success) {
-        // Store dev OTP for testing (remove in production)
-        if (data.devOtp) {
-          setDevOtp(data.devOtp);
-        }
-        
         setStep("otp");
         setCooldown(60);
         toast({
@@ -267,14 +261,6 @@ export const PhoneVerification = ({ onVerified, onSkip }: PhoneVerificationProps
           </>
         ) : (
           <>
-            {/* Dev mode OTP display */}
-            {devOtp && (
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-center">
-                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                  [DEV MODE] Your OTP: <span className="font-mono text-lg">{devOtp}</span>
-                </p>
-              </div>
-            )}
 
             <div className="flex flex-col items-center space-y-4">
               <InputOTP
