@@ -224,8 +224,6 @@ const handler = async (req: Request): Promise<Response> => {
         success: true, 
         message: "Verification code sent to your phone",
         expiresIn: 300, // 5 minutes in seconds
-        // Only include OTP in dev mode for testing
-        ...(termiiApiKey && termiiApiKey.length > 10 ? {} : { devOtp: otp })
       }),
       {
         status: 200,

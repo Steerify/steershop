@@ -24,7 +24,8 @@ import {
   Crown,
   Sparkles,
   Megaphone,
-  DollarSign
+  DollarSign,
+  Tv
 } from "lucide-react";
 import logo from "@/assets/steersolo-logo.jpg";
 
@@ -46,6 +47,7 @@ const menuItems = [
   { title: "Courses", url: "/admin/courses", icon: GraduationCap },
   { title: "Rewards", url: "/admin/prizes", icon: Award },
   { title: "Special Offers", url: "/admin/offers", icon: Gift },
+  { title: "Ads Manager", url: "/admin/ads", icon: Tv },
   { title: "Feedback", url: "/admin/feedback", icon: MessageSquare },
 ];
 

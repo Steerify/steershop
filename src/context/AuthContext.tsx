@@ -59,8 +59,6 @@ const fetchUserProfile = async (supabaseUser: User): Promise<AppUser | null> => 
     // Map database role string to UserRole enum
     let role: UserRole;
     
-    // Debug log to see what's in the database
-    console.log('Database role value:', profile?.role);
     
     // Handle null/undefined role first
     if (!profile?.role) {
@@ -84,7 +82,7 @@ const fetchUserProfile = async (supabaseUser: User): Promise<AppUser | null> => 
       }
     }
 
-    console.log('Mapped UserRole:', role);
+    
 
     // Check if entrepreneur has completed onboarding by checking onboarding_responses
     let onboardingCompleted = false;

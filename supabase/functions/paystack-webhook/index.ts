@@ -19,15 +19,19 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Verify webhook signature
+    // Verify webhook signature using proper HMAC-SHA512
     const signature = req.headers.get('x-paystack-signature');
     const body = await req.text();
     
-    const hash = await crypto.subtle.digest(
-      'SHA-512',
-      new TextEncoder().encode(paystackSecretKey + body)
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(paystackSecretKey),
+      { name: 'HMAC', hash: 'SHA-512' },
+      false,
+      ['sign']
     );
-    const expectedSignature = Array.from(new Uint8Array(hash))
+    const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(body));
+    const expectedSignature = Array.from(new Uint8Array(sig))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
