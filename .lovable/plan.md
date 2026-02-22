@@ -1,77 +1,71 @@
 
-# Make Shops Discoverable by AI Crawlers and Search Engines
+# Audit Fixes and Admin Ads Management
 
-## Problem
-
-Currently, shop pages are only served as rich HTML to a limited set of bot user agents (Googlebot, Twitterbot, etc.) via `vercel.json`. Modern AI crawlers like **GPTBot** (ChatGPT), **PerplexityBot**, **ClaudeBot**, **Google-Extended** (Gemini), and others are NOT included -- meaning your shops are invisible to AI-powered search and answer engines.
-
-Additionally, the client-side rendered shop and product pages lack proper meta tags for non-JS crawlers, and the shop-og-meta edge function could serve richer, more structured content.
+Based on the audit report, here are the actionable fixes I can implement now, plus the admin ads feature you requested.
 
 ---
 
-## Changes
+## 1. Security: Remove devOtp Leakage (Critical)
 
-### 1. Add AI Crawler User Agents to `vercel.json`
+**Problem:** The `send-phone-otp` edge function returns the raw OTP in the response (`devOtp`) when the Termii API key is missing or short. The frontend (`PhoneVerification.tsx`) displays it in a yellow banner. If Termii is ever misconfigured in production, OTPs are exposed to any caller.
 
-Expand the bot detection regex to include all major AI crawlers:
+**Fix:**
+- Remove `devOtp` from the edge function response entirely -- only log it server-side
+- Remove the dev OTP display from `PhoneVerification.tsx`
 
-Current bots: `Googlebot|bingbot|facebookexternalhit|Twitterbot|WhatsApp|Slackbot|LinkedInBot|Discordbot|TelegramBot`
+**Files:** `supabase/functions/send-phone-otp/index.ts`, `src/components/auth/PhoneVerification.tsx`
 
-Add: `GPTBot|ChatGPT-User|PerplexityBot|ClaudeBot|Claude-Web|Anthropic|Google-Extended|Applebot|Bytespider|CCBot|cohere-ai|Diffbot|YouBot|PetalBot|Amazonbot|meta-externalagent|OAI-SearchBot|AI2Bot|Scrapy|DuckDuckBot|YandexBot|SemrushBot|AhrefsBot|MJ12bot|DotBot`
+---
 
-Also add a **product-level rewrite** so individual product pages are also served with rich meta:
+## 2. Security: Fix Paystack Webhook HMAC Verification (Critical)
 
-```json
-{
-  "source": "/shop/:slug/product/:productId",
-  "has": [{ "type": "header", "key": "user-agent", "value": "...(all bots)..." }],
-  "destination": "https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/shop-og-meta?slug=:slug&product=:productId"
-}
-```
+**Problem:** The current webhook computes `SHA-512(secretKey + body)` -- a plain hash, not an HMAC. Paystack's docs specify `HMAC-SHA512(body, secretKey)`. This means signature verification may silently pass or fail incorrectly.
 
-### 2. Enhance `supabase/functions/shop-og-meta/index.ts`
+**Fix:** Replace `crypto.subtle.digest('SHA-512', ...)` with proper `crypto.subtle.importKey` + `crypto.subtle.sign('HMAC', ...)` using the Paystack secret key.
 
-- Accept optional `product` query parameter for product-level pages
-- When a product ID is provided, serve a **dedicated product page** with:
-  - Product-specific og:title, og:description, og:image
-  - Individual `Product` JSON-LD schema with price, availability, brand
-  - Richer HTML body with product details for text-based crawlers
-- For shop pages, enhance the HTML body with:
-  - Product listings with names, prices, descriptions, and image tags
-  - Shop location, category, and contact info as visible text
-  - Internal links between products for crawl depth
-  - `<nav>` breadcrumb for semantic structure
+**File:** `supabase/functions/paystack-webhook/index.ts`
 
-### 3. Enhance Client-Side Meta Tags in `src/pages/ShopStorefront.tsx`
+---
 
-Update the existing `useEffect` to also set:
-- `og:title`, `og:description`, `og:image`, `og:url` meta tags
-- `canonical` link
-- `description` meta tag
-- Enhanced JSON-LD with products, offers, address with state/region
-- `meta name="robots" content="index, follow"`
+## 3. Security: Reduce Verbose Auth Logging (Medium)
 
-### 4. Add Client-Side Meta Tags to `src/pages/ProductDetails.tsx`
+**Problem:** `AuthContext.tsx` logs database role values and mapped roles to the browser console, exposing role/profile info.
 
-Add a `useEffect` similar to `ShopStorefront.tsx` that sets:
-- Product-specific page title: "Product Name | Shop Name | SteerSolo"
-- `og:title`, `og:description`, `og:image` for the specific product
-- `Product` JSON-LD schema with price, availability, reviews, brand
-- `canonical` link to the product URL
+**Fix:** Remove `console.log('Database role value:')` and `console.log('Mapped UserRole:')` lines from `AuthContext.tsx`.
 
-### 5. Add Shops Directory to `supabase/functions/generate-sitemap/index.ts`
+**File:** `src/context/AuthContext.tsx`
 
-- Already includes shop URLs -- no changes needed here
+---
+
+## 4. Admin Ads Management Feature
+
+**What you asked:** As an admin, you want to create ads that automatically work on social media.
+
+**How it will work:**
+- Add an "Ads Manager" page to the admin panel at `/admin/ads`
+- Admin can create ad campaigns by selecting a shop (or all shops), choosing platforms, entering promo text or letting AI generate it
+- The page uses the existing `generate-ad-copy` edge function for AI copy generation
+- For each platform, it generates ready-to-post content and provides one-click actions:
+  - **WhatsApp:** Opens WhatsApp share with pre-filled text
+  - **Facebook/Instagram:** Copies formatted post + opens Facebook Ads Manager
+  - **TikTok:** Copies script + opens TikTok Ads
+  - **Google:** Copies ad copy + opens Google Ads
+- Admin can also create "bulk campaigns" for featured/top shops
+
+**Files to create:**
+- `src/pages/admin/AdminAds.tsx` -- Full admin ads management page
+
+**Files to modify:**
+- `src/components/AdminSidebar.tsx` -- Add "Ads Manager" menu item
+- `src/App.tsx` -- Add `/admin/ads` route
 
 ---
 
 ## Technical Summary
 
-| File | Change |
-|------|--------|
-| `vercel.json` | Add 25+ AI crawler user agents; add product-level bot rewrite rule |
-| `supabase/functions/shop-og-meta/index.ts` | Support product-level pages; richer HTML body with product listings, breadcrumbs, nav links |
-| `src/pages/ShopStorefront.tsx` | Enhanced meta tags (og, canonical, description, robots); richer JSON-LD with products and address |
-| `src/pages/ProductDetails.tsx` | Add meta tags and Product JSON-LD schema for individual product discoverability |
-
-This ensures every shop and product on SteerSolo is discoverable by Google, Bing, ChatGPT, Perplexity, Claude, Gemini, and all other AI/search crawlers -- just like Instagram profiles and posts.
+| Priority | Area | File(s) | Change |
+|----------|------|---------|--------|
+| Critical | Security | `send-phone-otp/index.ts`, `PhoneVerification.tsx` | Remove devOtp from response and UI |
+| Critical | Security | `paystack-webhook/index.ts` | Fix HMAC-SHA512 signature verification |
+| Medium | Security | `AuthContext.tsx` | Remove PII console.log statements |
+| Feature | Admin | `AdminAds.tsx` (new), `AdminSidebar.tsx`, `App.tsx` | Admin Ads Manager with AI generation and social media deep-links |
