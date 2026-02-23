@@ -109,7 +109,7 @@ const Index = () => {
           <div className="text-center mb-12">
             <p className="text-sm font-semibold text-destructive mb-2 tracking-wide uppercase">SOUND FAMILIAR?</p>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              The WhatsApp selling chaos
+              The Regular selling chaos
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               You're not losing sales because demand is low — you're losing them because your order process is messy.
