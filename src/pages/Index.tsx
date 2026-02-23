@@ -103,10 +103,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* SECTION 2: SOCIAL PROOF STATS */}
-      <SocialProofStats />
-
-      {/* SECTION 3: PAIN MIRROR — "Sound familiar?" */}
+      {/* SECTION 2: PAIN MIRROR — Hook them emotionally first */}
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -142,25 +139,28 @@ const Index = () => {
         </div>
       </section>
 
-      {/* SECTION 4: FEATURED SHOPS */}
-      <FeaturedShopsBanner />
-
-      {/* SECTION 5: SHOPPER DISCOVERY */}
-      <ShopperDiscovery />
-
-      {/* SECTION 6: WHAT IS STEERSOLO + WHY */}
+      {/* SECTION 3: WHAT IS STEERSOLO + WHY — Show the solution */}
       <WhySteerSolo />
 
-      {/* SECTION 7: HOW IT WORKS */}
+      {/* SECTION 4: HOW IT WORKS — Make it feel easy */}
       <HowItWorks />
 
-      {/* SECTION 8: PRICING */}
-      <DynamicPricing />
+      {/* SECTION 5: SOCIAL PROOF STATS — Back it up with numbers */}
+      <SocialProofStats />
 
-      {/* SECTION 9: REVIEWS */}
+      {/* SECTION 6: REVIEWS — Real people, real trust */}
       <HomepageReviews />
 
-      {/* SECTION 10: FINAL CTA — with guarantee */}
+      {/* SECTION 7: FEATURED SHOPS — Show live proof */}
+      <FeaturedShopsBanner />
+
+      {/* SECTION 8: PRICING — Now they're ready to buy */}
+      <DynamicPricing />
+
+      {/* SECTION 9: SHOPPER DISCOVERY — Secondary value prop */}
+      <ShopperDiscovery />
+
+      {/* SECTION 10: FINAL CTA — Close with guarantee */}
       <section className="relative py-20 overflow-hidden bg-primary">
         <AdirePattern variant="circles" className="text-primary-foreground" opacity={0.1} />
 
