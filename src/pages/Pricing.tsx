@@ -2,13 +2,31 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Sparkles, Check, Zap, Crown, HelpCircle } from "lucide-react";
+import { ArrowLeft, Sparkles, Check, Zap, Crown, HelpCircle, Clock, Users, TrendingUp, ShieldCheck } from "lucide-react";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { useAuth } from "@/context/AuthContext";
 import { SubscriptionCard } from "@/components/SubscriptionCard";
 import subscriptionService, { SubscriptionPlan } from "@/services/subscription.service";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/steersolo-logo.jpg";
+
+const planProfiles: Record<string, { bestFor: string; outcome: string; timeSaved: string }> = {
+  basic: {
+    bestFor: "New sellers just starting out on WhatsApp",
+    outcome: "Get your first 5 orders in 14 days",
+    timeSaved: "Save ~3 hours/week on order management",
+  },
+  pro: {
+    bestFor: "Growing sellers with 10+ orders/month",
+    outcome: "Double your conversion rate in 30 days",
+    timeSaved: "Save ~8 hours/week with AI tools & automation",
+  },
+  business: {
+    bestFor: "Established sellers scaling to ₦500K+/month",
+    outcome: "Full marketing suite to 3x your revenue",
+    timeSaved: "Save ~15 hours/week with done-for-you services",
+  },
+};
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -23,13 +41,11 @@ const Pricing = () => {
 
   const loadData = async () => {
     try {
-      // Fetch subscription plans
       const plansResult = await subscriptionService.getPlans();
       if (plansResult.success) {
         setPlans(plansResult.data);
       }
 
-      // Fetch current user's plan if logged in
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -65,6 +81,10 @@ const Pricing = () => {
       q: "How do payments work?",
       a: "We use Paystack for secure payments. You can pay with cards, bank transfer, or USSD."
     },
+    {
+      q: "What if I don't get results?",
+      a: "Complete your setup milestones within 14 days. If you don't see measurable improvement, your next month is free."
+    },
   ];
 
   return (
@@ -97,14 +117,54 @@ const Pricing = () => {
       </nav>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
-        {/* Hero Section */}
+        {/* Hero Section — ROI-first */}
         <div className="text-center mb-10 sm:mb-16">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Simple, Transparent Pricing
+            Invest Less Than ₦100/Day to Grow Your Business
           </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-            Choose the plan that fits your business. Start with a 15-day free trial on any plan.
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
+            Every plan pays for itself. Choose the one that matches your stage.
           </p>
+
+          {/* ROI highlights */}
+          <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-primary" />
+              15-day free trial
+            </div>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-primary" />
+              Cancel anytime
+            </div>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              No hidden fees
+            </div>
+          </div>
+        </div>
+
+        {/* Plan Profiles — Best-fit cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-10">
+          {Object.entries(planProfiles).map(([slug, profile]) => (
+            <Card key={slug} className="border-border/50 bg-card/50">
+              <CardContent className="p-5 text-center">
+                <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">
+                  {slug} plan
+                </p>
+                <p className="text-sm font-medium mb-2">{profile.bestFor}</p>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <p className="flex items-center gap-1.5 justify-center">
+                    <TrendingUp className="w-3 h-3 text-green-500" />
+                    {profile.outcome}
+                  </p>
+                  <p className="flex items-center gap-1.5 justify-center">
+                    <Clock className="w-3 h-3 text-blue-500" />
+                    {profile.timeSaved}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Subscription Cards */}
@@ -119,8 +179,23 @@ const Pricing = () => {
           />
         )}
 
+        {/* Guarantee Banner */}
+        <div className="max-w-3xl mx-auto mt-10">
+          <Card className="bg-gradient-to-r from-green-500/10 via-emerald-500/5 to-green-500/10 border-green-500/20">
+            <CardContent className="p-6 text-center">
+              <ShieldCheck className="w-8 h-8 text-green-600 mx-auto mb-3" />
+              <h3 className="text-lg font-heading font-bold mb-2">
+                Results Guarantee
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+                Complete your setup milestones within 14 days. If you don't see measurable order improvement, your next month is on us. No questions asked.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Setup Service CTA */}
-        <Card className="mt-12 sm:mt-16 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border-primary/20">
+        <Card className="mt-10 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border-primary/20">
           <CardContent className="p-6 sm:p-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div>
@@ -173,10 +248,10 @@ const Pricing = () => {
         {!user && (
           <div className="text-center mt-12 sm:mt-16 py-8 sm:py-12 bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl">
             <h3 className="text-xl sm:text-2xl font-heading font-bold mb-4">
-              Ready to grow your business?
+              Ready to stop losing sales?
             </h3>
             <p className="text-muted-foreground mb-6">
-              Join thousands of Nigerian entrepreneurs selling online with SteerSolo.
+              Join thousands of Nigerian entrepreneurs converting WhatsApp traffic into orders.
             </p>
             <Button 
               size="lg" 

@@ -237,13 +237,15 @@ const Products = () => {
       // Creating new product - check limits first
       const limitCheck = await checkProductLimit();
       if (limitCheck) {
+        // -1 means unlimited (Business plan)
+        const isUnlimited = limitCheck.max_allowed === -1;
         setProductLimitInfo({
           current_count: limitCheck.current_count,
-          max_allowed: limitCheck.max_allowed,
+          max_allowed: isUnlimited ? -1 : limitCheck.max_allowed,
           plan_slug: limitCheck.plan_slug,
         });
         
-        if (!limitCheck.can_create) {
+        if (!limitCheck.can_create && !isUnlimited) {
           // Show upgrade prompt instead of opening dialog
           setShowUpgradePrompt(true);
           return;

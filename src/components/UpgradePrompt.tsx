@@ -115,7 +115,7 @@ export const UpgradePrompt = ({
           </DialogDescription>
         </DialogHeader>
 
-        {feature === "products" && currentCount !== undefined && maxAllowed !== undefined && (
+        {feature === "products" && currentCount !== undefined && maxAllowed !== undefined && maxAllowed !== -1 && (
           <div className="bg-muted/50 rounded-lg p-4 text-center">
             <p className="text-2xl font-bold text-primary">
               {currentCount}/{maxAllowed}
