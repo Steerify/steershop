@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,11 +16,12 @@ import {
   Settings, LogOut, Share2,
   Megaphone, Target, ArrowRight, Clock,
   CheckCircle, AlertCircle, DollarSign, CalendarCheck, Menu, X,
-  HelpCircle, Search, Shield, BookOpen, Banknote, Wallet, Crown, MessageCircle, Truck, BadgeCheck, Sparkles
+  HelpCircle, Search, Shield, BookOpen, Banknote, Wallet, Crown, MessageCircle, Truck, BadgeCheck, Sparkles,
+  BarChart2, Home, Bell, ChevronUp, ChevronDown, Zap, Star, TrendingDown, ExternalLink
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
 import { PageWrapper } from "@/components/PageWrapper";
 import { FeatureDiscoveryPopup } from "@/components/FeatureDiscoveryPopup";
 import logo from "@/assets/steersolo-logo.jpg";
@@ -45,7 +46,7 @@ import { CouponManager } from "@/components/CouponManager";
 import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { NotificationBell } from "@/components/NotificationBell";
 
-// Helper component for verification progress (unchanged)
+// ─── Verification Progress Card ───────────────────────────────────────────────
 const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profile: any; shopFullData: any; totalSales: number }) => {
   const navigate = useNavigate();
   const bankVerified = profile?.bank_verified === true;
@@ -64,9 +65,9 @@ const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profi
 
   if (isVerified) {
     return (
-      <Card className="mb-6 border-green-500/20 bg-gradient-to-r from-green-500/5 to-emerald-500/5">
+      <Card className="mb-4 border-green-500/30 bg-gradient-to-r from-green-500/10 to-emerald-500/5 overflow-hidden">
         <CardContent className="p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-green-500/15 flex items-center justify-center">
             <BadgeCheck className="w-5 h-5 text-green-600" />
           </div>
           <div>
@@ -79,17 +80,18 @@ const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profi
   }
 
   return (
-    <Card className="mb-6 border-primary/20">
+    <Card className="mb-4 border-primary/20 overflow-hidden">
+      <div className="h-0.5 w-full bg-gradient-to-r from-primary via-accent to-gold" />
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-sm flex items-center gap-2">
             <Shield className="w-4 h-4 text-primary" />
             Verification Progress
           </h3>
-          <Badge variant="outline" className="text-xs">{metCount}/4</Badge>
+          <Badge variant="outline" className="text-xs font-bold">{metCount}/4</Badge>
         </div>
         <div className="h-2 w-full bg-muted rounded-full overflow-hidden mb-3">
-          <div className="h-full bg-primary transition-all" style={{ width: `${(metCount / 4) * 100}%` }} />
+          <div className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-700 rounded-full" style={{ width: `${(metCount / 4) * 100}%` }} />
         </div>
         <div className="space-y-2">
           {criteria.map((c, i) => (
@@ -118,6 +120,96 @@ const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profi
   );
 };
 
+// ─── Stat Card Component ───────────────────────────────────────────────────────
+const StatCard = ({
+  label, value, icon: Icon, gradient, trend, trendValue
+}: {
+  label: string;
+  value: string;
+  icon: React.ElementType;
+  gradient: string;
+  trend?: "up" | "down" | "neutral";
+  trendValue?: string;
+}) => (
+  <Card className={`relative overflow-hidden border-0 shadow-md ${gradient}`}>
+    <CardContent className="p-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-medium text-white/80 uppercase tracking-wider">{label}</p>
+        <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+          <Icon className="w-4 h-4 text-white" />
+        </div>
+      </div>
+      <p className="text-2xl font-bold text-white mb-1">{value}</p>
+      {trendValue && (
+        <div className="flex items-center gap-1">
+          {trend === "up" ? <TrendingUp className="w-3 h-3 text-white/80" /> : trend === "down" ? <TrendingDown className="w-3 h-3 text-white/80" /> : null}
+          <span className="text-xs text-white/80">{trendValue}</span>
+        </div>
+      )}
+    </CardContent>
+    <div className="absolute -bottom-3 -right-3 w-20 h-20 rounded-full bg-white/10" />
+    <div className="absolute -top-3 -left-3 w-14 h-14 rounded-full bg-white/5" />
+  </Card>
+);
+
+// ─── Quick Action Tile ─────────────────────────────────────────────────────────
+const QuickActionTile = ({
+  icon: Icon, label, description, onClick, color, textColor
+}: {
+  icon: React.ElementType;
+  label: string;
+  description: string;
+  onClick: () => void;
+  color: string;
+  textColor: string;
+}) => (
+  <button
+    onClick={onClick}
+    className="group flex flex-col items-start p-4 bg-card rounded-2xl border border-border hover:border-primary/30 hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 text-left w-full"
+  >
+    <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200`}>
+      <Icon className={`w-5 h-5 ${textColor}`} />
+    </div>
+    <p className="font-semibold text-sm text-foreground leading-tight">{label}</p>
+    <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{description}</p>
+  </button>
+);
+
+// ─── Mobile Bottom Nav ─────────────────────────────────────────────────────────
+const MobileBottomNav = ({ navigate }: { navigate: (path: string) => void }) => {
+  const items = [
+    { icon: Home, label: "Home", path: "/dashboard" },
+    { icon: Package, label: "Products", path: "/products" },
+    { icon: ShoppingCart, label: "Orders", path: "/orders" },
+    { icon: Megaphone, label: "Marketing", path: "/marketing" },
+    { icon: Settings, label: "Settings", path: "/settings" },
+  ];
+  const currentPath = window.location.pathname;
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card/95 backdrop-blur-xl border-t border-border safe-area-pb">
+      <div className="flex items-center justify-around px-2 py-2">
+        {items.map((item) => {
+          const isActive = currentPath === item.path;
+          return (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-200 ${
+                isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <item.icon className={`w-5 h-5 ${isActive ? "text-primary" : ""}`} />
+              <span className="text-[10px] font-medium">{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+};
+
+// ─── Main Dashboard Component ──────────────────────────────────────────────────
 const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -141,6 +233,8 @@ const Dashboard = () => {
   const [payoutBalance, setPayoutBalance] = useState({ totalRevenue: 0, totalWithdrawn: 0, totalPending: 0, availableBalance: 0 });
   const [isPayoutDialogOpen, setIsPayoutDialogOpen] = useState(false);
   const [showDfyPopup, setShowDfyPopup] = useState(false);
+  const [hasNoShop, setHasNoShop] = useState(false);
+  const [activeTab, setActiveTab] = useState<"overview" | "actions" | "wallet">("overview");
 
   // Carousel state
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -166,21 +260,13 @@ const Dashboard = () => {
         setIsSubscribing(true);
         try {
           const result = await subscriptionService.verifyPayment(reference);
-          
           if (result.success) {
-            toast({
-              title: "Payment Successful! 🎉",
-              description: "Your subscription has been activated. Welcome to SteerSolo!",
-            });
+            toast({ title: "Payment Successful! 🎉", description: "Your subscription has been activated. Welcome to SteerSolo!" });
             setSubscriptionStatus('active');
             localStorage.removeItem('paystack_reference');
             loadData();
           } else {
-            toast({
-              title: "Payment Verification Failed",
-              description: result.error || "Please try again or contact support.",
-              variant: "destructive",
-            });
+            toast({ title: "Payment Verification Failed", description: result.error || "Please try again or contact support.", variant: "destructive" });
           }
         } catch (error) {
           console.error('Payment verification error:', error);
@@ -190,13 +276,9 @@ const Dashboard = () => {
         }
       }
     };
-
-    if (user) {
-      verifyPayment();
-    }
+    if (user) verifyPayment();
   }, [searchParams, user]);
 
-  // Handle DFY verify callback - show popup when returning from Paystack
   useEffect(() => {
     if (searchParams.get('dfy') === 'verify' && searchParams.get('reference')) {
       setShowDfyPopup(true);
@@ -205,12 +287,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!isAuthLoading) {
-      if (user) {
-        loadData();
-      } else {
-        setIsLoading(false);
-        navigate("/auth/login");
-      }
+      if (user) loadData();
+      else { setIsLoading(false); navigate("/auth/login"); }
     }
   }, [user, isAuthLoading]);
 
@@ -219,7 +297,6 @@ const Dashboard = () => {
       setIsLoading(true);
       if (!user) return;
 
-      // Fetch profile from Supabase for accurate subscription data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -231,29 +308,20 @@ const Dashboard = () => {
         setProfile({ full_name: user.email?.split('@')[0] || 'User' });
       } else {
         setProfile(profileData);
-        
-        // Calculate subscription status from profile
         if (profileData.subscription_expires_at) {
           const expiresAt = new Date(profileData.subscription_expires_at);
           const now = new Date();
           const daysLeft = differenceInDays(expiresAt, now);
-          
           setDaysRemaining(Math.max(0, daysLeft));
-          
-          if (profileData.is_subscribed && expiresAt > now) {
-            setSubscriptionStatus('active');
-          } else if (!profileData.is_subscribed && expiresAt > now) {
-            setSubscriptionStatus('trial');
-          } else {
-            setSubscriptionStatus('expired');
-          }
+          if (profileData.is_subscribed && expiresAt > now) setSubscriptionStatus('active');
+          else if (!profileData.is_subscribed && expiresAt > now) setSubscriptionStatus('trial');
+          else setSubscriptionStatus('expired');
         } else {
           setSubscriptionStatus('trial');
           setDaysRemaining(15);
         }
       }
 
-      // Fetch real shop data
       const shopResponse = await shopService.getShopByOwner(user.id);
       const shops = shopResponse.data;
       const primaryShop = Array.isArray(shops) ? shops[0] : (shops as any);
@@ -261,35 +329,25 @@ const Dashboard = () => {
       if (primaryShop) {
         setShopData({ id: primaryShop.id, name: primaryShop.shop_name || primaryShop.name });
         setShopFullData(primaryShop);
-        
-        // Fetch products count for checklist
+
         const productsResponse = await productService.getProducts({ shopId: primaryShop.id });
         setProductsCount(productsResponse.data?.length || 0);
-        
+
         const ordersResponse = await orderService.getOrders({ shopId: primaryShop.id });
         const allOrders = ordersResponse.data || [];
-        
-        // Calculate pending orders
         const pending = allOrders.filter(o => (o as any).payment_status !== 'paid' && (o as any).order_status !== 'completed').length;
         setPendingOrders(pending);
 
-        // Generate chart data from real orders
         const last7Days = eachDayOfInterval({
           start: subMonths(new Date(), 0).setDate(new Date().getDate() - 6),
           end: new Date()
         });
-
-        // Only count paid orders for revenue accuracy
         const paidOrders = allOrders.filter(o => (o as any).payment_status === 'paid');
-
         const dailyData = last7Days.map(day => {
           const dateStr = format(day, 'yyyy-MM-dd');
-          const dayPaidOrders = paidOrders.filter(o => 
-            o.created_at && format(new Date(o.created_at), 'yyyy-MM-dd') === dateStr
-          );
-          
+          const dayPaidOrders = paidOrders.filter(o => o.created_at && format(new Date(o.created_at), 'yyyy-MM-dd') === dateStr);
           return {
-            date: format(day, 'MMM dd'),
+            date: format(day, 'EEE'),
             revenue: dayPaidOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0),
             sales: dayPaidOrders.length
           };
@@ -299,25 +357,21 @@ const Dashboard = () => {
         setTotalRevenue(paidOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0));
         setTotalSales(paidOrders.length);
 
-        // Fetch payout balance
         try {
           const balance = await payoutService.getBalance(primaryShop.id);
           setPayoutBalance(balance);
-        } catch (e) {
-          console.error('Payout balance error:', e);
-        }
+        } catch (e) { console.error('Payout balance error:', e); }
       } else {
-        // No shop — only show DFY popup if redirected from onboarding with show_dfy param
+        // No shop — always show the DFY popup (ignore dismissed flag)
+        setHasNoShop(true);
+        setShowDfyPopup(true);
         if (searchParams.get('show_dfy') === 'true') {
-          setShowDfyPopup(true);
-          // Clean the param from URL
           const newParams = new URLSearchParams(searchParams);
           newParams.delete('show_dfy');
           navigate({ search: newParams.toString() }, { replace: true });
         }
       }
 
-      // Fetch user badges
       if (user) {
         const badgesResult = await subscriptionService.getUserBadges(user.id);
         if (badgesResult.success && badgesResult.data) {
@@ -325,22 +379,15 @@ const Dashboard = () => {
         }
       }
 
-      // Fetch active offer for entrepreneurs
       const offerResponse = await offerService.getOffers();
       if (offerResponse.success && offerResponse.data) {
         const entOffer = offerResponse.data.find(o => o.target_audience === 'entrepreneurs' && o.is_active);
-        if (entOffer) {
-          setActiveOffer(entOffer);
-        }
+        if (entOffer) setActiveOffer(entOffer);
       }
 
     } catch (error) {
       console.error("Error loading dashboard data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load dashboard data",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to load dashboard data", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -348,33 +395,17 @@ const Dashboard = () => {
 
   const handleSubscribe = async () => {
     setIsSubscribing(true);
-    
     try {
       const result = await subscriptionService.initializePayment('basic', 'monthly');
-      
       if (result.success && result.authorization_url) {
         localStorage.setItem('paystack_reference', result.reference || '');
-        
-        toast({
-          title: "Redirecting to Payment",
-          description: "You'll be redirected to Paystack to complete your payment...",
-        });
-        
+        toast({ title: "Redirecting to Payment", description: "You'll be redirected to Paystack to complete your payment..." });
         window.location.href = result.authorization_url;
       } else {
-        toast({
-          title: "Payment Error",
-          description: result.error || "Failed to initialize payment. Please try again.",
-          variant: "destructive",
-        });
+        toast({ title: "Payment Error", description: result.error || "Failed to initialize payment.", variant: "destructive" });
       }
     } catch (error) {
-      console.error('Subscription error:', error);
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Something went wrong. Please try again.", variant: "destructive" });
     } finally {
       setIsSubscribing(false);
     }
@@ -382,159 +413,134 @@ const Dashboard = () => {
 
   const handleLogout = async () => {
     await signOut();
-    toast({
-      title: "Logged out",
-      description: "Come back soon!",
-    });
+    toast({ title: "Logged out", description: "Come back soon!" });
     navigate("/");
   };
 
-  // Build carousel slides dynamically based on current data
+  // Carousel slides — WhatsApp is now a permanent banner above the carousel
   const getCarouselSlides = () => {
     const slides = [];
 
-    // 1. WhatsApp Community Banner
-    slides.push(
-      <Card key="whatsapp" className="border-primary/20">
-        <CardContent className="p-4">
-          <WhatsAppCommunityBanner />
-        </CardContent>
-      </Card>
-    );
-
-    // 2. Trial / Subscription Status
+    // ── Trial / Expired subscription ──
     if (subscriptionStatus === 'trial') {
       slides.push(
-        <Card key="trial" className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Clock className="w-4 h-4 text-primary" />
+        <div key="trial" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-accent p-5">
+          {/* decorative blobs */}
+          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="absolute -bottom-6 -left-2 w-16 h-16 rounded-full bg-white/5" />
+          <div className="relative z-10 flex items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Clock className="w-4 h-4 text-white/80" />
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Free Trial</span>
               </div>
-              <div>
-                <h3 className="font-semibold text-sm">Free Trial · {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} left</h3>
-                <p className="text-xs text-muted-foreground">Upgrade to keep your store live.</p>
-              </div>
+              <h3 className="text-white font-extrabold text-base sm:text-lg leading-tight">{daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining</h3>
+              <p className="text-white/70 text-xs mt-0.5">Upgrade now to keep your store live 🚀</p>
             </div>
-            <Button size="sm" onClick={handleSubscribe} disabled={isSubscribing}>
+            <Button
+              size="sm"
+              onClick={() => navigate('/pricing')}
+              className="shrink-0 bg-white text-primary hover:bg-white/90 font-bold shadow-lg"
+            >
               Upgrade Now
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       );
     } else if (subscriptionStatus === 'expired') {
       slides.push(
-        <Card key="expired" className="bg-red-500/5 border-red-500/20">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
-                <AlertCircle className="w-4 h-4 text-red-600" />
+        <div key="expired" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 to-red-700 p-5">
+          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="relative z-10 flex items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <AlertCircle className="w-4 h-4 text-white/80" />
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Subscription Expired</span>
               </div>
-              <div>
-                <h3 className="font-semibold text-sm text-red-600">Subscription Expired</h3>
-                <p className="text-xs text-muted-foreground">Your store is hidden. Reactivate now.</p>
-              </div>
+              <h3 className="text-white font-extrabold text-base">Your store is hidden</h3>
+              <p className="text-white/70 text-xs mt-0.5">Customers can't see your products right now.</p>
             </div>
-            <Button size="sm" onClick={handleSubscribe} disabled={isSubscribing}>
+            <Button
+              size="sm"
+              onClick={() => navigate('/pricing')}
+              className="shrink-0 bg-white text-red-600 hover:bg-white/90 font-bold shadow-lg"
+            >
               Reactivate
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+      );
+    } else {
+      // Active — store visibility banner
+      slides.push(
+        <div key="visibility" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 p-5">
+          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="relative z-10 flex items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <CheckCircle className="w-4 h-4 text-white" />
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Store Active</span>
+              </div>
+              <h3 className="text-white font-extrabold text-base">You're live &amp; selling! 🎉</h3>
+              <p className="text-white/70 text-xs mt-0.5">Customers can find and buy from your store.</p>
+            </div>
+            <Badge className="shrink-0 bg-white/20 text-white border-0 font-bold">Live ✓</Badge>
+          </div>
+        </div>
       );
     }
 
-    // 3. Store visibility
-    slides.push(
-      <Card key="visibility" className="border-green-500/20">
-        <CardContent className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">Your store is visible to customers</p>
-              <p className="text-xs text-muted-foreground">Keep up the great work!</p>
-            </div>
-          </div>
-          <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
-            Live
-          </Badge>
-        </CardContent>
-      </Card>
-    );
-
-    // 4. Verification nudge (if needed)
+    // ── Verification nudge ──
     if (shopData && profile && !profile.bank_verified && !localStorage.getItem('verification_nudge_dismissed')) {
       slides.push(
-        <Card key="verification" className="border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-yellow-500/5">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-amber-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-sm">Get Verified</h3>
-                  <p className="text-xs text-muted-foreground">Verify identity to receive payouts.</p>
-                </div>
+        <div key="verification" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 p-5">
+          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="relative z-10 flex items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Shield className="w-4 h-4 text-white/80" />
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Get Verified</span>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Button size="sm" onClick={() => navigate('/identity-verification')}>
-                  Verify Now
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => { localStorage.setItem('verification_nudge_dismissed', 'true'); loadData(); }}>
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
+              <h3 className="text-white font-extrabold text-base">Unlock payouts 🛡️</h3>
+              <p className="text-white/70 text-xs mt-0.5">Verify your identity to withdraw your earnings.</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex gap-1 shrink-0">
+              <Button size="sm" onClick={() => navigate('/identity-verification')} className="bg-white text-amber-600 hover:bg-white/90 font-bold shadow-lg">Verify Now</Button>
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/20" onClick={() => { localStorage.setItem('verification_nudge_dismissed', 'true'); loadData(); }}>
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          </div>
+        </div>
       );
     }
 
-    // 5. First‑sale momentum (if no sales)
+    // ── First sale nudge ──
     if (shopData && totalSales === 0) {
       slides.push(
-        <Card key="first-sale" className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <Share2 className="w-4 h-4 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm mb-1">First sale is closer than you think! 🚀</h3>
-                <p className="text-xs text-muted-foreground truncate">
-                  Share your store link to get your first sale within 48h.
-                </p>
-              </div>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="flex-1 sm:flex-none text-xs h-8 px-2"
-                  onClick={() => {
-                    const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
-                    navigator.clipboard.writeText(url);
-                    toast({ title: "Link copied!" });
-                  }}
-                >
-                  Copy Link
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="flex-1 sm:flex-none text-xs h-8 px-2 bg-green-600 hover:bg-green-700"
-                  onClick={() => {
-                    const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
-                    window.open(`https://wa.me/?text=${encodeURIComponent('Check out my store: ' + url)}`, '_blank');
-                  }}
-                >
-                  <MessageCircle className="w-3 h-3 mr-1" />
-                  WhatsApp
-                </Button>
-              </div>
+        <div key="first-sale" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 p-5">
+          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="absolute -bottom-4 -left-2 w-16 h-16 rounded-full bg-white/5" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-1">
+              <Share2 className="w-4 h-4 text-white/80" />
+              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">First Sale Tips</span>
             </div>
-          </CardContent>
-        </Card>
+            <h3 className="text-white font-extrabold text-base mb-1">Your first sale is 48h away 🚀</h3>
+            <p className="text-white/70 text-xs mb-3">Share your store link on WhatsApp to get started.</p>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="border-white/40 text-white hover:bg-white/20 gap-1.5 text-xs h-8 font-semibold" onClick={() => {
+                const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
+                navigator.clipboard.writeText(url);
+                toast({ title: "Store link copied!" });
+              }}><ExternalLink className="w-3 h-3" />Copy Link</Button>
+              <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white gap-1.5 text-xs h-8 font-semibold" onClick={() => {
+                const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
+                window.open(`https://wa.me/?text=${encodeURIComponent('Check out my store: ' + url)}`, '_blank');
+              }}><MessageCircle className="w-3 h-3" />Share on WhatsApp</Button>
+            </div>
+          </div>
+        </div>
       );
     }
 
@@ -543,238 +549,133 @@ const Dashboard = () => {
 
   const slides = getCarouselSlides();
   const totalSlides = slides.length;
-
   const nextSlide = () => setCarouselIndex((prev) => (prev + 1) % totalSlides);
   const prevSlide = () => setCarouselIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
 
-  // Auto-slide carousel
   useEffect(() => {
     if (totalSlides <= 1 || isCarouselPaused) return;
     const timer = setInterval(nextSlide, 5000);
     return () => clearInterval(timer);
   }, [totalSlides, isCarouselPaused]);
+
   const goToSlide = (index: number) => setCarouselIndex(index);
 
-  // Quick Actions
+  // Quick Actions config
   const QuickActions = [
-    { 
-      icon: Store, 
-      label: "My Store", 
-      description: "Setup and customize",
-      path: "/my-store",
-      color: "from-primary/20 to-primary/10",
-      textColor: "text-primary"
-    },
-    { 
-      icon: Package, 
-      label: "Products", 
-      description: "Manage your catalog",
-      path: "/products",
-      color: "from-accent/20 to-accent/10",
-      textColor: "text-accent"
-    },
-    { 
-      icon: ShoppingCart, 
-      label: "Orders", 
-      description: "View & manage orders",
-      path: "/orders",
-      color: "from-gold/20 to-gold/10",
-      textColor: "text-gold"
-    },
-    { 
-      icon: Truck, 
-      label: "Delivery", 
-      description: "Shipping & logistics",
-      path: "/orders",
-      color: "from-emerald-500/20 to-emerald-500/10",
-      textColor: "text-emerald-500"
-    },
-    { 
-      icon: CalendarCheck, 
-      label: "Bookings", 
-      description: "Manage appointments",
-      path: "/bookings",
-      color: "from-purple-500/20 to-purple-500/10",
-      textColor: "text-purple-500"
-    },
-    { 
-      icon: Megaphone, 
-      label: "Marketing", 
-      description: "Create posters with AI",
-      path: "/marketing",
-      color: "from-pink-500/20 to-pink-500/10",
-      textColor: "text-pink-500"
-    },
-    { 
-      icon: Sparkles, 
-      label: "Ads Assistant", 
-      description: "AI ad copy generator",
-      path: "/ads-assistant",
-      color: "from-orange-500/20 to-red-500/10",
-      textColor: "text-orange-500"
-    },
-    { 
-      icon: Target, 
-      label: "Services", 
-      description: "Google & Ad consultations",
-      path: "/marketing-services",
-      color: "from-cyan-500/20 to-cyan-500/10",
-      textColor: "text-cyan-500"
-    },
-    { 
-      icon: BookOpen, 
-      label: "Tutorials", 
-      description: "Learn & earn points",
-      path: "/courses",
-      color: "from-blue-500/20 to-blue-500/10",
-      textColor: "text-blue-500"
-    },
-    { 
-      icon: Users, 
-      label: "Customers", 
-      description: "View customer records",
-      path: "/customers",
-      color: "from-emerald-500/20 to-emerald-500/10",
-      textColor: "text-emerald-500"
-    },
-    { 
-      icon: Crown, 
-      label: "Ambassador", 
-      description: "Refer & earn rewards",
-      path: "/ambassador",
-      color: "from-yellow-500/20 to-yellow-500/10",
-      textColor: "text-yellow-600"
-    },
+    { icon: Store, label: "My Store", description: "Setup & customize", path: "/my-store", color: "from-blue-600/20 to-blue-600/10", textColor: "text-blue-600" },
+    { icon: Package, label: "Products", description: "Manage catalog", path: "/products", color: "from-accent/20 to-accent/10", textColor: "text-accent" },
+    { icon: ShoppingCart, label: "Orders", description: "View & manage", path: "/orders", color: "from-orange-500/20 to-orange-500/10", textColor: "text-orange-500" },
+    { icon: Truck, label: "Delivery", description: "Shipping & logistics", path: "/orders", color: "from-emerald-500/20 to-emerald-500/10", textColor: "text-emerald-500" },
+    { icon: CalendarCheck, label: "Bookings", description: "Appointments", path: "/bookings", color: "from-purple-500/20 to-purple-500/10", textColor: "text-purple-500" },
+    { icon: Megaphone, label: "Marketing", description: "Create with AI", path: "/marketing", color: "from-pink-500/20 to-pink-500/10", textColor: "text-pink-500" },
+    { icon: Sparkles, label: "Ads Assistant", description: "AI ad generator", path: "/ads-assistant", color: "from-orange-400/20 to-red-500/10", textColor: "text-orange-500" },
+    { icon: Target, label: "Services", description: "Google & Ad consults", path: "/marketing-services", color: "from-cyan-500/20 to-cyan-500/10", textColor: "text-cyan-500" },
+    { icon: BookOpen, label: "Tutorials", description: "Learn & earn points", path: "/courses", color: "from-indigo-500/20 to-indigo-500/10", textColor: "text-indigo-500" },
+    { icon: Users, label: "Customers", description: "Customer records", path: "/customers", color: "from-teal-500/20 to-teal-500/10", textColor: "text-teal-500" },
+    { icon: Crown, label: "Ambassador", description: "Refer & earn", path: "/ambassador", color: "from-yellow-500/20 to-yellow-500/10", textColor: "text-yellow-600" },
   ];
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
-        <div className="animate-pulse flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-xl overflow-hidden">
-            <img src={logo} alt="Loading" className="w-full h-full object-cover" />
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative w-16 h-16">
+            <div className="absolute inset-0 rounded-2xl overflow-hidden">
+              <img src={logo} alt="Loading" className="w-full h-full object-cover" />
+            </div>
+            <div className="absolute inset-0 rounded-2xl border-2 border-primary/40 animate-ping" />
           </div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground text-sm animate-pulse">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
+  const firstName = (profile?.full_name && profile.full_name.trim()) ? profile.full_name.trim().split(' ')[0] : (user?.email?.split('@')[0] || 'there');
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
   return (
-    <PageWrapper patternVariant="dots" patternOpacity={0.3}>
-      {/* Top Navigation */}
-      <nav className="bg-background/95 backdrop-blur-lg border-b sticky top-0 z-50">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/3">
+      {/* ─── Top Navigation ──────────────────────────────── */}
+      <nav className="bg-card/95 backdrop-blur-xl border-b border-border/60 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg overflow-hidden">
+            {/* Logo */}
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-sm">
                 <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent hidden sm:block">
                 SteerSolo
               </span>
             </div>
-            
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-2">
-              {shopData && (
-                <StrokeMyShop shopId={shopData.id} shopName={shopData.name} />
-              )}
-              
-              <Button variant="ghost" size="icon">
-                <Search className="h-4 w-4" />
-              </Button>
-              
+
+            {/* Desktop Nav Actions */}
+            <div className="hidden md:flex items-center gap-1.5">
+              {shopData && <StrokeMyShop shopId={shopData.id} shopName={shopData.name} />}
               <NotificationBell audience="entrepreneurs" />
-              
-              <TourButton 
-                onStartTour={startTour} 
-                hasSeenTour={hasSeenTour} 
-                onResetTour={resetTour}
-              />
-              
-              <Button variant="ghost" onClick={handleLogout} className="hover:bg-destructive/10">
+              <TourButton onStartTour={startTour} hasSeenTour={hasSeenTour} onResetTour={resetTour} />
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive gap-1.5">
                 <LogOut className="h-4 w-4" />
+                <span className="hidden lg:inline">Logout</span>
               </Button>
             </div>
 
-            {/* Mobile Menu */}
-            <div className="flex md:hidden items-center gap-2">
+            {/* Mobile: notifications + hamburger */}
+            <div className="flex md:hidden items-center gap-1">
+              <NotificationBell audience="entrepreneurs" />
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right">
-                  <div className="flex flex-col h-full py-6">
-                    <div className="mb-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden">
-                          <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+                <SheetContent side="right" className="w-72 p-0">
+                  <div className="flex flex-col h-full">
+                    {/* Profile header */}
+                    <div className="p-5 bg-gradient-to-br from-primary/10 to-accent/5 border-b border-border">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                          {firstName.charAt(0).toUpperCase()}
                         </div>
-                        <div>
-                          <p className="font-semibold">{profile?.full_name}</p>
-                          <p className="text-sm text-muted-foreground">{user?.email}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold truncate">{profile?.full_name || firstName}</p>
+                          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                         </div>
                       </div>
-                      
-                      <div className="space-y-2">
-                        <TourButton 
-                          onStartTour={() => {
-                            startTour();
-                            setIsMobileMenuOpen(false);
-                          }} 
-                          hasSeenTour={hasSeenTour} 
-                          onResetTour={resetTour}
-                          className="w-full justify-start"
-                        />
-                        
-                        {QuickActions.map((action) => (
-                          <Button
-                            key={action.path}
-                            variant="ghost"
-                            className="w-full justify-start"
-                            onClick={() => {
-                              navigate(action.path);
-                              setIsMobileMenuOpen(false);
-                            }}
-                          >
-                            <action.icon className="w-4 h-4 mr-2" />
-                            {action.label}
-                          </Button>
-                        ))}
-                        
-                        <Separator className="my-2" />
-                        
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start"
-                          onClick={() => {
-                            navigate("/settings");
-                            setIsMobileMenuOpen(false);
-                          }}
-                        >
-                          <Settings className="w-4 h-4 mr-2" />
-                          Settings
-                        </Button>
-                        
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => {
-                            handleLogout();
-                            setIsMobileMenuOpen(false);
-                          }}
-                        >
-                          <LogOut className="w-4 h-4 mr-2" />
-                          Logout
-                        </Button>
+                      <div className="mt-3">
+                        <ShopStatusBadge status={subscriptionStatus} daysRemaining={daysRemaining} />
                       </div>
                     </div>
-                    
+
+                    {/* Menu items */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-1">
+                      {QuickActions.map((action) => (
+                        <button
+                          key={action.path + action.label}
+                          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-muted transition-colors text-left"
+                          onClick={() => { navigate(action.path); setIsMobileMenuOpen(false); }}
+                        >
+                          <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${action.color} flex items-center justify-center shrink-0`}>
+                            <action.icon className={`w-4 h-4 ${action.textColor}`} />
+                          </div>
+                          <span className="text-sm font-medium">{action.label}</span>
+                        </button>
+                      ))}
+                      <Separator className="my-2" />
+                      <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-muted transition-colors" onClick={() => { navigate("/settings"); setIsMobileMenuOpen(false); }}>
+                        <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center"><Settings className="w-4 h-4 text-muted-foreground" /></div>
+                        <span className="text-sm font-medium">Settings</span>
+                      </button>
+                      <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-destructive/10 transition-colors" onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}>
+                        <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center"><LogOut className="w-4 h-4 text-destructive" /></div>
+                        <span className="text-sm font-medium text-destructive">Logout</span>
+                      </button>
+                    </div>
+
                     {userBadges.length > 0 && (
-                      <div className="mt-auto">
+                      <div className="p-4 border-t border-border">
                         <BadgeDisplay badges={userBadges} size="sm" />
                       </div>
                     )}
@@ -786,203 +687,235 @@ const Dashboard = () => {
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-6">
-        {/* Welcome Header */}
-        <div className="mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+      {/* ─── Main Content ─────────────────────────────────── */}
+      <div className="container mx-auto px-4 py-5 pb-24 md:pb-8 max-w-7xl">
+
+        {/* Welcome Hero */}
+        <div className="relative rounded-3xl overflow-hidden mb-6 bg-gradient-to-br from-primary via-primary/90 to-accent p-6 shadow-xl">
+          {/* decorative circles */}
+          <div className="absolute -top-6 -right-6 w-36 h-36 rounded-full bg-white/5" />
+          <div className="absolute -bottom-8 -left-4 w-28 h-28 rounded-full bg-white/5" />
+          <div className="absolute top-1/2 right-12 w-16 h-16 rounded-full bg-white/8 -translate-y-1/2" />
+
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold mb-1">
-                Welcome back, {(profile?.full_name && profile.full_name.trim()) ? profile.full_name.trim() : (user?.email?.split('@')[0] || 'there')}!
-              </h1>
-              <p className="text-muted-foreground">Here's what's happening with your store today.</p>
+              <p className="text-white/70 text-sm font-medium mb-0.5">{greeting},</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">{firstName}! 👋</h1>
+              <p className="text-white/80 text-sm">
+                {shopData ? `Managing ${shopData.name}` : "Here's what's happening today"}
+              </p>
+              {userBadges.length > 0 && (
+                <div className="mt-2 hidden sm:block">
+                  <BadgeDisplay badges={userBadges} size="sm" />
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-3">
-              <BadgeDisplay badges={userBadges} size="sm" />
+            <div className="flex flex-col gap-2 sm:items-end">
               <ShopStatusBadge status={subscriptionStatus} daysRemaining={daysRemaining} />
+              {shopData && (
+                <Button
+                  size="sm"
+                  onClick={() => navigate(`/shop/${shopFullData?.shop_slug || shopData.id}`)}
+                  className="bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur-sm"
+                >
+                  View My Store →
+                </Button>
+              )}
+              {shopData && (
+                <div className="hidden md:block">
+                  <StrokeMyShop shopId={shopData.id} shopName={shopData.name} />
+                </div>
+              )}
             </div>
           </div>
-
-          {/* ===== CAROUSEL ===== */}
-          {slides.length > 0 && (
-            <div
-              className="relative w-full overflow-hidden mb-6 rounded-lg"
-              onMouseEnter={() => setIsCarouselPaused(true)}
-              onMouseLeave={() => setIsCarouselPaused(false)}
-            >
-              <div
-                className="flex transition-transform duration-300 ease-in-out"
-                style={{ transform: `translateX(-${carouselIndex * 100}%)` }}
-              >
-                {slides.map((slide, idx) => (
-                  <div key={idx} className="w-full flex-shrink-0">
-                    {slide}
-                  </div>
-                ))}
-              </div>
-              {/* Navigation Arrows */}
-              <button
-                onClick={prevSlide}
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1 shadow-md hover:bg-background"
-              >
-                <ArrowRight className="w-4 h-4 rotate-180" />
-              </button>
-              <button
-                onClick={nextSlide}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1 shadow-md hover:bg-background"
-              >
-                <ArrowRight className="w-4 h-4" />
-              </button>
-              {/* Dots */}
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-                {slides.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => goToSlide(idx)}
-                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                      idx === carouselIndex ? 'bg-primary' : 'bg-muted-foreground/30'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Revenue</p>
-                    <p className="text-2xl font-bold">₦{totalRevenue.toLocaleString()}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-primary" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Sales</p>
-                    <p className="text-2xl font-bold">{totalSales}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-accent" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Products</p>
-                    <p className="text-2xl font-bold">{productsCount}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
-                    <Package className="w-5 h-5 text-gold" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Pending Orders</p>
-                    <p className="text-2xl font-bold">{pendingOrders}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                    <ShoppingCart className="w-5 h-5 text-purple-500" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Verification Progress Card */}
-          {shopData && shopFullData && (
-            <VerificationProgressCard 
-              profile={profile}
-              shopFullData={shopFullData}
-              totalSales={totalSales}
-            />
-          )}
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Quick Actions & Chart */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Quick Actions - now at the top */}
+        {/* ─── Permanent WhatsApp Community Banner ─────── */}
+        <div className="relative overflow-hidden rounded-2xl mb-4 bg-gradient-to-br from-[#075E54] to-[#25D366] p-5 shadow-lg">
+          <div className="absolute -top-5 -right-5 w-28 h-28 rounded-full bg-white/10" />
+          <div className="absolute -bottom-4 left-10 w-16 h-16 rounded-full bg-white/5" />
+          <div className="relative z-10 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="flex items-center gap-2 mb-1">
+                <MessageCircle className="w-4 h-4 text-white" />
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Community</span>
+              </div>
+              <h3 className="text-white font-extrabold text-base leading-tight">Join 5,000+ vendors on WhatsApp</h3>
+              <p className="text-white/70 text-xs mt-0.5">Tips, support, buyer traffic &amp; giveaways — free!</p>
+            </div>
+            <Button
+              size="sm"
+              className="shrink-0 bg-white text-[#075E54] hover:bg-white/90 font-bold shadow-lg gap-1.5"
+              onClick={() => window.open('https://chat.whatsapp.com/LX2AQqaSYD5FzEuCmhwWmz', '_blank')}
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              Join Now
+            </Button>
+          </div>
+        </div>
+
+        {/* Info Carousel - subscription & store status */}
+        {slides.length > 0 && (
+          <div
+            className="relative w-full overflow-hidden mb-5"
+            onMouseEnter={() => setIsCarouselPaused(true)}
+            onMouseLeave={() => setIsCarouselPaused(false)}
+          >
+            <div
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${carouselIndex * 100}%)` }}
+            >
+              {slides.map((slide, idx) => (
+                <div key={idx} className="w-full flex-shrink-0">{slide}</div>
+              ))}
+            </div>
+            {totalSlides > 1 && (
+              <>
+                <button onClick={prevSlide} className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-background transition-colors">
+                  <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+                </button>
+                <button onClick={nextSlide} className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-background transition-colors">
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {slides.map((_, idx) => (
+                    <button key={idx} onClick={() => goToSlide(idx)} className={`h-1 rounded-full transition-all duration-300 ${idx === carouselIndex ? 'bg-white w-5' : 'bg-white/40 w-1.5'}`} />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* small spacer for dot indicator */}
+        {slides.length > 1 && <div className="h-3" />}
+
+        {/* ─── Stat Cards ──────────────────────────────────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          <StatCard
+            label="Total Revenue"
+            value={`₦${totalRevenue.toLocaleString()}`}
+            icon={DollarSign}
+            gradient="bg-gradient-to-br from-primary to-primary/80"
+            trend="up"
+            trendValue="All time earnings"
+          />
+          <StatCard
+            label="Total Sales"
+            value={String(totalSales)}
+            icon={TrendingUp}
+            gradient="bg-gradient-to-br from-accent to-accent/80"
+            trend="up"
+            trendValue="Completed orders"
+          />
+          <StatCard
+            label="Products"
+            value={String(productsCount)}
+            icon={Package}
+            gradient="bg-gradient-to-br from-orange-500 to-orange-600"
+            trendValue="Items in catalog"
+          />
+          <StatCard
+            label="Pending Orders"
+            value={String(pendingOrders)}
+            icon={ShoppingCart}
+            gradient="bg-gradient-to-br from-purple-600 to-purple-700"
+            trendValue={pendingOrders > 0 ? "Need attention" : "All clear!"}
+          />
+        </div>
+
+        {/* Verification Progress Card */}
+        {shopData && shopFullData && (
+          <VerificationProgressCard profile={profile} shopFullData={shopFullData} totalSales={totalSales} />
+        )}
+
+        {/* ─── Main Grid ───────────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left: Quick Actions + Chart */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Quick Actions */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-bold flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-primary" />
+                  Quick Actions
+                </h2>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3" data-tour="quick-actions">
                 {QuickActions.map((action) => (
-                  <Card
-                    key={action.path}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
+                  <QuickActionTile
+                    key={action.path + action.label}
+                    icon={action.icon}
+                    label={action.label}
+                    description={action.description}
                     onClick={() => navigate(action.path)}
-                  >
-                    <CardContent className="p-4">
-                      <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${action.color} flex items-center justify-center mb-3`}>
-                        <action.icon className={`w-6 h-6 ${action.textColor}`} />
-                      </div>
-                      <h3 className="font-medium text-sm mb-1">{action.label}</h3>
-                      <p className="text-xs text-muted-foreground">{action.description}</p>
-                    </CardContent>
-                  </Card>
+                    color={action.color}
+                    textColor={action.textColor}
+                  />
                 ))}
               </div>
             </div>
 
             {/* Revenue Chart */}
-            <Card data-tour="sales-analytics">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Revenue Trend</span>
-                  <span className="text-sm font-normal text-muted-foreground">Last 7 days</span>
-                </CardTitle>
+            <Card className="overflow-hidden" data-tour="sales-analytics">
+              <div className="h-1 w-full bg-gradient-to-r from-primary via-accent to-primary" />
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2">
+                    <BarChart2 className="w-4 h-4 text-primary" />
+                    Revenue Trend
+                  </CardTitle>
+                  <Badge variant="outline" className="text-xs">Last 7 days</Badge>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px]">
+                <div className="h-[220px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="date" />
-                      <YAxis tickFormatter={(value) => `₦${value}`} />
-                      <Tooltip formatter={(value) => [`₦${Number(value).toLocaleString()}`, 'Revenue']} />
-                      <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    </BarChart>
+                    <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₦${v}`} width={55} />
+                      <Tooltip
+                        contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}
+                        formatter={(value) => [`₦${Number(value).toLocaleString()}`, 'Revenue']}
+                      />
+                      <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#revenueGrad)" dot={{ r: 3, fill: 'hsl(var(--primary))' }} activeDot={{ r: 5 }} />
+                    </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Right Column - Profile & Tools */}
-          <div className="space-y-6">
+          {/* Right Column */}
+          <div className="space-y-4">
             {/* Profile Completion */}
             <ProfileCompletionChecklist shop={shopFullData} productsCount={productsCount} />
 
-            {/* Payout Balance Card */}
+            {/* Payout Balance */}
             {shopData && (
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <Wallet className="w-4 h-4" />
-                      Paystack Earnings
+              <Card className="overflow-hidden">
+                <div className="h-0.5 w-full bg-gradient-to-r from-accent to-primary" />
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-sm flex items-center gap-2">
+                      <Wallet className="w-4 h-4 text-accent" />
+                      Wallet Balance
                     </h3>
                   </div>
-                  <p className="text-2xl font-bold text-primary mb-1">₦{payoutBalance.availableBalance.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground mb-4">Available for withdrawal</p>
+                  <div className="text-center mb-4 py-3 bg-gradient-to-br from-accent/5 to-primary/5 rounded-xl">
+                    <p className="text-3xl font-extrabold text-primary">₦{payoutBalance.availableBalance.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Available for withdrawal</p>
+                    {payoutBalance.totalPending > 0 && (
+                      <p className="text-xs text-amber-600 mt-1 font-medium">₦{payoutBalance.totalPending.toLocaleString()} pending</p>
+                    )}
+                  </div>
                   <Button
                     size="sm"
                     className="w-full"
@@ -992,30 +925,32 @@ const Dashboard = () => {
                     <Banknote className="w-4 h-4 mr-2" />
                     Request Payout
                   </Button>
-                  {payoutBalance.totalPending > 0 && (
-                    <p className="text-xs text-muted-foreground mt-2">₦{payoutBalance.totalPending.toLocaleString()} pending</p>
+                  {payoutBalance.availableBalance < 5000 && (
+                    <p className="text-xs text-muted-foreground text-center mt-2">Minimum withdrawal: ₦5,000</p>
                   )}
                 </CardContent>
               </Card>
             )}
 
-            {/* Coupons Manager */}
+            {/* Coupon Manager */}
             {shopData && <CouponManager shopId={shopData.id} />}
 
-            {/* Active Offers */}
+            {/* Special Offer */}
             {activeOffer && (
-              <Card className="bg-gradient-to-br from-primary to-accent text-white">
-                <CardContent className="p-6">
+              <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary to-accent text-white shadow-lg">
+                <CardContent className="p-5">
                   <div className="flex items-start gap-3">
-                    <Sparkles className="w-5 h-5 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold mb-1">Special Offer</h3>
+                    <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold mb-1 text-sm">Special Offer 🎁</h3>
                       <p className="text-sm opacity-90 mb-3">{activeOffer.description}</p>
-                      <Button 
-                        variant="secondary" 
+                      <Button
+                        variant="secondary"
                         size="sm"
                         onClick={handleSubscribe}
-                        className="bg-white text-primary hover:bg-white/90"
+                        className="bg-white text-primary hover:bg-white/90 font-semibold"
                       >
                         {activeOffer.button_text || "Claim Offer"}
                       </Button>
@@ -1026,71 +961,58 @@ const Dashboard = () => {
             )}
 
             {/* Store Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Store Status</CardTitle>
+            <Card className="overflow-hidden">
+              <div className="h-0.5 w-full bg-gradient-to-r from-primary to-accent" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <Store className="w-4 h-4 text-primary" />
+                  Store Status
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Store Visibility</span>
-                  <Badge variant="outline" className={
-                    subscriptionStatus === 'expired'
-                      ? "bg-red-500/10 text-red-500 border-red-500/20"
-                      : "bg-green-500/10 text-green-500 border-green-500/20"
-                  }>
-                    {subscriptionStatus === 'expired' ? 'Hidden' : 'Live'}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Subscription</span>
-                  <span className="text-sm font-medium capitalize">{subscriptionStatus}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Products Listed</span>
-                  <span className="text-sm font-medium">{productsCount}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Store Rating</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm font-medium">
-                      {shopFullData?.average_rating?.toFixed(1) || 'N/A'}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      ({shopFullData?.total_reviews || 0} reviews)
-                    </span>
+              <CardContent className="space-y-3">
+                {[
+                  { label: "Store Visibility", value: subscriptionStatus === 'expired' ? 'Hidden' : 'Live', valueClass: subscriptionStatus === 'expired' ? 'text-red-500' : 'text-green-500' },
+                  { label: "Subscription", value: subscriptionStatus, valueClass: "capitalize" },
+                  { label: "Products Listed", value: String(productsCount) },
+                  { label: "Store Rating", value: shopFullData?.average_rating ? `${shopFullData.average_rating.toFixed(1)} ⭐ (${shopFullData.total_reviews || 0})` : 'No reviews yet' },
+                ].map(({ label, value, valueClass }) => (
+                  <div key={label} className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{label}</span>
+                    <span className={`font-semibold ${valueClass || ''}`}>{value}</span>
                   </div>
-                </div>
+                ))}
               </CardContent>
             </Card>
 
             {/* Help & Resources */}
             <Card>
-              <CardHeader>
-                <CardTitle>Help & Resources</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-primary" />
+                  Help & Resources
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="ghost" className="w-full justify-start">
-                  <HelpCircle className="w-4 h-4 mr-2" />
-                  Get Help
-                </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  <Shield className="w-4 h-4 mr-2" />
-                  Security Tips
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start"
-                  onClick={startTour}
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Take a Tour
-                </Button>
+              <CardContent className="space-y-1.5">
+                {[
+                  { icon: HelpCircle, label: "Get Help", onClick: () => {} },
+                  { icon: Shield, label: "Security Tips", onClick: () => {} },
+                  { icon: Sparkles, label: "Take a Tour", onClick: startTour },
+                ].map(({ icon: Icon, label, onClick }) => (
+                  <button key={label} onClick={onClick} className="flex items-center gap-3 w-full px-3 py-2 rounded-xl hover:bg-muted transition-colors text-sm text-left font-medium">
+                    <Icon className="w-4 h-4 text-muted-foreground" />
+                    {label}
+                  </button>
+                ))}
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
 
+      {/* ─── Mobile Bottom Navigation ────────────────────── */}
+      <MobileBottomNav navigate={navigate} />
+
+      {/* Joyride Tour */}
       <Joyride
         steps={dashboardTourSteps}
         run={isRunning}
@@ -1099,14 +1021,10 @@ const Dashboard = () => {
         showProgress
         callback={handleTourCallback}
         tooltipComponent={TourTooltip}
-        styles={{
-          options: {
-            zIndex: 10000,
-            arrowColor: 'hsl(var(--card))',
-          }
-        }}
+        styles={{ options: { zIndex: 10000, arrowColor: 'hsl(var(--card))' } }}
       />
       <FeatureDiscoveryPopup featureId="stroke_my_shop" />
+
       {shopData && (
         <PayoutRequestDialog
           isOpen={isPayoutDialogOpen}
@@ -1122,11 +1040,9 @@ const Dashboard = () => {
       <DoneForYouPopup
         open={showDfyPopup}
         onClose={() => setShowDfyPopup(false)}
-        onShopCreated={(newShopId) => {
-          loadData();
-        }}
+        onShopCreated={() => loadData()}
       />
-    </PageWrapper>
+    </div>
   );
 };
 
