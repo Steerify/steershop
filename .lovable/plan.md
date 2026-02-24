@@ -1,71 +1,67 @@
 
-# Audit Fixes and Admin Ads Management
 
-Based on the audit report, here are the actionable fixes I can implement now, plus the admin ads feature you requested.
+# Fix Authentication, Workflows, and Business Plan Branding
 
----
+## Issues Found
 
-## 1. Security: Remove devOtp Leakage (Critical)
+### 1. Auth Route Mismatch (Login/Signup Broken)
 
-**Problem:** The `send-phone-otp` edge function returns the raw OTP in the response (`devOtp`) when the Termii API key is missing or short. The frontend (`PhoneVerification.tsx`) displays it in a yellow banner. If Termii is ever misconfigured in production, OTPs are exposed to any caller.
+The Auth page route is defined as `/auth/:type` (e.g., `/auth/login`, `/auth/signup`), but multiple places in the codebase redirect to `/auth?tab=login` (without the `:type` param). This URL does NOT match any route and falls through to the 404 page.
 
-**Fix:**
-- Remove `devOtp` from the edge function response entirely -- only log it server-side
-- Remove the dev OTP display from `PhoneVerification.tsx`
+**Broken redirects found in:**
+- `src/pages/auth/Callback.tsx` -- 3 instances of `navigate("/auth?tab=login")`
+- `src/pages/auth/RoleSelection.tsx` -- 2 instances
+- `src/pages/ResetPassword.tsx` -- 3 instances
 
-**Files:** `supabase/functions/send-phone-otp/index.ts`, `src/components/auth/PhoneVerification.tsx`
+**Fix:** Change all `navigate("/auth?tab=login")` to `navigate("/auth/login")` in these files.
 
----
+### 2. Content-Security-Policy Blocking Auth Calls
 
-## 2. Security: Fix Paystack Webhook HMAC Verification (Critical)
+The `index.html` has a strict CSP that may block Supabase auth and Google Sign-In flows:
+- `script-src` only allows `self` and `accounts.google.com` -- inline scripts from Google Identity Services may be blocked
+- `connect-src` doesn't include `wss://` for Supabase realtime or some Google auth endpoints
 
-**Problem:** The current webhook computes `SHA-512(secretKey + body)` -- a plain hash, not an HMAC. Paystack's docs specify `HMAC-SHA512(body, secretKey)`. This means signature verification may silently pass or fail incorrectly.
+**Fix:** Update CSP to be more permissive for auth flows:
+- Add `'unsafe-inline'` to `script-src` (required for Google Identity Services inline callbacks)
+- Add Google auth API endpoints to `connect-src`
+- Add `blob:` to `img-src` for uploaded images
 
-**Fix:** Replace `crypto.subtle.digest('SHA-512', ...)` with proper `crypto.subtle.importKey` + `crypto.subtle.sign('HMAC', ...)` using the Paystack secret key.
+### 3. Business Plan Shop Branding (Custom Name and Logo)
 
-**File:** `supabase/functions/paystack-webhook/index.ts`
+Business plan shop owners should have their business name and logo displayed instead of the SteerSolo branding on their storefront. This requires:
 
----
+**Changes to `src/pages/ShopStorefront.tsx`:**
+- Fetch the shop owner's subscription plan
+- If on Business plan, display the shop's logo and name in the storefront header instead of SteerSolo branding
+- Hide "Powered by SteerSolo" badge or make it subtle for Business plan shops
 
-## 3. Security: Reduce Verbose Auth Logging (Medium)
+**Changes to `src/components/Navbar.tsx`:**
+- When viewing a Business plan shop's storefront, show the shop's logo and name instead of SteerSolo in the navbar
 
-**Problem:** `AuthContext.tsx` logs database role values and mapped roles to the browser console, exposing role/profile info.
+### 4. Business Plan Shops Fully Visible Online (Search/Discovery)
 
-**Fix:** Remove `console.log('Database role value:')` and `console.log('Mapped UserRole:')` lines from `AuthContext.tsx`.
+The Shops browse page (`/shops`) already supports search by name, description, and slug. To make Business plan shops more prominent and searchable:
 
-**File:** `src/context/AuthContext.tsx`
+**Changes to `src/pages/Shops.tsx`:**
+- Add a "Featured" or "Premium" badge for Business plan shops
+- Prioritize Business plan shops in search results (sort them higher)
+- Add keyword/tag search capability
 
----
-
-## 4. Admin Ads Management Feature
-
-**What you asked:** As an admin, you want to create ads that automatically work on social media.
-
-**How it will work:**
-- Add an "Ads Manager" page to the admin panel at `/admin/ads`
-- Admin can create ad campaigns by selecting a shop (or all shops), choosing platforms, entering promo text or letting AI generate it
-- The page uses the existing `generate-ad-copy` edge function for AI copy generation
-- For each platform, it generates ready-to-post content and provides one-click actions:
-  - **WhatsApp:** Opens WhatsApp share with pre-filled text
-  - **Facebook/Instagram:** Copies formatted post + opens Facebook Ads Manager
-  - **TikTok:** Copies script + opens TikTok Ads
-  - **Google:** Copies ad copy + opens Google Ads
-- Admin can also create "bulk campaigns" for featured/top shops
-
-**Files to create:**
-- `src/pages/admin/AdminAds.tsx` -- Full admin ads management page
-
-**Files to modify:**
-- `src/components/AdminSidebar.tsx` -- Add "Ads Manager" menu item
-- `src/App.tsx` -- Add `/admin/ads` route
+**Database query enhancement:**
+- Join shops with profiles and subscription_plans to identify Business plan shops
+- Add a visual indicator (crown/star badge) for Business plan shops in listings
 
 ---
 
 ## Technical Summary
 
-| Priority | Area | File(s) | Change |
-|----------|------|---------|--------|
-| Critical | Security | `send-phone-otp/index.ts`, `PhoneVerification.tsx` | Remove devOtp from response and UI |
-| Critical | Security | `paystack-webhook/index.ts` | Fix HMAC-SHA512 signature verification |
-| Medium | Security | `AuthContext.tsx` | Remove PII console.log statements |
-| Feature | Admin | `AdminAds.tsx` (new), `AdminSidebar.tsx`, `App.tsx` | Admin Ads Manager with AI generation and social media deep-links |
+| Priority | File | Change |
+|----------|------|--------|
+| Critical | `src/pages/auth/Callback.tsx` | Fix 3 broken redirects: `/auth?tab=login` to `/auth/login` |
+| Critical | `src/pages/auth/RoleSelection.tsx` | Fix 2 broken redirects |
+| Critical | `src/pages/ResetPassword.tsx` | Fix 3 broken redirects |
+| Critical | `index.html` | Relax CSP to allow Google Identity Services and Supabase auth |
+| High | `src/pages/ShopStorefront.tsx` | Show shop's own brand (logo + name) for Business plan shops |
+| High | `src/pages/Shops.tsx` | Add premium badge and priority sorting for Business plan shops |
+| Medium | `src/components/Navbar.tsx` | Show shop branding instead of SteerSolo when on Business plan shop storefront |
+
