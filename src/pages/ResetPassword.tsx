@@ -90,7 +90,7 @@ const ResetPassword = () => {
           description: "Please request a new password reset link",
           variant: "destructive"
         });
-        navigate("/auth?tab=login");
+        navigate("/auth/login");
       } catch (error) {
         console.error('Token exchange error:', error);
         toast({
@@ -98,7 +98,7 @@ const ResetPassword = () => {
           description: "Something went wrong. Please try again.",
           variant: "destructive"
         });
-        navigate("/auth?tab=login");
+        navigate("/auth/login");
       }
     };
     
@@ -127,7 +127,7 @@ const ResetPassword = () => {
 
         // Redirect to login after 2 seconds
         setTimeout(() => {
-          navigate("/auth?tab=login");
+          navigate("/auth/login");
         }, 2000);
       }
     } catch (error: any) {

@@ -17,7 +17,7 @@ const Callback = () => {
 
         if (error) {
           console.error('OAuth callback error:', error);
-          navigate("/auth?tab=login");
+          navigate("/auth/login");
           return;
         }
 
@@ -88,7 +88,7 @@ const Callback = () => {
           navigate(redirectPath);
         } else {
           console.log('No session found, redirecting to login');
-          navigate("/auth?tab=login");
+          navigate("/auth/login");
         }
       } catch (error: any) {
         console.error('Callback error:', error);
@@ -101,7 +101,7 @@ const Callback = () => {
           console.error('Error stack:', error.stack);
         }
 
-        navigate("/auth?tab=login");
+        navigate("/auth/login");
       }
     };
 

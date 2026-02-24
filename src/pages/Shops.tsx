@@ -60,6 +60,7 @@ const ProductCardSkeleton = () => (
 
 const Shops = () => {
   const [shops, setShops] = useState<Shop[]>([]);
+  const [businessPlanShopIds, setBusinessPlanShopIds] = useState<Set<string>>(new Set());
   const [productResults, setProductResults] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -93,7 +94,44 @@ const Shops = () => {
       ]);
       setStats({ shops: shopsRes.count || 0, products: productsRes.count || 0 });
     };
+
+    const fetchBusinessPlanShops = async () => {
+      // Find all shop owners on business plan
+      const { data: businessProfiles } = await supabase
+        .from('profiles')
+        .select('id, subscription_plan_id')
+        .not('subscription_plan_id', 'is', null);
+      
+      if (businessProfiles && businessProfiles.length > 0) {
+        const planIds = [...new Set(businessProfiles.map(p => p.subscription_plan_id).filter(Boolean))];
+        const { data: plans } = await supabase
+          .from('subscription_plans')
+          .select('id, slug')
+          .in('id', planIds as string[])
+          .eq('slug', 'business');
+        
+        if (plans && plans.length > 0) {
+          const businessPlanIds = new Set(plans.map(p => p.id));
+          const businessOwnerIds = businessProfiles
+            .filter(p => p.subscription_plan_id && businessPlanIds.has(p.subscription_plan_id))
+            .map(p => p.id);
+          
+          if (businessOwnerIds.length > 0) {
+            const { data: businessShops } = await supabase
+              .from('shops')
+              .select('id')
+              .in('owner_id', businessOwnerIds);
+            
+            if (businessShops) {
+              setBusinessPlanShopIds(new Set(businessShops.map(s => s.id)));
+            }
+          }
+        }
+      }
+    };
+
     fetchStats();
+    fetchBusinessPlanShops();
   }, []);
 
   // Fetch product previews for shops
@@ -189,7 +227,7 @@ const Shops = () => {
     }
   }, [showVerifiedOnly, selectedState, fetchShopPreviews]);
 
-  // Sort shops
+  // Sort shops - Business plan shops always appear first
   const sortedShops = useMemo(() => {
     const sorted = [...shops];
     switch (selectedSort) {
@@ -204,8 +242,14 @@ const Shops = () => {
         // Already sorted by created_at desc from API
         break;
     }
+    // Always prioritize business plan shops to the top
+    sorted.sort((a, b) => {
+      const aIsBusiness = businessPlanShopIds.has(a.id) ? 1 : 0;
+      const bIsBusiness = businessPlanShopIds.has(b.id) ? 1 : 0;
+      return bIsBusiness - aIsBusiness;
+    });
     return sorted;
-  }, [shops, selectedSort]);
+  }, [shops, selectedSort, businessPlanShopIds]);
 
   // Search products
   const searchProducts = useCallback(async (page: number = 1, reset: boolean = false) => {
@@ -461,6 +505,7 @@ const Shops = () => {
                       productPreviews={shopProducts[shop.id] || []}
                       productCount={shopProductCounts[shop.id] || 0}
                       index={index}
+                      isBusinessPlan={businessPlanShopIds.has(shop.id)}
                     />
                   ))}
                 </div>

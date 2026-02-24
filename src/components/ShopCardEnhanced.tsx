@@ -9,9 +9,10 @@ interface ShopCardEnhancedProps {
   productPreviews?: { image_url: string; name: string }[];
   productCount?: number;
   index?: number;
+  isBusinessPlan?: boolean;
 }
 
-export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0, index = 0 }: ShopCardEnhancedProps) => {
+export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0, index = 0, isBusinessPlan = false }: ShopCardEnhancedProps) => {
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
@@ -50,6 +51,12 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
                 <CardTitle className="group-hover:text-accent transition-colors font-display text-sm sm:text-base line-clamp-1">
                   {shop.name || shop.shop_name}
                 </CardTitle>
+                {isBusinessPlan && (
+                  <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800 text-[10px] px-1.5 py-0">
+                    <Star className="w-2.5 h-2.5 mr-0.5 fill-current" />
+                    Premium
+                  </Badge>
+                )}
                 {shop.is_verified && (
                   <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800 text-[10px] px-1.5 py-0">
                     Verified

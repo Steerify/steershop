@@ -22,12 +22,12 @@ const RoleSelection = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-          navigate("/auth?tab=login");
+          navigate("/auth/login");
           return;
         }
       } catch (error) {
         console.error("Error checking session:", error);
-        navigate("/auth?tab=login");
+        navigate("/auth/login");
       } finally {
         setIsCheckingSession(false);
       }
