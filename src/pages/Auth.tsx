@@ -244,27 +244,91 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4 relative overflow-hidden">
-      <AdirePattern variant="geometric" className="absolute inset-0 opacity-5" />
-      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-accent/20 to-transparent rounded-full blur-3xl" />
-      
-      <Card className="w-full max-w-md relative z-10 border-primary/10 shadow-2xl backdrop-blur-sm bg-card/95">
-        <CardHeader className="text-center pb-4">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg ring-4 ring-primary/20">
+    <div className="min-h-screen flex bg-background">
+      {/* ── Left brand panel (hidden on mobile) ──────────── */}
+      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative overflow-hidden flex-col justify-between bg-gradient-to-br from-primary via-primary/95 to-[hsl(145,55%,28%)] p-12">
+        {/* Background pattern */}
+        <AdirePattern variant="geometric" className="absolute inset-0 opacity-10" />
+        {/* Blob decorations */}
+        <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-white/5 blur-3xl" />
+        <div className="absolute top-1/2 right-8 w-32 h-32 rounded-full bg-accent/30 blur-2xl -translate-y-1/2" />
+
+        {/* Logo + tagline */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="w-12 h-12 rounded-2xl overflow-hidden ring-4 ring-white/25 shadow-xl">
               <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
             </div>
+            <span className="text-2xl font-bold text-white">SteerSolo</span>
           </div>
-          <CardTitle className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            {activeTab === "login" ? "Welcome Back" : "Start Growing Today"}
-          </CardTitle>
-          <CardDescription>
-            {activeTab === "login" ? "Sign in to your account" : "Create your account in seconds"}
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent>
+
+          <h2 className="text-4xl xl:text-5xl font-extrabold text-white leading-tight mb-4 text-balance">
+            Turn your WhatsApp into a real business.
+          </h2>
+          <p className="text-white/70 text-lg mb-10 leading-relaxed max-w-md">
+            Professional store, order tracking, and AI-powered marketing — all in one place.
+          </p>
+
+          {/* Feature highlights */}
+          <ul className="space-y-4">
+            {[
+              { emoji: "🏪", text: "Store ready in 10 minutes" },
+              { emoji: "📦", text: "Automated order management" },
+              { emoji: "🤖", text: "AI ad copy generation" },
+              { emoji: "💰", text: "Instant payouts to your bank" },
+              { emoji: "✅", text: "15-day free trial — no card needed" },
+            ].map((item, i) => (
+              <li
+                key={i}
+                className="flex items-center gap-3 text-white/90 animate-slide-up"
+                style={{ animationDelay: `${i * 80}ms` }}
+              >
+                <span className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-xl shadow-inner shrink-0">
+                  {item.emoji}
+                </span>
+                <span className="text-sm font-medium">{item.text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Bottom trust pill */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 max-w-sm">
+            <div className="flex -space-x-2">
+              {["🛍️","👗","🍔","💄","👟"].map((e, i) => (
+                <div key={i} className="w-8 h-8 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center text-sm">{e}</div>
+              ))}
+            </div>
+            <div>
+              <p className="text-white font-bold text-sm">2,000+ active vendors</p>
+              <p className="text-white/60 text-xs">Growing every day</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Right form panel ─────────────────────────────── */}
+      <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 relative overflow-hidden bg-gradient-to-br from-background via-background to-primary/3">
+        <AdirePattern variant="dots" className="absolute inset-0 opacity-4 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-accent/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+        {/* Mobile logo (shown only on small screens) */}
+        <div className="lg:hidden flex items-center gap-2.5 mb-8">
+          <div className="w-10 h-10 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-md">
+            <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+          </div>
+          <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">SteerSolo</span>
+        </div>
+
+        <div className="w-full max-w-md relative z-10 animate-bounce-in">
+          {/* Accent stripe */}
+          <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-primary via-accent to-primary mb-0" />
+
+          <div className="bg-card/95 backdrop-blur-xl rounded-b-3xl rounded-tr-3xl border border-border/60 shadow-2xl p-8">
+
           {authError && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
@@ -478,13 +542,14 @@ const Auth = () => {
                     <p className="text-xs text-center text-muted-foreground">
                       By signing up, you agree to our Terms of Service
                     </p>
-                  </form>
+                    </form>
                 </Form>
               </TabsContent>
             </Tabs>
           )}
-        </CardContent>
-      </Card>
+          </div>{/* /form card */}
+        </div>{/* /max-w-md */}
+      </div>{/* /right panel */}
     </div>
   );
 };

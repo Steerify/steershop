@@ -497,3 +497,95 @@ iframe[src*="accounts.google.com"] {
   justify-content: center !important;
   margin: 0 auto !important;
 }
+
+/* ===== SAFE AREA / MOBILE BOTTOM NAV ===== */
+.safe-area-pb {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+}
+
+/* ===== ELEVATED CARD ===== */
+.card-elevated {
+  border-radius: 1.5rem;
+  border: 1px solid hsl(var(--border) / 0.6);
+  background: hsl(var(--card));
+  box-shadow: 0 8px 32px -8px hsl(var(--primary) / 0.12), 0 2px 8px -2px hsl(0 0% 0% / 0.06);
+  transition: box-shadow 0.25s ease;
+}
+.card-elevated:hover {
+  box-shadow: 0 12px 40px -8px hsl(var(--primary) / 0.18), 0 4px 12px -2px hsl(0 0% 0% / 0.08);
+}
+
+/* ===== MESH GRADIENT BACKGROUND ===== */
+.bg-mesh {
+  background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(at 20% 20%, hsl(var(--primary) / 0.12) 0px, transparent 50%),
+    radial-gradient(at 80% 10%, hsl(var(--accent) / 0.08) 0px, transparent 50%),
+    radial-gradient(at 50% 85%, hsl(var(--gold) / 0.06) 0px, transparent 50%);
+}
+
+/* ===== GRADIENT TEXT UTILITIES ===== */
+.text-gradient {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.text-gradient-gold {
+  background: linear-gradient(135deg, hsl(var(--gold)), hsl(35 80% 48%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== ACCENT BAR TOP ===== */
+.accent-bar-top {
+  position: relative;
+}
+.accent-bar-top::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--gold)));
+  border-radius: 9999px 9999px 0 0;
+}
+
+/* ===== GLASS CARD ===== */
+.glass-card {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid hsl(var(--border) / 0.5);
+  border-radius: 1.5rem;
+  background: hsl(var(--card) / 0.88);
+}
+
+/* ===== TEXT WRAP BALANCE ===== */
+.text-balance { text-wrap: balance; }
+
+/* ===== ANIMATED GRADIENT ===== */
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 5s ease infinite;
+}
+
+/* ===== NEW KEYFRAMES ===== */
+@keyframes bounceIn {
+  0%   { opacity: 0; transform: scale(0.82); }
+  60%  { transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes gradientShift {
+  0%,100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+@keyframes pingRing {
+  75%,100% { transform: scale(1.8); opacity: 0; }
+}
+
+.animate-bounce-in { animation: bounceIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-slide-up  { animation: slideUp 0.5s ease-out both; }
+.animate-ping-ring { animation: pingRing 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }

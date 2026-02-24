@@ -48,54 +48,63 @@ const Index = () => {
       <Navbar />
 
       {/* SECTION 1: HERO — Outcome-first */}
-      <section className="relative pt-20 md:pt-24 pb-8 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
+      <section className="relative pt-28 md:pt-32 pb-12 overflow-hidden bg-mesh">
+        {/* Layered gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/8 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-primary/20 to-accent/5 blur-[120px] pointer-events-none" />
+        <div className="absolute -bottom-16 -right-16 w-96 h-96 rounded-full bg-gradient-to-tl from-accent/15 to-transparent blur-[80px] pointer-events-none" />
+        <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.03] pointer-events-none" />
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center space-y-8">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-              <Sparkles className="w-4 h-4 mr-2" />
-              Trusted by Nigerian businesses
+            {/* Trust badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 text-primary text-sm font-semibold border border-primary/15 shadow-sm animate-fade-up">
+              <Sparkles className="w-4 h-4" />
+              <span>Trusted by 2,000+ Nigerian vendors</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse ml-1" />
             </div>
 
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
+            {/* Main headline */}
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight animate-fade-up text-balance leading-[1.1]" style={{ animationDelay: '80ms' }}>
               Turn WhatsApp traffic into{" "}
               <TypewriterEffect
                 texts={["completed orders", "predictable revenue", "repeat customers", "a real business"]}
                 className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent"
               />{" "}
-              in 14 days.
+              <span className="text-foreground">in 14 days.</span>
             </h1>
 
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Stop losing sales to DM chaos. Get a professional storefront with payments, order tracking, and customer management — setup takes 10 minutes.
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-up text-balance" style={{ animationDelay: '160ms' }}>
+              Stop losing sales to DM chaos. Get a professional storefront with payments, order tracking, and AI marketing — setup takes 10 minutes.
             </p>
 
-            <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2 animate-fade-up" style={{ animationDelay: '240ms' }}>
               <Link to="/auth/signup">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-6 shadow-lg transition-all w-full sm:w-auto">
+                <Button size="lg" className="group bg-gradient-to-r from-primary to-accent hover:opacity-95 text-white text-base px-8 py-6 shadow-xl shadow-primary/25 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 w-full sm:w-auto font-bold rounded-2xl">
                   Start Free — No Card Needed
-                  <ArrowRight className="ml-2 w-5 h-5" />
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
                 </Button>
               </Link>
               <Link to="/demo">
-                <Button size="lg" variant="outline" className="text-lg px-8 py-6 w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="text-base px-8 py-6 w-full sm:w-auto rounded-2xl border-primary/25 hover:bg-primary/5 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-300 font-semibold">
                   See a Demo Store
                 </Button>
               </Link>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground pt-4">
-              <div className="flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+            {/* Trust chips */}
+            <div className="flex flex-wrap items-center justify-center gap-5 text-sm text-muted-foreground animate-fade-up" style={{ animationDelay: '320ms' }}>
+              <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-3 py-1.5 shadow-sm">
+                <CheckCircle className="w-4 h-4 text-accent" />
                 10-minute setup
               </div>
-              <div className="flex items-center">
-                <Clock className="w-5 h-5 text-blue-500 mr-2" />
+              <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-3 py-1.5 shadow-sm">
+                <Clock className="w-4 h-4 text-primary" />
                 15-day free trial
               </div>
-              <div className="flex items-center">
-                <MessageCircle className="w-5 h-5 text-green-600 mr-2" />
+              <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-3 py-1.5 shadow-sm">
+                <MessageCircle className="w-4 h-4 text-green-600" />
                 WhatsApp-powered
               </div>
             </div>
@@ -104,36 +113,36 @@ const Index = () => {
       </section>
 
       {/* SECTION 2: PAIN MIRROR — Hook them emotionally first */}
-      <section className="py-16 bg-background">
+      <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-destructive mb-2 tracking-wide uppercase">SOUND FAMILIAR?</p>
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              The Regular selling chaos
+            <p className="text-xs font-bold text-destructive mb-3 tracking-widest uppercase">Sound familiar?</p>
+            <h2 className="font-display text-3xl md:text-4xl font-extrabold mb-4">
+              The everyday selling chaos
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-balance">
               You're not losing sales because demand is low — you're losing them because your order process is messy.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {painPoints.map((point) => (
-              <Card key={point.pain} className="border-destructive/20 bg-destructive/5 hover:shadow-md transition-shadow">
+              <Card key={point.pain} className="border-destructive/20 bg-gradient-to-br from-destructive/5 to-destructive/2 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl">
                 <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-destructive/10 rounded-xl flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-destructive/10 rounded-2xl flex items-center justify-center mb-4 shadow-inner">
                     <point.icon className="w-6 h-6 text-destructive" />
                   </div>
-                  <h3 className="text-lg font-semibold mb-2">{point.pain}</h3>
-                  <p className="text-muted-foreground text-sm">{point.description}</p>
+                  <h3 className="text-base font-bold mb-2 text-foreground">{point.pain}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{point.description}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
 
           <div className="text-center mt-10">
-            <p className="text-lg font-semibold">
+            <p className="text-lg font-bold">
               SteerSolo fixes all of this.{" "}
-              <span className="text-primary">In one link.</span>
+              <span className="text-gradient">In one link.</span>
             </p>
           </div>
         </div>
@@ -161,53 +170,50 @@ const Index = () => {
       <ShopperDiscovery />
 
       {/* SECTION 10: FINAL CTA — Close with guarantee */}
-      <section className="relative py-20 overflow-hidden bg-primary">
-        <AdirePattern variant="circles" className="text-primary-foreground" opacity={0.1} />
+      <section className="relative py-24 overflow-hidden">
+        {/* Rich gradient BG */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-[hsl(175,55%,30%)] to-accent" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-white/5 blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-white/5 blur-3xl" />
+        <AdirePattern variant="circles" className="absolute inset-0 text-white" opacity={0.07} />
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="max-w-3xl mx-auto">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-foreground/10 text-primary-foreground text-sm font-medium mb-6">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/15 backdrop-blur-md text-white text-sm font-semibold mb-8 border border-white/20">
               <ShoppingBag className="w-4 h-4 mr-2" />
               Your first order is closer than you think
             </div>
 
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-primary-foreground mb-6">
+            <h2 className="font-display text-4xl md:text-5xl font-extrabold text-white mb-6 text-balance leading-tight">
               Get your first order within 14 days — or your next month is free
             </h2>
-            <p className="text-xl text-primary-foreground/80 mb-4">
-              Complete your setup milestones and start converting WhatsApp traffic into real orders.
+            <p className="text-xl text-white/75 mb-3 max-w-xl mx-auto">
+              Complete your setup milestones and watch your WhatsApp traffic become real orders.
             </p>
-            <p className="text-sm text-primary-foreground/60 mb-8 italic">
+            <p className="text-sm text-white/50 mb-10 italic">
               "If SteerSolo doesn't make your business more professional, you don't pay."
             </p>
 
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-10">
               <Link to="/auth/signup">
-                <Button size="lg" variant="secondary" className="text-lg px-10 py-6 shadow-xl hover:shadow-2xl w-full sm:w-auto">
+                <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-bold text-base px-10 py-6 shadow-2xl hover:shadow-white/20 hover:-translate-y-0.5 transition-all duration-300 w-full sm:w-auto rounded-2xl">
                   Start Your Free Store
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
               <Link to="/demo">
-                <Button size="lg" variant="outline" className="border-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 text-lg px-10 py-6 w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="border-2 border-white/30 text-white hover:bg-white/10 font-semibold text-base px-10 py-6 w-full sm:w-auto rounded-2xl transition-all duration-300 hover:-translate-y-0.5">
                   View Demo Store
                 </Button>
               </Link>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-primary-foreground/70">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4" />
-                15-day free trial
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4" />
-                No credit card required
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4" />
-                Cancel anytime
-              </div>
+            <div className="flex flex-wrap justify-center gap-5 text-sm text-white/65">
+              {["15-day free trial", "No credit card required", "Cancel anytime"].map(t => (
+                <div key={t} className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-white/80" />{t}
+                </div>
+              ))}
             </div>
           </div>
         </div>
