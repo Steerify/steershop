@@ -44,6 +44,10 @@ interface Shop {
   state?: string | null;
   country?: string | null;
 }
+interface OwnerPlan {
+  slug: string | null;
+  name: string | null;
+}
 interface Product {
   id: string;
   name: string;
@@ -78,6 +82,8 @@ const ShopStorefront = () => {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Product | null>(null);
   const [isOwner, setIsOwner] = useState(false);
+  const [ownerPlan, setOwnerPlan] = useState<OwnerPlan>({ slug: null, name: null });
+  const isBusinessPlan = ownerPlan.slug === 'business';
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   // Tour state
@@ -98,8 +104,8 @@ const ShopStorefront = () => {
     const shopUrl = `https://steersolo.lovable.app/shop/${shop.shop_slug}`;
     const imageUrl = shop.logo_url || shop.banner_url || '';
 
-    // Page title
-    document.title = `${shop.shop_name} | SteerSolo`;
+    // Page title - Business plan shows shop name alone
+    document.title = isBusinessPlan ? shop.shop_name : `${shop.shop_name} | SteerSolo`;
 
     // Helper to set/create meta tags
     const setMeta = (attr: string, key: string, content: string) => {
@@ -235,6 +241,27 @@ const ShopStorefront = () => {
       }
       setShop(shopData);
       setIsOwner(user?.id === shopData.owner_id);
+
+      // Fetch owner's subscription plan for branding
+      if (shopData.owner_id) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('subscription_plan_id')
+          .eq('id', shopData.owner_id)
+          .single();
+        
+        if (profileData?.subscription_plan_id) {
+          const { data: planData } = await supabase
+            .from('subscription_plans')
+            .select('slug, name')
+            .eq('id', profileData.subscription_plan_id)
+            .single();
+          
+          if (planData) {
+            setOwnerPlan({ slug: planData.slug, name: planData.name });
+          }
+        }
+      }
       let productsQuery = supabase
         .from("products")
         .select("*")
@@ -386,7 +413,7 @@ const ShopStorefront = () => {
   }
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar />
+      <Navbar shopBranding={isBusinessPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
       {/* Shop Header */}
       <div className="relative pt-20" data-tour="shop-header">
         {shop.banner_url ? (

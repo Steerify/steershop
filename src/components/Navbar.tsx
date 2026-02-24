@@ -65,9 +65,14 @@ const CelebrationBadge = ({ celebration }: { celebration: Celebration }) => {
   );
 };
 
-// --- Navbar Component ---
+interface NavbarProps {
+  shopBranding?: {
+    name: string;
+    logoUrl: string | null;
+  } | null;
+}
 
-const Navbar = () => {
+const Navbar = ({ shopBranding }: NavbarProps = {}) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeCelebrations, setActiveCelebrations] = useState<Celebration[]>([]);
   const [showCelebrationHint, setShowCelebrationHint] = useState(false);
@@ -127,18 +132,18 @@ const Navbar = () => {
             {/* Logo Section */}
             <Link to="/" className="flex items-center gap-3 group relative">
               <div className="w-11 h-11 rounded-xl overflow-hidden shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 relative bg-white">
-                <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+                <img src={shopBranding?.logoUrl || logo} alt={shopBranding?.name || "SteerSolo"} className="w-full h-full object-cover" />
                 
                 {/* Visual Effects (Non-animated) */}
-                {isNewYear && <FireworkFlare />}
-                {isChristmas && <SantaHat />}
-                {!isChristmas && primary && <CelebrationBadge celebration={primary} />}
+                {!shopBranding && isNewYear && <FireworkFlare />}
+                {!shopBranding && isChristmas && <SantaHat />}
+                {!shopBranding && !isChristmas && primary && <CelebrationBadge celebration={primary} />}
               </div>
 
               {/* Updated typography to match index page */}
               <span className="font-display text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                SteerSolo
-                {primary && (
+                {shopBranding?.name || "SteerSolo"}
+                {!shopBranding && primary && (
                   <span className="ml-2 text-lg inline-block text-primary">
                     {isChristmas ? "🎄" : <Sparkles className="inline w-5 h-5" />}
                   </span>
