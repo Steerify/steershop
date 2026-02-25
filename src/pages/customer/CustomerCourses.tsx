@@ -1,6 +1,7 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { courseService } from "@/services/course.service";
 import { rewardService } from "@/services/reward.service";
 import { useToast } from "@/hooks/use-toast";
@@ -9,12 +10,15 @@ import { CustomerSidebar } from "@/components/CustomerSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Award, BookOpen, CheckCircle2, Lock, Sparkles, Gift, Clock } from "lucide-react";
-import { AdirePattern } from "@/components/patterns/AdirePattern";
+import { Loader2, Award, BookOpen, CheckCircle2, Gift, ArrowRight, Youtube, Instagram, Video, Play } from "lucide-react";
 import { PageWrapper } from "@/components/PageWrapper";
-import DOMPurify from "dompurify";
+
+interface Collection {
+  id: string;
+  name: string;
+  description: string | null;
+  cover_image_url: string | null;
+}
 
 interface Course {
   id: string;
@@ -25,6 +29,8 @@ interface Course {
   video_url?: string;
   reward_points: number;
   is_active: boolean;
+  collection_id: string | null;
+  social_links: Record<string, string> | null;
 }
 
 interface Enrollment {
@@ -35,109 +41,85 @@ interface Enrollment {
   reward_claimed: boolean;
 }
 
+const isYouTubeUrl = (url: string) => /(?:youtube\.com|youtu\.be)/.test(url);
+const getYouTubeEmbedUrl = (url: string) => {
+  const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match ? `https://www.youtube.com/embed/${match[1]}` : url;
+};
+
+const CourseVideo = ({ url }: { url: string }) => {
+  if (isYouTubeUrl(url)) {
+    return <iframe src={getYouTubeEmbedUrl(url)} className="w-full aspect-video rounded-lg" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />;
+  }
+  return <video src={url} controls className="w-full rounded-lg" controlsList="nodownload" playsInline />;
+};
+
+const SocialCTAs = ({ links }: { links: Record<string, string> }) => {
+  if (!links || Object.keys(links).length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-2 mt-3">
+      {links.youtube && <a href={links.youtube} target="_blank" rel="noopener noreferrer"><Button size="sm" variant="outline" className="gap-2 text-red-500 border-red-200 hover:bg-red-50"><Youtube className="w-4 h-4" /> Subscribe</Button></a>}
+      {links.instagram && <a href={links.instagram} target="_blank" rel="noopener noreferrer"><Button size="sm" variant="outline" className="gap-2 text-pink-500 border-pink-200 hover:bg-pink-50"><Instagram className="w-4 h-4" /> Follow</Button></a>}
+      {links.tiktok && <a href={links.tiktok} target="_blank" rel="noopener noreferrer"><Button size="sm" variant="outline" className="gap-2"><Video className="w-4 h-4" /> TikTok</Button></a>}
+    </div>
+  );
+};
+
 const CustomerCourses = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isLoading: isAuthLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [totalPoints, setTotalPoints] = useState(0);
+  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   useEffect(() => {
     if (!isAuthLoading) {
-      if (user) {
-        loadData();
-      } else {
-        navigate("/auth/login");
-      }
+      if (user) loadData();
+      else navigate("/auth/login");
     }
   }, [user, isAuthLoading, navigate]);
 
   const loadData = async () => {
     try {
       if (!user) return;
-
-      // Load courses for customers only
-      const coursesData = await courseService.getCourses('customer');
-
-      // Load enrollments
-      const enrollmentsData = await courseService.getEnrollments();
-
-      // Load points (using rewardService for consistency)
-      const pointsData = await rewardService.getUserPoints();
-
-      setCourses(coursesData?.data || []);
+      const [collectionsRes, coursesData, enrollmentsData, pointsData] = await Promise.all([
+        supabase.from("tutorial_collections").select("*").eq("is_active", true).order("sort_order"),
+        courseService.getCourses('customer'),
+        courseService.getEnrollments(),
+        rewardService.getUserPoints(),
+      ]);
+      setCollections((collectionsRes.data as Collection[]) || []);
+      setCourses((coursesData?.data || []) as Course[]);
       setEnrollments(enrollmentsData?.data || []);
       setTotalPoints(pointsData?.data?.total_points || 0);
     } catch (error: any) {
-      console.error("Error loading data:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to load courses",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleEnroll = async (courseId: string) => {
-    try {
-      if (!user) return;
-
-      await courseService.enrollInCourse(courseId);
-
-      toast({ title: "Successfully enrolled in course!" });
-      loadData();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    try { if (!user) return; await courseService.enrollInCourse(courseId); toast({ title: "Enrolled!" }); loadData(); }
+    catch (error: any) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
   };
 
   const handleMarkComplete = async (enrollmentId: string) => {
-    try {
-      await courseService.markCourseComplete(enrollmentId);
-
-      toast({
-        title: "Course completed!",
-        description: "Points have been added to your account.",
-      });
-      loadData();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    try { await courseService.markCourseComplete(enrollmentId); toast({ title: "Completed! 🎉", description: "Points added." }); loadData(); }
+    catch (error: any) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
   };
 
-  const getEnrollment = (courseId: string) => {
-    return enrollments.find(e => e.course_id === courseId);
-  };
-
-  const availableCourses = courses.filter(c => !getEnrollment(c.id));
-  const inProgressCourses = courses.filter(c => {
-    const enrollment = getEnrollment(c.id);
-    return enrollment && !enrollment.completed_at;
-  });
-  const completedCourses = courses.filter(c => {
-    const enrollment = getEnrollment(c.id);
-    return enrollment?.completed_at;
-  });
+  const getEnrollment = (courseId: string) => enrollments.find(e => e.course_id === courseId);
+  const collectionCourses = selectedCollection ? courses.filter(c => c.collection_id === selectedCollection.id) : [];
+  const uncategorizedCourses = courses.filter(c => !c.collection_id);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
 
   return (
@@ -146,271 +128,104 @@ const CustomerCourses = () => {
         <div className="min-h-screen flex w-full">
           <CustomerSidebar />
           <div className="flex-1">
-          <header className="h-14 sm:h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center px-4 sm:px-6 justify-between">
-            <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-primary via-accent to-primary" />
-            <div className="flex items-center">
-              <SidebarTrigger className="mr-2 sm:mr-4" />
-              <h1 className="text-xl sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Learning Courses
-              </h1>
-            </div>
-            <div className="flex items-center gap-2 bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-2 rounded-xl border border-primary/20">
-              <Award className="w-5 h-5 text-primary" />
-              <span className="font-bold text-primary">{totalPoints}</span>
-              <span className="text-muted-foreground text-sm">Points</span>
-            </div>
-          </header>
-
-          <main className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-            {/* Learning Progress Hero */}
-            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-accent/20 to-transparent rounded-full blur-3xl" />
-              <CardContent className="p-6 relative">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg">
-                      <BookOpen className="w-8 h-8 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Your Learning Journey</p>
-                      <p className="text-2xl font-bold font-heading">
-                        {completedCourses.length} of {courses.length} Courses Completed
-                      </p>
-                    </div>
+            <header className="h-14 sm:h-16 border-b border-border/50 bg-card/80 backdrop-blur-lg flex items-center px-4 sm:px-6 justify-between">
+              <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-primary via-accent to-primary" />
+              <div className="flex items-center">
+                <SidebarTrigger className="mr-2 sm:mr-4" />
+                {selectedCollection ? (
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedCollection(null)}>← Back</Button>
+                    <h1 className="text-xl font-bold">{selectedCollection.name}</h1>
                   </div>
-                  <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => navigate("/customer/rewards")}>
-                      <Gift className="w-4 h-4 mr-2" />
-                      View Rewards
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Tabs defaultValue="available" className="space-y-6">
-              <TabsList className="bg-card border">
-                <TabsTrigger value="available" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Available ({availableCourses.length})
-                </TabsTrigger>
-                <TabsTrigger value="in-progress" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  <Clock className="w-4 h-4 mr-2" />
-                  In Progress ({inProgressCourses.length})
-                </TabsTrigger>
-                <TabsTrigger value="completed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Completed ({completedCourses.length})
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="available" className="space-y-4">
-                {availableCourses.length === 0 ? (
-                  <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
-                    <CardContent className="py-16 text-center">
-                      <div className="relative inline-block mb-4">
-                        <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground">
-                          Coming Soon
-                        </Badge>
-                        <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl flex items-center justify-center">
-                          <BookOpen className="w-10 h-10 text-primary" />
-                        </div>
-                      </div>
-                      <h3 className="text-xl font-heading font-semibold mb-2">Exciting Courses Coming Soon!</h3>
-                      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                        We're preparing educational content to help you become a smarter shopper.
-                        Complete courses to earn reward points!
-                      </p>
-                      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                        <Sparkles className="w-4 h-4 text-accent" />
-                        <span>Earn up to 100 points per course</span>
-                      </div>
-                    </CardContent>
-                  </Card>
                 ) : (
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {availableCourses.map((course) => (
-                      <Card key={course.id} className="flex flex-col">
-                        {course.image_url && (
-                          <img
-                            src={course.image_url}
-                            alt={course.title}
-                            className="w-full h-48 object-cover rounded-t-lg"
-                          />
-                        )}
-                        <CardHeader>
-                          <div className="flex items-start justify-between gap-2">
-                            <CardTitle className="line-clamp-2">{course.title}</CardTitle>
-                            <Badge className="shrink-0">
-                              <Award className="w-3 h-3 mr-1" />
-                              {course.reward_points}
-                            </Badge>
-                          </div>
-                          <CardDescription className="line-clamp-2">
-                            {course.description}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex-1 flex flex-col justify-end">
-                          <Button onClick={() => handleEnroll(course.id)} className="w-full">
-                            <BookOpen className="w-4 h-4 mr-2" />
-                            Enroll Now
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                  <h1 className="text-xl sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Video Tutorials</h1>
                 )}
-              </TabsContent>
+              </div>
+              <div className="flex items-center gap-2 bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-2 rounded-xl border border-primary/20">
+                <Award className="w-5 h-5 text-primary" />
+                <span className="font-bold text-primary">{totalPoints}</span>
+                <span className="text-muted-foreground text-sm">Points</span>
+              </div>
+            </header>
 
-              <TabsContent value="in-progress" className="space-y-4">
-                {inProgressCourses.length === 0 ? (
-                  <Card>
-                    <CardContent className="py-12 text-center">
-                      <BookOpen className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-muted-foreground">No courses in progress</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {inProgressCourses.map((course) => {
-                      const enrollment = getEnrollment(course.id)!;
-                      return (
-                        <Card key={course.id} className="flex flex-col">
-                          {course.image_url && (
-                            <img
-                              src={course.image_url}
-                              alt={course.title}
-                              className="w-full h-48 object-cover rounded-t-lg"
-                            />
-                          )}
-                          <CardHeader>
-                            <CardTitle className="line-clamp-2">{course.title}</CardTitle>
-                            <CardDescription className="line-clamp-2">
-                              {course.description}
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent className="flex-1 flex flex-col gap-4">
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-sm">
-                                <span>Progress</span>
-                                <span className="font-medium">{enrollment.progress}%</span>
+            <main className="p-4 sm:p-6 space-y-6">
+              {!selectedCollection ? (
+                <>
+                  {/* Collections */}
+                  {collections.length > 0 && (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {collections.map(c => {
+                        const count = courses.filter(co => co.collection_id === c.id).length;
+                        return (
+                          <Card key={c.id} className="cursor-pointer hover:shadow-lg hover:border-primary/30 transition-all group" onClick={() => setSelectedCollection(c)}>
+                            {c.cover_image_url && <div className="h-40 overflow-hidden rounded-t-lg"><img src={c.cover_image_url} alt={c.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" /></div>}
+                            <CardHeader className="pb-2">
+                              <div className="flex items-center justify-between">
+                                <CardTitle className="text-lg">{c.name}</CardTitle>
+                                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary" />
                               </div>
-                              <Progress value={enrollment.progress} />
-                            </div>
-                            <Button
-                              onClick={() => setSelectedCourse(course)}
-                              variant="outline"
-                              className="w-full"
-                            >
-                              Continue Learning
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="completed" className="space-y-4">
-                {completedCourses.length === 0 ? (
-                  <Card>
-                    <CardContent className="py-12 text-center">
-                      <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-muted-foreground">No completed courses yet</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {completedCourses.map((course) => {
-                      const enrollment = getEnrollment(course.id)!;
-                      return (
-                        <Card key={course.id} className="flex flex-col border-primary/50">
-                          {course.image_url && (
-                            <img
-                              src={course.image_url}
-                              alt={course.title}
-                              className="w-full h-48 object-cover rounded-t-lg"
-                            />
-                          )}
-                          <CardHeader>
-                            <div className="flex items-start justify-between gap-2">
-                              <CardTitle className="line-clamp-2">{course.title}</CardTitle>
-                              <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
-                            </div>
-                            <CardDescription className="line-clamp-2">
-                              Completed on {new Date(enrollment.completed_at!).toLocaleDateString()}
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <Badge variant="secondary" className="w-full justify-center">
-                              <Award className="w-3 h-3 mr-1" />
-                              {course.reward_points} Points Earned
-                            </Badge>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </main>
+                              <CardDescription className="line-clamp-2">{c.description}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="pt-0"><Badge variant="secondary">{count} videos</Badge></CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {uncategorizedCourses.length > 0 && (
+                    <div className="space-y-4">
+                      <h2 className="text-lg font-semibold">More Videos</h2>
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {uncategorizedCourses.map(course => <VideoCard key={course.id} course={course} enrollment={getEnrollment(course.id)} onEnroll={handleEnroll} onView={setSelectedCourse} onComplete={handleMarkComplete} />)}
+                      </div>
+                    </div>
+                  )}
+                  {collections.length === 0 && uncategorizedCourses.length === 0 && (
+                    <Card><CardContent className="py-16 text-center">
+                      <Play className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                      <h3 className="text-xl font-semibold mb-2">Tutorials Coming Soon!</h3>
+                      <p className="text-muted-foreground">Video content to help you shop smarter is on the way.</p>
+                    </CardContent></Card>
+                  )}
+                </>
+              ) : (
+                <>
+                  {collectionCourses.length === 0 ? (
+                    <Card><CardContent className="py-12 text-center text-muted-foreground">No videos in this collection yet.</CardContent></Card>
+                  ) : (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {collectionCourses.map(course => <VideoCard key={course.id} course={course} enrollment={getEnrollment(course.id)} onEnroll={handleEnroll} onView={setSelectedCourse} onComplete={handleMarkComplete} />)}
+                    </div>
+                  )}
+                </>
+              )}
+            </main>
+          </div>
         </div>
-        </div>
-        </PageWrapper>
+      </PageWrapper>
 
-      {/* Course Content Modal */}
+      {/* Video Detail Modal */}
       {selectedCourse && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <CardHeader>
               <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-2xl mb-2">{selectedCourse.title}</CardTitle>
-                  <CardDescription>{selectedCourse.description}</CardDescription>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedCourse(null)}
-                >
-                  ✕
-                </Button>
+                <CardTitle className="text-xl mb-2">{selectedCourse.title}</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedCourse(null)}>✕</Button>
               </div>
+              <CardDescription>{selectedCourse.description}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {selectedCourse.video_url && (
-                <CourseVideo url={selectedCourse.video_url} />
-              )}
-              {selectedCourse.image_url && !selectedCourse.video_url && (
-                <img
-                  src={selectedCourse.image_url}
-                  alt={selectedCourse.title}
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-              )}
-              <SanitizedContent content={selectedCourse.content} />
+            <CardContent className="space-y-4">
+              {selectedCourse.video_url && <CourseVideo url={selectedCourse.video_url} />}
+              <SocialCTAs links={(selectedCourse.social_links || {}) as Record<string, string>} />
               <div className="flex gap-4 pt-4 border-t">
-                <Button
-                  onClick={() => {
-                    const enrollment = getEnrollment(selectedCourse.id);
-                    if (enrollment) {
-                      handleMarkComplete(enrollment.id);
-                      setSelectedCourse(null);
-                    }
-                  }}
-                  className="flex-1"
-                >
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Mark as Complete
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setSelectedCourse(null)}
-                >
-                  Close
-                </Button>
+                {(() => {
+                  const enrollment = getEnrollment(selectedCourse.id);
+                  if (!enrollment) return <Button onClick={() => { handleEnroll(selectedCourse.id); setSelectedCourse(null); }} className="flex-1"><BookOpen className="w-4 h-4 mr-2" /> Enroll</Button>;
+                  if (!enrollment.completed_at) return <Button onClick={() => { handleMarkComplete(enrollment.id); setSelectedCourse(null); }} className="flex-1"><CheckCircle2 className="w-4 h-4 mr-2" /> Mark Complete</Button>;
+                  return <Badge variant="secondary" className="flex-1 justify-center py-2"><Award className="w-4 h-4 mr-1" /> Completed</Badge>;
+                })()}
+                <Button variant="outline" onClick={() => setSelectedCourse(null)}>Close</Button>
               </div>
             </CardContent>
           </Card>
@@ -420,48 +235,34 @@ const CustomerCourses = () => {
   );
 };
 
-const isYouTubeUrl = (url: string) => /(?:youtube\.com|youtu\.be)/.test(url);
-
-const getYouTubeEmbedUrl = (url: string) => {
-  const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  return match ? `https://www.youtube.com/embed/${match[1]}` : url;
-};
-
-const CourseVideo = ({ url }: { url: string }) => {
-  if (isYouTubeUrl(url)) {
-    return (
-      <iframe
-        src={getYouTubeEmbedUrl(url)}
-        className="w-full aspect-video rounded-lg"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-      />
-    );
-  }
-  return (
-    <video src={url} controls className="w-full rounded-lg" controlsList="nodownload" playsInline />
-  );
-};
-
-// Sanitized content component to prevent XSS attacks
-const SanitizedContent = ({ content }: { content: string }) => {
-  const sanitizedContent = useMemo(() => {
-    return DOMPurify.sanitize(content, {
-      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre', 'span', 'div'],
-      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'target', 'rel'],
-      ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
-      ALLOW_DATA_ATTR: false,
-      ADD_ATTR: ['target'],
-      FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
-      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'onfocus', 'onblur']
-    });
-  }, [content]);
+const VideoCard = ({ course, enrollment, onEnroll, onView, onComplete }: {
+  course: Course; enrollment?: Enrollment; onEnroll: (id: string) => void; onView: (c: Course) => void; onComplete: (id: string) => void;
+}) => {
+  const sl = (course.social_links || {}) as Record<string, string>;
+  const isCompleted = !!enrollment?.completed_at;
+  const isEnrolled = !!enrollment;
 
   return (
-    <div
-      className="prose prose-sm max-w-none"
-      dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-    />
+    <Card className={`flex flex-col overflow-hidden hover:shadow-lg transition-all ${isCompleted ? "border-primary/50" : ""}`}>
+      <div className="relative cursor-pointer" onClick={() => onView(course)}>
+        {course.image_url ? <img src={course.image_url} alt={course.title} className="w-full h-40 object-cover" /> : <div className="w-full h-40 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center"><Play className="w-12 h-12 text-muted-foreground" /></div>}
+        {course.video_url && <div className="absolute inset-0 flex items-center justify-center bg-black/20"><div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg"><Play className="w-6 h-6 text-primary ml-0.5" /></div></div>}
+        {isCompleted && <div className="absolute top-2 right-2"><CheckCircle2 className="w-6 h-6 text-primary drop-shadow" /></div>}
+      </div>
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="text-base line-clamp-2">{course.title}</CardTitle>
+          <Badge className="shrink-0 text-xs"><Award className="w-3 h-3 mr-1" />{course.reward_points}</Badge>
+        </div>
+        <CardDescription className="line-clamp-2 text-xs">{course.description}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex-1 flex flex-col justify-end gap-2 pt-0">
+        <SocialCTAs links={sl} />
+        {!isEnrolled ? <Button onClick={() => onEnroll(course.id)} size="sm" className="w-full"><BookOpen className="w-4 h-4 mr-2" /> Enroll</Button>
+          : !isCompleted ? <Button onClick={() => onComplete(enrollment!.id)} size="sm" variant="secondary" className="w-full"><CheckCircle2 className="w-4 h-4 mr-2" /> Complete</Button>
+          : <Badge variant="secondary" className="w-full justify-center py-1.5 text-xs"><Award className="w-3 h-3 mr-1" />{course.reward_points} pts earned</Badge>}
+      </CardContent>
+    </Card>
   );
 };
 

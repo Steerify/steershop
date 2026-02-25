@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle, Sparkles, Play } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { VideoUpload } from "@/components/VideoUpload";
 import { z } from "zod";
@@ -474,6 +474,11 @@ const Products = () => {
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
+                    {product.video_url && (
+                      <div className="absolute top-2 right-2 bg-black/70 rounded-full p-1.5">
+                        <Play className="w-4 h-4 text-white" />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className={`h-48 bg-gradient-to-br ${product.type === 'service' ? 'from-accent/10 to-primary/10' : 'from-primary/10 to-accent/10'} flex items-center justify-center relative`}>

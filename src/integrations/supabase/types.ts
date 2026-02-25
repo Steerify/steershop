@@ -290,6 +290,7 @@ export type Database = {
       }
       courses: {
         Row: {
+          collection_id: string | null
           content: string
           created_at: string | null
           created_by: string | null
@@ -298,12 +299,14 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           reward_points: number | null
+          social_links: Json | null
           target_audience: string
           title: string
           updated_at: string | null
           video_url: string | null
         }
         Insert: {
+          collection_id?: string | null
           content: string
           created_at?: string | null
           created_by?: string | null
@@ -312,12 +315,14 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           reward_points?: number | null
+          social_links?: Json | null
           target_audience?: string
           title: string
           updated_at?: string | null
           video_url?: string | null
         }
         Update: {
+          collection_id?: string | null
           content?: string
           created_at?: string | null
           created_by?: string | null
@@ -326,12 +331,21 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           reward_points?: number | null
+          social_links?: Json | null
           target_audience?: string
           title?: string
           updated_at?: string | null
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "courses_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "tutorial_collections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customer_preferences: {
         Row: {
@@ -2312,6 +2326,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tutorial_collections: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
       }
       user_badges: {
         Row: {
