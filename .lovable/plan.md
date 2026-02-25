@@ -1,67 +1,98 @@
+# Plan: Tutorial Collections, Product Video Upload, Business Plan Visibility, and Plan Features Update
+
+## 1. Convert Tutorial Section to Video Collection System
+
+**Current state:** The courses/tutorials system is text-based with optional video URLs. The admin creates courses with HTML content and optional YouTube/MP4 links. There's no concept of "collections" or social media link drops.
+
+**What changes:**
+
+### Database
+
+- Create a new `tutorial_collections` table (e.g., "Essentials", "Growth Tips", "Marketing") with fields: `id`, `name`, `description`, `cover_image_url`, `is_active`, `sort_order`, `created_at`
+- Add a `collection_id` column to the existing `courses` table referencing `tutorial_collections`
+- Add a `social_links` JSONB column to `courses` for social media follow/subscribe links (YouTube, Instagram, TikTok, Twitter)
+- The existing `video_url` column already supports YouTube and direct video URLs, which is sufficient
+
+### Admin (`src/pages/admin/AdminCourses.tsx`)
+
+- Rename to "Tutorial Manager" with a two-level UI:
+  - **Collections tab:** Create/edit/delete collections (name, description, cover image)
+  - **Videos tab:** Create tutorial entries with: title, description, video URL (YouTube/TikTok/Instagram embed), collection assignment, social media links (like, follow, subscribe CTAs)
+- Remove the HTML content textarea in favor of video-first entries with a short description
+- Add social link fields: YouTube channel URL, Instagram profile URL, TikTok profile URL
+
+### Entrepreneur view (`src/pages/entrepreneur/EntrepreneurCourses.tsx`)
+
+- Restructure from flat list to collection-based grid: show collection cards, clicking opens the collection to show videos
+- Each video card shows: thumbnail, title, embedded video player, and social CTA buttons ("Subscribe on YouTube", "Follow on Instagram", etc.)
+- Keep the enrollment/completion/reward points system
+
+### Customer view (`src/pages/customer/CustomerCourses.tsx`)
+
+- Same collection-based restructure as entrepreneur view
+
+## 2. Product Upload: Video Option (Already Working -- Verify)
+
+**Current state:** The Products page (`src/pages/Products.tsx`) already has a `<VideoUpload>` component at line 713 and passes `videoUrl` to the product service. The `product.service.ts` handles `video_url` in create/update. The `VideoUpload` component uploads to a `product-videos` storage bucket.
+
+**What needs checking/fixing:**
+
+- The product card display (lines 467-543) only shows `product.images[0].url` -- it does NOT show video previews on the product cards. Add a video indicator badge when a product has a `video_url`.
+- On the storefront (`ShopStorefront.tsx`), product cards should show a play icon overlay when a video exists, and clicking should open the video
+- The `getProducts` service already maps `video_url` correctly
+
+### Changes:
+
+- `**src/pages/Products.tsx`:** Add video indicator on product cards (small play icon overlay when `product.video_url` exists)
+- `**src/pages/ShopStorefront.tsx`:** Show video play button on storefront product cards when video exists; add video modal/inline player on product detail view
+
+## 3. Business Plan Visibility for Search Engines and AI
+
+**Current state:** The `ShopStorefront.tsx` already injects JSON-LD structured data for each shop. Business plan shops already get custom branding in the Navbar. SEO meta tags (og:title, description, canonical, etc.) are already set.
+
+**What needs enhancing:**
+
+- For Business plan shops, make the JSON-LD richer: add `sameAs` for social profiles if available, mark as `@type: Store` (more specific than LocalBusiness), add product catalog as `hasOfferCatalog`
+- Add `ItemList` schema for products to improve search snippet appearance
+- Ensure the storefront header for Business plan shows their logo/name prominently but clicking the brand leads back to SteerSolo homepage (currently it links to SteerSolo via Navbar -- verify this works)
+
+### Changes:
+
+- `**src/pages/ShopStorefront.tsx`:** Enhance JSON-LD for Business plan shops with richer schema. Add a "Powered by SteerSolo" clickable footer link for Business plan shops
+- `**src/components/Navbar.tsx`:** Verify the shop branding logo links back to SteerSolo homepage (currently uses `<Link to="/">` which is correct)
+
+## 4. Update Subscription Plan Features Lists
+
+**Current state (from database):**
 
 
-# Fix Authentication, Workflows, and Business Plan Branding
+| Plan     | Current Features                                                                                                                                                                                             |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Basic    | Up to 20 products, Basic analytics, WhatsApp support, Bank transfer payments                                                                                                                                 |
+| Pro      | Up to 100 products, Done-for-you Business Profile, Advanced analytics, AI Shop Assistant, Paystack direct payments, Priority support                                                                         |
+| Business | Unlimited products, Full analytics suite, All AI features, Google My Business Setup, SEO Optimization, Organic Marketing Strategy, Priority support, Custom domain (coming soon), Add-on: YouTube/Google Ads |
 
-## Issues Found
 
-### 1. Auth Route Mismatch (Login/Signup Broken)
+**What needs updating:** The features lists should be more comprehensive and accurate to reflect what each plan actually provides. Based on what's built:
 
-The Auth page route is defined as `/auth/:type` (e.g., `/auth/login`, `/auth/signup`), but multiple places in the codebase redirect to `/auth?tab=login` (without the `:type` param). This URL does NOT match any route and falls through to the 404 page.
+**Basic:** Up to 20 products/services, Basic analytics dashboard, WhatsApp order link, Bank transfer payments, Product & service listings, Booking system, Store link sharing
 
-**Broken redirects found in:**
-- `src/pages/auth/Callback.tsx` -- 3 instances of `navigate("/auth?tab=login")`
-- `src/pages/auth/RoleSelection.tsx` -- 2 instances
-- `src/pages/ResetPassword.tsx` -- 3 instances
+**Pro:** Up to 100 products/services, AI-powered descriptions & pricing, Done-for-you Business Profile, Advanced analytics & revenue tracking, Paystack direct payments, AI Shop Assistant (10/month), Marketing poster tools, Priority support
 
-**Fix:** Change all `navigate("/auth?tab=login")` to `navigate("/auth/login")` in these files.
+**Business:** Unlimited products/services, Everything in Pro, White-label branding (your logo in navbar), Premium search visibility & badge, Unlimited AI features, Google My Business setup, SEO optimization, Organic marketing strategy, Rich search engine schemas, Custom domain (coming soon)
 
-### 2. Content-Security-Policy Blocking Auth Calls
-
-The `index.html` has a strict CSP that may block Supabase auth and Google Sign-In flows:
-- `script-src` only allows `self` and `accounts.google.com` -- inline scripts from Google Identity Services may be blocked
-- `connect-src` doesn't include `wss://` for Supabase realtime or some Google auth endpoints
-
-**Fix:** Update CSP to be more permissive for auth flows:
-- Add `'unsafe-inline'` to `script-src` (required for Google Identity Services inline callbacks)
-- Add Google auth API endpoints to `connect-src`
-- Add `blob:` to `img-src` for uploaded images
-
-### 3. Business Plan Shop Branding (Custom Name and Logo)
-
-Business plan shop owners should have their business name and logo displayed instead of the SteerSolo branding on their storefront. This requires:
-
-**Changes to `src/pages/ShopStorefront.tsx`:**
-- Fetch the shop owner's subscription plan
-- If on Business plan, display the shop's logo and name in the storefront header instead of SteerSolo branding
-- Hide "Powered by SteerSolo" badge or make it subtle for Business plan shops
-
-**Changes to `src/components/Navbar.tsx`:**
-- When viewing a Business plan shop's storefront, show the shop's logo and name instead of SteerSolo in the navbar
-
-### 4. Business Plan Shops Fully Visible Online (Search/Discovery)
-
-The Shops browse page (`/shops`) already supports search by name, description, and slug. To make Business plan shops more prominent and searchable:
-
-**Changes to `src/pages/Shops.tsx`:**
-- Add a "Featured" or "Premium" badge for Business plan shops
-- Prioritize Business plan shops in search results (sort them higher)
-- Add keyword/tag search capability
-
-**Database query enhancement:**
-- Join shops with profiles and subscription_plans to identify Business plan shops
-- Add a visual indicator (crown/star badge) for Business plan shops in listings
+This requires a database UPDATE to the `subscription_plans.features` column.
 
 ---
 
 ## Technical Summary
 
-| Priority | File | Change |
-|----------|------|--------|
-| Critical | `src/pages/auth/Callback.tsx` | Fix 3 broken redirects: `/auth?tab=login` to `/auth/login` |
-| Critical | `src/pages/auth/RoleSelection.tsx` | Fix 2 broken redirects |
-| Critical | `src/pages/ResetPassword.tsx` | Fix 3 broken redirects |
-| Critical | `index.html` | Relax CSP to allow Google Identity Services and Supabase auth |
-| High | `src/pages/ShopStorefront.tsx` | Show shop's own brand (logo + name) for Business plan shops |
-| High | `src/pages/Shops.tsx` | Add premium badge and priority sorting for Business plan shops |
-| Medium | `src/components/Navbar.tsx` | Show shop branding instead of SteerSolo when on Business plan shop storefront |
 
+| Priority | Area     | Files                                            | Change                                                                                   |
+| -------- | -------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| High     | Database | Migration                                        | Create `tutorial_collections` table, add `collection_id` and `social_links` to `courses` |
+| High     | Admin    | `AdminCourses.tsx`                               | Rebuild as collection-based tutorial manager with video + social links                   |
+| High     | Frontend | `EntrepreneurCourses.tsx`, `CustomerCourses.tsx` | Collection-based video tutorial UI with social CTAs                                      |
+| Medium   | Products | `Products.tsx`, `ShopStorefront.tsx`             | Video indicator badges on product cards, video player in storefront                      |
+| Medium   | SEO      | `ShopStorefront.tsx`                             | Enhanced JSON-LD for Business plan shops                                                 |
+| Medium   | Plans    | Database UPDATE                                  | Update features arrays for all 3 plans                                                   |
