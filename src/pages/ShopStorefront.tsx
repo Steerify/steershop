@@ -131,12 +131,12 @@ const ShopStorefront = () => {
     if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
     canonical.href = shopUrl;
 
-    // JSON-LD
+    // JSON-LD - Enhanced for Business plan
     const schemaData: any = {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
+      "@type": isBusinessPlan ? "Store" : "LocalBusiness",
       "name": shop.shop_name,
-      "description": shop.description || `Shop at ${shop.shop_name} on SteerSolo`,
+      "description": shop.description || `Shop at ${shop.shop_name}${isBusinessPlan ? '' : ' on SteerSolo'}`,
       "url": shopUrl,
       "image": imageUrl || undefined,
       "numberOfEmployees": "1-10",
@@ -154,18 +154,33 @@ const ShopStorefront = () => {
       }),
     };
 
-    // Add product offers to JSON-LD
+    // Business plan: richer schema
+    if (isBusinessPlan) {
+      schemaData["@id"] = shopUrl;
+      schemaData.brand = { "@type": "Brand", "name": shop.shop_name };
+      if (shop.whatsapp_number) {
+        schemaData.contactPoint = { "@type": "ContactPoint", "telephone": shop.whatsapp_number, "contactType": "customer service" };
+      }
+    }
+
+    // Add product catalog as ItemList for rich snippets
     if (products.length > 0) {
-      schemaData.makesOffer = products.slice(0, 10).map(p => ({
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Product",
-          "name": p.name,
-          "image": p.image_url || undefined,
-          "url": `${shopUrl}/product/${p.id}`,
-          "offers": { "@type": "Offer", "price": p.price, "priceCurrency": "NGN", "availability": "https://schema.org/InStock" }
-        }
-      }));
+      schemaData.hasOfferCatalog = {
+        "@type": "OfferCatalog",
+        "name": `${shop.shop_name} Products`,
+        "itemListElement": products.slice(0, 20).map((p, i) => ({
+          "@type": "ListItem",
+          "position": i + 1,
+          "item": {
+            "@type": p.type === 'service' ? "Service" : "Product",
+            "name": p.name,
+            "description": p.description || undefined,
+            "image": p.image_url || undefined,
+            "url": `${shopUrl}/product/${p.id}`,
+            "offers": { "@type": "Offer", "price": p.price, "priceCurrency": "NGN", "availability": p.is_available ? "https://schema.org/InStock" : "https://schema.org/OutOfStock" }
+          }
+        }))
+      };
     }
 
     const script = document.createElement("script");
