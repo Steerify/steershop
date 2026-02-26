@@ -39,7 +39,6 @@ export const DynamicPricing = () => {
         .from('subscription_plans')
         .select('*')
         .eq('is_active', true)
-        .gt('price_monthly', 0)
         .order('display_order', { ascending: true });
 
       if (error) throw error;
@@ -76,6 +75,8 @@ export const DynamicPricing = () => {
 
   const getPlanMeta = (slug: string) => {
     switch (slug) {
+      case 'free':
+        return { badge: 'FREE FOREVER', highlight: false, icon: Zap, tagline: "Start selling — no risk, no cost" };
       case 'basic':
         return { badge: null, highlight: false, icon: Zap, tagline: "Perfect for getting started" };
       case 'pro':
@@ -177,10 +178,10 @@ export const DynamicPricing = () => {
           </div>
         </div>
 
-        <div className={`grid gap-6 max-w-5xl mx-auto ${
-          plans.length === 1 ? 'md:grid-cols-1 max-w-md' :
-          plans.length === 2 ? 'md:grid-cols-2 max-w-3xl' :
-          'md:grid-cols-3'
+        <div className={`grid gap-6 max-w-6xl mx-auto ${
+          plans.length <= 2 ? 'md:grid-cols-2 max-w-3xl' :
+          plans.length === 3 ? 'md:grid-cols-3 max-w-5xl' :
+          'md:grid-cols-4'
         }`}>
           {plans.map((plan) => {
             const { badge, highlight, icon: PlanIcon, tagline } = getPlanMeta(plan.slug);
@@ -213,8 +214,17 @@ export const DynamicPricing = () => {
                 
                 <CardContent>
                   <div className="mb-1">
-                    <span className="text-4xl font-bold">₦{formatPrice(price)}</span>
-                    <span className="text-muted-foreground">/{billingCycle === "yearly" ? "year" : "month"}</span>
+                    {price === 0 ? (
+                      <>
+                        <span className="text-4xl font-bold text-green-600">₦0</span>
+                        <span className="text-muted-foreground"> forever</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-4xl font-bold">₦{formatPrice(price)}</span>
+                        <span className="text-muted-foreground">/{billingCycle === "yearly" ? "year" : "month"}</span>
+                      </>
+                    )}
                   </div>
                   
                   {billingCycle === "yearly" && savings > 0 && (
@@ -223,9 +233,12 @@ export const DynamicPricing = () => {
                     </p>
                   )}
                   
-                  <p className="text-xs text-muted-foreground mb-6">
-                    Less than ₦{dailyCost} per day
-                  </p>
+                  {price > 0 && (
+                    <p className="text-xs text-muted-foreground mb-6">
+                      Less than ₦{dailyCost} per day
+                    </p>
+                  )}
+                  {price === 0 && <div className="mb-6" />}
                   
                   <ul className="space-y-2.5 mb-8">
                     {features.map((feature, index) => (
@@ -238,10 +251,10 @@ export const DynamicPricing = () => {
                   
                   <Link to="/auth/signup">
                     <Button 
-                      className={`w-full ${highlight ? 'bg-primary hover:bg-primary/90' : ''}`}
-                      variant={highlight ? 'default' : 'outline'}
+                      className={`w-full ${highlight ? 'bg-primary hover:bg-primary/90' : ''} ${price === 0 ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
+                      variant={highlight || price === 0 ? 'default' : 'outline'}
                     >
-                      Start 15-Day Free Trial
+                      {price === 0 ? 'Start Free Forever' : 'Start 15-Day Free Trial'}
                     </Button>
                   </Link>
                 </CardContent>

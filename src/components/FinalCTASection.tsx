@@ -66,7 +66,7 @@ export const FinalCTASection = () => {
           <div className="flex flex-wrap justify-center gap-6 text-sm text-white/70">
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
-              <span>7-day free trial</span>
+              <span>Free forever plan</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />

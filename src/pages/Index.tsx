@@ -82,7 +82,7 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2 animate-fade-up" style={{ animationDelay: '240ms' }}>
               <Link to="/auth/signup">
                 <Button size="lg" className="group bg-gradient-to-r from-primary to-accent hover:opacity-95 text-white text-base px-8 py-6 shadow-xl shadow-primary/25 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 w-full sm:w-auto font-bold rounded-2xl">
-                  Start Free — No Card Needed
+                  Start Free Forever
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
                 </Button>
               </Link>
@@ -101,7 +101,7 @@ const Index = () => {
               </div>
               <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-3 py-1.5 shadow-sm">
                 <Clock className="w-4 h-4 text-primary" />
-                15-day free trial
+                Free forever plan
               </div>
               <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-3 py-1.5 shadow-sm">
                 <MessageCircle className="w-4 h-4 text-green-600" />
@@ -209,7 +209,7 @@ const Index = () => {
             </div>
 
             <div className="flex flex-wrap justify-center gap-5 text-sm text-white/65">
-              {["15-day free trial", "No credit card required", "Cancel anytime"].map(t => (
+              {["Free forever plan", "No credit card required", "Cancel anytime"].map(t => (
                 <div key={t} className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-white/80" />{t}
                 </div>

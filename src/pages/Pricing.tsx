@@ -11,6 +11,11 @@ import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/steersolo-logo.jpg";
 
 const planProfiles: Record<string, { bestFor: string; outcome: string; timeSaved: string }> = {
+  free: {
+    bestFor: "Testing the waters — zero risk",
+    outcome: "Launch your first store in 10 minutes",
+    timeSaved: "Start selling immediately, no commitment",
+  },
   basic: {
     bestFor: "New sellers just starting out on WhatsApp",
     outcome: "Get your first 5 orders in 14 days",
@@ -120,17 +125,17 @@ const Pricing = () => {
         {/* Hero Section — ROI-first */}
         <div className="text-center mb-10 sm:mb-16">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Invest Less Than ₦100/Day to Grow Your Business
+            Start Free. Upgrade When You Grow.
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
-            Every plan pays for itself. Choose the one that matches your stage.
+            Your free store is forever. Paid plans pay for themselves — choose the one that matches your stage.
           </p>
 
           {/* ROI highlights */}
           <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-primary" />
-              15-day free trial
+              Free forever plan
             </div>
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-primary" />
@@ -144,7 +149,7 @@ const Pricing = () => {
         </div>
 
         {/* Plan Profiles — Best-fit cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto mb-10">
           {Object.entries(planProfiles).map(([slug, profile]) => (
             <Card key={slug} className="border-border/50 bg-card/50">
               <CardContent className="p-5 text-center">
@@ -258,7 +263,7 @@ const Pricing = () => {
               className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
               onClick={() => navigate('/auth/signup')}
             >
-              Start Your Free Trial
+              Start Free Forever
             </Button>
           </div>
         )}
