@@ -27,6 +27,12 @@ export const SubscriptionCard = ({ plans, currentPlanId, onSubscriptionSuccess }
   const { toast } = useToast();
 
   const handleSubscribe = async (plan: SubscriptionPlan) => {
+    // Free plan — redirect to signup instead of Paystack
+    if (plan.price_monthly === 0) {
+      window.location.href = '/auth/signup';
+      return;
+    }
+
     setIsLoading(plan.slug);
     
     try {
@@ -181,6 +187,8 @@ export const SubscriptionCard = ({ plans, currentPlanId, onSubscriptionSuccess }
                     </>
                   ) : isCurrentPlan ? (
                     "Current Plan"
+                  ) : plan.price_monthly === 0 ? (
+                    "Get Started Free"
                   ) : (
                     `Subscribe to ${plan.name}`
                   )}
