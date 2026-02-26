@@ -214,30 +214,23 @@ const MarketingServices = () => {
                   Your Google Business Profile
                 </CardTitle>
                 <CardDescription>
-                  Access and manage your Google My Business profile directly from here
+                  Let us create and optimize your Google Business Profile for maximum local visibility
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="googleUrl">Google Business Profile URL</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="googleUrl"
-                      placeholder="https://business.google.com/..."
-                      value={googleProfileUrl}
-                      onChange={(e) => setGoogleProfileUrl(e.target.value)}
-                    />
-                    <Button onClick={handleSaveGoogleProfile} disabled={isSavingProfile}>
-                      {isSavingProfile ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        "Save"
-                      )}
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Paste your Google Business Profile URL here for quick access
+                <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-6 text-center">
+                  <Globe className="w-12 h-12 text-primary mx-auto mb-3" />
+                  <h3 className="font-bold text-lg mb-2">Get Found on Google</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Submit your business info and our team will create a fully optimized Google Business Profile for you — included in your Business plan.
                   </p>
+                  <Button
+                    onClick={() => navigate("/google-business-profile")}
+                    className="bg-gradient-to-r from-primary to-accent"
+                  >
+                    Start Google Profile Setup
+                    <ExternalLink className="w-4 h-4 ml-2" />
+                  </Button>
                 </div>
 
                 {googleProfileUrl && (
@@ -247,7 +240,7 @@ const MarketingServices = () => {
                     onClick={() => window.open(googleProfileUrl, '_blank')}
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    Open Google Business Profile
+                    Open Existing Google Business Profile
                   </Button>
                 )}
 

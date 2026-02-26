@@ -654,6 +654,111 @@ export type Database = {
           },
         ]
       }
+      google_business_profiles: {
+        Row: {
+          admin_notes: string | null
+          attributes: string[] | null
+          business_description: string | null
+          business_hours: Json | null
+          business_name: string | null
+          consent_given: boolean
+          consent_given_at: string | null
+          cover_photo_url: string | null
+          created_at: string
+          exterior_photos: string[] | null
+          id: string
+          interior_photos: string[] | null
+          is_service_area_business: boolean | null
+          logo_url: string | null
+          opening_date: string | null
+          phone_number: string | null
+          physical_address: string | null
+          primary_category: string | null
+          service_areas: string | null
+          services_list: string | null
+          shop_id: string
+          status: string
+          team_photos: string[] | null
+          updated_at: string
+          user_id: string
+          verification_notes: string | null
+          website_url: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          attributes?: string[] | null
+          business_description?: string | null
+          business_hours?: Json | null
+          business_name?: string | null
+          consent_given?: boolean
+          consent_given_at?: string | null
+          cover_photo_url?: string | null
+          created_at?: string
+          exterior_photos?: string[] | null
+          id?: string
+          interior_photos?: string[] | null
+          is_service_area_business?: boolean | null
+          logo_url?: string | null
+          opening_date?: string | null
+          phone_number?: string | null
+          physical_address?: string | null
+          primary_category?: string | null
+          service_areas?: string | null
+          services_list?: string | null
+          shop_id: string
+          status?: string
+          team_photos?: string[] | null
+          updated_at?: string
+          user_id: string
+          verification_notes?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          attributes?: string[] | null
+          business_description?: string | null
+          business_hours?: Json | null
+          business_name?: string | null
+          consent_given?: boolean
+          consent_given_at?: string | null
+          cover_photo_url?: string | null
+          created_at?: string
+          exterior_photos?: string[] | null
+          id?: string
+          interior_photos?: string[] | null
+          is_service_area_business?: boolean | null
+          logo_url?: string | null
+          opening_date?: string | null
+          phone_number?: string | null
+          physical_address?: string | null
+          primary_category?: string | null
+          service_areas?: string | null
+          services_list?: string | null
+          shop_id?: string
+          status?: string
+          team_photos?: string[] | null
+          updated_at?: string
+          user_id?: string
+          verification_notes?: string | null
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_business_profiles_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "google_business_profiles_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_ai_usage: {
         Row: {
           created_at: string | null
