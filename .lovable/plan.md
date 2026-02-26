@@ -1,89 +1,79 @@
-# Plan: Free Trap Pricing Strategy + Homepage & Branding Refinements
-
-## Analysis of Current State
-
-### Homepage (Already Strong — Minor Tweaks Only)
-
-The current homepage already follows the $100M Offers value equation and Diary of a CEO storytelling principles:
-
-- **Dream Outcome:** "Turn WhatsApp traffic into completed orders in 14 days"
-- **Perceived Likelihood:** Social proof stats, live featured shops, reviews
-- **Time Delay:** "10-minute setup", "60 seconds" signup
-- **Effort/Sacrifice:** "No credit card", "No technical skills"
-- **Pain Mirror:** The 3 chaos cards hit emotional triggers
-- **Risk Reversal:** "14-day guarantee or next month free"
-- **10-section conversion funnel** is already well-structured
-
-**Verdict:** The homepage is solid. Only minor copy refinements needed (strengthen the guarantee language, add a "free forever" tier callout in the hero).
-
-### Pricing ("Free Trap" — Major Change Needed)
-
-Warren Buffett's "Free Trap" principle: give away genuine value for free so users become dependent, then monetize the upgrade. Currently there is NO free plan. All 3 plans cost money. The `DynamicPricing` component explicitly filters out free plans (`.gt('price_monthly', 0)`).
-
-**What needs to change:**
-
-1. Create a **Free Forever** plan in the database (₦0/month, 5 products, basic features)
-2. Update `DynamicPricing` to show the free plan
-3. Update `Pricing.tsx` to include free plan profile
-4. Restructure plan presentation: Free → Basic → Pro → Business
-
-### Navbar Branding (Already Working — Tiny Fix)
-
-The `shopBranding` prop system works. The logo links to `/` which is the SteerSolo homepage. One small issue: on the screenshot the user shared, the navbar shows "SteerSolo" — this is the default homepage view, NOT a shop storefront. The branding swap only applies on `/shop/:slug` routes where the `ShopStorefront` passes branding to the Navbar. This is correct behavior.
-
----
-
-## Changes
-
-### 1. Database: Create Free Forever Plan
-
-Add a new subscription plan row:
-
-- **Name:** Starter (Free)
-- **Slug:** free
-- **Price:** ₦0/month, ₦0/year
-- **Max Products:** 5
-- **Features:** Up to 5 products, Store link sharing, WhatsApp order link, Basic product catalog, Bank transfer payments
-- **Display Order:** 0 (shows first)
-
-### 2. `src/components/DynamicPricing.tsx` — Show Free Plan
-
-- Remove the `.gt('price_monthly', 0)` filter so the free plan appears
-- Add special styling for the free plan (green "FREE" badge, "₦0 forever" price display)
-- Add "Free Forever" CTA button text instead of "Start 15-Day Free Trial"
-- Add plan meta for `free` slug
-
-### 3. `src/pages/Pricing.tsx` — Add Free Plan Profile
-
-- Add `free` entry to `planProfiles` with: bestFor, outcome, timeSaved
-- Update hero copy to emphasize "Start free, upgrade when you grow"
-
-### 4. `src/pages/Index.tsx` — Minor Hero Refinements
-
-- Update the trust chip from "15-day free trial" to "Free forever plan available"
-- Update the CTA button text from "Start Free — No Card Needed" to "Start Free Forever"
-- Add a small line under the hero about the free tier to reinforce the free trap
-- Update the final CTA section to mention the free plan
-
-### 5. `src/components/FinalCTASection.tsx` — Update Trust Points
-
-- Change "7-day free trial" to "Free forever plan" (it's currently inconsistent — says 7-day while the rest of the site says 15-day)
-
-### 6. `src/components/SubscriptionCard.tsx` — Handle Free Plan
-
-- For the free plan, show "Get Started Free" button instead of "Subscribe to..."
-- Don't redirect to Paystack for free plan — instead redirect to signup
-
----
-
-## Technical Summary
 
 
-| Priority | File                   | Change                                                  |
-| -------- | ---------------------- | ------------------------------------------------------- |
-| High     | Database migration     | Create "Starter (Free)" plan with 5 products, ₦0        |
-| High     | `DynamicPricing.tsx`   | Remove price > 0 filter, add free plan styling          |
-| High     | `Pricing.tsx`          | Add free plan profile, update hero copy                 |
-| Medium   | `Index.tsx`            | Update hero trust chips and CTA copy for free trap      |
-| Medium   | `SubscriptionCard.tsx` | Handle free plan CTA (redirect to signup, not Paystack) |
-| Low      | `FinalCTASection.tsx`  | Fix inconsistent trial duration text                    |
+# Plan: Google Business Profile Info Collection Page
+
+## Overview
+
+Create a multi-step form page at `/google-business-profile` for Business plan shop owners to submit all required information for Google Business Profile creation. The form starts with a consent checkbox, then walks through 4 sections matching the provided requirements.
+
+## Database
+
+Create a `google_business_profiles` table to store submissions:
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | PK |
+| shop_id | uuid | FK to shops |
+| user_id | uuid | owner ref |
+| consent_given | boolean | must be true |
+| consent_given_at | timestamptz | when consent was given |
+| status | text | 'draft', 'submitted', 'in_progress', 'completed' |
+| business_name | text | official name |
+| physical_address | text | full address |
+| is_service_area_business | boolean | SAB flag |
+| service_areas | text | cities/zips if SAB |
+| primary_category | text | e.g. "Italian Restaurant" |
+| phone_number | text | local preferred |
+| website_url | text | |
+| business_hours | jsonb | { mon: {open, close}, ... } |
+| business_description | text | up to 750 chars |
+| services_list | text | comma/line separated |
+| attributes | text[] | array of highlights |
+| opening_date | text | month/year |
+| logo_url | text | 720x720 |
+| cover_photo_url | text | 1024x575 |
+| interior_photos | text[] | array of URLs |
+| exterior_photos | text[] | array of URLs |
+| team_photos | text[] | array of URLs |
+| verification_notes | text | free text for proof details |
+| admin_notes | text | for admin use |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+RLS: shop owners can CRUD their own; admins can view all.
+
+## Page: `src/pages/entrepreneur/GoogleBusinessProfile.tsx`
+
+A stepper form with 5 steps:
+
+1. **Consent** — explanation of what data is collected and why, with a mandatory checkbox: "I authorize SteerSolo to create and manage a Google Business Profile on behalf of my business." Must tick before proceeding.
+
+2. **Core Business Info** — Business name, address (with SAB toggle), primary category (dropdown/combobox), phone, website, business hours grid.
+
+3. **Profile Content** — Description (750 char limit with counter), services/products list, attributes (multi-select chips), opening date (month/year picker).
+
+4. **Visual Assets** — Logo upload (note 720x720), cover photo (note 1024x575), interior/exterior/team photo uploads (multiple). Reuse existing `ImageUpload` component.
+
+5. **Verification & Submit** — Verification notes textarea explaining what proof they can provide, review summary, submit button.
+
+Auto-saves as "draft" so owners can return and complete later. On submit, status changes to "submitted" and admin sees it in their marketing consultations page.
+
+## Route & Navigation
+
+- Add route `/google-business-profile` in `App.tsx` (protected, entrepreneur only)
+- Add a prominent CTA button in the Marketing Services page (`MarketingServices.tsx`) Google Profile tab linking to this form instead of just a URL paste field
+
+## Admin View
+
+- Add a section in `AdminMarketingConsultations.tsx` to list and review submitted Google Business Profile requests with status management
+
+## Files to Create/Modify
+
+| File | Action |
+|------|--------|
+| Migration SQL | Create `google_business_profiles` table with RLS |
+| `src/pages/entrepreneur/GoogleBusinessProfile.tsx` | New page — full stepper form |
+| `src/App.tsx` | Add route |
+| `src/pages/entrepreneur/MarketingServices.tsx` | Add CTA to new page in Google Profile tab |
+| `src/integrations/supabase/types.ts` | Auto-updated |
+
