@@ -1,4 +1,3 @@
-// pages/Index.tsx
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,8 +23,6 @@ import { HowItWorks } from "@/components/HowItWorks";
 import { DynamicPricing } from "@/components/DynamicPricing";
 import { SocialProofStats } from "@/components/SocialProofStats";
 import { Card, CardContent } from "@/components/ui/card";
-import { useVendorStats } from "@/hooks/useVendorStats"; // Import the hook
-import { Skeleton } from "@/components/ui/skeleton"; // For loading state
 
 const painPoints = [
   {
@@ -46,13 +43,6 @@ const painPoints = [
 ];
 
 const Index = () => {
-  const { vendorCount, isLoading } = useVendorStats();
-  
-  // Format the number (e.g., 2000 -> "2,000+", 1500 -> "1,500+")
-  const formattedVendorCount = vendorCount >= 1000 
-    ? `${(vendorCount / 1000).toFixed(1)}K+` 
-    : `${vendorCount}+`;
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -67,18 +57,10 @@ const Index = () => {
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center space-y-8">
-            {/* Trust badge with real data */}
+            {/* Trust badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 text-primary text-sm font-semibold border border-primary/15 shadow-sm animate-fade-up">
               <Sparkles className="w-4 h-4" />
-              <span>
-                Trusted by{' '}
-                {isLoading ? (
-                  <Skeleton className="w-16 h-4 inline-block bg-primary/20" />
-                ) : (
-                  <span className="font-bold">{formattedVendorCount}</span>
-                )}{' '}
-                Nigerian vendors
-              </span>
+              <span>Trusted by 2,000+ Nigerian vendors</span>
               <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse ml-1" />
             </div>
 
@@ -173,10 +155,7 @@ const Index = () => {
       <HowItWorks />
 
       {/* SECTION 5: SOCIAL PROOF STATS — Back it up with numbers */}
-      <SocialProofStats 
-        vendorCount={vendorCount}
-        isLoading={isLoading}
-      />
+      <SocialProofStats />
 
       {/* SECTION 6: REVIEWS — Real people, real trust */}
       <HomepageReviews />
@@ -202,13 +181,7 @@ const Index = () => {
           <div className="max-w-3xl mx-auto">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/15 backdrop-blur-md text-white text-sm font-semibold mb-8 border border-white/20">
               <ShoppingBag className="w-4 h-4 mr-2" />
-              Join{' '}
-              {isLoading ? (
-                <Skeleton className="w-16 h-4 mx-1 bg-white/30" />
-              ) : (
-                <span className="font-bold mx-1">{formattedVendorCount}</span>
-              )}{' '}
-              successful vendors
+              Your first order is closer than you think
             </div>
 
             <h2 className="font-display text-4xl md:text-5xl font-extrabold text-white mb-6 text-balance leading-tight">
