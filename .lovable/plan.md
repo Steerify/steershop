@@ -1,79 +1,131 @@
 
 
-# Plan: Google Business Profile Info Collection Page
+# Plan: Multi-Feature Update — Video Fix, Notifications, Domain, Floating Cart, and More
 
-## Overview
+This is a large batch of changes. Here's the breakdown organized by priority.
 
-Create a multi-step form page at `/google-business-profile` for Business plan shop owners to submit all required information for Google Business Profile creation. The form starts with a consent checkbox, then walks through 4 sections matching the provided requirements.
+---
 
-## Database
+## 1. Fix Product Video Display on Owner's Product Card (`Products.tsx`)
 
-Create a `google_business_profiles` table to store submissions:
+**Issue:** Product cards on the owner dashboard (lines 470-491) only show images. When a product has a `video_url` but no image, the card shows a generic icon. When it has both, only the image shows with a small play icon — but the video never plays.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| shop_id | uuid | FK to shops |
-| user_id | uuid | owner ref |
-| consent_given | boolean | must be true |
-| consent_given_at | timestamptz | when consent was given |
-| status | text | 'draft', 'submitted', 'in_progress', 'completed' |
-| business_name | text | official name |
-| physical_address | text | full address |
-| is_service_area_business | boolean | SAB flag |
-| service_areas | text | cities/zips if SAB |
-| primary_category | text | e.g. "Italian Restaurant" |
-| phone_number | text | local preferred |
-| website_url | text | |
-| business_hours | jsonb | { mon: {open, close}, ... } |
-| business_description | text | up to 750 chars |
-| services_list | text | comma/line separated |
-| attributes | text[] | array of highlights |
-| opening_date | text | month/year |
-| logo_url | text | 720x720 |
-| cover_photo_url | text | 1024x575 |
-| interior_photos | text[] | array of URLs |
-| exterior_photos | text[] | array of URLs |
-| team_photos | text[] | array of URLs |
-| verification_notes | text | free text for proof details |
-| admin_notes | text | for admin use |
-| created_at | timestamptz | |
-| updated_at | timestamptz | |
+**Fix:** When `product.video_url` exists and no image exists, render a `<video>` tag (muted, loop, autoPlay, playsInline) as the card thumbnail — matching what the storefront already does (ShopStorefront line 708-716). When both exist, show the image with a clickable play overlay that opens a video modal.
 
-RLS: shop owners can CRUD their own; admins can view all.
+**Files:** `src/pages/Products.tsx`
 
-## Page: `src/pages/entrepreneur/GoogleBusinessProfile.tsx`
+---
 
-A stepper form with 5 steps:
+## 2. Replace `steersolo.lovable.app` with `steersolo.com` Everywhere
 
-1. **Consent** — explanation of what data is collected and why, with a mandatory checkbox: "I authorize SteerSolo to create and manage a Google Business Profile on behalf of my business." Must tick before proceeding.
+**Files affected (9 files, 87 occurrences):**
+- `src/components/SEOSchemas.tsx`
+- `src/components/ReferralCard.tsx`
+- `src/pages/FAQ.tsx`
+- `src/pages/MyStore.tsx`
+- `src/pages/ShopStorefront.tsx`
+- `src/pages/seo/SellOnlineNigeria.tsx`
+- Plus remaining SEO pages
 
-2. **Core Business Info** — Business name, address (with SAB toggle), primary category (dropdown/combobox), phone, website, business hours grid.
+Simple find-and-replace across all files.
 
-3. **Profile Content** — Description (750 char limit with counter), services/products list, attributes (multi-select chips), opening date (month/year picker).
+---
 
-4. **Visual Assets** — Logo upload (note 720x720), cover photo (note 1024x575), interior/exterior/team photo uploads (multiple). Reuse existing `ImageUpload` component.
+## 3. Floating Cart & Contact Button on Storefront (`ShopStorefront.tsx`)
 
-5. **Verification & Submit** — Verification notes textarea explaining what proof they can provide, review summary, submit button.
+**What:** When a customer adds to cart and scrolls down past the header, show a floating bottom bar with cart count + "Contact Us" button. It disappears when user scrolls back to the top (where the header cart button is visible).
 
-Auto-saves as "draft" so owners can return and complete later. On submit, status changes to "submitted" and admin sees it in their marketing consultations page.
+**Implementation:** Add a scroll listener with `IntersectionObserver` on the header cart area. When it's out of viewport, show a fixed bottom floating bar. When it's in viewport, hide it.
 
-## Route & Navigation
+**Files:** `src/pages/ShopStorefront.tsx`
 
-- Add route `/google-business-profile` in `App.tsx` (protected, entrepreneur only)
-- Add a prominent CTA button in the Marketing Services page (`MarketingServices.tsx`) Google Profile tab linking to this form instead of just a URL paste field
+---
 
-## Admin View
+## 4. Feedback Popup for First-Time Shop Owners & Customers
 
-- Add a section in `AdminMarketingConsultations.tsx` to list and review submitted Google Business Profile requests with status management
+**What:** A small, one-time notification popup when:
+- A shop owner opens their dashboard for the first time
+- A customer visits any storefront for the first time
 
-## Files to Create/Modify
+The popup says something like "Enjoying SteerSolo? We'd love your feedback!" with a button linking to `/feedback`.
 
-| File | Action |
-|------|--------|
-| Migration SQL | Create `google_business_profiles` table with RLS |
-| `src/pages/entrepreneur/GoogleBusinessProfile.tsx` | New page — full stepper form |
-| `src/App.tsx` | Add route |
-| `src/pages/entrepreneur/MarketingServices.tsx` | Add CTA to new page in Google Profile tab |
-| `src/integrations/supabase/types.ts` | Auto-updated |
+**Implementation:** Use `localStorage` flag (`steersolo_feedback_prompted`). Show a small toast-like popup after 5 seconds on first visit. Dismissible with "Later" and "Give Feedback" buttons.
+
+**Files:** New component `src/components/FeedbackPrompt.tsx`, integrate into `Dashboard.tsx` and `ShopStorefront.tsx`
+
+---
+
+## 5. Free Plan Users: Store Visibility Even After Trial Expiry
+
+**Current behavior:** The subscription util marks users as "expired" when trial ends. This may hide their shop.
+
+**What to change:**
+- Users with ≤5 products are on the free plan — their store stays visible in `/shops` and accessible via direct link regardless of subscription status.
+- When a free trial expires, show a popup: "Your trial has ended. Choose to continue free (5 products) or upgrade." with a button to `/pricing`.
+- Free trial users get link personalization (logo/name in navbar). Free plan users (post-expiry, chose free) do NOT get personalization.
+
+**Files:** `src/utils/subscription.ts`, `src/pages/Dashboard.tsx` (trial expiry popup), `src/pages/ShopStorefront.tsx` (navbar branding logic)
+
+---
+
+## 6. Verified Badges for Current Featured Businesses
+
+**What:** Grant verified status to all current active shops as early adopter privilege.
+
+**Implementation:** Database UPDATE to set `is_verified = true` for all 9 current active shops.
+
+---
+
+## 7. Verified Seller Safety Notice for Customers
+
+**What:** A small popup/banner shown to customers on the `/shops` page encouraging them to choose verified sellers for safety.
+
+**Files:** `src/pages/Shops.tsx` — add a dismissible info banner at top
+
+---
+
+## 8. Order Email Notification (Gmail Delivery)
+
+**Current state:** Orders go to WhatsApp via `order-notifications` edge function. The function already supports email via `send-notification-email`.
+
+**What to add:** When an order is placed, also send the order details to the shop owner's email (from their profile). This happens automatically — no user action needed. The WhatsApp link is still generated for the customer to optionally send.
+
+**Files:** `supabase/functions/order-notifications/index.ts`, `src/components/CheckoutDialog.tsx`
+
+---
+
+## 9. Sales Milestone Celebration Popup
+
+**What:** When a shop owner reaches their 1st sale, 10th, 20th, 30th... (increments of 10), show a celebration popup with confetti.
+
+**Implementation:** Check total completed orders on dashboard load. Compare against milestones stored in `localStorage`. If a new milestone is reached, show a celebratory dialog with `react-dom-confetti`.
+
+**Files:** New component `src/components/SalesMilestonePopup.tsx`, integrate into `Dashboard.tsx`
+
+---
+
+## 10. Shop Location Info Update
+
+**Current state:** Shops have `state` and `country` fields. The `ShopStorefront` displays them. The `MyStore` page may not have proper location fields.
+
+**What:** Ensure `MyStore.tsx` has proper state/city selection fields and that the shop card in `/shops` also shows location.
+
+**Files:** `src/pages/MyStore.tsx`, `src/components/ShopCardEnhanced.tsx`
+
+---
+
+## Technical Summary
+
+| # | Feature | Files | Priority |
+|---|---------|-------|----------|
+| 1 | Fix video on product cards | `Products.tsx` | High |
+| 2 | Domain replacement | 9 files | High |
+| 3 | Floating cart/contact | `ShopStorefront.tsx` | High |
+| 4 | Feedback popup | New component + `Dashboard.tsx`, `ShopStorefront.tsx` | Medium |
+| 5 | Free plan store visibility + trial expiry popup | `subscription.ts`, `Dashboard.tsx`, `ShopStorefront.tsx` | High |
+| 6 | Verified badges for current shops | Database UPDATE | Medium |
+| 7 | Verified seller notice | `Shops.tsx` | Low |
+| 8 | Order email notification | `order-notifications/index.ts`, `CheckoutDialog.tsx` | Medium |
+| 9 | Sales milestone popup | New component + `Dashboard.tsx` | Medium |
+| 10 | Location fields | `MyStore.tsx`, `ShopCardEnhanced.tsx` | Low |
 
