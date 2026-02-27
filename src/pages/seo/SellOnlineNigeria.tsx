@@ -24,7 +24,7 @@ const SellOnlineNigeria = () => (
         title: "Step 2: Create Your Online Store",
         description: "You don't need a developer or technical skills. With SteerSolo, you can create a professional online store in 60 seconds.",
         points: [
-          "Sign up free at steersolo.lovable.app",
+          "Sign up free at steersolo.com",
           "Enter your business name and WhatsApp number",
           "Upload your logo or let AI create one for you",
           "Add your products with photos and prices",

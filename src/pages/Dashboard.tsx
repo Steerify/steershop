@@ -45,7 +45,8 @@ import { PayoutRequestDialog } from "@/components/PayoutRequestDialog";
 import { CouponManager } from "@/components/CouponManager";
 import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { NotificationBell } from "@/components/NotificationBell";
-
+import { FeedbackPrompt } from "@/components/FeedbackPrompt";
+import { SalesMilestonePopup } from "@/components/SalesMilestonePopup";
 // ─── Verification Progress Card ───────────────────────────────────────────────
 const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profile: any; shopFullData: any; totalSales: number }) => {
   const navigate = useNavigate();
@@ -1042,6 +1043,8 @@ const Dashboard = () => {
         onClose={() => setShowDfyPopup(false)}
         onShopCreated={() => loadData()}
       />
+      <FeedbackPrompt />
+      <SalesMilestonePopup totalSales={totalSales} />
     </div>
   );
 };

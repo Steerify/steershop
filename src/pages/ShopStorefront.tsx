@@ -86,6 +86,8 @@ const ShopStorefront = () => {
   const isBusinessPlan = ownerPlan.slug === 'business';
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const headerCartRef = useRef<HTMLDivElement>(null);
+  const [showFloatingBar, setShowFloatingBar] = useState(false);
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('storefront');
   const handleTourCallback = (data: CallBackProps) => {
@@ -98,10 +100,22 @@ const ShopStorefront = () => {
     loadShopData();
   }, [slug]);
 
+  // Floating cart/contact bar — show when header cart area is out of viewport
+  useEffect(() => {
+    const target = headerCartRef.current;
+    if (!target) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowFloatingBar(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [shop]);
+
   // Inject meta tags and JSON-LD structured data for SEO/AEO
   useEffect(() => {
     if (!shop) return;
-    const shopUrl = `https://steersolo.lovable.app/shop/${shop.shop_slug}`;
+    const shopUrl = `https://steersolo.com/shop/${shop.shop_slug}`;
     const imageUrl = shop.logo_url || shop.banner_url || '';
 
     // Page title - Business plan shows shop name alone
@@ -484,7 +498,7 @@ const ShopStorefront = () => {
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div ref={headerCartRef} className="flex flex-wrap items-center gap-2">
                       {shop.whatsapp_number && (
                         <Button
                           variant="outline"
@@ -833,6 +847,36 @@ const ShopStorefront = () => {
           </>
         )}
       </div>
+
+      {/* Floating Cart & Contact Bar */}
+      {showFloatingBar && (getTotalItems() > 0 || shop.whatsapp_number) && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-xl border-t border-border p-3 animate-fade-up safe-area-pb">
+          <div className="container mx-auto flex items-center justify-center gap-3 max-w-lg">
+            {shop.whatsapp_number && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
+                className="flex-1 min-h-[44px]"
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Contact
+              </Button>
+            )}
+            {getTotalItems() > 0 && (
+              <Button
+                size="sm"
+                onClick={() => setIsCheckoutOpen(true)}
+                className="flex-1 bg-gradient-to-r from-accent to-primary hover:opacity-90 min-h-[44px]"
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Cart ({getTotalItems()}) · ₦{getTotalAmount().toLocaleString()}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       <Footer />
       {/* Checkout Dialog */}
       {shop && (

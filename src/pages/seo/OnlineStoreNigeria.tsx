@@ -27,7 +27,7 @@ const OnlineStoreNigeria = () => (
           "Step 1: Sign up with your email or Google account",
           "Step 2: Add your business name, logo, and products",
           "Step 3: Share your unique store link and start selling",
-          "Get a professional URL like steersolo.lovable.app/shop/yourbrand",
+          "Get a professional URL like steersolo.com/shop/yourbrand",
           "Add products with photos, descriptions, and prices",
           "Accept payments automatically via Paystack"
         ]

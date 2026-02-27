@@ -467,7 +467,18 @@ const Products = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredProducts.map((product, index) => (
               <Card key={product.id} className="overflow-hidden group hover:shadow-xl hover:shadow-primary/10 transition-all border-primary/10 hover:border-primary/30" data-tour={index === 0 ? "product-card" : undefined}>
-                {product.images && product.images.length > 0 ? (
+                {product.video_url && !(product.images && product.images.length > 0) ? (
+                  <div className="relative h-48 overflow-hidden">
+                    <video
+                      src={product.video_url}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                    />
+                  </div>
+                ) : product.images && product.images.length > 0 ? (
                   <div className="relative h-48 overflow-hidden">
                     <img
                       src={product.images[0].url}
@@ -475,9 +486,15 @@ const Products = () => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     {product.video_url && (
-                      <div className="absolute top-2 right-2 bg-black/70 rounded-full p-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(product.video_url!, '_blank');
+                        }}
+                        className="absolute top-2 right-2 bg-black/70 rounded-full p-1.5 hover:bg-black/90 transition-colors cursor-pointer"
+                      >
                         <Play className="w-4 h-4 text-white" />
-                      </div>
+                      </button>
                     )}
                   </div>
                 ) : (

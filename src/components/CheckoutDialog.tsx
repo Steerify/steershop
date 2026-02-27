@@ -344,9 +344,27 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     }
   }, [isOpen]);
 
-  // Send order notification (fire-and-forget)
+  // Send order notification (fire-and-forget) — also sends email to shop owner
   const sendOrderNotification = async (orderId: string, eventType: string, extra?: Record<string, any>) => {
     try {
+      // Fetch shop owner email
+      let shopOwnerEmail: string | null = null;
+      try {
+        const { data: shopData } = await supabase
+          .from('shops')
+          .select('owner_id')
+          .eq('id', shop.id)
+          .single();
+        if (shopData?.owner_id) {
+          const { data: ownerProfile } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('id', shopData.owner_id)
+            .single();
+          shopOwnerEmail = ownerProfile?.email || null;
+        }
+      } catch (e) { /* non-blocking */ }
+
       await supabase.functions.invoke('order-notifications', {
         body: {
           orderId,
@@ -356,6 +374,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
           customerName: formData.customer_name,
           totalAmount: effectiveTotal,
           items: cart.map(item => ({ name: item.product.name, quantity: item.quantity, price: item.product.price })),
+          shopOwnerEmail,
           ...extra,
         },
       });

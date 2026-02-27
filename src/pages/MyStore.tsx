@@ -423,7 +423,7 @@ const MyStore = () => {
                   <p className="text-destructive text-sm">{errors.shop_slug}</p>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Your store URL: steersolo.lovable.app/shop/{formData.shop_slug || 'your-store'}
+                  Your store URL: steersolo.com/shop/{formData.shop_slug || 'your-store'}
                 </p>
               </div>
 

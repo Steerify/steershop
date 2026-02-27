@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Store, Package, Sparkles, BadgeCheck, MapPin } from "lucide-react";
+import { Search, Store, Package, Sparkles, BadgeCheck, MapPin, ShieldCheck, X } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { TopSellerBanner } from "@/components/TopSellerBanner";
@@ -16,6 +16,33 @@ import { Shop, Product } from "@/types/api";
 import { ExploreFilters } from "@/components/ExploreFilters";
 import { ShopCardEnhanced } from "@/components/ShopCardEnhanced";
 import { supabase } from "@/integrations/supabase/client";
+import { useState as useReactState } from "react";
+import { Button } from "@/components/ui/button";
+
+const VERIFIED_NOTICE_KEY = "steersolo_verified_notice_dismissed";
+
+const VerifiedSellerNotice = () => {
+  const [dismissed, setDismissed] = useState(() => localStorage.getItem(VERIFIED_NOTICE_KEY) === "true");
+  if (dismissed) return null;
+  return (
+    <div className="bg-accent/10 border-b border-accent/20">
+      <div className="container mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-sm">
+          <ShieldCheck className="w-4 h-4 text-accent shrink-0" />
+          <span className="text-foreground">
+            For your safety, look for the <BadgeCheck className="w-3.5 h-3.5 inline text-green-500" /> <strong>Verified</strong> badge when choosing a seller.
+          </span>
+        </div>
+        <button
+          onClick={() => { setDismissed(true); localStorage.setItem(VERIFIED_NOTICE_KEY, "true"); }}
+          className="text-muted-foreground hover:text-foreground shrink-0"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const ShopCardSkeleton = () => (
   <Card className="h-full">
@@ -528,8 +555,10 @@ const Shops = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
+
+      {/* Verified Seller Safety Notice */}
+      <VerifiedSellerNotice />
       
-      {/* Hero Section */}
       <section className="relative pt-24 sm:pt-28 pb-6 sm:pb-8 overflow-hidden">
         <AdirePattern variant="geometric" className="text-primary" opacity={0.5} />
         <div className="absolute inset-0 bg-gradient-to-b from-accent/5 via-transparent to-transparent" />
