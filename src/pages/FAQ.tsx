@@ -69,7 +69,7 @@ const faqCategories: FAQCategory[] = [
       },
       {
         question: "Can I customize my storefront?",
-        answer: "Yes! You can personalize your storefront with: a business logo, a banner image, a detailed business description, and organized product categories. Your store gets a unique URL (steersolo.lovable.app/shop/your-shop-name) that you can share anywhere."
+        answer: "Yes! You can personalize your storefront with: a business logo, a banner image, a detailed business description, and organized product categories. Your store gets a unique URL (steersolo.com/shop/your-shop-name) that you can share anywhere."
       },
       {
         question: "How do I add products and services?",

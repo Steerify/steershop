@@ -1,9 +1,9 @@
 export interface SubscriptionStatus {
-  status: 'active' | 'trial' | 'expired';
+  status: 'active' | 'trial' | 'expired' | 'free';
   daysRemaining: number;
 }
 
-export const calculateSubscriptionStatus = (profileData: any): SubscriptionStatus => {
+export const calculateSubscriptionStatus = (profileData: any, productCount?: number): SubscriptionStatus => {
   if (!profileData) {
     return { status: 'expired', daysRemaining: 0 };
   }
@@ -32,11 +32,16 @@ export const calculateSubscriptionStatus = (profileData: any): SubscriptionStatu
     }
   }
   
+  // If trial/subscription expired but user has ≤5 products, they're on Free plan
+  if (productCount !== undefined && productCount <= 5) {
+    return { status: 'free', daysRemaining: 0 };
+  }
+  
   return { status: 'expired', daysRemaining: 0 };
 };
 
 // Helper to check if user can access shop features
-export const canAccessShopFeatures = (profileData: any): boolean => {
-  const { status } = calculateSubscriptionStatus(profileData);
-  return status === 'active' || status === 'trial';
+export const canAccessShopFeatures = (profileData: any, productCount?: number): boolean => {
+  const { status } = calculateSubscriptionStatus(profileData, productCount);
+  return status === 'active' || status === 'trial' || status === 'free';
 };

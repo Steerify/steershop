@@ -135,7 +135,7 @@ const Ambassador = () => {
     }
   };
 
-  const referralLink = `https://steersolo.lovable.app/auth/signup?ref=${referralCode}`;
+  const referralLink = `https://steersolo.com/auth/signup?ref=${referralCode}`;
 
   const copyLink = async () => {
     try {

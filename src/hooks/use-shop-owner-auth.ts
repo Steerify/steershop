@@ -10,7 +10,7 @@ export const useShopOwnerAuth = () => {
   const { user, isLoading: authLoading } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'trial' | 'expired'>('trial');
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'trial' | 'expired' | 'free'>('trial');
   const [daysRemaining, setDaysRemaining] = useState(0);
   const [canAccess, setCanAccess] = useState(false);
 

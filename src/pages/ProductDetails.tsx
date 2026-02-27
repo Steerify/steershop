@@ -48,7 +48,7 @@ const ProductDetails = () => {
   // SEO: Inject meta tags and Product JSON-LD
   useEffect(() => {
     if (!product || !shop) return;
-    const shopUrl = `https://steersolo.lovable.app/shop/${slug}`;
+    const shopUrl = `https://steersolo.com/shop/${slug}`;
     const productUrl = `${shopUrl}/product/${product.id}`;
     const imageUrl = product.image_url || (product.images?.[0]?.url) || '';
     const shopName = shop.shop_name || shop.name || 'Shop';
