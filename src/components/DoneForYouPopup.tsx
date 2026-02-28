@@ -135,6 +135,46 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
     setDraftProducts(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleFreeCreate = async () => {
+    if (draftProducts.length === 0) {
+      toast({ title: "Add products", description: "Please add at least 1 product before proceeding.", variant: "destructive" });
+      return;
+    }
+
+    setIsPayingLoading(true);
+    setStep("creating");
+    setCreatingStatus("AI is crafting your store & products...");
+
+    try {
+      const { data, error } = await supabase.functions.invoke("done-for-you-setup", {
+        body: {
+          reference: "free_setup",
+          business_name: businessName,
+          whatsapp_number: whatsappNumber,
+          business_category: businessCategory,
+          products: draftProducts,
+          free_setup: true,
+        },
+      });
+
+      if (error || !data?.success) {
+        throw new Error(data?.error || error?.message || "Setup failed");
+      }
+
+      setShopId(data.shop_id);
+      setBusinessName(data.shop_name);
+      onShopCreated(data.shop_id);
+      toast({ title: "Store Created! 🎉", description: `"${data.shop_name}" is now live with ${data.products_created || 0} products!` });
+      setStep("complete");
+    } catch (error) {
+      console.error("Free DFY setup error:", error);
+      toast({ title: "Setup Error", description: error instanceof Error ? error.message : "Failed to create store", variant: "destructive" });
+      setStep("intro");
+    } finally {
+      setIsPayingLoading(false);
+    }
+  };
+
   const handlePayAndCreate = async () => {
     if (draftProducts.length === 0) {
       toast({ title: "Add products", description: "Please add at least 1 product before proceeding.", variant: "destructive" });
@@ -243,8 +283,8 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
             </DialogHeader>
 
             <div className="space-y-4 mt-2">
-              <div className="bg-accent/10 rounded-lg p-4 space-y-2">
-                <p className="font-medium text-sm">What you get for ₦5,000:</p>
+            <div className="bg-accent/10 rounded-lg p-4 space-y-2">
+                <p className="font-medium text-sm">What you get:</p>
                 <ul className="space-y-1.5">
                   {[
                     "Professional store with your business name",
@@ -252,6 +292,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
                     "Custom store link ready to share",
                     "WhatsApp ordering set up instantly",
                     "All your products listed with AI descriptions",
+                    "Free for 5 products or less • ₦5,000 for bulk AI setup (6+)",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2 text-sm">
                       <CheckCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -295,7 +336,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Package className="w-5 h-5 text-primary" />
-                Add your products (1-5)
+                Add your products
               </DialogTitle>
               <DialogDescription>
                 Add the products you sell — AI will write descriptions for each.
@@ -321,8 +362,8 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
                 </div>
               )}
 
-              {/* Add product form - limit to 5 */}
-              {draftProducts.length < 5 && (
+              {/* Add product form - no limit */}
+              {true && (
                 <div className="space-y-3 border rounded-lg p-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -347,26 +388,35 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
                   <ImageUpload value={productImage} onChange={setProductImage} folder="product-images" />
 
                   <Button size="sm" onClick={handleAddDraftProduct} disabled={!productName.trim() || !productPrice.trim()} className="w-full">
-                    <Plus className="w-3 h-3 mr-1" /> Add Product ({draftProducts.length}/5)
+                    <Plus className="w-3 h-3 mr-1" /> Add Product ({draftProducts.length})
                   </Button>
                 </div>
               )}
 
               {/* Trust + fee info */}
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Powered by Paystack — your payment is 100% secure</span>
-                </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  ₦5,000 + ₦175 processing fee = <span className="font-semibold">₦5,175 total</span>
-                </p>
+                {draftProducts.length > 5 && (
+                  <>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>Powered by Paystack — your payment is 100% secure</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">
+                      AI bulk setup: ₦5,000 + ₦175 processing fee = <span className="font-semibold">₦5,175 total</span>
+                    </p>
+                  </>
+                )}
+                {draftProducts.length <= 5 && draftProducts.length > 0 && (
+                  <p className="text-xs text-center text-green-600 font-medium">
+                    ✨ Free setup for {draftProducts.length} product{draftProducts.length > 1 ? 's' : ''}!
+                  </p>
+                )}
               </div>
 
               {/* Actions */}
               <div className="flex flex-col gap-2">
                 <Button
-                  onClick={handlePayAndCreate}
+                  onClick={draftProducts.length > 5 ? handlePayAndCreate : handleFreeCreate}
                   disabled={isPayingLoading || draftProducts.length === 0}
                   className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90"
                   size="lg"
@@ -376,7 +426,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
                   ) : (
                     <Sparkles className="w-4 h-4 mr-2" />
                   )}
-                  Pay ₦5,175 & Create My Store
+                  {draftProducts.length > 5 ? 'Pay ₦5,175 & Create My Store' : 'Create My Store — Free!'}
                 </Button>
                 <Button variant="ghost" onClick={() => setStep("intro")} className="text-muted-foreground">
                   ← Back

@@ -60,7 +60,7 @@ const Index = () => {
             {/* Trust badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 text-primary text-sm font-semibold border border-primary/15 shadow-sm animate-fade-up">
               <Sparkles className="w-4 h-4" />
-              <span>Trusted by 2,000+ Nigerian vendors</span>
+              <span>Trusted by Nigerian vendors</span>
               <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse ml-1" />
             </div>
 

@@ -138,7 +138,7 @@ export const SubscriptionCard = ({ plans, currentPlanId, onSubscriptionSuccess }
                 <div className="flex items-center gap-2 mb-2">
                   <div className={cn(
                     "w-10 h-10 rounded-xl flex items-center justify-center",
-                    plan.slug === 'basic' && "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300",
+                    (plan.slug === 'growth' || plan.slug === 'basic') && "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300",
                     plan.slug === 'pro' && "bg-primary/10 text-primary",
                     plan.slug === 'business' && "bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-300"
                   )}>

@@ -77,12 +77,10 @@ export const DynamicPricing = () => {
     switch (slug) {
       case 'free':
         return { badge: 'FREE FOREVER', highlight: false, icon: Zap, tagline: "Start selling — no risk, no cost" };
-      case 'basic':
-        return { badge: null, highlight: false, icon: Zap, tagline: "Perfect for getting started" };
+      case 'growth':
+        return { badge: null, highlight: false, icon: Zap, tagline: "Perfect for growing businesses" };
       case 'pro':
-        return { badge: 'Most Popular', highlight: true, icon: Sparkles, tagline: "Includes DFY Business Profile" };
-      case 'business':
-        return { badge: 'Best Value', highlight: false, icon: Crown, tagline: "Full Marketing Suite" };
+        return { badge: 'Most Popular', highlight: true, icon: Sparkles, tagline: "Unlimited products + AI tools" };
       default:
         return { badge: null, highlight: false, icon: Zap, tagline: "" };
     }
@@ -149,7 +147,7 @@ export const DynamicPricing = () => {
             Simple, Transparent Pricing
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
-            Start with a 15-day free trial. No credit card required.
+            Start free. Upgrade when you grow.
           </p>
 
           {/* Billing toggle */}
@@ -178,12 +176,11 @@ export const DynamicPricing = () => {
           </div>
         </div>
 
-        <div className={`grid gap-6 max-w-6xl mx-auto ${
-          plans.length <= 2 ? 'md:grid-cols-2 max-w-3xl' :
-          plans.length === 3 ? 'md:grid-cols-3 max-w-5xl' :
-          'md:grid-cols-4'
+        <div className={`grid gap-6 max-w-5xl mx-auto ${
+          plans.filter(p => p.slug !== 'business').length <= 2 ? 'md:grid-cols-2 max-w-3xl' :
+          'md:grid-cols-3'
         }`}>
-          {plans.map((plan) => {
+          {plans.filter(p => p.slug !== 'business').map((plan) => {
             const { badge, highlight, icon: PlanIcon, tagline } = getPlanMeta(plan.slug);
             const features = getAllFeatures(plan);
             const price = getPrice(plan);
@@ -254,7 +251,7 @@ export const DynamicPricing = () => {
                       className={`w-full ${highlight ? 'bg-primary hover:bg-primary/90' : ''} ${price === 0 ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
                       variant={highlight || price === 0 ? 'default' : 'outline'}
                     >
-                      {price === 0 ? 'Start Free Forever' : 'Start 15-Day Free Trial'}
+                      {price === 0 ? 'Start Free Forever' : 'Get Started'}
                     </Button>
                   </Link>
                 </CardContent>
@@ -263,12 +260,18 @@ export const DynamicPricing = () => {
           })}
         </div>
 
-        <div className="text-center mt-10 space-y-2">
+        <div className="text-center mt-10 space-y-3">
           <p className="text-muted-foreground text-sm">
-            All plans include: 15-day free trial • WhatsApp integration • Paystack payments • Customer management
+            All plans include: WhatsApp integration • Paystack payments • Customer management
           </p>
           <p className="text-muted-foreground text-xs">
             Prices in Nigerian Naira (₦). Cancel anytime.
+          </p>
+          <p className="text-sm text-muted-foreground mt-4">
+            Need a fully managed solution?{" "}
+            <a href="https://wa.me/2348000000000?text=I'm%20interested%20in%20the%20Business%20plan" className="text-primary font-semibold hover:underline">
+              Contact us for Enterprise pricing →
+            </a>
           </p>
         </div>
       </div>

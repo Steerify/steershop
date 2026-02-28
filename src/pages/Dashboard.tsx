@@ -56,7 +56,10 @@ const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profi
   const shopAge = shopFullData?.created_at ? differenceInDays(new Date(), new Date(shopFullData.created_at)) : 0;
   const isVerified = shopFullData?.is_verified === true;
 
+  const hasPaidSubscription = profile?.is_subscribed === true;
+
   const criteria = [
+    { label: "Active paid subscription", met: hasPaidSubscription, detail: hasPaidSubscription ? "Subscribed" : "Free plan", link: "/subscription" },
     { label: "Bank account verified", met: bankVerified, detail: bankVerified ? "Verified" : "Not verified", link: "/identity-verification" },
     { label: "10+ completed orders", met: completedOrders >= 10, detail: `${completedOrders}/10 orders` },
     { label: "3.5+ average rating", met: avgRating >= 3.5 || avgRating === 0, detail: avgRating > 0 ? `${avgRating.toFixed(1)} rating` : "No reviews yet" },
@@ -89,10 +92,10 @@ const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profi
             <Shield className="w-4 h-4 text-primary" />
             Verification Progress
           </h3>
-          <Badge variant="outline" className="text-xs font-bold">{metCount}/4</Badge>
+          <Badge variant="outline" className="text-xs font-bold">{metCount}/5</Badge>
         </div>
         <div className="h-2 w-full bg-muted rounded-full overflow-hidden mb-3">
-          <div className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-700 rounded-full" style={{ width: `${(metCount / 4) * 100}%` }} />
+          <div className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-700 rounded-full" style={{ width: `${(metCount / 5) * 100}%` }} />
         </div>
         <div className="space-y-2">
           {criteria.map((c, i) => (
