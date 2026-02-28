@@ -302,7 +302,7 @@ const Auth = () => {
               ))}
             </div>
             <div>
-              <p className="text-white font-bold text-sm">2,000+ active vendors</p>
+              <p className="text-white font-bold text-sm">Join growing vendors</p>
               <p className="text-white/60 text-xs">Growing every day</p>
             </div>
           </div>
