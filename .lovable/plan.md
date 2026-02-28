@@ -1,131 +1,109 @@
 
 
-# Plan: Multi-Feature Update — Video Fix, Notifications, Domain, Floating Cart, and More
+# Plan: Pricing Strategy, Dynamic Stats, DFY Popup Fix, and Verification Rules
 
-This is a large batch of changes. Here's the breakdown organized by priority.
+## 1. Verified Shop Rule: Only Paid Plans
 
----
+**Current:** Any shop can become verified if it meets order/rating thresholds. Free plan users can also get verified.
 
-## 1. Fix Product Video Display on Owner's Product Card (`Products.tsx`)
+**Fix:** Add a paid-plan check to the `VerificationProgressCard` in `Dashboard.tsx`. Add a 5th criterion: "Active paid subscription". Free-plan shops cannot display the verified badge. Also update the verification logic so `is_verified` is only granted to paid users.
 
-**Issue:** Product cards on the owner dashboard (lines 470-491) only show images. When a product has a `video_url` but no image, the card shows a generic icon. When it has both, only the image shows with a small play icon — but the video never plays.
-
-**Fix:** When `product.video_url` exists and no image exists, render a `<video>` tag (muted, loop, autoPlay, playsInline) as the card thumbnail — matching what the storefront already does (ShopStorefront line 708-716). When both exist, show the image with a clickable play overlay that opens a video modal.
-
-**Files:** `src/pages/Products.tsx`
+**Files:** `src/pages/Dashboard.tsx` (VerificationProgressCard component)
 
 ---
 
-## 2. Replace `steersolo.lovable.app` with `steersolo.com` Everywhere
+## 2. Dashboard Revenue & Sales — Already Backend-Driven
 
-**Files affected (9 files, 87 occurrences):**
-- `src/components/SEOSchemas.tsx`
-- `src/components/ReferralCard.tsx`
-- `src/pages/FAQ.tsx`
-- `src/pages/MyStore.tsx`
-- `src/pages/ShopStorefront.tsx`
-- `src/pages/seo/SellOnlineNigeria.tsx`
-- Plus remaining SEO pages
-
-Simple find-and-replace across all files.
+Looking at the code (lines 346-359), `totalRevenue` and `totalSales` are already computed from real order data fetched from the database (`paidOrders` filtered by `payment_status === 'paid'`). The screenshot shows ₦0 and 0 because the shop has zero paid orders. **No change needed here.**
 
 ---
 
-## 3. Floating Cart & Contact Button on Storefront (`ShopStorefront.tsx`)
+## 3. Replace Hardcoded Vendor Counts with Live Data
 
-**What:** When a customer adds to cart and scrolls down past the header, show a floating bottom bar with cart count + "Contact Us" button. It disappears when user scrolls back to the top (where the header cart button is visible).
+**Hardcoded values found:**
+- `src/pages/Index.tsx` line 63: "Trusted by 2,000+ Nigerian vendors"
+- `src/pages/Auth.tsx` line 305: "2,000+ active vendors"
+- `src/pages/Dashboard.tsx` line 744: "Join 5,000+ vendors on WhatsApp"
 
-**Implementation:** Add a scroll listener with `IntersectionObserver` on the header cart area. When it's out of viewport, show a fixed bottom floating bar. When it's in viewport, hide it.
+**Fix:** For `Index.tsx` and `Auth.tsx`, fetch the live shop count from the `shops` table (or use the `shops_public` view) and display it dynamically. For the WhatsApp "5,000+" — this is a community number, not a DB metric, so leave it as aspirational marketing copy (or replace with a softer "growing community of vendors").
 
-**Files:** `src/pages/ShopStorefront.tsx`
-
----
-
-## 4. Feedback Popup for First-Time Shop Owners & Customers
-
-**What:** A small, one-time notification popup when:
-- A shop owner opens their dashboard for the first time
-- A customer visits any storefront for the first time
-
-The popup says something like "Enjoying SteerSolo? We'd love your feedback!" with a button linking to `/feedback`.
-
-**Implementation:** Use `localStorage` flag (`steersolo_feedback_prompted`). Show a small toast-like popup after 5 seconds on first visit. Dismissible with "Later" and "Give Feedback" buttons.
-
-**Files:** New component `src/components/FeedbackPrompt.tsx`, integrate into `Dashboard.tsx` and `ShopStorefront.tsx`
+**Files:** `src/pages/Index.tsx`, `src/pages/Auth.tsx`
 
 ---
 
-## 5. Free Plan Users: Store Visibility Even After Trial Expiry
+## 4. Subscription Strategy: 3 Plans + Ghost Plan
 
-**Current behavior:** The subscription util marks users as "expired" when trial ends. This may hide their shop.
+**Current state:** 4 plans — Free (₦0), Basic (₦1,000/mo), Pro (₦3,000/mo), Business (₦5,000/mo).
 
-**What to change:**
-- Users with ≤5 products are on the free plan — their store stays visible in `/shops` and accessible via direct link regardless of subscription status.
-- When a free trial expires, show a popup: "Your trial has ended. Choose to continue free (5 products) or upgrade." with a button to `/pricing`.
-- Free trial users get link personalization (logo/name in navbar). Free plan users (post-expiry, chose free) do NOT get personalization.
+**Recommendation — 3 visible plans + 1 ghost:**
 
-**Files:** `src/utils/subscription.ts`, `src/pages/Dashboard.tsx` (trial expiry popup), `src/pages/ShopStorefront.tsx` (navbar branding logic)
+The "Free Trap" works best with **3 visible tiers** (cognitive simplicity) plus a hidden "ghost" plan:
 
----
+| Plan | Monthly | Yearly | Products | Purpose |
+|------|---------|--------|----------|---------|
+| **Starter (Free)** | ₦0 | ₦0 | 5 | Hook — get users dependent |
+| **Growth** (rename Basic) | ₦2,500/mo | ₦25,000/yr | 50 | Sweet spot — most users land here |
+| **Pro** | ₦5,000/mo | ₦50,000/yr | Unlimited | Power users, AI, white-label |
+| **Business** (Ghost) | Hidden | Contact us | Unlimited + DFY | Anchor — makes Pro look cheap |
 
-## 6. Verified Badges for Current Featured Businesses
+**Why this works:**
+- **Free → Growth gap is ₦2,500/mo** (~₦83/day). Affordable for any Nigerian SME generating even ₦50K/month. The 5→50 product jump is the natural trigger.
+- **Growth → Pro gap is ₦2,500/mo** — same increment, easy upgrade decision. Pro unlocks AI + unlimited + branding.
+- **Business as ghost plan:** Never shown on pricing page. Only mentioned in "Enterprise? Contact us" line. It anchors Pro as the top visible plan, making ₦5,000/mo feel like the premium choice. This is the psychological "ghost plan" method.
+- **Current ₦1,000/₦3,000/₦5,000** pricing is too low for long-term sustainability. At 9 shops, even 100% conversion = ₦45K/mo max. The new pricing triples revenue per user while staying under ₦170/day.
 
-**What:** Grant verified status to all current active shops as early adopter privilege.
-
-**Implementation:** Database UPDATE to set `is_verified = true` for all 9 current active shops.
-
----
-
-## 7. Verified Seller Safety Notice for Customers
-
-**What:** A small popup/banner shown to customers on the `/shops` page encouraging them to choose verified sellers for safety.
-
-**Files:** `src/pages/Shops.tsx` — add a dismissible info banner at top
+**Database changes:** Update `subscription_plans` — rename Basic to Growth, adjust prices, deactivate Business plan from public display (keep it as a hidden/contact-us tier).
 
 ---
 
-## 8. Order Email Notification (Gmail Delivery)
+## 5. DFY Popup — Remove ₦5,000 for ≤5 Products
 
-**Current state:** Orders go to WhatsApp via `order-notifications` edge function. The function already supports email via `send-notification-email`.
+**Current:** The DFY popup always charges ₦5,000 regardless of product count. The title says "Add your products (1-5)" limiting to 5 max.
 
-**What to add:** When an order is placed, also send the order details to the shop owner's email (from their profile). This happens automatically — no user action needed. The WhatsApp link is still generated for the customer to optionally send.
+**Fix:**
+- Remove the 5-product limit in the DFY popup — allow any number of products
+- Only charge ₦5,000 when user adds MORE than 5 products (the extra is for AI-powered bulk setup)
+- If ≤5 products, the store creation is **free** (no Paystack redirect) — just create the shop directly
+- Update copy: "Add your products" (remove "(1-5)"), update the ₦5,000 messaging to only appear when product count exceeds 5
 
-**Files:** `supabase/functions/order-notifications/index.ts`, `src/components/CheckoutDialog.tsx`
-
----
-
-## 9. Sales Milestone Celebration Popup
-
-**What:** When a shop owner reaches their 1st sale, 10th, 20th, 30th... (increments of 10), show a celebration popup with confetti.
-
-**Implementation:** Check total completed orders on dashboard load. Compare against milestones stored in `localStorage`. If a new milestone is reached, show a celebratory dialog with `react-dom-confetti`.
-
-**Files:** New component `src/components/SalesMilestonePopup.tsx`, integrate into `Dashboard.tsx`
+**Files:** `src/components/DoneForYouPopup.tsx`
 
 ---
 
-## 10. Shop Location Info Update
+## 6. DynamicPricing — Update Copy
 
-**Current state:** Shops have `state` and `country` fields. The `ShopStorefront` displays them. The `MyStore` page may not have proper location fields.
+**Current:** Still says "Start with a 15-day free trial" (line 152).
 
-**What:** Ensure `MyStore.tsx` has proper state/city selection fields and that the shop card in `/shops` also shows location.
+**Fix:** Update to "Start free. Upgrade when you grow." and remove the "15-day free trial" from the bottom text too (line 268). Also hide the Business plan from the grid (ghost plan — show "Need more? Contact us" link instead).
 
-**Files:** `src/pages/MyStore.tsx`, `src/components/ShopCardEnhanced.tsx`
+**Files:** `src/components/DynamicPricing.tsx`
+
+---
+
+## 7. Marketing Strategy (Advisory — No Code Changes)
+
+For pushing SteerSolo and shops online:
+
+1. **WhatsApp-first distribution:** Each shop owner shares their `steersolo.com/shop/slug` link in their existing WhatsApp status/groups. The platform grows through merchant networks, not paid ads.
+2. **SEO landing pages** (already built — 6 pages targeting high-intent Nigerian keywords). Keep publishing content.
+3. **AI crawler optimization** (already done — 25+ crawlers whitelisted).
+4. **Referral program** (already built — Ambassador system). Incentivize with reward points.
+5. **Content marketing:** Use the course system to create "How to sell on WhatsApp" tutorials that rank on Google/YouTube.
+6. **Instagram/TikTok UGC:** Encourage shop owners to post their SteerSolo store links with a branded hashtag.
+7. **Google Business Profile** (just built) — each merchant gets local SEO visibility.
+
+No code changes needed for this item.
 
 ---
 
 ## Technical Summary
 
-| # | Feature | Files | Priority |
-|---|---------|-------|----------|
-| 1 | Fix video on product cards | `Products.tsx` | High |
-| 2 | Domain replacement | 9 files | High |
-| 3 | Floating cart/contact | `ShopStorefront.tsx` | High |
-| 4 | Feedback popup | New component + `Dashboard.tsx`, `ShopStorefront.tsx` | Medium |
-| 5 | Free plan store visibility + trial expiry popup | `subscription.ts`, `Dashboard.tsx`, `ShopStorefront.tsx` | High |
-| 6 | Verified badges for current shops | Database UPDATE | Medium |
-| 7 | Verified seller notice | `Shops.tsx` | Low |
-| 8 | Order email notification | `order-notifications/index.ts`, `CheckoutDialog.tsx` | Medium |
-| 9 | Sales milestone popup | New component + `Dashboard.tsx` | Medium |
-| 10 | Location fields | `MyStore.tsx`, `ShopCardEnhanced.tsx` | Low |
+| # | Change | Files | Priority |
+|---|--------|-------|----------|
+| 1 | Verified badge only for paid plans | `Dashboard.tsx` | High |
+| 2 | Revenue/sales already live | None | N/A |
+| 3 | Dynamic vendor counts (replace hardcoded) | `Index.tsx`, `Auth.tsx` | High |
+| 4 | 3-plan pricing + ghost Business plan | DB migration, `DynamicPricing.tsx` | High |
+| 5 | DFY popup: free for ≤5 products, ₦5K for >5 | `DoneForYouPopup.tsx` | High |
+| 6 | Update pricing page copy | `DynamicPricing.tsx` | Medium |
 
