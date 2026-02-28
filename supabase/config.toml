@@ -1,95 +1,67 @@
 project_id = "hwkcqgmtinbgyjjgcgmp"
 
-[functions.paystack-initialize]
-verify_jwt = false
-
-[functions.paystack-verify]
-verify_jwt = false
-
-[functions.paystack-webhook]
-verify_jwt = false
-
-[functions.paystack-setup-service]
-verify_jwt = false
-
-[functions.send-notification-email]
-verify_jwt = false
-
-[functions.migrate-images]
-verify_jwt = false
-
-[functions.paystack-list-banks]
-verify_jwt = false
-
-[functions.paystack-create-subaccount]
-verify_jwt = false
-
-[functions.stroke-my-shop]
-verify_jwt = false
-
-[functions.know-this-shop]
-verify_jwt = false
-
-[functions.marketing-ai-assist]
-verify_jwt = false
-
-[functions.send-password-reset]
-verify_jwt = false
-
-[functions.send-phone-otp]
-verify_jwt = false
-
-[functions.verify-phone-otp]
-verify_jwt = false
-
-[functions.verify-identity]
-verify_jwt = false
-
-[functions.delete-account]
-verify_jwt = false
-
-[functions.logistics-get-rates]
-verify_jwt = false
-
-[functions.logistics-book-delivery]
-verify_jwt = false
-
-[functions.logistics-track]
-verify_jwt = false
-
-[functions.logistics-webhook]
-verify_jwt = false
-
-[functions.shop-og-meta]
-verify_jwt = false
-
-[functions.subscription-reminder]
-verify_jwt = false
-
-[functions.engagement-reminders]
-verify_jwt = false
-
-[functions.order-notifications]
-verify_jwt = false
-
-[functions.ai-product-description]
-verify_jwt = false
-
-[functions.check-ambassador-tier]
-verify_jwt = false
-
-[functions.done-for-you-setup]
-verify_jwt = false
-
-[functions.done-for-you-initialize]
-verify_jwt = false
-
-[functions.generate-sitemap]
-verify_jwt = false
-
-[functions.paystack-initialize-order]
-verify_jwt = false
-
-[functions.generate-ad-copy]
-verify_jwt = false
-
+[functions]
+  [functions.ai-product-description]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.check-ambassador-tier]
+    verify_jwt = false
+  [functions.delete-account]
+    verify_jwt = false
+  [functions.done-for-you-initialize]
+    verify_jwt = false
+  [functions.done-for-you-setup]
+    verify_jwt = false
+  [functions.engagement-reminders]
+    verify_jwt = false
+  [functions.generate-ad-copy]
+    verify_jwt = false
+  [functions.generate-sitemap]
+    verify_jwt = false
+  [functions.know-this-shop]
+    verify_jwt = false
+  [functions.logistics-book-delivery]
+    verify_jwt = false
+  [functions.logistics-get-rates]
+    verify_jwt = false
+  [functions.logistics-track]
+    verify_jwt = false
+  [functions.logistics-webhook]
+    verify_jwt = false
+  [functions.marketing-ai-assist]
+    verify_jwt = false
+  [functions.migrate-images]
+    verify_jwt = false
+  [functions.order-notifications]
+    verify_jwt = false
+  [functions.paystack-create-subaccount]
+    verify_jwt = false
+  [functions.paystack-initialize]
+    verify_jwt = false
+  [functions.paystack-initialize-order]
+    verify_jwt = false
+  [functions.paystack-list-banks]
+    verify_jwt = false
+  [functions.paystack-setup-service]
+    verify_jwt = false
+  [functions.paystack-verify]
+    verify_jwt = false
+  [functions.paystack-webhook]
+    verify_jwt = false
+  [functions.send-notification-email]
+    verify_jwt = false
+  [functions.send-password-reset]
+    verify_jwt = false
+  [functions.send-phone-otp]
+    verify_jwt = false
+  [functions.shop-og-meta]
+    verify_jwt = false
+  [functions.stroke-my-shop]
+    verify_jwt = false
+  [functions.subscription-reminder]
+    verify_jwt = false
+  [functions.verify-identity]
+    verify_jwt = false
+  [functions.verify-phone-otp]
+    verify_jwt = false
