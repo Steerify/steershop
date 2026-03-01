@@ -27,7 +27,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Img src={LOGO_URL} width="120" height="40" alt="SteerSolo" style={logo} />
+          <Img src={LOGO_URL} width="120" alt="SteerSolo" style={logo} />
         </Section>
         <Heading style={h1}>Confirm your identity</Heading>
         <Text style={text}>Use the code below to verify it's you:</Text>

@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SITE_URL = "https://steersolo.lovable.app";
+const SITE_URL = "https://steersolo.com";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -117,7 +117,7 @@ ${urls}
     return new Response(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://steersolo.lovable.app/</loc>
+    <loc>https://steersolo.com/</loc>
   </url>
 </urlset>`, {
       headers: { 'Content-Type': 'application/xml', ...corsHeaders },

@@ -33,6 +33,7 @@ const productService = {
         name: data.name,
         description: data.description,
         price: data.price,
+        compare_price: data.comparePrice || null,
         stock_quantity: data.inventory,
         image_url: primaryImage,
         type: data.type || 'product',
@@ -93,7 +94,7 @@ const productService = {
       slug: p.name.toLowerCase().replace(/\s+/g, '-'),
       description: p.description || '',
       price: Number(p.price),
-      comparePrice: undefined,
+      comparePrice: p.compare_price ? Number(p.compare_price) : undefined,
       inventory: p.stock_quantity,
       images: p.image_url ? [{ url: p.image_url, alt: p.name, position: 0 }] : [],
       averageRating: p.average_rating ? Number(p.average_rating) : undefined,
@@ -137,7 +138,7 @@ const productService = {
       slug: product.name.toLowerCase().replace(/\s+/g, '-'),
       description: product.description || '',
       price: Number(product.price),
-      comparePrice: undefined,
+      comparePrice: product.compare_price ? Number(product.compare_price) : undefined,
       inventory: product.stock_quantity,
       images: product.image_url ? [{ url: product.image_url, alt: product.name, position: 0 }] : [],
       averageRating: product.average_rating ? Number(product.average_rating) : undefined,
@@ -162,6 +163,7 @@ const productService = {
     if (data.name) updateData.name = data.name;
     if (data.description !== undefined) updateData.description = data.description;
     if (data.price !== undefined) updateData.price = data.price;
+    if (data.comparePrice !== undefined) updateData.compare_price = data.comparePrice || null;
     if (data.inventory !== undefined) updateData.stock_quantity = data.inventory;
     if (data.images && data.images.length > 0) updateData.image_url = data.images[0].url;
     if (data.type) updateData.type = data.type;

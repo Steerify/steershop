@@ -164,7 +164,13 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
       setShopId(data.shop_id);
       setBusinessName(data.shop_name);
       onShopCreated(data.shop_id);
-      toast({ title: "Store Created! 🎉", description: `"${data.shop_name}" is now live with ${data.products_created || 0} products!` });
+      toast({ title: "Store Created! 🎉", description: `"${data.shop_name}" is being verified.` });
+      
+      // Send welcome email (fire and forget)
+      supabase.functions.invoke("send-welcome-email", {
+        body: { shopName: data.shop_name, shopSlug: data.shop_slug || businessName.toLowerCase().replace(/\s+/g, '-') },
+      }).catch(console.error);
+      
       setStep("complete");
     } catch (error) {
       console.error("Free DFY setup error:", error);
@@ -452,18 +458,30 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
         {step === "complete" && (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-4">
-              <CheckCircle className="w-10 h-10 text-primary" />
+              <ShieldCheck className="w-10 h-10 text-primary" />
             </div>
-            <h3 className="text-xl font-bold mb-2">Your store is live! 🎉</h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              {businessName} is ready with all your products.
+            <h3 className="text-xl font-bold mb-2">Your store is being verified! 🔍</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              <strong>{businessName}</strong> has been created with all your products.
             </p>
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6 text-left w-full">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300 mb-2">⏳ Verification in progress</p>
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                Your shop is being reviewed and will be live within <strong>30 minutes to 7 hours</strong>. We'll notify you when it's ready!
+              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-500 mt-2">
+                While you wait, you can set up your payment method, add more products, and customize your store.
+              </p>
+            </div>
 
             <div className="flex flex-col gap-2 w-full max-w-xs">
               <Button onClick={() => { onClose(); navigate("/my-store"); }}>
-                <Store className="w-4 h-4 mr-2" /> View My Store
+                <Store className="w-4 h-4 mr-2" /> Set Up My Store
               </Button>
-              <Button variant="outline" onClick={() => { onClose(); navigate("/subscription"); }}>
+              <Button variant="outline" onClick={() => { onClose(); navigate("/products"); }}>
+                <Package className="w-4 h-4 mr-2" /> Add More Products
+              </Button>
+              <Button variant="ghost" onClick={() => { onClose(); navigate("/subscription"); }}>
                 <ArrowRight className="w-4 h-4 mr-2" /> Choose a Plan
               </Button>
             </div>

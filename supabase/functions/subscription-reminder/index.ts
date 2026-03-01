@@ -125,7 +125,7 @@ serve(async (req) => {
       <p>Don't let your business go offline! Renew now to keep selling without interruption.</p>
       
       <center>
-        <a href="https://steersolo.lovable.app/subscription" class="cta-button">
+        <a href="https://steersolo.com/subscription" class="cta-button">
           Renew Now →
         </a>
       </center>

@@ -95,7 +95,7 @@ serve(async (req) => {
               <li>💳 Secure payment via Paystack</li>
               <li>📊 Sales dashboard & analytics</li>
             </ul>
-            <p><a href="https://steersolo.lovable.app/select-role" style="display:inline-block;padding:12px 24px;background:#16A349;color:white;text-decoration:none;border-radius:8px;font-weight:bold">Complete Your Account →</a></p>
+            <p><a href="https://steersolo.com/select-role" style="display:inline-block;padding:12px 24px;background:#16A349;color:white;text-decoration:none;border-radius:8px;font-weight:bold">Complete Your Account →</a></p>
             <p style="color:#666;font-size:12px">You're receiving this because you signed up for SteerSolo.</p>
           </div>`
         );
@@ -139,7 +139,7 @@ serve(async (req) => {
               <li><strong>Set up payments</strong> — Paystack or bank transfer</li>
             </ol>
             <p>💡 <strong>Tip:</strong> Shops with logos and descriptions get 3x more visits!</p>
-            <p><a href="https://steersolo.lovable.app/my-store" style="display:inline-block;padding:12px 24px;background:#16A349;color:white;text-decoration:none;border-radius:8px;font-weight:bold">Create Your Store →</a></p>
+            <p><a href="https://steersolo.com/my-store" style="display:inline-block;padding:12px 24px;background:#16A349;color:white;text-decoration:none;border-radius:8px;font-weight:bold">Create Your Store →</a></p>
             <p style="color:#666;font-size:12px">You're receiving this because you signed up as a shop owner on SteerSolo.</p>
           </div>`
         );
@@ -199,7 +199,7 @@ serve(async (req) => {
               <li>📝 Write descriptions that answer customer questions</li>
               <li>💰 Start with competitive pricing to get your first reviews</li>
             </ul>
-            <p><a href="https://steersolo.lovable.app/products" style="display:inline-block;padding:12px 24px;background:#16A349;color:white;text-decoration:none;border-radius:8px;font-weight:bold">Add Your First Product →</a></p>
+            <p><a href="https://steersolo.com/products" style="display:inline-block;padding:12px 24px;background:#16A349;color:white;text-decoration:none;border-radius:8px;font-weight:bold">Add Your First Product →</a></p>
           </div>`
         );
         if (sent) {
@@ -299,8 +299,8 @@ serve(async (req) => {
 
         // Use shop_slug for the store link
         const storeLink = shop.shop_slug
-          ? `steersolo.lovable.app/shop/${shop.shop_slug}`
-          : `steersolo.lovable.app/dashboard`;
+          ? `steersolo.com/shop/${shop.shop_slug}`
+          : `steersolo.com/dashboard`;
 
         const sent = await sendEmail(
           owner.email,
@@ -317,7 +317,7 @@ serve(async (req) => {
               <li>Post on WhatsApp Status with a product photo</li>
               <li>Ask 3 friends to share your store link</li>
             </ol>
-            <p><a href="https://steersolo.lovable.app/dashboard" style="display:inline-block;padding:12px 24px;background:#16A349;color:white;text-decoration:none;border-radius:8px;font-weight:bold">Go to Dashboard →</a></p>
+            <p><a href="https://steersolo.com/dashboard" style="display:inline-block;padding:12px 24px;background:#16A349;color:white;text-decoration:none;border-radius:8px;font-weight:bold">Go to Dashboard →</a></p>
             <p style="color:#666;font-size:12px">You're receiving this because you own a store on SteerSolo.</p>
           </div>`
         );
@@ -370,7 +370,7 @@ serve(async (req) => {
             </ul>
             <p style="font-size:16px"><strong>Plans start at just ₦1,500/month</strong> — less than the cost of one customer you could be losing every day.</p>
             <p style="text-align:center;margin:24px 0">
-              <a href="https://steersolo.lovable.app/subscription" style="display:inline-block;padding:14px 32px;background:#16A349;color:white;text-decoration:none;border-radius:8px;font-weight:bold;font-size:16px">Reactivate My Store →</a>
+              <a href="https://steersolo.com/subscription" style="display:inline-block;padding:14px 32px;background:#16A349;color:white;text-decoration:none;border-radius:8px;font-weight:bold;font-size:16px">Reactivate My Store →</a>
             </p>
             <p style="color:#666;font-size:12px">You're receiving this because your SteerSolo subscription has expired. Resubscribe to stop receiving these reminders.</p>
           </div>`

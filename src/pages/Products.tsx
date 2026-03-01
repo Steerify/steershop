@@ -93,6 +93,7 @@ const Products = () => {
     name: "",
     description: "",
     price: "",
+    comparePrice: "",
     inventory: "",
     is_available: true,
     type: "product" as "product" | "service",
@@ -167,6 +168,7 @@ const Products = () => {
       name: "",
       description: "",
       price: "",
+      comparePrice: "",
       inventory: "",
       is_available: true,
       type: "product",
@@ -223,6 +225,7 @@ const Products = () => {
         name: product.name,
         description: product.description || "",
         price: product.price.toString(),
+        comparePrice: product.comparePrice ? product.comparePrice.toString() : "",
         inventory: product.inventory.toString(),
         is_available: product.is_available ?? true,
         type: product.type || "product",
@@ -291,11 +294,12 @@ const Products = () => {
 
       const productData = {
         shopId: shop.id,
-        categoryId: "default-category", // Placeholder
+        categoryId: "default-category",
         name: formData.name,
         slug: formData.name.toLowerCase().replace(/ /g, '-'),
         description: formData.description,
         price: parseFloat(formData.price),
+        comparePrice: formData.comparePrice ? parseFloat(formData.comparePrice) : undefined,
         inventory: parseInt(formData.inventory),
         images: images,
         type: formData.type,
@@ -519,9 +523,19 @@ const Products = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 mb-4">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Price:</span>
-                      <span className="font-semibold text-primary">₦{product.price.toLocaleString()}</span>
+                      <div className="flex items-center gap-2">
+                        {product.comparePrice && product.comparePrice > product.price && (
+                          <span className="text-sm text-muted-foreground line-through">₦{product.comparePrice.toLocaleString()}</span>
+                        )}
+                        <span className="font-semibold text-primary">₦{product.price.toLocaleString()}</span>
+                        {product.comparePrice && product.comparePrice > product.price && (
+                          <Badge variant="destructive" className="text-xs">
+                            -{Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}%
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{product.type === 'service' ? 'Available Slots:' : 'Stock:'}</span>
@@ -663,7 +677,18 @@ const Products = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price (₦) *</Label>
+                  <Label htmlFor="comparePrice">Original Price (₦)</Label>
+                  <Input
+                    id="comparePrice"
+                    type="number"
+                    value={formData.comparePrice}
+                    onChange={(e) => setFormData({ ...formData, comparePrice: e.target.value })}
+                    placeholder="e.g. 5000"
+                  />
+                  <p className="text-xs text-muted-foreground">Leave blank if no discount</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="price">Selling Price (₦) *</Label>
                   <Input
                     id="price"
                     type="number"
@@ -673,12 +698,19 @@ const Products = () => {
                     className={errors.price ? "border-destructive" : ""}
                   />
                   {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
+                  {formData.comparePrice && formData.price && parseFloat(formData.comparePrice) > parseFloat(formData.price) && (
+                    <p className="text-xs text-accent font-semibold">
+                      🏷️ {Math.round(((parseFloat(formData.comparePrice) - parseFloat(formData.price)) / parseFloat(formData.comparePrice)) * 100)}% discount
+                    </p>
+                  )}
                   {priceSuggestion && (
                     <p className="text-xs text-muted-foreground mt-1">
                       💡 Suggested: ₦{priceSuggestion.min.toLocaleString()} – ₦{priceSuggestion.max.toLocaleString()}
                     </p>
                   )}
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="inventory">
                     {formData.type === 'service' ? 'Available Slots' : 'Stock Quantity'} *

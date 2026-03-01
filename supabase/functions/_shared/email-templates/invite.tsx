@@ -35,7 +35,7 @@ export const InviteEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Img src={LOGO_URL} width="120" height="40" alt="SteerSolo" style={logo} />
+          <Img src={LOGO_URL} width="120" alt="SteerSolo" style={logo} />
         </Section>
         <Heading style={h1}>You've been invited! 🎉</Heading>
         <Text style={text}>
