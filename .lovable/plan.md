@@ -1,109 +1,159 @@
 
 
-# Plan: Pricing Strategy, Dynamic Stats, DFY Popup Fix, and Verification Rules
+# Plan: Security Hardening, Discount Prices, Email Fixes, AI Bulk Upload, Store Verification Popup, and More
 
-## 1. Verified Shop Rule: Only Paid Plans
-
-**Current:** Any shop can become verified if it meets order/rating thresholds. Free plan users can also get verified.
-
-**Fix:** Add a paid-plan check to the `VerificationProgressCard` in `Dashboard.tsx`. Add a 5th criterion: "Active paid subscription". Free-plan shops cannot display the verified badge. Also update the verification logic so `is_verified` is only granted to paid users.
-
-**Files:** `src/pages/Dashboard.tsx` (VerificationProgressCard component)
+This is a large multi-part request. Here's the plan broken into prioritized batches.
 
 ---
 
-## 2. Dashboard Revenue & Sales — Already Backend-Driven
+## Batch 1 — High Priority (Security, Email Fixes, Domain Cleanup)
 
-Looking at the code (lines 346-359), `totalRevenue` and `totalSales` are already computed from real order data fetched from the database (`paidOrders` filtered by `payment_status === 'paid'`). The screenshot shows ₦0 and 0 because the shop has zero paid orders. **No change needed here.**
+### 1A. Security Hardening
 
----
+Audit and fix across the codebase:
 
-## 3. Replace Hardcoded Vendor Counts with Live Data
+- **RLS audit:** Run the database linter. Verify all tables with user data have proper RLS. Check for overly permissive policies (e.g. `true` on INSERT).
+- **Input sanitization:** Audit all `dangerouslySetInnerHTML` usage (if any). Ensure DOMPurify is used where needed. Add zod validation to any forms missing it.
+- **Edge function auth:** Verify all edge functions check `Authorization` header and validate the user via `supabase.auth.getUser()` before processing.
+- **Rate limiting:** Ensure auth rate limits are enforced on login/signup.
+- **XSS prevention:** Audit WhatsApp message construction (URL encoding), storefront rendering of user-generated content.
 
-**Hardcoded values found:**
-- `src/pages/Index.tsx` line 63: "Trusted by 2,000+ Nigerian vendors"
-- `src/pages/Auth.tsx` line 305: "2,000+ active vendors"
-- `src/pages/Dashboard.tsx` line 744: "Join 5,000+ vendors on WhatsApp"
+**Files:** Multiple edge functions, `CheckoutDialog.tsx`, `ShopStorefront.tsx`, etc.
 
-**Fix:** For `Index.tsx` and `Auth.tsx`, fetch the live shop count from the `shops` table (or use the `shops_public` view) and display it dynamically. For the WhatsApp "5,000+" — this is a community number, not a DB metric, so leave it as aspirational marketing copy (or replace with a softer "growing community of vendors").
+### 1B. Fix Email Templates
 
-**Files:** `src/pages/Index.tsx`, `src/pages/Auth.tsx`
+- **Logo deformation:** Change `<Img>` from `width="120" height="40"` to `width="120" height="auto"` (or actual aspect ratio) across all 6 templates.
+- **Link fix:** Change `siteUrl` default from `steersolo.lovable.app` to `https://steersolo.com` in `auth-email-hook/index.ts` (`SAMPLE_PROJECT_URL`).
+- **Body text update:** Change "You're one step away from launching your online store" to "You're one step away from launching your WhatsApp-powered online store."
 
----
+**Files:** `supabase/functions/auth-email-hook/index.ts`, `supabase/functions/_shared/email-templates/signup.tsx`
 
-## 4. Subscription Strategy: 3 Plans + Ghost Plan
+### 1C. Replace Remaining `steersolo.lovable.app` References
 
-**Current state:** 4 plans — Free (₦0), Basic (₦1,000/mo), Pro (₦3,000/mo), Business (₦5,000/mo).
+Still 75 occurrences in 7 files (edge functions + `index.html`). Replace all with `steersolo.com`.
 
-**Recommendation — 3 visible plans + 1 ghost:**
-
-The "Free Trap" works best with **3 visible tiers** (cognitive simplicity) plus a hidden "ghost" plan:
-
-| Plan | Monthly | Yearly | Products | Purpose |
-|------|---------|--------|----------|---------|
-| **Starter (Free)** | ₦0 | ₦0 | 5 | Hook — get users dependent |
-| **Growth** (rename Basic) | ₦2,500/mo | ₦25,000/yr | 50 | Sweet spot — most users land here |
-| **Pro** | ₦5,000/mo | ₦50,000/yr | Unlimited | Power users, AI, white-label |
-| **Business** (Ghost) | Hidden | Contact us | Unlimited + DFY | Anchor — makes Pro look cheap |
-
-**Why this works:**
-- **Free → Growth gap is ₦2,500/mo** (~₦83/day). Affordable for any Nigerian SME generating even ₦50K/month. The 5→50 product jump is the natural trigger.
-- **Growth → Pro gap is ₦2,500/mo** — same increment, easy upgrade decision. Pro unlocks AI + unlimited + branding.
-- **Business as ghost plan:** Never shown on pricing page. Only mentioned in "Enterprise? Contact us" line. It anchors Pro as the top visible plan, making ₦5,000/mo feel like the premium choice. This is the psychological "ghost plan" method.
-- **Current ₦1,000/₦3,000/₦5,000** pricing is too low for long-term sustainability. At 9 shops, even 100% conversion = ₦45K/mo max. The new pricing triples revenue per user while staying under ₦170/day.
-
-**Database changes:** Update `subscription_plans` — rename Basic to Growth, adjust prices, deactivate Business plan from public display (keep it as a hidden/contact-us tier).
+**Files:** `index.html`, `supabase/functions/generate-sitemap/index.ts`, `supabase/functions/shop-og-meta/index.ts`, `supabase/functions/engagement-reminders/index.ts`, `supabase/functions/subscription-reminder/index.ts`, `supabase/functions/auth-email-hook/index.ts`
 
 ---
 
-## 5. DFY Popup — Remove ₦5,000 for ≤5 Products
+## Batch 2 — Product Discount Feature
 
-**Current:** The DFY popup always charges ₦5,000 regardless of product count. The title says "Add your products (1-5)" limiting to 5 max.
+### 2A. Database: Add `compare_price` Column
 
-**Fix:**
-- Remove the 5-product limit in the DFY popup — allow any number of products
-- Only charge ₦5,000 when user adds MORE than 5 products (the extra is for AI-powered bulk setup)
-- If ≤5 products, the store creation is **free** (no Paystack redirect) — just create the shop directly
-- Update copy: "Add your products" (remove "(1-5)"), update the ₦5,000 messaging to only appear when product count exceeds 5
+Add a nullable `compare_price` (numeric) column to the `products` table. This is the original/crossed-out price. The existing `price` field becomes the discounted/selling price.
 
-**Files:** `src/components/DoneForYouPopup.tsx`
+### 2B. Products Page: Discount Fields
 
----
+Add "Original Price" and "Selling Price" fields side by side in the product create/edit form. When original > selling, show the discount percentage.
 
-## 6. DynamicPricing — Update Copy
+### 2C. Storefront Display
 
-**Current:** Still says "Start with a 15-day free trial" (line 152).
+On `ShopStorefront.tsx` and `ProductDetails.tsx`, show the `compare_price` with a strikethrough next to the actual `price`. Example: ~~₦5,000~~ ₦3,500.
 
-**Fix:** Update to "Start free. Upgrade when you grow." and remove the "15-day free trial" from the bottom text too (line 268). Also hide the Business plan from the grid (ghost plan — show "Need more? Contact us" link instead).
-
-**Files:** `src/components/DynamicPricing.tsx`
+**Files:** DB migration, `Products.tsx`, `ShopStorefront.tsx`, `ProductDetails.tsx`, `product.service.ts`, `types/api.ts`
 
 ---
 
-## 7. Marketing Strategy (Advisory — No Code Changes)
+## Batch 3 — Store Creation Verification Popup + Welcome Email
 
-For pushing SteerSolo and shops online:
+### 3A. Post-Store-Creation Popup
 
-1. **WhatsApp-first distribution:** Each shop owner shares their `steersolo.com/shop/slug` link in their existing WhatsApp status/groups. The platform grows through merchant networks, not paid ads.
-2. **SEO landing pages** (already built — 6 pages targeting high-intent Nigerian keywords). Keep publishing content.
-3. **AI crawler optimization** (already done — 25+ crawlers whitelisted).
-4. **Referral program** (already built — Ambassador system). Incentivize with reward points.
-5. **Content marketing:** Use the course system to create "How to sell on WhatsApp" tutorials that rank on Google/YouTube.
-6. **Instagram/TikTok UGC:** Encourage shop owners to post their SteerSolo store links with a branded hashtag.
-7. **Google Business Profile** (just built) — each merchant gets local SEO visibility.
+After the DoneForYouPopup completes or after a shop is created via `MyStore.tsx`, show a dialog: "Your shop is being reviewed and will be live within 30 minutes to 7 hours. We'll notify you when it's ready!"
 
-No code changes needed for this item.
+**Files:** `DoneForYouPopup.tsx` (add a "verification" step), `MyStore.tsx`
+
+### 3B. Welcome Email After Signup (Shop Owner Intro)
+
+Create a new edge function `send-welcome-email` that fires after a shop owner creates their first store. Email includes: dashboard overview, how to add products, how to share their store link, payment setup reminder, and support contact.
+
+**Files:** New `supabase/functions/send-welcome-email/index.ts`, trigger from `DoneForYouPopup.tsx` or `MyStore.tsx` after shop creation
 
 ---
 
-## Technical Summary
+## Batch 4 — Admin GBP Submissions View
 
-| # | Change | Files | Priority |
-|---|--------|-------|----------|
-| 1 | Verified badge only for paid plans | `Dashboard.tsx` | High |
-| 2 | Revenue/sales already live | None | N/A |
-| 3 | Dynamic vendor counts (replace hardcoded) | `Index.tsx`, `Auth.tsx` | High |
-| 4 | 3-plan pricing + ghost Business plan | DB migration, `DynamicPricing.tsx` | High |
-| 5 | DFY popup: free for ≤5 products, ₦5K for >5 | `DoneForYouPopup.tsx` | High |
-| 6 | Update pricing page copy | `DynamicPricing.tsx` | Medium |
+The `AdminMarketingConsultations.tsx` page currently only fetches from `marketing_services` table. It doesn't query `google_business_profiles` at all.
+
+Add a new tab "Google Business Profiles" to the admin page that lists all submitted GBP requests with status management (draft/submitted/in_progress/completed).
+
+**Files:** `src/pages/admin/AdminMarketingConsultations.tsx`
+
+---
+
+## Batch 5 — AI Bulk Product Upload (10 Photos → Auto-Generated Cards)
+
+### 5A. New Component: `BulkProductUpload.tsx`
+
+A dialog/page where the shop owner uploads up to 10 images (or videos). For each, the AI:
+1. Analyzes the image to identify the product
+2. Generates: name, description, category, suggested price range
+3. Creates a draft product card the owner can review and confirm
+
+Uses the Lovable AI gateway (google/gemini-2.5-flash with vision) — no extra API key needed.
+
+### 5B. New Edge Function: `ai-bulk-product-create`
+
+Accepts an array of image URLs. For each image, calls the AI to generate product info. Returns an array of draft product objects.
+
+### 5C. Integration
+
+Add a "Bulk Upload with AI" button on the Products page. After AI generates drafts, owner reviews and confirms. Products are then batch-inserted.
+
+**Files:** New `src/components/BulkProductUpload.tsx`, new `supabase/functions/ai-bulk-product-create/index.ts`, `Products.tsx`
+
+---
+
+## Batch 6 — Mobile Responsiveness (Orders Page)
+
+Audit `Orders.tsx` (690 lines). The order cards, tables, and dialogs need responsive treatment:
+- Use `flex-col` on mobile for order details
+- Make invoice template scrollable on small screens
+- Ensure approval dialog doesn't overflow on mobile
+
+**Files:** `src/pages/Orders.tsx`
+
+---
+
+## Batch 7 — SEO for Paid Shops (AI & Search Engine Discovery)
+
+Enhance the `shop-og-meta` edge function to generate richer structured data (JSON-LD `LocalBusiness` schema) for paid shops. This makes paid shops discoverable by Google, Bing, and AI assistants (ChatGPT, Perplexity, etc.).
+
+Also ensure the `generate-sitemap` function includes all active paid shop URLs.
+
+**Files:** `supabase/functions/shop-og-meta/index.ts`, `supabase/functions/generate-sitemap/index.ts`
+
+---
+
+## Batch 8 — Ads Manager Enhancement (Advisory)
+
+Running actual Facebook/Google/TikTok ads through the SteerSolo interface requires official API integrations:
+- **Facebook/Instagram Ads:** Requires a Facebook Marketing API app, Business Manager setup, and user OAuth with `ads_management` scope. This is a significant integration (~2-4 weeks of work).
+- **Google Ads:** Requires Google Ads API developer token and OAuth flow. Also substantial.
+- **TikTok:** Requires TikTok Marketing API access.
+
+**Recommendation:** This is a major feature that goes beyond what can be scaffolded in a single session. The current AI ad copy generator is the right first step. For Phase 2, I recommend starting with the **Facebook Marketing API** integration since it covers both Facebook and Instagram. I'll need your Facebook Business Manager ID and App credentials to proceed. Want to start with Facebook Ads integration specifically?
+
+---
+
+## Subscription Check
+
+The subscription flow (Paystack initialize → verify → update profile) is already wired up. I'll verify the `paystack-initialize` and `paystack-verify` edge functions handle the new Growth/Pro pricing correctly and that the webhook processes recurring payments.
+
+---
+
+## Summary
+
+| # | Feature | Priority | Effort |
+|---|---------|----------|--------|
+| 1A | Security hardening | Critical | Medium |
+| 1B | Email template fixes | Critical | Small |
+| 1C | Domain cleanup (edge functions) | Critical | Small |
+| 2 | Product discount (compare_price) | High | Medium |
+| 3A | Store verification popup | High | Small |
+| 3B | Welcome email for shop owners | High | Medium |
+| 4 | Admin GBP view | High | Small |
+| 5 | AI bulk product upload | High | Large |
+| 6 | Mobile responsiveness (Orders) | Medium | Medium |
+| 7 | SEO for paid shops | Medium | Small |
+| 8 | Full ads manager (Facebook API etc.) | Low | Very Large |
 
