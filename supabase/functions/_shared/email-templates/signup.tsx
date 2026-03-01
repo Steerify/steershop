@@ -37,11 +37,11 @@ export const SignupEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Img src={LOGO_URL} width="120" height="40" alt="SteerSolo" style={logo} />
+          <Img src={LOGO_URL} width="120" alt="SteerSolo" style={logo} />
         </Section>
         <Heading style={h1}>Welcome aboard! 🎉</Heading>
         <Text style={text}>
-          You're one step away from launching your online store on{' '}
+          You're one step away from launching your WhatsApp-powered online store on{' '}
           <Link href={siteUrl} style={link}>
             <strong>SteerSolo</strong>
           </Link>

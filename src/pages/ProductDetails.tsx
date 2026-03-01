@@ -317,8 +317,16 @@ const ProductDetails = () => {
             </div>
 
             {/* Price */}
-            <div className="flex items-baseline gap-3">
+            <div className="flex items-baseline gap-3 flex-wrap">
+              {product.comparePrice && product.comparePrice > product.price && (
+                <span className="text-2xl text-muted-foreground line-through">₦{product.comparePrice.toLocaleString()}</span>
+              )}
               <span className="text-4xl font-bold gradient-text">₦{product.price.toLocaleString()}</span>
+              {product.comparePrice && product.comparePrice > product.price && (
+                <Badge variant="destructive">
+                  -{Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}% OFF
+                </Badge>
+              )}
               <Badge 
                 variant={product.inventory > 0 ? "default" : "destructive"}
                 className={product.inventory > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}

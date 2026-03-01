@@ -6,8 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const DEFAULT_IMAGE = "https://steersolo.lovable.app/favicon.ico";
-const SITE_URL = "https://steersolo.lovable.app";
+const DEFAULT_IMAGE = "https://steersolo.com/favicon.ico";
+const SITE_URL = "https://steersolo.com";
 
 function escapeHtml(text: string): string {
   return text

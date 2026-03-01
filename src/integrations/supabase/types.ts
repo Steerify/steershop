@@ -1358,6 +1358,7 @@ export type Database = {
           average_rating: number | null
           booking_required: boolean | null
           category: string
+          compare_price: number | null
           created_at: string
           description: string | null
           duration_minutes: number | null
@@ -1377,6 +1378,7 @@ export type Database = {
           average_rating?: number | null
           booking_required?: boolean | null
           category?: string
+          compare_price?: number | null
           created_at?: string
           description?: string | null
           duration_minutes?: number | null
@@ -1396,6 +1398,7 @@ export type Database = {
           average_rating?: number | null
           booking_required?: boolean | null
           category?: string
+          compare_price?: number | null
           created_at?: string
           description?: string | null
           duration_minutes?: number | null

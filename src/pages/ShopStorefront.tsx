@@ -53,6 +53,7 @@ interface Product {
   name: string;
   description: string | null;
   price: number;
+  compare_price: number | null;
   stock_quantity: number;
   is_available: boolean;
   image_url: string | null;
@@ -783,7 +784,17 @@ const ShopStorefront = () => {
                   </CardHeader>
                   <CardContent className="pb-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold gradient-text">₦{product.price.toLocaleString()}</span>
+                      <div className="flex items-center gap-2">
+                        {product.compare_price && Number(product.compare_price) > product.price && (
+                          <span className="text-sm text-muted-foreground line-through">₦{Number(product.compare_price).toLocaleString()}</span>
+                        )}
+                        <span className="text-2xl font-bold gradient-text">₦{product.price.toLocaleString()}</span>
+                        {product.compare_price && Number(product.compare_price) > product.price && (
+                          <Badge variant="destructive" className="text-xs">
+                            -{Math.round(((Number(product.compare_price) - product.price) / Number(product.compare_price)) * 100)}%
+                          </Badge>
+                        )}
+                      </div>
                       {product.type === 'service' ? (
                         product.duration_minutes && (
                           <Badge variant="outline" className="bg-purple-500/10 border-purple-500/20 text-purple-600">
