@@ -30,7 +30,8 @@ import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { DoneForYouPopup } from "@/components/DoneForYouPopup";
-
+import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { BulkProductUpload } from "@/components/BulkProductUpload";
 // Helper function to format UUID with hyphens
 const formatUUIDWithHyphens = (uuid: string): string => {
   if (!uuid) return uuid;
@@ -105,6 +106,7 @@ const Products = () => {
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [priceSuggestion, setPriceSuggestion] = useState<{ min: number; max: number } | null>(null);
   const [showDfyPopup, setShowDfyPopup] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('products');
@@ -417,10 +419,16 @@ const Products = () => {
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">Manage your catalog - sell products or offer services</p>
           </div>
-          <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90 min-h-[44px]" data-tour="add-item-btn">
-            <Plus className="w-4 h-4 mr-2" />
-            Add New
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button onClick={() => setShowBulkUpload(true)} variant="outline" className="w-full sm:w-auto min-h-[44px]">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Bulk Upload with AI
+            </Button>
+            <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90 min-h-[44px]" data-tour="add-item-btn">
+              <Plus className="w-4 h-4 mr-2" />
+              Add New
+            </Button>
+          </div>
         </div>
 
         {/* Tabs for filtering */}
@@ -828,6 +836,15 @@ const Products = () => {
           }
         }}
       />
+      {shop && (
+        <BulkProductUpload
+          open={showBulkUpload}
+          onClose={() => setShowBulkUpload(false)}
+          shopId={shop.id}
+          onSuccess={() => loadShopAndProducts()}
+        />
+      )}
+      <MobileBottomNav />
       </PageWrapper>
     </>
   );

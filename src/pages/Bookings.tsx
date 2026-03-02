@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -425,6 +426,7 @@ const Bookings = () => {
           </div>
         )}
       </div>
+      <MobileBottomNav />
     </PageWrapper>
   );
 };

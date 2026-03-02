@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -723,6 +724,7 @@ const MyStore = () => {
         showSkipButton
         showProgress
       />
+      <MobileBottomNav />
     </PageWrapper>
   );
 };

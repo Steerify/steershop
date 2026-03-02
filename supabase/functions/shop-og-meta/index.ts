@@ -163,7 +163,7 @@ serve(async (req) => {
     
     const { data: shop, error } = await supabase
       .from('shops')
-      .select('id, shop_name, description, logo_url, banner_url, whatsapp_number, average_rating, total_reviews, state, country')
+      .select('id, shop_name, description, logo_url, banner_url, whatsapp_number, average_rating, total_reviews, state, country, owner_id')
       .eq('shop_slug', slug)
       .eq('is_active', true)
       .single();
@@ -171,6 +171,17 @@ serve(async (req) => {
     if (error || !shop) {
       console.log("Shop not found for slug:", slug);
       return generateDefaultHTML();
+    }
+
+    // Check if owner is subscribed for richer SEO
+    let isSubscribed = false;
+    if (shop.owner_id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_subscribed')
+        .eq('id', shop.owner_id)
+        .single();
+      isSubscribed = profile?.is_subscribed === true;
     }
 
     const shopUrl = `${SITE_URL}/shop/${slug}`;
@@ -230,6 +241,17 @@ serve(async (req) => {
         phone = phone.startsWith('234') ? `+${phone}` : `+234${phone.replace(/^0+/, '')}`;
       }
       jsonLd.telephone = phone;
+      jsonLd.sameAs = [`https://wa.me/${phone.replace('+', '')}`];
+    }
+
+    // Price range for paid shops
+    if (isSubscribed && shopProducts.length > 0) {
+      const prices = shopProducts.map(p => p.price).filter(Boolean);
+      if (prices.length > 0) {
+        const minP = Math.min(...prices);
+        const maxP = Math.max(...prices);
+        jsonLd.priceRange = `₦${minP.toLocaleString()} - ₦${maxP.toLocaleString()}`;
+      }
     }
 
     if (shop.average_rating && shop.total_reviews) {

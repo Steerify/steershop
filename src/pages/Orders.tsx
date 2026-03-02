@@ -24,6 +24,7 @@ import { TourTooltip } from "@/components/tours/TourTooltip";
 import { ordersTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
 import { InvoiceTemplate } from "@/components/InvoiceTemplate";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -440,29 +441,29 @@ const Orders = () => {
             {orders.map((order, index) => (
               <Card key={order.id} className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group" data-tour={index === 0 ? "order-card" : undefined}>
                 <CardHeader className="border-b border-border/50">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="flex items-center gap-2 mb-2 font-heading">
-                        Order #{order.id?.slice(0, 8) || 'N/A'}
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="flex flex-wrap items-center gap-2 mb-2 font-heading text-base sm:text-lg">
+                        <span className="truncate">Order #{order.id?.slice(0, 8) || 'N/A'}</span>
                         <Badge variant="outline" className={getStatusColor(order.status)} data-tour={index === 0 ? "order-status" : undefined}>
                           {getStatusIcon(order.status)}
-                          <span className="ml-2 capitalize">{order.status?.replace(/_/g, ' ') || 'unknown'}</span>
+                          <span className="ml-1 sm:ml-2 capitalize text-xs sm:text-sm">{order.status?.replace(/_/g, ' ') || 'unknown'}</span>
                         </Badge>
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-xs sm:text-sm">
                         {order.profiles?.full_name || order.customer_name || 'Unknown Customer'} • {order.profiles?.email || order.customer_email || 'No email'}
                       </CardDescription>
                       {order.payment_status === "on_delivery" && (
-                        <Badge variant="secondary" className="mt-1 bg-gold/10 text-gold border-gold/20">
+                        <Badge variant="secondary" className="mt-1 bg-gold/10 text-gold border-gold/20 text-xs">
                           Pay on Delivery
                         </Badge>
                       )}
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    <div className="text-left sm:text-right shrink-0">
+                      <p className="text-xl sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                         ₦{parseFloat(order.total_amount || 0).toLocaleString()}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {order.created_at ? format(new Date(order.created_at), "MMM dd, yyyy • h:mm a") : 'Date unavailable'}
                       </p>
                       {order.paid_at && (
@@ -477,12 +478,12 @@ const Orders = () => {
                   <div className="space-y-4">
                     <div className="border border-border/50 rounded-lg divide-y divide-border/50">
                       {order.order_items?.map((item: any) => (
-                        <div key={item.id} className="p-4 flex items-center gap-4 hover:bg-muted/30 transition-colors">
+                         <div key={item.id} className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/30 transition-colors">
                           {item.products?.image_url && (
                             <img
                               src={item.products.image_url}
                               alt={item.products.name}
-                              className="w-16 h-16 object-cover rounded-lg shadow-sm"
+                              className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg shadow-sm shrink-0"
                             />
                           )}
                           <div className="flex-1">
@@ -520,102 +521,60 @@ const Orders = () => {
                     {/* Order Actions */}
                     <div className="flex flex-wrap gap-2" data-tour={index === 0 ? "order-actions" : undefined}>
                       {order.status === "awaiting_approval" && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleReviewOrder(order)}
-                          className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
-                        >
-                          <ThumbsUp className="w-4 h-4 mr-2" />
-                          Review Order
+                        <Button size="sm" onClick={() => handleReviewOrder(order)} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                          <ThumbsUp className="w-4 h-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Review Order</span>
                         </Button>
                       )}
 
                       {order.status === "confirmed" && (
-                        <Button
-                          size="sm"
-                          onClick={() => updateOrderStatus(order.id, "processing")}
-                          disabled={updatingOrderId === order.id}
-                        >
-                          {updatingOrderId === order.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                          ) : (
-                            <Package className="w-4 h-4 mr-2" />
-                          )}
-                          Start Processing
+                        <Button size="sm" onClick={() => updateOrderStatus(order.id, "processing")} disabled={updatingOrderId === order.id}>
+                          {updatingOrderId === order.id ? <Loader2 className="w-4 h-4 animate-spin sm:mr-2" /> : <Package className="w-4 h-4 sm:mr-2" />}
+                          <span className="hidden sm:inline">Start Processing</span>
                         </Button>
                       )}
 
                       {order.status === "processing" && (
-                        <Button
-                          size="sm"
-                          onClick={() => updateOrderStatus(order.id, "out_for_delivery")}
-                          disabled={updatingOrderId === order.id}
-                        >
-                          <Truck className="w-4 h-4 mr-2" />
-                          Out for Delivery
+                        <Button size="sm" onClick={() => updateOrderStatus(order.id, "out_for_delivery")} disabled={updatingOrderId === order.id}>
+                          <Truck className="w-4 h-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Out for Delivery</span>
                         </Button>
                       )}
 
                       {order.status === "out_for_delivery" && (
-                        <Button
-                          size="sm"
-                          onClick={() => updateOrderStatus(order.id, "delivered")}
-                          disabled={updatingOrderId === order.id}
-                          className="bg-green-500 hover:bg-green-600"
-                        >
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Mark Delivered
+                        <Button size="sm" onClick={() => updateOrderStatus(order.id, "delivered")} disabled={updatingOrderId === order.id} className="bg-green-500 hover:bg-green-600">
+                          <CheckCircle className="w-4 h-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Mark Delivered</span>
                         </Button>
                       )}
 
                       {order.payment_status !== "paid" && order.status !== "cancelled" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => markAsPaid(order)}
-                          disabled={updatingOrderId === order.id}
-                          className="border-green-500/30 text-green-600 hover:bg-green-500/10"
-                          data-tour={index === 0 ? "mark-paid" : undefined}
-                        >
-                          <Banknote className="w-4 h-4 mr-2" />
-                          Mark as Paid
+                        <Button size="sm" variant="outline" onClick={() => markAsPaid(order)} disabled={updatingOrderId === order.id}
+                          className="border-green-500/30 text-green-600 hover:bg-green-500/10" data-tour={index === 0 ? "mark-paid" : undefined}>
+                          <Banknote className="w-4 h-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Mark as Paid</span>
                         </Button>
                       )}
 
                       {order.status !== "cancelled" && order.status !== "delivered" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => updateOrderStatus(order.id, "cancelled")}
-                          disabled={updatingOrderId === order.id}
-                          className="border-destructive/30 text-destructive hover:bg-destructive/10"
-                        >
-                          <XCircle className="w-4 h-4 mr-2" />
-                          Cancel
+                        <Button size="sm" variant="outline" onClick={() => updateOrderStatus(order.id, "cancelled")} disabled={updatingOrderId === order.id}
+                          className="border-destructive/30 text-destructive hover:bg-destructive/10">
+                          <XCircle className="w-4 h-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Cancel</span>
                         </Button>
                       )}
 
                       {order.customer_phone && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openWhatsAppWithOrder(order)}
-                          className="border-green-500/30 text-green-600 hover:bg-green-500/10"
-                          data-tour={index === 0 ? "whatsapp-btn" : undefined}
-                        >
-                          <MessageCircle className="w-4 h-4 mr-2" />
-                          WhatsApp
+                        <Button size="sm" variant="outline" onClick={() => openWhatsAppWithOrder(order)}
+                          className="border-green-500/30 text-green-600 hover:bg-green-500/10" data-tour={index === 0 ? "whatsapp-btn" : undefined}>
+                          <MessageCircle className="w-4 h-4 sm:mr-2" />
+                          <span className="hidden sm:inline">WhatsApp</span>
                         </Button>
                       )}
 
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setInvoiceOrder(order)}
-                        className="border-primary/30 text-primary hover:bg-primary/10"
-                      >
-                        <FileText className="w-4 h-4 mr-2" />
-                        Invoice
+                      <Button size="sm" variant="outline" onClick={() => setInvoiceOrder(order)} className="border-primary/30 text-primary hover:bg-primary/10">
+                        <FileText className="w-4 h-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Invoice</span>
                       </Button>
                     </div>
                   </div>
@@ -683,6 +642,7 @@ const Orders = () => {
           }
         }}
       />
+      <MobileBottomNav />
     </PageWrapper>
   );
 };
