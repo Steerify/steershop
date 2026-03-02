@@ -179,39 +179,8 @@ const QuickActionTile = ({
   </button>
 );
 
-// ─── Mobile Bottom Nav ─────────────────────────────────────────────────────────
-const MobileBottomNav = ({ navigate }: { navigate: (path: string) => void }) => {
-  const items = [
-    { icon: Home, label: "Home", path: "/dashboard" },
-    { icon: Package, label: "Products", path: "/products" },
-    { icon: ShoppingCart, label: "Orders", path: "/orders" },
-    { icon: Megaphone, label: "Marketing", path: "/marketing" },
-    { icon: Settings, label: "Settings", path: "/settings" },
-  ];
-  const currentPath = window.location.pathname;
-
-  return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card/95 backdrop-blur-xl border-t border-border safe-area-pb">
-      <div className="flex items-center justify-around px-2 py-2">
-        {items.map((item) => {
-          const isActive = currentPath === item.path;
-          return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-200 ${
-                isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <item.icon className={`w-5 h-5 ${isActive ? "text-primary" : ""}`} />
-              <span className="text-[10px] font-medium">{item.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    </nav>
-  );
-};
+// MobileBottomNav is now a shared component
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 // ─── Main Dashboard Component ──────────────────────────────────────────────────
 const Dashboard = () => {
@@ -237,6 +206,9 @@ const Dashboard = () => {
   const [payoutBalance, setPayoutBalance] = useState({ totalRevenue: 0, totalWithdrawn: 0, totalPending: 0, availableBalance: 0 });
   const [isPayoutDialogOpen, setIsPayoutDialogOpen] = useState(false);
   const [showDfyPopup, setShowDfyPopup] = useState(false);
+  const [quickActionsExpanded, setQuickActionsExpanded] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('quickActionsExpanded') || 'false'); } catch { return false; }
+  });
   const [hasNoShop, setHasNoShop] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "actions" | "wallet">("overview");
 
@@ -844,9 +816,20 @@ const Dashboard = () => {
                   <Zap className="w-4 h-4 text-primary" />
                   Quick Actions
                 </h2>
+                <button
+                  onClick={() => {
+                    const next = !quickActionsExpanded;
+                    setQuickActionsExpanded(next);
+                    try { localStorage.setItem('quickActionsExpanded', JSON.stringify(next)); } catch {}
+                  }}
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                >
+                  {quickActionsExpanded ? "Show less" : "Show more"}
+                  {quickActionsExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </button>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3" data-tour="quick-actions">
-                {QuickActions.map((action) => (
+                {(quickActionsExpanded ? QuickActions : QuickActions.slice(0, 6)).map((action) => (
                   <QuickActionTile
                     key={action.path + action.label}
                     icon={action.icon}
@@ -1014,7 +997,7 @@ const Dashboard = () => {
       </div>
 
       {/* ─── Mobile Bottom Navigation ────────────────────── */}
-      <MobileBottomNav navigate={navigate} />
+      <MobileBottomNav />
 
       {/* Joyride Tour */}
       <Joyride

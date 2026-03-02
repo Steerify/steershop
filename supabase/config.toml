@@ -1,6 +1,8 @@
 project_id = "hwkcqgmtinbgyjjgcgmp"
 
 [functions]
+  [functions.ai-bulk-product-create]
+    verify_jwt = false
   [functions.ai-product-description]
     verify_jwt = false
   [functions.auth-email-hook]

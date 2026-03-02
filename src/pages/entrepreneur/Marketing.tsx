@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useNavigate } from "react-router-dom";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
@@ -280,6 +281,7 @@ const Marketing = () => {
           </TabsContent>
         </Tabs>
       </div>
+      <MobileBottomNav />
     </PageWrapper>
   );
 };

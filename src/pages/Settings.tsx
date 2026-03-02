@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { PageWrapper } from "@/components/PageWrapper";
@@ -254,6 +255,7 @@ const Settings = () => {
           </Card>
         </div>
       </div>
+      <MobileBottomNav />
     </PageWrapper>
   );
 };
