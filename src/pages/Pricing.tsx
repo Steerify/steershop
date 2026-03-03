@@ -12,24 +12,24 @@ import logo from "@/assets/steersolo-logo.jpg";
 
 const planProfiles: Record<string, { bestFor: string; outcome: string; timeSaved: string }> = {
   free: {
-    bestFor: "Testing the waters — zero risk",
+    bestFor: "Testing the Daily Selling System",
     outcome: "Launch your first store in 10 minutes",
-    timeSaved: "Start selling immediately, no commitment",
+    timeSaved: "Start building your One Link habit today",
   },
   basic: {
-    bestFor: "New sellers just starting out on WhatsApp",
-    outcome: "Get your first 5 orders in 14 days",
+    bestFor: "Solo Hustlers transitioning to Structured Sellers",
+    outcome: "Master the 30-Day Routine",
     timeSaved: "Save ~3 hours/week on order management",
   },
   pro: {
-    bestFor: "Growing sellers with 10+ orders/month",
-    outcome: "Double your conversion rate in 30 days",
-    timeSaved: "Save ~8 hours/week with AI tools & automation",
+    bestFor: "Structured Sellers with 10+ orders/month",
+    outcome: "Automate your Daily Sales Workflow",
+    timeSaved: "Save ~8 hours/week with AI & automation",
   },
   business: {
-    bestFor: "Established sellers scaling to ₦500K+/month",
+    bestFor: "Established brands scaling beyond WhatsApp",
     outcome: "Full marketing suite to 3x your revenue",
-    timeSaved: "Save ~15 hours/week with done-for-you services",
+    timeSaved: "Save ~15 hours/week with done-for-you support",
   },
 };
 
@@ -253,10 +253,10 @@ const Pricing = () => {
         {!user && (
           <div className="text-center mt-12 sm:mt-16 py-8 sm:py-12 bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl">
             <h3 className="text-xl sm:text-2xl font-heading font-bold mb-4">
-              Ready to stop losing sales?
+              Ready to break the WhatsApp chaos?
             </h3>
             <p className="text-muted-foreground mb-6">
-              Join thousands of Nigerian entrepreneurs converting WhatsApp traffic into orders.
+              Join thousands of Nigerian entrepreneurs building their Daily Selling System.
             </p>
             <Button 
               size="lg" 

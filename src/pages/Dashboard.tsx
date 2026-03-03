@@ -47,6 +47,9 @@ import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { NotificationBell } from "@/components/NotificationBell";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { SalesMilestonePopup } from "@/components/SalesMilestonePopup";
+import { DailySellerRoutine } from "@/components/DailySellerRoutine";
+import { ProductNudges } from "@/components/ProductNudges";
+import { StructuredSellingChallenge } from "@/components/StructuredSellingChallenge";
 // ─── Verification Progress Card ───────────────────────────────────────────────
 const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profile: any; shopFullData: any; totalSales: number }) => {
   const navigate = useNavigate();
@@ -690,7 +693,10 @@ const Dashboard = () => {
       </nav>
 
       {/* ─── Main Content ─────────────────────────────────── */}
-      <div className="container mx-auto px-4 py-5 pb-24 md:pb-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-3 pb-24 md:pb-8 max-w-7xl space-y-4">
+        
+        {/* Daily Product Nudges */}
+        <ProductNudges />
 
         {/* Welcome Hero */}
         <div className="relative rounded-3xl overflow-hidden mb-6 bg-gradient-to-br from-primary via-primary/90 to-accent p-6 shadow-xl">
@@ -807,6 +813,12 @@ const Dashboard = () => {
             gradient="bg-gradient-to-br from-purple-600 to-purple-700"
             trendValue={pendingOrders > 0 ? "Need attention" : "All clear!"}
           />
+        </div>
+
+        {/* Challenge & Routine Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <DailySellerRoutine />
+          <StructuredSellingChallenge />
         </div>
 
         {/* Verification Progress Card */}

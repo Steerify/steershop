@@ -8,9 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { couponService } from "@/services/coupon.service";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Minus, Plus, ShoppingCart, Trash2, CreditCard, MessageCircle, Copy, Check, Upload, Camera, User, Building2 } from "lucide-react";
+import { Loader2, Minus, Plus, ShoppingCart, Trash2, CreditCard, MessageCircle, Copy, Check, Upload, Camera, User, Building2, Truck } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { z } from "zod";
+import deliveryService, { DeliveryRate } from "@/services/delivery.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { saveCheckoutDraft, clearCheckoutDraft } from "@/store/slices/formSlice";
 import { clearCart } from "@/store/slices/cartSlice";
@@ -50,6 +51,8 @@ const checkoutSchema = z.object({
   customer_email: z.string().trim().email("Invalid email address").max(255, "Email too long"),
   customer_phone: z.string().trim().min(10, "Phone number must be at least 10 digits").max(20, "Phone number too long"),
   delivery_address: z.string().trim().min(10, "Address must be at least 10 characters").max(500, "Address too long"),
+  delivery_city: z.string().trim().min(2, "City is required"),
+  delivery_state: z.string().trim().min(2, "State is required"),
 });
 
 // Paystack fee calculator: 1.5% + NGN 100, capped at NGN 2,000
@@ -146,8 +149,11 @@ const openWhatsAppWithOrderDetails = (
     customerEmail: string;
     customerPhone: string;
     deliveryAddress: string;
+    deliveryCity: string;
+    deliveryState: string;
     cart: CartItem[];
     totalAmount: number;
+    shippingFee?: number;
     paymentReference?: string;
     shopName: string;
     paymentMethod: string;
@@ -223,7 +229,7 @@ const openWhatsAppWithOrderDetails = (
       `Name: ${orderDetails.customerName}%0A` +
       `Phone: ${orderDetails.customerPhone}%0A` +
       `Email: ${orderDetails.customerEmail}%0A` +
-      `Delivery Address: ${orderDetails.deliveryAddress}%0A%0A` +
+      `Delivery Address: ${orderDetails.deliveryAddress}, ${orderDetails.deliveryCity}, ${orderDetails.deliveryState}%0A%0A` +
       `Order ID: ${orderDetails.orderId}%0A%0A` +
       `Please confirm delivery timeline.`;
   }
@@ -266,6 +272,8 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     customer_email: checkoutDraft?.customerEmail || "",
     customer_phone: checkoutDraft?.customerPhone || "",
     delivery_address: checkoutDraft?.deliveryAddress || "",
+    delivery_city: "",
+    delivery_state: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -281,7 +289,12 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
-  const effectiveTotal = Math.max(0, totalAmount - couponDiscount);
+  // Shipping state
+  const [shippingRates, setShippingRates] = useState<DeliveryRate[]>([]);
+  const [isFetchingRates, setIsFetchingRates] = useState(false);
+  const [selectedRate, setSelectedRate] = useState<DeliveryRate | null>(null);
+
+  const effectiveTotal = Math.max(0, totalAmount + (selectedRate?.price || 0) - couponDiscount);
   const paystackFee = calculatePaystackFee(effectiveTotal);
   const totalWithFee = effectiveTotal + paystackFee;
 
@@ -329,6 +342,58 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     loadUserProfile();
   }, [isOpen, user, isAuthLoading]);
 
+  // Fetch shipping rates when address is reasonably complete
+  useEffect(() => {
+    const fetchRates = async () => {
+      if (
+        formData.customer_name &&
+        formData.customer_phone &&
+        formData.delivery_address.length > 5 &&
+        formData.delivery_city.length > 2 &&
+        formData.delivery_state.length > 2
+      ) {
+        setIsFetchingRates(true);
+        try {
+          // Shop's pickup address (mocked for now, in a real scenario you'd fetch the shop's default address)
+          const pickupAddress = {
+             name: shop.shop_name,
+             phone: shop.whatsapp_number || '0000000000',
+             address: 'Lagos, Nigeria', // Fallback
+             city: 'Lagos',
+             state: 'Lagos',
+             country: 'NG'
+          };
+          
+          const rates = await deliveryService.getRates({
+            order_id: 'temp_' + Date.now(),
+            pickup_address: pickupAddress,
+            delivery_address: {
+              name: formData.customer_name,
+              phone: formData.customer_phone,
+              address: formData.delivery_address,
+              city: formData.delivery_city,
+              state: formData.delivery_state,
+              country: 'NG'
+            },
+            weight_kg: cart.length * 0.5 // Estimated weight
+          });
+          
+          setShippingRates(rates);
+          if (rates.length > 0 && !selectedRate) {
+             setSelectedRate(rates[0]); // Auto-select first/cheapest rate
+          }
+        } catch (error) {
+          console.error("Failed to fetch shipping rates", error);
+        } finally {
+          setIsFetchingRates(false);
+        }
+      }
+    };
+
+    const debounceTimeout = setTimeout(fetchRates, 1000); // 1s debounce
+    return () => clearTimeout(debounceTimeout);
+  }, [formData.delivery_address, formData.delivery_city, formData.delivery_state]);
+
   // Reset states when dialog closes
   useEffect(() => {
     if (!isOpen) {
@@ -341,6 +406,8 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       setCouponCode("");
       setCouponDiscount(0);
       setAppliedCoupon(null);
+      setShippingRates([]);
+      setSelectedRate(null);
     }
   }, [isOpen]);
 
@@ -502,8 +569,11 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
         customerEmail: formData.customer_email,
         customerPhone: formData.customer_phone,
         deliveryAddress: formData.delivery_address,
+        deliveryCity: formData.delivery_city,
+        deliveryState: formData.delivery_state,
         cart,
-        totalAmount,
+        totalAmount: effectiveTotal,
+        shippingFee: selectedRate?.price,
         shopName: shop.shop_name,
         paymentMethod: "delivery_before"
       });
@@ -535,6 +605,8 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       customer_email: "",
       customer_phone: "",
       delivery_address: "",
+      delivery_city: "",
+      delivery_state: "",
     });
     setOrderCreated(false);
     setCurrentOrderId(null);
@@ -584,6 +656,8 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
           customer_email: formData.customer_email,
           customer_phone: formData.customer_phone,
           delivery_address: formData.delivery_address,
+          delivery_city: formData.delivery_city,
+          delivery_state: formData.delivery_state,
           total_amount: effectiveTotal,
           status: paymentChoice === "delivery_before" ? "awaiting_approval" : "pending",
           payment_status: paymentChoice === "pay_before" ? "pending" : "unpaid",
@@ -606,6 +680,38 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
         .insert(orderItems);
 
       if (itemsError) throw itemsError;
+
+      // Book shipping if a rate was selected
+      if (selectedRate) {
+        try {
+           await deliveryService.bookDelivery({
+             order_id: orderId,
+             shop_id: shop.id,
+             rate_id: selectedRate.rate_id,
+             provider: 'terminal',
+             pickup_address: {
+               name: shop.shop_name,
+               phone: shop.whatsapp_number || '0000000000',
+               address: 'Shop Location', // Should use actual shop address
+               city: 'Lagos',
+               state: 'Lagos',
+               country: 'NG'
+             },
+             delivery_address: {
+               name: formData.customer_name,
+               phone: formData.customer_phone,
+               address: formData.delivery_address,
+               city: formData.delivery_city,
+               state: formData.delivery_state,
+               country: 'NG'
+             },
+             delivery_fee: selectedRate.price,
+             weight_kg: cart.length * 0.5,
+           });
+        } catch (shippingError) {
+           console.error("Failed to book shipping, but order created:", shippingError);
+        }
+      }
 
       setCurrentOrderId(orderId);
       setOrderCreated(true);
@@ -660,8 +766,11 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       customerEmail: formData.customer_email,
       customerPhone: formData.customer_phone,
       deliveryAddress: formData.delivery_address,
+      deliveryCity: formData.delivery_city,
+      deliveryState: formData.delivery_state,
       cart,
-      totalAmount,
+      totalAmount: effectiveTotal,
+      shippingFee: selectedRate?.price,
       shopName: shop.shop_name,
       paymentMethod: "pay_before",
       requiresProof: true
@@ -768,6 +877,12 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 <span className="text-sm text-muted-foreground">Subtotal:</span>
                 <span className="text-sm">₦{totalAmount.toLocaleString()}</span>
               </div>
+              {selectedRate && (
+                <div className="flex justify-between items-center text-muted-foreground">
+                  <span className="text-sm">Delivery ({selectedRate.carrier}):</span>
+                  <span className="text-sm">₦{selectedRate.price.toLocaleString()}</span>
+                </div>
+              )}
               {couponDiscount > 0 && (
                 <div className="flex justify-between items-center text-primary">
                   <span className="text-sm">Coupon ({appliedCoupon?.code}):</span>
@@ -866,13 +981,43 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 )}
               </div>
 
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="delivery_city" className="text-sm">City *</Label>
+                  <Input
+                    id="delivery_city"
+                    value={formData.delivery_city}
+                    onChange={(e) => handleFormChange('delivery_city', e.target.value)}
+                    placeholder="E.g. Ikeja"
+                    className={`min-h-[44px] ${errors.delivery_city ? "border-destructive" : ""}`}
+                  />
+                  {errors.delivery_city && (
+                    <p className="text-xs sm:text-sm text-destructive">{errors.delivery_city}</p>
+                  )}
+                </div>
+
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="delivery_state" className="text-sm">State *</Label>
+                  <Input
+                    id="delivery_state"
+                    value={formData.delivery_state}
+                    onChange={(e) => handleFormChange('delivery_state', e.target.value)}
+                    placeholder="E.g. Lagos"
+                    className={`min-h-[44px] ${errors.delivery_state ? "border-destructive" : ""}`}
+                  />
+                  {errors.delivery_state && (
+                    <p className="text-xs sm:text-sm text-destructive">{errors.delivery_state}</p>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-1.5 sm:space-y-2">
                 <Label htmlFor="delivery_address" className="text-sm">Delivery Address *</Label>
                 <Textarea
                   id="delivery_address"
                   value={formData.delivery_address}
                   onChange={(e) => handleFormChange('delivery_address', e.target.value)}
-                  placeholder="Enter your full delivery address including landmarks"
+                  placeholder="Enter your full street address including landmarks"
                   rows={3}
                   className={`min-h-[80px] ${errors.delivery_address ? "border-destructive" : ""}`}
                 />
@@ -880,6 +1025,49 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                   <p className="text-xs sm:text-sm text-destructive">{errors.delivery_address}</p>
                 )}
               </div>
+
+              {/* Shipping Rates Selection */}
+              {(shippingRates.length > 0 || isFetchingRates) && (
+                <div className="space-y-2 sm:space-y-3 pt-2">
+                  <Label className="text-sm flex items-center justify-between">
+                    <span>Delivery Method</span>
+                    {isFetchingRates && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+                  </Label>
+                  
+                  {isFetchingRates ? (
+                    <div className="p-4 border rounded-lg text-sm text-muted-foreground flex items-center justify-center bg-muted/30">
+                      Calculating real-time rates...
+                    </div>
+                  ) : (
+                    <RadioGroup
+                      value={selectedRate?.rate_id}
+                      onValueChange={(val) => {
+                         const rate = shippingRates.find(r => r.rate_id === val);
+                         if (rate) setSelectedRate(rate);
+                      }}
+                      className="space-y-2"
+                    >
+                      {shippingRates.map((rate) => (
+                        <div key={rate.rate_id} className={`flex items-start justify-between p-3 border rounded-lg cursor-pointer transition-colors ${selectedRate?.rate_id === rate.rate_id ? 'border-primary bg-primary/5' : 'hover:bg-muted'}`} onClick={() => setSelectedRate(rate)}>
+                          <div className="flex items-center gap-3">
+                            <RadioGroupItem value={rate.rate_id} id={rate.rate_id} />
+                            <div>
+                               <Label htmlFor={rate.rate_id} className="font-medium cursor-pointer flex items-center gap-2">
+                                 {rate.carrier_logo ? <img src={rate.carrier_logo} alt={rate.carrier} className="h-4 object-contain" /> : <Truck className="w-4 h-4" />}
+                                 {rate.carrier}
+                               </Label>
+                               <span className="text-xs text-muted-foreground block mt-0.5">Estimated: {rate.estimated_days} days</span>
+                            </div>
+                          </div>
+                          <div className="font-semibold">
+                            ₦{rate.price.toLocaleString()}
+                          </div>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  )}
+                </div>
+              )}
 
               {/* Payment Choice */}
               <div className="space-y-2 sm:space-y-3">

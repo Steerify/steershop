@@ -19,12 +19,12 @@ const About = () => {
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-4 sm:mb-6">
-              Built for the 
+              The Daily Selling System for the
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent"> Solo Hustler</span>
             </h1>
             <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-8 px-2">
-              SteerSolo is where one-person businesses look like established brands. 
-              We're empowering Africa's independent entrepreneurs with tools that make them shine.
+              SteerSolo turns WhatsApp chaos into a predictable, calm daily routine. 
+              We're giving Africa's independent entrepreneurs the structure they need to scale.
             </p>
           </div>
         </div>
@@ -42,11 +42,10 @@ const About = () => {
                 <h2 className="text-2xl sm:text-3xl font-bold">Our Mission</h2>
               </div>
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-                To empower solo entrepreneurs in Africa with simple tools that make them look and operate 
-                like established brands — without needing coding, design, or marketing experience.
+                To replace the stress of manual selling with a calm, repeatable structure. We empower solo entrepreneurs in Africa with a clear Daily Selling System.
               </p>
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-                We're taking the power that big e-commerce platforms have and putting it in one person's hands — affordably.
+                No more answering "How much?" 50 times a day. Just one link, a clear daily routine, and predictable growth.
               </p>
             </div>
             
@@ -56,11 +55,10 @@ const About = () => {
                 <h2 className="text-2xl sm:text-3xl font-bold">Our Vision</h2>
               </div>
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-                To be the home of Africa's independent entrepreneurs — a single platform where anyone 
-                with a skill, service, or small product line can build, grow, and get seen.
+                To build a generation of "Structured Sellers" across Africa — entrepreneurs who are organized, professional, and globally ready.
               </p>
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-                SteerSolo is the digital street market of Africa's future — every small business, one click away.
+                SteerSolo is the engine that will power Africa's digital street market, turning hustle into lasting businesses.
               </p>
             </div>
           </div>
@@ -77,16 +75,17 @@ const About = () => {
             <h2 className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6">The Heart of SteerSolo</h2>
             <div className="space-y-4 sm:space-y-6 text-base sm:text-lg text-muted-foreground leading-relaxed">
               <p>
-                SteerSolo was born from a simple observation: Africa is full of incredible solo entrepreneurs 
-                — the tailor running her business on WhatsApp, the shoe vendor posting daily on Instagram, 
-                the skincare seller who DMs every customer manually.
+                SteerSolo was born from a simple observation: Africa's solo entrepreneurs are exhausted.
+                The tailor running her business on WhatsApp, the shoe vendor posting daily on Instagram, 
+                the skincare seller who DMs every customer manually. They are always "on," yet growth is slow.
               </p>
               <p>
-                These hustlers are building something real, alone — but they deserve to look and feel professional. 
-                That's what SteerSolo provides: the polish that turns hustle into brand.
+                We realized they didn't just need a website; they needed a *system*. A way to structure their day 
+                so they spend less time explaining prices and more time fulfilling orders. That's why we created 
+                the Daily Selling System and the 30-Day Structured Seller Challenge.
               </p>
               <p className="text-lg sm:text-xl font-semibold text-accent">
-                "Even if it's just you — SteerSolo makes it look like a team."
+                "We turn disorganized hustle into predictable, professional sales."
               </p>
             </div>
           </div>

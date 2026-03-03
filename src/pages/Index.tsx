@@ -23,6 +23,8 @@ import { HowItWorks } from "@/components/HowItWorks";
 import { DynamicPricing } from "@/components/DynamicPricing";
 import { SocialProofStats } from "@/components/SocialProofStats";
 import { Card, CardContent } from "@/components/ui/card";
+import { AfricaGlobe } from "@/components/AfricaGlobe";
+import { Globe, Shield, Zap, Globe2, DollarSign } from "lucide-react";
 
 const painPoints = [
   {
@@ -65,14 +67,17 @@ const Index = () => {
             </div>
 
             {/* Main headline */}
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight animate-fade-up text-balance leading-[1.1]" style={{ animationDelay: '80ms' }}>
+            <h1 className="font-display text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tight animate-fade-up text-balance leading-[1.1]" style={{ animationDelay: '80ms' }}>
+              Your <span className="text-accent underline decoration-gold/30">Daily Selling System</span> is here.
+            </h1>
+
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground/90 mt-4 animate-fade-up" style={{ animationDelay: '120ms' }}>
               Turn WhatsApp traffic into{" "}
               <TypewriterEffect
-                texts={["completed orders", "predictable revenue", "repeat customers", "a real business"]}
-                className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent"
-              />{" "}
-              <span className="text-foreground">in 14 days.</span>
-            </h1>
+                texts={["consistent orders", "global revenue", "trusted brand", "daily success"]}
+                className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-gold"
+              />
+            </h2>
 
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-up text-balance" style={{ animationDelay: '160ms' }}>
               Stop losing sales to DM chaos. Get a professional storefront with payments, order tracking, and AI marketing — setup takes 10 minutes.
@@ -95,18 +100,62 @@ const Index = () => {
 
             {/* Trust chips */}
             <div className="flex flex-wrap items-center justify-center gap-5 text-sm text-muted-foreground animate-fade-up" style={{ animationDelay: '320ms' }}>
-              <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-3 py-1.5 shadow-sm">
+              <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-4 py-2 shadow-sm hover:border-accent/40 transition-colors">
                 <CheckCircle className="w-4 h-4 text-accent" />
-                10-minute setup
+                Proven 30-Day Ritual
               </div>
-              <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-3 py-1.5 shadow-sm">
-                <Clock className="w-4 h-4 text-primary" />
-                Free forever plan
+              <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-4 py-2 shadow-sm hover:border-primary/40 transition-colors">
+                <Globe2 className="w-4 h-4 text-primary" />
+                Sell Globally from Africa
               </div>
-              <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-3 py-1.5 shadow-sm">
-                <MessageCircle className="w-4 h-4 text-green-600" />
-                WhatsApp-powered
+              <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-4 py-2 shadow-sm hover:border-gold/40 transition-colors">
+                <Shield className="w-4 h-4 text-gold" />
+                Trusted & Secure
               </div>
+            </div>
+
+            {/* Premium Asset Showcase */}
+            <div className="mt-16 relative animate-fade-up" style={{ animationDelay: '400ms' }}>
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                  <div className="relative group">
+                     <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-[2.5rem] blur-xl opacity-50 group-hover:opacity-100 transition-opacity" />
+                     <div className="relative rounded-[2rem] overflow-hidden border border-white/20 shadow-2xl">
+                        <img src="/assets/vendor_focused.png" alt="Structured Seller" className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700" />
+                        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+                           <p className="text-white font-bold text-lg">“I switched from chaos to structure.”</p>
+                           <p className="text-white/70 text-sm">Now selling at scale with one link.</p>
+                        </div>
+                     </div>
+                  </div>
+                  <div className="h-[400px] lg:h-[500px]">
+                     <AfricaGlobe className="scale-90 lg:scale-110" />
+                  </div>
+               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 1.5: GLOBAL REACH Section */}
+      <section className="py-16 bg-muted/20 relative overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-4xl mx-auto text-center space-y-6">
+            <h2 className="text-3xl md:text-4xl font-black text-primary">From Africa to the World</h2>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              SteerSolo isn't just for local sales. We provide the structure you need to accept global payments, manage international shipping, and look like a premium brand to customers anywhere on Earth.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+               {[
+                 { icon: DollarSign, text: "Multi-Currency" },
+                 { icon: Globe, text: "Global Reach" },
+                 { icon: Zap, text: "Fast Setup" },
+                 { icon: Shield, text: "Bank Verified" }
+               ].map((item, i) => (
+                 <div key={i} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-background shadow-sm border border-border/50">
+                    <item.icon className="w-6 h-6 text-accent" />
+                    <span className="text-sm font-bold">{item.text}</span>
+                 </div>
+               ))}
             </div>
           </div>
         </div>

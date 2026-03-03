@@ -10,31 +10,31 @@ const HowItWorksPage = () => {
   const sellerSteps = [
     {
       step: 1,
-      icon: UserPlus,
-      title: "Create Your Account",
-      description: "Sign up in 60 seconds with your email. No credit card required.",
-      time: "1 minute"
+      icon: Palette,
+      title: "Set Up Your Store (10 mins)",
+      description: "Add products, pricing, and images. Your daily selling system is now live.",
+      time: "10 minutes"
     },
     {
       step: 2,
-      icon: Palette,
-      title: "Set Up Your Store",
-      description: "Add your shop name, logo, and description. Make it yours.",
-      time: "5 minutes"
+      icon: UserPlus,
+      title: "Install Your One Link Habit",
+      description: "Add to IG bio, pin on WhatsApp, save as quick reply. Stop explaining prices.",
+      time: "2 minutes"
     },
     {
       step: 3,
-      icon: ShoppingCart,
-      title: "Add Your Products",
-      description: "Upload photos, set prices, and describe what you're selling.",
-      time: "10 minutes"
+      icon: MessageCircle,
+      title: "Daily Sales Workflow",
+      description: "Morning: Check orders. Midday: Share link. Evening: Review & rest.",
+      time: "Daily"
     },
     {
       step: 4,
       icon: Rocket,
-      title: "Share & Start Selling",
-      description: "Share your store link on WhatsApp, Instagram, and social media.",
-      time: "Ongoing"
+      title: "The Weekly Reset",
+      description: "Every Sunday: Update featured products, check stock, and prepare for the week.",
+      time: "Weekly"
     }
   ];
 
@@ -88,7 +88,7 @@ const HowItWorksPage = () => {
               <span className="font-medium">For Sellers</span>
             </div>
             <h2 className="font-display text-3xl font-bold">
-              From Zero to Selling in Minutes
+              The SteerSolo Daily Selling Routine
             </h2>
           </div>
           
