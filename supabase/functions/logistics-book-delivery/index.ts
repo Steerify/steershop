@@ -50,30 +50,74 @@ serve(async (req: Request) => {
 
     // For Terminal Africa provider with API key configured
     if (provider === 'terminal' && TERMINAL_API_KEY && rate_id) {
-      // Create shipment using the selected rate
-      const shipmentRes = await fetch(`${TERMINAL_BASE_URL}/shipments`, {
+      // Step 1: Create pickup address
+      const pickupRes = await fetch(`${TERMINAL_BASE_URL}/addresses`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${TERMINAL_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${TERMINAL_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          rate_id: rate_id,
-          metadata: {
-            order_id: order_id,
-            shop_id: shop_id,
-          },
+          first_name: pickup_address.name.split(' ')[0],
+          last_name: pickup_address.name.split(' ').slice(1).join(' ') || pickup_address.name,
+          phone: pickup_address.phone, line1: pickup_address.address,
+          city: pickup_address.city, state: pickup_address.state, country: pickup_address.country || 'NG', is_residential: false,
         }),
       });
+      const pickupData = await pickupRes.json();
 
+      // Step 2: Create delivery address
+      const deliveryRes = await fetch(`${TERMINAL_BASE_URL}/addresses`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${TERMINAL_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_name: delivery_address.name.split(' ')[0],
+          last_name: delivery_address.name.split(' ').slice(1).join(' ') || delivery_address.name,
+          phone: delivery_address.phone, line1: delivery_address.address,
+          city: delivery_address.city, state: delivery_address.state, country: delivery_address.country || 'NG', is_residential: true,
+        }),
+      });
+      const deliveryData = await deliveryRes.json();
+
+      // Step 3: Create parcel
+      const parcelRes = await fetch(`${TERMINAL_BASE_URL}/parcels`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${TERMINAL_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          weight: weight_kg || 1, weight_unit: 'kg',
+          length: dimensions?.length || 20, width: dimensions?.width || 15, height: dimensions?.height || 10,
+          dimension_unit: 'cm', packaging: 'box', description: 'SteerSolo order package',
+        }),
+      });
+      const parcelData = await parcelRes.json();
+
+      // Step 4: Create shipment with full payload
+      const shipmentRes = await fetch(`${TERMINAL_BASE_URL}/shipments`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${TERMINAL_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rate_id,
+          address_from: pickupData.data?.id,
+          address_to: deliveryData.data?.id,
+          parcel: parcelData.data?.id,
+          metadata: { order_id, shop_id },
+        }),
+      });
       const shipmentData = await shipmentRes.json();
 
       if (shipmentData.data) {
         providerShipmentId = shipmentData.data.id;
         providerTrackingCode = shipmentData.data.tracking_number;
-        
         if (shipmentData.data.estimated_delivery_date) {
           estimatedDeliveryDate = shipmentData.data.estimated_delivery_date;
+        }
+
+        // Step 5: Arrange pickup (dispatch the shipment)
+        try {
+          await fetch(`${TERMINAL_BASE_URL}/shipments/${shipmentData.data.id}/arrange-pickup`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${TERMINAL_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+          });
+        } catch (pickupErr) {
+          console.error('Arrange pickup failed (non-fatal):', pickupErr);
         }
       }
     }

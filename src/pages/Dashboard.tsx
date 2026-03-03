@@ -215,6 +215,7 @@ const Dashboard = () => {
   // Carousel state
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
@@ -393,9 +394,34 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  // Carousel slides — WhatsApp is now a permanent banner above the carousel
   const getCarouselSlides = () => {
     const slides = [];
+
+    // ── WhatsApp Community slide ──
+    slides.push(
+      <div key="whatsapp" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#075E54] to-[#25D366] p-5 shadow-lg">
+        <div className="absolute -top-5 -right-5 w-28 h-28 rounded-full bg-white/10" />
+        <div className="absolute -bottom-4 left-10 w-16 h-16 rounded-full bg-white/5" />
+        <div className="relative z-10 flex items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <MessageCircle className="w-4 h-4 text-white" />
+              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Community</span>
+            </div>
+            <h3 className="text-white font-extrabold text-base leading-tight">Join 5,000+ vendors on WhatsApp</h3>
+            <p className="text-white/70 text-xs mt-0.5">Tips, support, buyer traffic &amp; giveaways — free!</p>
+          </div>
+          <Button
+            size="sm"
+            className="shrink-0 bg-white text-[#075E54] hover:bg-white/90 font-bold shadow-lg gap-1.5"
+            onClick={() => window.open('https://chat.whatsapp.com/LX2AQqaSYD5FzEuCmhwWmz', '_blank')}
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+            Join Now
+          </Button>
+        </div>
+      </div>
+    );
 
     // ── Trial / Expired subscription ──
     if (subscriptionStatus === 'trial') {
@@ -706,36 +732,19 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* ─── Permanent WhatsApp Community Banner ─────── */}
-        <div className="relative overflow-hidden rounded-2xl mb-4 bg-gradient-to-br from-[#075E54] to-[#25D366] p-5 shadow-lg">
-          <div className="absolute -top-5 -right-5 w-28 h-28 rounded-full bg-white/10" />
-          <div className="absolute -bottom-4 left-10 w-16 h-16 rounded-full bg-white/5" />
-          <div className="relative z-10 flex items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <MessageCircle className="w-4 h-4 text-white" />
-                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Community</span>
-              </div>
-              <h3 className="text-white font-extrabold text-base leading-tight">Join 5,000+ vendors on WhatsApp</h3>
-              <p className="text-white/70 text-xs mt-0.5">Tips, support, buyer traffic &amp; giveaways — free!</p>
-            </div>
-            <Button
-              size="sm"
-              className="shrink-0 bg-white text-[#075E54] hover:bg-white/90 font-bold shadow-lg gap-1.5"
-              onClick={() => window.open('https://chat.whatsapp.com/LX2AQqaSYD5FzEuCmhwWmz', '_blank')}
-            >
-              <MessageCircle className="w-3.5 h-3.5" />
-              Join Now
-            </Button>
-          </div>
-        </div>
-
-        {/* Info Carousel - subscription & store status */}
+        {/* Info Carousel - subscription, WhatsApp & store status */}
         {slides.length > 0 && (
           <div
             className="relative w-full overflow-hidden mb-5"
             onMouseEnter={() => setIsCarouselPaused(true)}
             onMouseLeave={() => setIsCarouselPaused(false)}
+            onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+            onTouchEnd={(e) => {
+              if (touchStartX === null) return;
+              const diff = touchStartX - e.changedTouches[0].clientX;
+              if (Math.abs(diff) > 50) { diff > 0 ? nextSlide() : prevSlide(); }
+              setTouchStartX(null);
+            }}
           >
             <div
               className="flex transition-transform duration-500 ease-in-out"
@@ -747,10 +756,10 @@ const Dashboard = () => {
             </div>
             {totalSlides > 1 && (
               <>
-                <button onClick={prevSlide} className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-background transition-colors">
+                <button onClick={prevSlide} className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-background transition-colors">
                   <ArrowRight className="w-3.5 h-3.5 rotate-180" />
                 </button>
-                <button onClick={nextSlide} className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-background transition-colors">
+                <button onClick={nextSlide} className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-background transition-colors">
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
                 <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">

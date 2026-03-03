@@ -21,6 +21,7 @@ export const NotificationBell = ({ audience }: { audience: "entrepreneurs" | "cu
   const [updates, setUpdates] = useState<PlatformUpdate[]>([]);
   const [unseenCount, setUnseenCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     loadUpdates();
@@ -86,13 +87,17 @@ export const NotificationBell = ({ audience }: { audience: "entrepreneurs" | "cu
           ) : (
             <div className="divide-y divide-border">
               {updates.map(update => (
-                <div key={update.id} className="p-3 hover:bg-muted/50 transition-colors">
+                <div
+                  key={update.id}
+                  className="p-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => setExpandedId(expandedId === update.id ? null : update.id)}
+                >
                   <div className="flex items-start gap-2">
                     <span className="text-base mt-0.5">{typeIcon(update.type)}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium leading-tight">{update.title}</p>
                       {update.description && (
-                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{update.description}</p>
+                        <p className={`text-xs text-muted-foreground mt-0.5 ${expandedId === update.id ? '' : 'line-clamp-2'}`}>{update.description}</p>
                       )}
                       <p className="text-[10px] text-muted-foreground mt-1">
                         {format(new Date(update.created_at), "MMM d, yyyy")}

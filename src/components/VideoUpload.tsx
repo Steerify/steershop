@@ -35,8 +35,8 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
   onChange,
   label = 'Short Video (max 10s)',
   className = '',
-  maxDurationSeconds = 10,
-  maxSizeMB = 20,
+  maxDurationSeconds = 60,
+  maxSizeMB = 50,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);

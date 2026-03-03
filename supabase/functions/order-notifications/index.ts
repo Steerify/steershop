@@ -22,7 +22,7 @@ serve(async (req) => {
     }
 
     const resend = new Resend(resendApiKey);
-    const { orderId, eventType, shopName, customerEmail, customerName, totalAmount, items, statusUpdate, shopOwnerEmail } = await req.json();
+    const { orderId, eventType, shopName, customerEmail, customerName, totalAmount, items, statusUpdate, shopOwnerEmail, shopOwnerPhone } = await req.json();
 
     if (!orderId || !eventType) {
       return new Response(JSON.stringify({ error: "Missing orderId or eventType" }), {
@@ -66,7 +66,6 @@ serve(async (req) => {
             </div>
           </div>`;
 
-        // Owner notification email
         ownerSubject = `🛒 New Order #${shortId} - ${formattedAmount}`;
         ownerBodyHtml = `
           <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
@@ -93,7 +92,6 @@ serve(async (req) => {
       case "status_update":
         const statusLabel = (statusUpdate || "").replace(/_/g, " ");
         customerSubject = `Order #${shortId} - ${statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}`;
-        
         const statusMessages: Record<string, string> = {
           confirmed: "Your order has been confirmed by the seller and will be processed soon.",
           processing: "Your order is now being prepared.",
@@ -102,7 +100,6 @@ serve(async (req) => {
           completed: "Your order is complete. Thank you for shopping with us!",
           cancelled: "Your order has been cancelled. If you have questions, please contact the seller.",
         };
-
         customerBodyHtml = `
           <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
             <div style="background:#2563eb;color:white;padding:20px;text-align:center;border-radius:8px 8px 0 0">
@@ -146,6 +143,39 @@ serve(async (req) => {
         subject: ownerSubject,
         html: ownerBodyHtml,
       });
+    }
+
+    // Send SMS to shop owner via Termii (automatic - no WhatsApp button needed)
+    if (eventType === "order_placed" && shopOwnerPhone) {
+      const termiiApiKey = Deno.env.get("TERMII_API_KEY");
+      if (termiiApiKey) {
+        try {
+          const itemNames = (items || []).slice(0, 3).map((i: any) => i.name).join(", ");
+          const smsMessage = `SteerSolo: New order #${shortId} (${formattedAmount}) from ${customerName || "a customer"}. Items: ${itemNames}${(items || []).length > 3 ? '...' : ''}. Log in to process.`;
+          
+          // Clean phone: ensure it starts with country code
+          let phone = shopOwnerPhone.replace(/\s+/g, '').replace(/^0/, '234');
+          if (!phone.startsWith('+') && !phone.startsWith('234')) {
+            phone = '234' + phone;
+          }
+
+          await fetch("https://api.ng.termii.com/api/sms/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              to: phone,
+              from: "SteerSolo",
+              sms: smsMessage,
+              type: "plain",
+              channel: "generic",
+              api_key: termiiApiKey,
+            }),
+          });
+          console.log("SMS sent to shop owner:", phone);
+        } catch (smsErr) {
+          console.error("SMS send failed (non-fatal):", smsErr);
+        }
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {
