@@ -47,9 +47,8 @@ import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { NotificationBell } from "@/components/NotificationBell";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { SalesMilestonePopup } from "@/components/SalesMilestonePopup";
-import { DailySellerRoutine } from "@/components/DailySellerRoutine";
-import { ProductNudges } from "@/components/ProductNudges";
 import { StructuredSellingChallenge } from "@/components/StructuredSellingChallenge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 // ─── Verification Progress Card ───────────────────────────────────────────────
 const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profile: any; shopFullData: any; totalSales: number }) => {
   const navigate = useNavigate();
@@ -214,6 +213,7 @@ const Dashboard = () => {
   });
   const [hasNoShop, setHasNoShop] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "actions" | "wallet">("overview");
+  const [isChallengeOpen, setIsChallengeOpen] = useState(false);
 
   // Carousel state
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -402,10 +402,10 @@ const Dashboard = () => {
 
     // ── WhatsApp Community slide ──
     slides.push(
-      <div key="whatsapp" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#075E54] to-[#25D366] p-5 shadow-lg">
+      <div key="whatsapp" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#075E54] to-[#25D366] p-5 shadow-lg min-h-[120px] flex items-center">
         <div className="absolute -top-5 -right-5 w-28 h-28 rounded-full bg-white/10" />
         <div className="absolute -bottom-4 left-10 w-16 h-16 rounded-full bg-white/5" />
-        <div className="relative z-10 flex items-center justify-between gap-3">
+        <div className="relative z-10 flex items-center justify-between gap-3 w-full">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <MessageCircle className="w-4 h-4 text-white" />
@@ -429,11 +429,11 @@ const Dashboard = () => {
     // ── Trial / Expired subscription ──
     if (subscriptionStatus === 'trial') {
       slides.push(
-        <div key="trial" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-accent p-5">
+        <div key="trial" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-accent p-5 min-h-[120px] flex items-center">
           {/* decorative blobs */}
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
           <div className="absolute -bottom-6 -left-2 w-16 h-16 rounded-full bg-white/5" />
-          <div className="relative z-10 flex items-center justify-between gap-3">
+          <div className="relative z-10 flex items-center justify-between gap-3 w-full">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Clock className="w-4 h-4 text-white/80" />
@@ -454,9 +454,9 @@ const Dashboard = () => {
       );
     } else if (subscriptionStatus === 'expired') {
       slides.push(
-        <div key="expired" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 to-red-700 p-5">
+        <div key="expired" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 to-red-700 p-5 min-h-[120px] flex items-center">
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
-          <div className="relative z-10 flex items-center justify-between gap-3">
+          <div className="relative z-10 flex items-center justify-between gap-3 w-full">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <AlertCircle className="w-4 h-4 text-white/80" />
@@ -478,9 +478,9 @@ const Dashboard = () => {
     } else {
       // Active — store visibility banner
       slides.push(
-        <div key="visibility" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 p-5">
+        <div key="visibility" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 p-5 min-h-[120px] flex items-center">
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
-          <div className="relative z-10 flex items-center justify-between gap-3">
+          <div className="relative z-10 flex items-center justify-between gap-3 w-full">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <CheckCircle className="w-4 h-4 text-white" />
@@ -498,9 +498,9 @@ const Dashboard = () => {
     // ── Verification nudge ──
     if (shopData && profile && !profile.bank_verified && !localStorage.getItem('verification_nudge_dismissed')) {
       slides.push(
-        <div key="verification" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 p-5">
+        <div key="verification" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 p-5 min-h-[120px] flex items-center">
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
-          <div className="relative z-10 flex items-center justify-between gap-3">
+          <div className="relative z-10 flex items-center justify-between gap-3 w-full">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Shield className="w-4 h-4 text-white/80" />
@@ -523,10 +523,10 @@ const Dashboard = () => {
     // ── First sale nudge ──
     if (shopData && totalSales === 0) {
       slides.push(
-        <div key="first-sale" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 p-5">
+        <div key="first-sale" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 p-5 min-h-[120px] flex items-center">
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
           <div className="absolute -bottom-4 -left-2 w-16 h-16 rounded-full bg-white/5" />
-          <div className="relative z-10">
+          <div className="relative z-10 w-full">
             <div className="flex items-center gap-2 mb-1">
               <Share2 className="w-4 h-4 text-white/80" />
               <span className="text-xs font-bold text-white/80 uppercase tracking-wider">First Sale Tips</span>
@@ -548,6 +548,92 @@ const Dashboard = () => {
         </div>
       );
     }
+
+    // ── 30-Day Challenge CTA ──
+    slides.push(
+      <div key="challenge" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500 p-5 min-h-[120px] flex items-center">
+        <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+        <div className="absolute -bottom-4 left-8 w-16 h-16 rounded-full bg-white/5" />
+        <div className="relative z-10 flex items-center justify-between gap-3 w-full">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Star className="w-4 h-4 text-white" />
+              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">30-Day Challenge</span>
+            </div>
+            <h3 className="text-white font-extrabold text-base leading-tight">Become a Structured Seller 🏆</h3>
+            <p className="text-white/70 text-xs mt-0.5">Daily tasks to transform your selling habits.</p>
+          </div>
+          <Button
+            size="sm"
+            className="shrink-0 bg-white text-amber-600 hover:bg-white/90 font-bold shadow-lg"
+            onClick={() => setIsChallengeOpen(true)}
+          >
+            Start →
+          </Button>
+        </div>
+      </div>
+    );
+
+    // ── Store Status slide ──
+    if (shopData) {
+      slides.push(
+        <div key="store-status" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 p-5 min-h-[120px] flex items-center">
+          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/5" />
+          <div className="relative z-10 w-full">
+            <div className="flex items-center gap-2 mb-3">
+              <Store className="w-4 h-4 text-white/80" />
+              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Store Status</span>
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-white/60 text-xs">Visibility</span>
+                <span className={`text-xs font-bold ${subscriptionStatus === 'expired' ? 'text-red-400' : 'text-green-400'}`}>
+                  {subscriptionStatus === 'expired' ? 'Hidden' : 'Live'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white/60 text-xs">Plan</span>
+                <span className="text-xs font-bold text-white capitalize">{subscriptionStatus}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white/60 text-xs">Products</span>
+                <span className="text-xs font-bold text-white">{productsCount}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white/60 text-xs">Rating</span>
+                <span className="text-xs font-bold text-white">
+                  {shopFullData?.average_rating ? `${shopFullData.average_rating.toFixed(1)} ⭐` : 'N/A'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Help & Resources slide ──
+    slides.push(
+      <div key="help" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 p-5 min-h-[120px] flex items-center">
+        <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+        <div className="relative z-10 flex items-center justify-between gap-3 w-full">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <HelpCircle className="w-4 h-4 text-white" />
+              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Help & Resources</span>
+            </div>
+            <h3 className="text-white font-extrabold text-base leading-tight">Need help? We've got you 💡</h3>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <Button size="sm" variant="outline" className="border-white/30 text-white hover:bg-white/20 text-xs h-8 font-semibold" onClick={() => navigate('/faq')}>
+              <HelpCircle className="w-3 h-3 mr-1" /> FAQ
+            </Button>
+            <Button size="sm" className="bg-white text-indigo-600 hover:bg-white/90 text-xs h-8 font-semibold" onClick={startTour}>
+              <Sparkles className="w-3 h-3 mr-1" /> Tour
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
 
     return slides;
   };
@@ -695,8 +781,7 @@ const Dashboard = () => {
       {/* ─── Main Content ─────────────────────────────────── */}
       <div className="container mx-auto px-4 py-3 pb-24 md:pb-8 max-w-7xl space-y-4">
         
-        {/* Daily Product Nudges */}
-        <ProductNudges />
+        {/* ProductNudges moved into carousel */}
 
         {/* Welcome Hero */}
         <div className="relative rounded-3xl overflow-hidden mb-6 bg-gradient-to-br from-primary via-primary/90 to-accent p-6 shadow-xl">
@@ -741,7 +826,7 @@ const Dashboard = () => {
         {/* Info Carousel - subscription, WhatsApp & store status */}
         {slides.length > 0 && (
           <div
-            className="relative w-full overflow-hidden mb-5"
+            className="relative w-full overflow-hidden mb-5 min-h-[120px]"
             onMouseEnter={() => setIsCarouselPaused(true)}
             onMouseLeave={() => setIsCarouselPaused(false)}
             onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
@@ -815,16 +900,33 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Challenge & Routine Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <DailySellerRoutine />
-          <StructuredSellingChallenge />
-        </div>
-
-        {/* Verification Progress Card */}
-        {shopData && shopFullData && (
-          <VerificationProgressCard profile={profile} shopFullData={shopFullData} totalSales={totalSales} />
-        )}
+        {/* Verification Progress Card - collapsible */}
+        {shopData && shopFullData && (() => {
+          const bankVerified = profile?.bank_verified === true;
+          const completedOrders = totalSales;
+          const avgRating = shopFullData?.average_rating || 0;
+          const shopAge = shopFullData?.created_at ? differenceInDays(new Date(), new Date(shopFullData.created_at)) : 0;
+          const hasPaidSubscription = profile?.is_subscribed === true;
+          const metCount = [hasPaidSubscription, bankVerified, completedOrders >= 10, avgRating >= 3.5 || avgRating === 0, shopAge >= 7].filter(Boolean).length;
+          const defaultOpen = metCount < 3;
+          return (
+            <Collapsible defaultOpen={defaultOpen}>
+              <CollapsibleTrigger className="w-full">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border/50 mb-2 hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-primary" />
+                    <span className="font-semibold text-sm">Verification Progress</span>
+                    <Badge variant="outline" className="text-xs font-bold">{metCount}/5</Badge>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <VerificationProgressCard profile={profile} shopFullData={shopFullData} totalSales={totalSales} />
+              </CollapsibleContent>
+            </Collapsible>
+          );
+        })()}
 
         {/* ─── Main Grid ───────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -968,51 +1070,7 @@ const Dashboard = () => {
               </Card>
             )}
 
-            {/* Store Status */}
-            <Card className="overflow-hidden">
-              <div className="h-0.5 w-full bg-gradient-to-r from-primary to-accent" />
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <Store className="w-4 h-4 text-primary" />
-                  Store Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {[
-                  { label: "Store Visibility", value: subscriptionStatus === 'expired' ? 'Hidden' : 'Live', valueClass: subscriptionStatus === 'expired' ? 'text-red-500' : 'text-green-500' },
-                  { label: "Subscription", value: subscriptionStatus, valueClass: "capitalize" },
-                  { label: "Products Listed", value: String(productsCount) },
-                  { label: "Store Rating", value: shopFullData?.average_rating ? `${shopFullData.average_rating.toFixed(1)} ⭐ (${shopFullData.total_reviews || 0})` : 'No reviews yet' },
-                ].map(({ label, value, valueClass }) => (
-                  <div key={label} className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{label}</span>
-                    <span className={`font-semibold ${valueClass || ''}`}>{value}</span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Help & Resources */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <HelpCircle className="w-4 h-4 text-primary" />
-                  Help & Resources
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1.5">
-                {[
-                  { icon: HelpCircle, label: "Get Help", onClick: () => {} },
-                  { icon: Shield, label: "Security Tips", onClick: () => {} },
-                  { icon: Sparkles, label: "Take a Tour", onClick: startTour },
-                ].map(({ icon: Icon, label, onClick }) => (
-                  <button key={label} onClick={onClick} className="flex items-center gap-3 w-full px-3 py-2 rounded-xl hover:bg-muted transition-colors text-sm text-left font-medium">
-                    <Icon className="w-4 h-4 text-muted-foreground" />
-                    {label}
-                  </button>
-                ))}
-              </CardContent>
-            </Card>
+            {/* Store Status & Help moved into carousel */}
           </div>
         </div>
       </div>
@@ -1052,6 +1110,15 @@ const Dashboard = () => {
       />
       <FeedbackPrompt />
       <SalesMilestonePopup totalSales={totalSales} />
+
+      {/* 30-Day Structured Selling Challenge Sheet */}
+      <Sheet open={isChallengeOpen} onOpenChange={setIsChallengeOpen}>
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-3xl p-0">
+          <div className="p-4 sm:p-6">
+            <StructuredSellingChallenge />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
