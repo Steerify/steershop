@@ -23,7 +23,6 @@ import { HowItWorks } from "@/components/HowItWorks";
 import { DynamicPricing } from "@/components/DynamicPricing";
 import { SocialProofStats } from "@/components/SocialProofStats";
 import { Card, CardContent } from "@/components/ui/card";
-import { AfricaGlobe } from "@/components/AfricaGlobe";
 import { Globe, Shield, Zap, Globe2, DollarSign } from "lucide-react";
 
 const painPoints = [
@@ -112,25 +111,6 @@ const Index = () => {
                 <Shield className="w-4 h-4 text-gold" />
                 Trusted & Secure
               </div>
-            </div>
-
-            {/* Premium Asset Showcase */}
-            <div className="mt-16 relative animate-fade-up" style={{ animationDelay: '400ms' }}>
-               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                  <div className="relative group">
-                     <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-[2.5rem] blur-xl opacity-50 group-hover:opacity-100 transition-opacity" />
-                     <div className="relative rounded-[2rem] overflow-hidden border border-white/20 shadow-2xl">
-                        <img src="/assets/vendor_focused.png" alt="Structured Seller" className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700" />
-                        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-                           <p className="text-white font-bold text-lg">“I switched from chaos to structure.”</p>
-                           <p className="text-white/70 text-sm">Now selling at scale with one link.</p>
-                        </div>
-                     </div>
-                  </div>
-                  <div className="h-[400px] lg:h-[500px]">
-                     <AfricaGlobe className="scale-90 lg:scale-110" />
-                  </div>
-               </div>
             </div>
           </div>
         </div>
