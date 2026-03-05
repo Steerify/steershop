@@ -1,35 +1,64 @@
 
 
-# Plan: Declutter Dashboard + Carousel Consistency + Mobile Pass
+# Plan: Subscription Expiry Popup, Homepage Alignment, and Logistics Verification
 
-## 1. Move Standalone Sections into Carousel Slides
+## 1. Subscription Expiry / Free Plan Persuasion Popup
 
-Currently cluttering the main layout:
-- **`ProductNudges`** (line 699) — move into carousel as a compact slide
-- **`DailySellerRoutine`** + **`StructuredSellingChallenge`** (lines 819-822) — convert the 30-Day Challenge into a carousel CTA slide ("Join the 30-Day Challenge → Start") that opens a dialog/sheet with the full challenge UI. Remove `DailySellerRoutine` as a standalone block and fold its nudge into the challenge slide.
-- **Store Status** card (lines 971-993) — compact into a carousel slide showing visibility, subscription, products, rating in a 2x2 mini-grid
-- **Help & Resources** card (lines 995-1015) — compact into a carousel slide with the 3 action buttons inline
-- **Verification Progress** card (lines 824-827) — keep but make it collapsible (collapsed by default if > 3/5 criteria met)
+Create a new component `src/components/SubscriptionExpiryDialog.tsx` that shows when a shop owner's trial/subscription has expired. This dialog will be triggered from `Dashboard.tsx` after data loads.
 
-**Remove from main layout:** `ProductNudges`, `DailySellerRoutine`, `StructuredSellingChallenge`, Store Status card, Help & Resources card.
+**Logic flow:**
+- After `loadData()` completes, check `subscriptionStatus === 'expired'`
+- Show a persuasive full-screen dialog with two paths:
+  - **"Upgrade to a Paid Plan"** — navigates to `/pricing`
+  - **"Stay on Free Plan (5 products max)"** — if `productsCount > 5`, show a product list with delete buttons so the user can trim down to 5. If `productsCount <= 5`, show a persuasive "you're missing out" message but allow them to dismiss
+- Even if products are <= 5, still show the dialog once per session (use `sessionStorage` to avoid repeat)
+- The dialog should be beautifully designed with gradient backgrounds, clear value propositions for upgrading, and a sense of urgency
 
-**New dashboard flow:** Welcome Hero → Carousel (now 8-10 slides) → Stats → Quick Actions + Chart (left) | Profile Checklist + Wallet + Coupons (right)
+**Also show for `subscriptionStatus === 'free'`:** A lighter persuasion popup (not blocking) that appears once per day (tracked via `localStorage` timestamp) encouraging upgrade with feature comparisons.
 
-## 2. Standardize Carousel Slide Heights
+**Files:** New `src/components/SubscriptionExpiryDialog.tsx`, edit `src/pages/Dashboard.tsx`
 
-All slides get a consistent `min-h-[120px]` with content vertically centered via `flex items-center`. The carousel container itself gets `min-h-[120px]` to prevent layout shifts between slides.
+---
 
-## 3. Wallet Balance Verification
+## 2. Homepage Alignment — Fix Inconsistencies
 
-The payout service logic is correct — it queries `revenue_transactions` (Paystack payments only) minus completed/pending `shop_payouts`. No code fix needed. Wallet shows ₦0 when there are no Paystack-paid orders, which is accurate.
+Review current Index page claims vs actual system capabilities:
 
-## 4. Mobile Adaptability
+**Issues found:**
+- "Proven 30-Day Ritual" chip in hero — this exists (StructuredSellingChallenge), accurate
+- "Sell Globally from Africa" — the system only supports NGN payments via Paystack currently. The "From Africa to the World" section claims "Multi-Currency" and "Global Reach" which is misleading
+- "setup takes 10 minutes" — accurate
+- HowItWorks says "15-day free trial" but the pricing strategy is "Free Forever" (Starter plan) — inconsistent
+- Final CTA says "Get your first order within 14 days — or your next month is free" — this guarantee isn't enforced in the system
+- "Free forever plan" in footer chips — accurate per pricing strategy
 
-- Carousel already has swipe + hidden arrows — confirmed working
-- Stat cards already use `grid-cols-2` on mobile — good
-- Quick actions use `grid-cols-2` on mobile — good
-- Right column stacks below via `lg:grid-cols-3` — good
-- Minimal fixes: ensure new carousel slides don't overflow text on small screens
+**Fixes:**
+- Remove the "From Africa to the World" section (Section 1.5) since multi-currency/global payments aren't implemented
+- Update HowItWorks step 1 description from "15-day free trial" to "Free forever with up to 5 products"
+- Soften the Final CTA guarantee to something achievable: "Get your first order within 14 days" without the "next month is free" promise (unless you want to enforce it)
+- Keep the hero as-is — "Turn WhatsApp traffic into consistent orders" is accurate
 
-**Files:** `src/pages/Dashboard.tsx`
+**Files:** `src/pages/Index.tsx`, `src/components/HowItWorks.tsx`
+
+---
+
+## 3. Logistics Function Verification
+
+The `logistics-get-rates` and `logistics-book-delivery` edge functions are correctly structured for the Terminal Africa API. The flow is: Create addresses → Create parcel → Get rates / Create shipment → Arrange pickup.
+
+**Current status:** The code is correct. The only issue is that without a valid `TERMINAL_API_KEY`, it falls back to mock data. The `TERMINAL_API_KEY` secret is already configured. The functions should work if the key is valid and the Terminal Africa account is active.
+
+**Small fix needed:** The `logistics-get-rates` function hardcodes `country: 'NG'` — should use the `country` field from the address if provided. Also add better error messages when Terminal API returns errors (currently just throws generic "Failed to create pickup address").
+
+**Files:** `supabase/functions/logistics-get-rates/index.ts`, `supabase/functions/logistics-book-delivery/index.ts`
+
+---
+
+## Summary
+
+| # | Feature | Files | Effort |
+|---|---------|-------|--------|
+| 1 | Subscription expiry persuasion popup | New component + `Dashboard.tsx` | Medium |
+| 2 | Homepage consistency fixes | `Index.tsx`, `HowItWorks.tsx` | Small |
+| 3 | Logistics error handling improvement | 2 edge functions | Small |
 
