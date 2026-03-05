@@ -89,14 +89,14 @@ serve(async (req: Request) => {
         line1: pickup_address.address,
         city: pickup_address.city,
         state: pickup_address.state,
-        country: 'NG',
+        country: pickup_address.country || 'NG',
         is_residential: false,
       }),
     });
 
     const pickupData = await pickupAddressRes.json();
     if (!pickupData.data?.id) {
-      throw new Error('Failed to create pickup address');
+      throw new Error(`Failed to create pickup address: ${pickupData.message || JSON.stringify(pickupData.error || pickupData)}`);
     }
 
     const deliveryAddressRes = await fetch(`${TERMINAL_BASE_URL}/addresses`, {
@@ -112,14 +112,14 @@ serve(async (req: Request) => {
         line1: delivery_address.address,
         city: delivery_address.city,
         state: delivery_address.state,
-        country: 'NG',
+        country: delivery_address.country || 'NG',
         is_residential: true,
       }),
     });
 
     const deliveryData = await deliveryAddressRes.json();
     if (!deliveryData.data?.id) {
-      throw new Error('Failed to create delivery address');
+      throw new Error(`Failed to create delivery address: ${deliveryData.message || JSON.stringify(deliveryData.error || deliveryData)}`);
     }
 
     // Create parcel
@@ -143,7 +143,7 @@ serve(async (req: Request) => {
 
     const parcelData = await parcelRes.json();
     if (!parcelData.data?.id) {
-      throw new Error('Failed to create parcel');
+      throw new Error(`Failed to create parcel: ${parcelData.message || JSON.stringify(parcelData.error || parcelData)}`);
     }
 
     // Get shipping rates

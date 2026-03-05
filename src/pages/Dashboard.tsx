@@ -48,6 +48,8 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { SalesMilestonePopup } from "@/components/SalesMilestonePopup";
 import { StructuredSellingChallenge } from "@/components/StructuredSellingChallenge";
+import { SubscriptionExpiryDialog } from "@/components/SubscriptionExpiryDialog";
+import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 // ─── Verification Progress Card ───────────────────────────────────────────────
 const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profile: any; shopFullData: any; totalSales: number }) => {
@@ -194,7 +196,7 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [daysRemaining, setDaysRemaining] = useState<number>(0);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'trial' | 'expired'>('trial');
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'trial' | 'expired' | 'free'>('trial');
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalSales, setTotalSales] = useState(0);
   const [chartData, setChartData] = useState<any[]>([]);
@@ -295,7 +297,11 @@ const Dashboard = () => {
           setDaysRemaining(Math.max(0, daysLeft));
           if (profileData.is_subscribed && expiresAt > now) setSubscriptionStatus('active');
           else if (!profileData.is_subscribed && expiresAt > now) setSubscriptionStatus('trial');
-          else setSubscriptionStatus('expired');
+          else {
+            // Expired — check product count to determine free vs expired
+            const subStatus = calculateSubscriptionStatus(profileData, productsCount);
+            setSubscriptionStatus(subStatus.status === 'free' ? 'free' : 'expired');
+          }
         } else {
           setSubscriptionStatus('trial');
           setDaysRemaining(15);
@@ -1110,6 +1116,12 @@ const Dashboard = () => {
       />
       <FeedbackPrompt />
       <SalesMilestonePopup totalSales={totalSales} />
+      <SubscriptionExpiryDialog
+        subscriptionStatus={subscriptionStatus}
+        productsCount={productsCount}
+        shopId={shopData?.id || null}
+        onProductDeleted={() => loadData()}
+      />
 
       {/* 30-Day Structured Selling Challenge Sheet */}
       <Sheet open={isChallengeOpen} onOpenChange={setIsChallengeOpen}>

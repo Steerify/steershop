@@ -7,7 +7,7 @@ const steps = [
   {
     number: "01",
     title: "Sign Up Free",
-    description: "Create your account in 60 seconds. No credit card required, 15-day free trial.",
+    description: "Create your account in 60 seconds. No credit card required — free forever with up to 5 products.",
     icon: UserPlus,
     color: "from-blue-500 to-cyan-500",
   },
