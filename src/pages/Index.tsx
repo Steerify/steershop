@@ -104,38 +104,13 @@ const Index = () => {
                 Proven 30-Day Ritual
               </div>
               <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-4 py-2 shadow-sm hover:border-primary/40 transition-colors">
-                <Globe2 className="w-4 h-4 text-primary" />
-                Sell Globally from Africa
+                <Zap className="w-4 h-4 text-primary" />
+                Free Forever Plan
               </div>
               <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-4 py-2 shadow-sm hover:border-gold/40 transition-colors">
                 <Shield className="w-4 h-4 text-gold" />
                 Trusted & Secure
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 1.5: GLOBAL REACH Section */}
-      <section className="py-16 bg-muted/20 relative overflow-hidden">
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto text-center space-y-6">
-            <h2 className="text-3xl md:text-4xl font-black text-primary">From Africa to the World</h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              SteerSolo isn't just for local sales. We provide the structure you need to accept global payments, manage international shipping, and look like a premium brand to customers anywhere on Earth.
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-               {[
-                 { icon: DollarSign, text: "Multi-Currency" },
-                 { icon: Globe, text: "Global Reach" },
-                 { icon: Zap, text: "Fast Setup" },
-                 { icon: Shield, text: "Bank Verified" }
-               ].map((item, i) => (
-                 <div key={i} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-background shadow-sm border border-border/50">
-                    <item.icon className="w-6 h-6 text-accent" />
-                    <span className="text-sm font-bold">{item.text}</span>
-                 </div>
-               ))}
             </div>
           </div>
         </div>
@@ -214,13 +189,13 @@ const Index = () => {
             </div>
 
             <h2 className="font-display text-4xl md:text-5xl font-extrabold text-white mb-6 text-balance leading-tight">
-              Get your first order within 14 days — or your next month is free
+              Your first order could come within 14 days
             </h2>
             <p className="text-xl text-white/75 mb-3 max-w-xl mx-auto">
               Complete your setup milestones and watch your WhatsApp traffic become real orders.
             </p>
             <p className="text-sm text-white/50 mb-10 italic">
-              "If SteerSolo doesn't make your business more professional, you don't pay."
+              "SteerSolo made my business look professional from day one."
             </p>
 
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-10">

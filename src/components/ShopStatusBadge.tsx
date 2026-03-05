@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, Clock, AlertTriangle, Sparkles, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type ShopStatus = 'active' | 'trial' | 'expired';
+export type ShopStatus = 'active' | 'trial' | 'expired' | 'free';
 
 interface ShopStatusBadgeProps {
   status: ShopStatus;
@@ -21,7 +21,7 @@ export const ShopStatusBadge = ({
   variant = 'badge',
   className 
 }: ShopStatusBadgeProps) => {
-  const isVisible = status === 'active' || status === 'trial';
+  const isVisible = status === 'active' || status === 'trial' || status === 'free';
 
   if (variant === 'card') {
     return (
@@ -133,15 +133,19 @@ export const ShopStatusBadge = ({
           Trial • {daysRemaining}d left
         </Badge>
       )}
-      {status === 'expired' && (
+      {(status === 'expired' || status === 'free') && (
         <>
-          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800">
-            <AlertTriangle className="w-3 h-3 mr-1" />
-            Expired
+          <Badge variant="outline" className={cn(
+            status === 'expired' 
+              ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800"
+              : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800"
+          )}>
+            {status === 'expired' ? <AlertTriangle className="w-3 h-3 mr-1" /> : <CheckCircle className="w-3 h-3 mr-1" />}
+            {status === 'expired' ? 'Expired' : 'Free Plan'}
           </Badge>
           {showUpgradeAction && (
             <Link to="/subscription">
-              <Button size="sm" variant="destructive" className="h-6 px-2 text-xs">
+              <Button size="sm" variant={status === 'expired' ? 'destructive' : 'default'} className="h-6 px-2 text-xs">
                 <Sparkles className="w-3 h-3 mr-1" />
                 Upgrade
               </Button>
