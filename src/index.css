@@ -133,12 +133,12 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Roboto', 'Inter', system-ui, sans-serif;
+    font-family: 'Poppins', sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', 'Playfair Display', sans-serif;
+    font-family: 'Poppins', sans-serif;
     @apply font-semibold tracking-tight;
   }
 
@@ -153,10 +153,6 @@
 
   h3 {
     @apply text-xl sm:text-2xl;
-  }
-
-  p, span, li {
-    font-family: 'Roboto', 'Inter', sans-serif;
   }
 }
 
