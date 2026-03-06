@@ -11,8 +11,6 @@ import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X
 import { WishlistButton } from "@/components/WishlistButton";
 import { openWhatsAppContact } from "@/utils/whatsapp";
 import Navbar from "@/components/Navbar";
-import { calculateSubscriptionStatus } from "@/utils/subscription";
-import { FreeShopRestrictionsBanner } from "@/components/FreeShopRestrictionsBanner";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireAccent } from "@/components/patterns/AdirePattern";
 import CheckoutDialog from "@/components/CheckoutDialog";
@@ -91,7 +89,6 @@ const ShopStorefront = () => {
   const [isOwner, setIsOwner] = useState(false);
   const [ownerPlan, setOwnerPlan] = useState<OwnerPlan>({ slug: null, name: null });
   const [ownerIsInTrial, setOwnerIsInTrial] = useState(false);
-  const [ownerIsFree, setOwnerIsFree] = useState(false);
   const isPremiumPlan = ownerPlan.slug === 'pro' || ownerPlan.slug === 'business' || ownerIsInTrial;
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -300,21 +297,12 @@ const ShopStorefront = () => {
           .single();
         
         if (profileData) {
-          // Count products to determine free vs expired
-          const { count: shopProductCount } = await supabase
-            .from('products')
-            .select('id', { count: 'exact', head: true })
-            .eq('shop_id', shopData.id);
-
-          // Calculate subscription status to determine visibility
-          const subStatus = calculateSubscriptionStatus(profileData, shopProductCount ?? undefined);
-          
-          if (subStatus.status === 'trial') {
-            setOwnerIsInTrial(true);
-          }
-          
-          if (subStatus.status === 'free') {
-            setOwnerIsFree(true);
+          // Check if owner is in trial (has expiry, not subscribed, expiry in future)
+          if (!profileData.is_subscribed && profileData.subscription_expires_at) {
+            const expiresAt = new Date(profileData.subscription_expires_at);
+            if (expiresAt > new Date()) {
+              setOwnerIsInTrial(true);
+            }
           }
 
           if (profileData.subscription_plan_id) {
@@ -479,42 +467,6 @@ const ShopStorefront = () => {
       </div>
     );
   }
-
-  // Block free-plan shops from public viewing (non-owners see unavailable page)
-  if (ownerIsFree && !isOwner) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <Navbar />
-        <div className="flex-1 container mx-auto px-4 pt-32">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="w-24 h-24 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
-              <Store className="w-12 h-12 text-muted-foreground" />
-            </div>
-            <h1 className="font-display text-3xl font-bold mb-3">Shop Unavailable</h1>
-            <p className="text-muted-foreground mb-8 text-lg">
-              This shop is currently on the Free plan and not visible to the public.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/shops">
-                <Button size="lg" className="bg-gradient-to-r from-accent to-primary">
-                  <Store className="w-4 h-4 mr-2" />
-                  Browse All Shops
-                </Button>
-              </Link>
-              <Link to="/">
-                <Button size="lg" variant="outline">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Go Home
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
   return (
     <div 
       className="min-h-screen bg-background flex flex-col"
@@ -523,14 +475,6 @@ const ShopStorefront = () => {
       }}
     >
       <Navbar shopBranding={isPremiumPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
-      {/* Free plan owner banner */}
-      {ownerIsFree && isOwner && (
-        <div className="pt-20 pb-0">
-          <div className="container mx-auto px-4">
-            <FreeShopRestrictionsBanner />
-          </div>
-        </div>
-      )}
       {/* Shop Header */}
       <div className="relative pt-20" data-tour="shop-header">
         {shop.banner_url ? (
