@@ -1,51 +1,64 @@
 
 
-# Fixes: Enterprise Pricing, Font Consistency & Contrast
+# Plan: Subscription Expiry Popup, Homepage Alignment, and Logistics Verification
 
-## 1. Enterprise Pricing — What It Is
+## 1. Subscription Expiry / Free Plan Persuasion Popup
 
-The "Enterprise pricing" link at the bottom of the pricing section (line 287-292 in `DynamicPricing.tsx`) is a WhatsApp contact link for the hidden **Business plan** (the "Ghost Plan" strategy). It's not a real plan shown on the grid — it exists as a psychological anchor. The link says "Contact us for Enterprise pricing →" and opens WhatsApp to discuss the Business plan.
+Create a new component `src/components/SubscriptionExpiryDialog.tsx` that shows when a shop owner's trial/subscription has expired. This dialog will be triggered from `Dashboard.tsx` after data loads.
 
-**No code change needed** — this is working as designed. It's your hidden high-tier plan that makes Pro look more affordable by comparison.
+**Logic flow:**
+- After `loadData()` completes, check `subscriptionStatus === 'expired'`
+- Show a persuasive full-screen dialog with two paths:
+  - **"Upgrade to a Paid Plan"** — navigates to `/pricing`
+  - **"Stay on Free Plan (5 products max)"** — if `productsCount > 5`, show a product list with delete buttons so the user can trim down to 5. If `productsCount <= 5`, show a persuasive "you're missing out" message but allow them to dismiss
+- Even if products are <= 5, still show the dialog once per session (use `sessionStorage` to avoid repeat)
+- The dialog should be beautifully designed with gradient backgrounds, clear value propositions for upgrading, and a sense of urgency
+
+**Also show for `subscriptionStatus === 'free'`:** A lighter persuasion popup (not blocking) that appears once per day (tracked via `localStorage` timestamp) encouraging upgrade with feature comparisons.
+
+**Files:** New `src/components/SubscriptionExpiryDialog.tsx`, edit `src/pages/Dashboard.tsx`
 
 ---
 
-## 2. Poppins Font on Storefront
+## 2. Homepage Alignment — Fix Inconsistencies
 
-The `ShopStorefront.tsx` (line 474-475) allows shop owners to override the font via `font_style`. When no custom font is set, the storefront inherits Poppins from the global CSS (which we already fixed). This is working correctly — Poppins is the default everywhere.
+Review current Index page claims vs actual system capabilities:
 
-**No change needed** — Poppins is already the global default after the previous fix.
+**Issues found:**
+- "Proven 30-Day Ritual" chip in hero — this exists (StructuredSellingChallenge), accurate
+- "Sell Globally from Africa" — the system only supports NGN payments via Paystack currently. The "From Africa to the World" section claims "Multi-Currency" and "Global Reach" which is misleading
+- "setup takes 10 minutes" — accurate
+- HowItWorks says "15-day free trial" but the pricing strategy is "Free Forever" (Starter plan) — inconsistent
+- Final CTA says "Get your first order within 14 days — or your next month is free" — this guarantee isn't enforced in the system
+- "Free forever plan" in footer chips — accurate per pricing strategy
+
+**Fixes:**
+- Remove the "From Africa to the World" section (Section 1.5) since multi-currency/global payments aren't implemented
+- Update HowItWorks step 1 description from "15-day free trial" to "Free forever with up to 5 products"
+- Soften the Final CTA guarantee to something achievable: "Get your first order within 14 days" without the "next month is free" promise (unless you want to enforce it)
+- Keep the hero as-is — "Turn WhatsApp traffic into consistent orders" is accurate
+
+**Files:** `src/pages/Index.tsx`, `src/components/HowItWorks.tsx`
 
 ---
 
-## 3. Contrast Issues in Dark Mode
+## 3. Logistics Function Verification
 
-The screenshot shows poor text contrast — the body text and sub-headings are barely visible against the dark background. The issue is in the dark mode CSS variables in `src/index.css`:
+The `logistics-get-rates` and `logistics-book-delivery` edge functions are correctly structured for the Terminal Africa API. The flow is: Create addresses → Create parcel → Get rates / Create shipment → Arrange pickup.
 
-### Changes to `src/index.css` (dark mode variables, around lines 72-100):
+**Current status:** The code is correct. The only issue is that without a valid `TERMINAL_API_KEY`, it falls back to mock data. The `TERMINAL_API_KEY` secret is already configured. The functions should work if the key is valid and the Terminal Africa account is active.
 
-- **`--foreground`**: Brighten from `40 20% 98%` — this is fine, but `--muted-foreground` is too dim
-- **`--muted-foreground`**: Change from `40 15% 65%` → `40 15% 75%` (brighter muted text for readability)
-- **`--secondary-foreground`**: Already `40 20% 98%` — fine
-- **`--card`**: Change from `220 35% 12%` → `220 35% 14%` (slightly lighter cards for more separation from background)
-- **`--border`**: Change from `220 30% 20%` → `220 30% 24%` (more visible borders)
+**Small fix needed:** The `logistics-get-rates` function hardcodes `country: 'NG'` — should use the `country` field from the address if provided. Also add better error messages when Terminal API returns errors (currently just throws generic "Failed to create pickup address").
 
-### Changes to `src/pages/Index.tsx` (hero section, lines 70-84):
+**Files:** `supabase/functions/logistics-get-rates/index.ts`, `supabase/functions/logistics-book-delivery/index.ts`
 
-- Line 70: The `h1` heading uses `text-foreground` by default which is fine, but the body text on line 83 uses `text-muted-foreground` which is too dim in dark mode. The CSS fix above addresses this globally.
-- Line 74: `text-foreground/90` — change to `text-foreground` for full opacity in the sub-heading.
+---
 
-### Summary of CSS variable changes in dark mode block:
+## Summary
 
-| Variable | Before | After | Reason |
-|---|---|---|---|
-| `--muted-foreground` | `40 15% 65%` | `40 15% 75%` | Body text too dim |
-| `--card` | `220 35% 12%` | `220 35% 14%` | Better card/bg separation |
-| `--border` | `220 30% 20%` | `220 30% 24%` | More visible borders |
-| `--input` | `220 30% 20%` | `220 30% 24%` | Match border |
-
-### In `Index.tsx` line 74:
-- Change `text-foreground/90` → `text-foreground` for the sub-heading
-
-These are small but impactful tweaks that improve readability across all dark-mode pages without changing the overall aesthetic.
+| # | Feature | Files | Effort |
+|---|---------|-------|--------|
+| 1 | Subscription expiry persuasion popup | New component + `Dashboard.tsx` | Medium |
+| 2 | Homepage consistency fixes | `Index.tsx`, `HowItWorks.tsx` | Small |
+| 3 | Logistics error handling improvement | 2 edge functions | Small |
 

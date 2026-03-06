@@ -71,7 +71,7 @@ const Index = () => {
                 Your <span className="text-accent underline decoration-gold/30">Daily Selling System</span> is here.
               </h1>
 
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground/90 mt-4 animate-fade-up" style={{ animationDelay: '120ms' }}>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mt-4 animate-fade-up" style={{ animationDelay: '120ms' }}>
                 Turn WhatsApp traffic into
                 {" "}
                 <TypewriterEffect
