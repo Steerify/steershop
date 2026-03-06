@@ -854,6 +854,9 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Free plan restrictions banner */}
+        {subscriptionStatus === 'free' && <FreeShopRestrictionsBanner />}
+
         {/* Info Carousel - subscription, WhatsApp & store status */}
         {slides.length > 0 && (
           <div
