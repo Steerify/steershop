@@ -50,6 +50,7 @@ import { SalesMilestonePopup } from "@/components/SalesMilestonePopup";
 import { StructuredSellingChallenge } from "@/components/StructuredSellingChallenge";
 import { SubscriptionExpiryDialog } from "@/components/SubscriptionExpiryDialog";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
+import { FreeShopRestrictionsBanner } from "@/components/FreeShopRestrictionsBanner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 // ─── Verification Progress Card ───────────────────────────────────────────────
 const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profile: any; shopFullData: any; totalSales: number }) => {
@@ -481,6 +482,30 @@ const Dashboard = () => {
           </div>
         </div>
       );
+    } else if (subscriptionStatus === 'free') {
+      // Free plan — store hidden
+      slides.push(
+        <div key="free-plan" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-5 min-h-[120px] flex items-center">
+          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="relative z-10 flex items-center justify-between gap-3 w-full">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <AlertCircle className="w-4 h-4 text-white/80" />
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Free Plan</span>
+              </div>
+              <h3 className="text-white font-extrabold text-base">Your shop is hidden from customers</h3>
+              <p className="text-white/70 text-xs mt-0.5">Upgrade to get listed in the marketplace.</p>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => navigate('/pricing')}
+              className="shrink-0 bg-white text-amber-600 hover:bg-white/90 font-bold shadow-lg"
+            >
+              Upgrade
+            </Button>
+          </div>
+        </div>
+      );
     } else {
       // Active — store visibility banner
       slides.push(
@@ -593,8 +618,8 @@ const Dashboard = () => {
             <div className="grid grid-cols-2 gap-x-6 gap-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-white/60 text-xs">Visibility</span>
-                <span className={`text-xs font-bold ${subscriptionStatus === 'expired' ? 'text-red-400' : 'text-green-400'}`}>
-                  {subscriptionStatus === 'expired' ? 'Hidden' : 'Live'}
+                <span className={`text-xs font-bold ${subscriptionStatus === 'expired' || subscriptionStatus === 'free' ? 'text-red-400' : 'text-green-400'}`}>
+                  {subscriptionStatus === 'expired' || subscriptionStatus === 'free' ? 'Hidden' : 'Live'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -828,6 +853,9 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Free plan restrictions banner */}
+        {subscriptionStatus === 'free' && <FreeShopRestrictionsBanner />}
 
         {/* Info Carousel - subscription, WhatsApp & store status */}
         {slides.length > 0 && (
