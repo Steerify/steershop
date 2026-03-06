@@ -150,7 +150,7 @@ const Customers = () => {
               <p className="text-xs text-muted-foreground">Total</p>
             </CardContent>
           </Card>
-          <Card className="border-primary/10">
+          <Card className="card-spotify">
             <CardContent className="p-4 text-center">
               <TrendingUp className="w-6 h-6 text-accent mx-auto mb-1" />
               <p className="text-2xl font-bold">{repeatCustomers}</p>
