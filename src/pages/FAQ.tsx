@@ -139,7 +139,7 @@ const faqCategories: FAQCategory[] = [
       },
       {
         question: "Is there a setup fee?",
-        answer: "No setup fees! You only pay the monthly subscription after your free trial. We also offer a professional setup service (₦5,000) where our team builds your complete store for you if you prefer a hands-off approach."
+        answer: "No setup fees! The Starter plan is free forever. We also offer a professional 'Done-For-You' setup service (₦5,000) where our team builds your complete store for you if you prefer a hands-off approach."
       },
       {
         question: "What is 'Pay Before Service' vs 'Pay After Service'?",
