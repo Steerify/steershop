@@ -63,22 +63,18 @@ const ShopCardSkeleton = () => (
 );
 
 const ProductCardSkeleton = () => (
-  <Card className="h-full">
-    <CardHeader>
-      <Skeleton className="w-full h-48 rounded-lg mb-4" />
-      <Skeleton className="h-5 w-3/4 mb-2" />
-      <div className="flex items-center gap-2 mt-2">
-        <Skeleton className="w-6 h-6 rounded-full" />
-        <Skeleton className="h-4 w-24" />
-      </div>
-    </CardHeader>
-    <CardContent>
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-6 w-16 rounded-full" />
-      </div>
-    </CardContent>
-  </Card>
+  <div className="card-spotify h-full p-4">
+    <Skeleton className="w-full h-48 rounded-xl mb-4" />
+    <Skeleton className="h-5 w-3/4 mb-2" />
+    <div className="flex items-center gap-2 mt-2">
+      <Skeleton className="w-6 h-6 rounded-full" />
+      <Skeleton className="h-4 w-24" />
+    </div>
+    <div className="flex items-center justify-between mt-4">
+      <Skeleton className="h-8 w-32" />
+      <Skeleton className="h-6 w-16 rounded-full" />
+    </div>
+  </div>
 );
 
 const Shops = () => {
