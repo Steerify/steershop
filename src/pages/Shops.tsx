@@ -551,32 +551,29 @@ const Shops = () => {
       {/* Verified Seller Safety Notice */}
       <VerifiedSellerNotice />
       
-      <section className="relative pt-24 sm:pt-28 pb-6 sm:pb-8 overflow-hidden">
-        <AdirePattern variant="geometric" className="text-primary" opacity={0.5} />
-        <div className="absolute inset-0 bg-gradient-to-b from-accent/5 via-transparent to-transparent" />
-        
+      <section className="relative pt-24 sm:pt-28 pb-8 sm:pb-12 gradient-hero-spotify">
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-accent/10 border border-accent/20 rounded-full mb-4 sm:mb-6">
-              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full mb-5 sm:mb-6">
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
               <span className="text-accent font-semibold text-xs sm:text-sm">Discover Nigerian Businesses</span>
             </div>
             
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-3">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-3 tracking-tight">
               Explore <span className="gradient-text">Amazing Shops</span>
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mb-4 sm:mb-6 px-2">
+            <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mb-6 sm:mb-8 px-2">
               {stats.shops} shops · {stats.products} products from talented Nigerian entrepreneurs
             </p>
 
             {/* Search */}
-            <div className="relative max-w-lg mx-auto px-2">
-              <Search className="absolute left-6 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+            <div className="relative max-w-lg mx-auto px-2 search-spotify rounded-full">
+              <Search className="absolute left-6 sm:left-6 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground z-10" />
               <Input
                 placeholder="Search shops, products, or services..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 sm:pl-12 h-12 sm:h-14 text-sm sm:text-base bg-card/80 backdrop-blur-sm border-border/50 focus:border-accent shadow-lg rounded-xl"
+                className="pl-10 sm:pl-12 h-12 sm:h-14 text-sm sm:text-base bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-full"
               />
               {(isSearching || isLoading) && (
                 <div className="absolute right-6 sm:right-4 top-1/2 -translate-y-1/2">
