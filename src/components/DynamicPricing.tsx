@@ -225,8 +225,14 @@ export const DynamicPricing = () => {
                   </div>
                   
                   {billingCycle === "yearly" && savings > 0 && (
-                    <p className="text-sm text-primary font-medium mb-2">
-                      Save ₦{formatPrice(savings)}/year
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className="bg-green-600 text-white border-0 text-xs px-2 py-0.5 animate-pulse">SAVE 17%</Badge>
+                      <span className="text-sm text-green-600 dark:text-green-400 font-medium">₦{formatPrice(savings)}/year</span>
+                    </div>
+                  )}
+                  {billingCycle === "monthly" && price > 0 && plan.price_yearly && (
+                    <p className="text-xs text-muted-foreground mb-2 italic">
+                      💡 Switch to yearly and save!
                     </p>
                   )}
                   
