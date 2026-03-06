@@ -60,8 +60,7 @@ export const WhySteerSolo = () => {
                   </div>
                   <h3 className="text-lg font-semibold mb-2">{card.title}</h3>
                   <p className="text-muted-foreground text-sm">{card.description}</p>
-                </CardContent>
-              </Card>
+              </div>
             ))}
           </div>
         </div>
