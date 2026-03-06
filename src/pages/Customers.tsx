@@ -143,7 +143,7 @@ const Customers = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
-          <Card className="border-primary/10">
+          <Card className="card-spotify">
             <CardContent className="p-4 text-center">
               <Users className="w-6 h-6 text-primary mx-auto mb-1" />
               <p className="text-2xl font-bold">{totalCustomers}</p>
