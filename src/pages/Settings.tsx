@@ -169,7 +169,7 @@ const Settings = () => {
 
           {/* Subscription Status - Entrepreneurs only */}
           {isEntrepreneur && shopStatus && (
-            <Card className="border-border/50 shadow-sm">
+            <Card className="card-spotify shadow-sm">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <CreditCard className="w-5 h-5 text-primary" />
