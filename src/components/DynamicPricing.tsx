@@ -80,7 +80,7 @@ export const DynamicPricing = () => {
       case 'growth':
         return { badge: null, highlight: false, icon: Zap, tagline: "Chosen by ambitious sellers", cta: "Start Growing Today", missingFeatures: ["No AI tools", "No priority support"] };
       case 'pro':
-        return { badge: '🔥 Most chosen plan', highlight: true, icon: Sparkles, tagline: "⚡ Used by top-performing sellers", cta: "Unlock AI Power", missingFeatures: [] };
+        return { badge: '🔥 Most chosen', highlight: true, icon: Sparkles, tagline: "⚡ Used by top-performing sellers", cta: "Unlock AI Power", missingFeatures: [] };
       default:
         return { badge: null, highlight: false, icon: Zap, tagline: "", cta: "Get Started", missingFeatures: [] };
     }
