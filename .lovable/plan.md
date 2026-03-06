@@ -1,15 +1,19 @@
 
 
-# Default Poppins with Optional Custom Font Override
+# Plan: Replace Favicon & Enforce Poppins on Shop Storefront
 
-The current code already supports custom fonts for Pro/Business shops. The only issue is that when `font_style` is not set, there's no explicit Poppins declaration — it just inherits from global CSS, which works fine.
+## 1. Replace Favicon
 
-**No code change is actually needed.** The current behavior already does exactly what you want:
+The SteerSolo icon is currently referenced from an external Google Storage URL. We will:
 
-1. **Default**: When a shop owner hasn't set a custom font (`font_style` is null), the storefront inherits **Poppins** from the global CSS
-2. **Custom**: When a Pro/Business shop owner picks a font via the Storefront Customizer, it overrides with their chosen font
+- **Download and save** the image to `public/favicon.jpg` (copy from the external URL)
+- **Update `index.html`** lines 61-62 to reference `/favicon.jpg` locally instead of the external URL
 
-The `StorefrontCustomizer` component already has "Default (Poppins)" as the first option in the font dropdown, and the storefront code only applies a custom `fontFamily` when `shop.font_style` is truthy.
+## 2. Enforce Poppins Font on Shop Storefront
 
-This is already working as designed — Poppins is the default, and users can change it themselves through the customizer.
+Currently `ShopStorefront.tsx` (line 475) applies `shop.font_style` as `fontFamily`, which could be any font. We will:
+
+- **Override** the font to always use `Poppins` by removing the dynamic `fontFamily` style from the container div (line 475)
+- **Remove** the dynamic Google Fonts `<link>` injection (lines 478-482) since Poppins is already loaded globally
+- This ensures all storefront text consistently uses Poppins regardless of shop settings
 
