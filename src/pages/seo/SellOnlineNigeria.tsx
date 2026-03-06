@@ -29,7 +29,7 @@ const SellOnlineNigeria = () => (
           "Upload your logo or let AI create one for you",
           "Add your products with photos and prices",
           "Your store is live immediately — share the link anywhere",
-          "15-day free trial, no credit card needed"
+          "Free forever plan — up to 5 products, no credit card needed"
         ]
       },
       {
