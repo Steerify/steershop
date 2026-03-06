@@ -441,7 +441,7 @@ const Shops = () => {
                           />
                         </div>
                       ) : (
-                        <div className="w-full h-32 sm:h-48 mb-2 sm:mb-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg flex items-center justify-center">
+                        <div className="w-full h-32 sm:h-48 mb-3 sm:mb-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl flex items-center justify-center">
                           <Package className="w-10 h-10 sm:w-16 sm:h-16 text-muted-foreground" />
                         </div>
                       )}
