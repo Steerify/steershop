@@ -1,64 +1,73 @@
 
 
-# Plan: Subscription Expiry Popup, Homepage Alignment, and Logistics Verification
+# Plan: White-Label Branding Enforcement, Ads Deep-Link Posting, and Competitive Alignment
 
-## 1. Subscription Expiry / Free Plan Persuasion Popup
+## Issues Found
 
-Create a new component `src/components/SubscriptionExpiryDialog.tsx` that shows when a shop owner's trial/subscription has expired. This dialog will be triggered from `Dashboard.tsx` after data loads.
+### A. White-Label Branding — Partially Working, Gaps Exist
+- **ShopStorefront.tsx (line 457):** Already passes `shopBranding` to Navbar for `isPremiumPlan` (pro/business). This works correctly — the Navbar shows shop name + logo instead of SteerSolo. **Confirmed working.**
+- **Gap:** The `isPremiumPlan` check requires `subscription_plan_id` to be set on the profile AND the plan slug to be `pro` or `business`. If a user is on trial (no plan assigned yet), `ownerPlan.slug` is `null` → white-label won't show even though they're in trial. Per memory, trial users should also get white-label.
+- **Gap:** When a customer is browsing (not the owner), the Navbar `Link to="/"` always goes to SteerSolo homepage. For premium shops, this should link to the shop itself (or at minimum stay on the storefront).
 
-**Logic flow:**
-- After `loadData()` completes, check `subscriptionStatus === 'expired'`
-- Show a persuasive full-screen dialog with two paths:
-  - **"Upgrade to a Paid Plan"** — navigates to `/pricing`
-  - **"Stay on Free Plan (5 products max)"** — if `productsCount > 5`, show a product list with delete buttons so the user can trim down to 5. If `productsCount <= 5`, show a persuasive "you're missing out" message but allow them to dismiss
-- Even if products are <= 5, still show the dialog once per session (use `sessionStorage` to avoid repeat)
-- The dialog should be beautifully designed with gradient backgrounds, clear value propositions for upgrading, and a sense of urgency
+### B. Ads Assistant — Generates Copy but Doesn't Actually Post
+The current flow: Generate AI copy → Copy to clipboard → "Launch on [Platform]" button opens the platform's generic campaign creation page. The user then has to manually paste the copy.
 
-**Also show for `subscriptionStatus === 'free'`:** A lighter persuasion popup (not blocking) that appears once per day (tracked via `localStorage` timestamp) encouraging upgrade with feature comparisons.
+**Reality check against competitors (Bumpa):** Bumpa also doesn't auto-post ads — they generate copy and link to Meta Ads Manager. No Nigerian platform actually auto-posts because it requires full OAuth integration with Meta Business API, Google Ads API, and TikTok Marketing API — each requiring business verification, developer accounts, and approved ad accounts.
 
-**Files:** New `src/components/SubscriptionExpiryDialog.tsx`, edit `src/pages/Dashboard.tsx`
+**What we CAN improve:**
+- For **WhatsApp**: Already works — opens `wa.me/?text=...` with pre-filled text. Good.
+- For **Facebook/Instagram**: Pre-fill the copy into the clipboard AND open the correct campaign creation URL. Add a step-by-step instruction card showing exactly where to paste.
+- For **TikTok**: Same approach — clipboard + launch + instructions.
+- For **Google Ads**: Same approach.
+- Add a "Share to WhatsApp Status" option (different from broadcast) — `whatsapp://send?text=...`
+- Add a "Share to Instagram Story" deep link option (limited but possible via clipboard + story camera link)
 
----
+### C. Competitive Analysis — SteerSolo vs Bumpa (Main Nigerian Competitor)
 
-## 2. Homepage Alignment — Fix Inconsistencies
+| Feature | Bumpa | SteerSolo | Gap |
+|---------|-------|-----------|-----|
+| Mobile app | Yes (iOS/Android) | Web only | Major — consider PWA |
+| WhatsApp integration | Deep (auto-messages, catalog sync) | Basic (link sharing) | Medium |
+| Inventory management | Advanced (multi-location, low-stock alerts) | Basic (stock count) | Medium |
+| AI tools | AI product descriptions, business insights | AI ads, shop analysis, product descriptions | On par |
+| Payment processing | Paystack, transfers | Paystack, transfers, bank | On par |
+| Social media ads | Copy generation + link to Meta | Copy generation + link to platforms | On par |
+| Website/storefront | Custom domain, extensions, themes | Slug-based storefront | Medium gap |
+| Analytics | Revenue, customer, product analytics | Basic dashboard stats | Medium |
+| Delivery integration | Multiple carriers | Terminal Africa | On par |
+| Pricing | Free plan, paid from ₦3,900/mo | Free plan, paid from ₦2,500/mo | Competitive |
 
-Review current Index page claims vs actual system capabilities:
-
-**Issues found:**
-- "Proven 30-Day Ritual" chip in hero — this exists (StructuredSellingChallenge), accurate
-- "Sell Globally from Africa" — the system only supports NGN payments via Paystack currently. The "From Africa to the World" section claims "Multi-Currency" and "Global Reach" which is misleading
-- "setup takes 10 minutes" — accurate
-- HowItWorks says "15-day free trial" but the pricing strategy is "Free Forever" (Starter plan) — inconsistent
-- Final CTA says "Get your first order within 14 days — or your next month is free" — this guarantee isn't enforced in the system
-- "Free forever plan" in footer chips — accurate per pricing strategy
-
-**Fixes:**
-- Remove the "From Africa to the World" section (Section 1.5) since multi-currency/global payments aren't implemented
-- Update HowItWorks step 1 description from "15-day free trial" to "Free forever with up to 5 products"
-- Soften the Final CTA guarantee to something achievable: "Get your first order within 14 days" without the "next month is free" promise (unless you want to enforce it)
-- Keep the hero as-is — "Turn WhatsApp traffic into consistent orders" is accurate
-
-**Files:** `src/pages/Index.tsx`, `src/components/HowItWorks.tsx`
-
----
-
-## 3. Logistics Function Verification
-
-The `logistics-get-rates` and `logistics-book-delivery` edge functions are correctly structured for the Terminal Africa API. The flow is: Create addresses → Create parcel → Get rates / Create shipment → Arrange pickup.
-
-**Current status:** The code is correct. The only issue is that without a valid `TERMINAL_API_KEY`, it falls back to mock data. The `TERMINAL_API_KEY` secret is already configured. The functions should work if the key is valid and the Terminal Africa account is active.
-
-**Small fix needed:** The `logistics-get-rates` function hardcodes `country: 'NG'` — should use the `country` field from the address if provided. Also add better error messages when Terminal API returns errors (currently just throws generic "Failed to create pickup address").
-
-**Files:** `supabase/functions/logistics-get-rates/index.ts`, `supabase/functions/logistics-book-delivery/index.ts`
+**Key takeaway:** SteerSolo is competitive on price and AI features. Biggest gaps are: (1) no mobile app/PWA, (2) limited WhatsApp automation, (3) no custom domains.
 
 ---
 
-## Summary
+## Plan
 
-| # | Feature | Files | Effort |
-|---|---------|-------|--------|
-| 1 | Subscription expiry persuasion popup | New component + `Dashboard.tsx` | Medium |
-| 2 | Homepage consistency fixes | `Index.tsx`, `HowItWorks.tsx` | Small |
-| 3 | Logistics error handling improvement | 2 edge functions | Small |
+### 1. Fix White-Label for Trial Users
+**`ShopStorefront.tsx`:** Expand `isPremiumPlan` check to also include users who are in trial period (`subscription_expires_at > now()` and `is_subscribed = false`). Fetch `is_subscribed` and `subscription_expires_at` alongside `subscription_plan_id` in the `loadShopData` function.
+
+**`Navbar.tsx`:** When `shopBranding` is provided, make the logo link go to the current page (or the shop slug) instead of always linking to `/`.
+
+### 2. Improve Ads Assistant — Add Post-Generation Guidance
+**`AdsAssistant.tsx`:** After generating copy (Step 3), add a collapsible "How to Post This Ad" instruction card per platform:
+- **WhatsApp:** Already has share button. Add "Share as Status" button too.
+- **Facebook/Instagram:** Show 3-step visual guide: "1. Copy text above → 2. Click Launch → 3. Paste in Primary Text field". Auto-copy all text before opening link.
+- **TikTok:** Show instructions for TikTok Ads Manager.
+- **Google Ads:** Show instructions for responsive search ads.
+
+Also: When "Launch on [Platform]" is clicked, auto-copy all text to clipboard first, then open the link. Currently it only opens the link.
+
+### 3. No Major Structural Changes Needed
+SteerSolo is reasonably competitive. The gaps (mobile app, custom domains) are infrastructure-level and not quick fixes. What IS actionable:
+- Already have PWA basics (`robots.txt`, `favicon`). Could add a `manifest.json` for installability — but that's a separate task.
+
+---
+
+## Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/pages/ShopStorefront.tsx` | Expand `isPremiumPlan` to include trial users |
+| `src/components/Navbar.tsx` | When `shopBranding` is set, logo links to current page instead of `/` |
+| `src/pages/entrepreneur/AdsAssistant.tsx` | Auto-copy before launch, add per-platform posting instructions |
 
