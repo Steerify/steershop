@@ -127,7 +127,7 @@ const faqCategories: FAQCategory[] = [
     faqs: [
       {
         question: "What happens after my free trial ends?",
-        answer: "When your 14-day trial expires, your store becomes hidden from public view (customers can't see it). However, all your data—products, orders, settings—is preserved. Simply subscribe to reactivate your store instantly."
+        answer: "SteerSolo has a free forever plan, so your store stays active with up to 5 products. If you were on a paid plan that expired, your store reverts to the free plan limits. All your data—products, orders, settings—is preserved. Simply resubscribe to unlock all features."
       },
       {
         question: "How do payments to sellers work?",
