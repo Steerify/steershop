@@ -269,7 +269,7 @@ export const DynamicPricing = () => {
           </p>
           <p className="text-sm text-muted-foreground mt-4">
             Need a fully managed solution?{" "}
-            <a href="https://wa.me/2348000000000?text=I'm%20interested%20in%20the%20Business%20plan" className="text-primary font-semibold hover:underline">
+            <a href="https://wa.me/2349161922351?text=I'm%20interested%20in%20the%20Business%20plan" className="text-primary font-semibold hover:underline">
               Contact us for Enterprise pricing →
             </a>
           </p>

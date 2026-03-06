@@ -309,7 +309,7 @@ const DemoStorefront = () => {
             </div>
             <Link to="/auth/signup">
               <Button size="sm" className="bg-gradient-to-r from-accent to-primary">
-                Start Free Trial
+                Start Free Forever
                 <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
               </Button>
             </Link>
@@ -577,12 +577,12 @@ const DemoStorefront = () => {
             <CardContent className="p-8 md:p-12">
               <h2 className="font-display text-3xl font-bold mb-4">Ready to Build Your Store?</h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Your hustle deserves a professional home. Start your 15-day free trial today.
+                Your hustle deserves a professional home. Start free — no credit card required.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/auth/signup">
                   <Button size="lg" className="bg-gradient-to-r from-accent to-primary text-lg px-8">
-                    Start Free Trial
+                    Start Free Forever
                     <ArrowLeft className="w-5 h-5 ml-2 rotate-180" />
                   </Button>
                 </Link>

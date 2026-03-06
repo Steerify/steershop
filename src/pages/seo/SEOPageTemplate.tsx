@@ -171,7 +171,7 @@ export const SEOPageTemplate = ({
             Ready to Start Selling?
           </h2>
           <p className="text-primary-foreground/80 mb-6">
-            Join 500+ Nigerian entrepreneurs already using SteerSolo. 15-day free trial, no credit card required.
+            Join 500+ Nigerian entrepreneurs already using SteerSolo. Free forever plan — no credit card required.
           </p>
           <Link to="/auth/signup">
             <Button size="lg" variant="secondary" className="text-base px-8">

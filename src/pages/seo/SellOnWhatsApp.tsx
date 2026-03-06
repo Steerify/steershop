@@ -55,7 +55,7 @@ const SellOnWhatsApp = () => (
       { question: "How do I create a WhatsApp store in Nigeria?", answer: "Sign up on SteerSolo for free, add your products, and share your unique store link on WhatsApp. Customers can browse and order directly. No coding needed." },
       { question: "Can customers pay through my WhatsApp store?", answer: "Yes! SteerSolo integrates with Paystack. Customers can pay via card, bank transfer, or USSD directly from your store link." },
       { question: "Is the WhatsApp store link different from WhatsApp Business?", answer: "Yes. WhatsApp Business only lets you create a basic catalog. SteerSolo gives you a full online store with payment processing, order management, and analytics." },
-      { question: "How much does a WhatsApp store cost?", answer: "SteerSolo starts at ₦1,000/month with a 15-day free trial. No credit card required to start." },
+      { question: "How much does a WhatsApp store cost?", answer: "SteerSolo offers a free forever Starter plan with up to 5 products. Paid plans start at ₦2,500/month. No credit card required to start." },
       { question: "Can I use SteerSolo on my phone?", answer: "Absolutely! SteerSolo is fully mobile-friendly. Manage your entire store from your phone." }
     ]}
   />

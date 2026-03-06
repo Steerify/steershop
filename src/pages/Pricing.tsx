@@ -72,7 +72,7 @@ const Pricing = () => {
   const faqs = [
     {
       q: "What happens after my free trial?",
-      a: "You'll need to subscribe to continue using SteerSolo. Your store remains active but hidden until you subscribe."
+      a: "Your store automatically moves to the free Starter plan (up to 5 products). To unlock more products and features, choose a paid plan."
     },
     {
       q: "Can I change plans later?",
@@ -88,7 +88,7 @@ const Pricing = () => {
     },
     {
       q: "What if I don't get results?",
-      a: "Complete your setup milestones within 14 days. If you don't see measurable improvement, your next month is free."
+      a: "We're confident SteerSolo will help you grow. Complete your setup milestones and start receiving orders — our support team is here to help every step of the way."
     },
   ];
 
@@ -190,10 +190,10 @@ const Pricing = () => {
             <CardContent className="p-6 text-center">
               <ShieldCheck className="w-8 h-8 text-green-600 mx-auto mb-3" />
               <h3 className="text-lg font-heading font-bold mb-2">
-                Results Guarantee
+                We're Here to Help You Succeed
               </h3>
               <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-                Complete your setup milestones within 14 days. If you don't see measurable order improvement, your next month is on us. No questions asked.
+                Complete your setup milestones and start receiving orders. Our support team is with you every step of the way — reach out anytime on WhatsApp.
               </p>
             </CardContent>
           </Card>

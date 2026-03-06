@@ -50,7 +50,7 @@ const faqCategories: FAQCategory[] = [
       },
       {
         question: "Is SteerSolo free to use?",
-        answer: "SteerSolo offers a 15-day free trial that gives you full access to all features. After your trial ends, you'll need an active subscription (starting at ₦1,000/month) to keep your store visible and operational. Your store data is preserved even if your subscription lapses."
+        answer: "SteerSolo offers a free forever Starter plan with up to 5 products. For more products and advanced features, paid plans start at ₦2,500/month (Growth) and ₦5,000/month (Pro). Your store data is always preserved."
       },
       {
         question: "What do I need to start selling?",
@@ -85,7 +85,7 @@ const faqCategories: FAQCategory[] = [
       },
       {
         question: "What is the subscription fee?",
-        answer: "SteerSolo costs ₦1,000/month for full access to all features including: unlimited products, order management, payment processing, marketing tools, and customer communication features. This is less than the cost of one meal out!"
+        answer: "SteerSolo offers a free forever Starter plan (up to 5 products). The Growth plan is ₦2,500/month (up to 50 products) and the Pro plan is ₦5,000/month (unlimited products + AI tools). All plans include order management, payments, and WhatsApp integration."
       },
       {
         question: "How do I share my store?",
@@ -127,7 +127,7 @@ const faqCategories: FAQCategory[] = [
     faqs: [
       {
         question: "What happens after my free trial ends?",
-        answer: "When your 14-day trial expires, your store becomes hidden from public view (customers can't see it). However, all your data—products, orders, settings—is preserved. Simply subscribe to reactivate your store instantly."
+        answer: "SteerSolo has a free forever plan, so your store stays active with up to 5 products. If you were on a paid plan that expired, your store reverts to the free plan limits. All your data—products, orders, settings—is preserved. Simply resubscribe to unlock all features."
       },
       {
         question: "How do payments to sellers work?",
@@ -135,11 +135,11 @@ const faqCategories: FAQCategory[] = [
       },
       {
         question: "Can I change my subscription plan?",
-        answer: "Currently, SteerSolo offers one comprehensive plan at ₦1,000/month that includes all features. We're working on additional tiers with even more advanced features—stay tuned!"
+        answer: "Yes! SteerSolo offers three plans: Starter (Free, 5 products), Growth (₦2,500/month, 50 products), and Pro (₦5,000/month, unlimited products + AI). You can upgrade or downgrade at any time."
       },
       {
         question: "Is there a setup fee?",
-        answer: "No setup fees! You only pay the monthly subscription after your free trial. We also offer a professional setup service (₦5,000) where our team builds your complete store for you if you prefer a hands-off approach."
+        answer: "No setup fees! The Starter plan is free forever. We also offer a professional 'Done-For-You' setup service (₦5,000) where our team builds your complete store for you if you prefer a hands-off approach."
       },
       {
         question: "What is 'Pay Before Service' vs 'Pay After Service'?",
@@ -166,7 +166,7 @@ const faqCategories: FAQCategory[] = [
       },
       {
         question: "How do I report a problem or suspicious activity?",
-        answer: "Use the 'Feedback' page to report any issues, suspicious shops, or concerns. Our team reviews all reports and takes appropriate action. You can also contact us directly via WhatsApp (+234 905 994 7055) or email (steerifygroup@gmail.com)."
+        answer: "Use the 'Feedback' page to report any issues, suspicious shops, or concerns. Our team reviews all reports and takes appropriate action. You can also contact us directly via WhatsApp (+234 916 192 2351) or email (steerifygroup@gmail.com)."
       }
     ]
   },
@@ -216,7 +216,7 @@ const faqCategories: FAQCategory[] = [
       },
       {
         question: "Who do I contact for help?",
-        answer: "Reach us through: Email: steerifygroup@gmail.com, WhatsApp: +234 905 994 7055, or use the Feedback form on our website. We typically respond within 24 hours on business days."
+        answer: "Reach us through: Email: steerifygroup@gmail.com, WhatsApp: +234 916 192 2351, or use the Feedback form on our website. We typically respond within 24 hours on business days."
       }
     ]
   }
@@ -385,7 +385,7 @@ const FAQ = () => {
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a 
-                  href="https://wa.me/2349059947055" 
+                  href="https://wa.me/2349161922351" 
                   target="_blank" 
                   rel="noopener noreferrer"
                 >

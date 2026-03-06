@@ -1,111 +1,64 @@
 
 
-# Plan: Premium Shop SEO Discoverability, Contact Update, Mobile Audit & Functionality Review
+# Plan: Subscription Expiry Popup, Homepage Alignment, and Logistics Verification
 
-## Critical Issues Found
+## 1. Subscription Expiry / Free Plan Persuasion Popup
 
-### A. Inconsistent Pricing & Trial Claims Across Codebase
+Create a new component `src/components/SubscriptionExpiryDialog.tsx` that shows when a shop owner's trial/subscription has expired. This dialog will be triggered from `Dashboard.tsx` after data loads.
 
-The actual subscription tiers (from memory) are: **Free (₦0), Growth (₦2,500/mo), Pro (₦5,000/mo)**. But across the codebase:
+**Logic flow:**
+- After `loadData()` completes, check `subscriptionStatus === 'expired'`
+- Show a persuasive full-screen dialog with two paths:
+  - **"Upgrade to a Paid Plan"** — navigates to `/pricing`
+  - **"Stay on Free Plan (5 products max)"** — if `productsCount > 5`, show a product list with delete buttons so the user can trim down to 5. If `productsCount <= 5`, show a persuasive "you're missing out" message but allow them to dismiss
+- Even if products are <= 5, still show the dialog once per session (use `sessionStorage` to avoid repeat)
+- The dialog should be beautifully designed with gradient backgrounds, clear value propositions for upgrading, and a sense of urgency
 
-- `SEOSchemas.tsx` says: Basic ₦1,000, Pro ₦3,000, Business ₦5,000
-- `FAQ.tsx` says: "starting at ₦1,000/month"
-- All 6 SEO landing pages say: "₦1,000/month with 15-day free trial"
-- `DemoStoreFront.tsx` says: "15-day free trial"
-- `SEOPageTemplate.tsx` says: "15-day free trial"
-- `DynamicPricing.tsx` enterprise link uses fake number `2348000000000`
-- `Pricing.tsx` FAQ says: "your store remains active but hidden until you subscribe" (inconsistent with free plan)
-- `Pricing.tsx` guarantee says "next month is free" (unenforced)
+**Also show for `subscriptionStatus === 'free'`:** A lighter persuasion popup (not blocking) that appears once per day (tracked via `localStorage` timestamp) encouraging upgrade with feature comparisons.
 
-### B. Wrong Contact Number Everywhere
-
-Current: `+2349059947055` appears in Footer, FAQ, SEOSchemas, index.html
-Should be: `+234 916 192 2351`
-
-### C. Premium Shop SEO — Not Gated by Plan
-
-Currently `shop-og-meta` serves rich SEO for ALL active shops regardless of plan. The `isSubscribed` check only adds `priceRange` — it doesn't gate the core indexing. The sitemap includes ALL shops. For Instagram-like discoverability (search by name → find the shop), premium shops need enhanced treatment.
+**Files:** New `src/components/SubscriptionExpiryDialog.tsx`, edit `src/pages/Dashboard.tsx`
 
 ---
 
-## Plan
+## 2. Homepage Alignment — Fix Inconsistencies
 
-### 1. Enhanced Premium Shop SEO (Pro/Business Plans)
+Review current Index page claims vs actual system capabilities:
 
-**`shop-og-meta` edge function:**
-- Fetch the owner's `subscription_plan_id` and join to `subscription_plans.slug`
-- For Pro/Business plan shops: serve full rich HTML with JSON-LD, all product schemas, aggregate ratings, `@id` identifiers, `sameAs` links, and WebPage schema — making them highly crawlable
-- For Free/Growth plan shops: serve basic OG meta (title, description, image) but skip the rich product schemas and enhanced structured data. Still indexable, but not "premium findable"
-- Add `WebPage` schema with `isPartOf` linking to SteerSolo for premium shops
+**Issues found:**
+- "Proven 30-Day Ritual" chip in hero — this exists (StructuredSellingChallenge), accurate
+- "Sell Globally from Africa" — the system only supports NGN payments via Paystack currently. The "From Africa to the World" section claims "Multi-Currency" and "Global Reach" which is misleading
+- "setup takes 10 minutes" — accurate
+- HowItWorks says "15-day free trial" but the pricing strategy is "Free Forever" (Starter plan) — inconsistent
+- Final CTA says "Get your first order within 14 days — or your next month is free" — this guarantee isn't enforced in the system
+- "Free forever plan" in footer chips — accurate per pricing strategy
 
-**`generate-sitemap` edge function:**
-- Join shops to profiles to check subscription plan
-- Give Pro/Business shops `priority: 0.9` and `changefreq: daily`
-- Give Free/Growth shops `priority: 0.6` and `changefreq: weekly`
-- Add `<lastmod>` based on actual product updates for premium shops
+**Fixes:**
+- Remove the "From Africa to the World" section (Section 1.5) since multi-currency/global payments aren't implemented
+- Update HowItWorks step 1 description from "15-day free trial" to "Free forever with up to 5 products"
+- Soften the Final CTA guarantee to something achievable: "Get your first order within 14 days" without the "next month is free" promise (unless you want to enforce it)
+- Keep the hero as-is — "Turn WhatsApp traffic into consistent orders" is accurate
 
-**`ShopStorefront.tsx` client-side SEO:**
-- Already injects JSON-LD — enhance for Pro/Business by adding `sameAs`, `potentialAction` (SearchAction), and individual product `@id` references
-
-### 2. Update Contact Number Everywhere
-
-Replace `+2349059947055` / `2349059947055` with `+2349161922351` in:
-- `index.html` (meta tag)
-- `src/components/Footer.tsx` (WhatsApp link)
-- `src/components/SEOSchemas.tsx` (contactPoint)
-- `src/pages/FAQ.tsx` (WhatsApp link)
-
-Replace fake `2348000000000` in `DynamicPricing.tsx` with the real number.
-
-### 3. Fix All Pricing & Trial Inconsistencies
-
-Update hardcoded pricing to match actual tiers (Free/Growth ₦2,500/Pro ₦5,000):
-- `SEOSchemas.tsx` — fix Product schema offers and FAQ answers
-- `FAQ.tsx` — update pricing answer
-- `Pricing.tsx` — fix FAQ about "store hidden" to mention Free plan, remove unenforced guarantee or make it accurate
-- 6 SEO pages (`SellOnWhatsApp`, `SellOnInstagram`, `OnlineStoreNigeria`, `SmallBusinessTools`, `SellOnlineNigeria`, `AcceptPayments`) — update pricing and trial mentions
-- `SEOPageTemplate.tsx` — update CTA text
-- `DemoStoreFront.tsx` — update CTA text
-- `tourSteps.ts` — update tour text
-- Replace "15-day free trial" everywhere with "Free forever plan (up to 5 products)"
-
-### 4. Mobile Responsiveness Audit
-
-Key pages to check and fix:
-- **Dashboard:** Already uses responsive grids. Carousel has swipe. Verified good.
-- **Products page:** Uses responsive layout. Good.
-- **Orders page:** Needs check — order cards may overflow on small screens
-- **Shops browse page:** Grid already responsive. Good.
-- **ShopStorefront:** Floating cart bar may overlap bottom nav on mobile — check z-index
-- **Pricing page:** Plan profile cards use `grid-cols-4` which may squeeze on mobile — already has `grid-cols-1 sm:grid-cols-2 md:grid-cols-4`. Good.
-
-### 5. Non-Working / Unnecessary Functionalities
-
-**Issues identified:**
-- `FinalCTASection.tsx` — imported but NOT used on Index page anymore (dead component)
-- `SocialProofStats.tsx` — shows hardcoded fallback "500+" even when real count is 0. Should show "Growing" instead of inflated numbers when data is low
-- `FeaturedShopsBanner` — depends on `featured_shops` table entries. If empty, renders nothing (fine, but could show a CTA instead)
-- `HomepageReviews` — likely depends on `reviews` or `platform_reviews` table. If empty, may show nothing
-- Ambassador page — exists but unclear if the referral system fully works
-- `GrowthPage.tsx` — publicly shows internal metrics (total users, GMV). This could be sensitive; consider gating
+**Files:** `src/pages/Index.tsx`, `src/components/HowItWorks.tsx`
 
 ---
 
-## Files to Modify
+## 3. Logistics Function Verification
 
-| File | Change |
-|------|--------|
-| `supabase/functions/shop-og-meta/index.ts` | Gate rich SEO by Pro/Business plan |
-| `supabase/functions/generate-sitemap/index.ts` | Prioritize premium shops |
-| `index.html` | Update contact number |
-| `src/components/Footer.tsx` | Update WhatsApp number |
-| `src/components/SEOSchemas.tsx` | Fix pricing, contact, FAQ text |
-| `src/components/DynamicPricing.tsx` | Fix enterprise contact number |
-| `src/pages/FAQ.tsx` | Fix pricing, WhatsApp number |
-| `src/pages/Pricing.tsx` | Fix FAQ answers, guarantee text |
-| `src/pages/seo/*.tsx` (6 files) | Fix pricing/trial mentions |
-| `src/pages/DemoStoreFront.tsx` | Fix trial mention |
-| `src/components/tours/tourSteps.ts` | Fix trial mention |
-| `src/pages/seo/SEOPageTemplate.tsx` | Fix CTA text |
-| `src/pages/ShopStorefront.tsx` | Enhance Pro/Business SEO |
+The `logistics-get-rates` and `logistics-book-delivery` edge functions are correctly structured for the Terminal Africa API. The flow is: Create addresses → Create parcel → Get rates / Create shipment → Arrange pickup.
+
+**Current status:** The code is correct. The only issue is that without a valid `TERMINAL_API_KEY`, it falls back to mock data. The `TERMINAL_API_KEY` secret is already configured. The functions should work if the key is valid and the Terminal Africa account is active.
+
+**Small fix needed:** The `logistics-get-rates` function hardcodes `country: 'NG'` — should use the `country` field from the address if provided. Also add better error messages when Terminal API returns errors (currently just throws generic "Failed to create pickup address").
+
+**Files:** `supabase/functions/logistics-get-rates/index.ts`, `supabase/functions/logistics-book-delivery/index.ts`
+
+---
+
+## Summary
+
+| # | Feature | Files | Effort |
+|---|---------|-------|--------|
+| 1 | Subscription expiry persuasion popup | New component + `Dashboard.tsx` | Medium |
+| 2 | Homepage consistency fixes | `Index.tsx`, `HowItWorks.tsx` | Small |
+| 3 | Logistics error handling improvement | 2 edge functions | Small |
 

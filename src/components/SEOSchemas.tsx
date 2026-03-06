@@ -30,7 +30,7 @@ export const SEOSchemas = () => {
       },
       "contactPoint": {
         "@type": "ContactPoint",
-        "telephone": "+2349059947055",
+        "telephone": "+2349161922351",
         "email": "steerifygroup@gmail.com",
         "contactType": "customer service",
         "availableLanguage": ["English", "Pidgin"]
@@ -59,9 +59,9 @@ export const SEOSchemas = () => {
       "offers": [
         {
           "@type": "Offer",
-          "name": "Basic Plan",
-          "description": "Perfect for new sellers starting their online journey",
-          "price": "1000",
+          "name": "Starter Plan",
+          "description": "Free forever — up to 5 products, perfect for getting started",
+          "price": "0",
           "priceCurrency": "NGN",
           "priceValidUntil": "2027-12-31",
           "availability": "https://schema.org/InStock",
@@ -70,9 +70,9 @@ export const SEOSchemas = () => {
         },
         {
           "@type": "Offer",
-          "name": "Pro Plan",
-          "description": "For growing businesses with advanced features and DFY business profile",
-          "price": "3000",
+          "name": "Growth Plan",
+          "description": "For growing businesses — up to 50 products with full order management",
+          "price": "2500",
           "priceCurrency": "NGN",
           "priceValidUntil": "2027-12-31",
           "availability": "https://schema.org/InStock",
@@ -80,8 +80,8 @@ export const SEOSchemas = () => {
         },
         {
           "@type": "Offer",
-          "name": "Business Plan",
-          "description": "Full suite with AI marketing tools, SEO, Google My Business setup, and priority support",
+          "name": "Pro Plan",
+          "description": "Unlimited products, AI marketing tools, SEO optimization, and priority support",
           "price": "5000",
           "priceCurrency": "NGN",
           "priceValidUntil": "2027-12-31",
@@ -116,7 +116,7 @@ export const SEOSchemas = () => {
           "name": "What's the best online store builder for small businesses in Nigeria?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "SteerSolo is built specifically for Nigerian small businesses and solo entrepreneurs. Unlike generic platforms, SteerSolo integrates WhatsApp ordering, Paystack payments, and AI-powered marketing tools. Plans start at just ₦1,000/month with a 15-day free trial."
+            "text": "SteerSolo is built specifically for Nigerian small businesses and solo entrepreneurs. Unlike generic platforms, SteerSolo integrates WhatsApp ordering, Paystack payments, and AI-powered marketing tools. Start free forever with up to 5 products, or upgrade from ₦2,500/month."
           }
         },
         {
@@ -132,7 +132,7 @@ export const SEOSchemas = () => {
           "name": "How much does SteerSolo cost?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "SteerSolo starts at ₦1,000/month for the Basic plan. We also offer Pro (₦3,000/month) and Business (₦5,000/month) plans with advanced features. All plans include a 15-day free trial. No credit card required."
+            "text": "SteerSolo offers a free forever Starter plan with up to 5 products. Paid plans include Growth (₦2,500/month) and Pro (₦5,000/month) with advanced features. No credit card required to start."
           }
         },
         {
@@ -244,7 +244,7 @@ export const SEOSchemas = () => {
           "name": "Is there a free trial for SteerSolo?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes! Every new account gets a 15-day free trial with full access to all features. No credit card required. You can create your store, add products, and start selling immediately."
+            "text": "Yes! SteerSolo offers a free forever Starter plan with up to 5 products. You can create your store, add products, and start selling immediately — no credit card required. Upgrade anytime for more features."
           }
         }
       ]
@@ -294,7 +294,7 @@ export const SEOSchemas = () => {
       "operatingSystem": "Web",
       "offers": {
         "@type": "Offer",
-        "price": "1000",
+        "price": "0",
         "priceCurrency": "NGN"
       },
       "aggregateRating": {

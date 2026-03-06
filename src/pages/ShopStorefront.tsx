@@ -84,7 +84,7 @@ const ShopStorefront = () => {
   const [selectedService, setSelectedService] = useState<Product | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [ownerPlan, setOwnerPlan] = useState<OwnerPlan>({ slug: null, name: null });
-  const isBusinessPlan = ownerPlan.slug === 'business';
+  const isPremiumPlan = ownerPlan.slug === 'pro' || ownerPlan.slug === 'business';
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const headerCartRef = useRef<HTMLDivElement>(null);
@@ -119,8 +119,8 @@ const ShopStorefront = () => {
     const shopUrl = `https://steersolo.com/shop/${shop.shop_slug}`;
     const imageUrl = shop.logo_url || shop.banner_url || '';
 
-    // Page title - Business plan shows shop name alone
-    document.title = isBusinessPlan ? shop.shop_name : `${shop.shop_name} | SteerSolo`;
+    // Page title - Premium plan shows shop name alone for brand authority
+    document.title = isPremiumPlan ? `${shop.shop_name} — Shop Online` : `${shop.shop_name} | SteerSolo`;
 
     // Helper to set/create meta tags
     const setMeta = (attr: string, key: string, content: string) => {
@@ -146,12 +146,12 @@ const ShopStorefront = () => {
     if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
     canonical.href = shopUrl;
 
-    // JSON-LD - Enhanced for Business plan
+    // JSON-LD - Enhanced for Pro/Business plans
     const schemaData: any = {
       "@context": "https://schema.org",
-      "@type": isBusinessPlan ? "Store" : "LocalBusiness",
+      "@type": isPremiumPlan ? "Store" : "LocalBusiness",
       "name": shop.shop_name,
-      "description": shop.description || `Shop at ${shop.shop_name}${isBusinessPlan ? '' : ' on SteerSolo'}`,
+      "description": shop.description || `Shop at ${shop.shop_name}${isPremiumPlan ? '' : ' on SteerSolo'}`,
       "url": shopUrl,
       "image": imageUrl || undefined,
       "numberOfEmployees": "1-10",
@@ -169,13 +169,24 @@ const ShopStorefront = () => {
       }),
     };
 
-    // Business plan: richer schema
-    if (isBusinessPlan) {
+    // Premium plan: richer schema for search engine discoverability
+    if (isPremiumPlan) {
       schemaData["@id"] = shopUrl;
       schemaData.brand = { "@type": "Brand", "name": shop.shop_name };
+      schemaData.isPartOf = { "@type": "WebSite", "name": "SteerSolo", "url": "https://steersolo.com" };
       if (shop.whatsapp_number) {
-        schemaData.contactPoint = { "@type": "ContactPoint", "telephone": shop.whatsapp_number, "contactType": "customer service" };
+        let phone = shop.whatsapp_number.replace(/[^\d+]/g, '');
+        if (!phone.startsWith('+')) {
+          phone = phone.startsWith('234') ? `+${phone}` : `+234${phone.replace(/^0+/, '')}`;
+        }
+        schemaData.contactPoint = { "@type": "ContactPoint", "telephone": phone, "contactType": "customer service", "availableLanguage": ["English"] };
+        schemaData.sameAs = [`https://wa.me/${phone.replace('+', '')}`];
       }
+      schemaData.potentialAction = {
+        "@type": "SearchAction",
+        "target": `${shopUrl}?search={search_term}`,
+        "query-input": "required name=search_term"
+      };
     }
 
     // Add product catalog as ItemList for rich snippets
@@ -443,7 +454,7 @@ const ShopStorefront = () => {
   }
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar shopBranding={isBusinessPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
+      <Navbar shopBranding={isPremiumPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
       {/* Shop Header */}
       <div className="relative pt-20" data-tour="shop-header">
         {shop.banner_url ? (

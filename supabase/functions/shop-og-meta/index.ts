@@ -173,17 +173,28 @@ serve(async (req) => {
       return generateDefaultHTML();
     }
 
-    // Check if owner is subscribed for richer SEO
+    // Check owner's subscription plan for SEO gating
+    let planSlug = 'free';
     let isSubscribed = false;
     if (shop.owner_id) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('is_subscribed')
+        .select('is_subscribed, subscription_plan_id')
         .eq('id', shop.owner_id)
         .single();
       isSubscribed = profile?.is_subscribed === true;
+      
+      if (profile?.subscription_plan_id) {
+        const { data: plan } = await supabase
+          .from('subscription_plans')
+          .select('slug')
+          .eq('id', profile.subscription_plan_id)
+          .single();
+        planSlug = plan?.slug || 'free';
+      }
     }
 
+    const isPremium = planSlug === 'pro' || planSlug === 'business';
     const shopUrl = `${SITE_URL}/shop/${slug}`;
 
     // If product ID is provided, serve a product-specific page
@@ -198,16 +209,15 @@ serve(async (req) => {
       if (product) {
         return generateProductPageHTML(shop, product, shopUrl);
       }
-      // Fall through to shop page if product not found
     }
 
     // Fetch products for shop page
     const { data: prods } = await supabase
       .from('products')
-      .select('id, name, description, price, image_url, category')
+      .select('id, name, description, price, image_url, category, average_rating, total_reviews')
       .eq('shop_id', shop.id)
       .eq('is_available', true)
-      .limit(20);
+      .limit(isPremium ? 50 : 20);
     const shopProducts = prods || [];
     
     const shopName = escapeHtml(shop.shop_name || 'Shop');
@@ -217,10 +227,11 @@ serve(async (req) => {
     const categories = [...new Set(shopProducts.map(p => p.category).filter(Boolean))];
     const keywordsMeta = [shopName, ...(categories.length ? categories : ['online shop']), 'SteerSolo', 'Nigeria', shop.state || ''].filter(Boolean).join(', ');
 
-    // LocalBusiness JSON-LD
+    // LocalBusiness JSON-LD — enhanced for premium shops
     const jsonLd: any = {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
+      "@type": isPremium ? "Store" : "LocalBusiness",
+      "@id": isPremium ? shopUrl : undefined,
       "name": shop.shop_name || 'Shop',
       "description": shop.description || `Shop at ${shop.shop_name} on SteerSolo`,
       "url": shopUrl,
@@ -244,8 +255,27 @@ serve(async (req) => {
       jsonLd.sameAs = [`https://wa.me/${phone.replace('+', '')}`];
     }
 
+    // Premium: add brand, isPartOf, potentialAction
+    if (isPremium) {
+      jsonLd.brand = { "@type": "Brand", "name": shop.shop_name };
+      jsonLd.isPartOf = { "@type": "WebSite", "name": "SteerSolo", "url": SITE_URL };
+      jsonLd.potentialAction = {
+        "@type": "SearchAction",
+        "target": `${shopUrl}?search={search_term}`,
+        "query-input": "required name=search_term"
+      };
+      if (shop.whatsapp_number) {
+        jsonLd.contactPoint = {
+          "@type": "ContactPoint",
+          "telephone": jsonLd.telephone,
+          "contactType": "customer service",
+          "availableLanguage": ["English"]
+        };
+      }
+    }
+
     // Price range for paid shops
-    if (isSubscribed && shopProducts.length > 0) {
+    if ((isSubscribed || isPremium) && shopProducts.length > 0) {
       const prices = shopProducts.map(p => p.price).filter(Boolean);
       if (prices.length > 0) {
         const minP = Math.min(...prices);
@@ -281,23 +311,45 @@ serve(async (req) => {
       }));
     }
 
-    // Individual Product schemas
-    const productSchemas = shopProducts.slice(0, 10).map(p => ({
-      "@context": "https://schema.org",
-      "@type": "Product",
-      "name": p.name,
-      "description": p.description || `${p.name} available at ${shop.shop_name}`,
-      "image": p.image_url || DEFAULT_IMAGE,
-      "url": `${shopUrl}/product/${p.id}`,
-      "brand": { "@type": "Brand", "name": shop.shop_name },
-      "offers": {
-        "@type": "Offer",
-        "price": p.price,
-        "priceCurrency": "NGN",
-        "availability": "https://schema.org/InStock",
-        "seller": { "@type": "Organization", "name": shop.shop_name, "url": shopUrl }
+    // Individual Product schemas — more for premium shops
+    const productLimit = isPremium ? 20 : 10;
+    const productSchemas = shopProducts.slice(0, productLimit).map(p => {
+      const schema: any = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": p.name,
+        "description": p.description || `${p.name} available at ${shop.shop_name}`,
+        "image": p.image_url || DEFAULT_IMAGE,
+        "url": `${shopUrl}/product/${p.id}`,
+        "brand": { "@type": "Brand", "name": shop.shop_name },
+        "offers": {
+          "@type": "Offer",
+          "price": p.price,
+          "priceCurrency": "NGN",
+          "availability": "https://schema.org/InStock",
+          "seller": { "@type": "Organization", "name": shop.shop_name, "url": shopUrl }
+        }
+      };
+      // Premium: add aggregate rating per product
+      if (isPremium && p.average_rating && p.total_reviews) {
+        schema.aggregateRating = {
+          "@type": "AggregateRating",
+          "ratingValue": p.average_rating,
+          "reviewCount": p.total_reviews
+        };
       }
-    }));
+      return schema;
+    });
+
+    // WebPage schema for premium shops
+    const webPageSchema = isPremium ? {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": shop.shop_name,
+      "url": shopUrl,
+      "isPartOf": { "@type": "WebSite", "name": "SteerSolo", "url": SITE_URL },
+      "about": { "@type": "Store", "@id": shopUrl }
+    } : null;
 
     // Breadcrumb schema
     const breadcrumbSchema = {
@@ -310,23 +362,28 @@ serve(async (req) => {
       ]
     };
     
-    const allSchemas = [jsonLd, breadcrumbSchema, ...productSchemas];
+    const allSchemas = [jsonLd, breadcrumbSchema, ...productSchemas, ...(webPageSchema ? [webPageSchema] : [])];
     
     const locationText = [shop.state, shop.country].filter(Boolean).join(', ');
+    
+    // Premium shops get noindex removed + richer title
+    const titleTag = isPremium 
+      ? `${shopName} — Shop Online | SteerSolo` 
+      : `${shopName} | SteerSolo`;
     
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>${shopName} | SteerSolo</title>
+  <title>${titleTag}</title>
   <meta name="description" content="${description}" />
   <meta name="keywords" content="${escapeHtml(keywordsMeta)}" />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
   <link rel="canonical" href="${shopUrl}" />
   <meta property="og:title" content="${shopName}" />
   <meta property="og:description" content="${description}" />
   <meta property="og:image" content="${imageUrl}" />
   <meta property="og:url" content="${shopUrl}" />
-  <meta property="og:type" content="website" />
+  <meta property="og:type" content="${isPremium ? 'business.business' : 'website'}" />
   <meta property="og:site_name" content="SteerSolo" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${shopName}" />
@@ -358,7 +415,6 @@ serve(async (req) => {
         ${p.image_url ? `<img src="${p.image_url}" alt="${escapeHtml(p.name)}" />` : ''}
         ${p.description ? `<p>${escapeHtml(p.description)}</p>` : ''}
         <p><strong>Price:</strong> ${formatPrice(p.price)}</p>
-        ${p.category ? `<p><strong>Category:</strong> ${escapeHtml(p.category)}</p>` : ''}
       </article>`).join('\n      ')}
     </section>
   </main>
