@@ -135,7 +135,7 @@ const faqCategories: FAQCategory[] = [
       },
       {
         question: "Can I change my subscription plan?",
-        answer: "Currently, SteerSolo offers one comprehensive plan at ₦1,000/month that includes all features. We're working on additional tiers with even more advanced features—stay tuned!"
+        answer: "Yes! SteerSolo offers three plans: Starter (Free, 5 products), Growth (₦2,500/month, 50 products), and Pro (₦5,000/month, unlimited products + AI). You can upgrade or downgrade at any time."
       },
       {
         question: "Is there a setup fee?",
