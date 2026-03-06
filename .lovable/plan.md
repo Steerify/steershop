@@ -1,64 +1,46 @@
 
 
-# Plan: Subscription Expiry Popup, Homepage Alignment, and Logistics Verification
+# Plan: Trial Shops Visible, Free Plan Shops Hidden + Free Plan Restrictions Banner
 
-## 1. Subscription Expiry / Free Plan Persuasion Popup
+## Overview
 
-Create a new component `src/components/SubscriptionExpiryDialog.tsx` that shows when a shop owner's trial/subscription has expired. This dialog will be triggered from `Dashboard.tsx` after data loads.
+- **Trial users**: shops remain visible in marketplace and via direct link until trial expires
+- **Free plan users**: shops are hidden from marketplace AND direct storefront access. When a free user visits their own storefront or dashboard, they see a persuasive banner explaining what they can't do and encouraging upgrade
 
-**Logic flow:**
-- After `loadData()` completes, check `subscriptionStatus === 'expired'`
-- Show a persuasive full-screen dialog with two paths:
-  - **"Upgrade to a Paid Plan"** — navigates to `/pricing`
-  - **"Stay on Free Plan (5 products max)"** — if `productsCount > 5`, show a product list with delete buttons so the user can trim down to 5. If `productsCount <= 5`, show a persuasive "you're missing out" message but allow them to dismiss
-- Even if products are <= 5, still show the dialog once per session (use `sessionStorage` to avoid repeat)
-- The dialog should be beautifully designed with gradient backgrounds, clear value propositions for upgrading, and a sense of urgency
+## Changes
 
-**Also show for `subscriptionStatus === 'free'`:** A lighter persuasion popup (not blocking) that appears once per day (tracked via `localStorage` timestamp) encouraging upgrade with feature comparisons.
+### 1. ShopStorefront.tsx — Block free-plan shops from public viewing
 
-**Files:** New `src/components/SubscriptionExpiryDialog.tsx`, edit `src/pages/Dashboard.tsx`
+In `loadShopData()` (around line 292), after fetching the owner's profile data, calculate subscription status using `calculateSubscriptionStatus`. If the owner is on the `free` plan and the visitor is NOT the owner, show a "Shop Unavailable" message instead of the storefront, with a message like "This shop is currently on a free plan and not visible to the public."
 
----
+If the visitor IS the owner, show the storefront but with a persistent banner at the top explaining:
+- "Your shop is hidden from the public"
+- List of restricted features (no AI tools, no verification badge, limited to 5 products, shop not visible in marketplace)
+- CTA button to upgrade
 
-## 2. Homepage Alignment — Fix Inconsistencies
+### 2. Shops.tsx (Marketplace) — Filter out free-plan shops
 
-Review current Index page claims vs actual system capabilities:
+In `fetchShops()` (around line 186), after fetching shops, also fetch owner profiles to determine subscription status. Filter out shops whose owners are on the `free` plan (expired trial, not subscribed, and no active subscription). This keeps trial and paid shops visible.
 
-**Issues found:**
-- "Proven 30-Day Ritual" chip in hero — this exists (StructuredSellingChallenge), accurate
-- "Sell Globally from Africa" — the system only supports NGN payments via Paystack currently. The "From Africa to the World" section claims "Multi-Currency" and "Global Reach" which is misleading
-- "setup takes 10 minutes" — accurate
-- HowItWorks says "15-day free trial" but the pricing strategy is "Free Forever" (Starter plan) — inconsistent
-- Final CTA says "Get your first order within 14 days — or your next month is free" — this guarantee isn't enforced in the system
-- "Free forever plan" in footer chips — accurate per pricing strategy
+Approach: Query profiles for all shop owner_ids, calculate status for each, and exclude `free` status shops from the displayed list.
 
-**Fixes:**
-- Remove the "From Africa to the World" section (Section 1.5) since multi-currency/global payments aren't implemented
-- Update HowItWorks step 1 description from "15-day free trial" to "Free forever with up to 5 products"
-- Soften the Final CTA guarantee to something achievable: "Get your first order within 14 days" without the "next month is free" promise (unless you want to enforce it)
-- Keep the hero as-is — "Turn WhatsApp traffic into consistent orders" is accurate
+### 3. Create a reusable `FreeShopRestrictionsBanner` component
 
-**Files:** `src/pages/Index.tsx`, `src/components/HowItWorks.tsx`
+A dismissible (per session) banner component showing:
+- "Your shop is not visible to customers"
+- List: No marketplace listing, no AI tools, no verified badge, max 5 products
+- "Upgrade Now" button linking to `/pricing`
 
----
+Used in both Dashboard and ShopStorefront for free-plan owners.
 
-## 3. Logistics Function Verification
+### 4. Dashboard.tsx — Show restrictions banner for free users
 
-The `logistics-get-rates` and `logistics-book-delivery` edge functions are correctly structured for the Terminal Africa API. The flow is: Create addresses → Create parcel → Get rates / Create shipment → Arrange pickup.
+Add the `FreeShopRestrictionsBanner` component to the dashboard when `subscriptionStatus === 'free'`, placed prominently near the top.
 
-**Current status:** The code is correct. The only issue is that without a valid `TERMINAL_API_KEY`, it falls back to mock data. The `TERMINAL_API_KEY` secret is already configured. The functions should work if the key is valid and the Terminal Africa account is active.
+## Technical Details
 
-**Small fix needed:** The `logistics-get-rates` function hardcodes `country: 'NG'` — should use the `country` field from the address if provided. Also add better error messages when Terminal API returns errors (currently just throws generic "Failed to create pickup address").
-
-**Files:** `supabase/functions/logistics-get-rates/index.ts`, `supabase/functions/logistics-book-delivery/index.ts`
-
----
-
-## Summary
-
-| # | Feature | Files | Effort |
-|---|---------|-------|--------|
-| 1 | Subscription expiry persuasion popup | New component + `Dashboard.tsx` | Medium |
-| 2 | Homepage consistency fixes | `Index.tsx`, `HowItWorks.tsx` | Small |
-| 3 | Logistics error handling improvement | 2 edge functions | Small |
+- `calculateSubscriptionStatus` from `src/utils/subscription.ts` already returns `'free'` status — reuse this
+- The storefront already fetches owner profile data (lines 292-319) — extend with subscription status check
+- For marketplace filtering, batch-fetch profiles for displayed shop owner_ids to avoid N+1 queries
+- The "shop unavailable" page for public visitors will be a simple card with SteerSolo branding, not a 404
 
