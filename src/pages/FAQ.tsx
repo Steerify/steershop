@@ -216,7 +216,7 @@ const faqCategories: FAQCategory[] = [
       },
       {
         question: "Who do I contact for help?",
-        answer: "Reach us through: Email: steerifygroup@gmail.com, WhatsApp: +234 905 994 7055, or use the Feedback form on our website. We typically respond within 24 hours on business days."
+        answer: "Reach us through: Email: steerifygroup@gmail.com, WhatsApp: +234 916 192 2351, or use the Feedback form on our website. We typically respond within 24 hours on business days."
       }
     ]
   }
