@@ -879,7 +879,7 @@ const ShopStorefront = () => {
                       onReviewSubmitted={loadShopData}
                     />
                   </CardFooter>
-                </Card>
+                </div>
               ))}
             </div>
           </>
