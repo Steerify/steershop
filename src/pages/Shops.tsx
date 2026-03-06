@@ -427,8 +427,8 @@ const Shops = () => {
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
               {productResults.map((product, index) => (
                 <Link key={`${product.id}-${index}`} to={`/shop/${product.shop_slug || 'shop'}`}>
-                  <Card 
-                    className="h-full hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer group bg-card/80 backdrop-blur-sm"
+                  <div 
+                    className="card-spotify h-full cursor-pointer group"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     <CardHeader className="p-2 sm:p-4">
