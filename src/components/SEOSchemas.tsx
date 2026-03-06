@@ -116,7 +116,7 @@ export const SEOSchemas = () => {
           "name": "What's the best online store builder for small businesses in Nigeria?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "SteerSolo is built specifically for Nigerian small businesses and solo entrepreneurs. Unlike generic platforms, SteerSolo integrates WhatsApp ordering, Paystack payments, and AI-powered marketing tools. Plans start at just ₦1,000/month with a 15-day free trial."
+            "text": "SteerSolo is built specifically for Nigerian small businesses and solo entrepreneurs. Unlike generic platforms, SteerSolo integrates WhatsApp ordering, Paystack payments, and AI-powered marketing tools. Start free forever with up to 5 products, or upgrade from ₦2,500/month."
           }
         },
         {
