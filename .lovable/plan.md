@@ -1,64 +1,39 @@
 
 
-# Plan: Subscription Expiry Popup, Homepage Alignment, and Logistics Verification
+# Plan: Replace Nigeria Dot Map with Accurate, Dense Dot-Matrix Version
 
-## 1. Subscription Expiry / Free Plan Persuasion Popup
+The current map uses a crude bounding-box approximation that produces a vaguely rectangular blob — nothing like the reference image showing a proper Nigeria silhouette filled with dense green dots and labeled cities.
 
-Create a new component `src/components/SubscriptionExpiryDialog.tsx` that shows when a shop owner's trial/subscription has expired. This dialog will be triggered from `Dashboard.tsx` after data loads.
+## Approach
 
-**Logic flow:**
-- After `loadData()` completes, check `subscriptionStatus === 'expired'`
-- Show a persuasive full-screen dialog with two paths:
-  - **"Upgrade to a Paid Plan"** — navigates to `/pricing`
-  - **"Stay on Free Plan (5 products max)"** — if `productsCount > 5`, show a product list with delete buttons so the user can trim down to 5. If `productsCount <= 5`, show a persuasive "you're missing out" message but allow them to dismiss
-- Even if products are <= 5, still show the dialog once per session (use `sessionStorage` to avoid repeat)
-- The dialog should be beautifully designed with gradient backgrounds, clear value propositions for upgrading, and a sense of urgency
+**Replace `src/components/NigeriaDotMap.tsx`** entirely with a high-fidelity implementation:
 
-**Also show for `subscriptionStatus === 'free'`:** A lighter persuasion popup (not blocking) that appears once per day (tracked via `localStorage` timestamp) encouraging upgrade with feature comparisons.
+### Accurate Nigeria Boundary
+- Define ~80-100 polygon vertices tracing Nigeria's actual border (including the southern coastline indentation around the Niger Delta, the northeastern Lake Chad region, the western border bulge near Lagos/Ogun)
+- Use a proper **ray-casting point-in-polygon** algorithm instead of the current bounding-box hack
 
-**Files:** New `src/components/SubscriptionExpiryDialog.tsx`, edit `src/pages/Dashboard.tsx`
+### Dense Dot Grid
+- Reduce dot spacing from 8px to ~5px for a denser fill matching the reference image
+- Use uniform small circles (`r={2}`) with solid green fill (`fill-primary` or `fill-[#0A7B3E]`)
+- No separate "outline dots" — just the filled grid clipped to the polygon (like the reference)
 
----
+### City Labels
+- Add more cities to match reference: **Lagos, Abuja, Kano, Kaduna, Port Harcourt, Ibadan, Enugu, Benin City, Maiduguri, Ilorin**
+- City markers: small white/lighter dot with uppercase bold label text positioned beside it
+- Keep the subtle pulse animation on city dots
 
-## 2. Homepage Alignment — Fix Inconsistencies
+### Styling
+- Dots use a rich green (`#0A7B3E` / `hsl(var(--primary))`) — solid, not transparent like current
+- Dark mode: slightly brighter green
+- Remove the dashed connection lines (not in reference)
+- Clean, no-frills look matching the reference's professional cartographic style
 
-Review current Index page claims vs actual system capabilities:
+### No changes to `Index.tsx`
+The component is already imported and positioned correctly in the hero. Only the component internals change.
 
-**Issues found:**
-- "Proven 30-Day Ritual" chip in hero — this exists (StructuredSellingChallenge), accurate
-- "Sell Globally from Africa" — the system only supports NGN payments via Paystack currently. The "From Africa to the World" section claims "Multi-Currency" and "Global Reach" which is misleading
-- "setup takes 10 minutes" — accurate
-- HowItWorks says "15-day free trial" but the pricing strategy is "Free Forever" (Starter plan) — inconsistent
-- Final CTA says "Get your first order within 14 days — or your next month is free" — this guarantee isn't enforced in the system
-- "Free forever plan" in footer chips — accurate per pricing strategy
+## File
 
-**Fixes:**
-- Remove the "From Africa to the World" section (Section 1.5) since multi-currency/global payments aren't implemented
-- Update HowItWorks step 1 description from "15-day free trial" to "Free forever with up to 5 products"
-- Soften the Final CTA guarantee to something achievable: "Get your first order within 14 days" without the "next month is free" promise (unless you want to enforce it)
-- Keep the hero as-is — "Turn WhatsApp traffic into consistent orders" is accurate
-
-**Files:** `src/pages/Index.tsx`, `src/components/HowItWorks.tsx`
-
----
-
-## 3. Logistics Function Verification
-
-The `logistics-get-rates` and `logistics-book-delivery` edge functions are correctly structured for the Terminal Africa API. The flow is: Create addresses → Create parcel → Get rates / Create shipment → Arrange pickup.
-
-**Current status:** The code is correct. The only issue is that without a valid `TERMINAL_API_KEY`, it falls back to mock data. The `TERMINAL_API_KEY` secret is already configured. The functions should work if the key is valid and the Terminal Africa account is active.
-
-**Small fix needed:** The `logistics-get-rates` function hardcodes `country: 'NG'` — should use the `country` field from the address if provided. Also add better error messages when Terminal API returns errors (currently just throws generic "Failed to create pickup address").
-
-**Files:** `supabase/functions/logistics-get-rates/index.ts`, `supabase/functions/logistics-book-delivery/index.ts`
-
----
-
-## Summary
-
-| # | Feature | Files | Effort |
-|---|---------|-------|--------|
-| 1 | Subscription expiry persuasion popup | New component + `Dashboard.tsx` | Medium |
-| 2 | Homepage consistency fixes | `Index.tsx`, `HowItWorks.tsx` | Small |
-| 3 | Logistics error handling improvement | 2 edge functions | Small |
+| File | Change |
+|------|--------|
+| `src/components/NigeriaDotMap.tsx` | Full rewrite with accurate polygon + dense dots |
 
