@@ -119,8 +119,8 @@ const ShopStorefront = () => {
     const shopUrl = `https://steersolo.com/shop/${shop.shop_slug}`;
     const imageUrl = shop.logo_url || shop.banner_url || '';
 
-    // Page title - Business plan shows shop name alone
-    document.title = isBusinessPlan ? shop.shop_name : `${shop.shop_name} | SteerSolo`;
+    // Page title - Premium plan shows shop name alone for brand authority
+    document.title = isPremiumPlan ? `${shop.shop_name} — Shop Online` : `${shop.shop_name} | SteerSolo`;
 
     // Helper to set/create meta tags
     const setMeta = (attr: string, key: string, content: string) => {
