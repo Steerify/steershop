@@ -457,7 +457,7 @@ const Shops = () => {
                         </div>
                       </div>
                     </div>
-                    <CardContent className="p-2 sm:p-4 pt-0">
+                    <div className="px-3 sm:px-4 pb-4 pt-0">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-lg sm:text-2xl font-bold gradient-text">₦{product.price?.toLocaleString() || '0'}</p>
