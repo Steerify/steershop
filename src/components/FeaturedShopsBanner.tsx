@@ -171,7 +171,7 @@ export const FeaturedShopsBanner = () => {
                 key={featured.id}
                 to={`/shop/${featured.shop.shop_slug}`}
                 onClick={() => trackClick(featured)}
-                className="flex-shrink-0 w-[300px] sm:w-[340px]"
+                className="flex-shrink-0 w-[340px]"
               >
                 <div className={cn(
                   "relative rounded-2xl border border-border/50 bg-card p-5",
