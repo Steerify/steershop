@@ -244,7 +244,7 @@ export const SEOSchemas = () => {
           "name": "Is there a free trial for SteerSolo?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes! Every new account gets a 15-day free trial with full access to all features. No credit card required. You can create your store, add products, and start selling immediately."
+            "text": "Yes! SteerSolo offers a free forever Starter plan with up to 5 products. You can create your store, add products, and start selling immediately — no credit card required. Upgrade anytime for more features."
           }
         }
       ]
