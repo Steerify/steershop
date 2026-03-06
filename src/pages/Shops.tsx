@@ -45,44 +45,36 @@ const VerifiedSellerNotice = () => {
 };
 
 const ShopCardSkeleton = () => (
-  <Card className="h-full">
-    <CardHeader>
-      <div className="flex items-start gap-3">
-        <Skeleton className="w-14 h-14 rounded-xl" />
-        <div className="flex-1">
-          <Skeleton className="h-5 w-3/4 mb-2" />
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-3 w-2/3 mt-1" />
-        </div>
+  <div className="card-spotify h-full p-5">
+    <div className="flex items-start gap-4">
+      <Skeleton className="w-16 h-16 rounded-full" />
+      <div className="flex-1">
+        <Skeleton className="h-5 w-3/4 mb-2" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-2/3 mt-1" />
       </div>
-    </CardHeader>
-    <CardContent>
-      <div className="flex gap-1.5">
-        <Skeleton className="w-16 h-16 rounded-lg" />
-        <Skeleton className="w-16 h-16 rounded-lg" />
-        <Skeleton className="w-16 h-16 rounded-lg" />
-      </div>
-    </CardContent>
-  </Card>
+    </div>
+    <div className="flex gap-2 mt-4">
+      <Skeleton className="w-[72px] h-[72px] rounded-xl" />
+      <Skeleton className="w-[72px] h-[72px] rounded-xl" />
+      <Skeleton className="w-[72px] h-[72px] rounded-xl" />
+    </div>
+  </div>
 );
 
 const ProductCardSkeleton = () => (
-  <Card className="h-full">
-    <CardHeader>
-      <Skeleton className="w-full h-48 rounded-lg mb-4" />
-      <Skeleton className="h-5 w-3/4 mb-2" />
-      <div className="flex items-center gap-2 mt-2">
-        <Skeleton className="w-6 h-6 rounded-full" />
-        <Skeleton className="h-4 w-24" />
-      </div>
-    </CardHeader>
-    <CardContent>
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-6 w-16 rounded-full" />
-      </div>
-    </CardContent>
-  </Card>
+  <div className="card-spotify h-full p-4">
+    <Skeleton className="w-full h-48 rounded-xl mb-4" />
+    <Skeleton className="h-5 w-3/4 mb-2" />
+    <div className="flex items-center gap-2 mt-2">
+      <Skeleton className="w-6 h-6 rounded-full" />
+      <Skeleton className="h-4 w-24" />
+    </div>
+    <div className="flex items-center justify-between mt-4">
+      <Skeleton className="h-8 w-32" />
+      <Skeleton className="h-6 w-16 rounded-full" />
+    </div>
+  </div>
 );
 
 const Shops = () => {
@@ -413,12 +405,12 @@ const Shops = () => {
       <>
         {/* Search Type Tabs */}
         {hasSearchQuery && (
-          <div className="flex gap-1 sm:gap-2 mb-4 sm:mb-6 border-b pb-3 sm:pb-4 overflow-x-auto">
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
             {(['all', 'shops', 'products'] as const).map(type => (
               <button
                 key={type}
                 onClick={() => handleSearchTypeChange(type)}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm whitespace-nowrap min-h-[40px] ${searchType === type ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/10'}`}
+                className={`pill-button whitespace-nowrap ${searchType === type ? 'pill-button-active' : 'pill-button-inactive'}`}
               >
                 {type === 'all' ? `All (${shops.length + productResults.length})` : type === 'shops' ? `Shops (${shops.length})` : `Products (${productResults.length})`}
               </button>
@@ -432,16 +424,16 @@ const Shops = () => {
             <h2 className="font-display text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
               Product Results <span className="text-accent">({productResults.length})</span>
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
               {productResults.map((product, index) => (
                 <Link key={`${product.id}-${index}`} to={`/shop/${product.shop_slug || 'shop'}`}>
-                  <Card 
-                    className="h-full hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer group bg-card/80 backdrop-blur-sm"
+                  <div 
+                    className="card-spotify h-full cursor-pointer group"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    <CardHeader className="p-2 sm:p-4">
+                    <div className="p-3 sm:p-4">
                       {product.image_url || (product.images && product.images.length > 0) ? (
-                        <div className="w-full h-32 sm:h-48 mb-2 sm:mb-4 overflow-hidden rounded-lg">
+                        <div className="w-full h-32 sm:h-48 mb-3 sm:mb-4 overflow-hidden rounded-xl">
                           <img 
                             src={product.image_url || product.images?.[0]?.url} 
                             alt={product.name}
@@ -449,23 +441,23 @@ const Shops = () => {
                           />
                         </div>
                       ) : (
-                        <div className="w-full h-32 sm:h-48 mb-2 sm:mb-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg flex items-center justify-center">
+                        <div className="w-full h-32 sm:h-48 mb-3 sm:mb-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl flex items-center justify-center">
                           <Package className="w-10 h-10 sm:w-16 sm:h-16 text-muted-foreground" />
                         </div>
                       )}
-                      <CardTitle className="group-hover:text-accent transition-colors text-sm sm:text-lg font-display line-clamp-2">
+                      <h3 className="group-hover:text-accent transition-colors text-sm sm:text-lg font-semibold tracking-tight line-clamp-2">
                         {product.name}
-                      </CardTitle>
-                      <CardDescription className="hidden sm:block">
+                      </h3>
+                      <div className="hidden sm:block">
                         <div className="flex items-center gap-2 mt-2">
                           <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                             <Store className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary-foreground" />
                           </div>
                           <span className="text-xs sm:text-sm">Visit Shop</span>
                         </div>
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-2 sm:p-4 pt-0">
+                      </div>
+                    </div>
+                    <div className="px-3 sm:px-4 pb-4 pt-0">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-lg sm:text-2xl font-bold gradient-text">₦{product.price?.toLocaleString() || '0'}</p>
@@ -477,8 +469,8 @@ const Shops = () => {
                           {product.is_available ? 'Available' : 'Unavailable'}
                         </Badge>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 </Link>
               ))}
             </div>
@@ -524,7 +516,7 @@ const Shops = () => {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
                   {sortedShops.map((shop, index) => (
                     <ShopCardEnhanced
                       key={`${shop.id}-${index}`}
@@ -559,32 +551,29 @@ const Shops = () => {
       {/* Verified Seller Safety Notice */}
       <VerifiedSellerNotice />
       
-      <section className="relative pt-24 sm:pt-28 pb-6 sm:pb-8 overflow-hidden">
-        <AdirePattern variant="geometric" className="text-primary" opacity={0.5} />
-        <div className="absolute inset-0 bg-gradient-to-b from-accent/5 via-transparent to-transparent" />
-        
+      <section className="relative pt-24 sm:pt-28 pb-8 sm:pb-12 gradient-hero-spotify">
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-accent/10 border border-accent/20 rounded-full mb-4 sm:mb-6">
-              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full mb-5 sm:mb-6">
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
               <span className="text-accent font-semibold text-xs sm:text-sm">Discover Nigerian Businesses</span>
             </div>
             
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-3">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-3 tracking-tight">
               Explore <span className="gradient-text">Amazing Shops</span>
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mb-4 sm:mb-6 px-2">
+            <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mb-6 sm:mb-8 px-2">
               {stats.shops} shops · {stats.products} products from talented Nigerian entrepreneurs
             </p>
 
             {/* Search */}
-            <div className="relative max-w-lg mx-auto px-2">
-              <Search className="absolute left-6 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+            <div className="relative max-w-lg mx-auto px-2 search-spotify rounded-full">
+              <Search className="absolute left-6 sm:left-6 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground z-10" />
               <Input
                 placeholder="Search shops, products, or services..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 sm:pl-12 h-12 sm:h-14 text-sm sm:text-base bg-card/80 backdrop-blur-sm border-border/50 focus:border-accent shadow-lg rounded-xl"
+                className="pl-10 sm:pl-12 h-12 sm:h-14 text-sm sm:text-base bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-full"
               />
               {(isSearching || isLoading) && (
                 <div className="absolute right-6 sm:right-4 top-1/2 -translate-y-1/2">
@@ -614,7 +603,7 @@ const Shops = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 container mx-auto px-4 pb-16 sm:pb-20">
+      <div className="flex-1 container mx-auto px-4 pb-16 sm:pb-20 mt-2">
         <div className="max-w-6xl mx-auto">
           {renderContent()}
 
