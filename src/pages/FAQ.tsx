@@ -166,7 +166,7 @@ const faqCategories: FAQCategory[] = [
       },
       {
         question: "How do I report a problem or suspicious activity?",
-        answer: "Use the 'Feedback' page to report any issues, suspicious shops, or concerns. Our team reviews all reports and takes appropriate action. You can also contact us directly via WhatsApp (+234 905 994 7055) or email (steerifygroup@gmail.com)."
+        answer: "Use the 'Feedback' page to report any issues, suspicious shops, or concerns. Our team reviews all reports and takes appropriate action. You can also contact us directly via WhatsApp (+234 916 192 2351) or email (steerifygroup@gmail.com)."
       }
     ]
   },
