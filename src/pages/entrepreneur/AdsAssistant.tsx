@@ -597,26 +597,84 @@ const AdsAssistant = () => {
               <div className="bg-card/95 backdrop-blur-xl border border-border/60 rounded-3xl p-4 shadow-2xl space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   {platform.id === "whatsapp" ? (
-                    <Button
-                      className="rounded-2xl bg-green-600 hover:bg-green-700 text-white font-bold gap-1.5"
-                      onClick={() => {
-                        const text = `${result.headline}\n\n${result.bodyText}\n\n${result.callToAction}`;
-                        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
-                      }}
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      Share on WhatsApp
-                    </Button>
+                    <>
+                      <Button
+                        className="rounded-2xl bg-green-600 hover:bg-green-700 text-white font-bold gap-1.5"
+                        onClick={() => {
+                          const text = `${result.headline}\n\n${result.bodyText}\n\n${result.callToAction}`;
+                          window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                        }}
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Share on WhatsApp
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="rounded-2xl gap-1.5 font-bold border-green-500/30 text-green-600"
+                        onClick={() => {
+                          const text = `${result.headline}\n\n${result.bodyText}\n\n${result.callToAction}`;
+                          navigator.clipboard.writeText(text);
+                          toast({ title: "Copied! Now paste into your WhatsApp Status" });
+                        }}
+                      >
+                        <Share2 className="w-4 h-4" />
+                        Copy for Status
+                      </Button>
+                    </>
                   ) : platform.link ? (
                     <Button
-                      className="rounded-2xl gap-1.5 font-bold"
-                      onClick={() => window.open(platform.link, "_blank")}
+                      className="rounded-2xl gap-1.5 font-bold col-span-2"
+                      onClick={() => {
+                        // Auto-copy everything before launching
+                        const all = `${result.headline}\n\n${result.bodyText}\n\nCTA: ${result.callToAction}${result.hashtags?.length ? `\n\n${result.hashtags.join(" ")}` : ""}`;
+                        navigator.clipboard.writeText(all);
+                        toast({ title: "Ad copy copied to clipboard!", description: "Paste it when you get to the ad creation page." });
+                        setTimeout(() => window.open(platform.link, "_blank"), 500);
+                      }}
                     >
                       <ExternalLink className="w-4 h-4" />
-                      Launch on {platform.name.split(" ")[0]}
+                      Copy & Launch on {platform.name.split(" ")[0]}
                     </Button>
                   ) : null}
+                </div>
 
+                {/* Platform-specific posting instructions */}
+                {platform.id !== "whatsapp" && (
+                  <div className="bg-muted/40 rounded-2xl p-4 border border-border/60 space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Lightbulb className="w-3.5 h-3.5 text-yellow-500" />
+                      How to post this ad
+                    </p>
+                    {platform.id === "facebook" && (
+                      <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+                        <li>Click <strong>"Copy & Launch"</strong> above — your ad copy is auto-copied</li>
+                        <li>In Meta Ads Manager, choose <strong>"Sales"</strong> or <strong>"Traffic"</strong> as your campaign goal</li>
+                        <li>Paste the headline in <strong>"Headline"</strong> and ad copy in <strong>"Primary Text"</strong></li>
+                        <li>Set your audience location to <strong>Nigeria</strong> and add interests from the targeting suggestions above</li>
+                      </ol>
+                    )}
+                    {platform.id === "google" && (
+                      <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+                        <li>Click <strong>"Copy & Launch"</strong> — your ad copy is auto-copied</li>
+                        <li>Choose <strong>"Search campaign"</strong> in Google Ads</li>
+                        <li>Paste the headline into <strong>"Headlines"</strong> (max 30 chars each, split if needed)</li>
+                        <li>Paste the ad copy into <strong>"Descriptions"</strong></li>
+                        <li>Add your shop URL as the <strong>Final URL</strong></li>
+                      </ol>
+                    )}
+                    {platform.id === "tiktok" && (
+                      <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+                        <li>Click <strong>"Copy & Launch"</strong> — your ad copy is auto-copied</li>
+                        <li>In TikTok Ads Manager, select <strong>"Website Conversions"</strong></li>
+                        <li>Upload a short video or image of your product</li>
+                        <li>Paste the ad copy into the <strong>"Text"</strong> field</li>
+                        <li>Target <strong>Nigeria, ages 18-35</strong> for best results</li>
+                      </ol>
+                    )}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-2">
                   <Button
                     variant="outline"
                     className="rounded-2xl gap-1.5 font-bold"
@@ -628,26 +686,23 @@ const AdsAssistant = () => {
                     {copiedField === "all" ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                     Copy All
                   </Button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
                   <Button
                     variant="ghost"
-                    size="sm"
                     className="rounded-2xl text-xs"
                     onClick={() => { setResult(null); setStep("details"); }}
                   >
                     Regenerate
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="rounded-2xl text-xs"
-                    onClick={() => { setResult(null); setPlatform(null); setStep("platform"); }}
-                  >
-                    Try Another Platform
-                  </Button>
                 </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full rounded-2xl text-xs"
+                  onClick={() => { setResult(null); setPlatform(null); setStep("platform"); }}
+                >
+                  Try Another Platform
+                </Button>
               </div>
             </div>
           </div>

@@ -288,19 +288,29 @@ const ShopStorefront = () => {
       if (shopData.owner_id) {
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('subscription_plan_id')
+          .select('subscription_plan_id, is_subscribed, subscription_expires_at')
           .eq('id', shopData.owner_id)
           .single();
         
-        if (profileData?.subscription_plan_id) {
-          const { data: planData } = await supabase
-            .from('subscription_plans')
-            .select('slug, name')
-            .eq('id', profileData.subscription_plan_id)
-            .single();
-          
-          if (planData) {
-            setOwnerPlan({ slug: planData.slug, name: planData.name });
+        if (profileData) {
+          // Check if owner is in trial (has expiry, not subscribed, expiry in future)
+          if (!profileData.is_subscribed && profileData.subscription_expires_at) {
+            const expiresAt = new Date(profileData.subscription_expires_at);
+            if (expiresAt > new Date()) {
+              setOwnerIsInTrial(true);
+            }
+          }
+
+          if (profileData.subscription_plan_id) {
+            const { data: planData } = await supabase
+              .from('subscription_plans')
+              .select('slug, name')
+              .eq('id', profileData.subscription_plan_id)
+              .single();
+            
+            if (planData) {
+              setOwnerPlan({ slug: planData.slug, name: planData.name });
+            }
           }
         }
       }
