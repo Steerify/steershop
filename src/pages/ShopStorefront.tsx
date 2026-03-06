@@ -300,12 +300,15 @@ const ShopStorefront = () => {
           .single();
         
         if (profileData) {
-          // Check if owner is in trial (has expiry, not subscribed, expiry in future)
-          if (!profileData.is_subscribed && profileData.subscription_expires_at) {
-            const expiresAt = new Date(profileData.subscription_expires_at);
-            if (expiresAt > new Date()) {
-              setOwnerIsInTrial(true);
-            }
+          // Calculate subscription status to determine visibility
+          const subStatus = calculateSubscriptionStatus(profileData);
+          
+          if (subStatus.status === 'trial') {
+            setOwnerIsInTrial(true);
+          }
+          
+          if (subStatus.status === 'free') {
+            setOwnerIsFree(true);
           }
 
           if (profileData.subscription_plan_id) {
