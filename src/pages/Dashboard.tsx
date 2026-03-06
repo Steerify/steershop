@@ -50,6 +50,7 @@ import { SalesMilestonePopup } from "@/components/SalesMilestonePopup";
 import { StructuredSellingChallenge } from "@/components/StructuredSellingChallenge";
 import { SubscriptionExpiryDialog } from "@/components/SubscriptionExpiryDialog";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
+import { FreeShopRestrictionsBanner } from "@/components/FreeShopRestrictionsBanner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 // ─── Verification Progress Card ───────────────────────────────────────────────
 const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profile: any; shopFullData: any; totalSales: number }) => {
