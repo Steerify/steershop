@@ -603,7 +603,7 @@ const Shops = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 container mx-auto px-4 pb-16 sm:pb-20">
+      <div className="flex-1 container mx-auto px-4 pb-16 sm:pb-20 mt-2">
         <div className="max-w-6xl mx-auto">
           {renderContent()}
 
