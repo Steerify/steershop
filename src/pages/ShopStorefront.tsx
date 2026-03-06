@@ -11,6 +11,8 @@ import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X
 import { WishlistButton } from "@/components/WishlistButton";
 import { openWhatsAppContact } from "@/utils/whatsapp";
 import Navbar from "@/components/Navbar";
+import { calculateSubscriptionStatus } from "@/utils/subscription";
+import { FreeShopRestrictionsBanner } from "@/components/FreeShopRestrictionsBanner";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireAccent } from "@/components/patterns/AdirePattern";
 import CheckoutDialog from "@/components/CheckoutDialog";
