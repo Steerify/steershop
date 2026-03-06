@@ -888,7 +888,7 @@ const ShopStorefront = () => {
 
       {/* Floating Cart & Contact Bar */}
       {showFloatingBar && (getTotalItems() > 0 || shop.whatsapp_number) && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-xl border-t border-border p-3 animate-fade-up safe-area-pb">
+        <div className="fixed bottom-0 left-0 right-0 z-40 glass-spotify border-t border-border/30 p-3 animate-fade-up safe-area-pb">
           <div className="container mx-auto flex items-center justify-center gap-3 max-w-lg">
             {shop.whatsapp_number && (
               <Button
