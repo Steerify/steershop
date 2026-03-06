@@ -171,10 +171,10 @@ export const FeaturedShopsBanner = () => {
                 key={featured.id}
                 to={`/shop/${featured.shop.shop_slug}`}
                 onClick={() => trackClick(featured)}
-                className="flex-shrink-0 w-[300px] sm:w-[340px]"
+                className="flex-shrink-0 w-[340px]"
               >
                 <div className={cn(
-                  "relative rounded-2xl border border-border/50 bg-card p-5",
+                  "relative rounded-2xl border border-border/50 bg-card p-5 h-[160px]",
                   "transition-all duration-300 ease-out",
                   "hover:shadow-xl hover:shadow-accent/5 hover:scale-[1.02] hover:border-accent/30",
                   "cursor-pointer overflow-hidden group/card"
@@ -193,7 +193,7 @@ export const FeaturedShopsBanner = () => {
                   </div>
 
                   {/* Content */}
-                  <div className="relative flex items-start gap-4">
+                  <div className="relative flex items-center gap-4">
                     {/* Logo */}
                     <div className="w-14 h-14 rounded-2xl overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/50">
                       {featured.shop.logo_url ? (
@@ -214,7 +214,7 @@ export const FeaturedShopsBanner = () => {
                       <h3 className="font-semibold text-foreground text-base truncate mb-1">
                         {featured.shop.shop_name}
                       </h3>
-                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-2">
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed min-h-[2.5rem]">
                         {featured.tagline || featured.shop.description || "Discover amazing products"}
                       </p>
                       {(featured.shop.state || featured.shop.country) && (
