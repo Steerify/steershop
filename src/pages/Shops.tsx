@@ -431,7 +431,7 @@ const Shops = () => {
                     className="card-spotify h-full cursor-pointer group"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    <CardHeader className="p-2 sm:p-4">
+                    <div className="p-3 sm:p-4">
                       {product.image_url || (product.images && product.images.length > 0) ? (
                         <div className="w-full h-32 sm:h-48 mb-2 sm:mb-4 overflow-hidden rounded-lg">
                           <img 
