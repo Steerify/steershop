@@ -157,7 +157,7 @@ const CustomerDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group">
+              <Card className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all group">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                   <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Completed</CardTitle>
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
