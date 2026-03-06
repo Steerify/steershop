@@ -1,39 +1,57 @@
 import { useEffect, useState } from "react";
 
-const cities = [
-  { name: "Lagos", x: 130, y: 295, delay: 0 },
-  { name: "Abuja", x: 220, y: 225, delay: 0.5 },
-  { name: "Port Harcourt", x: 195, y: 310, delay: 1 },
-  { name: "Kano", x: 235, y: 130, delay: 1.5 },
+// Accurate Nigeria boundary polygon (normalized to ~400x400 viewBox)
+const nigeriaBorder: [number, number][] = [
+  // Western border (Benin) - from south to north
+  [68, 310], [65, 300], [62, 290], [58, 280], [55, 270], [53, 260],
+  [52, 250], [55, 240], [58, 230], [60, 220], [58, 210], [55, 200],
+  [52, 190], [50, 180], [48, 170], [50, 160], [55, 150], [58, 140],
+  [62, 132], [68, 125], [75, 120], [82, 116],
+  // Northern border (Niger) - west to east
+  [90, 112], [100, 108], [110, 105], [120, 100], [130, 96], [140, 92],
+  [150, 88], [160, 85], [170, 82], [180, 80], [190, 78], [200, 76],
+  [210, 75], [220, 74], [230, 74], [240, 75], [250, 78], [260, 82],
+  [270, 85], [280, 82], [290, 78], [300, 74], [310, 72],
+  // Northeast (Lake Chad region)
+  [318, 74], [325, 80], [330, 88], [335, 96], [338, 105], [340, 115],
+  [338, 125], [335, 132], [330, 138],
+  // Eastern border (Cameroon) - north to south
+  [325, 145], [320, 155], [315, 165], [310, 175], [305, 185],
+  [298, 195], [290, 205], [285, 212], [280, 220], [275, 228],
+  [268, 235], [260, 242], [252, 248], [245, 255], [240, 262],
+  [235, 268], [230, 275], [228, 282], [226, 288],
+  // Southeast coast (Cross River / Calabar)
+  [222, 295], [218, 300], [212, 305], [205, 308],
+  // Niger Delta region (complex coastline)
+  [198, 312], [190, 318], [182, 322], [175, 325], [168, 328],
+  [160, 330], [152, 328], [145, 325], [140, 320], [135, 316],
+  [130, 318], [125, 322], [120, 326], [115, 328],
+  // Lagos coast
+  [108, 326], [100, 322], [92, 318], [85, 315], [78, 312],
+  [72, 312], [68, 310],
 ];
 
-// Simplified Nigeria outline as dot coordinates (approximate boundary)
-const nigeriaOutline: [number, number][] = [
-  [115,270],[110,260],[105,250],[100,240],[95,230],[95,220],[100,210],[105,200],
-  [110,195],[115,190],[120,185],[125,180],[130,175],[140,170],[150,165],[160,160],
-  [170,155],[180,150],[190,145],[200,140],[210,135],[220,130],[230,125],[240,120],
-  [250,125],[260,130],[270,135],[280,140],[290,150],[295,160],[300,170],[305,180],
-  [305,190],[300,200],[295,210],[290,220],[285,230],[280,240],[275,250],[270,260],
-  [265,270],[260,280],[255,290],[250,295],[240,300],[230,305],[220,310],[210,315],
-  [200,320],[190,325],[180,320],[170,315],[160,310],[150,305],[140,300],[130,295],
-  [120,285],[115,275],
-];
+// Ray-casting point-in-polygon
+const isInsideNigeria = (x: number, y: number): boolean => {
+  let inside = false;
+  const n = nigeriaBorder.length;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const xi = nigeriaBorder[i][0], yi = nigeriaBorder[i][1];
+    const xj = nigeriaBorder[j][0], yj = nigeriaBorder[j][1];
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+      inside = !inside;
+    }
+  }
+  return inside;
+};
 
-// Fill dots within the outline
-const generateFillDots = () => {
+// Generate dense dot grid
+const generateDots = () => {
   const dots: [number, number][] = [];
-  const spacing = 8;
-  for (let x = 85; x <= 315; x += spacing) {
-    for (let y = 110; y <= 335; y += spacing) {
-      // Simple point-in-polygon approximation using bounding
-      const inBounds = 
-        x >= 90 && x <= 310 &&
-        y >= 115 && y <= 330 &&
-        // Rough shape constraints
-        (y < 200 ? x > 100 + (200 - y) * 0.3 && x < 300 - (200 - y) * 0.2 :
-         y < 260 ? x > 95 && x < 305 :
-         x > 110 + (y - 260) * 0.3 && x < 260 - (y - 260) * 0.2);
-      if (inBounds) {
+  const spacing = 5;
+  for (let x = 40; x <= 350; x += spacing) {
+    for (let y = 65; y <= 340; y += spacing) {
+      if (isInsideNigeria(x, y)) {
         dots.push([x, y]);
       }
     }
@@ -41,7 +59,20 @@ const generateFillDots = () => {
   return dots;
 };
 
-const fillDots = generateFillDots();
+const dots = generateDots();
+
+const cities = [
+  { name: "Lagos", x: 82, y: 308 },
+  { name: "Abuja", x: 195, y: 185 },
+  { name: "Kano", x: 230, y: 100 },
+  { name: "Kaduna", x: 215, y: 135 },
+  { name: "Port Harcourt", x: 185, y: 310 },
+  { name: "Ibadan", x: 100, y: 275 },
+  { name: "Enugu", x: 218, y: 260 },
+  { name: "Benin City", x: 148, y: 285 },
+  { name: "Maiduguri", x: 315, y: 105 },
+  { name: "Ilorin", x: 120, y: 215 },
+];
 
 export const NigeriaDotMap = () => {
   const [visible, setVisible] = useState(false);
@@ -54,104 +85,39 @@ export const NigeriaDotMap = () => {
   return (
     <div className={`relative w-full h-full transition-opacity duration-1000 ${visible ? 'opacity-100' : 'opacity-0'}`}>
       <svg
-        viewBox="60 80 280 280"
+        viewBox="30 55 330 290"
         className="w-full h-full"
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Fill dots */}
-        {fillDots.map(([x, y], i) => (
+        {/* Dense dot fill */}
+        {dots.map(([x, y], i) => (
           <circle
-            key={`fill-${i}`}
-            cx={x}
-            cy={y}
-            r={1.5}
-            className="fill-accent/15 dark:fill-accent/25"
-            style={{ animationDelay: `${i * 5}ms` }}
-          />
-        ))}
-
-        {/* Outline dots (brighter) */}
-        {nigeriaOutline.map(([x, y], i) => (
-          <circle
-            key={`outline-${i}`}
+            key={i}
             cx={x}
             cy={y}
             r={2}
-            className="fill-accent/30 dark:fill-accent/50"
+            className="fill-primary dark:fill-primary"
+            opacity={0.85}
           />
         ))}
 
-        {/* Connection lines radiating from cities */}
-        {cities.map((city, i) => (
-          <g key={`line-${i}`}>
-            <line
-              x1={city.x}
-              y1={city.y}
-              x2={city.x + (i % 2 === 0 ? 60 : -50)}
-              y2={city.y + (i < 2 ? 30 : -25)}
-              stroke="hsl(var(--accent))"
-              strokeOpacity={0.15}
-              strokeWidth={0.8}
-              strokeDasharray="4 4"
-              className="dark:stroke-accent/25"
-            >
-              <animate
-                attributeName="stroke-dashoffset"
-                from="0"
-                to="-8"
-                dur="2s"
-                repeatCount="indefinite"
-              />
-            </line>
-          </g>
-        ))}
-
-        {/* City markers with pulse */}
+        {/* City markers */}
         {cities.map((city) => (
           <g key={city.name}>
-            {/* Ping ring */}
-            <circle
-              cx={city.x}
-              cy={city.y}
-              r={4}
-              className="fill-accent/40"
-            >
-              <animate
-                attributeName="r"
-                from="4"
-                to="14"
-                dur="2s"
-                begin={`${city.delay}s`}
-                repeatCount="indefinite"
-              />
-              <animate
-                attributeName="opacity"
-                from="0.5"
-                to="0"
-                dur="2s"
-                begin={`${city.delay}s`}
-                repeatCount="indefinite"
-              />
+            {/* Pulse ring */}
+            <circle cx={city.x} cy={city.y} r={3} className="fill-primary">
+              <animate attributeName="r" from="3" to="10" dur="2.5s" repeatCount="indefinite" />
+              <animate attributeName="opacity" from="0.6" to="0" dur="2.5s" repeatCount="indefinite" />
             </circle>
             {/* Core dot */}
-            <circle
-              cx={city.x}
-              cy={city.y}
-              r={3.5}
-              className="fill-accent"
-            />
-            <circle
-              cx={city.x}
-              cy={city.y}
-              r={1.5}
-              className="fill-accent-foreground dark:fill-background"
-            />
+            <circle cx={city.x} cy={city.y} r={3.5} className="fill-background" />
+            <circle cx={city.x} cy={city.y} r={2.5} className="fill-primary" />
             {/* Label */}
             <text
-              x={city.x + 8}
+              x={city.x + 7}
               y={city.y + 3}
-              className="fill-muted-foreground text-[7px] font-medium"
-              style={{ fontFamily: 'sans-serif' }}
+              className="fill-foreground/70 dark:fill-foreground/60"
+              style={{ fontSize: '6px', fontFamily: 'system-ui, sans-serif', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' as const }}
             >
               {city.name}
             </text>
