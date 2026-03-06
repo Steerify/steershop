@@ -73,7 +73,7 @@ const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profi
 
   if (isVerified) {
     return (
-      <Card className="mb-4 border-green-500/30 bg-gradient-to-r from-green-500/10 to-emerald-500/5 overflow-hidden">
+      <Card className="mb-4 card-spotify border-l-4 border-l-green-500 overflow-hidden">
         <CardContent className="p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-green-500/15 flex items-center justify-center">
             <BadgeCheck className="w-5 h-5 text-green-600" />
@@ -88,8 +88,8 @@ const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profi
   }
 
   return (
-    <Card className="mb-4 border-primary/20 overflow-hidden">
-      <div className="h-0.5 w-full bg-gradient-to-r from-primary via-accent to-gold" />
+    <Card className="mb-4 card-spotify overflow-hidden">
+      <div className="h-1 w-full bg-gradient-to-r from-primary via-accent to-gold" />
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-sm flex items-center gap-2">
@@ -139,7 +139,7 @@ const StatCard = ({
   trend?: "up" | "down" | "neutral";
   trendValue?: string;
 }) => (
-  <Card className={`relative overflow-hidden border-0 shadow-md ${gradient}`}>
+  <Card className={`relative overflow-hidden card-spotify border-0 shadow-md ${gradient}`}>
     <CardContent className="p-4">
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-medium text-white/80 uppercase tracking-wider">{label}</p>
@@ -173,7 +173,7 @@ const QuickActionTile = ({
 }) => (
   <button
     onClick={onClick}
-    className="group flex flex-col items-start p-4 bg-card rounded-2xl border border-border hover:border-primary/30 hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 text-left w-full"
+    className="group flex flex-col items-start p-4 bg-card card-spotify hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 text-left w-full"
   >
     <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200`}>
       <Icon className={`w-5 h-5 ${textColor}`} />

@@ -24,6 +24,7 @@ import { storefrontTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
 import { KnowThisShop } from "@/components/ai/KnowThisShop";
 import { TrustBadges } from "@/components/TrustBadges";
+import { ShareStorefront } from "@/components/ShareStorefront";
 interface Shop {
   id: string;
   shop_name: string;
@@ -43,6 +44,9 @@ interface Shop {
   owner_id?: string;
   state?: string | null;
   country?: string | null;
+  accent_color?: string | null;
+  font_style?: string | null;
+  theme_mode?: string | null;
 }
 interface OwnerPlan {
   slug: string | null;
@@ -464,7 +468,19 @@ const ShopStorefront = () => {
     );
   }
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div 
+      className="min-h-screen bg-background flex flex-col"
+      style={{ 
+        ...(shop?.accent_color ? { '--accent': shop.accent_color } as any : {}),
+        ...(shop?.font_style ? { fontFamily: shop.font_style } : {}),
+      }}
+    >
+      {shop?.font_style && (
+        <link
+          href={`https://fonts.googleapis.com/css2?family=${shop.font_style.replace(/ /g, '+')}:wght@400;500;600;700&display=swap`}
+          rel="stylesheet"
+        />
+      )}
       <Navbar shopBranding={isPremiumPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
       {/* Shop Header */}
       <div className="relative pt-20" data-tour="shop-header">
@@ -535,6 +551,15 @@ const ShopStorefront = () => {
                         onStartTour={startTour}
                         hasSeenTour={hasSeenTour}
                         onResetTour={resetTour}
+                      />
+                      <ShareStorefront 
+                        shopName={shop.shop_name}
+                        shopSlug={shop.shop_slug}
+                        shopDescription={shop.description}
+                        logoUrl={shop.logo_url}
+                        rating={shop.average_rating}
+                        totalReviews={shop.total_reviews}
+                        productCount={productCount}
                       />
                       {getTotalItems() > 0 && (
                         <Button

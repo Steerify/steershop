@@ -57,14 +57,13 @@ export const HomepageReviews = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {reviews.map((review, index) => (
-            <Card
+            <div
               key={review.id}
               className={cn(
-                "relative overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1",
+                "card-spotify relative overflow-hidden p-6",
                 index === 0 && "md:col-span-2 lg:col-span-1"
               )}
             >
-              <CardContent className="p-6">
                 <Quote className="w-8 h-8 text-primary/20 mb-4" />
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
@@ -92,8 +91,7 @@ export const HomepageReviews = () => {
                   </div>
                 </div>
                 <div className="absolute bottom-0 right-0 w-24 h-24 bg-gradient-to-tl from-primary/5 to-transparent rounded-tl-full" />
-              </CardContent>
-            </Card>
+            </div>
           ))}
         </div>
       </div>

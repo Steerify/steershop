@@ -318,7 +318,7 @@ const FAQ = () => {
           {/* FAQ Accordions */}
           <div className="max-w-4xl mx-auto space-y-8">
             {filteredCategories.length === 0 ? (
-              <Card className="text-center py-12">
+              <Card className="text-center py-12 card-spotify">
                 <CardContent>
                   <HelpCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-xl font-semibold mb-2">No results found</h3>

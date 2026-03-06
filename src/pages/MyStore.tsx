@@ -54,6 +54,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 import { ShopStatusBadge, getShopStatusFromProfile } from "@/components/ShopStatusBadge";
 import { DoneForYouPopup } from "@/components/DoneForYouPopup";
+import { StorefrontCustomizer } from "@/components/StorefrontCustomizer";
 
 const shopSchema = z
   .object({
@@ -121,6 +122,7 @@ const MyStore = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPaystackGuide, setShowPaystackGuide] = useState(false);
   const [shopStatus, setShopStatus] = useState<{ status: 'active' | 'trial' | 'expired' | 'free'; daysRemaining: number }>({ status: 'trial', daysRemaining: 15 });
+  const [isPremiumPlan, setIsPremiumPlan] = useState(false);
 
   const [showDfyPopup, setShowDfyPopup] = useState(false);
 
@@ -208,6 +210,9 @@ const MyStore = () => {
       
       if (profileData) {
         setShopStatus(getShopStatusFromProfile(profileData));
+        // Check if premium (Pro or Business or Active Trial)
+        const subStatus = getShopStatusFromProfile(profileData);
+        setIsPremiumPlan(subStatus.status === 'active' || subStatus.status === 'trial');
       }
       
       const res = await shopService.getShopByOwner(formattedUserId);
@@ -712,6 +717,15 @@ const MyStore = () => {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {shop && isPremiumPlan && (
+          <StorefrontCustomizer 
+            shopId={shop.id}
+            currentAccentColor={shop.accent_color}
+            currentFontStyle={shop.font_style}
+            currentThemeMode={shop.theme_mode}
+          />
         )}
       </div>
 

@@ -172,7 +172,7 @@ const Subscription = () => {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-4xl">
         {/* Current Status Card */}
-        <Card className="mb-8">
+        <Card className="mb-8 card-spotify">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -276,7 +276,7 @@ const Subscription = () => {
         </Card>
 
         {/* Subscription History */}
-        <Card className="mb-8">
+        <Card className="mb-8 card-spotify">
           <CardHeader>
             <CardTitle className="text-xl font-heading flex items-center gap-2">
               <History className="w-5 h-5" />
@@ -325,7 +325,7 @@ const Subscription = () => {
         </Card>
 
         {/* Available Plans Preview */}
-        <Card>
+        <Card className="card-spotify">
           <CardHeader>
             <CardTitle className="text-xl font-heading">Available Plans</CardTitle>
             <CardDescription>Compare plans and upgrade anytime</CardDescription>

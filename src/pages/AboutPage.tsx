@@ -113,8 +113,7 @@ const About = () => {
               { icon: Heart, title: "Community", description: "Encouraging connection and growth, not competition" },
               { icon: Globe, title: "Local First", description: "Built for African realities and business contexts" }
             ].map((value, index) => (
-              <Card key={index} className="text-center border-2 hover:border-accent transition-all duration-300 hover:-translate-y-1 card-hover">
-                <CardHeader className="p-4 sm:p-6">
+              <div key={index} className="card-spotify text-center p-6 hover:-translate-y-1 transition-all duration-300">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4">
                     <value.icon className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
                   </div>
@@ -122,8 +121,7 @@ const About = () => {
                   <CardDescription className="text-xs sm:text-sm">
                     {value.description}
                   </CardDescription>
-                </CardHeader>
-              </Card>
+              </div>
             ))}
           </div>
         </div>

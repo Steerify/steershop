@@ -248,19 +248,19 @@ const Bookings = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
-          <Card className="border-yellow-500/20 bg-yellow-500/5">
+          <Card className="card-spotify border-l-4 border-l-yellow-500 bg-yellow-500/5">
             <CardContent className="p-3 sm:pt-4 text-center">
               <p className="text-xl sm:text-2xl font-bold text-yellow-600">{pendingCount}</p>
               <p className="text-xs sm:text-sm text-muted-foreground">Pending</p>
             </CardContent>
           </Card>
-          <Card className="border-blue-500/20 bg-blue-500/5">
+          <Card className="card-spotify border-l-4 border-l-blue-500 bg-blue-500/5">
             <CardContent className="p-3 sm:pt-4 text-center">
               <p className="text-xl sm:text-2xl font-bold text-blue-600">{confirmedCount}</p>
               <p className="text-xs sm:text-sm text-muted-foreground">Confirmed</p>
             </CardContent>
           </Card>
-          <Card className="border-green-500/20 bg-green-500/5">
+          <Card className="card-spotify border-l-4 border-l-green-500 bg-green-500/5">
             <CardContent className="p-3 sm:pt-4 text-center">
               <p className="text-xl sm:text-2xl font-bold text-green-600">{completedCount}</p>
               <p className="text-xs sm:text-sm text-muted-foreground">Completed</p>
@@ -291,7 +291,7 @@ const Bookings = () => {
         ) : (
           <div className="space-y-4">
             {filteredBookings.map((booking) => (
-              <Card key={booking.id} className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all">
+              <Card key={booking.id} className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all">
                 <CardHeader className="border-b border-border/50">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                     <div className="flex-1">

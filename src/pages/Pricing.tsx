@@ -151,7 +151,7 @@ const Pricing = () => {
         {/* Plan Profiles — Best-fit cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto mb-10">
           {Object.entries(planProfiles).map(([slug, profile]) => (
-            <Card key={slug} className="border-border/50 bg-card/50">
+            <Card key={slug} className="card-spotify bg-card/50">
               <CardContent className="p-5 text-center">
                 <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">
                   {slug} plan
@@ -186,7 +186,7 @@ const Pricing = () => {
 
         {/* Guarantee Banner */}
         <div className="max-w-3xl mx-auto mt-10">
-          <Card className="bg-gradient-to-r from-green-500/10 via-emerald-500/5 to-green-500/10 border-green-500/20">
+          <Card className="card-spotify bg-gradient-to-r from-green-500/10 via-emerald-500/5 to-green-500/10">
             <CardContent className="p-6 text-center">
               <ShieldCheck className="w-8 h-8 text-green-600 mx-auto mb-3" />
               <h3 className="text-lg font-heading font-bold mb-2">
@@ -200,7 +200,7 @@ const Pricing = () => {
         </div>
 
         {/* Setup Service CTA */}
-        <Card className="mt-10 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border-primary/20">
+        <Card className="mt-10 card-spotify bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10">
           <CardContent className="p-6 sm:p-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div>
@@ -234,7 +234,7 @@ const Pricing = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto">
             {faqs.map((faq, idx) => (
-              <Card key={idx} className="border-border/50">
+              <Card key={idx} className="card-spotify">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base sm:text-lg flex items-start gap-2">
                     <HelpCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
