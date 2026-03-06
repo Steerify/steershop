@@ -72,7 +72,7 @@ const Pricing = () => {
   const faqs = [
     {
       q: "What happens after my free trial?",
-      a: "You'll need to subscribe to continue using SteerSolo. Your store remains active but hidden until you subscribe."
+      a: "Your store automatically moves to the free Starter plan (up to 5 products). To unlock more products and features, choose a paid plan."
     },
     {
       q: "Can I change plans later?",
