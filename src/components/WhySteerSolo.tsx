@@ -54,8 +54,7 @@ export const WhySteerSolo = () => {
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {explainerCards.map((card) => (
-              <Card key={card.title} className="border-0 shadow-sm hover:shadow-md transition-shadow text-center">
-                <CardContent className="p-8">
+              <div key={card.title} className="card-spotify text-center p-8">
                   <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-5">
                     <card.icon className="w-7 h-7 text-primary" />
                   </div>
