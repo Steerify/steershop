@@ -151,7 +151,7 @@ const Pricing = () => {
         {/* Plan Profiles — Best-fit cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto mb-10">
           {Object.entries(planProfiles).map(([slug, profile]) => (
-            <Card key={slug} className="border-border/50 bg-card/50">
+            <Card key={slug} className="card-spotify bg-card/50">
               <CardContent className="p-5 text-center">
                 <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">
                   {slug} plan
