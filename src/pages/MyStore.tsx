@@ -718,6 +718,15 @@ const MyStore = () => {
             </CardContent>
           </Card>
         )}
+
+        {shop && isPremiumPlan && (
+          <StorefrontCustomizer 
+            shopId={shop.id}
+            currentAccentColor={shop.accent_color}
+            currentFontStyle={shop.font_style}
+            currentThemeMode={shop.theme_mode}
+          />
+        )}
       </div>
 
       <Joyride

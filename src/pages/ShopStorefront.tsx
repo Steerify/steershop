@@ -549,8 +549,16 @@ const ShopStorefront = () => {
                       )}
                       <TourButton
                         onStartTour={startTour}
-                        hasSeenTour={hasSeenTour}
                         onResetTour={resetTour}
+                      />
+                      <ShareStorefront 
+                        shopName={shop.shop_name}
+                        shopSlug={shop.shop_slug}
+                        shopDescription={shop.description}
+                        logoUrl={shop.logo_url}
+                        rating={shop.average_rating}
+                        totalReviews={shop.total_reviews}
+                        productCount={productCount}
                       />
                       {getTotalItems() > 0 && (
                         <Button
