@@ -130,7 +130,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
           <div className="flex items-center justify-between">
             
             {/* Logo Section */}
-            <Link to="/" className="flex items-center gap-3 group relative">
+            <Link to={shopBranding ? "#" : "/"} onClick={shopBranding ? (e) => e.preventDefault() : undefined} className="flex items-center gap-3 group relative">
               <div className="w-11 h-11 rounded-xl overflow-hidden shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 relative bg-white">
                 <img src={shopBranding?.logoUrl || logo} alt={shopBranding?.name || "SteerSolo"} className="w-full h-full object-cover" />
                 
