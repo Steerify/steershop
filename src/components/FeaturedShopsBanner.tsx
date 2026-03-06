@@ -214,7 +214,7 @@ export const FeaturedShopsBanner = () => {
                       <h3 className="font-semibold text-foreground text-base truncate mb-1">
                         {featured.shop.shop_name}
                       </h3>
-                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-2">
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed min-h-[2.5rem]">
                         {featured.tagline || featured.shop.description || "Discover amazing products"}
                       </p>
                       {(featured.shop.state || featured.shop.country) && (
