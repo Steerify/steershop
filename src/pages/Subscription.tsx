@@ -172,7 +172,7 @@ const Subscription = () => {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-4xl">
         {/* Current Status Card */}
-        <Card className="mb-8">
+        <Card className="mb-8 card-spotify">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
