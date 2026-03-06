@@ -24,6 +24,7 @@ import { storefrontTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
 import { KnowThisShop } from "@/components/ai/KnowThisShop";
 import { TrustBadges } from "@/components/TrustBadges";
+import { ShareStorefront } from "@/components/ShareStorefront";
 interface Shop {
   id: string;
   shop_name: string;
