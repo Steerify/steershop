@@ -122,6 +122,7 @@ const MyStore = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPaystackGuide, setShowPaystackGuide] = useState(false);
   const [shopStatus, setShopStatus] = useState<{ status: 'active' | 'trial' | 'expired' | 'free'; daysRemaining: number }>({ status: 'trial', daysRemaining: 15 });
+  const [isPremiumPlan, setIsPremiumPlan] = useState(false);
 
   const [showDfyPopup, setShowDfyPopup] = useState(false);
 
