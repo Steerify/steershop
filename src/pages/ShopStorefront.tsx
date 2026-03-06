@@ -895,7 +895,7 @@ const ShopStorefront = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
-                className="flex-1 min-h-[44px]"
+                className="flex-1 min-h-[44px] rounded-full"
               >
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Contact
