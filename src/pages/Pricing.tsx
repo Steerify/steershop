@@ -200,7 +200,7 @@ const Pricing = () => {
         </div>
 
         {/* Setup Service CTA */}
-        <Card className="mt-10 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border-primary/20">
+        <Card className="mt-10 card-spotify bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10">
           <CardContent className="p-6 sm:p-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div>
