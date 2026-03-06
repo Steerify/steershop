@@ -905,7 +905,7 @@ const ShopStorefront = () => {
               <Button
                 size="sm"
                 onClick={() => setIsCheckoutOpen(true)}
-                className="flex-1 bg-gradient-to-r from-accent to-primary hover:opacity-90 min-h-[44px]"
+                className="flex-1 rounded-full bg-gradient-to-r from-accent to-primary hover:opacity-90 min-h-[44px]"
               >
                 <ShoppingCart className="w-4 h-4 mr-2" />
                 Cart ({getTotalItems()}) · ₦{getTotalAmount().toLocaleString()}
