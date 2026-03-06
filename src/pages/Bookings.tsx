@@ -260,7 +260,7 @@ const Bookings = () => {
               <p className="text-xs sm:text-sm text-muted-foreground">Confirmed</p>
             </CardContent>
           </Card>
-          <Card className="border-green-500/20 bg-green-500/5">
+          <Card className="card-spotify border-l-4 border-l-green-500 bg-green-500/5">
             <CardContent className="p-3 sm:pt-4 text-center">
               <p className="text-xl sm:text-2xl font-bold text-green-600">{completedCount}</p>
               <p className="text-xs sm:text-sm text-muted-foreground">Completed</p>
