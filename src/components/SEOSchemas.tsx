@@ -132,7 +132,7 @@ export const SEOSchemas = () => {
           "name": "How much does SteerSolo cost?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "SteerSolo starts at ₦1,000/month for the Basic plan. We also offer Pro (₦3,000/month) and Business (₦5,000/month) plans with advanced features. All plans include a 15-day free trial. No credit card required."
+            "text": "SteerSolo offers a free forever Starter plan with up to 5 products. Paid plans include Growth (₦2,500/month) and Pro (₦5,000/month) with advanced features. No credit card required to start."
           }
         },
         {
