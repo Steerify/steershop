@@ -277,7 +277,7 @@ const Auth = () => {
               { emoji: "📦", text: "Automated order management" },
               { emoji: "🤖", text: "AI ad copy generation" },
               { emoji: "💰", text: "Instant payouts to your bank" },
-              { emoji: "✅", text: "15-day free trial — no card needed" },
+              { emoji: "✅", text: "Free forever — no card needed" },
             ].map((item, i) => (
               <li
                 key={i}

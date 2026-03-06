@@ -47,6 +47,7 @@ const painPoints = [
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
+      <GoogleOneTap />
       <Navbar />
 
       {/* SECTION 1: HERO — Outcome-first */}

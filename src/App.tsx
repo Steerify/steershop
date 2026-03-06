@@ -115,7 +115,7 @@ const App = () => (
           v7_relativeSplatPath: true,
         }}
       >
-        <GoogleOneTap />
+        
         <SessionExpiryModal />
         <PlatformReviewPopup />
         <Suspense fallback={<PageLoadingSkeleton />}>
