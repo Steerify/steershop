@@ -190,7 +190,7 @@ export const DynamicPricing = () => {
             return (
               <Card 
                 key={plan.id} 
-                className={`relative ${highlight ? 'border-2 border-primary shadow-lg scale-105' : 'border'}`}
+                className={`relative transition-all duration-300 ${highlight ? 'border-2 border-primary shadow-xl scale-105 ring-2 ring-primary/20 bg-gradient-to-b from-primary/5 to-transparent' : 'border hover:shadow-md'}`}
               >
                 {badge && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
