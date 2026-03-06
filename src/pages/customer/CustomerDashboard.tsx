@@ -169,7 +169,7 @@ const CustomerDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/rewards")} data-tour="reward-points">
+              <Card className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/rewards")} data-tour="reward-points">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                   <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Reward Points</CardTitle>
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-gold/20 to-amber-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
