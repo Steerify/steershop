@@ -739,9 +739,9 @@ const ShopStorefront = () => {
             )}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map((product, index) => (
-                <Card
+                <div
                   key={product.id}
-                  className="card-african overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 animate-fade-up"
+                  className="card-spotify overflow-hidden group animate-fade-up"
                   style={{ animationDelay: `${index * 0.05}s` }}
                   data-tour={index === 0 ? "product-card" : undefined}
                 >
