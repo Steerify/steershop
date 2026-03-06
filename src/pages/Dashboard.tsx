@@ -73,7 +73,7 @@ const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profi
 
   if (isVerified) {
     return (
-      <Card className="mb-4 border-green-500/30 bg-gradient-to-r from-green-500/10 to-emerald-500/5 overflow-hidden">
+      <Card className="mb-4 card-spotify border-l-4 border-l-green-500 overflow-hidden">
         <CardContent className="p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-green-500/15 flex items-center justify-center">
             <BadgeCheck className="w-5 h-5 text-green-600" />
