@@ -157,7 +157,7 @@ const Customers = () => {
               <p className="text-xs text-muted-foreground">Repeat</p>
             </CardContent>
           </Card>
-          <Card className="border-primary/10">
+          <Card className="card-spotify">
             <CardContent className="p-4 text-center">
               <ShoppingCart className="w-6 h-6 text-primary mx-auto mb-1" />
               <p className="text-2xl font-bold">₦{totalRevenue.toLocaleString()}</p>
