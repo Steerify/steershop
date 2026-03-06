@@ -455,8 +455,8 @@ const Shops = () => {
                           </div>
                           <span className="text-xs sm:text-sm">Visit Shop</span>
                         </div>
-                      </CardDescription>
-                    </CardHeader>
+                      </div>
+                    </div>
                     <CardContent className="p-2 sm:p-4 pt-0">
                       <div className="flex items-center justify-between">
                         <div>
