@@ -433,7 +433,7 @@ const Shops = () => {
                   >
                     <div className="p-3 sm:p-4">
                       {product.image_url || (product.images && product.images.length > 0) ? (
-                        <div className="w-full h-32 sm:h-48 mb-2 sm:mb-4 overflow-hidden rounded-lg">
+                        <div className="w-full h-32 sm:h-48 mb-3 sm:mb-4 overflow-hidden rounded-xl">
                           <img 
                             src={product.image_url || product.images?.[0]?.url} 
                             alt={product.name}
