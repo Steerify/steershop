@@ -85,7 +85,7 @@ const faqCategories: FAQCategory[] = [
       },
       {
         question: "What is the subscription fee?",
-        answer: "SteerSolo costs ₦1,000/month for full access to all features including: unlimited products, order management, payment processing, marketing tools, and customer communication features. This is less than the cost of one meal out!"
+        answer: "SteerSolo offers a free forever Starter plan (up to 5 products). The Growth plan is ₦2,500/month (up to 50 products) and the Pro plan is ₦5,000/month (unlimited products + AI tools). All plans include order management, payments, and WhatsApp integration."
       },
       {
         question: "How do I share my store?",
