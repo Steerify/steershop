@@ -99,12 +99,10 @@ export const WhySteerSolo = () => {
                     </li>
                   ))}
                 </ul>
-              </CardContent>
-            </Card>
+            </div>
 
             {/* SteerSolo Adds */}
-            <Card className="border-primary/20 shadow-sm">
-              <CardContent className="p-6">
+            <div className="card-spotify p-6 border-l-4 border-l-primary/40">
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                     <Store className="w-5 h-5 text-primary" />
