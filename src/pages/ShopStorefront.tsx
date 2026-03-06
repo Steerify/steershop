@@ -517,6 +517,14 @@ const ShopStorefront = () => {
       }}
     >
       <Navbar shopBranding={isPremiumPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
+      {/* Free plan owner banner */}
+      {ownerIsFree && isOwner && (
+        <div className="pt-20 pb-0">
+          <div className="container mx-auto px-4">
+            <FreeShopRestrictionsBanner />
+          </div>
+        </div>
+      )}
       {/* Shop Header */}
       <div className="relative pt-20" data-tour="shop-header">
         {shop.banner_url ? (
