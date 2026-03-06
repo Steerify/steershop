@@ -181,7 +181,7 @@ export const DynamicPricing = () => {
           'md:grid-cols-3'
         }`}>
           {plans.filter(p => p.slug !== 'business').map((plan) => {
-            const { badge, highlight, icon: PlanIcon, tagline } = getPlanMeta(plan.slug);
+            const { badge, highlight, icon: PlanIcon, tagline, cta, missingFeatures } = getPlanMeta(plan.slug);
             const features = getAllFeatures(plan);
             const price = getPrice(plan);
             const savings = getYearlySavings(plan);
