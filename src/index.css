@@ -100,8 +100,8 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 30% 20%;
-    --input: 220 30% 20%;
+    --border: 220 30% 24%;
+    --input: 220 30% 24%;
     --ring: 145 60% 45%;
     
     --hero-gradient: linear-gradient(135deg, hsl(220 40% 12%), hsl(145 55% 35%));
