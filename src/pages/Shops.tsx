@@ -424,7 +424,7 @@ const Shops = () => {
             <h2 className="font-display text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
               Product Results <span className="text-accent">({productResults.length})</span>
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
               {productResults.map((product, index) => (
                 <Link key={`${product.id}-${index}`} to={`/shop/${product.shop_slug || 'shop'}`}>
                   <Card 
