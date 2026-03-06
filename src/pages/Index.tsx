@@ -180,7 +180,7 @@ const Index = () => {
       {/* SECTION 10: FINAL CTA — Close with guarantee */}
       <section className="relative py-24 overflow-hidden">
         {/* Rich gradient BG */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-[hsl(175,55%,30%)] to-accent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-[hsl(160,50%,28%)] to-accent" />
         <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-white/5 blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-white/5 blur-3xl" />
         <AdirePattern variant="circles" className="absolute inset-0 text-white" opacity={0.07} />
