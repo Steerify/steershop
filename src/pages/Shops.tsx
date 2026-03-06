@@ -205,6 +205,45 @@ const Shops = () => {
       }
 
       let filteredShops = response.data || [];
+
+      // Filter out free-plan shops (owner's trial expired, not subscribed, ≤5 products)
+      if (filteredShops.length > 0) {
+        const ownerIds = [...new Set(filteredShops.map(s => s.owner_id).filter(Boolean))];
+        if (ownerIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, is_subscribed, subscription_expires_at')
+            .in('id', ownerIds);
+          
+          if (profiles) {
+            // Count products per shop to determine free eligibility
+            const shopIds = filteredShops.map(s => s.id);
+            const { data: productCounts } = await supabase
+              .from('products')
+              .select('shop_id')
+              .in('shop_id', shopIds);
+            
+            const countByShop: Record<string, number> = {};
+            productCounts?.forEach(p => {
+              countByShop[p.shop_id] = (countByShop[p.shop_id] || 0) + 1;
+            });
+
+            const freeOwnerIds = new Set(
+              profiles
+                .filter(p => {
+                  const pCount = Object.entries(countByShop).find(([shopId]) => 
+                    filteredShops.find(s => s.id === shopId && s.owner_id === p.id)
+                  )?.[1] || 0;
+                  const status = calculateSubscriptionStatus(p, pCount);
+                  return status.status === 'free';
+                })
+                .map(p => p.id)
+            );
+            
+            filteredShops = filteredShops.filter(s => !s.owner_id || !freeOwnerIds.has(s.owner_id));
+          }
+        }
+      }
       
       // Local search filter
       if (searchTerm.trim()) {
