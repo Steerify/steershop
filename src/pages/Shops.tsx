@@ -469,8 +469,8 @@ const Shops = () => {
                           {product.is_available ? 'Available' : 'Unavailable'}
                         </Badge>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 </Link>
               ))}
             </div>
