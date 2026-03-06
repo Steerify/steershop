@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import nigeriaMap from "@/assets/nigeria-dot-map.png";
+import globalMap from "@/assets/global-dot-map.png";
 
 export const NigeriaDotMap = () => {
   const [visible, setVisible] = useState(false);
@@ -12,9 +12,9 @@ export const NigeriaDotMap = () => {
   return (
     <div className={`relative w-full h-full transition-opacity duration-1000 ${visible ? 'opacity-100' : 'opacity-0'}`}>
       <img
-        src={nigeriaMap}
-        alt="Nigeria dot map showing major cities"
-        className="w-full h-full object-contain"
+        src={globalMap}
+        alt="Global dot map"
+        className="w-full h-full object-contain mix-blend-multiply"
         loading="eager"
       />
     </div>
