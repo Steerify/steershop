@@ -76,13 +76,13 @@ export const DynamicPricing = () => {
   const getPlanMeta = (slug: string) => {
     switch (slug) {
       case 'free':
-        return { badge: 'FREE FOREVER', highlight: false, icon: Zap, tagline: "Start selling — no risk, no cost" };
+        return { badge: 'FREE FOREVER', highlight: false, icon: Zap, tagline: "Perfect to test the waters", cta: "Start Free Forever", missingFeatures: ["No AI tools", "No SEO optimization", "No priority support"] };
       case 'growth':
-        return { badge: null, highlight: false, icon: Zap, tagline: "Perfect for growing businesses" };
+        return { badge: null, highlight: false, icon: Zap, tagline: "Chosen by ambitious sellers", cta: "Start Growing Today", missingFeatures: ["No AI tools", "No priority support"] };
       case 'pro':
-        return { badge: 'Most Popular', highlight: true, icon: Sparkles, tagline: "Unlimited products + AI tools" };
+        return { badge: '🔥 Most chosen plan', highlight: true, icon: Sparkles, tagline: "⚡ Used by top-performing sellers", cta: "Unlock AI Power", missingFeatures: [] };
       default:
-        return { badge: null, highlight: false, icon: Zap, tagline: "" };
+        return { badge: null, highlight: false, icon: Zap, tagline: "", cta: "Get Started", missingFeatures: [] };
     }
   };
 
