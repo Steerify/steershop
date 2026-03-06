@@ -468,7 +468,19 @@ const ShopStorefront = () => {
     );
   }
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div 
+      className="min-h-screen bg-background flex flex-col"
+      style={{ 
+        ...(shop?.accent_color ? { '--accent': shop.accent_color } as any : {}),
+        ...(shop?.font_style ? { fontFamily: shop.font_style } : {}),
+      }}
+    >
+      {shop?.font_style && (
+        <link
+          href={`https://fonts.googleapis.com/css2?family=${shop.font_style.replace(/ /g, '+')}:wght@400;500;600;700&display=swap`}
+          rel="stylesheet"
+        />
+      )}
       <Navbar shopBranding={isPremiumPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
       {/* Shop Header */}
       <div className="relative pt-20" data-tour="shop-header">
