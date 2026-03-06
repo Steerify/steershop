@@ -121,7 +121,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* SECTION 2: PAIN MIRROR — Hook them emotionally first */}
+      {/* SECTION 2: PAIN MIRROR */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -136,15 +136,13 @@ const Index = () => {
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {painPoints.map((point) => (
-              <Card key={point.pain} className="border-destructive/20 bg-gradient-to-br from-destructive/5 to-destructive/2 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-destructive/10 rounded-2xl flex items-center justify-center mb-4 shadow-inner">
-                    <point.icon className="w-6 h-6 text-destructive" />
-                  </div>
-                  <h3 className="text-base font-bold mb-2 text-foreground">{point.pain}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{point.description}</p>
-                </CardContent>
-              </Card>
+              <div key={point.pain} className="card-spotify p-6 bg-destructive/5 hover:bg-destructive/8">
+                <div className="w-12 h-12 bg-destructive/10 rounded-2xl flex items-center justify-center mb-4 shadow-inner">
+                  <point.icon className="w-6 h-6 text-destructive" />
+                </div>
+                <h3 className="text-base font-bold mb-2 text-foreground">{point.pain}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{point.description}</p>
+              </div>
             ))}
           </div>
 

@@ -55,8 +55,7 @@ export const HowItWorks = () => {
                   </div>
                   <h3 className="text-xl font-bold mb-2">{step.title}</h3>
                   <p className="text-muted-foreground">{step.description}</p>
-                </CardContent>
-              </Card>
+              </div>
               {index < steps.length - 1 && (
                 <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
                   <ArrowRight className="w-8 h-8 text-primary/30" />

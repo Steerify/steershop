@@ -91,8 +91,7 @@ export const HomepageReviews = () => {
                   </div>
                 </div>
                 <div className="absolute bottom-0 right-0 w-24 h-24 bg-gradient-to-tl from-primary/5 to-transparent rounded-tl-full" />
-              </CardContent>
-            </Card>
+            </div>
           ))}
         </div>
       </div>

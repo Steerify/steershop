@@ -117,8 +117,7 @@ export const WhySteerSolo = () => {
                     </li>
                   ))}
                 </ul>
-              </CardContent>
-            </Card>
+            </div>
           </div>
 
           {/* Callout */}
