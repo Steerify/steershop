@@ -24,6 +24,7 @@ import { DynamicPricing } from "@/components/DynamicPricing";
 import { SocialProofStats } from "@/components/SocialProofStats";
 import { Card, CardContent } from "@/components/ui/card";
 import { Globe, Shield, Zap, Globe2, DollarSign } from "lucide-react";
+import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 
 const painPoints = [
   {
@@ -46,6 +47,7 @@ const painPoints = [
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
+      <GoogleOneTap />
       <Navbar />
 
       {/* SECTION 1: HERO — Outcome-first */}
