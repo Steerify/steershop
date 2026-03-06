@@ -25,6 +25,7 @@ import { SocialProofStats } from "@/components/SocialProofStats";
 import { Card, CardContent } from "@/components/ui/card";
 import { Globe, Shield, Zap, Globe2, DollarSign } from "lucide-react";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
+import { NigeriaDotMap } from "@/components/NigeriaDotMap";
 
 const painPoints = [
   {
