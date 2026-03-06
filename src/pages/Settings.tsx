@@ -126,7 +126,7 @@ const Settings = () => {
 
           {/* Shop Settings - Entrepreneurs only */}
           {isEntrepreneur && (
-            <Card className="border-border/50 shadow-sm">
+            <Card className="card-spotify shadow-sm">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <Store className="w-5 h-5 text-primary" />
