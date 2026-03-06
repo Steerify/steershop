@@ -654,25 +654,32 @@ const ShopStorefront = () => {
           </div>
           {/* Filter Tabs */}
           {(productCount > 0 || serviceCount > 0) && (
-            <Tabs value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)} data-tour="product-filters">
-              <TabsList className="bg-card border border-primary/10">
-                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  All ({products.length})
-                </TabsTrigger>
-                {productCount > 0 && (
-                  <TabsTrigger value="product" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                    <Package className="w-4 h-4 mr-2" />
-                    Products ({productCount})
-                  </TabsTrigger>
-                )}
-                {serviceCount > 0 && (
-                  <TabsTrigger value="service" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    <Briefcase className="w-4 h-4 mr-2" />
-                    Services ({serviceCount})
-                  </TabsTrigger>
-                )}
-              </TabsList>
-            </Tabs>
+            <div className="flex gap-2" data-tour="product-filters">
+              <button
+                onClick={() => setTypeFilter('all')}
+                className={`pill-button ${typeFilter === 'all' ? 'pill-button-active' : 'pill-button-inactive'}`}
+              >
+                All ({products.length})
+              </button>
+              {productCount > 0 && (
+                <button
+                  onClick={() => setTypeFilter('product')}
+                  className={`pill-button flex items-center gap-1.5 ${typeFilter === 'product' ? 'pill-button-active' : 'pill-button-inactive'}`}
+                >
+                  <Package className="w-3.5 h-3.5" />
+                  Products ({productCount})
+                </button>
+              )}
+              {serviceCount > 0 && (
+                <button
+                  onClick={() => setTypeFilter('service')}
+                  className={`pill-button flex items-center gap-1.5 ${typeFilter === 'service' ? 'pill-button-active' : 'pill-button-inactive'}`}
+                >
+                  <Briefcase className="w-3.5 h-3.5" />
+                  Services ({serviceCount})
+                </button>
+              )}
+            </div>
           )}
         </div>
         {filteredProducts.length === 0 ? (
