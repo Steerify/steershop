@@ -210,6 +210,9 @@ const MyStore = () => {
       
       if (profileData) {
         setShopStatus(getShopStatusFromProfile(profileData));
+        // Check if premium (Pro or Business or Active Trial)
+        const subStatus = getShopStatusFromProfile(profileData);
+        setIsPremiumPlan(subStatus.status === 'active' || subStatus.status === 'trial');
       }
       
       const res = await shopService.getShopByOwner(formattedUserId);
