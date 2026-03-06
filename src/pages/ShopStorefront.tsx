@@ -683,7 +683,7 @@ const ShopStorefront = () => {
           )}
         </div>
         {filteredProducts.length === 0 ? (
-          <Card className="card-african">
+          <div className="card-spotify p-0">
             <CardContent className="py-16 text-center">
               <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
                 {searchQuery ? (
