@@ -473,6 +473,42 @@ const ShopStorefront = () => {
       </div>
     );
   }
+
+  // Block free-plan shops from public viewing (non-owners see unavailable page)
+  if (ownerIsFree && !isOwner) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navbar />
+        <div className="flex-1 container mx-auto px-4 pt-32">
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="w-24 h-24 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
+              <Store className="w-12 h-12 text-muted-foreground" />
+            </div>
+            <h1 className="font-display text-3xl font-bold mb-3">Shop Unavailable</h1>
+            <p className="text-muted-foreground mb-8 text-lg">
+              This shop is currently on the Free plan and not visible to the public.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/shops">
+                <Button size="lg" className="bg-gradient-to-r from-accent to-primary">
+                  <Store className="w-4 h-4 mr-2" />
+                  Browse All Shops
+                </Button>
+              </Link>
+              <Link to="/">
+                <Button size="lg" variant="outline">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Go Home
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div 
       className="min-h-screen bg-background flex flex-col"
