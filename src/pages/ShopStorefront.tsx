@@ -300,8 +300,14 @@ const ShopStorefront = () => {
           .single();
         
         if (profileData) {
+          // Count products to determine free vs expired
+          const { count: shopProductCount } = await supabase
+            .from('products')
+            .select('id', { count: 'exact', head: true })
+            .eq('shop_id', shopData.id);
+
           // Calculate subscription status to determine visibility
-          const subStatus = calculateSubscriptionStatus(profileData);
+          const subStatus = calculateSubscriptionStatus(profileData, shopProductCount ?? undefined);
           
           if (subStatus.status === 'trial') {
             setOwnerIsInTrial(true);
