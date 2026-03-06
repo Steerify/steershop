@@ -1,64 +1,65 @@
 
 
-# Plan: Subscription Expiry Popup, Homepage Alignment, and Logistics Verification
+# Plan: Storefront Functionality Audit, Google One Tap Fix, and Auth Page Cleanup
 
-## 1. Subscription Expiry / Free Plan Persuasion Popup
+## Issues Found
 
-Create a new component `src/components/SubscriptionExpiryDialog.tsx` that shows when a shop owner's trial/subscription has expired. This dialog will be triggered from `Dashboard.tsx` after data loads.
+### A. Google One Tap — Shows Everywhere, Should Only Show on Homepage
+Currently `<GoogleOneTap />` is rendered globally in `App.tsx` (line 118), meaning it appears on every page including the login page. Per the user's request:
+- It should **only** appear on the homepage (`/`)
+- On the auth/login page, it's redundant since `GoogleSignInButton` is already rendered inline
 
-**Logic flow:**
-- After `loadData()` completes, check `subscriptionStatus === 'expired'`
-- Show a persuasive full-screen dialog with two paths:
-  - **"Upgrade to a Paid Plan"** — navigates to `/pricing`
-  - **"Stay on Free Plan (5 products max)"** — if `productsCount > 5`, show a product list with delete buttons so the user can trim down to 5. If `productsCount <= 5`, show a persuasive "you're missing out" message but allow them to dismiss
-- Even if products are <= 5, still show the dialog once per session (use `sessionStorage` to avoid repeat)
-- The dialog should be beautifully designed with gradient backgrounds, clear value propositions for upgrading, and a sense of urgency
+**Root cause of "not working":** The component depends on `VITE_GOOGLE_CLIENT_ID` env var (line 56 of GoogleOneTap.tsx). If this isn't set, the component silently does nothing. Additionally, Lovable Cloud has managed Google OAuth — the One Tap component uses `supabase.auth.signInWithIdToken` which requires the Google client ID to match what's configured in the backend. The `GoogleSignInButton` on the auth page has the same dependency.
 
-**Also show for `subscriptionStatus === 'free'`:** A lighter persuasion popup (not blocking) that appears once per day (tracked via `localStorage` timestamp) encouraging upgrade with feature comparisons.
+**Fix:** Move `<GoogleOneTap />` from `App.tsx` into `Index.tsx` only. This ensures it only appears on the homepage.
 
-**Files:** New `src/components/SubscriptionExpiryDialog.tsx`, edit `src/pages/Dashboard.tsx`
+### B. Auth Page — Stale "15-day free trial" Text
+Line 280 of `Auth.tsx` still says `"15-day free trial — no card needed"`. This was supposed to be updated to "Free forever plan" per previous pricing sync work but was missed.
 
----
+### C. Storefront Functionality Audit
 
-## 2. Homepage Alignment — Fix Inconsistencies
+**Working correctly:**
+1. **Product browsing** — filtering by type (product/service), search, responsive grid
+2. **Add to cart** — stock validation, quantity limits enforced
+3. **Checkout flow** — form validation with Zod, order creation in database, Paystack split payment via backend edge function, bank transfer proof via WhatsApp, delivery-before-payment option
+4. **Wishlist** — uses `WishlistButton` component (requires auth)
+5. **Product reviews** — inline `ProductReviewForm` on each card
+6. **Booking dialog** — for service-type products with `booking_required`
+7. **SEO** — JSON-LD injection, meta tags, canonical URLs
+8. **White-label branding** — premium/trial shops show their own name/logo in Navbar
+9. **Trust badges** — verification, WhatsApp, ratings displayed
+10. **Floating cart bar** — IntersectionObserver shows it when header cart scrolls out of view
 
-Review current Index page claims vs actual system capabilities:
+**Security review:**
+- Orders insert uses `customer_id: user?.id || null` — allows guest checkout (correct for storefront)
+- RLS on orders table likely permits inserts (since guests can order). Verified via `order_exists` and `shop_has_valid_subscription` security definer functions
+- Stock reduction handled by `reduce_product_stock` trigger — prevents overselling
+- Coupon validation done server-side via `couponService.validateCoupon`
+- Paystack payment initialized via edge function (`paystack-initialize-order`) — keys never exposed to client
 
-**Issues found:**
-- "Proven 30-Day Ritual" chip in hero — this exists (StructuredSellingChallenge), accurate
-- "Sell Globally from Africa" — the system only supports NGN payments via Paystack currently. The "From Africa to the World" section claims "Multi-Currency" and "Global Reach" which is misleading
-- "setup takes 10 minutes" — accurate
-- HowItWorks says "15-day free trial" but the pricing strategy is "Free Forever" (Starter plan) — inconsistent
-- Final CTA says "Get your first order within 14 days — or your next month is free" — this guarantee isn't enforced in the system
-- "Free forever plan" in footer chips — accurate per pricing strategy
-
-**Fixes:**
-- Remove the "From Africa to the World" section (Section 1.5) since multi-currency/global payments aren't implemented
-- Update HowItWorks step 1 description from "15-day free trial" to "Free forever with up to 5 products"
-- Soften the Final CTA guarantee to something achievable: "Get your first order within 14 days" without the "next month is free" promise (unless you want to enforce it)
-- Keep the hero as-is — "Turn WhatsApp traffic into consistent orders" is accurate
-
-**Files:** `src/pages/Index.tsx`, `src/components/HowItWorks.tsx`
-
----
-
-## 3. Logistics Function Verification
-
-The `logistics-get-rates` and `logistics-book-delivery` edge functions are correctly structured for the Terminal Africa API. The flow is: Create addresses → Create parcel → Get rates / Create shipment → Arrange pickup.
-
-**Current status:** The code is correct. The only issue is that without a valid `TERMINAL_API_KEY`, it falls back to mock data. The `TERMINAL_API_KEY` secret is already configured. The functions should work if the key is valid and the Terminal Africa account is active.
-
-**Small fix needed:** The `logistics-get-rates` function hardcodes `country: 'NG'` — should use the `country` field from the address if provided. Also add better error messages when Terminal API returns errors (currently just throws generic "Failed to create pickup address").
-
-**Files:** `supabase/functions/logistics-get-rates/index.ts`, `supabase/functions/logistics-book-delivery/index.ts`
+**No critical issues found in storefront functionality.**
 
 ---
 
-## Summary
+## Plan
 
-| # | Feature | Files | Effort |
-|---|---------|-------|--------|
-| 1 | Subscription expiry persuasion popup | New component + `Dashboard.tsx` | Medium |
-| 2 | Homepage consistency fixes | `Index.tsx`, `HowItWorks.tsx` | Small |
-| 3 | Logistics error handling improvement | 2 edge functions | Small |
+### 1. Move Google One Tap to Homepage Only
+- **`App.tsx`**: Remove `<GoogleOneTap />` from global render and its import
+- **`Index.tsx`**: Import and render `<GoogleOneTap />` inside the Index component
+
+### 2. Fix Auth Page Trial Text
+- **`Auth.tsx` line 280**: Change `"15-day free trial — no card needed"` to `"Free forever — no card needed"`
+
+### 3. Verify Google OAuth Configuration
+- Check if `VITE_GOOGLE_CLIENT_ID` is set. If not, the Google buttons and One Tap will silently fail. Will check secrets and advise.
+
+---
+
+## Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/App.tsx` | Remove `GoogleOneTap` import and component |
+| `src/pages/Index.tsx` | Add `GoogleOneTap` component |
+| `src/pages/Auth.tsx` | Fix "15-day free trial" text |
 
