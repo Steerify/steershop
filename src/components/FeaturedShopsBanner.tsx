@@ -174,7 +174,7 @@ export const FeaturedShopsBanner = () => {
                 className="flex-shrink-0 w-[340px]"
               >
                 <div className={cn(
-                  "relative rounded-2xl border border-border/50 bg-card p-5",
+                  "relative rounded-2xl border border-border/50 bg-card p-5 h-[160px]",
                   "transition-all duration-300 ease-out",
                   "hover:shadow-xl hover:shadow-accent/5 hover:scale-[1.02] hover:border-accent/30",
                   "cursor-pointer overflow-hidden group/card"
