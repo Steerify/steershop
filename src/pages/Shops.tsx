@@ -405,12 +405,12 @@ const Shops = () => {
       <>
         {/* Search Type Tabs */}
         {hasSearchQuery && (
-          <div className="flex gap-1 sm:gap-2 mb-4 sm:mb-6 border-b pb-3 sm:pb-4 overflow-x-auto">
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
             {(['all', 'shops', 'products'] as const).map(type => (
               <button
                 key={type}
                 onClick={() => handleSearchTypeChange(type)}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm whitespace-nowrap min-h-[40px] ${searchType === type ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/10'}`}
+                className={`pill-button whitespace-nowrap ${searchType === type ? 'pill-button-active' : 'pill-button-inactive'}`}
               >
                 {type === 'all' ? `All (${shops.length + productResults.length})` : type === 'shops' ? `Shops (${shops.length})` : `Products (${productResults.length})`}
               </button>
