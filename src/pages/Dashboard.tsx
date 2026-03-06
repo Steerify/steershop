@@ -618,8 +618,8 @@ const Dashboard = () => {
             <div className="grid grid-cols-2 gap-x-6 gap-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-white/60 text-xs">Visibility</span>
-                <span className={`text-xs font-bold ${subscriptionStatus === 'expired' ? 'text-red-400' : 'text-green-400'}`}>
-                  {subscriptionStatus === 'expired' ? 'Hidden' : 'Live'}
+                <span className={`text-xs font-bold ${subscriptionStatus === 'expired' || subscriptionStatus === 'free' ? 'text-red-400' : 'text-green-400'}`}>
+                  {subscriptionStatus === 'expired' || subscriptionStatus === 'free' ? 'Hidden' : 'Live'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
