@@ -88,7 +88,7 @@ const Pricing = () => {
     },
     {
       q: "What if I don't get results?",
-      a: "Complete your setup milestones within 14 days. If you don't see measurable improvement, your next month is free."
+      a: "We're confident SteerSolo will help you grow. Complete your setup milestones and start receiving orders — our support team is here to help every step of the way."
     },
   ];
 
