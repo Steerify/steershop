@@ -1,64 +1,47 @@
 
 
-# Plan: Subscription Expiry Popup, Homepage Alignment, and Logistics Verification
+# Plan: Spotify-Inspired Shop Design Refresh
 
-## 1. Subscription Expiry / Free Plan Persuasion Popup
+## Design Philosophy (Spotify Web Traits)
+- **Cards**: Larger border-radius (1rem+), no visible borders, background elevation via subtle shadows, hover = gentle scale-up + brighter shadow
+- **Image-forward**: Product/shop images take center stage, overlaid with gradients for text readability
+- **Colors**: Leverage existing dark mode well; in light mode use soft muted backgrounds with pops of accent color
+- **Typography**: Clean, generous spacing, bold headings, muted secondary text
+- **Animations**: Smooth scale transitions on hover (1.02-1.04x), no jarring movement
+- **Layout**: Generous padding, breathing room between elements, full-bleed hero sections
 
-Create a new component `src/components/SubscriptionExpiryDialog.tsx` that shows when a shop owner's trial/subscription has expired. This dialog will be triggered from `Dashboard.tsx` after data loads.
+## Files to Modify
 
-**Logic flow:**
-- After `loadData()` completes, check `subscriptionStatus === 'expired'`
-- Show a persuasive full-screen dialog with two paths:
-  - **"Upgrade to a Paid Plan"** — navigates to `/pricing`
-  - **"Stay on Free Plan (5 products max)"** — if `productsCount > 5`, show a product list with delete buttons so the user can trim down to 5. If `productsCount <= 5`, show a persuasive "you're missing out" message but allow them to dismiss
-- Even if products are <= 5, still show the dialog once per session (use `sessionStorage` to avoid repeat)
-- The dialog should be beautifully designed with gradient backgrounds, clear value propositions for upgrading, and a sense of urgency
+### 1. `src/components/ShopCardEnhanced.tsx` — Spotify-style shop card
+- Remove visible card borders, use `bg-card` with soft shadow
+- Larger border-radius (`rounded-2xl`)
+- On hover: `scale-[1.02]` + elevated shadow, no translate-y
+- Shop logo gets a subtle ring/glow instead of gradient box
+- Product preview thumbnails: fully rounded corners, slight gap increase
+- "Visit →" becomes a subtle pill button on hover reveal
+- Overall: more padding, cleaner spacing
 
-**Also show for `subscriptionStatus === 'free'`:** A lighter persuasion popup (not blocking) that appears once per day (tracked via `localStorage` timestamp) encouraging upgrade with feature comparisons.
+### 2. `src/pages/Shops.tsx` — Spotify-style browse page
+- Hero section: Replace pattern background with a smooth gradient (like Spotify's genre/mood headers)
+- Search bar: Rounded-full, frosted glass effect, no visible border until focus
+- Grid: Increase gap, cards breathe more
+- Section headers: Bolder, left-aligned (Spotify doesn't center section titles)
+- Skeleton cards match new card style
+- Filter tabs: Pill-shaped, Spotify-style toggle buttons
 
-**Files:** New `src/components/SubscriptionExpiryDialog.tsx`, edit `src/pages/Dashboard.tsx`
+### 3. `src/pages/ShopStorefront.tsx` — Spotify-style storefront
+- Shop header card: Remove `card-african` style, use full-width gradient backdrop derived from accent colors, glass-card overlay
+- Product grid cards: Image-dominant (larger aspect ratio), rounded-2xl, border-none, shadow-based elevation
+- Hover effect: Scale + shadow, eye icon overlay fades in smoothly
+- Floating cart bar: More rounded, pill-shaped buttons, frosted glass
+- Filter tabs: Pill-shaped like Spotify's "All / Music / Podcasts" toggle
 
----
+### 4. `src/index.css` — Add Spotify-inspired utility classes
+- `.card-spotify`: rounded-2xl, no border, shadow-md, hover:shadow-xl hover:scale-[1.02] transition
+- `.glass-spotify`: backdrop-blur-xl with higher opacity
+- `.pill-button`: rounded-full small button style
+- Subtle gradient overlay utilities
 
-## 2. Homepage Alignment — Fix Inconsistencies
-
-Review current Index page claims vs actual system capabilities:
-
-**Issues found:**
-- "Proven 30-Day Ritual" chip in hero — this exists (StructuredSellingChallenge), accurate
-- "Sell Globally from Africa" — the system only supports NGN payments via Paystack currently. The "From Africa to the World" section claims "Multi-Currency" and "Global Reach" which is misleading
-- "setup takes 10 minutes" — accurate
-- HowItWorks says "15-day free trial" but the pricing strategy is "Free Forever" (Starter plan) — inconsistent
-- Final CTA says "Get your first order within 14 days — or your next month is free" — this guarantee isn't enforced in the system
-- "Free forever plan" in footer chips — accurate per pricing strategy
-
-**Fixes:**
-- Remove the "From Africa to the World" section (Section 1.5) since multi-currency/global payments aren't implemented
-- Update HowItWorks step 1 description from "15-day free trial" to "Free forever with up to 5 products"
-- Soften the Final CTA guarantee to something achievable: "Get your first order within 14 days" without the "next month is free" promise (unless you want to enforce it)
-- Keep the hero as-is — "Turn WhatsApp traffic into consistent orders" is accurate
-
-**Files:** `src/pages/Index.tsx`, `src/components/HowItWorks.tsx`
-
----
-
-## 3. Logistics Function Verification
-
-The `logistics-get-rates` and `logistics-book-delivery` edge functions are correctly structured for the Terminal Africa API. The flow is: Create addresses → Create parcel → Get rates / Create shipment → Arrange pickup.
-
-**Current status:** The code is correct. The only issue is that without a valid `TERMINAL_API_KEY`, it falls back to mock data. The `TERMINAL_API_KEY` secret is already configured. The functions should work if the key is valid and the Terminal Africa account is active.
-
-**Small fix needed:** The `logistics-get-rates` function hardcodes `country: 'NG'` — should use the `country` field from the address if provided. Also add better error messages when Terminal API returns errors (currently just throws generic "Failed to create pickup address").
-
-**Files:** `supabase/functions/logistics-get-rates/index.ts`, `supabase/functions/logistics-book-delivery/index.ts`
-
----
-
-## Summary
-
-| # | Feature | Files | Effort |
-|---|---------|-------|--------|
-| 1 | Subscription expiry persuasion popup | New component + `Dashboard.tsx` | Medium |
-| 2 | Homepage consistency fixes | `Index.tsx`, `HowItWorks.tsx` | Small |
-| 3 | Logistics error handling improvement | 2 edge functions | Small |
+## No Content Changes
+All text, features, data, buttons, links, and functionality remain exactly the same. Only visual styling (classes, shadows, border-radius, hover effects, spacing) changes.
 
