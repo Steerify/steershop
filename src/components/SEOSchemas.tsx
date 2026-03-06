@@ -59,9 +59,9 @@ export const SEOSchemas = () => {
       "offers": [
         {
           "@type": "Offer",
-          "name": "Basic Plan",
-          "description": "Perfect for new sellers starting their online journey",
-          "price": "1000",
+          "name": "Starter Plan",
+          "description": "Free forever — up to 5 products, perfect for getting started",
+          "price": "0",
           "priceCurrency": "NGN",
           "priceValidUntil": "2027-12-31",
           "availability": "https://schema.org/InStock",
@@ -70,9 +70,9 @@ export const SEOSchemas = () => {
         },
         {
           "@type": "Offer",
-          "name": "Pro Plan",
-          "description": "For growing businesses with advanced features and DFY business profile",
-          "price": "3000",
+          "name": "Growth Plan",
+          "description": "For growing businesses — up to 50 products with full order management",
+          "price": "2500",
           "priceCurrency": "NGN",
           "priceValidUntil": "2027-12-31",
           "availability": "https://schema.org/InStock",
@@ -80,8 +80,8 @@ export const SEOSchemas = () => {
         },
         {
           "@type": "Offer",
-          "name": "Business Plan",
-          "description": "Full suite with AI marketing tools, SEO, Google My Business setup, and priority support",
+          "name": "Pro Plan",
+          "description": "Unlimited products, AI marketing tools, SEO optimization, and priority support",
           "price": "5000",
           "priceCurrency": "NGN",
           "priceValidUntil": "2027-12-31",
