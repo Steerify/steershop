@@ -276,7 +276,7 @@ const Subscription = () => {
         </Card>
 
         {/* Subscription History */}
-        <Card className="mb-8">
+        <Card className="mb-8 card-spotify">
           <CardHeader>
             <CardTitle className="text-xl font-heading flex items-center gap-2">
               <History className="w-5 h-5" />
