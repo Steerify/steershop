@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Store, BadgeCheck, MapPin, Star, Package } from "lucide-react";
 import { Shop } from "@/types/api";
@@ -24,23 +23,23 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
 
   return (
     <Link to={`/shop/${shop.slug || shop.shop_slug}`}>
-      <Card
-        className="h-full hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer group bg-card/80 backdrop-blur-sm animate-fade-up overflow-hidden"
+      <div
+        className="card-spotify h-full cursor-pointer group overflow-hidden animate-fade-up"
         style={{ animationDelay: `${index * 0.05}s` }}
       >
-        {/* Banner / Logo area */}
-        <CardHeader className="p-4 sm:p-5 pb-3">
-          <div className="flex items-start gap-3">
+        {/* Header */}
+        <div className="p-5 pb-3">
+          <div className="flex items-start gap-4">
             <div className="relative shrink-0">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform shadow-lg overflow-hidden">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center group-hover:ring-2 group-hover:ring-accent/40 transition-all overflow-hidden shadow-sm">
                 {shop.logo_url ? (
                   <img src={shop.logo_url} alt={shop.name || shop.shop_name} className="w-full h-full object-cover" />
                 ) : (
-                  <Store className="w-7 h-7 text-primary-foreground" />
+                  <Store className="w-7 h-7 text-muted-foreground" />
                 )}
               </div>
               {shop.is_verified && (
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-sm border-2 border-card">
+                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-sm border-2 border-card">
                   <BadgeCheck className="w-3 h-3 text-white" />
                 </div>
               )}
@@ -48,9 +47,9 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <CardTitle className="group-hover:text-accent transition-colors font-display text-sm sm:text-base line-clamp-1">
+                <h3 className="font-semibold text-foreground group-hover:text-accent transition-colors text-sm sm:text-base line-clamp-1 tracking-tight">
                   {shop.name || shop.shop_name}
-                </CardTitle>
+                </h3>
                 {isBusinessPlan && (
                   <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800 text-[10px] px-1.5 py-0">
                     <Star className="w-2.5 h-2.5 mr-0.5 fill-current" />
@@ -63,13 +62,12 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
                   </Badge>
                 )}
               </div>
-              <CardDescription className="line-clamp-2 text-xs mt-0.5">
+              <p className="text-muted-foreground line-clamp-2 text-xs mt-1">
                 {shop.description || "Visit this shop to see their products"}
-              </CardDescription>
+              </p>
 
-              {/* Location */}
               {(shop.state || shop.country) && (
-                <div className="flex items-center gap-1 mt-1">
+                <div className="flex items-center gap-1 mt-1.5">
                   <MapPin className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                   <span className="text-[11px] text-muted-foreground truncate">
                     {[shop.state, shop.country].filter(Boolean).join(", ")}
@@ -78,19 +76,19 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
               )}
             </div>
           </div>
-        </CardHeader>
+        </div>
 
         {/* Product previews */}
         {productPreviews.length > 0 && (
-          <div className="px-4 sm:px-5 pb-2">
-            <div className="flex gap-1.5">
+          <div className="px-5 pb-3">
+            <div className="flex gap-2">
               {productPreviews.slice(0, 3).map((p, i) => (
-                <div key={i} className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                <div key={i} className="w-[72px] h-[72px] rounded-xl overflow-hidden bg-muted flex-shrink-0">
                   <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
                 </div>
               ))}
               {productCount > 3 && (
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                <div className="w-[72px] h-[72px] rounded-xl bg-muted/60 flex items-center justify-center flex-shrink-0">
                   <span className="text-xs text-muted-foreground font-medium">+{productCount - 3}</span>
                 </div>
               )}
@@ -98,10 +96,9 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
           </div>
         )}
 
-        <CardContent className="p-4 sm:p-5 pt-2">
+        <div className="px-5 pb-5 pt-1">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {/* Rating stars */}
               {(shop.total_reviews ?? 0) > 0 ? (
                 <div className="flex items-center gap-1">
                   <div className="flex">{renderStars(shop.average_rating || 0)}</div>
@@ -114,18 +111,18 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
             
             <div className="flex items-center gap-1.5">
               {productCount > 0 && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                  <Package className="w-2.5 h-2.5 mr-0.5" />
+                <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+                  <Package className="w-3 h-3" />
                   {productCount}
-                </Badge>
+                </span>
               )}
-              <span className="text-xs font-medium text-accent group-hover:translate-x-0.5 transition-transform">
+              <span className="pill-button pill-button-inactive text-xs !px-3 !py-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 Visit →
               </span>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </Link>
   );
 };
