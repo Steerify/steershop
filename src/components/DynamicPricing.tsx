@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Star, Loader2, Zap, Sparkles, Crown } from "lucide-react";
+import { CheckCircle, Star, Loader2, Zap, Sparkles, Crown, ShieldCheck, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Plan {
@@ -76,13 +76,13 @@ export const DynamicPricing = () => {
   const getPlanMeta = (slug: string) => {
     switch (slug) {
       case 'free':
-        return { badge: 'FREE FOREVER', highlight: false, icon: Zap, tagline: "Start selling — no risk, no cost" };
+        return { badge: 'FREE FOREVER', highlight: false, icon: Zap, tagline: "Perfect to test the waters", cta: "Start Free Forever", missingFeatures: ["No AI tools", "No SEO optimization", "No priority support"] };
       case 'growth':
-        return { badge: null, highlight: false, icon: Zap, tagline: "Perfect for growing businesses" };
+        return { badge: null, highlight: false, icon: Zap, tagline: "Chosen by ambitious sellers", cta: "Start Growing Today", missingFeatures: ["No AI tools", "No priority support"] };
       case 'pro':
-        return { badge: 'Most Popular', highlight: true, icon: Sparkles, tagline: "Unlimited products + AI tools" };
+        return { badge: '🔥 Most chosen plan', highlight: true, icon: Sparkles, tagline: "⚡ Used by top-performing sellers", cta: "Unlock AI Power", missingFeatures: [] };
       default:
-        return { badge: null, highlight: false, icon: Zap, tagline: "" };
+        return { badge: null, highlight: false, icon: Zap, tagline: "", cta: "Get Started", missingFeatures: [] };
     }
   };
 
@@ -181,7 +181,7 @@ export const DynamicPricing = () => {
           'md:grid-cols-3'
         }`}>
           {plans.filter(p => p.slug !== 'business').map((plan) => {
-            const { badge, highlight, icon: PlanIcon, tagline } = getPlanMeta(plan.slug);
+            const { badge, highlight, icon: PlanIcon, tagline, cta, missingFeatures } = getPlanMeta(plan.slug);
             const features = getAllFeatures(plan);
             const price = getPrice(plan);
             const savings = getYearlySavings(plan);
@@ -190,7 +190,7 @@ export const DynamicPricing = () => {
             return (
               <Card 
                 key={plan.id} 
-                className={`relative ${highlight ? 'border-2 border-primary shadow-lg scale-105' : 'border'}`}
+                className={`relative transition-all duration-300 ${highlight ? 'border-2 border-primary shadow-xl scale-105 ring-2 ring-primary/20 bg-gradient-to-b from-primary/5 to-transparent' : 'border hover:shadow-md'}`}
               >
                 {badge && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
@@ -225,8 +225,14 @@ export const DynamicPricing = () => {
                   </div>
                   
                   {billingCycle === "yearly" && savings > 0 && (
-                    <p className="text-sm text-primary font-medium mb-2">
-                      Save ₦{formatPrice(savings)}/year
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className="bg-green-600 text-white border-0 text-xs px-2 py-0.5 animate-pulse">SAVE 17%</Badge>
+                      <span className="text-sm text-green-600 dark:text-green-400 font-medium">₦{formatPrice(savings)}/year</span>
+                    </div>
+                  )}
+                  {billingCycle === "monthly" && price > 0 && plan.price_yearly && (
+                    <p className="text-xs text-muted-foreground mb-2 italic">
+                      💡 Switch to yearly and save!
                     </p>
                   )}
                   
@@ -237,23 +243,34 @@ export const DynamicPricing = () => {
                   )}
                   {price === 0 && <div className="mb-6" />}
                   
-                  <ul className="space-y-2.5 mb-8">
+                  <ul className="space-y-2.5 mb-4">
                     {features.map((feature, index) => (
                       <li key={index} className="flex items-start gap-2.5">
                         <CheckCircle className={`w-4 h-4 mt-0.5 shrink-0 ${highlight ? 'text-primary' : 'text-primary/70'}`} />
                         <span className="text-sm">{feature}</span>
                       </li>
                     ))}
+                    {missingFeatures.map((missing, index) => (
+                      <li key={`missing-${index}`} className="flex items-start gap-2.5 opacity-50">
+                        <XCircle className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground line-through">{missing}</span>
+                      </li>
+                    ))}
                   </ul>
                   
                   <Link to="/auth/signup">
                     <Button 
-                      className={`w-full ${highlight ? 'bg-primary hover:bg-primary/90' : ''} ${price === 0 ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
+                      className={`w-full ${highlight ? 'bg-primary hover:bg-primary/90 text-lg py-6 font-bold shadow-lg' : ''} ${price === 0 ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
                       variant={highlight || price === 0 ? 'default' : 'outline'}
+                      size={highlight ? 'lg' : 'default'}
                     >
-                      {price === 0 ? 'Start Free Forever' : 'Get Started'}
+                      {cta}
                     </Button>
                   </Link>
+                  <p className="text-xs text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
+                    <ShieldCheck className="w-3 h-3" />
+                    No contracts. Cancel anytime.
+                  </p>
                 </CardContent>
               </Card>
             );
