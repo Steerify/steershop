@@ -75,7 +75,7 @@ const Index = () => {
                 Turn WhatsApp traffic into
                 {" "}
                 <TypewriterEffect
-                  texts={["consistent orders", "global revenue", "trusted brand", "daily success"]}
+                  texts={["consistent orders", "", "a trusted brand", "daily success"]}
                   className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-gold"
                 />
               </h2>
