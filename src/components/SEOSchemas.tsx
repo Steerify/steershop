@@ -30,7 +30,7 @@ export const SEOSchemas = () => {
       },
       "contactPoint": {
         "@type": "ContactPoint",
-        "telephone": "+2349059947055",
+        "telephone": "+2349161922351",
         "email": "steerifygroup@gmail.com",
         "contactType": "customer service",
         "availableLanguage": ["English", "Pidgin"]
