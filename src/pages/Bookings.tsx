@@ -248,7 +248,7 @@ const Bookings = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
-          <Card className="border-yellow-500/20 bg-yellow-500/5">
+          <Card className="card-spotify border-l-4 border-l-yellow-500 bg-yellow-500/5">
             <CardContent className="p-3 sm:pt-4 text-center">
               <p className="text-xl sm:text-2xl font-bold text-yellow-600">{pendingCount}</p>
               <p className="text-xs sm:text-sm text-muted-foreground">Pending</p>
