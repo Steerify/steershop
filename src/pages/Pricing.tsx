@@ -186,7 +186,7 @@ const Pricing = () => {
 
         {/* Guarantee Banner */}
         <div className="max-w-3xl mx-auto mt-10">
-          <Card className="bg-gradient-to-r from-green-500/10 via-emerald-500/5 to-green-500/10 border-green-500/20">
+          <Card className="card-spotify bg-gradient-to-r from-green-500/10 via-emerald-500/5 to-green-500/10">
             <CardContent className="p-6 text-center">
               <ShieldCheck className="w-8 h-8 text-green-600 mx-auto mb-3" />
               <h3 className="text-lg font-heading font-bold mb-2">
