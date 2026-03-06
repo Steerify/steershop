@@ -139,7 +139,7 @@ const StatCard = ({
   trend?: "up" | "down" | "neutral";
   trendValue?: string;
 }) => (
-  <Card className={`relative overflow-hidden border-0 shadow-md ${gradient}`}>
+  <Card className={`relative overflow-hidden card-spotify border-0 shadow-md ${gradient}`}>
     <CardContent className="p-4">
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-medium text-white/80 uppercase tracking-wider">{label}</p>
