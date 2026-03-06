@@ -630,7 +630,7 @@ const ShopStorefront = () => {
                       placeholder="Search..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-10 bg-card border-accent/20 focus:border-accent pl-3 pr-8"
+                      className="h-10 bg-card border-accent/20 focus:border-accent pl-3 pr-8 rounded-full"
                       onBlur={() => {
                         if (searchQuery === "" && isSearchExpanded) {
                           setTimeout(() => setIsSearchExpanded(false), 200);
