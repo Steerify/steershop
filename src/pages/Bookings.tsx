@@ -291,7 +291,7 @@ const Bookings = () => {
         ) : (
           <div className="space-y-4">
             {filteredBookings.map((booking) => (
-              <Card key={booking.id} className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all">
+              <Card key={booking.id} className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all">
                 <CardHeader className="border-b border-border/50">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                     <div className="flex-1">

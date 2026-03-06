@@ -197,7 +197,7 @@ const CustomerDashboard = () => {
             {/* Two Column Layout: Orders + Referral */}
             <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Recent Orders - Takes 2 columns */}
-              <Card className="border-primary/10 lg:col-span-2" data-tour="recent-orders">
+              <Card className="card-spotify lg:col-span-2" data-tour="recent-orders">
                 <CardHeader className="border-b border-border/50">
                   <CardTitle className="font-heading">Recent Orders</CardTitle>
                   <CardDescription>Your latest order activity</CardDescription>

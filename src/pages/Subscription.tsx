@@ -325,7 +325,7 @@ const Subscription = () => {
         </Card>
 
         {/* Available Plans Preview */}
-        <Card>
+        <Card className="card-spotify">
           <CardHeader>
             <CardTitle className="text-xl font-heading">Available Plans</CardTitle>
             <CardDescription>Compare plans and upgrade anytime</CardDescription>

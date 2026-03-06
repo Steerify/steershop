@@ -439,7 +439,7 @@ const Orders = () => {
         ) : (
           <div className="space-y-4">
             {orders.map((order, index) => (
-              <Card key={order.id} className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group" data-tour={index === 0 ? "order-card" : undefined}>
+              <Card key={order.id} className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all group" data-tour={index === 0 ? "order-card" : undefined}>
                 <CardHeader className="border-b border-border/50">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">

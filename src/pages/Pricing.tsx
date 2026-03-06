@@ -234,7 +234,7 @@ const Pricing = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto">
             {faqs.map((faq, idx) => (
-              <Card key={idx} className="border-border/50">
+              <Card key={idx} className="card-spotify">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base sm:text-lg flex items-start gap-2">
                     <HelpCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />

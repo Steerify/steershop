@@ -549,6 +549,7 @@ const ShopStorefront = () => {
                       )}
                       <TourButton
                         onStartTour={startTour}
+                        hasSeenTour={hasSeenTour}
                         onResetTour={resetTour}
                       />
                       <ShareStorefront 

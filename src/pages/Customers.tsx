@@ -195,7 +195,7 @@ const Customers = () => {
         ) : (
           <div className="space-y-3">
             {filteredCustomers.map((customer, idx) => (
-              <Card key={idx} className="border-primary/10 hover:shadow-md transition-shadow">
+              <Card key={idx} className="card-spotify hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">

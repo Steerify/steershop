@@ -229,7 +229,7 @@ const Settings = () => {
           </Card>
 
           {/* Danger Zone */}
-          <Card className="border-destructive/20 bg-destructive/5 shadow-sm">
+          <Card className="card-spotify border-destructive/20 bg-destructive/5 shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg text-destructive">Danger Zone</CardTitle>
               <CardDescription>

@@ -121,8 +121,7 @@ const About = () => {
                   <CardDescription className="text-xs sm:text-sm">
                     {value.description}
                   </CardDescription>
-                </CardHeader>
-              </Card>
+              </div>
             ))}
           </div>
         </div>
