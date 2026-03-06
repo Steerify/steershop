@@ -454,7 +454,7 @@ const ShopStorefront = () => {
   }
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar shopBranding={isBusinessPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
+      <Navbar shopBranding={isPremiumPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
       {/* Shop Header */}
       <div className="relative pt-20" data-tour="shop-header">
         {shop.banner_url ? (
