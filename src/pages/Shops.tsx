@@ -448,7 +448,7 @@ const Shops = () => {
                       <h3 className="group-hover:text-accent transition-colors text-sm sm:text-lg font-semibold tracking-tight line-clamp-2">
                         {product.name}
                       </h3>
-                      <CardDescription className="hidden sm:block">
+                      <div className="hidden sm:block">
                         <div className="flex items-center gap-2 mt-2">
                           <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                             <Store className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary-foreground" />
