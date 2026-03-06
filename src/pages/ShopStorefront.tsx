@@ -712,7 +712,7 @@ const ShopStorefront = () => {
                 </Button>
               )}
             </CardContent>
-          </Card>
+          </div>
         ) : (
           <>
             {/* Search results summary */}
