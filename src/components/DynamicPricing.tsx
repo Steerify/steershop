@@ -243,11 +243,17 @@ export const DynamicPricing = () => {
                   )}
                   {price === 0 && <div className="mb-6" />}
                   
-                  <ul className="space-y-2.5 mb-8">
+                  <ul className="space-y-2.5 mb-4">
                     {features.map((feature, index) => (
                       <li key={index} className="flex items-start gap-2.5">
                         <CheckCircle className={`w-4 h-4 mt-0.5 shrink-0 ${highlight ? 'text-primary' : 'text-primary/70'}`} />
                         <span className="text-sm">{feature}</span>
+                      </li>
+                    ))}
+                    {missingFeatures.map((missing, index) => (
+                      <li key={`missing-${index}`} className="flex items-start gap-2.5 opacity-50">
+                        <XCircle className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground line-through">{missing}</span>
                       </li>
                     ))}
                   </ul>
