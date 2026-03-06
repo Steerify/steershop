@@ -64,7 +64,7 @@ const SellOnlineNigeria = () => (
     }}
     faqs={[
       { question: "How do I start selling online in Nigeria as a beginner?", answer: "Create a free SteerSolo store, add your products with photos and prices, and share your store link on WhatsApp and Instagram. You can get your first sale within 48 hours." },
-      { question: "How much money do I need to start selling online?", answer: "You can start for free! SteerSolo offers a 15-day free trial. After that, plans start at ₦1,000/month. You just need products to sell and a phone." },
+      { question: "How much money do I need to start selling online?", answer: "You can start for free! SteerSolo offers a free forever Starter plan with up to 5 products. Paid plans start at ₦2,500/month. You just need products to sell and a phone." },
       { question: "What's the best platform to sell online in Nigeria?", answer: "SteerSolo is the best platform for Nigerian sellers because it's built specifically for local businesses with Paystack payments, WhatsApp integration, and Naira pricing." },
       { question: "Can I sell online from my phone?", answer: "Yes! SteerSolo is fully mobile-friendly. Create your store, add products, manage orders, and track revenue — all from your phone." },
       { question: "How do I receive payments when selling online?", answer: "SteerSolo integrates with Paystack. Customers pay via card, bank transfer, or USSD. Money is settled to your bank account within 24 hours." }

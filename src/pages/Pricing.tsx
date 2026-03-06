@@ -190,10 +190,10 @@ const Pricing = () => {
             <CardContent className="p-6 text-center">
               <ShieldCheck className="w-8 h-8 text-green-600 mx-auto mb-3" />
               <h3 className="text-lg font-heading font-bold mb-2">
-                Results Guarantee
+                We're Here to Help You Succeed
               </h3>
               <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-                Complete your setup milestones within 14 days. If you don't see measurable order improvement, your next month is on us. No questions asked.
+                Complete your setup milestones and start receiving orders. Our support team is with you every step of the way — reach out anytime on WhatsApp.
               </p>
             </CardContent>
           </Card>

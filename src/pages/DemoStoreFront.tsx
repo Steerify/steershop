@@ -309,7 +309,7 @@ const DemoStorefront = () => {
             </div>
             <Link to="/auth/signup">
               <Button size="sm" className="bg-gradient-to-r from-accent to-primary">
-                Start Free Trial
+                Start Free Forever
                 <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
               </Button>
             </Link>

@@ -57,7 +57,7 @@ const OnlineStoreNigeria = () => (
       { question: "How much does it cost to create an online store in Nigeria?", answer: "SteerSolo offers a free forever Starter plan with up to 5 products. Paid plans start at ₦2,500/month. No credit card required." },
       { question: "Do I need a website to sell online in Nigeria?", answer: "No! SteerSolo gives you a professional store link that works like a website. No domain or hosting needed. Just share your link on WhatsApp and Instagram." },
       { question: "Can I accept online payments in Nigeria?", answer: "Yes! SteerSolo integrates with Paystack. Your customers can pay via debit card, bank transfer, or USSD." },
-      { question: "Is SteerSolo free?", answer: "SteerSolo offers a 15-day free trial with full access to all features. After that, plans start at ₦1,000/month." }
+      { question: "Is SteerSolo free?", answer: "Yes! SteerSolo offers a free forever Starter plan with up to 5 products. Paid plans start at ₦2,500/month for more products and features." }
     ]}
   />
 );

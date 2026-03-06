@@ -52,7 +52,7 @@ const AcceptPayments = () => (
     }}
     faqs={[
       { question: "How do I accept online payments in Nigeria?", answer: "Create a SteerSolo store and connect Paystack. Customers can pay via card, bank transfer, or USSD when they order from your store." },
-      { question: "Do I need a Paystack account?", answer: "SteerSolo handles the Paystack setup for you. You just enter your bank details and start receiving payments." },
+      { question: "Do I need a Paystack account?", answer: "SteerSolo handles the Paystack setup for you. Just enter your bank details and start receiving payments. Start free — no credit card required." },
       { question: "How fast do I receive my money?", answer: "Paystack settles payments to your bank account within 24 hours (next business day)." },
       { question: "Is it safe to accept payments online?", answer: "Yes! Paystack is PCI-DSS compliant and used by over 600,000 businesses in Nigeria. Your customers' payment data is encrypted and secure." },
       { question: "What are the transaction fees?", answer: "Paystack charges 1.5% + ₦100 per transaction (capped at ₦2,000). SteerSolo passes this to the customer so you receive the full product price." }

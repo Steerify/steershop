@@ -11,7 +11,7 @@ export const dashboardTourSteps: Step[] = [
   },
   {
     target: '[data-tour="subscription-status"]',
-    content: "This shows your subscription status. You get a 15-day free trial to explore all features. After that, subscribe to keep your store active.",
+    content: "This shows your subscription status. The Starter plan is free forever with up to 5 products. Upgrade anytime for more features.",
     title: "📊 Subscription Status",
     placement: "bottom"
   },

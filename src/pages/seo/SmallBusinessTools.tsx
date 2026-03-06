@@ -24,7 +24,7 @@ const SmallBusinessTools = () => (
       },
       {
         title: "Replace Expensive Business Tools",
-        description: "You're probably spending hundreds of thousands on tools that SteerSolo can replace for just ₦1,000/month.",
+        description: "You're probably spending hundreds of thousands on tools that SteerSolo can replace — starting free, or from ₦2,500/month.",
         points: [
           "Replace your website developer (₦100k+) — SteerSolo is free to start",
           "Replace POS machine rental (₦5k/month) — accept payments online",

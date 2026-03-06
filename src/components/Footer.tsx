@@ -64,7 +64,7 @@ export const Footer = () => {
                 <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
               </a>
               <a 
-                href="https://wa.me/2349059947055" 
+                href="https://wa.me/2349161922351" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"

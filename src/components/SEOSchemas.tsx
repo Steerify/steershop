@@ -294,7 +294,7 @@ export const SEOSchemas = () => {
       "operatingSystem": "Web",
       "offers": {
         "@type": "Offer",
-        "price": "1000",
+        "price": "0",
         "priceCurrency": "NGN"
       },
       "aggregateRating": {
