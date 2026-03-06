@@ -88,8 +88,8 @@ const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profi
   }
 
   return (
-    <Card className="mb-4 border-primary/20 overflow-hidden">
-      <div className="h-0.5 w-full bg-gradient-to-r from-primary via-accent to-gold" />
+    <Card className="mb-4 card-spotify overflow-hidden">
+      <div className="h-1 w-full bg-gradient-to-r from-primary via-accent to-gold" />
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-sm flex items-center gap-2">
