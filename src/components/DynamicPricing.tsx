@@ -260,12 +260,17 @@ export const DynamicPricing = () => {
                   
                   <Link to="/auth/signup">
                     <Button 
-                      className={`w-full ${highlight ? 'bg-primary hover:bg-primary/90' : ''} ${price === 0 ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
+                      className={`w-full ${highlight ? 'bg-primary hover:bg-primary/90 text-lg py-6 font-bold shadow-lg' : ''} ${price === 0 ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
                       variant={highlight || price === 0 ? 'default' : 'outline'}
+                      size={highlight ? 'lg' : 'default'}
                     >
-                      {price === 0 ? 'Start Free Forever' : 'Get Started'}
+                      {cta}
                     </Button>
                   </Link>
+                  <p className="text-xs text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
+                    <ShieldCheck className="w-3 h-3" />
+                    No contracts. Cancel anytime.
+                  </p>
                 </CardContent>
               </Card>
             );
