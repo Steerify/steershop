@@ -72,7 +72,8 @@ const Index = () => {
               </h1>
 
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground/90 mt-4 animate-fade-up" style={{ animationDelay: '120ms' }}>
-                Turn WhatsApp traffic into{" "}
+                Turn WhatsApp traffic into
+                {" "}
                 <TypewriterEffect
                   texts={["consistent orders", "global revenue", "trusted brand", "daily success"]}
                   className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-gold"
