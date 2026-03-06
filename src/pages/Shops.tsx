@@ -45,25 +45,21 @@ const VerifiedSellerNotice = () => {
 };
 
 const ShopCardSkeleton = () => (
-  <Card className="h-full">
-    <CardHeader>
-      <div className="flex items-start gap-3">
-        <Skeleton className="w-14 h-14 rounded-xl" />
-        <div className="flex-1">
-          <Skeleton className="h-5 w-3/4 mb-2" />
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-3 w-2/3 mt-1" />
-        </div>
+  <div className="card-spotify h-full p-5">
+    <div className="flex items-start gap-4">
+      <Skeleton className="w-16 h-16 rounded-full" />
+      <div className="flex-1">
+        <Skeleton className="h-5 w-3/4 mb-2" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-2/3 mt-1" />
       </div>
-    </CardHeader>
-    <CardContent>
-      <div className="flex gap-1.5">
-        <Skeleton className="w-16 h-16 rounded-lg" />
-        <Skeleton className="w-16 h-16 rounded-lg" />
-        <Skeleton className="w-16 h-16 rounded-lg" />
-      </div>
-    </CardContent>
-  </Card>
+    </div>
+    <div className="flex gap-2 mt-4">
+      <Skeleton className="w-[72px] h-[72px] rounded-xl" />
+      <Skeleton className="w-[72px] h-[72px] rounded-xl" />
+      <Skeleton className="w-[72px] h-[72px] rounded-xl" />
+    </div>
+  </div>
 );
 
 const ProductCardSkeleton = () => (
