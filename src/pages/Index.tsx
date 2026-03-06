@@ -51,69 +51,71 @@ const Index = () => {
       <GoogleOneTap />
       <Navbar />
 
-      {/* SECTION 1: HERO — Outcome-first */}
+      {/* SECTION 1: HERO — Outcome-first with Nigeria Map */}
       <section className="relative pt-28 md:pt-32 pb-12 overflow-hidden bg-mesh">
-        {/* Layered gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/8 via-transparent to-transparent pointer-events-none" />
         <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-primary/20 to-accent/5 blur-[120px] pointer-events-none" />
         <div className="absolute -bottom-16 -right-16 w-96 h-96 rounded-full bg-gradient-to-tl from-accent/15 to-transparent blur-[80px] pointer-events-none" />
-        <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.03] pointer-events-none" />
 
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            {/* Trust badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 text-primary text-sm font-semibold border border-primary/15 shadow-sm animate-fade-up">
-              <Sparkles className="w-4 h-4" />
-              <span>Trusted by Nigerian vendors</span>
-              <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse ml-1" />
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+            {/* Left: Text Content */}
+            <div className="flex-1 text-center lg:text-left space-y-8">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 text-primary text-sm font-semibold border border-primary/15 shadow-sm animate-fade-up">
+                <Sparkles className="w-4 h-4" />
+                <span>Trusted by Nigerian vendors</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse ml-1" />
+              </div>
+
+              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight animate-fade-up text-balance leading-[1.1]" style={{ animationDelay: '80ms' }}>
+                Your <span className="text-accent underline decoration-gold/30">Daily Selling System</span> is here.
+              </h1>
+
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground/90 mt-4 animate-fade-up" style={{ animationDelay: '120ms' }}>
+                Turn WhatsApp traffic into{" "}
+                <TypewriterEffect
+                  texts={["consistent orders", "global revenue", "trusted brand", "daily success"]}
+                  className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-gold"
+                />
+              </h2>
+
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 animate-fade-up text-balance" style={{ animationDelay: '160ms' }}>
+                Stop losing sales to DM chaos. Get a professional storefront with payments, order tracking, and AI marketing — setup takes 10 minutes.
+              </p>
+
+              <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 pt-2 animate-fade-up" style={{ animationDelay: '240ms' }}>
+                <Link to="/auth/signup">
+                  <Button size="lg" className="group bg-gradient-to-r from-primary to-accent hover:opacity-95 text-white text-base px-8 py-6 shadow-xl shadow-primary/25 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 w-full sm:w-auto font-bold rounded-2xl">
+                    Start Free Forever
+                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+                  </Button>
+                </Link>
+                <Link to="/demo">
+                  <Button size="lg" variant="outline" className="text-base px-8 py-6 w-full sm:w-auto rounded-2xl border-primary/25 hover:bg-primary/5 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-300 font-semibold">
+                    See a Demo Store
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-5 text-sm text-muted-foreground animate-fade-up" style={{ animationDelay: '320ms' }}>
+                <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-4 py-2 shadow-sm hover:border-accent/40 transition-colors">
+                  <CheckCircle className="w-4 h-4 text-accent" />
+                  Proven 30-Day Ritual
+                </div>
+                <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-4 py-2 shadow-sm hover:border-primary/40 transition-colors">
+                  <Zap className="w-4 h-4 text-primary" />
+                  Free Forever Plan
+                </div>
+                <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-4 py-2 shadow-sm hover:border-gold/40 transition-colors">
+                  <Shield className="w-4 h-4 text-gold" />
+                  Trusted & Secure
+                </div>
+              </div>
             </div>
 
-            {/* Main headline */}
-            <h1 className="font-display text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tight animate-fade-up text-balance leading-[1.1]" style={{ animationDelay: '80ms' }}>
-              Your <span className="text-accent underline decoration-gold/30">Daily Selling System</span> is here.
-            </h1>
-
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground/90 mt-4 animate-fade-up" style={{ animationDelay: '120ms' }}>
-              Turn WhatsApp traffic into{" "}
-              <TypewriterEffect
-                texts={["consistent orders", "global revenue", "trusted brand", "daily success"]}
-                className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-gold"
-              />
-            </h2>
-
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-up text-balance" style={{ animationDelay: '160ms' }}>
-              Stop losing sales to DM chaos. Get a professional storefront with payments, order tracking, and AI marketing — setup takes 10 minutes.
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2 animate-fade-up" style={{ animationDelay: '240ms' }}>
-              <Link to="/auth/signup">
-                <Button size="lg" className="group bg-gradient-to-r from-primary to-accent hover:opacity-95 text-white text-base px-8 py-6 shadow-xl shadow-primary/25 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 w-full sm:w-auto font-bold rounded-2xl">
-                  Start Free Forever
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
-                </Button>
-              </Link>
-              <Link to="/demo">
-                <Button size="lg" variant="outline" className="text-base px-8 py-6 w-full sm:w-auto rounded-2xl border-primary/25 hover:bg-primary/5 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-300 font-semibold">
-                  See a Demo Store
-                </Button>
-              </Link>
-            </div>
-
-            {/* Trust chips */}
-            <div className="flex flex-wrap items-center justify-center gap-5 text-sm text-muted-foreground animate-fade-up" style={{ animationDelay: '320ms' }}>
-              <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-4 py-2 shadow-sm hover:border-accent/40 transition-colors">
-                <CheckCircle className="w-4 h-4 text-accent" />
-                Proven 30-Day Ritual
-              </div>
-              <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-4 py-2 shadow-sm hover:border-primary/40 transition-colors">
-                <Zap className="w-4 h-4 text-primary" />
-                Free Forever Plan
-              </div>
-              <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-4 py-2 shadow-sm hover:border-gold/40 transition-colors">
-                <Shield className="w-4 h-4 text-gold" />
-                Trusted & Secure
-              </div>
+            {/* Right: Nigeria Dot Map (Paystack-style) */}
+            <div className="hidden lg:block w-[400px] h-[400px] xl:w-[460px] xl:h-[460px] flex-shrink-0 animate-fade-up" style={{ animationDelay: '400ms' }}>
+              <NigeriaDotMap />
             </div>
           </div>
         </div>
