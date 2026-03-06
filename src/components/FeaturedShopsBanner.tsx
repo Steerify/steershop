@@ -193,7 +193,7 @@ export const FeaturedShopsBanner = () => {
                   </div>
 
                   {/* Content */}
-                  <div className="relative flex items-start gap-4">
+                  <div className="relative flex items-center gap-4">
                     {/* Logo */}
                     <div className="w-14 h-14 rounded-2xl overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/50">
                       {featured.shop.logo_url ? (
