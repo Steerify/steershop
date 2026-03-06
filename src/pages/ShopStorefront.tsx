@@ -44,6 +44,9 @@ interface Shop {
   owner_id?: string;
   state?: string | null;
   country?: string | null;
+  accent_color?: string | null;
+  font_style?: string | null;
+  theme_mode?: string | null;
 }
 interface OwnerPlan {
   slug: string | null;
