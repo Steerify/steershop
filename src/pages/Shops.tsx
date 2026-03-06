@@ -445,7 +445,7 @@ const Shops = () => {
                           <Package className="w-10 h-10 sm:w-16 sm:h-16 text-muted-foreground" />
                         </div>
                       )}
-                      <CardTitle className="group-hover:text-accent transition-colors text-sm sm:text-lg font-display line-clamp-2">
+                      <h3 className="group-hover:text-accent transition-colors text-sm sm:text-lg font-semibold tracking-tight line-clamp-2">
                         {product.name}
                       </CardTitle>
                       <CardDescription className="hidden sm:block">
