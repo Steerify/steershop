@@ -321,7 +321,7 @@ const Auth = () => {
 
         {/* Mobile logo (shown only on small screens) */}
         <div className="lg:hidden flex items-center gap-2.5 mb-8">
-          <div className="w-10 h-10 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-md">
+          <div className={`w-12 h-12 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-md ${theme === 'dark' ? '' : 'bg-white'}`}>
             <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
           </div>
           <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">SteerSolo</span>
