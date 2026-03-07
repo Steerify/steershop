@@ -1,9 +1,13 @@
 import { Link } from "react-router-dom";
 import { Twitter, Instagram, Mail, Heart, MessageCircle } from "lucide-react";
 import { AdirePattern, AdireAccent } from "./patterns/AdirePattern";
-import logo from "@/assets/steersolo-logo.jpg";
+import logoLight from "@/assets/steersolo-logo.jpg";
+import logoDark from "@/assets/steersolo-logo-dark.jpg";
+import { useTheme } from "next-themes";
 
 export const Footer = () => {
+  const { theme } = useTheme();
+  const logo = theme === 'dark' ? logoDark : logoLight;
   return (
     <footer className="relative bg-primary text-primary-foreground overflow-hidden">
       {/* Adire Pattern Overlay */}

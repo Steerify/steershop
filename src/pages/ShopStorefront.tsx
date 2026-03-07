@@ -89,6 +89,7 @@ const ShopStorefront = () => {
   const [isOwner, setIsOwner] = useState(false);
   const [ownerPlan, setOwnerPlan] = useState<OwnerPlan>({ slug: null, name: null });
   const [ownerIsInTrial, setOwnerIsInTrial] = useState(false);
+  const [completedOrders, setCompletedOrders] = useState(0);
   const isPremiumPlan = ownerPlan.slug === 'pro' || ownerPlan.slug === 'business' || ownerIsInTrial;
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -335,6 +336,14 @@ const ShopStorefront = () => {
       }));
       setProducts(productsList);
       setFilteredProducts(productsList);
+
+      // Fetch completed orders count
+      const { count: ordersCount } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('shop_id', shopData.id)
+        .eq('status', 'completed');
+      setCompletedOrders(ordersCount || 0);
     } catch (error: any) {
       console.error("Error loading shop:", error);
       toast({
@@ -578,6 +587,16 @@ const ShopStorefront = () => {
                         </span>
                       </div>
                     )}
+                    {completedOrders > 0 && (
+                      <Badge variant="outline" className="rounded-full bg-primary/5 border-primary/20 text-primary">
+                        <ShoppingCart className="w-3 h-3 mr-1" />
+                        {completedOrders} Completed Orders
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="rounded-full bg-gold/5 border-gold/20 text-gold">
+                      <Star className="w-3 h-3 mr-1" />
+                      {shop.total_reviews} Total Ratings
+                    </Badge>
                     {productCount > 0 && (
                       <Badge variant="outline" className="rounded-full bg-accent/5 border-accent/20 text-accent">
                         <Package className="w-3 h-3 mr-1" />

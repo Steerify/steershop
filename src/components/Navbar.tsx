@@ -6,7 +6,8 @@ import {
   Heart, Flag, Ghost, Egg, Sparkles, Store, MessageSquare
 } from "lucide-react";
 import { AdireAccent } from "./patterns/AdirePattern";
-import logo from "@/assets/steersolo-logo.jpg";
+import logoLight from "@/assets/steersolo-logo.jpg";
+import logoDark from "@/assets/steersolo-logo-dark.jpg";
 import { useTheme } from "next-themes";
 
 // --- Types ---
@@ -107,6 +108,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
   const primary = activeCelebrations[0];
   const isChristmas = primary?.name.toLowerCase().includes("christmas");
   const isNewYear = primary?.name.toLowerCase().includes("new year");
+  const logo = theme === 'dark' ? logoDark : logoLight;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
@@ -131,7 +133,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
             
             {/* Logo Section */}
             <Link to={shopBranding ? "#" : "/"} onClick={shopBranding ? (e) => e.preventDefault() : undefined} className="flex items-center gap-3 group relative">
-              <div className="w-11 h-11 rounded-xl overflow-hidden shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 relative bg-white">
+              <div className={`w-11 h-11 rounded-xl overflow-hidden shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 relative ${theme === 'dark' ? '' : 'bg-white'}`}>
                 <img src={shopBranding?.logoUrl || logo} alt={shopBranding?.name || "SteerSolo"} className="w-full h-full object-cover" />
                 
                 {/* Visual Effects (Non-animated) */}

@@ -1,6 +1,10 @@
-import logo from "@/assets/steersolo-logo.jpg";
+import logoLight from "@/assets/steersolo-logo.jpg";
+import logoDark from "@/assets/steersolo-logo-dark.jpg";
+import { useTheme } from "next-themes";
 
 export const PageLoadingSkeleton = () => {
+  const { theme } = useTheme();
+  const logo = theme === 'dark' ? logoDark : logoLight;
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
       <div className="flex flex-col items-center gap-4">

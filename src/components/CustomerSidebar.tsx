@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import logo from "@/assets/steersolo-logo.jpg";
+import logoLight from "@/assets/steersolo-logo.jpg";
+import logoDark from "@/assets/steersolo-logo-dark.jpg";
+import { useTheme } from "next-themes";
 
 const items = [
   { title: "Dashboard", url: "/customer_dashboard", icon: Home },
@@ -31,6 +33,8 @@ export function CustomerSidebar() {
   const { toast } = useToast();
   const { signOut } = useAuth();
   const collapsed = state === "collapsed";
+  const { theme } = useTheme();
+  const logo = theme === 'dark' ? logoDark : logoLight;
 
   const handleLogout = async () => {
     try {
