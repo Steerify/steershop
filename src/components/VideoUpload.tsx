@@ -33,7 +33,7 @@ const validateVideoDuration = (file: File, maxSeconds: number): Promise<boolean>
 export const VideoUpload: React.FC<VideoUploadProps> = ({
   value,
   onChange,
-  label = 'Short Video (max 10s)',
+  label = 'Product Video (max 1 min)',
   className = '',
   maxDurationSeconds = 60,
   maxSizeMB = 50,
