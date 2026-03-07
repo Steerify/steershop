@@ -7,7 +7,10 @@ import { supabase } from '@/integrations/supabase/client';
 
 const MAX_HEIGHT = 720;
 
-const compressVideo = (file: File): Promise<Blob> => {
+const compressVideo = (
+  file: File,
+  onProgress?: (percent: number) => void
+): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
     video.muted = true;
@@ -30,6 +33,15 @@ const compressVideo = (file: File): Promise<Blob> => {
 
       video.currentTime = 0;
       video.play().catch(reject);
+
+      // Track compression progress via timeupdate
+      const duration = video.duration;
+      video.ontimeupdate = () => {
+        if (duration > 0 && onProgress) {
+          const pct = Math.min(Math.round((video.currentTime / duration) * 100), 99);
+          onProgress(pct);
+        }
+      };
 
       const stream = canvas.captureStream(30);
 
@@ -54,6 +66,7 @@ const compressVideo = (file: File): Promise<Blob> => {
       };
       recorder.onstop = () => {
         URL.revokeObjectURL(objectUrl);
+        onProgress?.(100);
         resolve(new Blob(chunks, { type: 'video/webm' }));
       };
       recorder.onerror = () => {
@@ -82,6 +95,39 @@ const compressVideo = (file: File): Promise<Blob> => {
       URL.revokeObjectURL(objectUrl);
       reject(new Error('Failed to load video'));
     };
+  });
+};
+
+const uploadWithProgress = (
+  filePath: string,
+  blob: Blob,
+  token: string,
+  onProgress?: (percent: number) => void
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${supabaseUrl}/storage/v1/object/product-videos/${filePath}`, true);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.setRequestHeader('x-upsert', 'false');
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        reject(new Error(xhr.responseText || `Upload failed with status ${xhr.status}`));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error('Network error during upload'));
+
+    xhr.send(blob);
   });
 };
 
@@ -120,17 +166,20 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
     }
 
     setIsProcessing(true);
-    setProgress(5);
+    setProgress(0);
 
     try {
-      // Compress video
+      // Compress video (0–50%)
       let uploadBlob: Blob = file;
       let ext = file.name.split('.').pop() || 'mp4';
 
       try {
-        setStatusText('Compressing video...');
-        setProgress(10);
-        const compressed = await compressVideo(file);
+        setStatusText('Compressing... 0%');
+        const compressed = await compressVideo(file, (pct) => {
+          const mapped = Math.round(pct * 0.5);
+          setProgress(mapped);
+          setStatusText(`Compressing... ${pct}%`);
+        });
         const savedPercent = Math.round(((file.size - compressed.size) / file.size) * 100);
         console.log(`Video compressed: ${(file.size / 1024 / 1024).toFixed(1)}MB → ${(compressed.size / 1024 / 1024).toFixed(1)}MB (${savedPercent}% smaller)`);
         uploadBlob = compressed;
@@ -139,10 +188,10 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         console.warn('Video compression not supported, uploading original:', err.message);
       }
 
-      setStatusText('Uploading...');
-      setProgress(30);
+      // Resolve shop ID
+      setStatusText('Preparing upload...');
+      setProgress(50);
 
-      // Resolve shop ID for RLS-compliant path
       let resolvedShopId = propShopId;
       if (!resolvedShopId) {
         const { data: { user } } = await supabase.auth.getUser();
@@ -160,16 +209,25 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         throw new Error('Could not determine shop. Please try again.');
       }
 
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('Not authenticated. Please log in and try again.');
+      }
+
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const filePath = `${resolvedShopId}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('product-videos')
-        .upload(filePath, uploadBlob, { cacheControl: '3600', upsert: false });
+      // Upload with real progress (50–95%)
+      await uploadWithProgress(filePath, uploadBlob, session.access_token, (pct) => {
+        const mapped = 50 + Math.round(pct * 0.45);
+        setProgress(mapped);
+        setStatusText(`Uploading... ${pct}%`);
+      });
 
-      if (uploadError) throw uploadError;
-
-      setProgress(80);
+      // Finalize (95–100%)
+      setProgress(95);
+      setStatusText('Finalizing...');
 
       const { data: publicData } = supabase.storage
         .from('product-videos')
