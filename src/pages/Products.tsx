@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle, Sparkles, Play } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle, Sparkles } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { VideoUpload } from "@/components/VideoUpload";
 import { z } from "zod";
@@ -32,6 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { BulkProductUpload } from "@/components/BulkProductUpload";
+import { ProductMediaCard } from "@/components/ProductMediaCard";
 // Helper function to format UUID with hyphens
 const formatUUIDWithHyphens = (uuid: string): string => {
   if (!uuid) return uuid;
@@ -479,45 +480,22 @@ const Products = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredProducts.map((product, index) => (
               <Card key={product.id} className="overflow-hidden group hover:shadow-xl hover:shadow-primary/10 transition-all border-primary/10 hover:border-primary/30" data-tour={index === 0 ? "product-card" : undefined}>
-                {product.video_url && !(product.images && product.images.length > 0) ? (
-                  <div className="relative h-48 overflow-hidden">
-                    <video
-                      src={product.video_url}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                    />
-                  </div>
-                ) : product.images && product.images.length > 0 ? (
-                  <div className="relative h-48 overflow-hidden">
-                    <img
-                      src={product.images[0].url}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    {product.video_url && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(product.video_url!, '_blank');
-                        }}
-                        className="absolute top-2 right-2 bg-black/70 rounded-full p-1.5 hover:bg-black/90 transition-colors cursor-pointer"
-                      >
-                        <Play className="w-4 h-4 text-white" />
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className={`h-48 bg-gradient-to-br ${product.type === 'service' ? 'from-accent/10 to-primary/10' : 'from-primary/10 to-accent/10'} flex items-center justify-center relative`}>
-                    {product.type === 'service' ? (
-                      <Briefcase className="w-12 h-12 text-muted-foreground" />
-                    ) : (
-                      <Package className="w-12 h-12 text-muted-foreground" />
-                    )}
-                  </div>
-                )}
+                <ProductMediaCard
+                  imageUrl={product.images?.[0]?.url}
+                  videoUrl={product.video_url}
+                  alt={product.name}
+                  className="h-48"
+                >
+                  {!product.images?.length && !product.video_url && (
+                    <div className={`absolute inset-0 w-full h-full bg-gradient-to-br ${product.type === 'service' ? 'from-accent/10 to-primary/10' : 'from-primary/10 to-accent/10'} flex items-center justify-center`}>
+                      {product.type === 'service' ? (
+                        <Briefcase className="w-12 h-12 text-muted-foreground" />
+                      ) : (
+                        <Package className="w-12 h-12 text-muted-foreground" />
+                      )}
+                    </div>
+                  )}
+                </ProductMediaCard>
                 <CardHeader>
                   <CardTitle className="flex items-start justify-between gap-2 font-heading">
                     <span className="line-clamp-1">{product.name}</span>

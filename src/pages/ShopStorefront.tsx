@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X, Briefcase, Clock, Calendar, BadgeCheck, MessageCircle, MapPin } from "lucide-react";
 import { WishlistButton } from "@/components/WishlistButton";
 import { openWhatsAppContact } from "@/utils/whatsapp";
+import { ProductMediaCard } from "@/components/ProductMediaCard";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireAccent } from "@/components/patterns/AdirePattern";
@@ -783,24 +784,15 @@ const ShopStorefront = () => {
                   data-tour={index === 0 ? "product-card" : undefined}
                 >
                   <Link to={`/shop/${slug}/product/${product.id}`}>
-                    <div className="aspect-square overflow-hidden bg-muted relative">
-                      {product.video_url ? (
-                        <video
-                          src={product.video_url}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          autoPlay
-                          muted
-                          loop
-                          playsInline
-                        />
-                      ) : product.image_url ? (
-                        <img
-                          src={product.image_url}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                    <ProductMediaCard
+                      imageUrl={product.image_url}
+                      videoUrl={product.video_url}
+                      alt={product.name}
+                      className="aspect-square bg-muted"
+                    >
+                      {/* No media fallback */}
+                      {!product.image_url && !product.video_url && (
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
                           {product.type === 'service' ? (
                             <Briefcase className="w-16 h-16 text-accent" />
                           ) : (
@@ -808,7 +800,7 @@ const ShopStorefront = () => {
                           )}
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
                         <Eye className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                       {/* Type Badge */}
@@ -832,7 +824,7 @@ const ShopStorefront = () => {
                           </Badge>
                         </div>
                       )}
-                    </div>
+                    </ProductMediaCard>
                   </Link>
                   <CardHeader className="pb-3">
                     <Link to={`/shop/${slug}/product/${product.id}`}>
