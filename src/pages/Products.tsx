@@ -32,6 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { BulkProductUpload } from "@/components/BulkProductUpload";
+import { ProductMediaCard } from "@/components/ProductMediaCard";
 // Helper function to format UUID with hyphens
 const formatUUIDWithHyphens = (uuid: string): string => {
   if (!uuid) return uuid;
