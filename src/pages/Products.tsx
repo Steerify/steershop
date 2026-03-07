@@ -773,10 +773,9 @@ const Products = () => {
 
             <div className="space-y-2">
               <VideoUpload
-                label="Product Video (max 1 minute)"
+                label="Product Video"
                 value={videoUrl}
                 onChange={(url) => setVideoUrl(url)}
-                maxDurationSeconds={60}
                 shopId={shop?.id}
               />
             </div>

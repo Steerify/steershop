@@ -10,34 +10,14 @@ interface VideoUploadProps {
   onChange: (url: string) => void;
   label?: string;
   className?: string;
-  maxDurationSeconds?: number;
-  maxSizeMB?: number;
   shopId?: string;
 }
-
-const validateVideoDuration = (file: File, maxSeconds: number): Promise<boolean> => {
-  return new Promise((resolve) => {
-    const video = document.createElement('video');
-    video.preload = 'metadata';
-    video.onloadedmetadata = () => {
-      URL.revokeObjectURL(video.src);
-      resolve(video.duration <= maxSeconds);
-    };
-    video.onerror = () => {
-      URL.revokeObjectURL(video.src);
-      resolve(false);
-    };
-    video.src = URL.createObjectURL(file);
-  });
-};
 
 export const VideoUpload: React.FC<VideoUploadProps> = ({
   value,
   onChange,
-  label = 'Product Video (max 1 min)',
+  label = 'Product Video',
   className = '',
-  maxDurationSeconds = 60,
-  maxSizeMB = 50,
   shopId: propShopId,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -56,21 +36,6 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
     const validTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
     if (!validTypes.includes(file.type)) {
       setError('Invalid format. Please upload MP4, WebM, or MOV.');
-      return;
-    }
-
-    // Validate size
-    if (file.size > maxSizeMB * 1024 * 1024) {
-      setError(`File too large. Max ${maxSizeMB}MB.`);
-      return;
-    }
-
-    // Validate duration
-    setProgress(10);
-    const validDuration = await validateVideoDuration(file, maxDurationSeconds);
-    if (!validDuration) {
-      setError(`Video must be ${maxDurationSeconds} seconds or shorter.`);
-      setProgress(0);
       return;
     }
 
@@ -184,7 +149,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium mb-1">Upload short video</p>
-                <p className="text-xs text-muted-foreground">MP4, WebM or MOV (max {maxDurationSeconds}s, {maxSizeMB}MB)</p>
+                <p className="text-xs text-muted-foreground">MP4, WebM or MOV</p>
               </div>
               <Button
                 type="button"
