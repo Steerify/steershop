@@ -336,6 +336,14 @@ const ShopStorefront = () => {
       }));
       setProducts(productsList);
       setFilteredProducts(productsList);
+
+      // Fetch completed orders count
+      const { count: ordersCount } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('shop_id', shopData.id)
+        .eq('status', 'completed');
+      setCompletedOrders(ordersCount || 0);
     } catch (error: any) {
       console.error("Error loading shop:", error);
       toast({
