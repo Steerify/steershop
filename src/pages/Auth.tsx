@@ -261,7 +261,7 @@ const Auth = () => {
         {/* Logo + tagline */}
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-10">
-            <div className="w-12 h-12 rounded-2xl overflow-hidden ring-4 ring-white/25 shadow-xl">
+            <div className="w-14 h-14 rounded-2xl overflow-hidden ring-4 ring-white/25 shadow-xl">
               <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
             </div>
             <span className="text-2xl font-bold text-white">SteerSolo</span>
