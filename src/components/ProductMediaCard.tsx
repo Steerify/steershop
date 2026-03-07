@@ -50,7 +50,7 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
         />
         {/* Play icon overlay when not hovering */}
         {!isHovered && (
