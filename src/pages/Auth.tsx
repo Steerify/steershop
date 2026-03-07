@@ -14,7 +14,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, ArrowLeft, Store, ShoppingBag, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
-import logo from "@/assets/steersolo-logo.jpg";
+import logoLight from "@/assets/steersolo-logo.jpg";
+import logoDark from "@/assets/steersolo-logo-dark.jpg";
+import { useTheme } from "next-themes";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
