@@ -5,6 +5,86 @@ import { Upload, X, Loader2, Video } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 
+const MAX_HEIGHT = 720;
+
+const compressVideo = (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.muted = true;
+    video.playsInline = true;
+    const objectUrl = URL.createObjectURL(file);
+    video.src = objectUrl;
+
+    video.onloadedmetadata = () => {
+      let width = video.videoWidth;
+      let height = video.videoHeight;
+      if (height > MAX_HEIGHT) {
+        width = Math.round((width * MAX_HEIGHT) / height);
+        height = MAX_HEIGHT;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+
+      video.currentTime = 0;
+      video.play().catch(reject);
+
+      const stream = canvas.captureStream(30);
+
+      let mimeType = 'video/webm;codecs=vp8,opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'video/webm';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error('unsupported'));
+          return;
+        }
+      }
+
+      const recorder = new MediaRecorder(stream, {
+        mimeType,
+        videoBitsPerSecond: 1_000_000,
+      });
+
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+      recorder.onstop = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(new Blob(chunks, { type: 'video/webm' }));
+      };
+      recorder.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('unsupported'));
+      };
+
+      recorder.start();
+
+      const drawFrame = () => {
+        if (video.ended || video.paused) {
+          recorder.stop();
+          return;
+        }
+        ctx.drawImage(video, 0, 0, width, height);
+        requestAnimationFrame(drawFrame);
+      };
+      requestAnimationFrame(drawFrame);
+
+      video.onended = () => {
+        setTimeout(() => recorder.stop(), 100);
+      };
+    };
+
+    video.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Failed to load video'));
+    };
+  });
+};
+
 interface VideoUploadProps {
   value?: string;
   onChange: (url: string) => void;
@@ -21,8 +101,9 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
   shopId: propShopId,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [statusText, setStatusText] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,18 +113,35 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
 
     setError(null);
 
-    // Validate type
     const validTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
     if (!validTypes.includes(file.type)) {
       setError('Invalid format. Please upload MP4, WebM, or MOV.');
       return;
     }
 
-    // Upload
-    setIsUploading(true);
-    setProgress(30);
+    setIsProcessing(true);
+    setProgress(5);
 
     try {
+      // Compress video
+      let uploadBlob: Blob = file;
+      let ext = file.name.split('.').pop() || 'mp4';
+
+      try {
+        setStatusText('Compressing video...');
+        setProgress(10);
+        const compressed = await compressVideo(file);
+        const savedPercent = Math.round(((file.size - compressed.size) / file.size) * 100);
+        console.log(`Video compressed: ${(file.size / 1024 / 1024).toFixed(1)}MB → ${(compressed.size / 1024 / 1024).toFixed(1)}MB (${savedPercent}% smaller)`);
+        uploadBlob = compressed;
+        ext = 'webm';
+      } catch (err: any) {
+        console.warn('Video compression not supported, uploading original:', err.message);
+      }
+
+      setStatusText('Uploading...');
+      setProgress(30);
+
       // Resolve shop ID for RLS-compliant path
       let resolvedShopId = propShopId;
       if (!resolvedShopId) {
@@ -62,13 +160,12 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         throw new Error('Could not determine shop. Please try again.');
       }
 
-      const ext = file.name.split('.').pop() || 'mp4';
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const filePath = `${resolvedShopId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('product-videos')
-        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+        .upload(filePath, uploadBlob, { cacheControl: '3600', upsert: false });
 
       if (uploadError) throw uploadError;
 
@@ -84,7 +181,8 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
       console.error('Video upload error:', err);
       setError(err.message || 'Upload failed. Please try again.');
     } finally {
-      setIsUploading(false);
+      setIsProcessing(false);
+      setStatusText('');
       setTimeout(() => setProgress(0), 500);
     }
   };
@@ -105,7 +203,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         onChange={handleFileChange}
         accept="video/mp4,video/webm,video/quicktime"
         className="hidden"
-        disabled={isUploading}
+        disabled={isProcessing}
       />
 
       {value ? (
@@ -131,15 +229,15 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
       ) : (
         <div
           className={`border-2 border-dashed rounded-xl p-4 transition-all duration-200 ${
-            isUploading ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-accent/50'
+            isProcessing ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-accent/50'
           }`}
         >
-          {isUploading ? (
+          {isProcessing ? (
             <div className="flex flex-col items-center space-y-4 py-4">
               <Loader2 className="h-10 w-10 text-primary animate-spin" />
               <div className="w-full space-y-1">
                 <Progress value={progress} className="h-1" />
-                <p className="text-xs text-center text-muted-foreground">Uploading... {progress}%</p>
+                <p className="text-xs text-center text-muted-foreground">{statusText || `${progress}%`}</p>
               </div>
             </div>
           ) : (
@@ -149,7 +247,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium mb-1">Upload short video</p>
-                <p className="text-xs text-muted-foreground">MP4, WebM or MOV</p>
+                <p className="text-xs text-muted-foreground">MP4, WebM or MOV · auto-compressed</p>
               </div>
               <Button
                 type="button"
