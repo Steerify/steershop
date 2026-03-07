@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
-import { Upload, X, Loader2, Video } from 'lucide-react';
+import { Upload, X, Loader2, Video, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -18,42 +18,37 @@ const getMimeType = (file: File): string => {
   }
 };
 
-const uploadWithProgress = (
-  filePath: string,
-  blob: Blob,
-  contentType: string,
-  token: string,
-  onProgress?: (percent: number) => void
-): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${supabaseUrl}/storage/v1/object/product-videos/${filePath}`, true);
-    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-    xhr.setRequestHeader('x-upsert', 'true');
-    xhr.setRequestHeader('Content-Type', contentType);
+const validateVideoPlayback = (url: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const video = document.createElement('video');
+    video.preload = 'auto';
+    video.muted = true;
+    video.playsInline = true;
 
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && onProgress) {
-        onProgress(Math.round((e.loaded / e.total) * 100));
-      }
+    const cleanup = () => {
+      video.removeAttribute('src');
+      video.load();
     };
 
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve();
-      } else {
-        let errorMsg = `Upload failed (${xhr.status})`;
-        try {
-          const resp = JSON.parse(xhr.responseText);
-          errorMsg = resp.message || resp.error || errorMsg;
-        } catch {}
-        reject(new Error(errorMsg));
-      }
+    const timeout = setTimeout(() => {
+      cleanup();
+      resolve(false);
+    }, 15000);
+
+    video.onloadeddata = () => {
+      clearTimeout(timeout);
+      cleanup();
+      resolve(true);
     };
 
-    xhr.onerror = () => reject(new Error('Network error during upload'));
-    xhr.send(blob);
+    video.onerror = () => {
+      clearTimeout(timeout);
+      cleanup();
+      resolve(false);
+    };
+
+    video.src = url;
+    video.load();
   });
 };
 
@@ -77,12 +72,36 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [videoError, setVideoError] = useState(false);
+  const progressInterval = useRef<ReturnType<typeof setInterval>>();
+
+  const startProgressSimulation = (fileSizeMB: number) => {
+    // Estimate upload time: ~2s per MB on decent connection
+    const estimatedMs = Math.max(fileSizeMB * 2000, 3000);
+    const steps = 50;
+    const stepMs = estimatedMs / steps;
+    let current = 5;
+
+    progressInterval.current = setInterval(() => {
+      current += (90 - current) * 0.08; // Asymptotic approach to 95
+      if (current > 92) current = 92;
+      setProgress(Math.round(current));
+    }, stepMs);
+  };
+
+  const stopProgressSimulation = () => {
+    if (progressInterval.current) {
+      clearInterval(progressInterval.current);
+      progressInterval.current = undefined;
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
     setError(null);
+    setVideoError(false);
 
     const validTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
     const mimeType = getMimeType(file);
@@ -97,12 +116,10 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
     }
 
     setIsProcessing(true);
-    setProgress(0);
+    setProgress(5);
 
     try {
-      // Resolve shop ID
       setStatusText('Preparing...');
-      setProgress(5);
 
       let resolvedShopId = propShopId;
       if (!resolvedShopId) {
@@ -121,38 +138,53 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         throw new Error('Could not determine shop. Please try again.');
       }
 
-      // Get auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('Not authenticated. Please log in and try again.');
-      }
-
       const ext = file.name.split('.').pop()?.toLowerCase() || 'mp4';
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const filePath = `${resolvedShopId}/${fileName}`;
 
-      // Upload with real progress (5–95%)
+      // Start simulated progress
       setStatusText('Uploading...');
-      await uploadWithProgress(filePath, file, mimeType, session.access_token, (pct) => {
-        const mapped = 5 + Math.round(pct * 0.9);
-        setProgress(mapped);
-        setStatusText(`Uploading... ${pct}%`);
-      });
+      startProgressSimulation(file.size / (1024 * 1024));
 
-      // Finalize
-      setProgress(98);
-      setStatusText('Finalizing...');
+      // Upload using Supabase SDK
+      const { data, error: uploadError } = await supabase.storage
+        .from('product-videos')
+        .upload(filePath, file, {
+          contentType: mimeType,
+          upsert: true,
+        });
 
+      stopProgressSimulation();
+
+      if (uploadError) {
+        throw new Error(uploadError.message || 'Upload failed. Please try again.');
+      }
+
+      setProgress(95);
+      setStatusText('Validating video...');
+
+      // Get public URL
       const { data: publicData } = supabase.storage
         .from('product-videos')
-        .getPublicUrl(filePath);
+        .getPublicUrl(data.path);
+
+      const publicUrl = publicData.publicUrl;
+
+      // Validate the uploaded video is playable
+      const isPlayable = await validateVideoPlayback(publicUrl);
+      if (!isPlayable) {
+        // Delete the unplayable file
+        await supabase.storage.from('product-videos').remove([data.path]);
+        throw new Error('Video uploaded but cannot be played. Please try MP4 format recorded with your phone camera.');
+      }
 
       setProgress(100);
-      onChange(publicData.publicUrl);
+      onChange(publicUrl);
     } catch (err: any) {
       console.error('Video upload error:', err);
       setError(err.message || 'Upload failed. Please try again.');
     } finally {
+      stopProgressSimulation();
       setIsProcessing(false);
       setStatusText('');
       setTimeout(() => setProgress(0), 500);
@@ -162,6 +194,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
   const handleRemove = () => {
     onChange('');
     setError(null);
+    setVideoError(false);
     if (inputRef.current) inputRef.current.value = '';
   };
 
@@ -180,24 +213,37 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
 
       {value ? (
         <div className="relative rounded-xl overflow-hidden border-2 border-border">
-          <video
-            src={value}
-            className="w-full aspect-video object-cover"
-            controls
-            muted
-            loop
-            playsInline
-            preload="auto"
-          />
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            className="absolute top-2 right-2 h-8 w-8 rounded-full"
-            onClick={handleRemove}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          {videoError ? (
+            <div className="w-full aspect-video bg-muted flex flex-col items-center justify-center gap-2">
+              <AlertTriangle className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">This video format may not be supported</p>
+              <Button type="button" variant="outline" size="sm" onClick={handleRemove}>
+                Remove & re-upload
+              </Button>
+            </div>
+          ) : (
+            <video
+              src={value}
+              className="w-full aspect-video object-cover"
+              controls
+              muted
+              loop
+              playsInline
+              preload="auto"
+              onError={() => setVideoError(true)}
+            />
+          )}
+          {!videoError && (
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2 h-8 w-8 rounded-full"
+              onClick={handleRemove}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       ) : (
         <div
