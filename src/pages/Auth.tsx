@@ -331,7 +331,7 @@ const Auth = () => {
           {/* Accent stripe */}
           <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-primary via-accent to-primary mb-0" />
 
-          <div className="bg-card/95 backdrop-blur-xl rounded-b-3xl rounded-tr-3xl border border-border/60 shadow-2xl p-8">
+          <div className="bg-card/95 backdrop-blur-xl rounded-b-3xl rounded-tr-3xl border border-border/60 shadow-2xl p-6 sm:p-8">
 
           {authError && (
             <Alert variant="destructive" className="mb-4">
