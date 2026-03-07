@@ -15,7 +15,9 @@ import {
   Gift, GraduationCap, Award, MessageSquare, UserPlus,
   Crown, Sparkles, Megaphone, DollarSign, Tv, Activity, Bell
 } from "lucide-react";
-import logo from "@/assets/steersolo-logo.jpg";
+import logoLight from "@/assets/steersolo-logo.jpg";
+import logoDark from "@/assets/steersolo-logo-dark.jpg";
+import { useTheme } from "next-themes";
 
 // Grouped menu structure
 const menuGroups = [
