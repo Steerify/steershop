@@ -89,6 +89,7 @@ const ShopStorefront = () => {
   const [isOwner, setIsOwner] = useState(false);
   const [ownerPlan, setOwnerPlan] = useState<OwnerPlan>({ slug: null, name: null });
   const [ownerIsInTrial, setOwnerIsInTrial] = useState(false);
+  const [completedOrders, setCompletedOrders] = useState(0);
   const isPremiumPlan = ownerPlan.slug === 'pro' || ownerPlan.slug === 'business' || ownerIsInTrial;
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
