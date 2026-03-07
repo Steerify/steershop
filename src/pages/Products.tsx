@@ -777,6 +777,7 @@ const Products = () => {
                 value={videoUrl}
                 onChange={(url) => setVideoUrl(url)}
                 maxDurationSeconds={60}
+                shopId={shop?.id}
               />
             </div>
 

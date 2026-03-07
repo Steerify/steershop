@@ -12,6 +12,7 @@ interface VideoUploadProps {
   className?: string;
   maxDurationSeconds?: number;
   maxSizeMB?: number;
+  shopId?: string;
 }
 
 const validateVideoDuration = (file: File, maxSeconds: number): Promise<boolean> => {
@@ -37,6 +38,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
   className = '',
   maxDurationSeconds = 60,
   maxSizeMB = 50,
+  shopId: propShopId,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -77,9 +79,27 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
     setProgress(30);
 
     try {
+      // Resolve shop ID for RLS-compliant path
+      let resolvedShopId = propShopId;
+      if (!resolvedShopId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: shop } = await supabase
+            .from('shops')
+            .select('id')
+            .eq('owner_id', user.id)
+            .single();
+          resolvedShopId = shop?.id;
+        }
+      }
+
+      if (!resolvedShopId) {
+        throw new Error('Could not determine shop. Please try again.');
+      }
+
       const ext = file.name.split('.').pop() || 'mp4';
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const filePath = `videos/${fileName}`;
+      const filePath = `${resolvedShopId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('product-videos')
