@@ -6,7 +6,8 @@ import {
   Heart, Flag, Ghost, Egg, Sparkles, Store, MessageSquare
 } from "lucide-react";
 import { AdireAccent } from "./patterns/AdirePattern";
-import logo from "@/assets/steersolo-logo.jpg";
+import logoLight from "@/assets/steersolo-logo.jpg";
+import logoDark from "@/assets/steersolo-logo-dark.jpg";
 import { useTheme } from "next-themes";
 
 // --- Types ---
