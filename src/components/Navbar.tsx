@@ -108,6 +108,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
   const primary = activeCelebrations[0];
   const isChristmas = primary?.name.toLowerCase().includes("christmas");
   const isNewYear = primary?.name.toLowerCase().includes("new year");
+  const logo = theme === 'dark' ? logoDark : logoLight;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
