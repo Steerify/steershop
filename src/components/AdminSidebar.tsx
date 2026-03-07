@@ -65,6 +65,8 @@ export function AdminSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
+  const { theme } = useTheme();
+  const logo = theme === 'dark' ? logoDark : logoLight;
 
   const isActive = (path: string) => currentPath === path;
 

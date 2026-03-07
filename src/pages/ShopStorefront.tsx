@@ -587,6 +587,16 @@ const ShopStorefront = () => {
                         </span>
                       </div>
                     )}
+                    {completedOrders > 0 && (
+                      <Badge variant="outline" className="rounded-full bg-primary/5 border-primary/20 text-primary">
+                        <ShoppingCart className="w-3 h-3 mr-1" />
+                        {completedOrders} Completed Orders
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="rounded-full bg-gold/5 border-gold/20 text-gold">
+                      <Star className="w-3 h-3 mr-1" />
+                      {shop.total_reviews} Total Ratings
+                    </Badge>
                     {productCount > 0 && (
                       <Badge variant="outline" className="rounded-full bg-accent/5 border-accent/20 text-accent">
                         <Package className="w-3 h-3 mr-1" />

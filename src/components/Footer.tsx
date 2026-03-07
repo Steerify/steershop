@@ -6,6 +6,8 @@ import logoDark from "@/assets/steersolo-logo-dark.jpg";
 import { useTheme } from "next-themes";
 
 export const Footer = () => {
+  const { theme } = useTheme();
+  const logo = theme === 'dark' ? logoDark : logoLight;
   return (
     <footer className="relative bg-primary text-primary-foreground overflow-hidden">
       {/* Adire Pattern Overlay */}

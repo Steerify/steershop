@@ -33,6 +33,8 @@ export function CustomerSidebar() {
   const { toast } = useToast();
   const { signOut } = useAuth();
   const collapsed = state === "collapsed";
+  const { theme } = useTheme();
+  const logo = theme === 'dark' ? logoDark : logoLight;
 
   const handleLogout = async () => {
     try {
