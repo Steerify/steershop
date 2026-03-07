@@ -110,6 +110,7 @@ const uploadWithProgress = (
     xhr.open('POST', `${supabaseUrl}/storage/v1/object/product-videos/${filePath}`, true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.setRequestHeader('x-upsert', 'false');
+    xhr.setRequestHeader('Content-Type', blob.type || 'video/mp4');
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && onProgress) {
@@ -273,6 +274,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
             muted
             loop
             playsInline
+            preload="auto"
           />
           <Button
             type="button"

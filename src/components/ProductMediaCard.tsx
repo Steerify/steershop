@@ -50,7 +50,7 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
         />
         {/* Play icon overlay when not hovering */}
         {!isHovered && (
@@ -78,7 +78,7 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
         />
         {!isHovered && (
           <div className="absolute bottom-2 right-2 bg-black/60 rounded-full p-1.5 pointer-events-none">
