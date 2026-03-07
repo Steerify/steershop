@@ -12,6 +12,7 @@ interface VideoUploadProps {
   className?: string;
   maxDurationSeconds?: number;
   maxSizeMB?: number;
+  shopId?: string;
 }
 
 const validateVideoDuration = (file: File, maxSeconds: number): Promise<boolean> => {
