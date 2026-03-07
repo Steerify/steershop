@@ -274,6 +274,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
             muted
             loop
             playsInline
+            preload="auto"
           />
           <Button
             type="button"
