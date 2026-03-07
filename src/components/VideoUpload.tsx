@@ -5,102 +5,23 @@ import { Upload, X, Loader2, Video } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 
-const MAX_HEIGHT = 720;
+const MAX_FILE_SIZE_MB = 50;
 
-const compressVideo = (
-  file: File,
-  onProgress?: (percent: number) => void
-): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const video = document.createElement('video');
-    video.muted = true;
-    video.playsInline = true;
-    const objectUrl = URL.createObjectURL(file);
-    video.src = objectUrl;
-
-    video.onloadedmetadata = () => {
-      let width = video.videoWidth;
-      let height = video.videoHeight;
-      if (height > MAX_HEIGHT) {
-        width = Math.round((width * MAX_HEIGHT) / height);
-        height = MAX_HEIGHT;
-      }
-
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d')!;
-
-      video.currentTime = 0;
-      video.play().catch(reject);
-
-      // Track compression progress via timeupdate
-      const duration = video.duration;
-      video.ontimeupdate = () => {
-        if (duration > 0 && onProgress) {
-          const pct = Math.min(Math.round((video.currentTime / duration) * 100), 99);
-          onProgress(pct);
-        }
-      };
-
-      const stream = canvas.captureStream(30);
-
-      let mimeType = 'video/webm;codecs=vp8,opus';
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'video/webm';
-        if (!MediaRecorder.isTypeSupported(mimeType)) {
-          URL.revokeObjectURL(objectUrl);
-          reject(new Error('unsupported'));
-          return;
-        }
-      }
-
-      const recorder = new MediaRecorder(stream, {
-        mimeType,
-        videoBitsPerSecond: 1_000_000,
-      });
-
-      const chunks: Blob[] = [];
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.push(e.data);
-      };
-      recorder.onstop = () => {
-        URL.revokeObjectURL(objectUrl);
-        onProgress?.(100);
-        resolve(new Blob(chunks, { type: 'video/webm' }));
-      };
-      recorder.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        reject(new Error('unsupported'));
-      };
-
-      recorder.start();
-
-      const drawFrame = () => {
-        if (video.ended || video.paused) {
-          recorder.stop();
-          return;
-        }
-        ctx.drawImage(video, 0, 0, width, height);
-        requestAnimationFrame(drawFrame);
-      };
-      requestAnimationFrame(drawFrame);
-
-      video.onended = () => {
-        setTimeout(() => recorder.stop(), 100);
-      };
-    };
-
-    video.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error('Failed to load video'));
-    };
-  });
+const getMimeType = (file: File): string => {
+  if (file.type && file.type.startsWith('video/')) return file.type;
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'mp4': return 'video/mp4';
+    case 'webm': return 'video/webm';
+    case 'mov': return 'video/quicktime';
+    default: return 'video/mp4';
+  }
 };
 
 const uploadWithProgress = (
   filePath: string,
   blob: Blob,
+  contentType: string,
   token: string,
   onProgress?: (percent: number) => void
 ): Promise<void> => {
@@ -109,8 +30,8 @@ const uploadWithProgress = (
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `${supabaseUrl}/storage/v1/object/product-videos/${filePath}`, true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-    xhr.setRequestHeader('x-upsert', 'false');
-    xhr.setRequestHeader('Content-Type', blob.type || 'video/mp4');
+    xhr.setRequestHeader('x-upsert', 'true');
+    xhr.setRequestHeader('Content-Type', contentType);
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && onProgress) {
@@ -122,12 +43,16 @@ const uploadWithProgress = (
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve();
       } else {
-        reject(new Error(xhr.responseText || `Upload failed with status ${xhr.status}`));
+        let errorMsg = `Upload failed (${xhr.status})`;
+        try {
+          const resp = JSON.parse(xhr.responseText);
+          errorMsg = resp.message || resp.error || errorMsg;
+        } catch {}
+        reject(new Error(errorMsg));
       }
     };
 
     xhr.onerror = () => reject(new Error('Network error during upload'));
-
     xhr.send(blob);
   });
 };
@@ -157,12 +82,17 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
-
     setError(null);
 
     const validTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
-    if (!validTypes.includes(file.type)) {
+    const mimeType = getMimeType(file);
+    if (!validTypes.includes(mimeType)) {
       setError('Invalid format. Please upload MP4, WebM, or MOV.');
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      setError(`File too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.`);
       return;
     }
 
@@ -170,28 +100,9 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
     setProgress(0);
 
     try {
-      // Compress video (0–50%)
-      let uploadBlob: Blob = file;
-      let ext = file.name.split('.').pop() || 'mp4';
-
-      try {
-        setStatusText('Compressing... 0%');
-        const compressed = await compressVideo(file, (pct) => {
-          const mapped = Math.round(pct * 0.5);
-          setProgress(mapped);
-          setStatusText(`Compressing... ${pct}%`);
-        });
-        const savedPercent = Math.round(((file.size - compressed.size) / file.size) * 100);
-        console.log(`Video compressed: ${(file.size / 1024 / 1024).toFixed(1)}MB → ${(compressed.size / 1024 / 1024).toFixed(1)}MB (${savedPercent}% smaller)`);
-        uploadBlob = compressed;
-        ext = 'webm';
-      } catch (err: any) {
-        console.warn('Video compression not supported, uploading original:', err.message);
-      }
-
       // Resolve shop ID
-      setStatusText('Preparing upload...');
-      setProgress(50);
+      setStatusText('Preparing...');
+      setProgress(5);
 
       let resolvedShopId = propShopId;
       if (!resolvedShopId) {
@@ -216,18 +127,20 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         throw new Error('Not authenticated. Please log in and try again.');
       }
 
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'mp4';
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const filePath = `${resolvedShopId}/${fileName}`;
 
-      // Upload with real progress (50–95%)
-      await uploadWithProgress(filePath, uploadBlob, session.access_token, (pct) => {
-        const mapped = 50 + Math.round(pct * 0.45);
+      // Upload with real progress (5–95%)
+      setStatusText('Uploading...');
+      await uploadWithProgress(filePath, file, mimeType, session.access_token, (pct) => {
+        const mapped = 5 + Math.round(pct * 0.9);
         setProgress(mapped);
         setStatusText(`Uploading... ${pct}%`);
       });
 
-      // Finalize (95–100%)
-      setProgress(95);
+      // Finalize
+      setProgress(98);
       setStatusText('Finalizing...');
 
       const { data: publicData } = supabase.storage
@@ -307,7 +220,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium mb-1">Upload short video</p>
-                <p className="text-xs text-muted-foreground">MP4, WebM or MOV · auto-compressed</p>
+                <p className="text-xs text-muted-foreground">MP4, WebM or MOV · max {MAX_FILE_SIZE_MB}MB</p>
               </div>
               <Button
                 type="button"
