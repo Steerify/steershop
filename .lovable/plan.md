@@ -1,64 +1,31 @@
 
 
-# Plan: Subscription Expiry Popup, Homepage Alignment, and Logistics Verification
+# Plan: Fix Video Upload & Playback
 
-## 1. Subscription Expiry / Free Plan Persuasion Popup
+## Root Cause Analysis
 
-Create a new component `src/components/SubscriptionExpiryDialog.tsx` that shows when a shop owner's trial/subscription has expired. This dialog will be triggered from `Dashboard.tsx` after data loads.
+After investigating the storage, database, RLS policies, and code:
 
-**Logic flow:**
-- After `loadData()` completes, check `subscriptionStatus === 'expired'`
-- Show a persuasive full-screen dialog with two paths:
-  - **"Upgrade to a Paid Plan"** — navigates to `/pricing`
-  - **"Stay on Free Plan (5 products max)"** — if `productsCount > 5`, show a product list with delete buttons so the user can trim down to 5. If `productsCount <= 5`, show a persuasive "you're missing out" message but allow them to dismiss
-- Even if products are <= 5, still show the dialog once per session (use `sessionStorage` to avoid repeat)
-- The dialog should be beautifully designed with gradient backgrounds, clear value propositions for upgrading, and a sense of urgency
+1. **Storage is fine**: Files exist with correct MIME types (`video/mp4`) and reasonable sizes (16-44MB). Bucket is public with correct RLS.
+2. **All products with `video_url` have `is_available: false`**: You've been deleting them because videos don't play — confirming the issue is persistent.
+3. **The XHR upload is the likely culprit**: When `xhr.send(file)` is called, the browser may override or conflict with the manually set `Content-Type` header based on the File object's `.type` property. Some mobile-recorded videos have empty or incorrect `.type`, leading to files stored with wrong content types despite metadata looking correct. Additionally, XHR uploads can silently produce incomplete/corrupt files on slow connections without proper error detection.
 
-**Also show for `subscriptionStatus === 'free'`:** A lighter persuasion popup (not blocking) that appears once per day (tracked via `localStorage` timestamp) encouraging upgrade with feature comparisons.
+## Changes
 
-**Files:** New `src/components/SubscriptionExpiryDialog.tsx`, edit `src/pages/Dashboard.tsx`
+### 1. `src/components/VideoUpload.tsx` — Replace XHR with Supabase SDK upload
 
----
+The Supabase SDK's `.upload()` method is battle-tested and handles content types, chunking, and error recovery reliably. We'll:
 
-## 2. Homepage Alignment — Fix Inconsistencies
+- **Remove the `uploadWithProgress` XHR function entirely**
+- **Use `supabase.storage.from('product-videos').upload()`** with the correct `contentType` option and `upsert: true`
+- **Simulate smooth progress** during upload (increment based on file size estimate) since SDK doesn't expose byte-level progress
+- **Add post-upload validation**: After getting the public URL, create a hidden `<video>` element, attempt to load the video, and verify it fires `loadeddata` event before accepting it — if it fails, show an error asking the user to try a different video format
+- **Add `onError` handler** to the preview `<video>` element to show "This video format may not be supported" instead of a gray player
 
-Review current Index page claims vs actual system capabilities:
+### 2. `src/components/ProductMediaCard.tsx` — Graceful error fallback
 
-**Issues found:**
-- "Proven 30-Day Ritual" chip in hero — this exists (StructuredSellingChallenge), accurate
-- "Sell Globally from Africa" — the system only supports NGN payments via Paystack currently. The "From Africa to the World" section claims "Multi-Currency" and "Global Reach" which is misleading
-- "setup takes 10 minutes" — accurate
-- HowItWorks says "15-day free trial" but the pricing strategy is "Free Forever" (Starter plan) — inconsistent
-- Final CTA says "Get your first order within 14 days — or your next month is free" — this guarantee isn't enforced in the system
-- "Free forever plan" in footer chips — accurate per pricing strategy
+- Add `onError` state to video elements — if the video fails to load, hide the video and show the image (or a placeholder icon) instead of a broken gray player
+- This ensures product cards never show a broken video state on the storefront
 
-**Fixes:**
-- Remove the "From Africa to the World" section (Section 1.5) since multi-currency/global payments aren't implemented
-- Update HowItWorks step 1 description from "15-day free trial" to "Free forever with up to 5 products"
-- Soften the Final CTA guarantee to something achievable: "Get your first order within 14 days" without the "next month is free" promise (unless you want to enforce it)
-- Keep the hero as-is — "Turn WhatsApp traffic into consistent orders" is accurate
-
-**Files:** `src/pages/Index.tsx`, `src/components/HowItWorks.tsx`
-
----
-
-## 3. Logistics Function Verification
-
-The `logistics-get-rates` and `logistics-book-delivery` edge functions are correctly structured for the Terminal Africa API. The flow is: Create addresses → Create parcel → Get rates / Create shipment → Arrange pickup.
-
-**Current status:** The code is correct. The only issue is that without a valid `TERMINAL_API_KEY`, it falls back to mock data. The `TERMINAL_API_KEY` secret is already configured. The functions should work if the key is valid and the Terminal Africa account is active.
-
-**Small fix needed:** The `logistics-get-rates` function hardcodes `country: 'NG'` — should use the `country` field from the address if provided. Also add better error messages when Terminal API returns errors (currently just throws generic "Failed to create pickup address").
-
-**Files:** `supabase/functions/logistics-get-rates/index.ts`, `supabase/functions/logistics-book-delivery/index.ts`
-
----
-
-## Summary
-
-| # | Feature | Files | Effort |
-|---|---------|-------|--------|
-| 1 | Subscription expiry persuasion popup | New component + `Dashboard.tsx` | Medium |
-| 2 | Homepage consistency fixes | `Index.tsx`, `HowItWorks.tsx` | Small |
-| 3 | Logistics error handling improvement | 2 edge functions | Small |
+### No database or backend changes needed.
 
