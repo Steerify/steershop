@@ -1,4 +1,6 @@
-import logo from "@/assets/steersolo-logo.jpg";
+import logoLight from "@/assets/steersolo-logo.jpg";
+import logoDark from "@/assets/steersolo-logo-dark.jpg";
+import { useTheme } from "next-themes";
 
 export const PageLoadingSkeleton = () => {
   return (
