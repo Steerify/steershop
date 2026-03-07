@@ -78,6 +78,8 @@ type SignupFormData = z.infer<typeof signupSchema>;
 type LoginFormData = z.infer<typeof loginSchema>;
 
 const Auth = () => {
+  const { theme } = useTheme();
+  const logo = theme === 'dark' ? logoDark : logoLight;
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const { type } = useParams();
