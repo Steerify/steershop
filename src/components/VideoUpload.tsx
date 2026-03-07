@@ -38,6 +38,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
   className = '',
   maxDurationSeconds = 60,
   maxSizeMB = 50,
+  shopId: propShopId,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
