@@ -174,6 +174,9 @@ const Onboarding = () => {
       description: "You can complete this anytime from settings.",
     });
     
+    // Refresh user context so ProtectedRoute sees updated state
+    await refreshUser();
+
     // Redirect based on actual database role
     const { data: profile } = await supabase
       .from('profiles')
