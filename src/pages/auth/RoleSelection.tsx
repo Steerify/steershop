@@ -110,7 +110,9 @@ const RoleSelection = () => {
           console.error("Error upserting user_roles:", insertError);
         }
       }
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Refresh AuthContext so ProtectedRoute sees the updated role
+      await refreshUser();
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       toast({
         title: "Role selected!",

@@ -214,6 +214,9 @@ const Onboarding = () => {
         description: "Welcome to SteerSolo.",
       });
 
+      // Refresh user context so ProtectedRoute sees onboardingCompleted = true
+      await refreshUser();
+
       // Redirect based on actual database role
       const { data: profile } = await supabase
         .from('profiles')
