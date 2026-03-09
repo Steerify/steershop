@@ -21,7 +21,7 @@ type OnboardingStep = "phone" | "questions" | "complete";
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("phone");
@@ -78,18 +78,31 @@ const Onboarding = () => {
 
   // Check if onboarding already completed — redirect to dashboard
   useEffect(() => {
-    if (user?.id && hasCheckedAccess) {
-      supabase
-        .from('onboarding_responses')
-        .select('id')
-        .eq('user_id', user.id)
-        .limit(1)
-        .then(({ data }) => {
-          if (data && data.length > 0) {
+    const checkOnboardingCompleted = async () => {
+      if (user?.id && hasCheckedAccess) {
+        const { data } = await supabase
+          .from('onboarding_responses')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1);
+        
+        if (data && data.length > 0) {
+          // Redirect based on role
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+          
+          if (profile?.role === 'shop_owner') {
             navigate('/dashboard', { replace: true });
+          } else {
+            navigate('/customer_dashboard', { replace: true });
           }
-        });
-    }
+        }
+      }
+    };
+    checkOnboardingCompleted();
   }, [user, hasCheckedAccess, navigate]);
 
   // Check if phone is already verified
@@ -174,6 +187,9 @@ const Onboarding = () => {
       description: "You can complete this anytime from settings.",
     });
     
+    // Refresh user context so ProtectedRoute sees updated state
+    await refreshUser();
+
     // Redirect based on actual database role
     const { data: profile } = await supabase
       .from('profiles')
@@ -210,6 +226,9 @@ const Onboarding = () => {
         title: "Setup Complete!",
         description: "Welcome to SteerSolo.",
       });
+
+      // Refresh user context so ProtectedRoute sees onboardingCompleted = true
+      await refreshUser();
 
       // Redirect based on actual database role
       const { data: profile } = await supabase

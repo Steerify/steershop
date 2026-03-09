@@ -1,43 +1,64 @@
 
 
-# Plan: Fix Routing Race Conditions
+# Plan: Subscription Expiry Popup, Homepage Alignment, and Logistics Verification
 
-## Problems Identified
+## 1. Subscription Expiry / Free Plan Persuasion Popup
 
-**Problem 1: New entrepreneur routed to customer dashboard**
-- After signup + email verification + login, `AuthContext.fetchUserProfile` runs. Due to a race condition with the database trigger (`handle_new_user`), the profile may not be ready yet, defaulting the role to `CUSTOMER`.
-- Even when the profile IS ready, the `Auth.tsx` useEffect (line 123) fires before `fetchUserProfile` completes its async work, using a stale `user` object.
+Create a new component `src/components/SubscriptionExpiryDialog.tsx` that shows when a shop owner's trial/subscription has expired. This dialog will be triggered from `Dashboard.tsx` after data loads.
 
-**Problem 2: Onboarding loop (phone verification → survey → back to phone verification)**
-- After completing the survey, `handleSubmit` navigates to `/dashboard`.
-- `ProtectedRoute` checks `user.onboardingCompleted` which is **stale** (still `false` in the AuthContext because `fetchUserProfile` hasn't re-run).
-- ProtectedRoute redirects back to `/onboarding`.
-- Onboarding detects `onboarding_responses` exists and redirects to `/dashboard`.
-- This creates an infinite redirect loop.
+**Logic flow:**
+- After `loadData()` completes, check `subscriptionStatus === 'expired'`
+- Show a persuasive full-screen dialog with two paths:
+  - **"Upgrade to a Paid Plan"** — navigates to `/pricing`
+  - **"Stay on Free Plan (5 products max)"** — if `productsCount > 5`, show a product list with delete buttons so the user can trim down to 5. If `productsCount <= 5`, show a persuasive "you're missing out" message but allow them to dismiss
+- Even if products are <= 5, still show the dialog once per session (use `sessionStorage` to avoid repeat)
+- The dialog should be beautifully designed with gradient backgrounds, clear value propositions for upgrading, and a sense of urgency
 
-## Root Cause
-**AuthContext never refreshes `user` after profile changes.** There is no `refreshUser()` function. Once the user object is set, role and onboardingCompleted are frozen until a page refresh.
+**Also show for `subscriptionStatus === 'free'`:** A lighter persuasion popup (not blocking) that appears once per day (tracked via `localStorage` timestamp) encouraging upgrade with feature comparisons.
 
-## Changes
+**Files:** New `src/components/SubscriptionExpiryDialog.tsx`, edit `src/pages/Dashboard.tsx`
 
-### 1. `src/context/AuthContext.tsx` — Add `refreshUser` function
-- Expose a `refreshUser()` method on the AuthContext that re-calls `fetchUserProfile` and updates the `user` state.
-- This lets any component force a fresh profile read after making database changes.
+---
 
-### 2. `src/context/AuthContext.tsx` — Add retry logic to `fetchUserProfile`
-- When the profile query returns no data (trigger hasn't completed yet), wait 1 second and retry once. This handles the race condition on fresh signups.
+## 2. Homepage Alignment — Fix Inconsistencies
 
-### 3. `src/pages/entrepreneur/Onboarding.tsx` — Call `refreshUser` after saving onboarding
-- In `handleSubmit` (line 191) and `handleSkipQuestions` (line 171): call `refreshUser()` before navigating. This ensures `ProtectedRoute` sees the updated `onboardingCompleted = true`.
+Review current Index page claims vs actual system capabilities:
 
-### 4. `src/pages/auth/RoleSelection.tsx` — Call `refreshUser` after setting role
-- After updating the profile role (line 75-87), call `refreshUser()` so the AuthContext has the correct role before navigating to `/onboarding`.
+**Issues found:**
+- "Proven 30-Day Ritual" chip in hero — this exists (StructuredSellingChallenge), accurate
+- "Sell Globally from Africa" — the system only supports NGN payments via Paystack currently. The "From Africa to the World" section claims "Multi-Currency" and "Global Reach" which is misleading
+- "setup takes 10 minutes" — accurate
+- HowItWorks says "15-day free trial" but the pricing strategy is "Free Forever" (Starter plan) — inconsistent
+- Final CTA says "Get your first order within 14 days — or your next month is free" — this guarantee isn't enforced in the system
+- "Free forever plan" in footer chips — accurate per pricing strategy
 
-### 5. `src/components/ProtectedRoute.tsx` — Use database role as source of truth
-- The current ProtectedRoute already fetches `needs_role_selection` from the database. Extend this to also fetch `role` directly from the database instead of relying on the potentially stale `user.role` from AuthContext. This eliminates the "wrong dashboard" redirect on first load.
+**Fixes:**
+- Remove the "From Africa to the World" section (Section 1.5) since multi-currency/global payments aren't implemented
+- Update HowItWorks step 1 description from "15-day free trial" to "Free forever with up to 5 products"
+- Soften the Final CTA guarantee to something achievable: "Get your first order within 14 days" without the "next month is free" promise (unless you want to enforce it)
+- Keep the hero as-is — "Turn WhatsApp traffic into consistent orders" is accurate
 
-### 6. `src/pages/entrepreneur/Onboarding.tsx` — Fix redirect loop for completed onboarding
-- Line 88-89: Currently redirects to `/dashboard` hardcoded. Should redirect based on role (shop_owner → dashboard, customer → customer_dashboard) to avoid role mismatch redirects.
+**Files:** `src/pages/Index.tsx`, `src/components/HowItWorks.tsx`
 
-## No database or backend changes needed.
+---
+
+## 3. Logistics Function Verification
+
+The `logistics-get-rates` and `logistics-book-delivery` edge functions are correctly structured for the Terminal Africa API. The flow is: Create addresses → Create parcel → Get rates / Create shipment → Arrange pickup.
+
+**Current status:** The code is correct. The only issue is that without a valid `TERMINAL_API_KEY`, it falls back to mock data. The `TERMINAL_API_KEY` secret is already configured. The functions should work if the key is valid and the Terminal Africa account is active.
+
+**Small fix needed:** The `logistics-get-rates` function hardcodes `country: 'NG'` — should use the `country` field from the address if provided. Also add better error messages when Terminal API returns errors (currently just throws generic "Failed to create pickup address").
+
+**Files:** `supabase/functions/logistics-get-rates/index.ts`, `supabase/functions/logistics-book-delivery/index.ts`
+
+---
+
+## Summary
+
+| # | Feature | Files | Effort |
+|---|---------|-------|--------|
+| 1 | Subscription expiry persuasion popup | New component + `Dashboard.tsx` | Medium |
+| 2 | Homepage consistency fixes | `Index.tsx`, `HowItWorks.tsx` | Small |
+| 3 | Logistics error handling improvement | 2 edge functions | Small |
 

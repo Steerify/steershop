@@ -13,18 +13,30 @@ interface ProtectedRouteProps {
   allowedRoles?: UserRole[];
 }
 
+// Map DB role string to UserRole enum
+const mapDbRole = (dbRole: string | null | undefined): UserRole | null => {
+  if (!dbRole) return null;
+  switch (dbRole.toLowerCase()) {
+    case 'shop_owner': return UserRole.ENTREPRENEUR;
+    case 'admin': return UserRole.ADMIN;
+    case 'customer': return UserRole.CUSTOMER;
+    default: return null;
+  }
+};
+
 export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
   const dispatch = useAppDispatch();
   const sessionExpiredAt = useAppSelector((state) => state.ui.sessionExpiredAt);
-  const [needsRoleSelection, setNeedsRoleSelection] = useState<boolean | null>(null);
+  const [dbProfile, setDbProfile] = useState<{ role: string | null; needs_role_selection: boolean; onboardingCompleted: boolean } | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   // Track current route for restoration after login
   useEffect(() => {
     if (user) {
       dispatch(setLastRoute(location.pathname + location.search));
-      
+
       if (sessionExpiredAt) {
         dispatch(clearSessionExpired());
         dispatch(resetSession());
@@ -32,21 +44,48 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     }
   }, [user, location, dispatch, sessionExpiredAt]);
 
-  // Check if user needs role selection
+  // Fetch role & needs_role_selection directly from DB (source of truth)
   useEffect(() => {
     if (user && !isLoading) {
-      supabase
-        .from('profiles')
-        .select('needs_role_selection')
-        .eq('id', user.id)
-        .single()
-        .then(({ data }) => {
-          setNeedsRoleSelection(data?.needs_role_selection ?? false);
-        });
+      const fetchProfile = async () => {
+        setProfileLoading(true);
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role, needs_role_selection')
+            .eq('id', user.id)
+            .single();
+
+          // Check onboarding for entrepreneurs
+          let onboardingCompleted = true;
+          if (profile?.role === 'shop_owner') {
+            const { data: onboardingData } = await supabase
+              .from('onboarding_responses')
+              .select('id')
+              .eq('user_id', user.id)
+              .limit(1);
+            onboardingCompleted = !!(onboardingData && onboardingData.length > 0);
+          }
+
+          setDbProfile({
+            role: profile?.role ?? null,
+            needs_role_selection: profile?.needs_role_selection ?? false,
+            onboardingCompleted,
+          });
+        } catch (err) {
+          console.error('ProtectedRoute: Error fetching profile', err);
+          setDbProfile({ role: null, needs_role_selection: false, onboardingCompleted: true });
+        } finally {
+          setProfileLoading(false);
+        }
+      };
+      fetchProfile();
+    } else if (!isLoading) {
+      setProfileLoading(false);
     }
   }, [user, isLoading]);
 
-  if (isLoading || (user && needsRoleSelection === null)) {
+  if (isLoading || (user && profileLoading)) {
     return <PageLoadingSkeleton />;
   }
 
@@ -54,24 +93,28 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
+  if (!dbProfile) {
+    return <PageLoadingSkeleton />;
+  }
+
   // Redirect to role selection if needed
-  if (needsRoleSelection) {
+  if (dbProfile.needs_role_selection) {
+    return <Navigate to="/select-role" replace />;
+  }
+
+  const userRole = mapDbRole(dbProfile.role);
+
+  if (!userRole) {
     return <Navigate to="/select-role" replace />;
   }
 
   // Redirect entrepreneurs who haven't completed onboarding
-  if (user.role === UserRole.ENTREPRENEUR && user.onboardingCompleted === false && location.pathname !== '/onboarding') {
+  if (userRole === UserRole.ENTREPRENEUR && !dbProfile.onboardingCompleted && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 
   // Check role-based access if roles are specified
   if (allowedRoles && allowedRoles.length > 0) {
-    const userRole = user.role;
-    
-    if (!userRole) {
-      return <Navigate to="/select-role" replace />;
-    }
-    
     if (!allowedRoles.includes(userRole)) {
       switch (userRole) {
         case UserRole.ADMIN:
