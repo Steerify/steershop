@@ -20,7 +20,8 @@ import {
   RefreshCw,
   Shield,
   Trash2,
-  Plus
+  Plus,
+  Clock
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
@@ -34,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 export default function AdminShops() {
   const [shops, setShops] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'active' | 'inactive'>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [extendDialogOpen, setExtendDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -456,15 +458,33 @@ export default function AdminShops() {
     return shop.profiles.email || "No Email";
   };
 
-  const filteredShops = shops.filter(shop =>
+  const searchFiltered = shops.filter(shop =>
     shop.shop_name?.toLowerCase().includes(search.toLowerCase()) ||
     getOwnerName(shop).toLowerCase().includes(search.toLowerCase()) ||
     getOwnerEmail(shop).toLowerCase().includes(search.toLowerCase()) ||
     shop.whatsapp_number?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Pending = inactive + created within last 30 days
+  const isPending = (shop: any) => {
+    if (shop.is_active) return false;
+    const created = new Date(shop.created_at);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return created >= thirtyDaysAgo;
+  };
+
+  const filteredShops = searchFiltered.filter(shop => {
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'pending') return isPending(shop);
+    if (statusFilter === 'active') return shop.is_active;
+    if (statusFilter === 'inactive') return !shop.is_active && !isPending(shop);
+    return true;
+  });
+
   const activeCount = shops.filter(s => s.is_active).length;
-  const inactiveCount = shops.filter(s => !s.is_active).length;
+  const inactiveCount = shops.filter(s => !s.is_active && !isPending(s)).length;
+  const pendingCount = shops.filter(s => isPending(s)).length;
 
   // Fetch users without shops for admin shop creation
   const fetchUsersWithoutShops = async () => {
@@ -578,11 +598,15 @@ export default function AdminShops() {
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-              <Badge variant="outline" className="px-3 py-1 bg-green-500/10 border-green-500/30 text-green-600">
+              <Badge variant="outline" className="px-3 py-1 bg-orange-500/10 border-orange-500/30 text-orange-600 cursor-pointer" onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}>
+                <Clock className="w-4 h-4 mr-1" />
+                {pendingCount} Pending
+              </Badge>
+              <Badge variant="outline" className="px-3 py-1 bg-green-500/10 border-green-500/30 text-green-600 cursor-pointer" onClick={() => setStatusFilter(statusFilter === 'active' ? 'all' : 'active')}>
                 <Store className="w-4 h-4 mr-1" />
                 {activeCount} Active
               </Badge>
-              <Badge variant="outline" className="px-3 py-1 bg-red-500/10 border-red-500/30 text-red-600">
+              <Badge variant="outline" className="px-3 py-1 bg-red-500/10 border-red-500/30 text-red-600 cursor-pointer" onClick={() => setStatusFilter(statusFilter === 'inactive' ? 'all' : 'inactive')}>
                 <Store className="w-4 h-4 mr-1" />
                 {inactiveCount} Inactive
               </Badge>
@@ -683,12 +707,31 @@ export default function AdminShops() {
                           {getSubscriptionBadge(shop.profiles)}
                         </TableCell>
                         <TableCell>
-                          <Badge 
-                            variant={shop.is_active ? "default" : "secondary"} 
-                            className={shop.is_active ? "bg-green-600 hover:bg-green-700" : ""}
-                          >
-                            {shop.is_active ? "Active" : "Inactive"}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            {isPending(shop) ? (
+                              <Badge className="bg-orange-500 hover:bg-orange-600">
+                                <Clock className="w-3 h-3 mr-1" />
+                                Pending
+                              </Badge>
+                            ) : (
+                              <Badge 
+                                variant={shop.is_active ? "default" : "secondary"} 
+                                className={shop.is_active ? "bg-green-600 hover:bg-green-700" : ""}
+                              >
+                                {shop.is_active ? "Active" : "Inactive"}
+                              </Badge>
+                            )}
+                            {isPending(shop) && (
+                              <Button 
+                                size="sm" 
+                                className="h-7 px-2 bg-green-600 hover:bg-green-700 text-white"
+                                onClick={() => toggleShopStatus(shop.id, shop.is_active)}
+                              >
+                                <Check className="w-3 h-3 mr-1" />
+                                Approve
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>

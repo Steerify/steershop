@@ -316,6 +316,11 @@ const Dashboard = () => {
         setShopData({ id: primaryShop.id, name: primaryShop.shop_name || primaryShop.name });
         setShopFullData(primaryShop);
 
+        // Check if shop is pending approval (inactive)
+        if (!primaryShop.is_active) {
+          setSubscriptionStatus('trial'); // Keep trial status but show pending banner
+        }
+
         const productsResponse = await productService.getProducts({ shopId: primaryShop.id });
         setProductsCount(productsResponse.data?.length || 0);
 
@@ -871,6 +876,21 @@ const Dashboard = () => {
 
         {/* small spacer for dot indicator */}
         {slides.length > 1 && <div className="h-3" />}
+
+        {/* Pending Approval Banner */}
+        {shopFullData && !shopFullData.is_active && (
+          <Card className="mb-5 border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center shrink-0">
+                <Clock className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm text-orange-800 dark:text-orange-300">Your shop is pending approval</h3>
+                <p className="text-xs text-orange-600 dark:text-orange-400">Our team will review and activate your store shortly. You can still set up your products and settings while you wait.</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* ─── Stat Cards ──────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">

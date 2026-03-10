@@ -52,7 +52,7 @@ import { Shop } from "@/types/api";
 import { supabase } from "@/integrations/supabase/client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
-import { ShopStatusBadge, getShopStatusFromProfile } from "@/components/ShopStatusBadge";
+import { ShopStatusBadge, ShopStatus, getShopStatusFromProfile } from "@/components/ShopStatusBadge";
 import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { StorefrontCustomizer } from "@/components/StorefrontCustomizer";
 
@@ -121,7 +121,7 @@ const MyStore = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPaystackGuide, setShowPaystackGuide] = useState(false);
-  const [shopStatus, setShopStatus] = useState<{ status: 'active' | 'trial' | 'expired' | 'free'; daysRemaining: number }>({ status: 'trial', daysRemaining: 15 });
+  const [shopStatus, setShopStatus] = useState<{ status: ShopStatus; daysRemaining: number }>({ status: 'trial', daysRemaining: 15 });
   const [isPremiumPlan, setIsPremiumPlan] = useState(false);
 
   const [showDfyPopup, setShowDfyPopup] = useState(false);
@@ -232,6 +232,11 @@ const MyStore = () => {
       }
 
       setShop(data);
+
+      // If shop is inactive, show pending status
+      if (!data.is_active) {
+        setShopStatus({ status: 'pending', daysRemaining: 0 });
+      }
 
       setFormData({
         shop_name: data.shop_name || data.name,

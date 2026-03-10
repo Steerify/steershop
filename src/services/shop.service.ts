@@ -29,7 +29,7 @@ const shopService = {
         shop_slug: data.slug,
         description: data.description,
         whatsapp_number: data.whatsapp,
-        is_active: true,
+        is_active: false,
       })
       .select()
       .single();
