@@ -618,6 +618,7 @@ const Shops = () => {
         onStateChange={(s) => { setSelectedState(s); setShopsPage(1); }}
         showVerifiedOnly={showVerifiedOnly}
         onVerifiedChange={(v) => { setShowVerifiedOnly(v); setShopsPage(1); }}
+        categoryCounts={categoryCounts}
       />
 
       {/* Top Seller Banner */}
