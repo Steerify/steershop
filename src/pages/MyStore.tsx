@@ -233,6 +233,11 @@ const MyStore = () => {
 
       setShop(data);
 
+      // If shop is inactive, show pending status
+      if (!data.is_active) {
+        setShopStatus({ status: 'pending', daysRemaining: 0 });
+      }
+
       setFormData({
         shop_name: data.shop_name || data.name,
         shop_slug: data.shop_slug || data.slug,
