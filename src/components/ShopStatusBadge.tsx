@@ -89,7 +89,7 @@ export const ShopStatusBadge = ({
             )}
           </div>
           
-          {showUpgradeAction && (status === 'trial' || status === 'expired') && status !== 'pending' && (
+          {showUpgradeAction && (status === 'trial' || status === 'expired') && (
             <Link to="/subscription" className="shrink-0">
               <Button 
                 size="sm" 
