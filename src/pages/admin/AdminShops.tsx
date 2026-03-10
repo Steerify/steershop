@@ -34,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 export default function AdminShops() {
   const [shops, setShops] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'active' | 'inactive'>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [extendDialogOpen, setExtendDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
