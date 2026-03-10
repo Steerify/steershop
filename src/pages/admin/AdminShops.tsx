@@ -597,11 +597,15 @@ export default function AdminShops() {
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-              <Badge variant="outline" className="px-3 py-1 bg-green-500/10 border-green-500/30 text-green-600">
+              <Badge variant="outline" className="px-3 py-1 bg-orange-500/10 border-orange-500/30 text-orange-600 cursor-pointer" onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}>
+                <Clock className="w-4 h-4 mr-1" />
+                {pendingCount} Pending
+              </Badge>
+              <Badge variant="outline" className="px-3 py-1 bg-green-500/10 border-green-500/30 text-green-600 cursor-pointer" onClick={() => setStatusFilter(statusFilter === 'active' ? 'all' : 'active')}>
                 <Store className="w-4 h-4 mr-1" />
                 {activeCount} Active
               </Badge>
-              <Badge variant="outline" className="px-3 py-1 bg-red-500/10 border-red-500/30 text-red-600">
+              <Badge variant="outline" className="px-3 py-1 bg-red-500/10 border-red-500/30 text-red-600 cursor-pointer" onClick={() => setStatusFilter(statusFilter === 'inactive' ? 'all' : 'inactive')}>
                 <Store className="w-4 h-4 mr-1" />
                 {inactiveCount} Inactive
               </Badge>
