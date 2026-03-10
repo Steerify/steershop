@@ -346,7 +346,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && step !== "creating" && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o && step !== "creating") onClose(); }}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         {/* STEP: INTRO */}
         {step === "intro" && (
