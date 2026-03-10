@@ -322,6 +322,17 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
 
   const handleDismiss = () => {
     localStorage.setItem("dfy_popup_dismissed", "true");
+    // Reset form state only on explicit dismiss
+    setStep("intro");
+    setBusinessName("");
+    setWhatsappNumber("");
+    setBusinessCategory(prefillCategory || "");
+    setDraftProducts([]);
+    setProductName("");
+    setProductPrice("");
+    setProductPreviewUrl("");
+    setProductFile(null);
+    setShopId("");
     onClose();
   };
 
@@ -335,7 +346,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && step !== "creating" && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o && step !== "creating") onClose(); }}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         {/* STEP: INTRO */}
         {step === "intro" && (
