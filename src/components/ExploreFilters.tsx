@@ -39,6 +39,7 @@ interface ExploreFiltersProps {
   onStateChange: (state: string) => void;
   showVerifiedOnly: boolean;
   onVerifiedChange: (verified: boolean) => void;
+  categoryCounts?: Record<string, number>;
 }
 
 export const ExploreFilters = ({
