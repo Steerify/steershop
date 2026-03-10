@@ -457,15 +457,33 @@ export default function AdminShops() {
     return shop.profiles.email || "No Email";
   };
 
-  const filteredShops = shops.filter(shop =>
+  const searchFiltered = shops.filter(shop =>
     shop.shop_name?.toLowerCase().includes(search.toLowerCase()) ||
     getOwnerName(shop).toLowerCase().includes(search.toLowerCase()) ||
     getOwnerEmail(shop).toLowerCase().includes(search.toLowerCase()) ||
     shop.whatsapp_number?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Pending = inactive + created within last 30 days
+  const isPending = (shop: any) => {
+    if (shop.is_active) return false;
+    const created = new Date(shop.created_at);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return created >= thirtyDaysAgo;
+  };
+
+  const filteredShops = searchFiltered.filter(shop => {
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'pending') return isPending(shop);
+    if (statusFilter === 'active') return shop.is_active;
+    if (statusFilter === 'inactive') return !shop.is_active && !isPending(shop);
+    return true;
+  });
+
   const activeCount = shops.filter(s => s.is_active).length;
-  const inactiveCount = shops.filter(s => !s.is_active).length;
+  const inactiveCount = shops.filter(s => !s.is_active && !isPending(s)).length;
+  const pendingCount = shops.filter(s => isPending(s)).length;
 
   // Fetch users without shops for admin shop creation
   const fetchUsersWithoutShops = async () => {
