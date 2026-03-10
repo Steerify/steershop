@@ -65,6 +65,9 @@ export const ExploreFilters = ({
               }`}
             >
               {cat.label}
+              {categoryCounts && cat.value !== 'all' && categoryCounts[cat.value] !== undefined && (
+                <span className="ml-1 opacity-60">({categoryCounts[cat.value]})</span>
+              )}
             </button>
           ))}
         </div>

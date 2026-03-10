@@ -66,6 +66,11 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
               <p className="text-muted-foreground line-clamp-2 text-xs mt-1">
                 {shop.description || "Visit this shop to see their products"}
               </p>
+              {displayCategory && displayCategory !== 'other' && (
+                <Badge className="mt-1.5 bg-muted text-muted-foreground border-border text-[10px] px-1.5 py-0 font-normal">
+                  {displayCategory}
+                </Badge>
+              )}
 
               {(shop.state || shop.country) && (
                 <div className="flex items-center gap-1 mt-1.5">
