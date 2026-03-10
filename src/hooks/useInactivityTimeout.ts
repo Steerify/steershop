@@ -53,7 +53,7 @@ export const useInactivityTimeout = () => {
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
     
     // Throttle activity updates to prevent excessive dispatches
-    let throttleTimeout: NodeJS.Timeout | null = null;
+    let throttleTimeout: ReturnType<typeof setTimeout> | null = null;
     const throttledHandler = () => {
       if (!throttleTimeout) {
         handleUserActivity();
