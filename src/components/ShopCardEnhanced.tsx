@@ -12,7 +12,7 @@ interface ShopCardEnhancedProps {
   displayCategory?: string;
 }
 
-export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0, index = 0, isBusinessPlan = false }: ShopCardEnhancedProps) => {
+export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0, index = 0, isBusinessPlan = false, displayCategory }: ShopCardEnhancedProps) => {
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
