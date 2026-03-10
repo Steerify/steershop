@@ -52,7 +52,7 @@ import { Shop } from "@/types/api";
 import { supabase } from "@/integrations/supabase/client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
-import { ShopStatusBadge, getShopStatusFromProfile } from "@/components/ShopStatusBadge";
+import { ShopStatusBadge, ShopStatus, getShopStatusFromProfile } from "@/components/ShopStatusBadge";
 import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { StorefrontCustomizer } from "@/components/StorefrontCustomizer";
 
