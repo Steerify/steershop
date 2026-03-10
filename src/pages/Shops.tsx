@@ -548,6 +548,7 @@ const Shops = () => {
                       productCount={shopProductCounts[shop.id] || 0}
                       index={index}
                       isBusinessPlan={businessPlanShopIds.has(shop.id)}
+                      displayCategory={getCategoryLabel(shopCategories[shop.id] || 'other')}
                     />
                   ))}
                 </div>
