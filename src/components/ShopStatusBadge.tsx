@@ -110,9 +110,17 @@ export const ShopStatusBadge = ({
           "flex items-center gap-1.5 mt-2 pt-2 border-t text-xs sm:text-sm",
           status === 'active' && "border-green-200 dark:border-green-800",
           status === 'trial' && "border-amber-200 dark:border-amber-800",
-          status === 'expired' && "border-red-200 dark:border-red-800"
+          status === 'expired' && "border-red-200 dark:border-red-800",
+          status === 'pending' && "border-orange-200 dark:border-orange-800"
         )}>
-          {isVisible ? (
+          {status === 'pending' ? (
+            <>
+              <Clock className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+              <span className="text-orange-700 dark:text-orange-300">
+                Your store is under review
+              </span>
+            </>
+          ) : isVisible ? (
             <>
               <Eye className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
               <span className="text-green-700 dark:text-green-300">
