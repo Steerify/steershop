@@ -322,6 +322,17 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
 
   const handleDismiss = () => {
     localStorage.setItem("dfy_popup_dismissed", "true");
+    // Reset form state only on explicit dismiss
+    setStep("intro");
+    setBusinessName("");
+    setWhatsappNumber("");
+    setBusinessCategory(prefillCategory || "");
+    setDraftProducts([]);
+    setProductName("");
+    setProductPrice("");
+    setProductPreviewUrl("");
+    setProductFile(null);
+    setShopId("");
     onClose();
   };
 

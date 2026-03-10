@@ -42,6 +42,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     };
   }, [previewUrl]);
 
+  // Sync internal preview with parent's value prop — clears preview when parent resets
+  useEffect(() => {
+    if (!value && !isUploading) {
+      setPreviewUrl(null);
+    }
+  }, [value, isUploading]);
+
   const displayUrl = value || previewUrl;
 
   const processAndUpload = async (file: File) => {

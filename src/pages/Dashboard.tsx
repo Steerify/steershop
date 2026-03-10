@@ -353,9 +353,9 @@ const Dashboard = () => {
           setPayoutBalance(balance);
         } catch (e) { console.error('Payout balance error:', e); }
       } else {
-        // No shop — always show the DFY popup (ignore dismissed flag)
+        // No shop — show the DFY popup only if not already open (prevents remount/data loss)
         setHasNoShop(true);
-        setShowDfyPopup(true);
+        setShowDfyPopup(prev => prev || true);
         if (searchParams.get('show_dfy') === 'true') {
           const newParams = new URLSearchParams(searchParams);
           newParams.delete('show_dfy');
