@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, Clock, AlertTriangle, Sparkles, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type ShopStatus = 'active' | 'trial' | 'expired' | 'free';
+export type ShopStatus = 'active' | 'trial' | 'expired' | 'free' | 'pending';
 
 interface ShopStatusBadgeProps {
   status: ShopStatus;
