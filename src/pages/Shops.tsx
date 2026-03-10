@@ -16,6 +16,7 @@ import { Shop, Product } from "@/types/api";
 import { ExploreFilters } from "@/components/ExploreFilters";
 import { ShopCardEnhanced } from "@/components/ShopCardEnhanced";
 import { supabase } from "@/integrations/supabase/client";
+import { autoCategorize, getCategoryLabel } from "@/utils/autoCategorize";
 import { useState as useReactState } from "react";
 import { Button } from "@/components/ui/button";
 
