@@ -74,6 +74,19 @@ export const ShopStatusBadge = ({
                 </div>
               </>
             )}
+            {status === 'pending' && (
+              <>
+                <Clock className="w-5 h-5 text-orange-600 dark:text-orange-400 shrink-0" />
+                <div>
+                  <p className="font-medium text-orange-800 dark:text-orange-300 text-sm sm:text-base">
+                    Pending Approval
+                  </p>
+                  <p className="text-xs sm:text-sm text-orange-600 dark:text-orange-400">
+                    Our team is reviewing your store. You'll be notified once approved.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
           
           {showUpgradeAction && (status === 'trial' || status === 'expired') && (
