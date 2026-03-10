@@ -316,6 +316,11 @@ const Dashboard = () => {
         setShopData({ id: primaryShop.id, name: primaryShop.shop_name || primaryShop.name });
         setShopFullData(primaryShop);
 
+        // Check if shop is pending approval (inactive)
+        if (!primaryShop.is_active) {
+          setSubscriptionStatus('trial'); // Keep trial status but show pending banner
+        }
+
         const productsResponse = await productService.getProducts({ shopId: primaryShop.id });
         setProductsCount(productsResponse.data?.length || 0);
 
