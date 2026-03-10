@@ -9,6 +9,7 @@ interface ShopCardEnhancedProps {
   productCount?: number;
   index?: number;
   isBusinessPlan?: boolean;
+  displayCategory?: string;
 }
 
 export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0, index = 0, isBusinessPlan = false }: ShopCardEnhancedProps) => {
