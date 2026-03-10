@@ -47,6 +47,7 @@ export const ExploreFilters = ({
   selectedSort, onSortChange,
   selectedState, onStateChange,
   showVerifiedOnly, onVerifiedChange,
+  categoryCounts,
 }: ExploreFiltersProps) => {
   return (
     <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-lg border-b py-3">
