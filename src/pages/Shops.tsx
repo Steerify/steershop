@@ -246,29 +246,52 @@ const Shops = () => {
     }
   }, [showVerifiedOnly, selectedState, fetchShopPreviews]);
 
-  // Sort shops - Business plan shops always appear first
+  // Compute display categories for each shop
+  const shopCategories = useMemo(() => {
+    const cats: Record<string, string> = {};
+    shops.forEach(shop => {
+      cats[shop.id] = autoCategorize(shop.name || shop.shop_name || '', shop.description || '');
+    });
+    return cats;
+  }, [shops]);
+
+  // Category counts for filter chips
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    Object.values(shopCategories).forEach(cat => {
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    return counts;
+  }, [shopCategories]);
+
+  // Sort shops - Business plan shops always appear first, apply category filter
   const sortedShops = useMemo(() => {
-    const sorted = [...shops];
+    let filtered = [...shops];
+    
+    // Category filter
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(shop => shopCategories[shop.id] === selectedCategory);
+    }
+    
     switch (selectedSort) {
       case 'rating':
-        sorted.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0));
+        filtered.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0));
         break;
       case 'name':
-        sorted.sort((a, b) => (a.name || a.shop_name || '').localeCompare(b.name || b.shop_name || ''));
+        filtered.sort((a, b) => (a.name || a.shop_name || '').localeCompare(b.name || b.shop_name || ''));
         break;
       case 'newest':
       default:
-        // Already sorted by created_at desc from API
         break;
     }
     // Always prioritize business plan shops to the top
-    sorted.sort((a, b) => {
+    filtered.sort((a, b) => {
       const aIsBusiness = businessPlanShopIds.has(a.id) ? 1 : 0;
       const bIsBusiness = businessPlanShopIds.has(b.id) ? 1 : 0;
       return bIsBusiness - aIsBusiness;
     });
-    return sorted;
-  }, [shops, selectedSort, businessPlanShopIds]);
+    return filtered;
+  }, [shops, selectedSort, businessPlanShopIds, selectedCategory, shopCategories]);
 
   // Search products
   const searchProducts = useCallback(async (page: number = 1, reset: boolean = false) => {
