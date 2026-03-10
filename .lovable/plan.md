@@ -1,64 +1,50 @@
 
 
-# Plan: Subscription Expiry Popup, Homepage Alignment, and Logistics Verification
+# Plan: Fix DoneForYou Product Upload & Free Setup Flow
 
-## 1. Subscription Expiry / Free Plan Persuasion Popup
+## Problems Found
 
-Create a new component `src/components/SubscriptionExpiryDialog.tsx` that shows when a shop owner's trial/subscription has expired. This dialog will be triggered from `Dashboard.tsx` after data loads.
+1. **Image upload error (your screenshot)**: The `ImageUpload` component in the DoneForYouPopup tries to upload images to storage immediately (`autoUpload=true`). The upload service requires a shop to exist (to determine the storage path), but the shop hasn't been created yet at this point.
 
-**Logic flow:**
-- After `loadData()` completes, check `subscriptionStatus === 'expired'`
-- Show a persuasive full-screen dialog with two paths:
-  - **"Upgrade to a Paid Plan"** — navigates to `/pricing`
-  - **"Stay on Free Plan (5 products max)"** — if `productsCount > 5`, show a product list with delete buttons so the user can trim down to 5. If `productsCount <= 5`, show a persuasive "you're missing out" message but allow them to dismiss
-- Even if products are <= 5, still show the dialog once per session (use `sessionStorage` to avoid repeat)
-- The dialog should be beautifully designed with gradient backgrounds, clear value propositions for upgrading, and a sense of urgency
+2. **Free setup is broken**: The edge function `done-for-you-setup` always verifies Paystack payment (lines 53-72). When `handleFreeCreate` sends `reference: "free_setup"`, the Paystack verification fails because "free_setup" isn't a real transaction reference. So free shop creation (5 products or fewer) doesn't work at all.
 
-**Also show for `subscriptionStatus === 'free'`:** A lighter persuasion popup (not blocking) that appears once per day (tracked via `localStorage` timestamp) encouraging upgrade with feature comparisons.
+3. **Edge function sets `is_active: true`** (line 162): This bypasses the new admin approval workflow we just implemented.
 
-**Files:** New `src/components/SubscriptionExpiryDialog.tsx`, edit `src/pages/Dashboard.tsx`
+## Changes
 
----
+### 1. `src/components/DoneForYouPopup.tsx` — Store images locally, upload after shop creation
+- Set `autoUpload={false}` on `ImageUpload` so it only shows a local preview without uploading to storage.
+- Store `File` objects alongside draft products (add a `file` field to `DraftProduct`).
+- After the edge function creates the shop and products, upload images client-side using the returned `shop_id`, then update each product's `image_url` in the database.
+- This eliminates the "create shop first" error entirely.
 
-## 2. Homepage Alignment — Fix Inconsistencies
+### 2. `supabase/functions/done-for-you-setup/index.ts` — Support free setup path
+- Check for the `free_setup: true` flag in the request body.
+- When `free_setup` is true, skip Paystack payment verification entirely (no charge for 5 or fewer products).
+- Set `is_active: false` on the created shop to maintain the admin approval workflow.
+- Skip the `subscription_history` insert for free setups.
 
-Review current Index page claims vs actual system capabilities:
+### 3. `src/components/DoneForYouPopup.tsx` — Post-creation image upload logic
+- After `handleFreeCreate` or `handleVerifyPayment` succeeds, iterate over draft products that have a `File` attached.
+- Upload each file to `product-images/{shop_id}/` via the upload service.
+- Update the corresponding product records with the returned public URLs.
+- Show "Uploading images..." status during this phase.
 
-**Issues found:**
-- "Proven 30-Day Ritual" chip in hero — this exists (StructuredSellingChallenge), accurate
-- "Sell Globally from Africa" — the system only supports NGN payments via Paystack currently. The "From Africa to the World" section claims "Multi-Currency" and "Global Reach" which is misleading
-- "setup takes 10 minutes" — accurate
-- HowItWorks says "15-day free trial" but the pricing strategy is "Free Forever" (Starter plan) — inconsistent
-- Final CTA says "Get your first order within 14 days — or your next month is free" — this guarantee isn't enforced in the system
-- "Free forever plan" in footer chips — accurate per pricing strategy
+### 4. `src/components/ImageUpload.tsx` — Ensure `autoUpload={false}` returns File to parent
+- The component already supports `autoUpload={false}` with `onFileSelect` callback. No changes needed here — just need to wire it up in DoneForYouPopup.
 
-**Fixes:**
-- Remove the "From Africa to the World" section (Section 1.5) since multi-currency/global payments aren't implemented
-- Update HowItWorks step 1 description from "15-day free trial" to "Free forever with up to 5 products"
-- Soften the Final CTA guarantee to something achievable: "Get your first order within 14 days" without the "next month is free" promise (unless you want to enforce it)
-- Keep the hero as-is — "Turn WhatsApp traffic into consistent orders" is accurate
+## Flow After Fix
 
-**Files:** `src/pages/Index.tsx`, `src/components/HowItWorks.tsx`
+```text
+User fills business info → Adds products with local preview images
+  → Clicks "Create My Store — Free!" (≤5 products)
+    → Edge function creates shop + products (no payment check)
+    → Client uploads images to storage using new shop_id  
+    → Updates product image_urls
+    → Shows completion screen
 
----
-
-## 3. Logistics Function Verification
-
-The `logistics-get-rates` and `logistics-book-delivery` edge functions are correctly structured for the Terminal Africa API. The flow is: Create addresses → Create parcel → Get rates / Create shipment → Arrange pickup.
-
-**Current status:** The code is correct. The only issue is that without a valid `TERMINAL_API_KEY`, it falls back to mock data. The `TERMINAL_API_KEY` secret is already configured. The functions should work if the key is valid and the Terminal Africa account is active.
-
-**Small fix needed:** The `logistics-get-rates` function hardcodes `country: 'NG'` — should use the `country` field from the address if provided. Also add better error messages when Terminal API returns errors (currently just throws generic "Failed to create pickup address").
-
-**Files:** `supabase/functions/logistics-get-rates/index.ts`, `supabase/functions/logistics-book-delivery/index.ts`
-
----
-
-## Summary
-
-| # | Feature | Files | Effort |
-|---|---------|-------|--------|
-| 1 | Subscription expiry persuasion popup | New component + `Dashboard.tsx` | Medium |
-| 2 | Homepage consistency fixes | `Index.tsx`, `HowItWorks.tsx` | Small |
-| 3 | Logistics error handling improvement | 2 edge functions | Small |
+  → Clicks "Pay & Create" (>5 products)  
+    → Paystack payment → Edge function verifies + creates
+    → Same client-side image upload after
+```
 
