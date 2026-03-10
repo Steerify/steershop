@@ -706,12 +706,31 @@ export default function AdminShops() {
                           {getSubscriptionBadge(shop.profiles)}
                         </TableCell>
                         <TableCell>
-                          <Badge 
-                            variant={shop.is_active ? "default" : "secondary"} 
-                            className={shop.is_active ? "bg-green-600 hover:bg-green-700" : ""}
-                          >
-                            {shop.is_active ? "Active" : "Inactive"}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            {isPending(shop) ? (
+                              <Badge className="bg-orange-500 hover:bg-orange-600">
+                                <Clock className="w-3 h-3 mr-1" />
+                                Pending
+                              </Badge>
+                            ) : (
+                              <Badge 
+                                variant={shop.is_active ? "default" : "secondary"} 
+                                className={shop.is_active ? "bg-green-600 hover:bg-green-700" : ""}
+                              >
+                                {shop.is_active ? "Active" : "Inactive"}
+                              </Badge>
+                            )}
+                            {isPending(shop) && (
+                              <Button 
+                                size="sm" 
+                                className="h-7 px-2 bg-green-600 hover:bg-green-700 text-white"
+                                onClick={() => toggleShopStatus(shop.id, shop.is_active)}
+                              >
+                                <Check className="w-3 h-3 mr-1" />
+                                Approve
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
