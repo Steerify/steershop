@@ -39,6 +39,7 @@ interface ExploreFiltersProps {
   onStateChange: (state: string) => void;
   showVerifiedOnly: boolean;
   onVerifiedChange: (verified: boolean) => void;
+  categoryCounts?: Record<string, number>;
 }
 
 export const ExploreFilters = ({
@@ -46,6 +47,7 @@ export const ExploreFilters = ({
   selectedSort, onSortChange,
   selectedState, onStateChange,
   showVerifiedOnly, onVerifiedChange,
+  categoryCounts,
 }: ExploreFiltersProps) => {
   return (
     <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-lg border-b py-3">
@@ -63,6 +65,9 @@ export const ExploreFilters = ({
               }`}
             >
               {cat.label}
+              {categoryCounts && cat.value !== 'all' && categoryCounts[cat.value] !== undefined && (
+                <span className="ml-1 opacity-60">({categoryCounts[cat.value]})</span>
+              )}
             </button>
           ))}
         </div>
