@@ -30,6 +30,7 @@ export const ShopStatusBadge = ({
         status === 'active' && "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900",
         status === 'trial' && "bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900",
         status === 'expired' && "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900",
+        status === 'pending' && "bg-orange-50 border-orange-200 dark:bg-orange-950/20 dark:border-orange-900",
         className
       )}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
