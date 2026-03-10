@@ -17,7 +17,7 @@ export const useInactivityTimeout = () => {
   const lastActivity = useAppSelector((state) => state.activity.lastActivity);
   const isWarningShown = useAppSelector((state) => state.activity.isWarningShown);
   const rememberMe = useAppSelector((state) => state.activity.rememberMe);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const INACTIVITY_TIMEOUT = useMemo(() => 
     rememberMe ? EXTENDED_TIMEOUT : STANDARD_TIMEOUT
