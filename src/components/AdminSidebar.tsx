@@ -13,7 +13,7 @@ import {
 import {
   LayoutDashboard, Store, Package, ShoppingCart, Users,
   Gift, GraduationCap, Award, MessageSquare, UserPlus,
-  Crown, Sparkles, Megaphone, DollarSign, Tv, Activity, Bell
+  Crown, Sparkles, Megaphone, DollarSign, Tv, Activity, Bell, Brain
 } from "lucide-react";
 import logoLight from "@/assets/steersolo-logo.jpg";
 import logoDark from "@/assets/steersolo-logo-dark.jpg";
