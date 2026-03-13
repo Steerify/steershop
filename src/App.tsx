@@ -123,6 +123,7 @@ const App = () => (
             {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/auth/:type" element={<Auth />} />
             <Route path="/auth/callback" element={<Callback />} />
             {/* Add RoleSelection route - this is public but only accessible after signup */}
