@@ -55,6 +55,7 @@ const AdminMarketingConsultations = lazy(() => import("./pages/admin/AdminMarket
 const AdminPlatformEarnings = lazy(() => import("./pages/admin/AdminPlatformEarnings"));
 const AdminPlatformUpdates = lazy(() => import("./pages/admin/AdminPlatformUpdates"));
 const AdminAds = lazy(() => import("./pages/admin/AdminAds"));
+const AdminUXAudit = lazy(() => import("./pages/admin/AdminUXAudit"));
 const GrowthPage = lazy(() => import("./pages/GrowthPage"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const DemoStoreFront = lazy(() => import("./pages/DemoStoreFront"));
@@ -123,6 +124,7 @@ const App = () => (
             {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/auth/:type" element={<Auth />} />
             <Route path="/auth/callback" element={<Callback />} />
             {/* Add RoleSelection route - this is public but only accessible after signup */}
@@ -355,6 +357,11 @@ const App = () => (
             <Route path="/admin/ads" element={
               <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
                 <AdminAds />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/ux-audit" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminUXAudit />
               </ProtectedRoute>
             } />
             

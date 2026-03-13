@@ -1,68 +1,64 @@
 
 
-# Plan: Image Optimization, Workflow Audit, and AI UX Tester
+# Plan: Subscription Expiry Popup, Homepage Alignment, and Logistics Verification
 
-## 1. Convert Hero Map Image to AVIF
+## 1. Subscription Expiry / Free Plan Persuasion Popup
 
-**Problem**: The `global-dot-map.png` in `NigeriaDotMap.tsx` is loaded eagerly on the homepage hero section, impacting LCP (Largest Contentful Paint).
+Create a new component `src/components/SubscriptionExpiryDialog.tsx` that shows when a shop owner's trial/subscription has expired. This dialog will be triggered from `Dashboard.tsx` after data loads.
 
-**Approach**: Since Lovable cannot convert image files directly, we will:
-- Use the `<picture>` element with AVIF/WebP sources and PNG fallback
-- Install `vite-plugin-image-optimizer` to auto-generate optimized formats at build time
-- Alternatively (simpler): update `NigeriaDotMap.tsx` to add `fetchpriority="high"`, `decoding="async"`, and proper sizing attributes for performance, while you manually upload an `.avif` version of the image
+**Logic flow:**
+- After `loadData()` completes, check `subscriptionStatus === 'expired'`
+- Show a persuasive full-screen dialog with two paths:
+  - **"Upgrade to a Paid Plan"** — navigates to `/pricing`
+  - **"Stay on Free Plan (5 products max)"** — if `productsCount > 5`, show a product list with delete buttons so the user can trim down to 5. If `productsCount <= 5`, show a persuasive "you're missing out" message but allow them to dismiss
+- Even if products are <= 5, still show the dialog once per session (use `sessionStorage` to avoid repeat)
+- The dialog should be beautifully designed with gradient backgrounds, clear value propositions for upgrading, and a sense of urgency
 
-**Recommended approach**: Add a Vite image optimization plugin that auto-converts PNG/JPG to AVIF/WebP at build time. This handles all images across the app, not just this one.
+**Also show for `subscriptionStatus === 'free'`:** A lighter persuasion popup (not blocking) that appears once per day (tracked via `localStorage` timestamp) encouraging upgrade with feature comparisons.
 
-**Files changed**: `vite.config.ts`, `src/components/NigeriaDotMap.tsx`
-
----
-
-## 2. Workflow Issues Identified
-
-After reviewing the codebase, here are issues that could hurt user adoption and retention:
-
-### Critical Issues
-1. **Auth route pattern mismatch**: Routes use `/auth/:type` (e.g., `/auth/signup`) but CTA buttons link to `/auth/signup` which works, however the `defaultTab` logic falls back to `searchParams.get("tab")` which is fragile -- if someone visits `/auth` without a type param, `type` is undefined and defaults to login tab, which is fine, but the route itself won't match `/auth/:type` and will 404.
-
-2. **No `AuthProvider` wrapping check**: `AuthProvider` is in `main.tsx` but `BrowserRouter` is inside `App.tsx`. This means `useAuth` works everywhere, but `useNavigate` doesn't work inside `AuthProvider` (which is fine currently since it doesn't navigate).
-
-3. **ProtectedRoute makes 2 DB calls per navigation**: It fetches the profile AND checks onboarding on every route change. This is redundant with `AuthContext` which already fetches the same data. This causes unnecessary latency on every page navigation for logged-in users.
-
-4. **`AfricaGlobe` component is unused**: It's defined but never imported anywhere. Dead code.
-
-5. **`Math.random()` in render**: `AfricaGlobe` uses `Math.random()` for particle positions, causing layout shifts on every re-render. Should use `useMemo`.
-
-### UX / Adoption Issues
-6. **No loading state on Google sign-in button**: Users may click multiple times.
-7. **Empty firstName/lastName on signup**: Signup sends empty strings for name fields, meaning the profile will have no name until onboarding. If a customer signs up (not entrepreneur), there's no onboarding flow to collect this data.
-8. **Customer role has limited value**: Customer dashboard, orders, courses, rewards, and wishlist pages exist but the value proposition is unclear -- customers may sign up and find nothing useful.
-9. **`hero-image.jpg`, `nigeria-dot-map.png`, `pattern-bg.jpg`**: These assets exist but appear unused -- dead weight in the bundle.
+**Files:** New `src/components/SubscriptionExpiryDialog.tsx`, edit `src/pages/Dashboard.tsx`
 
 ---
 
-## 3. AI UX Audit Tool
+## 2. Homepage Alignment — Fix Inconsistencies
 
-**What**: Build an admin-only page that uses AI to analyze the app's routes, components, and user flows, generating a UX audit report.
+Review current Index page claims vs actual system capabilities:
 
-**Approach**:
-- Create a backend function (`ai-ux-audit`) that takes a list of routes/features and uses Lovable AI to analyze potential UX issues
-- Create an admin page `/admin/ux-audit` that triggers the audit and displays findings
-- The AI will analyze: route accessibility, component complexity, missing error states, dead features, onboarding gaps
+**Issues found:**
+- "Proven 30-Day Ritual" chip in hero — this exists (StructuredSellingChallenge), accurate
+- "Sell Globally from Africa" — the system only supports NGN payments via Paystack currently. The "From Africa to the World" section claims "Multi-Currency" and "Global Reach" which is misleading
+- "setup takes 10 minutes" — accurate
+- HowItWorks says "15-day free trial" but the pricing strategy is "Free Forever" (Starter plan) — inconsistent
+- Final CTA says "Get your first order within 14 days — or your next month is free" — this guarantee isn't enforced in the system
+- "Free forever plan" in footer chips — accurate per pricing strategy
 
-**Files to create**:
-- `supabase/functions/ai-ux-audit/index.ts` -- edge function calling Lovable AI
-- `src/pages/admin/AdminUXAudit.tsx` -- admin page to view results
-- Add route in `App.tsx`
+**Fixes:**
+- Remove the "From Africa to the World" section (Section 1.5) since multi-currency/global payments aren't implemented
+- Update HowItWorks step 1 description from "15-day free trial" to "Free forever with up to 5 products"
+- Soften the Final CTA guarantee to something achievable: "Get your first order within 14 days" without the "next month is free" promise (unless you want to enforce it)
+- Keep the hero as-is — "Turn WhatsApp traffic into consistent orders" is accurate
 
-**However** -- this is a substantial feature. I'd recommend we first address the concrete issues from #2, then build the AI audit tool as a follow-up.
+**Files:** `src/pages/Index.tsx`, `src/components/HowItWorks.tsx`
 
 ---
 
-## Recommended Implementation Order
+## 3. Logistics Function Verification
 
-1. Fix the image optimization (AVIF + performance attributes)
-2. Fix ProtectedRoute double-fetching (use AuthContext data instead)
-3. Remove dead code (`AfricaGlobe`, unused assets)
-4. Fix customer signup flow (collect name for customers)
-5. Build AI UX audit tool (follow-up)
+The `logistics-get-rates` and `logistics-book-delivery` edge functions are correctly structured for the Terminal Africa API. The flow is: Create addresses → Create parcel → Get rates / Create shipment → Arrange pickup.
+
+**Current status:** The code is correct. The only issue is that without a valid `TERMINAL_API_KEY`, it falls back to mock data. The `TERMINAL_API_KEY` secret is already configured. The functions should work if the key is valid and the Terminal Africa account is active.
+
+**Small fix needed:** The `logistics-get-rates` function hardcodes `country: 'NG'` — should use the `country` field from the address if provided. Also add better error messages when Terminal API returns errors (currently just throws generic "Failed to create pickup address").
+
+**Files:** `supabase/functions/logistics-get-rates/index.ts`, `supabase/functions/logistics-book-delivery/index.ts`
+
+---
+
+## Summary
+
+| # | Feature | Files | Effort |
+|---|---------|-------|--------|
+| 1 | Subscription expiry persuasion popup | New component + `Dashboard.tsx` | Medium |
+| 2 | Homepage consistency fixes | `Index.tsx`, `HowItWorks.tsx` | Small |
+| 3 | Logistics error handling improvement | 2 edge functions | Small |
 

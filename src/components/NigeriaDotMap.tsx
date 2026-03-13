@@ -13,9 +13,13 @@ export const NigeriaDotMap = () => {
     <div className={`relative w-full h-full transition-opacity duration-1000 ${visible ? 'opacity-100' : 'opacity-0'}`}>
       <img
         src={globalMap}
-        alt="Global dot map"
+        alt="Global dot map showing SteerSolo reach across Africa"
         className="w-full h-full object-contain mix-blend-multiply"
         loading="eager"
+        fetchPriority="high"
+        decoding="async"
+        width={800}
+        height={500}
       />
     </div>
   );
