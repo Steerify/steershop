@@ -55,6 +55,7 @@ const AdminMarketingConsultations = lazy(() => import("./pages/admin/AdminMarket
 const AdminPlatformEarnings = lazy(() => import("./pages/admin/AdminPlatformEarnings"));
 const AdminPlatformUpdates = lazy(() => import("./pages/admin/AdminPlatformUpdates"));
 const AdminAds = lazy(() => import("./pages/admin/AdminAds"));
+const AdminUXAudit = lazy(() => import("./pages/admin/AdminUXAudit"));
 const GrowthPage = lazy(() => import("./pages/GrowthPage"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const DemoStoreFront = lazy(() => import("./pages/DemoStoreFront"));
