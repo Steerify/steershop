@@ -359,6 +359,11 @@ const App = () => (
                 <AdminAds />
               </ProtectedRoute>
             } />
+            <Route path="/admin/ux-audit" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminUXAudit />
+              </ProtectedRoute>
+            } />
             
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

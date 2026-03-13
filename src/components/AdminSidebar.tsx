@@ -56,6 +56,7 @@ const menuGroups = [
       { title: "Rewards", url: "/admin/prizes", icon: Award },
       { title: "Special Offers", url: "/admin/offers", icon: Gift },
       { title: "Feedback", url: "/admin/feedback", icon: MessageSquare },
+      { title: "AI UX Audit", url: "/admin/ux-audit", icon: Brain },
     ],
   },
 ];
