@@ -242,7 +242,12 @@ export default function AdminProducts() {
                     filteredProducts.map((product) => (
                       <TableRow key={product.id} className="hover:bg-muted/30">
                         <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>
+                         <TableCell>
+                           <Badge variant="outline" className="text-xs">
+                             {getCategoryLabel(product.category || 'other')}
+                           </Badge>
+                         </TableCell>
+                         <TableCell>
                           <Badge variant={product.type === "service" ? "secondary" : "default"} className={product.type === "service" ? "bg-accent/20 text-accent" : ""}>
                             {product.type === "service" ? (
                               <><Briefcase className="w-3 h-3 mr-1" /> Service</>
