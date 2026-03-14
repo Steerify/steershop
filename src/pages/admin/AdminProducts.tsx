@@ -222,8 +222,9 @@ export default function AdminProducts() {
                 <TableHeader>
                   <TableRow className="hover:bg-muted/50">
                     <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Shop</TableHead>
+                     <TableHead>Category</TableHead>
+                     <TableHead>Type</TableHead>
+                     <TableHead>Shop</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Stock</TableHead>
                     <TableHead>Status</TableHead>
