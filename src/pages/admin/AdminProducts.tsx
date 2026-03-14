@@ -117,6 +117,36 @@ export default function AdminProducts() {
     fetchProducts();
   };
 
+  const handleAutoCategorize = async () => {
+    setIsCategorizing(true);
+    try {
+      const uncategorized = products.filter(p => !p.category || p.category === 'general');
+      if (uncategorized.length === 0) {
+        toast({ title: "All products are already categorized" });
+        setIsCategorizing(false);
+        return;
+      }
+
+      let updated = 0;
+      for (const product of uncategorized) {
+        const category = autoCategorize(product.name, product.description || '');
+        if (category !== 'other' && category !== product.category) {
+          const { error } = await supabase
+            .from("products")
+            .update({ category })
+            .eq("id", product.id);
+          if (!error) updated++;
+        }
+      }
+
+      toast({ title: `Auto-categorized ${updated} product${updated !== 1 ? 's' : ''}` });
+      fetchProducts();
+    } catch {
+      toast({ title: "Error during categorization", variant: "destructive" });
+    }
+    setIsCategorizing(false);
+  };
+
   const toggleAvailability = async (product: any) => {
     const { error } = await supabase
       .from("products")
