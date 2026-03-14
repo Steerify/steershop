@@ -1,64 +1,50 @@
 
 
-# Plan: Subscription Expiry Popup, Homepage Alignment, and Logistics Verification
+# Plan: AI User Testing System with 2 Simulated Personas
 
-## 1. Subscription Expiry / Free Plan Persuasion Popup
+## What We're Building
 
-Create a new component `src/components/SubscriptionExpiryDialog.tsx` that shows when a shop owner's trial/subscription has expired. This dialog will be triggered from `Dashboard.tsx` after data loads.
+An admin tool that simulates **2 AI personas** — one shop owner ("Adaeze") and one customer ("Tunde") — who mentally walk through every feature of the platform and provide structured, honest feedback as if they were real Nigerian users. The results are displayed as a detailed report with actionable insights.
 
-**Logic flow:**
-- After `loadData()` completes, check `subscriptionStatus === 'expired'`
-- Show a persuasive full-screen dialog with two paths:
-  - **"Upgrade to a Paid Plan"** — navigates to `/pricing`
-  - **"Stay on Free Plan (5 products max)"** — if `productsCount > 5`, show a product list with delete buttons so the user can trim down to 5. If `productsCount <= 5`, show a persuasive "you're missing out" message but allow them to dismiss
-- Even if products are <= 5, still show the dialog once per session (use `sessionStorage` to avoid repeat)
-- The dialog should be beautifully designed with gradient backgrounds, clear value propositions for upgrading, and a sense of urgency
+This extends the existing `/admin/ux-audit` page with a new "AI User Test" tab.
 
-**Also show for `subscriptionStatus === 'free'`:** A lighter persuasion popup (not blocking) that appears once per day (tracked via `localStorage` timestamp) encouraging upgrade with feature comparisons.
+## The 2 AI Personas
 
-**Files:** New `src/components/SubscriptionExpiryDialog.tsx`, edit `src/pages/Dashboard.tsx`
+1. **Adaeze** (Shop Owner) — A Lagos fashion entrepreneur, semi-technical, selling on WhatsApp/Instagram. Tests: signup → onboarding → shop creation → product upload → order management → payments → marketing tools → subscription → settings.
 
----
+2. **Tunde** (Customer) — A Abuja-based buyer who shops online via social media links. Tests: browsing shops → product discovery → checkout → WhatsApp ordering → order tracking → wishlist → reviews → rewards → courses.
 
-## 2. Homepage Alignment — Fix Inconsistencies
+## Architecture
 
-Review current Index page claims vs actual system capabilities:
+### Backend: New edge function `ai-user-test`
+- Takes persona definitions + full route/feature lists
+- Makes 2 sequential AI calls (one per persona) to Lovable AI
+- Each persona "walks through" their relevant features and rates them
+- Returns structured feedback per persona with:
+  - Journey steps (what they tried, what happened, friction score 1-5)
+  - Overall satisfaction score
+  - Top 3 frustrations
+  - Top 3 delights
+  - "Would I recommend this?" verdict
+  - Feature requests from a real user perspective
 
-**Issues found:**
-- "Proven 30-Day Ritual" chip in hero — this exists (StructuredSellingChallenge), accurate
-- "Sell Globally from Africa" — the system only supports NGN payments via Paystack currently. The "From Africa to the World" section claims "Multi-Currency" and "Global Reach" which is misleading
-- "setup takes 10 minutes" — accurate
-- HowItWorks says "15-day free trial" but the pricing strategy is "Free Forever" (Starter plan) — inconsistent
-- Final CTA says "Get your first order within 14 days — or your next month is free" — this guarantee isn't enforced in the system
-- "Free forever plan" in footer chips — accurate per pricing strategy
+### Frontend: New tab on AdminUXAudit page
+- Add "AI User Test" tab alongside the existing "UX Audit" tab
+- Shows both personas side-by-side in cards
+- Each persona card shows their journey, ratings, quotes, and recommendations
+- Aggregate insights section: common pain points, priority fixes
 
-**Fixes:**
-- Remove the "From Africa to the World" section (Section 1.5) since multi-currency/global payments aren't implemented
-- Update HowItWorks step 1 description from "15-day free trial" to "Free forever with up to 5 products"
-- Soften the Final CTA guarantee to something achievable: "Get your first order within 14 days" without the "next month is free" promise (unless you want to enforce it)
-- Keep the hero as-is — "Turn WhatsApp traffic into consistent orders" is accurate
+## Files Changed
 
-**Files:** `src/pages/Index.tsx`, `src/components/HowItWorks.tsx`
+1. **`supabase/functions/ai-user-test/index.ts`** — New edge function with 2 AI calls
+2. **`supabase/config.toml`** — Add `[functions.ai-user-test]` entry
+3. **`src/pages/admin/AdminUXAudit.tsx`** — Add tabs: "UX Audit" + "AI User Test", new UI for persona results
 
----
+## Key Implementation Details
 
-## 3. Logistics Function Verification
-
-The `logistics-get-rates` and `logistics-book-delivery` edge functions are correctly structured for the Terminal Africa API. The flow is: Create addresses → Create parcel → Get rates / Create shipment → Arrange pickup.
-
-**Current status:** The code is correct. The only issue is that without a valid `TERMINAL_API_KEY`, it falls back to mock data. The `TERMINAL_API_KEY` secret is already configured. The functions should work if the key is valid and the Terminal Africa account is active.
-
-**Small fix needed:** The `logistics-get-rates` function hardcodes `country: 'NG'` — should use the `country` field from the address if provided. Also add better error messages when Terminal API returns errors (currently just throws generic "Failed to create pickup address").
-
-**Files:** `supabase/functions/logistics-get-rates/index.ts`, `supabase/functions/logistics-book-delivery/index.ts`
-
----
-
-## Summary
-
-| # | Feature | Files | Effort |
-|---|---------|-------|--------|
-| 1 | Subscription expiry persuasion popup | New component + `Dashboard.tsx` | Medium |
-| 2 | Homepage consistency fixes | `Index.tsx`, `HowItWorks.tsx` | Small |
-| 3 | Logistics error handling improvement | 2 edge functions | Small |
+- Each persona gets a detailed system prompt describing who they are, their tech comfort level, and what they're trying to accomplish
+- The AI is instructed to be brutally honest — flag things that would make a real user abandon the platform
+- Tool calling is used for structured output (journey steps, scores, recommendations)
+- Both personas run in parallel (2 concurrent AI calls) for speed
+- Results include quotable "user voice" feedback that reads like real testimonials
 
