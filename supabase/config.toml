@@ -69,3 +69,5 @@ project_id = "hwkcqgmtinbgyjjgcgmp"
     verify_jwt = false
   [functions.ai-ux-audit]
     verify_jwt = false
+  [functions.ai-user-test]
+    verify_jwt = false
