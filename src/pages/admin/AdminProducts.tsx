@@ -13,11 +13,13 @@ import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { autoCategorize, getCategoryLabel } from "@/utils/autoCategorize";
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isCategorizing, setIsCategorizing] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
