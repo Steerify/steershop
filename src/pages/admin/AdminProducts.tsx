@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Edit, Trash2, Eye, EyeOff, Package, Briefcase, MoreHorizontal, Loader2 } from "lucide-react";
+import { Search, Edit, Trash2, Eye, EyeOff, Package, Briefcase, MoreHorizontal, Loader2, Wand2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
