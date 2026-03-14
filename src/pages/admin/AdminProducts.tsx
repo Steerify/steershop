@@ -205,6 +205,10 @@ export default function AdminProducts() {
                 className="pl-10 border-primary/20"
               />
             </div>
+            <Button onClick={handleAutoCategorize} disabled={isCategorizing} variant="outline">
+              {isCategorizing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Wand2 className="w-4 h-4 mr-2" />}
+              Auto-Categorize
+            </Button>
           </div>
 
           <div className="border rounded-lg border-primary/10 bg-card/50 backdrop-blur overflow-hidden">
