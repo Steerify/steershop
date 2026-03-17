@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { lazy, Suspense } from "react";
 import { PageLoadingSkeleton } from "@/components/PageLoadingSkeleton";
 import { SessionExpiryModal } from "@/components/SessionExpiryModal";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PlatformReviewPopup } from "@/components/PlatformReviewPopup";
@@ -93,6 +94,10 @@ const AcceptPayments = lazy(() => import("./pages/seo/AcceptPayments"));
 const SmallBusinessTools = lazy(() => import("./pages/seo/SmallBusinessTools"));
 const SellOnlineNigeria = lazy(() => import("./pages/seo/SellOnlineNigeria"));
 
+// Brand pages
+const BrandPage = lazy(() => import("./pages/BrandPage"));
+const UpdatesPage = lazy(() => import("./pages/UpdatesPage"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -119,6 +124,7 @@ const App = () => (
         
         <SessionExpiryModal />
         <PlatformReviewPopup />
+        <ScrollToTop />
         <Suspense fallback={<PageLoadingSkeleton />}>
           <Routes>
             {/* Public routes */}
@@ -142,6 +148,8 @@ const App = () => (
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/growth" element={<GrowthPage />} />
+            <Route path="/brand" element={<BrandPage />} />
+            <Route path="/updates" element={<UpdatesPage />} />
             
             {/* Feature pages */}
             <Route path="/features/whatsapp" element={<WhatsAppFeature />} />
