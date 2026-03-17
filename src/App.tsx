@@ -124,6 +124,7 @@ const App = () => (
         
         <SessionExpiryModal />
         <PlatformReviewPopup />
+        <ScrollToTop />
         <Suspense fallback={<PageLoadingSkeleton />}>
           <Routes>
             {/* Public routes */}
