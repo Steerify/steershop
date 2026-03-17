@@ -1,64 +1,70 @@
 
 
-# Plan: Subscription Expiry Popup, Homepage Alignment, and Logistics Verification
+# Plan: Turn SteerSolo into a Brand
 
-## 1. Subscription Expiry / Free Plan Persuasion Popup
+## Current State
+SteerSolo already has strong foundations — African-inspired color palette (Adire Indigo, Nigerian Green, Gold), Adire textile patterns, Poppins typography, themed 404 page, celebration-aware navbar, and localized Nigerian English copy. But the brand is scattered — there's no central brand system, inconsistent micro-interactions, no founder story depth, and the experience lacks the polish of a brand people *feel*.
 
-Create a new component `src/components/SubscriptionExpiryDialog.tsx` that shows when a shop owner's trial/subscription has expired. This dialog will be triggered from `Dashboard.tsx` after data loads.
+## What We'll Build
 
-**Logic flow:**
-- After `loadData()` completes, check `subscriptionStatus === 'expired'`
-- Show a persuasive full-screen dialog with two paths:
-  - **"Upgrade to a Paid Plan"** — navigates to `/pricing`
-  - **"Stay on Free Plan (5 products max)"** — if `productsCount > 5`, show a product list with delete buttons so the user can trim down to 5. If `productsCount <= 5`, show a persuasive "you're missing out" message but allow them to dismiss
-- Even if products are <= 5, still show the dialog once per session (use `sessionStorage` to avoid repeat)
-- The dialog should be beautifully designed with gradient backgrounds, clear value propositions for upgrading, and a sense of urgency
+### 1. Brand Guidelines Page (`/brand`)
+A public-facing brand guide that makes SteerSolo look like a real company — useful for partnerships, press, and internal consistency.
 
-**Also show for `subscriptionStatus === 'free'`:** A lighter persuasion popup (not blocking) that appears once per day (tracked via `localStorage` timestamp) encouraging upgrade with feature comparisons.
+**Contents:**
+- Brand story summary + mission/vision one-liners
+- Logo usage (light/dark variants with download-ready display)
+- Color palette (Adire Indigo, Nigerian Green, Gold, neutrals) — each with hex/HSL values, copyable
+- Typography scale (Poppins weights + usage hierarchy)
+- Tone of voice rules ("Nigerian English, warm, direct, no corporate jargon")
+- Adire pattern showcase (all 6 variants displayed)
+- Do's and Don'ts visual examples
 
-**Files:** New `src/components/SubscriptionExpiryDialog.tsx`, edit `src/pages/Dashboard.tsx`
+**Route:** `/brand` — public, no auth required
 
----
+### 2. Brand Experience Polish
 
-## 2. Homepage Alignment — Fix Inconsistencies
+**a) Branded Loading Screen** — Replace generic "Loading..." in `PageLoadingSkeleton` with an animated SteerSolo logo + tagline "Your Daily Selling System" with a smooth fade sequence.
 
-Review current Index page claims vs actual system capabilities:
+**b) Branded Toast/Notification Style** — Add a custom Sonner theme using brand colors so every success/error toast feels on-brand.
 
-**Issues found:**
-- "Proven 30-Day Ritual" chip in hero — this exists (StructuredSellingChallenge), accurate
-- "Sell Globally from Africa" — the system only supports NGN payments via Paystack currently. The "From Africa to the World" section claims "Multi-Currency" and "Global Reach" which is misleading
-- "setup takes 10 minutes" — accurate
-- HowItWorks says "15-day free trial" but the pricing strategy is "Free Forever" (Starter plan) — inconsistent
-- Final CTA says "Get your first order within 14 days — or your next month is free" — this guarantee isn't enforced in the system
-- "Free forever plan" in footer chips — accurate per pricing strategy
+**c) Consistent Micro-copy** — Update key touchpoints with brand voice:
+- Auth page: Welcome back messaging with Nigerian warmth
+- Onboarding completion: Celebration moment ("Welcome to the movement!")
+- Empty states across dashboard pages
 
-**Fixes:**
-- Remove the "From Africa to the World" section (Section 1.5) since multi-currency/global payments aren't implemented
-- Update HowItWorks step 1 description from "15-day free trial" to "Free forever with up to 5 products"
-- Soften the Final CTA guarantee to something achievable: "Get your first order within 14 days" without the "next month is free" promise (unless you want to enforce it)
-- Keep the hero as-is — "Turn WhatsApp traffic into consistent orders" is accurate
+**d) Branded Scroll-to-Top Button** — A floating button with the SteerSolo accent color that appears on long pages.
 
-**Files:** `src/pages/Index.tsx`, `src/components/HowItWorks.tsx`
+### 3. Brand Storytelling & Content
 
----
+**a) Enhanced About Page** — Add:
+- Founder photo/avatar placeholder section
+- Timeline of SteerSolo milestones (pull from GrowthPage data)
+- "Our Values" section with 4 core values (Hustle with Structure, Trust First, African Pride, Community Over Competition)
+- Team/community section
 
-## 3. Logistics Function Verification
+**b) Blog/Updates Page (`/updates`)** — A simple content page pulling from the existing `platform_updates` table, styled as a brand blog. Each update becomes a branded story card.
 
-The `logistics-get-rates` and `logistics-book-delivery` edge functions are correctly structured for the Terminal Africa API. The flow is: Create addresses → Create parcel → Get rates / Create shipment → Arrange pickup.
-
-**Current status:** The code is correct. The only issue is that without a valid `TERMINAL_API_KEY`, it falls back to mock data. The `TERMINAL_API_KEY` secret is already configured. The functions should work if the key is valid and the Terminal Africa account is active.
-
-**Small fix needed:** The `logistics-get-rates` function hardcodes `country: 'NG'` — should use the `country` field from the address if provided. Also add better error messages when Terminal API returns errors (currently just throws generic "Failed to create pickup address").
-
-**Files:** `supabase/functions/logistics-get-rates/index.ts`, `supabase/functions/logistics-book-delivery/index.ts`
+**c) Social Proof Consistency** — Standardize how testimonials appear across homepage, SEO pages, and pricing with a unified `TestimonialCard` component.
 
 ---
 
-## Summary
+## Files to Create
+1. **`src/pages/BrandPage.tsx`** — Full brand guidelines page
+2. **`src/pages/UpdatesPage.tsx`** — Blog/updates page from platform_updates table
+3. **`src/components/TestimonialCard.tsx`** — Reusable branded testimonial component
+4. **`src/components/ScrollToTop.tsx`** — Branded floating scroll button
 
-| # | Feature | Files | Effort |
-|---|---------|-------|--------|
-| 1 | Subscription expiry persuasion popup | New component + `Dashboard.tsx` | Medium |
-| 2 | Homepage consistency fixes | `Index.tsx`, `HowItWorks.tsx` | Small |
-| 3 | Logistics error handling improvement | 2 edge functions | Small |
+## Files to Edit
+1. **`src/App.tsx`** — Add `/brand` and `/updates` routes
+2. **`src/components/PageLoadingSkeleton.tsx`** — Branded loading with tagline animation
+3. **`src/pages/AboutPage.tsx`** — Add values section, milestone timeline, founder section
+4. **`src/components/Footer.tsx`** — Add "Brand" link to Quick Links
+5. **`src/index.css`** — Add branded toast theme overrides and scroll-to-top styles
+6. **`src/components/Navbar.tsx`** — Add "Brand" to navigation if appropriate (or keep in footer only)
+
+## Technical Notes
+- No database changes required — brand page is purely frontend, updates page uses existing `platform_updates` table
+- Color values are already defined in CSS variables — brand page will reference them directly
+- All new pages are public (no auth), lazy-loaded for performance
+- The `TestimonialCard` component will be adopted by homepage, pricing, and SEO pages in subsequent iterations
 
