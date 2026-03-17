@@ -94,6 +94,10 @@ const AcceptPayments = lazy(() => import("./pages/seo/AcceptPayments"));
 const SmallBusinessTools = lazy(() => import("./pages/seo/SmallBusinessTools"));
 const SellOnlineNigeria = lazy(() => import("./pages/seo/SellOnlineNigeria"));
 
+// Brand pages
+const BrandPage = lazy(() => import("./pages/BrandPage"));
+const UpdatesPage = lazy(() => import("./pages/UpdatesPage"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
