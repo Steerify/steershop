@@ -148,6 +148,8 @@ const App = () => (
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/growth" element={<GrowthPage />} />
+            <Route path="/brand" element={<BrandPage />} />
+            <Route path="/updates" element={<UpdatesPage />} />
             
             {/* Feature pages */}
             <Route path="/features/whatsapp" element={<WhatsAppFeature />} />
