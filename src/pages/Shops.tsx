@@ -575,33 +575,29 @@ const Shops = () => {
       {/* Verified Seller Safety Notice */}
       <VerifiedSellerNotice />
       
-      <section className="relative pt-24 sm:pt-28 pb-8 sm:pb-12 gradient-hero-spotify">
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full mb-5 sm:mb-6">
-              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
-              <span className="text-accent font-semibold text-xs sm:text-sm">Discover Nigerian Businesses</span>
-            </div>
-            
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-3 tracking-tight">
-              Explore <span className="gradient-text">Amazing Shops</span>
+      {/* Shopify-style hero */}
+      <section className="pt-28 sm:pt-32 pb-10 sm:pb-14 bg-background">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="max-w-2xl mx-auto text-center">
+            <h1 className="shopify-heading">
+              Explore Shops
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mb-6 sm:mb-8 px-2">
-              {stats.shops} shops · {stats.products} products from talented Nigerian entrepreneurs
+            <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto mb-8">
+              {stats.shops} shops · {stats.products} products from Nigerian entrepreneurs
             </p>
 
             {/* Search */}
-            <div className="relative max-w-lg mx-auto px-2 search-spotify rounded-full">
-              <Search className="absolute left-6 sm:left-6 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground z-10" />
+            <div className="relative max-w-md mx-auto">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search shops, products, or services..."
+                placeholder="Search shops or products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 sm:pl-12 h-12 sm:h-14 text-sm sm:text-base bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-full"
+                className="pl-11 h-12 text-sm rounded-full border-border"
               />
               {(isSearching || isLoading) && (
-                <div className="absolute right-6 sm:right-4 top-1/2 -translate-y-1/2">
-                  <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <div className="w-4 h-4 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
                 </div>
               )}
             </div>
@@ -623,20 +619,20 @@ const Shops = () => {
       />
 
       {/* Top Seller Banner */}
-      <div className="container mx-auto px-4 mt-6 mb-4">
+      <div className="container mx-auto px-4 sm:px-6 mt-6 mb-4">
         <TopSellerBanner />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 container mx-auto px-4 pb-16 sm:pb-20 mt-2">
+      <div className="flex-1 container mx-auto px-4 sm:px-6 pb-16 sm:pb-20 mt-2">
         <div className="max-w-6xl mx-auto">
           {renderContent()}
 
           {isSearching && !isLoading && (
             <div className="text-center py-8">
               <div className="inline-flex items-center gap-3">
-                <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                <span className="text-muted-foreground">Searching for "{debouncedSearchQuery}"...</span>
+                <div className="w-5 h-5 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
+                <span className="text-sm text-muted-foreground">Searching...</span>
               </div>
             </div>
           )}
@@ -644,31 +640,24 @@ const Shops = () => {
           {(hasMoreShops || hasMoreProducts) && !isSearching && (
             <div ref={sentinelRef} className="h-20 flex items-center justify-center">
               {(loadingMoreShops || loadingMoreProducts) && (
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                  <span>Loading more...</span>
-                </div>
+                <div className="w-5 h-5 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
               )}
             </div>
           )}
 
           {!hasMoreShops && !hasMoreProducts && (shops.length > 0 || productResults.length > 0) && (
-            <div className="text-center py-12 border-t">
-              <p className="text-muted-foreground">
-                You've seen all {debouncedSearchQuery ? 'results' : 'shops'} for now!
+            <div className="text-center py-12 border-t border-border">
+              <p className="text-sm text-muted-foreground">
+                You've seen all {debouncedSearchQuery ? 'results' : 'shops'} for now
               </p>
             </div>
           )}
 
           {!isLoading && !isSearching && shops.length === 0 && productResults.length === 0 && debouncedSearchQuery.trim() && (
             <div className="text-center py-16">
-              <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
-                <Search className="w-10 h-10 text-muted-foreground" />
-              </div>
-              <h3 className="font-display text-xl font-semibold mb-2">No results found</h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                No shops or products found for "{debouncedSearchQuery}". Try different keywords.
-              </p>
+              <Search className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
+              <h3 className="text-lg font-semibold mb-1">No results found</h3>
+              <p className="text-sm text-muted-foreground">Try different keywords</p>
             </div>
           )}
         </div>
