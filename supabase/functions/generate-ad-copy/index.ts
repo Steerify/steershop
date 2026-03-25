@@ -2,125 +2,171 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { shopName, shopDescription, productName, productDescription, productPrice, platform, targetAudience, budgetRange } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const {
+      shopName,
+      shopDescription,
+      productName,
+      productDescription,
+      productPrice,
+      platform,
+      targetAudience,
+      budgetRange,
+    } = await req.json();
 
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
+
+    // ─── Platform-specific creative briefs ──────────────────────────────────────
     const platformGuides: Record<string, string> = {
-      google: `Generate Google Ads content:
-- Headline 1 (max 30 chars), Headline 2 (max 30 chars), Headline 3 (max 30 chars)
-- Description 1 (max 90 chars), Description 2 (max 90 chars)
-- Display URL path
-- Keywords to target (10-15)
-- Negative keywords (5-10)
-- Recommended daily budget in Naira
-- Campaign type recommendation (Search, Display, Shopping)`,
-      facebook: `Generate Facebook/Instagram Ads content:
-- Primary text (125 chars for optimal, up to 500)
-- Headline (max 40 chars)
-- Description (max 30 chars for link ads)
-- Call to action button recommendation
-- 5 audience targeting suggestions (interests, demographics, behaviors)
-- Recommended daily budget in Naira
-- Ad format recommendation (Single image, Carousel, Video)
-- 10 relevant hashtags`,
-      tiktok: `Generate TikTok Ads content:
-- Ad text (max 100 chars)
-- CTA button recommendation
-- Video script idea (15-30 seconds)
-- Trending sounds/music suggestions
-- 10 hashtags including trending Nigerian ones
-- Audience targeting suggestions
-- Recommended daily budget in Naira`,
-      whatsapp: `Generate WhatsApp Status/Broadcast content:
-- Status text (concise, engaging, with emojis)
-- Broadcast message template
-- Caption for status image
-- 3 different message variations for different times of day
-- Call to action with store link placeholder
-- Follow-up message template`,
+      google: `Platform: Google Search Ads
+Craft copy that captures HIGH-INTENT buyers searching for this product.
+Requirements:
+- Headline (max 30 chars, punchy, keyword-rich)
+- Body text (2–3 sentences, benefit-focused, urgency)
+- CTA (e.g. "Shop Now", "Order Today", "Get Yours")
+- 10–15 keyword suggestions Nigerians would search
+- 5 negative keywords to exclude
+- Campaign type recommendation (Search / Shopping / Display)`,
+
+      facebook: `Platform: Facebook & Instagram Ads
+Craft copy that stops the scroll and drives clicks. Nigerians on Facebook respond to trust signals, social proof, and FOMO.
+Requirements:
+- Headline (max 40 chars, bold claim or question)
+- Body text (conversational, 100–200 words, can use light Pidgin)
+- Strong CTA with urgency
+- 10 hashtags (mix of Nigerian + niche)
+- 5 audience targeting suggestions (interests, behaviors, demographics)
+- Ad format recommendation (Single Image / Carousel / Reel)`,
+
+      tiktok: `Platform: TikTok Ads
+Nigerian Gen-Z and millennials dominate TikTok. Copy must be energetic, trendy, and fun.
+Requirements:
+- Hook-first text (first 3 words must stop the scroll)
+- Body text (direct, punchy, max 100 chars with emojis)
+- CTA (must feel organic, not salesy)
+- 15-second video script idea
+- 10 trending hashtags (include popular Nigerian TikTok tags)
+- Sound/music style suggestion`,
+
+      whatsapp: `Platform: WhatsApp Status & Broadcast
+Nigerians trust WhatsApp for personal recommendations. Copy should feel like a message from a friend.
+Requirements:
+- Status caption (short, emoji-rich, hook in first line)
+- Broadcast message (3–5 sentences, warm and personal, light Pidgin welcome)
+- 3 message variations (morning / afternoon / evening sends)
+- Follow-up message for non-responders
+- CTA with link placeholder [SHOP_LINK]`,
     };
 
-    const systemPrompt = `You are an expert Nigerian digital marketing specialist who creates high-converting ad copy for small businesses in Nigeria. You understand Nigerian culture, slang, and buying behavior. All prices are in Naira (₦). Your copy should be relatable, professional, and drive action.
+    // ─── System prompt (culturally tuned Nigerian marketer) ──────────────────────
+    const systemPrompt = `You are Marcus, an elite Nigerian digital marketing strategist with 10 years of experience running high-converting campaigns for SMEs across Lagos, Abuja, Port Harcourt, and beyond.
 
-Always return a valid JSON object with this structure:
+You KNOW Nigerian consumers deeply:
+- They respond to FOMO, trust, social proof, and urgency
+- Light Pidgin ("Abeg", "No dulling", "Omo see price!", "You go thank yourself") builds rapport — use it judiciously on casual platforms
+- Naira pricing matters — always frame value clearly
+- WhatsApp is the most trusted platform for commerce
+- Nigerians are savvy buyers — avoid hype without substance
+
+Your ad copy must be:
+✅ Platform-native (not generic)
+✅ Emotionally resonant
+✅ Action-driving
+✅ Culturally accurate
+
+ALWAYS return a valid JSON object with EXACTLY this structure (no markdown, no extra text):
 {
   "headline": "string",
   "bodyText": "string",
   "callToAction": "string",
-  "targetingSuggestions": ["string"],
+  "targetingSuggestions": ["string", "string", "string"],
   "budgetRecommendation": "string",
-  "hashtags": ["string"],
-  "additionalTips": ["string"],
-  "imagePrompt": "string describing ideal ad image",
-  "variations": [{"headline": "string", "bodyText": "string"}]
+  "hashtags": ["#tag1", "#tag2"],
+  "additionalTips": ["string", "string", "string"],
+  "imagePrompt": "string describing ideal ad visual in detail",
+  "variations": [
+    { "headline": "string", "bodyText": "string" },
+    { "headline": "string", "bodyText": "string" }
+  ]
 }`;
 
-    const userPrompt = `Create ad content for the ${platform} platform.
+    // ─── User prompt ─────────────────────────────────────────────────────────────
+    const userPrompt = `Generate a high-converting ${platform.toUpperCase()} ad campaign for this Nigerian business.
 
-Business: ${shopName}
-${shopDescription ? `About: ${shopDescription}` : ""}
-${productName ? `Product: ${productName}` : ""}
-${productDescription ? `Product Details: ${productDescription}` : ""}
-${productPrice ? `Price: ₦${productPrice}` : ""}
-${targetAudience ? `Target Audience: ${targetAudience}` : "Target: Nigerian consumers aged 18-45"}
-${budgetRange ? `Budget: ${budgetRange}` : "Budget: ₦1,000 - ₦5,000/day"}
+BUSINESS DETAILS:
+- Name: ${shopName}
+${shopDescription ? `- Description: ${shopDescription}` : ""}
+${productName ? `- Featured Product: ${productName}` : ""}
+${productDescription ? `- Product Details: ${productDescription}` : ""}
+${productPrice ? `- Price: ₦${Number(productPrice).toLocaleString()}` : ""}
+- Target Audience: ${targetAudience || "Nigerian consumers aged 18–45, mobile-first, value-conscious"}
+- Daily Budget: ${budgetRange || "₦2,000 – ₦5,000/day"}
 
+CREATIVE BRIEF:
 ${platformGuides[platform] || platformGuides.facebook}
 
-Make it compelling for Nigerian audiences. Use relatable language. Include urgency where appropriate.`;
+Generate 2 alternate variations in the "variations" array. Make the main copy and variations distinctly different in tone (e.g. one direct/urgent, one warm/story-driven).`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // ─── OpenAI API call ─────────────────────────────────────────────────────────
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        temperature: 0.8,
+        temperature: 0.85,
+        response_format: { type: "json_object" },
       }),
     });
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Service temporarily unavailable. Please try again later." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({ error: "Rate limit reached. Please try again in a moment." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error("AI generation failed");
+      console.error("OpenAI error:", response.status, errorText);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
+    const content = data.choices?.[0]?.message?.content || "{}";
 
-    // Parse JSON from the response
     let adContent;
     try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      adContent = jsonMatch ? JSON.parse(jsonMatch[0]) : { headline: content, bodyText: "", callToAction: "Shop Now" };
+      adContent = JSON.parse(content);
     } catch {
-      adContent = { headline: "Check out our amazing products!", bodyText: content, callToAction: "Shop Now", targetingSuggestions: [], hashtags: [], additionalTips: [], budgetRecommendation: "₦2,000 - ₦5,000/day" };
+      // Fallback: try to extract JSON from the response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      adContent = jsonMatch
+        ? JSON.parse(jsonMatch[0])
+        : {
+            headline: "Check Out Our Amazing Products!",
+            bodyText: content,
+            callToAction: "Shop Now",
+            targetingSuggestions: [],
+            hashtags: [],
+            additionalTips: [],
+            budgetRecommendation: "₦2,000 – ₦5,000/day",
+            imagePrompt: "",
+            variations: [],
+          };
     }
 
     return new Response(JSON.stringify({ success: true, data: adContent, platform }), {
@@ -128,9 +174,9 @@ Make it compelling for Nigerian audiences. Use relatable language. Include urgen
     });
   } catch (e) {
     console.error("generate-ad-copy error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 });
