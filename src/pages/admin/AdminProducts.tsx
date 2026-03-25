@@ -6,18 +6,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Edit, Trash2, Eye, EyeOff, Package, Briefcase, MoreHorizontal, Loader2 } from "lucide-react";
+import { Search, Edit, Trash2, Eye, EyeOff, Package, Briefcase, MoreHorizontal, Loader2, Wand2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { autoCategorize, getCategoryLabel } from "@/utils/autoCategorize";
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isCategorizing, setIsCategorizing] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -115,6 +117,36 @@ export default function AdminProducts() {
     fetchProducts();
   };
 
+  const handleAutoCategorize = async () => {
+    setIsCategorizing(true);
+    try {
+      const uncategorized = products.filter(p => !p.category || p.category === 'general');
+      if (uncategorized.length === 0) {
+        toast({ title: "All products are already categorized" });
+        setIsCategorizing(false);
+        return;
+      }
+
+      let updated = 0;
+      for (const product of uncategorized) {
+        const category = autoCategorize(product.name, product.description || '');
+        if (category !== 'other' && category !== product.category) {
+          const { error } = await supabase
+            .from("products")
+            .update({ category })
+            .eq("id", product.id);
+          if (!error) updated++;
+        }
+      }
+
+      toast({ title: `Auto-categorized ${updated} product${updated !== 1 ? 's' : ''}` });
+      fetchProducts();
+    } catch {
+      toast({ title: "Error during categorization", variant: "destructive" });
+    }
+    setIsCategorizing(false);
+  };
+
   const toggleAvailability = async (product: any) => {
     const { error } = await supabase
       .from("products")
@@ -173,6 +205,10 @@ export default function AdminProducts() {
                 className="pl-10 border-primary/20"
               />
             </div>
+            <Button onClick={handleAutoCategorize} disabled={isCategorizing} variant="outline">
+              {isCategorizing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Wand2 className="w-4 h-4 mr-2" />}
+              Auto-Categorize
+            </Button>
           </div>
 
           <div className="border rounded-lg border-primary/10 bg-card/50 backdrop-blur overflow-hidden">
@@ -186,8 +222,9 @@ export default function AdminProducts() {
                 <TableHeader>
                   <TableRow className="hover:bg-muted/50">
                     <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Shop</TableHead>
+                     <TableHead>Category</TableHead>
+                     <TableHead>Type</TableHead>
+                     <TableHead>Shop</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Stock</TableHead>
                     <TableHead>Status</TableHead>
@@ -197,7 +234,7 @@ export default function AdminProducts() {
                 <TableBody>
                   {filteredProducts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
                         No products found
                       </TableCell>
                     </TableRow>
@@ -205,7 +242,12 @@ export default function AdminProducts() {
                     filteredProducts.map((product) => (
                       <TableRow key={product.id} className="hover:bg-muted/30">
                         <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>
+                         <TableCell>
+                           <Badge variant="outline" className="text-xs">
+                             {getCategoryLabel(product.category || 'other')}
+                           </Badge>
+                         </TableCell>
+                         <TableCell>
                           <Badge variant={product.type === "service" ? "secondary" : "default"} className={product.type === "service" ? "bg-accent/20 text-accent" : ""}>
                             {product.type === "service" ? (
                               <><Briefcase className="w-3 h-3 mr-1" /> Service</>

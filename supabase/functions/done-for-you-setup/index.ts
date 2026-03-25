@@ -41,34 +41,52 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub as string;
 
-    const { reference, business_name, whatsapp_number, business_category, products } = await req.json();
+    const { reference, business_name, whatsapp_number, business_category, products, free_setup } = await req.json();
 
-    if (!reference || !business_name || !whatsapp_number) {
+    if (!business_name || !whatsapp_number) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: reference, business_name, whatsapp_number" }),
+        JSON.stringify({ error: "Missing required fields: business_name, whatsapp_number" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 1. Verify Paystack payment
-    const paystackRes = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
-      headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
-    });
-    const paystackData = await paystackRes.json();
+    // 1. Verify Paystack payment (skip for free setup)
+    if (!free_setup) {
+      if (!reference) {
+        return new Response(
+          JSON.stringify({ error: "Missing payment reference" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
-    if (!paystackData.status || paystackData.data?.status !== "success") {
-      return new Response(JSON.stringify({ error: "Payment verification failed" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      const paystackRes = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+        headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
       });
-    }
+      const paystackData = await paystackRes.json();
 
-    // Verify amount is at least N5,000 (500000 kobo) - allow for fee inclusion
-    if (paystackData.data.amount < 500000) {
-      return new Response(JSON.stringify({ error: "Invalid payment amount" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      if (!paystackData.status || paystackData.data?.status !== "success") {
+        return new Response(JSON.stringify({ error: "Payment verification failed" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Verify amount is at least N5,000 (500000 kobo)
+      if (paystackData.data.amount < 500000) {
+        return new Response(JSON.stringify({ error: "Invalid payment amount" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else {
+      // Free setup: enforce max 5 products
+      const productList = Array.isArray(products) ? products : [];
+      if (productList.length > 5) {
+        return new Response(JSON.stringify({ error: "Free setup is limited to 5 products. Please pay for bulk setup." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // 2. AI generates shop description + slug
@@ -138,7 +156,7 @@ You MUST call the generate_shop_branding function with the results.`;
       }
     }
 
-    // 3. Create shop using service role
+    // 3. Create shop using service role — always inactive for admin approval
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Check slug uniqueness
@@ -159,7 +177,7 @@ You MUST call the generate_shop_branding function with the results.`;
         shop_slug: finalSlug,
         description: shopDescription,
         whatsapp_number: whatsapp_number,
-        is_active: true,
+        is_active: false,
       })
       .select()
       .single();
@@ -174,6 +192,7 @@ You MUST call the generate_shop_branding function with the results.`;
     // 4. Batch-create products with AI descriptions
     let productsCreated = 0;
     const productList = Array.isArray(products) ? products : [];
+    const createdProductIds: string[] = [];
 
     if (productList.length > 0) {
       // Generate AI descriptions for all products in one call
@@ -231,35 +250,40 @@ You MUST call the generate_product_descriptions function with the results.`;
         console.error("AI product descriptions error:", e);
       }
 
-      // Insert products
+      // Insert products (without image_url — client will upload after)
       const productInserts = productList.map((p: any, i: number) => ({
         shop_id: shop.id,
         name: p.name,
         price: p.price,
         type: p.type || "product",
         description: productDescriptions[i] || `Quality ${p.name} available at ${business_name}. Order now!`,
-        image_url: p.imageUrl || null,
+        image_url: null,
         is_available: true,
         stock_quantity: 100,
         category: business_category?.toLowerCase() || "general",
       }));
 
-      const { error: productsError } = await supabaseAdmin.from("products").insert(productInserts);
+      const { data: createdProducts, error: productsError } = await supabaseAdmin.from("products").insert(productInserts).select("id");
       if (productsError) {
         console.error("Products creation error:", productsError);
       } else {
         productsCreated = productInserts.length;
+        if (createdProducts) {
+          createdProducts.forEach((p: any) => createdProductIds.push(p.id));
+        }
       }
     }
 
-    // 5. Record payment in subscription_history
-    await supabaseAdmin.from("subscription_history").insert({
-      user_id: userId,
-      event_type: "dfy_setup",
-      amount: 500000,
-      payment_reference: reference,
-      notes: `Done-For-You store setup for "${business_name}" with ${productsCreated} products`,
-    });
+    // 5. Record payment in subscription_history (only for paid setups)
+    if (!free_setup) {
+      await supabaseAdmin.from("subscription_history").insert({
+        user_id: userId,
+        event_type: "dfy_setup",
+        amount: 500000,
+        payment_reference: reference,
+        notes: `Done-For-You store setup for "${business_name}" with ${productsCreated} products`,
+      });
+    }
 
     // 6. Log activity
     await supabaseAdmin.from("activity_logs").insert({
@@ -268,7 +292,7 @@ You MUST call the generate_product_descriptions function with the results.`;
       resource_type: "shop",
       resource_id: shop.id,
       resource_name: business_name,
-      details: { method: "done_for_you", payment_reference: reference, products_created: productsCreated },
+      details: { method: "done_for_you", payment_reference: free_setup ? "free_setup" : reference, products_created: productsCreated, free_setup: !!free_setup },
     });
 
     return new Response(
@@ -279,6 +303,7 @@ You MUST call the generate_product_descriptions function with the results.`;
         shop_name: business_name,
         shop_description: shopDescription,
         products_created: productsCreated,
+        product_ids: createdProductIds,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

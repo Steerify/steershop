@@ -54,15 +54,13 @@ export const WhySteerSolo = () => {
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {explainerCards.map((card) => (
-              <Card key={card.title} className="border-0 shadow-sm hover:shadow-md transition-shadow text-center">
-                <CardContent className="p-8">
+              <div key={card.title} className="card-spotify text-center p-8">
                   <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-5">
                     <card.icon className="w-7 h-7 text-primary" />
                   </div>
                   <h3 className="text-lg font-semibold mb-2">{card.title}</h3>
                   <p className="text-muted-foreground text-sm">{card.description}</p>
-                </CardContent>
-              </Card>
+              </div>
             ))}
           </div>
         </div>
@@ -86,8 +84,7 @@ export const WhySteerSolo = () => {
 
           <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 mb-10">
             {/* WhatsApp Brings */}
-            <Card className="border-green-500/20 shadow-sm">
-              <CardContent className="p-6">
+            <div className="card-spotify p-6 border-l-4 border-l-green-500/40">
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
                     <MessageCircle className="w-5 h-5 text-green-600" />
@@ -102,12 +99,10 @@ export const WhySteerSolo = () => {
                     </li>
                   ))}
                 </ul>
-              </CardContent>
-            </Card>
+            </div>
 
             {/* SteerSolo Adds */}
-            <Card className="border-primary/20 shadow-sm">
-              <CardContent className="p-6">
+            <div className="card-spotify p-6 border-l-4 border-l-primary/40">
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                     <Store className="w-5 h-5 text-primary" />
@@ -122,8 +117,7 @@ export const WhySteerSolo = () => {
                     </li>
                   ))}
                 </ul>
-              </CardContent>
-            </Card>
+            </div>
           </div>
 
           {/* Callout */}

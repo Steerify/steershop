@@ -51,7 +51,7 @@ const SellOnInstagram = () => (
       business: "Beauty Brand, Abuja"
     }}
     faqs={[
-      { question: "How do I sell on Instagram in Nigeria?", answer: "Create a SteerSolo store, add your products, and put your store link in your Instagram bio. When followers ask about prices, direct them to your link." },
+      { question: "How do I sell on Instagram in Nigeria?", answer: "Create a free SteerSolo store, add your products, and put your store link in your Instagram bio. When followers ask about prices, direct them to your link." },
       { question: "Can I accept payments from Instagram?", answer: "Yes! Your SteerSolo store has Paystack integration. Customers pay via card, bank transfer, or USSD when they order from your store link." },
       { question: "Is this better than using Linktree?", answer: "Yes! Linktree just lists links. SteerSolo gives you a full online store with product catalog, payment processing, and order management." },
       { question: "How do I get more sales on Instagram?", answer: "Post consistently, use relevant hashtags, share your store link in stories, and run ads pointing to your SteerSolo store for easy checkout." },

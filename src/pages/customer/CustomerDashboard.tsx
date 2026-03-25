@@ -145,7 +145,7 @@ const CustomerDashboard = () => {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" data-tour="stats-grid">
-              <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group">
+              <Card className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all group">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                   <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -157,7 +157,7 @@ const CustomerDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group">
+              <Card className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all group">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                   <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Completed</CardTitle>
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -169,7 +169,7 @@ const CustomerDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/rewards")} data-tour="reward-points">
+              <Card className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/rewards")} data-tour="reward-points">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                   <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Reward Points</CardTitle>
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-gold/20 to-amber-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -181,7 +181,7 @@ const CustomerDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-primary/10 hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/courses")} data-tour="courses-card">
+              <Card className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/courses")} data-tour="courses-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                   <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Courses</CardTitle>
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -197,7 +197,7 @@ const CustomerDashboard = () => {
             {/* Two Column Layout: Orders + Referral */}
             <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Recent Orders - Takes 2 columns */}
-              <Card className="border-primary/10 lg:col-span-2" data-tour="recent-orders">
+              <Card className="card-spotify lg:col-span-2" data-tour="recent-orders">
                 <CardHeader className="border-b border-border/50">
                   <CardTitle className="font-heading">Recent Orders</CardTitle>
                   <CardDescription>Your latest order activity</CardDescription>

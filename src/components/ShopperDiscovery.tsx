@@ -56,7 +56,7 @@ export const ShopperDiscovery = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
           {cards.map((card) => (
             <Link key={card.title} to={card.href}>
-              <div className="group relative rounded-xl border bg-card p-5 text-center transition-all duration-300 hover:shadow-lg hover:border-accent/40 hover:-translate-y-1 cursor-pointer">
+              <div className="card-spotify p-5 text-center cursor-pointer">
                 <div className="mx-auto mb-3 w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
                   <card.icon className="w-6 h-6 text-accent" />
                 </div>

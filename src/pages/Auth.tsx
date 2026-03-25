@@ -14,7 +14,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, ArrowLeft, Store, ShoppingBag, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
-import logo from "@/assets/steersolo-logo.jpg";
+import logoLight from "@/assets/steersolo-logo.jpg";
+import logoDark from "@/assets/steersolo-logo-dark.jpg";
+import { useTheme } from "next-themes";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -76,6 +78,8 @@ type SignupFormData = z.infer<typeof signupSchema>;
 type LoginFormData = z.infer<typeof loginSchema>;
 
 const Auth = () => {
+  const { theme } = useTheme();
+  const logo = theme === 'dark' ? logoDark : logoLight;
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const { type } = useParams();
@@ -257,7 +261,7 @@ const Auth = () => {
         {/* Logo + tagline */}
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-10">
-            <div className="w-12 h-12 rounded-2xl overflow-hidden ring-4 ring-white/25 shadow-xl">
+            <div className="w-14 h-14 rounded-2xl overflow-hidden ring-4 ring-white/25 shadow-xl">
               <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
             </div>
             <span className="text-2xl font-bold text-white">SteerSolo</span>
@@ -277,7 +281,7 @@ const Auth = () => {
               { emoji: "📦", text: "Automated order management" },
               { emoji: "🤖", text: "AI ad copy generation" },
               { emoji: "💰", text: "Instant payouts to your bank" },
-              { emoji: "✅", text: "15-day free trial — no card needed" },
+              { emoji: "✅", text: "Free forever — no card needed" },
             ].map((item, i) => (
               <li
                 key={i}
@@ -317,7 +321,7 @@ const Auth = () => {
 
         {/* Mobile logo (shown only on small screens) */}
         <div className="lg:hidden flex items-center gap-2.5 mb-8">
-          <div className="w-10 h-10 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-md">
+          <div className={`w-12 h-12 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-md ${theme === 'dark' ? '' : 'bg-white'}`}>
             <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
           </div>
           <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">SteerSolo</span>
@@ -327,7 +331,7 @@ const Auth = () => {
           {/* Accent stripe */}
           <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-primary via-accent to-primary mb-0" />
 
-          <div className="bg-card/95 backdrop-blur-xl rounded-b-3xl rounded-tr-3xl border border-border/60 shadow-2xl p-8">
+          <div className="bg-card/95 backdrop-blur-xl rounded-b-3xl rounded-tr-3xl border border-border/60 shadow-2xl p-6 sm:p-8">
 
           {authError && (
             <Alert variant="destructive" className="mb-4">

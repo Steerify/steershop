@@ -74,7 +74,7 @@
     --background: 220 40% 8%;
     --foreground: 40 20% 98%;
 
-    --card: 220 35% 12%;
+    --card: 220 35% 14%;
     --card-foreground: 40 20% 98%;
 
     --popover: 220 35% 12%;
@@ -88,7 +88,7 @@
     --secondary-foreground: 40 20% 98%;
 
     --muted: 220 30% 18%;
-    --muted-foreground: 40 15% 65%;
+    --muted-foreground: 40 15% 75%;
 
     /* Vibrant Green for dark mode */
     --accent: 145 60% 45%;
@@ -100,8 +100,8 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 30% 20%;
-    --input: 220 30% 20%;
+    --border: 220 30% 24%;
+    --input: 220 30% 24%;
     --ring: 145 60% 45%;
     
     --hero-gradient: linear-gradient(135deg, hsl(220 40% 12%), hsl(145 55% 35%));
@@ -133,12 +133,12 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Roboto', 'Inter', system-ui, sans-serif;
+    font-family: 'Poppins', sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', 'Playfair Display', sans-serif;
+    font-family: 'Poppins', sans-serif;
     @apply font-semibold tracking-tight;
   }
 
@@ -153,10 +153,6 @@
 
   h3 {
     @apply text-xl sm:text-2xl;
-  }
-
-  p, span, li {
-    font-family: 'Roboto', 'Inter', sans-serif;
   }
 }
 
@@ -589,3 +585,53 @@ iframe[src*="accounts.google.com"] {
 .animate-bounce-in { animation: bounceIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .animate-slide-up  { animation: slideUp 0.5s ease-out both; }
 .animate-ping-ring { animation: pingRing 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
+
+/* ===== SPOTIFY-INSPIRED UTILITIES ===== */
+.card-spotify {
+  border-radius: 1rem;
+  border: none;
+  background: hsl(var(--card));
+  box-shadow: 0 4px 14px -4px hsl(var(--foreground) / 0.06);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+}
+.card-spotify:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 28px -6px hsl(var(--foreground) / 0.12);
+}
+
+.glass-spotify {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  background: hsl(var(--card) / 0.85);
+  border: 1px solid hsl(var(--border) / 0.3);
+}
+
+.pill-button {
+  @apply rounded-full px-5 py-2 text-sm font-medium transition-all duration-200;
+}
+.pill-button-active {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+.pill-button-inactive {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+.pill-button-inactive:hover {
+  background: hsl(var(--muted-foreground) / 0.15);
+}
+
+.search-spotify {
+  @apply rounded-full border-none shadow-md;
+  background: hsl(var(--card) / 0.9);
+  backdrop-filter: blur(12px);
+  transition: box-shadow 0.2s ease, background 0.2s ease;
+}
+.search-spotify:focus-within {
+  box-shadow: 0 0 0 2px hsl(var(--accent) / 0.4);
+  background: hsl(var(--card));
+}
+
+.gradient-hero-spotify {
+  background: linear-gradient(180deg, hsl(var(--accent) / 0.12) 0%, hsl(var(--background)) 100%);
+}

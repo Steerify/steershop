@@ -7,7 +7,8 @@ import { ThemeProvider } from "next-themes";
 import { lazy, Suspense } from "react";
 import { PageLoadingSkeleton } from "@/components/PageLoadingSkeleton";
 import { SessionExpiryModal } from "@/components/SessionExpiryModal";
-import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
+import { ScrollToTop } from "@/components/ScrollToTop";
+
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PlatformReviewPopup } from "@/components/PlatformReviewPopup";
 import { UserRole } from "@/types/api";
@@ -55,6 +56,7 @@ const AdminMarketingConsultations = lazy(() => import("./pages/admin/AdminMarket
 const AdminPlatformEarnings = lazy(() => import("./pages/admin/AdminPlatformEarnings"));
 const AdminPlatformUpdates = lazy(() => import("./pages/admin/AdminPlatformUpdates"));
 const AdminAds = lazy(() => import("./pages/admin/AdminAds"));
+const AdminUXAudit = lazy(() => import("./pages/admin/AdminUXAudit"));
 const GrowthPage = lazy(() => import("./pages/GrowthPage"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const DemoStoreFront = lazy(() => import("./pages/DemoStoreFront"));
@@ -92,6 +94,10 @@ const AcceptPayments = lazy(() => import("./pages/seo/AcceptPayments"));
 const SmallBusinessTools = lazy(() => import("./pages/seo/SmallBusinessTools"));
 const SellOnlineNigeria = lazy(() => import("./pages/seo/SellOnlineNigeria"));
 
+// Brand pages
+const BrandPage = lazy(() => import("./pages/BrandPage"));
+const UpdatesPage = lazy(() => import("./pages/UpdatesPage"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -115,14 +121,16 @@ const App = () => (
           v7_relativeSplatPath: true,
         }}
       >
-        <GoogleOneTap />
+        
         <SessionExpiryModal />
         <PlatformReviewPopup />
+        <ScrollToTop />
         <Suspense fallback={<PageLoadingSkeleton />}>
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/auth/:type" element={<Auth />} />
             <Route path="/auth/callback" element={<Callback />} />
             {/* Add RoleSelection route - this is public but only accessible after signup */}
@@ -140,6 +148,8 @@ const App = () => (
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/growth" element={<GrowthPage />} />
+            <Route path="/brand" element={<BrandPage />} />
+            <Route path="/updates" element={<UpdatesPage />} />
             
             {/* Feature pages */}
             <Route path="/features/whatsapp" element={<WhatsAppFeature />} />
@@ -355,6 +365,11 @@ const App = () => (
             <Route path="/admin/ads" element={
               <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
                 <AdminAds />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/ux-audit" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminUXAudit />
               </ProtectedRoute>
             } />
             

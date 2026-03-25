@@ -97,7 +97,7 @@ const Settings = () => {
 
         <div className="mt-8 space-y-6">
           {/* Profile Section */}
-          <Card className="border-border/50 shadow-sm">
+          <Card className="card-spotify shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <User className="w-5 h-5 text-primary" />
@@ -126,7 +126,7 @@ const Settings = () => {
 
           {/* Shop Settings - Entrepreneurs only */}
           {isEntrepreneur && (
-            <Card className="border-border/50 shadow-sm">
+            <Card className="card-spotify shadow-sm">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <Store className="w-5 h-5 text-primary" />
@@ -169,7 +169,7 @@ const Settings = () => {
 
           {/* Subscription Status - Entrepreneurs only */}
           {isEntrepreneur && shopStatus && (
-            <Card className="border-border/50 shadow-sm">
+            <Card className="card-spotify shadow-sm">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <CreditCard className="w-5 h-5 text-primary" />
@@ -195,7 +195,7 @@ const Settings = () => {
           )}
 
           {/* Security & Privacy */}
-          <Card className="border-border/50 shadow-sm">
+          <Card className="card-spotify shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
@@ -229,7 +229,7 @@ const Settings = () => {
           </Card>
 
           {/* Danger Zone */}
-          <Card className="border-destructive/20 bg-destructive/5 shadow-sm">
+          <Card className="card-spotify border-destructive/20 bg-destructive/5 shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg text-destructive">Danger Zone</CardTitle>
               <CardDescription>

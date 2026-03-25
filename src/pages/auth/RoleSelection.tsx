@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Check, Store, ShoppingBag, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
 import { UserRole } from "@/types/api";
@@ -13,6 +14,7 @@ import { UserRole } from "@/types/api";
 const RoleSelection = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { refreshUser } = useAuth();
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
@@ -108,7 +110,9 @@ const RoleSelection = () => {
           console.error("Error upserting user_roles:", insertError);
         }
       }
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Refresh AuthContext so ProtectedRoute sees the updated role
+      await refreshUser();
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       toast({
         title: "Role selected!",

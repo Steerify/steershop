@@ -1,9 +1,13 @@
 import { Link } from "react-router-dom";
 import { Twitter, Instagram, Mail, Heart, MessageCircle } from "lucide-react";
 import { AdirePattern, AdireAccent } from "./patterns/AdirePattern";
-import logo from "@/assets/steersolo-logo.jpg";
+import logoLight from "@/assets/steersolo-logo.jpg";
+import logoDark from "@/assets/steersolo-logo-dark.jpg";
+import { useTheme } from "next-themes";
 
 export const Footer = () => {
+  const { theme } = useTheme();
+  const logo = theme === 'dark' ? logoDark : logoLight;
   return (
     <footer className="relative bg-primary text-primary-foreground overflow-hidden">
       {/* Adire Pattern Overlay */}
@@ -64,7 +68,7 @@ export const Footer = () => {
                 <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
               </a>
               <a 
-                href="https://wa.me/2349059947055" 
+                href="https://wa.me/2349161922351" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"
@@ -95,13 +99,18 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/feedback" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
-                  Contact
+                <Link to="/brand" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                  Brand
                 </Link>
               </li>
               <li>
-                <Link to="/growth" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
-                  Our Growth
+                <Link to="/updates" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                  Updates
+                </Link>
+              </li>
+              <li>
+                <Link to="/feedback" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                  Contact
                 </Link>
               </li>
             </ul>

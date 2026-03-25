@@ -19,11 +19,45 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY')!
     );
 
-    // Fetch all active shops
+    // Fetch all active shops with owner subscription info
     const { data: shops } = await supabase
       .from('shops')
-      .select('shop_slug, updated_at, logo_url')
+      .select('shop_slug, updated_at, logo_url, owner_id')
       .eq('is_active', true);
+
+    // Fetch owner plan info for premium gating
+    const ownerPlanMap: Record<string, string> = {};
+    if (shops && shops.length > 0) {
+      const ownerIds = [...new Set(shops.map(s => s.owner_id).filter(Boolean))];
+      if (ownerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, subscription_plan_id')
+          .in('id', ownerIds);
+        
+        if (profiles) {
+          const planIds = [...new Set(profiles.map(p => p.subscription_plan_id).filter(Boolean))];
+          if (planIds.length > 0) {
+            const { data: plans } = await supabase
+              .from('subscription_plans')
+              .select('id, slug')
+              .in('id', planIds);
+            
+            const planSlugMap: Record<string, string> = {};
+            if (plans) {
+              for (const plan of plans) {
+                planSlugMap[plan.id] = plan.slug;
+              }
+            }
+            for (const profile of profiles) {
+              if (profile.subscription_plan_id) {
+                ownerPlanMap[profile.id] = planSlugMap[profile.subscription_plan_id] || 'free';
+              }
+            }
+          }
+        }
+      }
+    }
 
     // Fetch all available products with their shop slugs
     const { data: products } = await supabase
@@ -64,16 +98,21 @@ serve(async (req) => {
   </url>`;
     }
 
-    // Shop pages with image tags
+    // Shop pages with priority based on subscription plan
     if (shops) {
       for (const shop of shops) {
+        const planSlug = shop.owner_id ? (ownerPlanMap[shop.owner_id] || 'free') : 'free';
+        const isPremium = planSlug === 'pro' || planSlug === 'business';
         const lastmod = shop.updated_at ? new Date(shop.updated_at).toISOString().split('T')[0] : now;
+        const priority = isPremium ? '0.9' : '0.6';
+        const changefreq = isPremium ? 'daily' : 'weekly';
+        
         urls += `
   <url>
     <loc>${SITE_URL}/shop/${shop.shop_slug}</loc>
     <lastmod>${lastmod}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>${shop.logo_url ? `
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>${shop.logo_url ? `
     <image:image>
       <image:loc>${shop.logo_url}</image:loc>
     </image:image>` : ''}

@@ -13,9 +13,11 @@ import {
 import {
   LayoutDashboard, Store, Package, ShoppingCart, Users,
   Gift, GraduationCap, Award, MessageSquare, UserPlus,
-  Crown, Sparkles, Megaphone, DollarSign, Tv, Activity, Bell
+  Crown, Sparkles, Megaphone, DollarSign, Tv, Activity, Bell, Brain
 } from "lucide-react";
-import logo from "@/assets/steersolo-logo.jpg";
+import logoLight from "@/assets/steersolo-logo.jpg";
+import logoDark from "@/assets/steersolo-logo-dark.jpg";
+import { useTheme } from "next-themes";
 
 // Grouped menu structure
 const menuGroups = [
@@ -54,6 +56,7 @@ const menuGroups = [
       { title: "Rewards", url: "/admin/prizes", icon: Award },
       { title: "Special Offers", url: "/admin/offers", icon: Gift },
       { title: "Feedback", url: "/admin/feedback", icon: MessageSquare },
+      { title: "AI UX Audit", url: "/admin/ux-audit", icon: Brain },
     ],
   },
 ];
@@ -63,6 +66,8 @@ export function AdminSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
+  const { theme } = useTheme();
+  const logo = theme === 'dark' ? logoDark : logoLight;
 
   const isActive = (path: string) => currentPath === path;
 

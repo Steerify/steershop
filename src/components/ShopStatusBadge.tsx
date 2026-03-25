@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, Clock, AlertTriangle, Sparkles, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type ShopStatus = 'active' | 'trial' | 'expired';
+export type ShopStatus = 'active' | 'trial' | 'expired' | 'free' | 'pending';
 
 interface ShopStatusBadgeProps {
   status: ShopStatus;
@@ -21,7 +21,7 @@ export const ShopStatusBadge = ({
   variant = 'badge',
   className 
 }: ShopStatusBadgeProps) => {
-  const isVisible = status === 'active' || status === 'trial';
+  const isVisible = status === 'active' || status === 'trial' || status === 'free';
 
   if (variant === 'card') {
     return (
@@ -30,6 +30,7 @@ export const ShopStatusBadge = ({
         status === 'active' && "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900",
         status === 'trial' && "bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900",
         status === 'expired' && "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900",
+        status === 'pending' && "bg-orange-50 border-orange-200 dark:bg-orange-950/20 dark:border-orange-900",
         className
       )}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
@@ -73,6 +74,19 @@ export const ShopStatusBadge = ({
                 </div>
               </>
             )}
+            {status === 'pending' && (
+              <>
+                <Clock className="w-5 h-5 text-orange-600 dark:text-orange-400 shrink-0" />
+                <div>
+                  <p className="font-medium text-orange-800 dark:text-orange-300 text-sm sm:text-base">
+                    Pending Approval
+                  </p>
+                  <p className="text-xs sm:text-sm text-orange-600 dark:text-orange-400">
+                    Our team is reviewing your store. You'll be notified once approved.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
           
           {showUpgradeAction && (status === 'trial' || status === 'expired') && (
@@ -96,9 +110,17 @@ export const ShopStatusBadge = ({
           "flex items-center gap-1.5 mt-2 pt-2 border-t text-xs sm:text-sm",
           status === 'active' && "border-green-200 dark:border-green-800",
           status === 'trial' && "border-amber-200 dark:border-amber-800",
-          status === 'expired' && "border-red-200 dark:border-red-800"
+          status === 'expired' && "border-red-200 dark:border-red-800",
+          status === 'pending' && "border-orange-200 dark:border-orange-800"
         )}>
-          {isVisible ? (
+          {status === 'pending' ? (
+            <>
+              <Clock className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+              <span className="text-orange-700 dark:text-orange-300">
+                Your store is under review
+              </span>
+            </>
+          ) : isVisible ? (
             <>
               <Eye className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
               <span className="text-green-700 dark:text-green-300">
@@ -133,15 +155,19 @@ export const ShopStatusBadge = ({
           Trial • {daysRemaining}d left
         </Badge>
       )}
-      {status === 'expired' && (
+      {(status === 'expired' || status === 'free') && (
         <>
-          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800">
-            <AlertTriangle className="w-3 h-3 mr-1" />
-            Expired
+          <Badge variant="outline" className={cn(
+            status === 'expired' 
+              ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800"
+              : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800"
+          )}>
+            {status === 'expired' ? <AlertTriangle className="w-3 h-3 mr-1" /> : <CheckCircle className="w-3 h-3 mr-1" />}
+            {status === 'expired' ? 'Expired' : 'Free Plan'}
           </Badge>
           {showUpgradeAction && (
             <Link to="/subscription">
-              <Button size="sm" variant="destructive" className="h-6 px-2 text-xs">
+              <Button size="sm" variant={status === 'expired' ? 'destructive' : 'default'} className="h-6 px-2 text-xs">
                 <Sparkles className="w-3 h-3 mr-1" />
                 Upgrade
               </Button>

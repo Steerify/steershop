@@ -32,11 +32,11 @@ export const FeaturedShopsBanner = () => {
       loop: true, 
       align: "start",
       skipSnaps: false,
-      dragFree: true,
+      containScroll: "trimSnaps",
     },
     [
       Autoplay({ 
-        delay: 3000, 
+        delay: 4000, 
         stopOnInteraction: false,
         stopOnMouseEnter: true,
       })
@@ -50,7 +50,6 @@ export const FeaturedShopsBanner = () => {
     fetchFeaturedShops();
   }, []);
 
-  // Track click analytics (fire and forget)
   const trackClick = async (featured: FeaturedShop) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -94,7 +93,6 @@ export const FeaturedShopsBanner = () => {
 
       if (error) throw error;
 
-      // Transform the data to match our interface
       const transformed = (data || []).map((item: any) => ({
         ...item,
         shop: item.shops
@@ -108,131 +106,133 @@ export const FeaturedShopsBanner = () => {
     }
   };
 
-  // Don't render anything if no featured shops
-  if (!loading && featuredShops.length === 0) {
-    return null;
-  }
+  if (!loading && featuredShops.length === 0) return null;
 
   if (loading) {
     return (
-      <div className="w-full">
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-4 h-4 text-accent" />
-          <span className="text-sm font-medium text-muted-foreground">Featured Shops</span>
+      <section className="py-12 md:py-16">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-2.5 mb-6">
+            <div className="p-2 bg-accent/10 rounded-xl">
+              <Sparkles className="w-4 h-4 text-accent" />
+            </div>
+            <span className="text-sm font-semibold text-foreground">Featured Shops</span>
+          </div>
+          <div className="flex gap-5 overflow-hidden">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-28 w-[340px] rounded-2xl flex-shrink-0" />
+            ))}
+          </div>
         </div>
-        <div className="flex gap-4 overflow-hidden">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-20 w-64 rounded-xl flex-shrink-0" />
-          ))}
-        </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="w-full relative group container mx-auto px-4">
-      {/* Section Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-accent/10 rounded-lg">
-            <Sparkles className="w-4 h-4 text-accent" />
+    <section className="py-12 md:py-16">
+      <div className="container mx-auto px-4 relative group">
+        {/* Section Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-accent/10 rounded-xl">
+              <Sparkles className="w-4 h-4 text-accent" />
+            </div>
+            <div>
+              <span className="text-sm font-semibold text-foreground">Featured Shops</span>
+              <span className="text-xs text-muted-foreground ml-2 hidden sm:inline">• Curated for you</span>
+            </div>
           </div>
-          <span className="text-sm font-semibold text-foreground">Featured Shops</span>
-          <span className="text-xs text-muted-foreground hidden sm:inline">• Curated for you</span>
+          
+          {featuredShops.length > 2 && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={scrollPrev}
+                className="p-2 rounded-xl bg-muted/60 hover:bg-muted transition-colors"
+                aria-label="Previous"
+              >
+                <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+              </button>
+              <button
+                onClick={scrollNext}
+                className="p-2 rounded-xl bg-muted/60 hover:bg-muted transition-colors"
+                aria-label="Next"
+              >
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+          )}
         </div>
-        
-        {/* Navigation Arrows */}
-        {featuredShops.length > 2 && (
-          <div className="flex items-center gap-1">
-            <button
-              onClick={scrollPrev}
-              className="p-1.5 rounded-full bg-muted hover:bg-muted/80 transition-colors opacity-0 group-hover:opacity-100"
-              aria-label="Previous"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={scrollNext}
-              className="p-1.5 rounded-full bg-muted hover:bg-muted/80 transition-colors opacity-0 group-hover:opacity-100"
-              aria-label="Next"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-      </div>
 
-      {/* Carousel */}
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex gap-4">
-          {featuredShops.map((featured) => (
-            <Link
-              key={featured.id}
-              to={`/shop/${featured.shop.shop_slug}`}
-              onClick={() => trackClick(featured)}
-              className="flex-shrink-0 w-[280px] sm:w-[320px]"
-            >
-              <div className={cn(
-                "relative h-[88px] rounded-xl border bg-card p-4",
-                "transition-all duration-300 ease-out",
-                "hover:shadow-lg hover:scale-[1.02] hover:border-accent/40",
-                "cursor-pointer overflow-hidden group/card"
-              )}>
-                {/* Subtle gradient background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-primary/5 opacity-0 group-hover/card:opacity-100 transition-opacity" />
-                
-                {/* Content */}
-                <div className="relative flex items-center gap-4 h-full">
-                  {/* Logo */}
-                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted flex-shrink-0 shadow-sm">
-                    {featured.shop.logo_url ? (
-                      <img
-                        src={featured.shop.logo_url}
-                        alt={featured.shop.shop_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
-                        <Store className="w-6 h-6 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Text Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="font-semibold text-foreground truncate">
-                        {featured.shop.shop_name}
-                      </h3>
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-1">
-                      {featured.tagline || featured.shop.description || "Discover amazing products"}
-                    </p>
-                    {(featured.shop.state || featured.shop.country) && (
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-[10px] text-muted-foreground">
-                          {[featured.shop.state, featured.shop.country].filter(Boolean).join(", ")}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Featured Badge */}
-                  <div className="absolute top-2 right-2">
-                    <div className="flex items-center gap-1 px-2 py-0.5 bg-accent/10 border border-accent/20 rounded-full">
+        {/* Carousel */}
+        <div className="overflow-hidden -mx-1" ref={emblaRef}>
+          <div className="flex gap-5 px-1">
+            {featuredShops.map((featured) => (
+              <Link
+                key={featured.id}
+                to={`/shop/${featured.shop.shop_slug}`}
+                onClick={() => trackClick(featured)}
+                className="flex-shrink-0 w-[340px]"
+              >
+                <div className={cn(
+                  "relative rounded-2xl border border-border/50 bg-card p-5 h-[160px]",
+                  "transition-all duration-300 ease-out",
+                  "hover:shadow-xl hover:shadow-accent/5 hover:scale-[1.02] hover:border-accent/30",
+                  "cursor-pointer overflow-hidden group/card"
+                )}>
+                  {/* Subtle gradient on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5 opacity-0 group-hover/card:opacity-100 transition-opacity rounded-2xl" />
+                  
+                  {/* Badge - top right */}
+                  <div className="relative flex items-center justify-end mb-4">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-accent/10 border border-accent/20 rounded-full">
                       <Sparkles className="w-3 h-3 text-accent" />
-                      <span className="text-[10px] font-medium text-accent uppercase tracking-wide">
+                      <span className="text-[10px] font-semibold text-accent uppercase tracking-wider">
                         {featured.label}
                       </span>
                     </div>
                   </div>
+
+                  {/* Content */}
+                  <div className="relative flex items-center gap-4">
+                    {/* Logo */}
+                    <div className="w-14 h-14 rounded-2xl overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/50">
+                      {featured.shop.logo_url ? (
+                        <img
+                          src={featured.shop.logo_url}
+                          alt={featured.shop.shop_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
+                          <Store className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Text */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground text-base truncate mb-1">
+                        {featured.shop.shop_name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed min-h-[2.5rem]">
+                        {featured.tagline || featured.shop.description || "Discover amazing products"}
+                      </p>
+                      {(featured.shop.state || featured.shop.country) && (
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-muted-foreground/70" />
+                          <span className="text-[11px] text-muted-foreground/70">
+                            {[featured.shop.state, featured.shop.country].filter(Boolean).join(", ")}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };

@@ -16,6 +16,7 @@ import { ImageUpload } from "@/components/ImageUpload";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadService } from "@/services/upload.service";
 import {
   Sparkles,
   Store,
@@ -36,7 +37,8 @@ interface DraftProduct {
   name: string;
   price: number;
   type: "product" | "service";
-  imageUrl: string;
+  imageUrl: string; // local preview URL
+  file: File | null; // actual file to upload after shop creation
 }
 
 interface DoneForYouPopupProps {
@@ -68,7 +70,8 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
   const [productType, setProductType] = useState<"product" | "service">("product");
-  const [productImage, setProductImage] = useState("");
+  const [productPreviewUrl, setProductPreviewUrl] = useState("");
+  const [productFile, setProductFile] = useState<File | null>(null);
 
   // Payment / creating
   const [isPayingLoading, setIsPayingLoading] = useState(false);
@@ -123,16 +126,66 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
     }
     setDraftProducts(prev => [
       ...prev,
-      { name: productName, price: parseInt(productPrice), type: productType, imageUrl: productImage }
+      { name: productName, price: parseInt(productPrice), type: productType, imageUrl: productPreviewUrl, file: productFile }
     ]);
     setProductName("");
     setProductPrice("");
-    setProductImage("");
+    setProductPreviewUrl("");
+    setProductFile(null);
     setProductType("product");
   };
 
   const handleRemoveDraftProduct = (index: number) => {
     setDraftProducts(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Upload images after shop/products are created, then update product records
+  const uploadProductImages = async (createdShopId: string, productIds: string[]) => {
+    const productsWithFiles = draftProducts
+      .map((p, i) => ({ ...p, productId: productIds[i] }))
+      .filter(p => p.file && p.productId);
+
+    if (productsWithFiles.length === 0) return;
+
+    setCreatingStatus(`Uploading ${productsWithFiles.length} product image${productsWithFiles.length > 1 ? 's' : ''}...`);
+
+    for (const p of productsWithFiles) {
+      try {
+        // Compress if needed
+        let fileToUpload = p.file!;
+        if (fileToUpload.size > 500 * 1024) {
+          try {
+            fileToUpload = await uploadService.compressImage(fileToUpload, 1920, 0.8);
+          } catch { /* use original */ }
+        }
+
+        // Upload to storage
+        const timestamp = Date.now();
+        const sanitizedName = fileToUpload.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const filePath = `${createdShopId}/${timestamp}_${sanitizedName}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(filePath, fileToUpload, { cacheControl: '3600', upsert: false });
+
+        if (uploadError) {
+          console.error(`Failed to upload image for ${p.name}:`, uploadError);
+          continue;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(uploadData.path);
+
+        // Update product record with the image URL
+        await supabase
+          .from('products')
+          .update({ image_url: publicUrl })
+          .eq('id', p.productId);
+      } catch (err) {
+        console.error(`Image upload error for ${p.name}:`, err);
+      }
+    }
   };
 
   const handleFreeCreate = async () => {
@@ -148,17 +201,21 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
     try {
       const { data, error } = await supabase.functions.invoke("done-for-you-setup", {
         body: {
-          reference: "free_setup",
           business_name: businessName,
           whatsapp_number: whatsappNumber,
           business_category: businessCategory,
-          products: draftProducts,
+          products: draftProducts.map(p => ({ name: p.name, price: p.price, type: p.type })),
           free_setup: true,
         },
       });
 
       if (error || !data?.success) {
         throw new Error(data?.error || error?.message || "Setup failed");
+      }
+
+      // Upload images now that shop exists
+      if (data.product_ids?.length) {
+        await uploadProductImages(data.shop_id, data.product_ids);
       }
 
       setShopId(data.shop_id);
@@ -189,11 +246,11 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
 
     setIsPayingLoading(true);
 
-    // Store form data + products in localStorage before redirect
+    // Store form data + products in localStorage before redirect (no File objects — they can't be serialized)
     localStorage.setItem("dfy_business_name", businessName);
     localStorage.setItem("dfy_whatsapp", whatsappNumber);
     localStorage.setItem("dfy_category", businessCategory);
-    localStorage.setItem("dfy_products", JSON.stringify(draftProducts));
+    localStorage.setItem("dfy_products", JSON.stringify(draftProducts.map(p => ({ name: p.name, price: p.price, type: p.type }))));
 
     try {
       const { data, error } = await supabase.functions.invoke("done-for-you-initialize", {
@@ -223,7 +280,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
     const whatsapp = localStorage.getItem("dfy_whatsapp") || "";
     const category = localStorage.getItem("dfy_category") || "";
     const productsJson = localStorage.getItem("dfy_products");
-    let products: DraftProduct[] = [];
+    let products: Array<{ name: string; price: number; type: string }> = [];
     try { products = productsJson ? JSON.parse(productsJson) : []; } catch { /* ignore */ }
 
     try {
@@ -254,7 +311,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
       setBusinessName(data.shop_name);
       onShopCreated(data.shop_id);
 
-      toast({ title: "Store Created! 🎉", description: `"${data.shop_name}" is now live with ${data.products_created || 0} products!` });
+      toast({ title: "Store Created! 🎉", description: `"${data.shop_name}" is being verified with ${data.products_created || 0} products!` });
       setStep("complete");
     } catch (error) {
       console.error("DFY setup error:", error);
@@ -265,11 +322,31 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
 
   const handleDismiss = () => {
     localStorage.setItem("dfy_popup_dismissed", "true");
+    // Reset form state only on explicit dismiss
+    setStep("intro");
+    setBusinessName("");
+    setWhatsappNumber("");
+    setBusinessCategory(prefillCategory || "");
+    setDraftProducts([]);
+    setProductName("");
+    setProductPrice("");
+    setProductPreviewUrl("");
+    setProductFile(null);
+    setShopId("");
     onClose();
   };
 
+  const handleFileSelect = (file: File | null) => {
+    setProductFile(file);
+    if (file) {
+      setProductPreviewUrl(URL.createObjectURL(file));
+    } else {
+      setProductPreviewUrl("");
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && step !== "creating" && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o && step !== "creating") onClose(); }}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         {/* STEP: INTRO */}
         {step === "intro" && (
@@ -368,36 +445,47 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
                 </div>
               )}
 
-              {/* Add product form - no limit */}
-              {true && (
-                <div className="space-y-3 border rounded-lg p-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Name *</Label>
-                      <Input placeholder="e.g. Ankara Dress" value={productName} onChange={(e) => setProductName(e.target.value)} />
-                    </div>
-                    <div>
-                      <Label>Price (₦) *</Label>
-                      <Input type="number" placeholder="e.g. 15000" value={productPrice} onChange={(e) => setProductPrice(e.target.value)} />
-                    </div>
+              {/* Add product form */}
+              <div className="space-y-3 border rounded-lg p-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Name *</Label>
+                    <Input placeholder="e.g. Ankara Dress" value={productName} onChange={(e) => setProductName(e.target.value)} />
                   </div>
-
-                  <div className="flex items-center gap-3">
-                    <Label className="text-sm">Type:</Label>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs ${productType === "product" ? "font-semibold" : "text-muted-foreground"}`}>Product</span>
-                      <Switch checked={productType === "service"} onCheckedChange={(c) => setProductType(c ? "service" : "product")} />
-                      <span className={`text-xs ${productType === "service" ? "font-semibold" : "text-muted-foreground"}`}>Service</span>
-                    </div>
+                  <div>
+                    <Label>Price (₦) *</Label>
+                    <Input type="number" placeholder="e.g. 15000" value={productPrice} onChange={(e) => setProductPrice(e.target.value)} />
                   </div>
-
-                  <ImageUpload value={productImage} onChange={setProductImage} folder="product-images" />
-
-                  <Button size="sm" onClick={handleAddDraftProduct} disabled={!productName.trim() || !productPrice.trim()} className="w-full">
-                    <Plus className="w-3 h-3 mr-1" /> Add Product ({draftProducts.length})
-                  </Button>
                 </div>
-              )}
+
+                <div className="flex items-center gap-3">
+                  <Label className="text-sm">Type:</Label>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs ${productType === "product" ? "font-semibold" : "text-muted-foreground"}`}>Product</span>
+                    <Switch checked={productType === "service"} onCheckedChange={(c) => setProductType(c ? "service" : "product")} />
+                    <span className={`text-xs ${productType === "service" ? "font-semibold" : "text-muted-foreground"}`}>Service</span>
+                  </div>
+                </div>
+
+                <ImageUpload
+                  value={productPreviewUrl}
+                  onChange={(url) => {
+                    // When autoUpload is false, onChange won't be called with a remote URL
+                    // but we handle clear via empty string
+                    if (!url) {
+                      setProductPreviewUrl("");
+                      setProductFile(null);
+                    }
+                  }}
+                  autoUpload={false}
+                  onFileSelect={handleFileSelect}
+                  folder="product-images"
+                />
+
+                <Button size="sm" onClick={handleAddDraftProduct} disabled={!productName.trim() || !productPrice.trim()} className="w-full">
+                  <Plus className="w-3 h-3 mr-1" /> Add Product ({draftProducts.length})
+                </Button>
+              </div>
 
               {/* Trust + fee info */}
               <div className="space-y-2">

@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles, Eye, Search, X, Briefcase, Clock, Calendar, BadgeCheck, MessageCircle, MapPin } from "lucide-react";
 import { WishlistButton } from "@/components/WishlistButton";
 import { openWhatsAppContact } from "@/utils/whatsapp";
+import { ProductMediaCard } from "@/components/ProductMediaCard";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireAccent } from "@/components/patterns/AdirePattern";
@@ -24,6 +25,7 @@ import { storefrontTourSteps } from "@/components/tours/tourSteps";
 import { TourButton } from "@/components/tours/TourButton";
 import { KnowThisShop } from "@/components/ai/KnowThisShop";
 import { TrustBadges } from "@/components/TrustBadges";
+import { ShareStorefront } from "@/components/ShareStorefront";
 interface Shop {
   id: string;
   shop_name: string;
@@ -43,6 +45,9 @@ interface Shop {
   owner_id?: string;
   state?: string | null;
   country?: string | null;
+  accent_color?: string | null;
+  font_style?: string | null;
+  theme_mode?: string | null;
 }
 interface OwnerPlan {
   slug: string | null;
@@ -84,7 +89,9 @@ const ShopStorefront = () => {
   const [selectedService, setSelectedService] = useState<Product | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [ownerPlan, setOwnerPlan] = useState<OwnerPlan>({ slug: null, name: null });
-  const isBusinessPlan = ownerPlan.slug === 'business';
+  const [ownerIsInTrial, setOwnerIsInTrial] = useState(false);
+  const [completedOrders, setCompletedOrders] = useState(0);
+  const isPremiumPlan = ownerPlan.slug === 'pro' || ownerPlan.slug === 'business' || ownerIsInTrial;
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const headerCartRef = useRef<HTMLDivElement>(null);
@@ -119,8 +126,8 @@ const ShopStorefront = () => {
     const shopUrl = `https://steersolo.com/shop/${shop.shop_slug}`;
     const imageUrl = shop.logo_url || shop.banner_url || '';
 
-    // Page title - Business plan shows shop name alone
-    document.title = isBusinessPlan ? shop.shop_name : `${shop.shop_name} | SteerSolo`;
+    // Page title - Premium plan shows shop name alone for brand authority
+    document.title = isPremiumPlan ? `${shop.shop_name} — Shop Online` : `${shop.shop_name} | SteerSolo`;
 
     // Helper to set/create meta tags
     const setMeta = (attr: string, key: string, content: string) => {
@@ -146,12 +153,12 @@ const ShopStorefront = () => {
     if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
     canonical.href = shopUrl;
 
-    // JSON-LD - Enhanced for Business plan
+    // JSON-LD - Enhanced for Pro/Business plans
     const schemaData: any = {
       "@context": "https://schema.org",
-      "@type": isBusinessPlan ? "Store" : "LocalBusiness",
+      "@type": isPremiumPlan ? "Store" : "LocalBusiness",
       "name": shop.shop_name,
-      "description": shop.description || `Shop at ${shop.shop_name}${isBusinessPlan ? '' : ' on SteerSolo'}`,
+      "description": shop.description || `Shop at ${shop.shop_name}${isPremiumPlan ? '' : ' on SteerSolo'}`,
       "url": shopUrl,
       "image": imageUrl || undefined,
       "numberOfEmployees": "1-10",
@@ -169,13 +176,24 @@ const ShopStorefront = () => {
       }),
     };
 
-    // Business plan: richer schema
-    if (isBusinessPlan) {
+    // Premium plan: richer schema for search engine discoverability
+    if (isPremiumPlan) {
       schemaData["@id"] = shopUrl;
       schemaData.brand = { "@type": "Brand", "name": shop.shop_name };
+      schemaData.isPartOf = { "@type": "WebSite", "name": "SteerSolo", "url": "https://steersolo.com" };
       if (shop.whatsapp_number) {
-        schemaData.contactPoint = { "@type": "ContactPoint", "telephone": shop.whatsapp_number, "contactType": "customer service" };
+        let phone = shop.whatsapp_number.replace(/[^\d+]/g, '');
+        if (!phone.startsWith('+')) {
+          phone = phone.startsWith('234') ? `+${phone}` : `+234${phone.replace(/^0+/, '')}`;
+        }
+        schemaData.contactPoint = { "@type": "ContactPoint", "telephone": phone, "contactType": "customer service", "availableLanguage": ["English"] };
+        schemaData.sameAs = [`https://wa.me/${phone.replace('+', '')}`];
       }
+      schemaData.potentialAction = {
+        "@type": "SearchAction",
+        "target": `${shopUrl}?search={search_term}`,
+        "query-input": "required name=search_term"
+      };
     }
 
     // Add product catalog as ItemList for rich snippets
@@ -276,19 +294,29 @@ const ShopStorefront = () => {
       if (shopData.owner_id) {
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('subscription_plan_id')
+          .select('subscription_plan_id, is_subscribed, subscription_expires_at')
           .eq('id', shopData.owner_id)
           .single();
         
-        if (profileData?.subscription_plan_id) {
-          const { data: planData } = await supabase
-            .from('subscription_plans')
-            .select('slug, name')
-            .eq('id', profileData.subscription_plan_id)
-            .single();
-          
-          if (planData) {
-            setOwnerPlan({ slug: planData.slug, name: planData.name });
+        if (profileData) {
+          // Check if owner is in trial (has expiry, not subscribed, expiry in future)
+          if (!profileData.is_subscribed && profileData.subscription_expires_at) {
+            const expiresAt = new Date(profileData.subscription_expires_at);
+            if (expiresAt > new Date()) {
+              setOwnerIsInTrial(true);
+            }
+          }
+
+          if (profileData.subscription_plan_id) {
+            const { data: planData } = await supabase
+              .from('subscription_plans')
+              .select('slug, name')
+              .eq('id', profileData.subscription_plan_id)
+              .single();
+            
+            if (planData) {
+              setOwnerPlan({ slug: planData.slug, name: planData.name });
+            }
           }
         }
       }
@@ -309,6 +337,14 @@ const ShopStorefront = () => {
       }));
       setProducts(productsList);
       setFilteredProducts(productsList);
+
+      // Fetch completed orders count
+      const { count: ordersCount } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('shop_id', shopData.id)
+        .eq('status', 'completed');
+      setCompletedOrders(ordersCount || 0);
     } catch (error: any) {
       console.error("Error loading shop:", error);
       toast({
@@ -442,8 +478,13 @@ const ShopStorefront = () => {
     );
   }
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Navbar shopBranding={isBusinessPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
+    <div 
+      className="min-h-screen bg-background flex flex-col"
+      style={{ 
+        ...(shop?.accent_color ? { '--accent': shop.accent_color } as any : {}),
+      }}
+    >
+      <Navbar shopBranding={isPremiumPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
       {/* Shop Header */}
       <div className="relative pt-20" data-tour="shop-header">
         {shop.banner_url ? (
@@ -454,16 +495,14 @@ const ShopStorefront = () => {
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
           </div>
         ) : (
-          <div className="h-48 md:h-64 bg-gradient-to-br from-primary/20 via-accent/10 to-background relative overflow-hidden">
-            <AdirePattern variant="geometric" className="text-primary" opacity={0.3} />
-          </div>
+          <div className="h-48 md:h-64 gradient-hero-spotify relative overflow-hidden" />
         )}
        
         <div className="container mx-auto px-4">
           <div className="relative -mt-16 md:-mt-20 pb-8">
-            <Card className="card-african p-4 md:p-6 shadow-xl bg-card/95 backdrop-blur-sm">
-              <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">
-                <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden">
+            <div className="card-spotify glass-spotify p-5 md:p-8">
+              <div className="flex flex-col md:flex-row gap-5 md:gap-6 items-start">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-muted flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden ring-4 ring-card">
                   {shop.logo_url ? (
                     <img
                       src={shop.logo_url}
@@ -471,7 +510,7 @@ const ShopStorefront = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <Store className="w-10 h-10 md:w-12 md:h-12 text-primary-foreground" />
+                    <Store className="w-10 h-10 md:w-12 md:h-12 text-muted-foreground" />
                   )}
                 </div>
                
@@ -479,7 +518,7 @@ const ShopStorefront = () => {
                   <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-2">
                     <div>
                       <div className="flex items-center gap-3 flex-wrap">
-                        <h1 className="font-display text-2xl md:text-3xl font-bold">{shop.shop_name}</h1>
+                        <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">{shop.shop_name}</h1>
                         {shop.is_verified && (
                           <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">
                             <BadgeCheck className="w-3.5 h-3.5 mr-1" />
@@ -505,7 +544,7 @@ const ShopStorefront = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
-                          className="border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950 min-h-[44px]"
+                          className="rounded-full border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950 min-h-[44px]"
                         >
                           <MessageCircle className="w-4 h-4 mr-2" />
                           Contact Us
@@ -516,11 +555,20 @@ const ShopStorefront = () => {
                         hasSeenTour={hasSeenTour}
                         onResetTour={resetTour}
                       />
+                      <ShareStorefront 
+                        shopName={shop.shop_name}
+                        shopSlug={shop.shop_slug}
+                        shopDescription={shop.description}
+                        logoUrl={shop.logo_url}
+                        rating={shop.average_rating}
+                        totalReviews={shop.total_reviews}
+                        productCount={productCount}
+                      />
                       {getTotalItems() > 0 && (
                         <Button
                           size="sm"
                           onClick={() => setIsCheckoutOpen(true)}
-                          className="bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/25 min-h-[44px]"
+                          className="rounded-full bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/25 min-h-[44px]"
                           data-tour="cart-button"
                         >
                           <ShoppingCart className="w-4 h-4 mr-2" />
@@ -540,14 +588,24 @@ const ShopStorefront = () => {
                         </span>
                       </div>
                     )}
+                    {completedOrders > 0 && (
+                      <Badge variant="outline" className="rounded-full bg-primary/5 border-primary/20 text-primary">
+                        <ShoppingCart className="w-3 h-3 mr-1" />
+                        {completedOrders} Completed Orders
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="rounded-full bg-gold/5 border-gold/20 text-gold">
+                      <Star className="w-3 h-3 mr-1" />
+                      {shop.total_reviews} Total Ratings
+                    </Badge>
                     {productCount > 0 && (
-                      <Badge variant="outline" className="bg-accent/5 border-accent/20 text-accent">
+                      <Badge variant="outline" className="rounded-full bg-accent/5 border-accent/20 text-accent">
                         <Package className="w-3 h-3 mr-1" />
                         {productCount} Products
                       </Badge>
                     )}
                     {serviceCount > 0 && (
-                      <Badge variant="outline" className="bg-purple-500/10 border-purple-500/20 text-purple-600">
+                      <Badge variant="outline" className="rounded-full bg-purple-500/10 border-purple-500/20 text-purple-600">
                         <Briefcase className="w-3 h-3 mr-1" />
                         {serviceCount} Services
                       </Badge>
@@ -565,7 +623,7 @@ const ShopStorefront = () => {
                   </div>
                 </div>
               </div>
-            </Card>
+            </div>
           </div>
         </div>
       </div>
@@ -610,7 +668,7 @@ const ShopStorefront = () => {
                       placeholder="Search..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-10 bg-card border-accent/20 focus:border-accent pl-3 pr-8"
+                      className="h-10 bg-card border-accent/20 focus:border-accent pl-3 pr-8 rounded-full"
                       onBlur={() => {
                         if (searchQuery === "" && isSearchExpanded) {
                           setTimeout(() => setIsSearchExpanded(false), 200);
@@ -634,29 +692,36 @@ const ShopStorefront = () => {
           </div>
           {/* Filter Tabs */}
           {(productCount > 0 || serviceCount > 0) && (
-            <Tabs value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)} data-tour="product-filters">
-              <TabsList className="bg-card border border-primary/10">
-                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  All ({products.length})
-                </TabsTrigger>
-                {productCount > 0 && (
-                  <TabsTrigger value="product" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                    <Package className="w-4 h-4 mr-2" />
-                    Products ({productCount})
-                  </TabsTrigger>
-                )}
-                {serviceCount > 0 && (
-                  <TabsTrigger value="service" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    <Briefcase className="w-4 h-4 mr-2" />
-                    Services ({serviceCount})
-                  </TabsTrigger>
-                )}
-              </TabsList>
-            </Tabs>
+            <div className="flex gap-2" data-tour="product-filters">
+              <button
+                onClick={() => setTypeFilter('all')}
+                className={`pill-button ${typeFilter === 'all' ? 'pill-button-active' : 'pill-button-inactive'}`}
+              >
+                All ({products.length})
+              </button>
+              {productCount > 0 && (
+                <button
+                  onClick={() => setTypeFilter('product')}
+                  className={`pill-button flex items-center gap-1.5 ${typeFilter === 'product' ? 'pill-button-active' : 'pill-button-inactive'}`}
+                >
+                  <Package className="w-3.5 h-3.5" />
+                  Products ({productCount})
+                </button>
+              )}
+              {serviceCount > 0 && (
+                <button
+                  onClick={() => setTypeFilter('service')}
+                  className={`pill-button flex items-center gap-1.5 ${typeFilter === 'service' ? 'pill-button-active' : 'pill-button-inactive'}`}
+                >
+                  <Briefcase className="w-3.5 h-3.5" />
+                  Services ({serviceCount})
+                </button>
+              )}
+            </div>
           )}
         </div>
         {filteredProducts.length === 0 ? (
-          <Card className="card-african">
+          <div className="card-spotify p-0">
             <CardContent className="py-16 text-center">
               <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
                 {searchQuery ? (
@@ -685,7 +750,7 @@ const ShopStorefront = () => {
                 </Button>
               )}
             </CardContent>
-          </Card>
+          </div>
         ) : (
           <>
             {/* Search results summary */}
@@ -712,31 +777,22 @@ const ShopStorefront = () => {
             )}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map((product, index) => (
-                <Card
+                <div
                   key={product.id}
-                  className="card-african overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 animate-fade-up"
+                  className="card-spotify overflow-hidden group animate-fade-up"
                   style={{ animationDelay: `${index * 0.05}s` }}
                   data-tour={index === 0 ? "product-card" : undefined}
                 >
                   <Link to={`/shop/${slug}/product/${product.id}`}>
-                    <div className="aspect-square overflow-hidden bg-muted relative">
-                      {product.video_url ? (
-                        <video
-                          src={product.video_url}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          autoPlay
-                          muted
-                          loop
-                          playsInline
-                        />
-                      ) : product.image_url ? (
-                        <img
-                          src={product.image_url}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                    <ProductMediaCard
+                      imageUrl={product.image_url}
+                      videoUrl={product.video_url}
+                      alt={product.name}
+                      className="aspect-square bg-muted"
+                    >
+                      {/* No media fallback */}
+                      {!product.image_url && !product.video_url && (
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
                           {product.type === 'service' ? (
                             <Briefcase className="w-16 h-16 text-accent" />
                           ) : (
@@ -744,7 +800,7 @@ const ShopStorefront = () => {
                           )}
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
                         <Eye className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                       {/* Type Badge */}
@@ -768,7 +824,7 @@ const ShopStorefront = () => {
                           </Badge>
                         </div>
                       )}
-                    </div>
+                    </ProductMediaCard>
                   </Link>
                   <CardHeader className="pb-3">
                     <Link to={`/shop/${slug}/product/${product.id}`}>
@@ -852,7 +908,7 @@ const ShopStorefront = () => {
                       onReviewSubmitted={loadShopData}
                     />
                   </CardFooter>
-                </Card>
+                </div>
               ))}
             </div>
           </>
@@ -861,14 +917,14 @@ const ShopStorefront = () => {
 
       {/* Floating Cart & Contact Bar */}
       {showFloatingBar && (getTotalItems() > 0 || shop.whatsapp_number) && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-xl border-t border-border p-3 animate-fade-up safe-area-pb">
+        <div className="fixed bottom-0 left-0 right-0 z-40 glass-spotify border-t border-border/30 p-3 animate-fade-up safe-area-pb">
           <div className="container mx-auto flex items-center justify-center gap-3 max-w-lg">
             {shop.whatsapp_number && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
-                className="flex-1 min-h-[44px]"
+                className="flex-1 min-h-[44px] rounded-full"
               >
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Contact
@@ -878,7 +934,7 @@ const ShopStorefront = () => {
               <Button
                 size="sm"
                 onClick={() => setIsCheckoutOpen(true)}
-                className="flex-1 bg-gradient-to-r from-accent to-primary hover:opacity-90 min-h-[44px]"
+                className="flex-1 rounded-full bg-gradient-to-r from-accent to-primary hover:opacity-90 min-h-[44px]"
               >
                 <ShoppingCart className="w-4 h-4 mr-2" />
                 Cart ({getTotalItems()}) · ₦{getTotalAmount().toLocaleString()}
