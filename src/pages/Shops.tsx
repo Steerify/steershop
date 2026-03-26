@@ -1,12 +1,14 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Store, Package, Sparkles, BadgeCheck, MapPin, ShieldCheck, X } from "lucide-react";
+import {
+  Search, Store, Package, Sparkles, BadgeCheck, ShieldCheck,
+  X, TrendingUp, Grid3X3, MapPin, SlidersHorizontal, ChevronRight,
+  Star, ShoppingBag, Flame, ArrowRight
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { TopSellerBanner } from "@/components/TopSellerBanner";
-import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -21,62 +23,82 @@ import { Button } from "@/components/ui/button";
 
 const VERIFIED_NOTICE_KEY = "steersolo_verified_notice_dismissed";
 
+/* ─── Verified Seller Notice ─── */
 const VerifiedSellerNotice = () => {
-  const [dismissed, setDismissed] = useState(() => localStorage.getItem(VERIFIED_NOTICE_KEY) === "true");
+  const [dismissed, setDismissed] = useState(
+    () => localStorage.getItem(VERIFIED_NOTICE_KEY) === "true"
+  );
   if (dismissed) return null;
   return (
-    <div className="bg-accent/10 border-b border-accent/20">
+    <div className="bg-emerald-500/8 border-b border-emerald-500/15">
       <div className="container mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm">
-          <ShieldCheck className="w-4 h-4 text-accent shrink-0" />
-          <span className="text-foreground">
-            For your safety, look for the <BadgeCheck className="w-3.5 h-3.5 inline text-green-500" /> <strong>Verified</strong> badge when choosing a seller.
+          <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+          <span className="text-foreground/80 text-xs sm:text-sm">
+            For your safety, look for the{" "}
+            <BadgeCheck className="w-3.5 h-3.5 inline text-emerald-500" />{" "}
+            <strong>Verified</strong> badge when choosing a seller.
           </span>
         </div>
         <button
-          onClick={() => { setDismissed(true); localStorage.setItem(VERIFIED_NOTICE_KEY, "true"); }}
-          className="text-muted-foreground hover:text-foreground shrink-0"
+          onClick={() => {
+            setDismissed(true);
+            localStorage.setItem(VERIFIED_NOTICE_KEY, "true");
+          }}
+          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-muted transition-colors flex-shrink-0"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3.5 h-3.5 text-muted-foreground" />
         </button>
       </div>
     </div>
   );
 };
 
+/* ─── Skeleton Cards ─── */
 const ShopCardSkeleton = () => (
-  <div className="card-spotify h-full p-5">
-    <div className="flex items-start gap-4">
-      <Skeleton className="w-16 h-16 rounded-full" />
-      <div className="flex-1">
-        <Skeleton className="h-5 w-3/4 mb-2" />
-        <Skeleton className="h-3 w-full" />
-        <Skeleton className="h-3 w-2/3 mt-1" />
+  <div className="bg-card border border-border/60 rounded-2xl overflow-hidden">
+    <Skeleton className="w-full h-32" />
+    <div className="p-4">
+      <div className="flex items-start gap-3 -mt-8 mb-3">
+        <Skeleton className="w-14 h-14 rounded-xl ring-4 ring-card flex-shrink-0" />
+        <div className="flex-1 pt-6">
+          <Skeleton className="h-4 w-3/4 mb-1.5" />
+          <Skeleton className="h-3 w-full" />
+        </div>
       </div>
-    </div>
-    <div className="flex gap-2 mt-4">
-      <Skeleton className="w-[72px] h-[72px] rounded-xl" />
-      <Skeleton className="w-[72px] h-[72px] rounded-xl" />
-      <Skeleton className="w-[72px] h-[72px] rounded-xl" />
+      <div className="flex gap-2 mt-3">
+        <Skeleton className="flex-1 h-20 rounded-xl" />
+        <Skeleton className="flex-1 h-20 rounded-xl" />
+        <Skeleton className="flex-1 h-20 rounded-xl" />
+      </div>
     </div>
   </div>
 );
 
 const ProductCardSkeleton = () => (
-  <div className="card-spotify h-full p-4">
-    <Skeleton className="w-full h-48 rounded-xl mb-4" />
-    <Skeleton className="h-5 w-3/4 mb-2" />
-    <div className="flex items-center gap-2 mt-2">
-      <Skeleton className="w-6 h-6 rounded-full" />
-      <Skeleton className="h-4 w-24" />
-    </div>
-    <div className="flex items-center justify-between mt-4">
-      <Skeleton className="h-8 w-32" />
-      <Skeleton className="h-6 w-16 rounded-full" />
+  <div className="bg-card border border-border/60 rounded-2xl overflow-hidden">
+    <Skeleton className="w-full aspect-square" />
+    <div className="p-3">
+      <Skeleton className="h-4 w-3/4 mb-2" />
+      <Skeleton className="h-5 w-1/2" />
     </div>
   </div>
 );
 
+/* ─── Stat Chip ─── */
+const StatChip = ({ icon: Icon, value, label, color }: any) => (
+  <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm ${color}`}>
+    <Icon className="w-4 h-4 flex-shrink-0" />
+    <div>
+      <span className="font-bold tabular-nums">{value}</span>
+      <span className="text-current/60 ml-1 hidden sm:inline">{label}</span>
+    </div>
+  </div>
+);
+
+/* ══════════════════════════════════════════════════════
+   MAIN SHOPS PAGE
+══════════════════════════════════════════════════════ */
 const Shops = () => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [businessPlanShopIds, setBusinessPlanShopIds] = useState<Set<string>>(new Set());
@@ -98,13 +120,14 @@ const Shops = () => {
   const [shopProducts, setShopProducts] = useState<Record<string, { image_url: string; name: string }[]>>({});
   const [shopProductCounts, setShopProductCounts] = useState<Record<string, number>>({});
   const [stats, setStats] = useState({ shops: 0, products: 0 });
+  const [searchFocused, setSearchFocused] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
-
   const ITEMS_PER_PAGE = 12;
 
-  // Fetch stats
+  /* ─── Stats + Business Plans ─── */
   useEffect(() => {
     const fetchStats = async () => {
       const [shopsRes, productsRes] = await Promise.all([
@@ -115,35 +138,18 @@ const Shops = () => {
     };
 
     const fetchBusinessPlanShops = async () => {
-      // Find all shop owners on business plan
       const { data: businessProfiles } = await supabase
-        .from('profiles')
-        .select('id, subscription_plan_id')
-        .not('subscription_plan_id', 'is', null);
-      
-      if (businessProfiles && businessProfiles.length > 0) {
+        .from('profiles').select('id, subscription_plan_id').not('subscription_plan_id', 'is', null);
+      if (businessProfiles?.length) {
         const planIds = [...new Set(businessProfiles.map(p => p.subscription_plan_id).filter(Boolean))];
         const { data: plans } = await supabase
-          .from('subscription_plans')
-          .select('id, slug')
-          .in('id', planIds as string[])
-          .eq('slug', 'business');
-        
-        if (plans && plans.length > 0) {
+          .from('subscription_plans').select('id, slug').in('id', planIds as string[]).eq('slug', 'business');
+        if (plans?.length) {
           const businessPlanIds = new Set(plans.map(p => p.id));
-          const businessOwnerIds = businessProfiles
-            .filter(p => p.subscription_plan_id && businessPlanIds.has(p.subscription_plan_id))
-            .map(p => p.id);
-          
-          if (businessOwnerIds.length > 0) {
-            const { data: businessShops } = await supabase
-              .from('shops')
-              .select('id')
-              .in('owner_id', businessOwnerIds);
-            
-            if (businessShops) {
-              setBusinessPlanShopIds(new Set(businessShops.map(s => s.id)));
-            }
+          const ownerIds = businessProfiles.filter(p => p.subscription_plan_id && businessPlanIds.has(p.subscription_plan_id)).map(p => p.id);
+          if (ownerIds.length) {
+            const { data: bizShops } = await supabase.from('shops').select('id').in('owner_id', ownerIds);
+            if (bizShops) setBusinessPlanShopIds(new Set(bizShops.map(s => s.id)));
           }
         }
       }
@@ -153,20 +159,14 @@ const Shops = () => {
     fetchBusinessPlanShops();
   }, []);
 
-  // Fetch product previews for shops
+  /* ─── Shop Product Previews ─── */
   const fetchShopPreviews = useCallback(async (shopIds: string[]) => {
-    if (shopIds.length === 0) return;
+    if (!shopIds.length) return;
     const newIds = shopIds.filter(id => !shopProducts[id]);
-    if (newIds.length === 0) return;
-
+    if (!newIds.length) return;
     const { data } = await supabase
-      .from('products')
-      .select('shop_id, image_url, name')
-      .in('shop_id', newIds)
-      .eq('is_available', true)
-      .not('image_url', 'is', null)
-      .limit(100);
-
+      .from('products').select('shop_id, image_url, name')
+      .in('shop_id', newIds).eq('is_available', true).not('image_url', 'is', null).limit(100);
     if (data) {
       const grouped: Record<string, { image_url: string; name: string }[]> = {};
       const counts: Record<string, number> = {};
@@ -174,509 +174,474 @@ const Shops = () => {
         if (!grouped[p.shop_id]) grouped[p.shop_id] = [];
         if (!counts[p.shop_id]) counts[p.shop_id] = 0;
         counts[p.shop_id]++;
-        if (grouped[p.shop_id].length < 3 && p.image_url) {
-          grouped[p.shop_id].push({ image_url: p.image_url, name: p.name });
-        }
+        if (grouped[p.shop_id].length < 3 && p.image_url) grouped[p.shop_id].push({ image_url: p.image_url, name: p.name });
       });
       setShopProducts(prev => ({ ...prev, ...grouped }));
       setShopProductCounts(prev => ({ ...prev, ...counts }));
     }
   }, [shopProducts]);
 
-  const fetchShops = useCallback(async (page: number = 1, reset: boolean = false, searchTerm: string = '') => {
+  /* ─── Fetch Shops ─── */
+  const fetchShops = useCallback(async (page = 1, reset = false, searchTerm = '') => {
     try {
-      if (reset) {
-        setIsLoading(true);
-        setHasMoreShops(true);
-      } else {
-        setLoadingMoreShops(true);
-      }
-
-      const response = await shopService.getShops(page, ITEMS_PER_PAGE, { 
-        verified: showVerifiedOnly || undefined,
-        activeOnly: true
-      });
-      
-      if (!response.success) {
-        setHasMoreShops(false);
-        if (reset) setShops([]);
-        return;
-      }
-
-      let filteredShops = response.data || [];
-      
-      // Local search filter
+      if (reset) { setIsLoading(true); setHasMoreShops(true); } else setLoadingMoreShops(true);
+      const response = await shopService.getShops(page, ITEMS_PER_PAGE, { verified: showVerifiedOnly || undefined, activeOnly: true });
+      if (!response.success) { setHasMoreShops(false); if (reset) setShops([]); return; }
+      let filtered = response.data || [];
       if (searchTerm.trim()) {
-        filteredShops = filteredShops.filter(shop => 
-          shop.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          shop.shop_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          shop.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          shop.shop_slug?.toLowerCase().includes(searchTerm.toLowerCase())
+        filtered = filtered.filter(s =>
+          s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          s.shop_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          s.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          s.shop_slug?.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }
-
-      // State filter
-      if (selectedState !== 'All Locations') {
-        filteredShops = filteredShops.filter(shop => shop.state === selectedState);
-      }
-
-      const totalShops = response.meta?.total || 0;
-      const hasMore = filteredShops.length === ITEMS_PER_PAGE && 
-                     page < Math.ceil(totalShops / ITEMS_PER_PAGE);
-      
-      setHasMoreShops(hasMore);
-
+      if (selectedState !== 'All Locations') filtered = filtered.filter(s => s.state === selectedState);
+      const total = response.meta?.total || 0;
+      setHasMoreShops(filtered.length === ITEMS_PER_PAGE && page < Math.ceil(total / ITEMS_PER_PAGE));
       setShops(prev => {
-        if (reset) return filteredShops;
-        const existingIds = new Set(prev.map(s => s.id));
-        return [...prev, ...filteredShops.filter(s => !existingIds.has(s.id))];
+        if (reset) return filtered;
+        const ids = new Set(prev.map(s => s.id));
+        return [...prev, ...filtered.filter(s => !ids.has(s.id))];
       });
-      
-      // Fetch product previews for these shops
-      fetchShopPreviews(filteredShops.map(s => s.id));
-      
+      fetchShopPreviews(filtered.map(s => s.id));
       setShopsPage(page);
-    } catch (error) {
-      console.error('Error fetching shops:', error);
-      setHasMoreShops(false);
-      if (reset) setShops([]);
-    } finally {
-      setIsLoading(false);
-      setLoadingMoreShops(false);
-    }
+    } catch (e) {
+      console.error(e); setHasMoreShops(false); if (reset) setShops([]);
+    } finally { setIsLoading(false); setLoadingMoreShops(false); }
   }, [showVerifiedOnly, selectedState, fetchShopPreviews]);
 
-  // Compute display categories for each shop
+  /* ─── Category + Sort ─── */
   const shopCategories = useMemo(() => {
     const cats: Record<string, string> = {};
-    shops.forEach(shop => {
-      cats[shop.id] = autoCategorize(shop.name || shop.shop_name || '', shop.description || '');
-    });
+    shops.forEach(shop => { cats[shop.id] = autoCategorize(shop.name || shop.shop_name || '', shop.description || ''); });
     return cats;
   }, [shops]);
 
-  // Category counts for filter chips
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    Object.values(shopCategories).forEach(cat => {
-      counts[cat] = (counts[cat] || 0) + 1;
-    });
+    Object.values(shopCategories).forEach(cat => { counts[cat] = (counts[cat] || 0) + 1; });
     return counts;
   }, [shopCategories]);
 
-  // Sort shops - Business plan shops always appear first, apply category filter
   const sortedShops = useMemo(() => {
     let filtered = [...shops];
-    
-    // Category filter
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(shop => shopCategories[shop.id] === selectedCategory);
-    }
-    
+    if (selectedCategory !== 'all') filtered = filtered.filter(s => shopCategories[s.id] === selectedCategory);
     switch (selectedSort) {
-      case 'rating':
-        filtered.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0));
-        break;
-      case 'name':
-        filtered.sort((a, b) => (a.name || a.shop_name || '').localeCompare(b.name || b.shop_name || ''));
-        break;
-      case 'newest':
-      default:
-        break;
+      case 'rating': filtered.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0)); break;
+      case 'name': filtered.sort((a, b) => (a.name || a.shop_name || '').localeCompare(b.name || b.shop_name || '')); break;
     }
-    // Always prioritize business plan shops to the top
-    filtered.sort((a, b) => {
-      const aIsBusiness = businessPlanShopIds.has(a.id) ? 1 : 0;
-      const bIsBusiness = businessPlanShopIds.has(b.id) ? 1 : 0;
-      return bIsBusiness - aIsBusiness;
-    });
+    filtered.sort((a, b) => (businessPlanShopIds.has(b.id) ? 1 : 0) - (businessPlanShopIds.has(a.id) ? 1 : 0));
     return filtered;
   }, [shops, selectedSort, businessPlanShopIds, selectedCategory, shopCategories]);
 
-  // Search products
-  const searchProducts = useCallback(async (page: number = 1, reset: boolean = false) => {
-    if (!debouncedSearchQuery.trim()) {
-      if (reset) setProductResults([]);
-      return;
-    }
-
+  /* ─── Search Products ─── */
+  const searchProducts = useCallback(async (page = 1, reset = false) => {
+    if (!debouncedSearchQuery.trim()) { if (reset) setProductResults([]); return; }
     try {
-      if (reset) {
-        setIsSearching(true);
-        setHasMoreProducts(true);
-      } else {
-        setLoadingMoreProducts(true);
-      }
-
-      const response = await productService.searchProducts({
-        query: debouncedSearchQuery,
-        page,
-        limit: ITEMS_PER_PAGE
-      });
-
-      if (!response.success || !response.data) {
-        setHasMoreProducts(false);
-        if (reset) setProductResults([]);
-        return;
-      }
-
+      if (reset) { setIsSearching(true); setHasMoreProducts(true); } else setLoadingMoreProducts(true);
+      const response = await productService.searchProducts({ query: debouncedSearchQuery, page, limit: ITEMS_PER_PAGE });
+      if (!response.success || !response.data) { setHasMoreProducts(false); if (reset) setProductResults([]); return; }
       const results = response.data;
-      const hasMore = results.length === ITEMS_PER_PAGE && 
-                     page < (response.meta?.totalPages || 1);
-      
-      setHasMoreProducts(hasMore);
-
+      setHasMoreProducts(results.length === ITEMS_PER_PAGE && page < (response.meta?.totalPages || 1));
       setProductResults(prev => {
         if (reset) return results;
-        const existingIds = new Set(prev.map(p => p.id));
-        return [...prev, ...results.filter(p => !existingIds.has(p.id))];
+        const ids = new Set(prev.map(p => p.id));
+        return [...prev, ...results.filter(p => !ids.has(p.id))];
       });
-      
       setProductsPage(page);
-    } catch (error) {
-      console.error('Error searching products:', error);
-      setHasMoreProducts(false);
-      if (reset) setProductResults([]);
-    } finally {
-      setIsSearching(false);
-      setLoadingMoreProducts(false);
-    }
+    } catch (e) { console.error(e); setHasMoreProducts(false); if (reset) setProductResults([]); }
+    finally { setIsSearching(false); setLoadingMoreProducts(false); }
   }, [debouncedSearchQuery]);
 
-  // Main search/load effect
+  /* ─── Main Effect ─── */
   useEffect(() => {
     if (debouncedSearchQuery.trim()) {
-      setIsSearching(true);
-      setSearchType('all');
-      setShopsPage(1);
-      setProductsPage(1);
-      setHasMoreShops(true);
-      setHasMoreProducts(true);
-      
-      Promise.all([
-        fetchShops(1, true, debouncedSearchQuery),
-        searchProducts(1, true)
-      ]).finally(() => setIsSearching(false));
+      setIsSearching(true); setSearchType('all');
+      setShopsPage(1); setProductsPage(1); setHasMoreShops(true); setHasMoreProducts(true);
+      Promise.all([fetchShops(1, true, debouncedSearchQuery), searchProducts(1, true)]).finally(() => setIsSearching(false));
     } else {
-      setProductResults([]);
-      setSearchType('all');
-      setShopsPage(1);
-      setProductsPage(1);
+      setProductResults([]); setSearchType('all'); setShopsPage(1); setProductsPage(1);
       fetchShops(1, true, '');
     }
   }, [debouncedSearchQuery, fetchShops, searchProducts, showVerifiedOnly, selectedState]);
 
   const handleSearchTypeChange = (type: 'all' | 'shops' | 'products') => {
     setSearchType(type);
-    setShopsPage(1);
-    setProductsPage(1);
-    setHasMoreShops(true);
-    setHasMoreProducts(true);
-    
-    if (!debouncedSearchQuery.trim()) {
-      if (type === 'shops' || type === 'all') fetchShops(1, true);
-      if (type === 'products') setProductResults([]);
-      return;
-    }
-    
-    if (type === 'shops') {
-      setProductResults([]);
-      fetchShops(1, true, debouncedSearchQuery);
-    } else if (type === 'products') {
-      setShops([]);
-      searchProducts(1, true);
-    } else {
-      setShops([]);
-      setProductResults([]);
-      Promise.all([
-        fetchShops(1, true, debouncedSearchQuery),
-        searchProducts(1, true)
-      ]);
-    }
+    setShopsPage(1); setProductsPage(1); setHasMoreShops(true); setHasMoreProducts(true);
+    if (!debouncedSearchQuery.trim()) { if (type === 'shops' || type === 'all') fetchShops(1, true); if (type === 'products') setProductResults([]); return; }
+    if (type === 'shops') { setProductResults([]); fetchShops(1, true, debouncedSearchQuery); }
+    else if (type === 'products') { setShops([]); searchProducts(1, true); }
+    else { setShops([]); setProductResults([]); Promise.all([fetchShops(1, true, debouncedSearchQuery), searchProducts(1, true)]); }
   };
 
   const loadMore = useCallback(() => {
-    if (searchType === 'shops' && hasMoreShops && !loadingMoreShops) {
-      fetchShops(shopsPage + 1, false, debouncedSearchQuery);
-    } else if (searchType === 'products' && hasMoreProducts && !loadingMoreProducts) {
-      searchProducts(productsPage + 1, false);
-    } else if (searchType === 'all') {
+    if (searchType === 'shops' && hasMoreShops && !loadingMoreShops) fetchShops(shopsPage + 1, false, debouncedSearchQuery);
+    else if (searchType === 'products' && hasMoreProducts && !loadingMoreProducts) searchProducts(productsPage + 1, false);
+    else if (searchType === 'all') {
       if (hasMoreShops && !loadingMoreShops) fetchShops(shopsPage + 1, false, debouncedSearchQuery);
       if (hasMoreProducts && !loadingMoreProducts) searchProducts(productsPage + 1, false);
     }
   }, [searchType, hasMoreShops, hasMoreProducts, loadingMoreShops, loadingMoreProducts, shopsPage, productsPage, fetchShops, searchProducts, debouncedSearchQuery]);
 
-  // Intersection Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !isSearching && !isLoading) loadMore();
-      },
+      ([e]) => { if (e.isIntersecting && !isSearching && !isLoading) loadMore(); },
       { threshold: 0.1, rootMargin: "100px" }
     );
     observerRef.current = observer;
     if (sentinelRef.current) observer.observe(sentinelRef.current);
-    return () => { if (observerRef.current) observerRef.current.disconnect(); };
+    return () => { observerRef.current?.disconnect(); };
   }, [loadMore, isSearching, isLoading]);
 
-  const renderContent = () => {
-    const hasSearchQuery = debouncedSearchQuery.trim();
-    const showProducts = hasSearchQuery && (searchType === 'all' || searchType === 'products');
-    const showShops = !hasSearchQuery || searchType === 'all' || searchType === 'shops';
-
-    return (
-      <>
-        {/* Search Type Tabs */}
-        {hasSearchQuery && (
-          <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
-            {(['all', 'shops', 'products'] as const).map(type => (
-              <button
-                key={type}
-                onClick={() => handleSearchTypeChange(type)}
-                className={`pill-button whitespace-nowrap ${searchType === type ? 'pill-button-active' : 'pill-button-inactive'}`}
-              >
-                {type === 'all' ? `All (${shops.length + productResults.length})` : type === 'shops' ? `Shops (${shops.length})` : `Products (${productResults.length})`}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Product Results */}
-        {showProducts && productResults.length > 0 && (
-          <div className="mb-8 sm:mb-12 animate-fade-up">
-            <h2 className="font-display text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-              Product Results <span className="text-accent">({productResults.length})</span>
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
-              {productResults.map((product, index) => (
-                <Link key={`${product.id}-${index}`} to={`/shop/${product.shop_slug || 'shop'}`}>
-                  <div 
-                    className="card-spotify h-full cursor-pointer group"
-                    style={{ animationDelay: `${index * 0.05}s` }}
-                  >
-                    <div className="p-3 sm:p-4">
-                      {product.image_url || (product.images && product.images.length > 0) ? (
-                        <div className="w-full h-32 sm:h-48 mb-3 sm:mb-4 overflow-hidden rounded-xl">
-                          <img 
-                            src={product.image_url || product.images?.[0]?.url} 
-                            alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-full h-32 sm:h-48 mb-3 sm:mb-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl flex items-center justify-center">
-                          <Package className="w-10 h-10 sm:w-16 sm:h-16 text-muted-foreground" />
-                        </div>
-                      )}
-                      <h3 className="group-hover:text-accent transition-colors text-sm sm:text-lg font-semibold tracking-tight line-clamp-2">
-                        {product.name}
-                      </h3>
-                      <div className="hidden sm:block">
-                        <div className="flex items-center gap-2 mt-2">
-                          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                            <Store className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary-foreground" />
-                          </div>
-                          <span className="text-xs sm:text-sm">Visit Shop</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="px-3 sm:px-4 pb-4 pt-0">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-lg sm:text-2xl font-bold gradient-text">₦{product.price?.toLocaleString() || '0'}</p>
-                          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
-                            {product.inventory || product.stock_quantity || 0} in stock
-                          </p>
-                        </div>
-                        <Badge className={`${product.is_available ? 'bg-accent/10 text-accent border-accent/20' : 'bg-destructive/10 text-destructive border-destructive/20'} text-xs`}>
-                          {product.is_available ? 'Available' : 'Unavailable'}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-            
-            {loadingMoreProducts && (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mt-4 sm:mt-6">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <ProductCardSkeleton key={`product-skeleton-${index}`} />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Shops Section */}
-        {showShops && (
-          <div>
-            {(hasSearchQuery && searchType === 'all') && (
-              <h2 className="font-display text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-                Shop Results <span className="text-accent">({shops.length})</span>
-              </h2>
-            )}
-            
-            {(isLoading || isSearching) && !shops.length ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <ShopCardSkeleton key={index} />
-                ))}
-              </div>
-            ) : sortedShops.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
-                  <Store className="w-10 h-10 text-muted-foreground" />
-                </div>
-                <h3 className="font-display text-xl font-semibold mb-2">
-                  {hasSearchQuery ? "No shops found" : selectedState !== 'All Locations' ? `No shops in ${selectedState}` : "No active shops"}
-                </h3>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  {hasSearchQuery 
-                    ? `No shops found for "${debouncedSearchQuery}"`
-                    : "Try adjusting your filters or check back later."}
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
-                  {sortedShops.map((shop, index) => (
-                    <ShopCardEnhanced
-                      key={`${shop.id}-${index}`}
-                      shop={shop}
-                      productPreviews={shopProducts[shop.id] || []}
-                      productCount={shopProductCounts[shop.id] || 0}
-                      index={index}
-                      isBusinessPlan={businessPlanShopIds.has(shop.id)}
-                      displayCategory={getCategoryLabel(shopCategories[shop.id] || 'other')}
-                    />
-                  ))}
-                </div>
-
-                {loadingMoreShops && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <ShopCardSkeleton key={`shop-skeleton-${index}`} />
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-      </>
-    );
-  };
+  const hasSearchQuery = debouncedSearchQuery.trim();
+  const showProducts = hasSearchQuery && (searchType === 'all' || searchType === 'products');
+  const showShops = !hasSearchQuery || searchType === 'all' || searchType === 'shops';
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
-
-      {/* Verified Seller Safety Notice */}
       <VerifiedSellerNotice />
-      
-      <section className="relative pt-24 sm:pt-28 pb-8 sm:pb-12 gradient-hero-spotify">
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full mb-5 sm:mb-6">
-              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
-              <span className="text-accent font-semibold text-xs sm:text-sm">Discover Nigerian Businesses</span>
-            </div>
-            
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-3 tracking-tight">
-              Explore <span className="gradient-text">Amazing Shops</span>
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mb-6 sm:mb-8 px-2">
-              {stats.shops} shops · {stats.products} products from talented Nigerian entrepreneurs
-            </p>
 
-            {/* Search */}
-            <div className="relative max-w-lg mx-auto px-2 search-spotify rounded-full">
-              <Search className="absolute left-6 sm:left-6 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground z-10" />
-              <Input
-                placeholder="Search shops, products, or services..."
+      {/* ══════════ HERO ══════════ */}
+      <section className="relative pt-20 overflow-hidden">
+        {/* Background layers */}
+        <div className="absolute inset-0 gradient-hero-spotify" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--accent)/0.12),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--primary)/0.08),transparent_60%)]" />
+
+        <div className="relative z-10 container mx-auto px-4 pt-10 pb-12 sm:pt-14 sm:pb-16">
+          
+          {/* Eyebrow */}
+          <div className="flex justify-center mb-5">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 border border-accent/20 rounded-full">
+              <Flame className="w-3.5 h-3.5 text-accent" />
+              <span className="text-accent font-semibold text-xs sm:text-sm tracking-wide">Nigeria's Online Shopping Mall</span>
+            </div>
+          </div>
+
+          {/* Headline */}
+          <div className="text-center max-w-2xl mx-auto mb-4">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-3">
+              One Mall,{" "}
+              <span className="gradient-text">Endless Shops</span>
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-lg mx-auto">
+              Browse hundreds of verified Nigerian businesses — fashion, food, electronics, services and more.
+            </p>
+          </div>
+
+          {/* Stats Row */}
+          <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap mb-7">
+            <StatChip icon={Store} value={stats.shops.toLocaleString()} label="Shops" color="bg-primary/8 border-primary/20 text-primary" />
+            <StatChip icon={Package} value={stats.products.toLocaleString()} label="Products" color="bg-accent/8 border-accent/20 text-accent" />
+            <StatChip icon={BadgeCheck} value="Verified" label="Sellers" color="bg-emerald-500/8 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" />
+          </div>
+
+          {/* ── Search Bar ── */}
+          <div className="relative max-w-xl mx-auto">
+            <div className={`
+              relative flex items-center bg-card border rounded-2xl shadow-xl shadow-black/5 transition-all duration-200
+              ${searchFocused ? 'border-accent/60 shadow-accent/10 shadow-xl ring-4 ring-accent/10' : 'border-border/60'}
+            `}>
+              <Search className={`absolute left-4 w-4 h-4 transition-colors ${searchFocused ? 'text-accent' : 'text-muted-foreground'}`} />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search shops, products, services…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 sm:pl-12 h-12 sm:h-14 text-sm sm:text-base bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-full"
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                className="w-full bg-transparent pl-10 pr-12 h-14 text-sm sm:text-base focus:outline-none placeholder:text-muted-foreground/60"
               />
-              {(isSearching || isLoading) && (
-                <div className="absolute right-6 sm:right-4 top-1/2 -translate-y-1/2">
-                  <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+              {(isSearching || isLoading) ? (
+                <div className="absolute right-4">
+                  <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
                 </div>
-              )}
+              ) : searchQuery ? (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-4 w-6 h-6 flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/20 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+              ) : null}
             </div>
+
+            {/* Quick suggestions — visible when empty */}
+            {!searchQuery && (
+              <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
+                <span className="text-xs text-muted-foreground">Popular:</span>
+                {["Fashion", "Food", "Electronics", "Beauty", "Services"].map(tag => (
+                  <button
+                    key={tag}
+                    onClick={() => setSearchQuery(tag)}
+                    className="text-xs px-3 py-1.5 rounded-full bg-card border border-border/60 text-muted-foreground hover:border-accent/40 hover:text-accent hover:bg-accent/5 transition-all"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Filters */}
-      <ExploreFilters
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
-        selectedSort={selectedSort}
-        onSortChange={setSelectedSort}
-        selectedState={selectedState}
-        onStateChange={(s) => { setSelectedState(s); setShopsPage(1); }}
-        showVerifiedOnly={showVerifiedOnly}
-        onVerifiedChange={(v) => { setShowVerifiedOnly(v); setShopsPage(1); }}
-        categoryCounts={categoryCounts}
-      />
+      {/* ══════════ FILTERS ══════════ */}
+      <div className="sticky top-[57px] z-30 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm">
+        <ExploreFilters
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          selectedSort={selectedSort}
+          onSortChange={setSelectedSort}
+          selectedState={selectedState}
+          onStateChange={(s) => { setSelectedState(s); setShopsPage(1); }}
+          showVerifiedOnly={showVerifiedOnly}
+          onVerifiedChange={(v) => { setShowVerifiedOnly(v); setShopsPage(1); }}
+          categoryCounts={categoryCounts}
+        />
+      </div>
 
-      {/* Top Seller Banner */}
-      <div className="container mx-auto px-4 mt-6 mb-4">
+      {/* ══════════ TOP SELLER BANNER ══════════ */}
+      <div className="container mx-auto px-4 mt-5 mb-2">
         <TopSellerBanner />
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 container mx-auto px-4 pb-16 sm:pb-20 mt-2">
-        <div className="max-w-6xl mx-auto">
-          {renderContent()}
+      {/* ══════════ MAIN CONTENT ══════════ */}
+      <main className="flex-1 container mx-auto px-4 pb-20 mt-4">
+        <div className="max-w-7xl mx-auto">
 
-          {isSearching && !isLoading && (
-            <div className="text-center py-8">
-              <div className="inline-flex items-center gap-3">
-                <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                <span className="text-muted-foreground">Searching for "{debouncedSearchQuery}"...</span>
-              </div>
+          {/* ── Search Type Tabs ── */}
+          {hasSearchQuery && (
+            <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none">
+              {(['all', 'shops', 'products'] as const).map(type => (
+                <button
+                  key={type}
+                  onClick={() => handleSearchTypeChange(type)}
+                  className={`
+                    px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0
+                    ${searchType === type
+                      ? 'bg-foreground text-background shadow-sm'
+                      : 'bg-card border border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground'
+                    }
+                  `}
+                >
+                  {type === 'all' ? `All (${shops.length + productResults.length})` : type === 'shops' ? `Shops (${shops.length})` : `Products (${productResults.length})`}
+                </button>
+              ))}
             </div>
           )}
 
-          {(hasMoreShops || hasMoreProducts) && !isSearching && (
-            <div ref={sentinelRef} className="h-20 flex items-center justify-center">
-              {(loadingMoreShops || loadingMoreProducts) && (
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                  <span>Loading more...</span>
+          {/* ── Product Results ── */}
+          {showProducts && productResults.length > 0 && (
+            <div className="mb-10 animate-fade-up">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <Package className="w-4 h-4 text-accent" />
+                  </div>
+                  <h2 className="font-display text-lg sm:text-xl font-bold">
+                    Products
+                    <span className="ml-2 text-sm font-normal text-muted-foreground">({productResults.length} results)</span>
+                  </h2>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                {productResults.map((product, index) => (
+                  <Link key={`${product.id}-${index}`} to={`/shop/${product.shop_slug || 'shop'}`}>
+                    <div className="group bg-card border border-border/60 rounded-2xl overflow-hidden hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300 flex flex-col">
+                      {/* Image */}
+                      <div className="relative aspect-square overflow-hidden bg-muted">
+                        {product.image_url || product.images?.[0]?.url ? (
+                          <img
+                            src={product.image_url || product.images?.[0]?.url}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                            <Package className="w-10 h-10 text-muted-foreground/50" />
+                          </div>
+                        )}
+                        <div className="absolute top-2 right-2">
+                          <div className={`
+                            text-xs font-semibold px-2 py-0.5 rounded-lg
+                            ${product.is_available ? 'bg-emerald-500/90 text-white' : 'bg-red-500/90 text-white'}
+                          `}>
+                            {product.is_available ? 'In Stock' : 'Out'}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Info */}
+                      <div className="p-3 flex flex-col flex-1">
+                        <h3 className="text-sm font-semibold line-clamp-2 group-hover:text-accent transition-colors mb-2 leading-snug">
+                          {product.name}
+                        </h3>
+                        <div className="mt-auto flex items-center justify-between">
+                          <span className="text-base font-bold gradient-text tabular-nums">
+                            ₦{product.price?.toLocaleString() || '0'}
+                          </span>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Store className="w-3 h-3" />
+                            <span className="hidden sm:inline">View</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {loadingMoreProducts && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
+                  {Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={i} />)}
                 </div>
               )}
             </div>
           )}
 
+          {/* ── Shops Section ── */}
+          {showShops && (
+            <div>
+              {/* Section Header */}
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Store className="w-4 h-4 text-primary" />
+                  </div>
+                  <h2 className="font-display text-lg sm:text-xl font-bold">
+                    {hasSearchQuery ? 'Shop Results' : 'All Shops'}
+                    <span className="ml-2 text-sm font-normal text-muted-foreground">
+                      {hasSearchQuery ? `(${shops.length} found)` : `(${stats.shops} total)`}
+                    </span>
+                  </h2>
+                </div>
+                {selectedState !== 'All Locations' && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted rounded-xl px-3 py-1.5">
+                    <MapPin className="w-3.5 h-3.5" />
+                    {selectedState}
+                    <button onClick={() => setSelectedState('All Locations')} className="ml-1 hover:text-destructive transition-colors">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Grid */}
+              {(isLoading || isSearching) && !shops.length ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                  {Array.from({ length: 6 }).map((_, i) => <ShopCardSkeleton key={i} />)}
+                </div>
+              ) : sortedShops.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center mb-5 shadow-inner">
+                    <Store className="w-9 h-9 text-muted-foreground" />
+                  </div>
+                  <h3 className="font-display text-xl font-semibold mb-2">
+                    {hasSearchQuery ? "No shops found" : selectedState !== 'All Locations' ? `No shops in ${selectedState}` : "No active shops"}
+                  </h3>
+                  <p className="text-muted-foreground text-sm max-w-xs">
+                    {hasSearchQuery ? `No shops found for "${debouncedSearchQuery}". Try different keywords.` : "Try adjusting your filters or check back later."}
+                  </p>
+                  {(hasSearchQuery || selectedState !== 'All Locations') && (
+                    <Button
+                      variant="outline"
+                      className="mt-5 rounded-xl"
+                      onClick={() => { setSearchQuery(""); setSelectedState("All Locations"); }}
+                    >
+                      Clear Filters
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                    {sortedShops.map((shop, index) => (
+                      <ShopCardEnhanced
+                        key={`${shop.id}-${index}`}
+                        shop={shop}
+                        productPreviews={shopProducts[shop.id] || []}
+                        productCount={shopProductCounts[shop.id] || 0}
+                        index={index}
+                        isBusinessPlan={businessPlanShopIds.has(shop.id)}
+                        displayCategory={getCategoryLabel(shopCategories[shop.id] || 'other')}
+                      />
+                    ))}
+                  </div>
+
+                  {loadingMoreShops && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                      {Array.from({ length: 3 }).map((_, i) => <ShopCardSkeleton key={i} />)}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── Searching Indicator ── */}
+          {isSearching && !isLoading && (
+            <div className="flex justify-center py-10">
+              <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border/60">
+                <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm text-muted-foreground">Searching for <strong>"{debouncedSearchQuery}"</strong>…</span>
+              </div>
+            </div>
+          )}
+
+          {/* ── Infinite Scroll Sentinel ── */}
+          {(hasMoreShops || hasMoreProducts) && !isSearching && (
+            <div ref={sentinelRef} className="h-16 flex items-center justify-center mt-4">
+              {(loadingMoreShops || loadingMoreProducts) && (
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                  Loading more…
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── End of Results ── */}
           {!hasMoreShops && !hasMoreProducts && (shops.length > 0 || productResults.length > 0) && (
-            <div className="text-center py-12 border-t">
-              <p className="text-muted-foreground">
-                You've seen all {debouncedSearchQuery ? 'results' : 'shops'} for now!
+            <div className="text-center py-12 mt-4 border-t border-border/50">
+              <p className="text-muted-foreground text-sm">
+                You've explored all {debouncedSearchQuery ? 'results' : 'shops'} — that's everything! 🎉
               </p>
             </div>
           )}
 
-          {!isLoading && !isSearching && shops.length === 0 && productResults.length === 0 && debouncedSearchQuery.trim() && (
-            <div className="text-center py-16">
-              <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
-                <Search className="w-10 h-10 text-muted-foreground" />
+          {/* ── No Results ── */}
+          {!isLoading && !isSearching && shops.length === 0 && productResults.length === 0 && hasSearchQuery && (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center mb-5 shadow-inner">
+                <Search className="w-9 h-9 text-muted-foreground" />
               </div>
               <h3 className="font-display text-xl font-semibold mb-2">No results found</h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                No shops or products found for "{debouncedSearchQuery}". Try different keywords.
+              <p className="text-muted-foreground text-sm max-w-xs mb-5">
+                Nothing matched "<strong>{debouncedSearchQuery}</strong>". Try different keywords.
               </p>
+              <Button variant="outline" className="rounded-xl" onClick={() => setSearchQuery("")}>
+                Clear Search
+              </Button>
             </div>
           )}
         </div>
-      </div>
+      </main>
 
       <Footer />
     </div>
   );
 };
+
+/* ─── Helper Component ─── */
+const StatChip = ({ icon: Icon, value, label, color }: { icon: any; value: string | number; label: string; color: string }) => (
+  <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm ${color}`}>
+    <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+    <span className="font-bold tabular-nums">{value}</span>
+    <span className="opacity-70 text-xs hidden sm:inline">{label}</span>
+  </div>
+);
 
 export default Shops;
