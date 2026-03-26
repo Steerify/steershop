@@ -22,7 +22,23 @@ import { autoCategorize, getCategoryLabel } from "@/utils/autoCategorize";
 import { Button } from "@/components/ui/button";
 
 const VERIFIED_NOTICE_KEY = "steersolo_verified_notice_dismissed";
-
+const StatChip = ({
+  icon: Icon,
+  value,
+  label,
+  color,
+}: {
+  icon: React.ElementType;
+  value: string | number;
+  label: string;
+  color: string;
+}) => (
+  <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm ${color}`}>
+    <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+    <span className="font-bold tabular-nums">{value}</span>
+    <span className="opacity-70 text-xs hidden sm:inline">{label}</span>
+  </div>
+);
 /* ─── Verified Seller Notice ─── */
 const VerifiedSellerNotice = () => {
   const [dismissed, setDismissed] = useState(
@@ -85,16 +101,6 @@ const ProductCardSkeleton = () => (
   </div>
 );
 
-/* ─── Stat Chip ─── */
-const StatChip = ({ icon: Icon, value, label, color }: any) => (
-  <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm ${color}`}>
-    <Icon className="w-4 h-4 flex-shrink-0" />
-    <div>
-      <span className="font-bold tabular-nums">{value}</span>
-      <span className="text-current/60 ml-1 hidden sm:inline">{label}</span>
-    </div>
-  </div>
-);
 
 /* ══════════════════════════════════════════════════════
    MAIN SHOPS PAGE
@@ -635,13 +641,5 @@ const Shops = () => {
   );
 };
 
-/* ─── Helper Component ─── */
-const StatChip = ({ icon: Icon, value, label, color }: { icon: any; value: string | number; label: string; color: string }) => (
-  <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm ${color}`}>
-    <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-    <span className="font-bold tabular-nums">{value}</span>
-    <span className="opacity-70 text-xs hidden sm:inline">{label}</span>
-  </div>
-);
 
 export default Shops;
