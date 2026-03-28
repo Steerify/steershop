@@ -143,7 +143,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
               </div>
 
               {/* Updated typography to match index page */}
-              <span className="font-display text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <span className="hidden min-[360px]:inline font-display text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 {shopBranding?.name || "SteerSolo"}
                 {!shopBranding && primary && (
                   <span className="ml-2 text-lg inline-block text-primary">
