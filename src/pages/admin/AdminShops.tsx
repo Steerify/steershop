@@ -79,6 +79,7 @@ export default function AdminShops() {
         .select(`
           id,
           shop_name,
+          slug,
           description,
           logo_url,
           whatsapp_number,
@@ -153,7 +154,44 @@ export default function AdminShops() {
     }
   };
 
-  const toggleShopStatus = async (shopId: string, currentStatus: boolean) => {
+  const sendStoreApprovalEmail = async (shop: any) => {
+    const ownerEmail = shop?.profiles?.email;
+    if (!ownerEmail) return;
+
+    const { error } = await supabase.functions.invoke("send-notification-email", {
+      body: {
+        type: "store_approved",
+        user_id: shop.owner_id,
+        data: {
+          email: ownerEmail,
+          name: shop?.profiles?.full_name || shop.shop_name,
+          storeName: shop.shop_name,
+          storefrontUrl: `${window.location.origin}/shop/${shop.slug || ""}`,
+          dashboardUrl: `${window.location.origin}/dashboard`,
+        },
+      },
+    });
+
+    if (error) {
+      console.error("Failed to send store approval email:", error);
+      toast({
+        title: "Shop approved, but email failed",
+        description: "The store was activated, but we could not send the approval email.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Approval email sent",
+      description: `A professional approval email has been sent to ${ownerEmail}.`,
+    });
+  };
+
+  const toggleShopStatus = async (shop: any) => {
+    const shopId = shop.id;
+    const currentStatus = shop.is_active;
+
     const { error } = await supabase
       .from("shops")
       .update({ is_active: !currentStatus })
@@ -172,6 +210,11 @@ export default function AdminShops() {
       title: `Shop ${!currentStatus ? 'activated' : 'deactivated'}`,
       description: `Shop has been ${!currentStatus ? 'activated' : 'deactivated'} successfully`
     });
+
+    if (!currentStatus) {
+      await sendStoreApprovalEmail(shop);
+    }
+
     fetchShops();
   };
 
@@ -725,7 +768,7 @@ export default function AdminShops() {
                               <Button 
                                 size="sm" 
                                 className="h-7 px-2 bg-green-600 hover:bg-green-700 text-white"
-                                onClick={() => toggleShopStatus(shop.id, shop.is_active)}
+                                onClick={() => toggleShopStatus(shop)}
                               >
                                 <Check className="w-3 h-3 mr-1" />
                                 Approve
@@ -774,7 +817,7 @@ export default function AdminShops() {
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuItem 
-                                onClick={() => toggleShopStatus(shop.id, shop.is_active)}
+                                onClick={() => toggleShopStatus(shop)}
                                 className={shop.is_active ? "text-red-600" : "text-green-600"}
                               >
                                 {shop.is_active ? (

@@ -111,7 +111,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {/* Admin Header */}
-          <header className="h-14 border-b border-border/60 flex items-center justify-between px-4 sm:px-6 bg-card/95 backdrop-blur-xl sticky top-0 z-30">
+          <header className="h-14 border-b border-border/60 flex items-center justify-between px-4 sm:px-6 bg-card/95 sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
               <div className="hidden sm:block h-4 w-px bg-border" />
@@ -142,9 +142,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           {/* Main Content */}
           <main className="flex-1 p-4 sm:p-6 bg-background overflow-auto relative">
             <AdirePattern variant="dots" className="text-primary" opacity={0.04} />
-            {/* Background blobs */}
-            <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-accent/10 to-transparent rounded-full blur-3xl pointer-events-none" />
             <div className="relative z-10">
               {children}
             </div>
