@@ -79,7 +79,7 @@ export default function AdminShops() {
         .select(`
           id,
           shop_name,
-          slug,
+          shop_slug,
           description,
           logo_url,
           whatsapp_number,
@@ -166,7 +166,7 @@ export default function AdminShops() {
           email: ownerEmail,
           name: shop?.profiles?.full_name || shop.shop_name,
           storeName: shop.shop_name,
-          storefrontUrl: `${window.location.origin}/shop/${shop.slug || ""}`,
+          storefrontUrl: `${window.location.origin}/shop/${shop.shop_slug || ""}`,
           dashboardUrl: `${window.location.origin}/dashboard`,
         },
       },
@@ -620,7 +620,7 @@ export default function AdminShops() {
               </h1>
               <p className="text-muted-foreground">Manage all shops on the platform</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button 
                 onClick={() => {
                   setCreateDialogOpen(true);
@@ -656,8 +656,8 @@ export default function AdminShops() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 mb-6">
-            <div className="relative flex-1 max-w-md">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+            <div className="relative flex-1 sm:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search shops, owners, or WhatsApp numbers..."
@@ -666,7 +666,7 @@ export default function AdminShops() {
                 className="pl-10 border-primary/20"
               />
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground sm:text-right">
               {filteredShops.length} of {shops.length} shops
             </div>
           </div>
@@ -678,7 +678,54 @@ export default function AdminShops() {
                 <p className="text-muted-foreground">Loading shops...</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              <div className="grid gap-3 p-3 md:hidden">
+                {filteredShops.length === 0 ? (
+                  <div className="text-center py-10 text-muted-foreground border rounded-lg">
+                    <Store className="w-10 h-10 opacity-20 mx-auto mb-2" />
+                    <p>No shops found</p>
+                  </div>
+                ) : filteredShops.map((shop) => (
+                  <div key={shop.id} className="rounded-xl border border-border/70 bg-card p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold">{shop.shop_name}</p>
+                        <p className="text-xs text-muted-foreground">{getOwnerName(shop)}</p>
+                        <p className="text-xs text-muted-foreground">{getOwnerEmail(shop)}</p>
+                      </div>
+                      {isPending(shop) ? (
+                        <Badge className="bg-orange-500 hover:bg-orange-600">
+                          <Clock className="w-3 h-3 mr-1" />
+                          Pending
+                        </Badge>
+                      ) : (
+                        <Badge variant={shop.is_active ? "default" : "secondary"} className={shop.is_active ? "bg-green-600 hover:bg-green-700" : ""}>
+                          {shop.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div>{getSubscriptionBadge(shop.profiles)}</div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      {isPending(shop) && (
+                        <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => toggleShopStatus(shop)}>
+                          Approve
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline" onClick={() => handleEditShop(shop)}>Edit</Button>
+                      <Button size="sm" variant="outline" onClick={() => toggleShopStatus(shop)}>
+                        {shop.is_active ? "Deactivate" : "Activate"}
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleDeleteShop(shop)} className="text-red-600 border-red-200">
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="hidden md:block overflow-x-auto">
               <Table className="min-w-[800px]">
                 <TableHeader>
                   <TableRow className="hover:bg-muted/50 bg-muted/30">
@@ -849,6 +896,7 @@ export default function AdminShops() {
                 </TableBody>
               </Table>
               </div>
+              </>
             )}
           </div>
         </div>
