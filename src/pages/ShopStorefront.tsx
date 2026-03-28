@@ -767,7 +767,7 @@ const ShopStorefront = () => {
                   {/* Price Row */}
                   <div className="flex items-center justify-between mt-2 mb-3">
                     <div className="flex items-baseline gap-1.5 flex-wrap">
-                      <span className="text-base sm:text-lg font-bold gradient-text tabular-nums">
+                      <span className="text-base sm:text-lg font-bold text-primary dark:text-accent tabular-nums tracking-tight">
                         ₦{product.price.toLocaleString()}
                       </span>
                       {product.compare_price && Number(product.compare_price) > product.price && (
