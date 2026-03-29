@@ -10,44 +10,44 @@ const Callback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log('Processing OAuth callback...');
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get("code");
+        const next = params.get("next");
 
-        // Get the session from the URL hash (Supabase OAuth redirect)
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) {
+            console.error("Auth code exchange error:", exchangeError);
+            navigate("/auth/login");
+            return;
+          }
+        }
+
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error) {
-          console.error('OAuth callback error:', error);
+          console.error("OAuth callback error:", error);
           navigate("/auth/login");
           return;
         }
 
         if (session?.user) {
-          console.log('User authenticated:', session.user.id);
-
-          // Check if this user needs role selection (Google OAuth signups)
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('role, phone_verified, needs_role_selection')
             .eq('id', session.user.id)
             .single();
 
-          console.log('Profile fetch result:', { profile, profileError });
-
-          // If profile doesn't exist (shouldn't happen due to trigger, but handle gracefully)
           if (profileError && profileError.code === 'PGRST116') {
-            console.log('No profile found, redirecting to role selection');
             navigate("/select-role");
             return;
           }
 
-          // If user needs role selection (Google OAuth signup), redirect to role selection
           if (profile?.needs_role_selection) {
-            console.log('Google user needs role selection, redirecting...');
             navigate("/select-role");
             return;
           }
 
-          // Check if onboarding/survey is needed (for this implementation, we check if they have onboarding responses)
           const { data: onboardingResponses } = await supabase
             .from('onboarding_responses')
             .select('id')
@@ -56,15 +56,11 @@ const Callback = () => {
 
           const needsOnboarding = !onboardingResponses || onboardingResponses.length === 0;
 
-          // Existing user with role set - proceed with normal flow
-          console.log('User role:', profile.role, 'Needs onboarding:', needsOnboarding);
-
           let redirectPath = '/';
 
           if (profile.role === 'admin') {
             redirectPath = '/admin';
           } else if (profile.role === 'shop_owner') {
-            // Check if they have a shop (onboarding completed)
             const { data: shops } = await supabase
               .from('shops')
               .select('id')
@@ -77,30 +73,22 @@ const Callback = () => {
               redirectPath = (shops && shops.length > 0) ? '/dashboard' : '/onboarding';
             }
           } else if (profile.role === 'customer') {
-            redirectPath = needsOnboarding ? '/onboarding' : '/customer_dashboard';
+            redirectPath = '/customer_dashboard';
           } else {
-            // Unknown role, default to customer dashboard
-            console.warn('Unknown role, defaulting to customer dashboard');
             redirectPath = '/customer_dashboard';
           }
 
-          console.log('Redirecting to:', redirectPath);
+          if (next && next.startsWith("/") && !next.startsWith("//")) {
+            navigate(next);
+            return;
+          }
+
           navigate(redirectPath);
         } else {
-          console.log('No session found, redirecting to login');
           navigate("/auth/login");
         }
       } catch (error: any) {
-        console.error('Callback error:', error);
-
-        // More detailed error logging
-        if (error.message) {
-          console.error('Error message:', error.message);
-        }
-        if (error.stack) {
-          console.error('Error stack:', error.stack);
-        }
-
+        console.error("Callback error:", error);
         navigate("/auth/login");
       }
     };
