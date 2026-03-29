@@ -80,7 +80,7 @@ export default function AdminShops() {
           id,
           shop_name,
           shop_slug,
-          description,
+         description,
           logo_url,
           whatsapp_number,
           is_active,

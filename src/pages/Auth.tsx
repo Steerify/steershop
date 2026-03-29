@@ -231,17 +231,11 @@ const Auth = () => {
       return;
     }
 
-    const validation = z.string().email().safeParse(email);
-    if (!validation.success) {
-      toast({ title: "Invalid email", description: "Please enter a valid email address.", variant: "destructive" });
-      return;
-    }
-
     setIsLoading(true);
     setAuthError(null);
     try {
       const { error } = await supabase.auth.signInWithOtp({
-        email: validation.data,
+        email,
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
 
