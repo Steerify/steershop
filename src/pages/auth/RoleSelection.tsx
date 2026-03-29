@@ -119,8 +119,12 @@ const RoleSelection = () => {
         description: `Welcome as ${selectedRole === UserRole.ENTREPRENEUR ? "an Entrepreneur" : "a Customer"}`,
       });
 
-      // Always send to onboarding first for both roles
-      navigate("/onboarding");
+      // Entrepreneurs go through onboarding survey, customers go to customer dashboard.
+      if (selectedRole === UserRole.ENTREPRENEUR) {
+        navigate("/onboarding");
+      } else {
+        navigate("/customer_dashboard");
+      }
 
     } catch (error: any) {
       console.error("Error setting role:", error);

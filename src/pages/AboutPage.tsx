@@ -23,6 +23,41 @@ const MILESTONES = [
   { year: "2025", quarter: "Q2", title: "Going Pan-African", desc: "Expanding beyond Nigeria. The structured selling movement goes continental." },
 ];
 
+const MARKET_SNAPSHOT = [
+  { value: "$8.8B", label: "Nigeria e-commerce (2024)" },
+  { value: "$22.9B", label: "Projected by 2032" },
+  { value: "69%", label: "Social commerce penetration" },
+  { value: "82%", label: "Transactions via mobile" },
+];
+
+const TRUST_STACK = [
+  {
+    icon: Shield,
+    title: "Vendor Verification",
+    desc: "Vendors provide business identity and accountable profiles before public listing.",
+  },
+  {
+    icon: Globe,
+    title: "Store Page Presence",
+    desc: "Every seller gets a structured public storefront with products, prices, and clear contact.",
+  },
+  {
+    icon: Award,
+    title: "Badge Credibility Layer",
+    desc: "Badges such as verified/trusted signals reduce buyer hesitation before payment.",
+  },
+  {
+    icon: Users,
+    title: "Buyer Social Proof",
+    desc: "Ratings and reviews are visible publicly to separate reliable vendors from risky ones.",
+  },
+  {
+    icon: Target,
+    title: "Dispute & Accountability",
+    desc: "Transparent moderation and consequence layers protect buyers and preserve ecosystem trust.",
+  },
+];
+
 const About = () => {
   return (
     <PageWrapper patternVariant="waves" patternOpacity={0.3}>
@@ -77,6 +112,57 @@ const About = () => {
                 SteerSolo is the engine that will power Africa's digital street market, turning hustle into lasting businesses.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <AdireDivider />
+
+      {/* Market Snapshot */}
+      <section className="py-12 sm:py-16 bg-card/40">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8 sm:mb-10">
+            <p className="text-sm uppercase tracking-[0.16em] text-accent font-semibold mb-2">Market Timing</p>
+            <h2 className="text-2xl sm:text-3xl font-bold">Why now is the perfect moment</h2>
+            <p className="text-muted-foreground mt-3 max-w-2xl mx-auto">
+              Nigeria's social commerce growth and mobile-first buying behavior make trust infrastructure the biggest leverage point.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
+            {MARKET_SNAPSHOT.map((stat) => (
+              <div key={stat.label} className="rounded-2xl border border-border/70 bg-card/80 p-4 sm:p-5 text-center">
+                <p className="text-xl sm:text-3xl font-black text-primary">{stat.value}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <AdireDivider />
+
+      {/* Trust Architecture */}
+      <section className="py-12 sm:py-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-14">
+            <p className="text-sm uppercase tracking-[0.16em] text-accent font-semibold mb-2">Trust Architecture</p>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">The 5-layer trust stack</h2>
+            <p className="text-muted-foreground">
+              We align SteerSolo around the trust law: trust infrastructure comes first, then conversion and retention.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
+            {TRUST_STACK.map((item) => (
+              <div key={item.title} className="rounded-2xl border border-border/70 bg-card/90 p-5">
+                <div className="w-10 h-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center mb-3">
+                  <item.icon className="w-5 h-5" />
+                </div>
+                <h3 className="font-semibold mb-1">{item.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
