@@ -153,21 +153,15 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
               </div>
 
               {/* Updated typography to match index page */}
-              {shopBranding ? (
-                <span className="hidden min-[360px]:inline font-display text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  {shopBranding.name}
-                </span>
-              ) : (
-                <Link to="/" className="hidden min-[360px]:inline font-display text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  SteerSolo
-                  {primary && (
-                    <span className="ml-2 text-lg inline-block text-primary">
-                      {isChristmas ? "🎄" : <Sparkles className="inline w-5 h-5" />}
-                    </span>
-                  )}
-                </Link>
-              )}
-            </div>
+              <span className="hidden min-[360px]:inline font-display text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                {shopBranding?.name || "SteerSolo"}
+                {!shopBranding && primary && (
+                  <span className="ml-2 text-lg inline-block text-primary">
+                    {isChristmas ? "🎄" : <Sparkles className="inline w-5 h-5" />}
+                  </span>
+                )}
+              </span>
+            </Link>
 
             {/* Desktop Nav - Updated typography */}
             <div className="hidden md:flex items-center gap-8 font-display">
