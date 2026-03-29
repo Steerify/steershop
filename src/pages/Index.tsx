@@ -45,6 +45,13 @@ const painPoints = [
   },
 ];
 
+const safeBeautyBadges = [
+  { title: "SafeBeauty Listed", detail: "Entry-level verified beauty vendor profile." },
+  { title: "SafeBeauty Checked", detail: "At least one product batch checked in our process." },
+  { title: "SafeBeauty Trusted", detail: "30+ days active, reviews, and complaint-safe history." },
+  { title: "SafeBeauty Verified", detail: "Full verification + stronger trust signal for buyers." },
+];
+
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
@@ -174,6 +181,32 @@ const Index = () => {
       </section>
 
       {/* SECTION 3: WHAT IS STEERSOLO + WHY — Show the solution */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-10">
+              <p className="text-xs font-bold text-primary tracking-widest uppercase mb-3">Beauty Market Focus</p>
+              <h2 className="font-display text-3xl md:text-4xl font-extrabold mb-3">SafeBeauty: our trust layer for beauty sellers</h2>
+              <p className="text-muted-foreground max-w-3xl mx-auto">
+                We are renovating SteerSolo around beauty-commerce trust: verified sellers, transparent badges, and safer buyer discovery.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-4 gap-4">
+              {safeBeautyBadges.map((badge) => (
+                <Card key={badge.title} className="border-primary/15">
+                  <CardContent className="p-5">
+                    <p className="font-bold text-primary mb-1">{badge.title}</p>
+                    <p className="text-sm text-muted-foreground">{badge.detail}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 3B: WHAT IS STEERSOLO + WHY — Show the solution */}
       <WhySteerSolo />
 
       {/* SECTION 4: HOW IT WORKS — Make it feel easy */}
