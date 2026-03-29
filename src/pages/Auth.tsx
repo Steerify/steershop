@@ -98,6 +98,7 @@ const Auth = () => {
   );
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [magicLinkEmail, setMagicLinkEmail] = useState("");
 
   const returnUrl = useAppSelector((state) => state.ui.returnUrl);
   const lastRoute = useAppSelector((state) => state.ui.lastRoute);
@@ -218,6 +219,34 @@ const Auth = () => {
       }
     } catch (error: any) {
       setAuthError(error.message || "Invalid credentials");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMagicLinkLogin = async () => {
+    const email = (magicLinkEmail || loginForm.getValues("email") || "").trim();
+    if (!email) {
+      toast({ title: "Enter your email", description: "We need your email to send a secure login link.", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
+    setAuthError(null);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
+
+      if (error) {
+        setAuthError(error.message);
+      } else {
+        toast({
+          title: "Magic link sent",
+          description: "Check your email and tap the login link to continue.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -464,6 +493,26 @@ const Auth = () => {
                     </Button>
                   </form>
                 </Form>
+
+                <div className="relative">
+                  <Separator />
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">
+                    easier login
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <Input
+                    type="email"
+                    value={magicLinkEmail}
+                    onChange={(e) => setMagicLinkEmail(e.target.value)}
+                    placeholder="Email for magic login link"
+                  />
+                  <Button type="button" variant="outline" className="w-full" onClick={handleMagicLinkLogin} disabled={isLoading}>
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+                    Send me a magic link
+                  </Button>
+                </div>
               </TabsContent>
 
               {/* ================= SIGNUP TAB ================= */}

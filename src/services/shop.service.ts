@@ -61,7 +61,8 @@ const shopService = {
 
     let query = supabase
       .from('shops')
-      .select('*', { count: 'exact' });
+      .select('*, products!inner(id)', { count: 'exact' })
+      .eq('products.is_available', true);
 
     // Only show active shops unless explicitly told otherwise
     if (filters?.activeOnly !== false) {
@@ -83,7 +84,7 @@ const shopService = {
     }
 
     // Map database fields to API types - return ALL active shops
-    const mappedShops: Shop[] = (shops || []).map(s => ({
+    const mappedShops: Shop[] = (shops || []).map(({ products: _products, ...s }: any) => ({
       id: s.id,
       name: s.shop_name,
       slug: s.shop_slug,

@@ -15,7 +15,6 @@ import logo from "@/assets/steersolo-logo.jpg";
 import { cn } from "@/lib/utils";
 import { PhoneVerification } from "@/components/auth/PhoneVerification";
 import { supabase } from "@/integrations/supabase/client";
-import { UserRole } from "@/types/api"; // ADD THIS IMPORT
 
 type OnboardingStep = "phone" | "questions" | "complete";
 
@@ -27,6 +26,7 @@ const Onboarding = () => {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("phone");
   const [isCheckingPhone, setIsCheckingPhone] = useState(true);
   const [hasCheckedAccess, setHasCheckedAccess] = useState(false);
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   
   // Guard: Redirect if not Entrepreneur or Customer
   useEffect(() => {
@@ -46,15 +46,15 @@ const Onboarding = () => {
         
         console.log('Database role for user:', profile?.role);
         
-        // Allow both shop_owner and customer for onboarding survey
-        if (profile?.role !== 'shop_owner' && profile?.role !== 'customer') {
-          console.log('Access denied: User is not shop_owner or customer in database');
+        // Onboarding survey is only for entrepreneurs.
+        if (profile?.role !== 'shop_owner') {
+          console.log('Access denied: User is not a shop_owner in database');
           toast({
             title: "Access Denied",
-            description: "Onboarding is for registered users only.",
+            description: "Onboarding is only available for entrepreneurs.",
             variant: "destructive"
           });
-          navigate("/");
+          navigate("/customer_dashboard");
         } else {
           console.log('Access granted:', profile?.role);
           setHasCheckedAccess(true);
@@ -87,18 +87,7 @@ const Onboarding = () => {
           .limit(1);
         
         if (data && data.length > 0) {
-          // Redirect based on role
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-          
-          if (profile?.role === 'shop_owner') {
-            navigate('/dashboard', { replace: true });
-          } else {
-            navigate('/customer_dashboard', { replace: true });
-          }
+          navigate('/dashboard', { replace: true });
         }
       }
     };
@@ -116,12 +105,6 @@ const Onboarding = () => {
             .eq('id', user.id)
             .single();
           
-          // For customers, we might want to skip phone verification entirely and go to questions
-          if (profile?.role === 'customer') {
-            setCurrentStep("questions");
-            return;
-          }
-
           // Skip phone step if already verified
           if (profile?.phone_verified) {
             setCurrentStep("questions");
@@ -157,6 +140,21 @@ const Onboarding = () => {
 
   const handleChange = (field: keyof OnboardingData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+
+    const questionOrder: (keyof OnboardingData)[] = [
+      "businessType",
+      "customerSource",
+      "biggestStruggle",
+      "paymentMethod",
+      "deliveryMethod",
+      "perfectFeature",
+    ];
+    const fieldIndex = questionOrder.indexOf(field);
+    if (fieldIndex >= 0 && fieldIndex < totalQuestions - 1) {
+      setTimeout(() => {
+        setActiveQuestionIndex((current) => (current === fieldIndex ? current + 1 : current));
+      }, 180);
+    }
   };
 
   const answeredCount = [
@@ -168,6 +166,14 @@ const Onboarding = () => {
   ].filter(Boolean).length;
 
   const isFormValid = () => answeredCount === 5;
+  const requiredQuestions: (keyof OnboardingData)[] = [
+    "businessType",
+    "customerSource",
+    "biggestStruggle",
+    "paymentMethod",
+    "deliveryMethod",
+  ];
+  const totalQuestions = 6;
 
   const handleSkipPhone = () => {
     toast({
@@ -190,18 +196,7 @@ const Onboarding = () => {
     // Refresh user context so ProtectedRoute sees updated state
     await refreshUser();
 
-    // Redirect based on actual database role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user?.id || '')
-      .single();
-      
-    if (profile?.role === 'shop_owner') {
-      navigate("/dashboard");
-    } else {
-      navigate("/customer_dashboard");
-    }
+    navigate("/dashboard");
   };
 
   const handleSubmit = async () => {
@@ -230,18 +225,7 @@ const Onboarding = () => {
       // Refresh user context so ProtectedRoute sees onboardingCompleted = true
       await refreshUser();
 
-      // Redirect based on actual database role
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user?.id || '')
-        .single();
-        
-      if (profile?.role === 'shop_owner') {
-        navigate("/dashboard?show_dfy=true");
-      } else {
-        navigate("/customer_dashboard");
-      }
+      navigate("/dashboard?show_dfy=true");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -293,28 +277,7 @@ const Onboarding = () => {
           </CardDescription>
 
           {/* Progress Indicator */}
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center justify-center gap-2">
-              {/* Phone verification step */}
-              <div 
-                className={cn(
-                  "h-2 rounded-full transition-all duration-300 flex items-center justify-center",
-                  currentStep !== "phone" ? "bg-primary w-10" : "bg-primary/50 w-10 animate-pulse"
-                )}
-              />
-               {/* Questions steps */}
-               {[1, 2, 3, 4, 5].map((stepNum) => (
-                 <div 
-                   key={stepNum}
-                   className={cn(
-                     "h-2 rounded-full transition-all duration-300",
-                     currentStep === "questions" && answeredCount >= stepNum 
-                       ? "bg-primary w-10" 
-                       : "bg-muted w-8"
-                   )}
-                 />
-               ))}
-            </div>
+          <div className="mt-4">
             <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
               {currentStep === "phone" ? (
                 <>
@@ -324,7 +287,7 @@ const Onboarding = () => {
               ) : (
                 <>
                   <Shield className="w-4 h-4 text-green-500" />
-                  Step 2: {answeredCount} of 5 questions answered
+                  Step 2: Question {activeQuestionIndex + 1} of {totalQuestions}
                 </>
               )}
             </p>
@@ -381,110 +344,122 @@ const Onboarding = () => {
                 )}
               </div>
 
-              {/* Question 1 */}
-              <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <Label className="text-base font-semibold">1. What best describes your business?</Label>
-                <RadioGroup value={formData.businessType} onValueChange={(val) => handleChange("businessType", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {["Fashion / Clothing", "Food / Bakery", "Beauty / Skincare", "Gadgets / Accessories", "Digital services", "Other"].map((opt) => (
-                    <div key={opt}>
-                      <RadioGroupItem value={opt} id={`q1-${opt}`} className="peer sr-only" />
-                      <Label
-                        htmlFor={`q1-${opt}`}
-                        className="flex items-center justify-between p-4 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
-                      >
-                        {opt}
-                        {formData.businessType === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
+              <div key={activeQuestionIndex} className="space-y-4 animate-in fade-in slide-in-from-right-6 duration-300">
+                {activeQuestionIndex === 0 && (
+                  <>
+                    <Label className="text-base font-semibold">1. What best describes your business?</Label>
+                    <RadioGroup value={formData.businessType} onValueChange={(val) => handleChange("businessType", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {["Fashion / Clothing", "Food / Bakery", "Beauty / Skincare", "Gadgets / Accessories", "Digital services", "Other"].map((opt) => (
+                        <div key={opt}>
+                          <RadioGroupItem value={opt} id={`q1-${opt}`} className="peer sr-only" />
+                          <Label htmlFor={`q1-${opt}`} className="flex items-center justify-between p-4 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all">
+                            {opt}
+                            {formData.businessType === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </>
+                )}
+
+                {activeQuestionIndex === 1 && (
+                  <>
+                    <Label className="text-base font-semibold">2. Where do most of your customers come from right now?</Label>
+                    <RadioGroup value={formData.customerSource} onValueChange={(val) => handleChange("customerSource", val)} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {["WhatsApp", "Instagram", "TikTok", "Facebook", "Offline / Referrals"].map((opt) => (
+                        <div key={opt}>
+                          <RadioGroupItem value={opt} id={`q2-${opt}`} className="peer sr-only" />
+                          <Label htmlFor={`q2-${opt}`} className="flex items-center justify-between p-3 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all">
+                            {opt}
+                            {formData.customerSource === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </>
+                )}
+
+                {activeQuestionIndex === 2 && (
+                  <>
+                    <Label className="text-base font-semibold">3. What's your biggest struggle with selling online?</Label>
+                    <RadioGroup value={formData.biggestStruggle} onValueChange={(val) => handleChange("biggestStruggle", val)} className="space-y-2">
+                      {["Repeating prices & details", "Losing orders in chats", "Customers not trusting payment", "Too much back-and-forth", "Organizing products & orders"].map((opt) => (
+                        <div key={opt} className="flex items-center space-x-2">
+                          <RadioGroupItem value={opt} id={`q3-${opt}`} />
+                          <Label htmlFor={`q3-${opt}`} className="font-normal cursor-pointer">{opt}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </>
+                )}
+
+                {activeQuestionIndex === 3 && (
+                  <>
+                    <Label className="text-base font-semibold">4. How do you currently collect payments?</Label>
+                    <RadioGroup value={formData.paymentMethod} onValueChange={(val) => handleChange("paymentMethod", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {["Bank transfer only", "Paystack", "Cash on delivery", "I want all options"].map((opt) => (
+                        <div key={opt}>
+                          <RadioGroupItem value={opt} id={`q4-${opt}`} className="peer sr-only" />
+                          <Label htmlFor={`q4-${opt}`} className="flex items-center justify-between p-3 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all">
+                            {opt}
+                            {formData.paymentMethod === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </>
+                )}
+
+                {activeQuestionIndex === 4 && (
+                  <>
+                    <Label className="text-base font-semibold flex items-center gap-2">
+                      <Truck className="w-4 h-4" />
+                      5. How do you handle delivery?
+                    </Label>
+                    <RadioGroup value={formData.deliveryMethod || ""} onValueChange={(val) => handleChange("deliveryMethod", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {["I deliver myself", "I use a logistics company", "I need help with delivery", "Customers pick up from me"].map((opt) => (
+                        <div key={opt}>
+                          <RadioGroupItem value={opt} id={`q5-${opt}`} className="peer sr-only" />
+                          <Label htmlFor={`q5-${opt}`} className="flex items-center justify-between p-3 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all">
+                            {opt}
+                            {formData.deliveryMethod === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </>
+                )}
+
+                {activeQuestionIndex === 5 && (
+                  <>
+                    <Label className="text-base font-semibold">6. What would make SteerSolo perfect for your business? <span className="text-muted-foreground font-normal text-sm">(Optional)</span></Label>
+                    <Textarea
+                      placeholder="Tell us what you'd love to see"
+                      value={formData.perfectFeature}
+                      onChange={(e) => handleChange("perfectFeature", e.target.value)}
+                      className="resize-none min-h-[100px]"
+                    />
+                  </>
+                )}
               </div>
 
-              {/* Question 2 */}
-              <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
-                <Label className="text-base font-semibold">2. Where do most of your customers come from right now?</Label>
-                <RadioGroup value={formData.customerSource} onValueChange={(val) => handleChange("customerSource", val)} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {["WhatsApp", "Instagram", "TikTok", "Facebook", "Offline / Referrals"].map((opt) => (
-                    <div key={opt}>
-                      <RadioGroupItem value={opt} id={`q2-${opt}`} className="peer sr-only" />
-                      <Label
-                         htmlFor={`q2-${opt}`}
-                         className="flex items-center justify-between p-3 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
-                      >
-                        {opt}
-                        {formData.customerSource === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
+              <div className="flex items-center justify-between gap-3 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setActiveQuestionIndex((prev) => Math.max(prev - 1, 0))}
+                  disabled={activeQuestionIndex === 0}
+                >
+                  Previous
+                </Button>
 
-              {/* Question 3 */}
-              <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
-                <Label className="text-base font-semibold">3. What's your biggest struggle with selling online?</Label>
-                <RadioGroup value={formData.biggestStruggle} onValueChange={(val) => handleChange("biggestStruggle", val)} className="space-y-2">
-                  {["Repeating prices & details", "Losing orders in chats", "Customers not trusting payment", "Too much back-and-forth", "Organizing products & orders"].map((opt) => (
-                    <div key={opt} className="flex items-center space-x-2">
-                      <RadioGroupItem value={opt} id={`q3-${opt}`} />
-                      <Label htmlFor={`q3-${opt}`} className="font-normal cursor-pointer">{opt}</Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setActiveQuestionIndex((prev) => Math.min(prev + 1, totalQuestions - 1))}
+                  disabled={activeQuestionIndex >= totalQuestions - 1 || (activeQuestionIndex < 5 && !formData[requiredQuestions[activeQuestionIndex]])}
+                >
+                  Next
+                </Button>
 
-               {/* Question 4 */}
-               <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
-                <Label className="text-base font-semibold">4. How do you currently collect payments?</Label>
-                <RadioGroup value={formData.paymentMethod} onValueChange={(val) => handleChange("paymentMethod", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {["Bank transfer only", "Paystack", "Cash on delivery", "I want all options"].map((opt) => (
-                    <div key={opt}>
-                      <RadioGroupItem value={opt} id={`q4-${opt}`} className="peer sr-only" />
-                      <Label
-                         htmlFor={`q4-${opt}`}
-                         className="flex items-center justify-between p-3 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
-                      >
-                        {opt}
-                        {formData.paymentMethod === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
-
-              {/* Question 5 - Delivery */}
-              <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-400">
-                <Label className="text-base font-semibold flex items-center gap-2">
-                  <Truck className="w-4 h-4" />
-                  5. How do you handle delivery?
-                </Label>
-                <RadioGroup value={formData.deliveryMethod || ""} onValueChange={(val) => handleChange("deliveryMethod", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {["I deliver myself", "I use a logistics company", "I need help with delivery", "Customers pick up from me"].map((opt) => (
-                    <div key={opt}>
-                      <RadioGroupItem value={opt} id={`q5-${opt}`} className="peer sr-only" />
-                      <Label
-                         htmlFor={`q5-${opt}`}
-                         className="flex items-center justify-between p-3 rounded-lg border-2 border-muted bg-popover hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
-                      >
-                        {opt}
-                        {formData.deliveryMethod === opt && <CheckCircle2 className="w-4 h-4 text-primary" />}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
-
-              {/* Question 6 - Optional */}
-              <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500">
-                <Label className="text-base font-semibold">6. What would make SteerSolo perfect for your business? <span className="text-muted-foreground font-normal text-sm">(Optional)</span></Label>
-                <Textarea 
-                  placeholder="Tell us what you'd love to see" 
-                  value={formData.perfectFeature}
-                  onChange={(e) => handleChange("perfectFeature", e.target.value)}
-                  className="resize-none min-h-[100px]"
-                />
-              </div>
-
-              <div className="flex items-center justify-between gap-4 mt-4">
                 <Button 
                   variant="ghost" 
                   onClick={handleSkipQuestions}
@@ -496,8 +471,8 @@ const Onboarding = () => {
 
                 <Button 
                   onClick={handleSubmit} 
-                  className="flex-1 bg-gradient-to-r from-primary to-accent py-6 text-lg"
-                  disabled={!isFormValid() || isLoading}
+                  className="bg-gradient-to-r from-primary to-accent py-6 text-lg"
+                  disabled={!isFormValid() || isLoading || activeQuestionIndex < totalQuestions - 1}
                 >
                   {isLoading ? (
                      <>

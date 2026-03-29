@@ -77,7 +77,7 @@ const Callback = () => {
               redirectPath = (shops && shops.length > 0) ? '/dashboard' : '/onboarding';
             }
           } else if (profile.role === 'customer') {
-            redirectPath = needsOnboarding ? '/onboarding' : '/customer_dashboard';
+            redirectPath = '/customer_dashboard';
           } else {
             // Unknown role, default to customer dashboard
             console.warn('Unknown role, defaulting to customer dashboard');
