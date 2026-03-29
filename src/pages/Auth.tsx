@@ -88,7 +88,7 @@ const Auth = () => {
   const { toast } = useToast();
   const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState(defaultTab);
-  const { signIn, signUp, signInWithGoogle, resetPassword, user, isLoading: authLoading } = useAuth();
+  const { signIn, signUp, resetPassword, user, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
