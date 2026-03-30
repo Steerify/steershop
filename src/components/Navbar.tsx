@@ -161,7 +161,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                   </span>
                 )}
               </span>
-            </Link>
+            </div>
 
             {/* Desktop Nav - Updated typography */}
             <div className="hidden md:flex items-center gap-8 font-display">
@@ -208,7 +208,11 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
             </div>
 
             {/* Mobile Button */}
-            <button className="md:hidden p-2 rounded-lg hover:bg-muted relative" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            <button 
+              className="md:hidden p-2 rounded-lg hover:bg-muted relative" 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+            >
               {activeCelebrations.length > 0 && (
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full"></div>
               )}
