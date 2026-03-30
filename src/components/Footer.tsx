@@ -20,12 +20,24 @@ export const Footer = () => {
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
           {/* Brand Section */}
           <div className="col-span-2 sm:col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden shadow-lg ring-2 ring-gold/30 flex-shrink-0">
-                <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <div
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden shadow-lg ring-2 ring-gold/30 flex-shrink-0 select-none"
+                onContextMenu={(e) => e.preventDefault()}
+                aria-label="SteerSolo logo"
+              >
+                <img
+                  src={logo}
+                  alt="SteerSolo"
+                  className="w-full h-full object-cover"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                />
               </div>
-              <span className="font-heading text-xl sm:text-2xl font-bold text-gold">SteerSolo</span>
-            </Link>
+              <Link to="/" className="font-heading text-xl sm:text-2xl font-bold text-gold">
+                SteerSolo
+              </Link>
+            </div>
             <p className="text-primary-foreground/80 text-xs sm:text-sm leading-relaxed">
               Empowering Nigerian solo entrepreneurs to build, grow, and thrive in the digital economy.
             </p>

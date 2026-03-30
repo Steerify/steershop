@@ -45,6 +45,13 @@ const painPoints = [
   },
 ];
 
+const safeBeautyBadges = [
+  { title: "SafeBeauty Listed", detail: "Entry-level verified beauty vendor profile." },
+  { title: "SafeBeauty Checked", detail: "At least one product batch checked in our process." },
+  { title: "SafeBeauty Trusted", detail: "30+ days active, reviews, and complaint-safe history." },
+  { title: "SafeBeauty Verified", detail: "Full verification + stronger trust signal for buyers." },
+];
+
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
@@ -63,25 +70,26 @@ const Index = () => {
             <div className="flex-1 text-center lg:text-left space-y-8">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 text-primary text-sm font-semibold border border-primary/15 shadow-sm animate-fade-up">
                 <Sparkles className="w-4 h-4" />
-                <span>Trusted by Nigerian vendors</span>
+                <span>Built for Nigeria's social-commerce sellers</span>
                 <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse ml-1" />
               </div>
 
               <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight animate-fade-up text-balance leading-[1.1]" style={{ animationDelay: '80ms' }}>
-                Your <span className="text-accent underline decoration-gold/30">Daily Selling System</span> is here.
+                Turn your WhatsApp & Instagram audience into a
+                <span className="text-accent underline decoration-gold/30"> trusted storefront</span>.
               </h1>
 
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mt-4 animate-fade-up" style={{ animationDelay: '120ms' }}>
-                Turn WhatsApp traffic into
+                Give buyers proof, prices and confidence —
                 {" "}
                 <TypewriterEffect
-                  texts={["consistent orders", "", "a trusted brand", "daily success"]}
+                  texts={["before they DM", "", "before they pay", "before they leave"]}
                   className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-gold"
                 />
               </h2>
 
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 animate-fade-up text-balance" style={{ animationDelay: '160ms' }}>
-                Stop losing sales to DM chaos. Get a professional storefront with payments, order tracking, and AI marketing — setup takes 10 minutes.
+                Most Nigerian online sales start on social apps but fail at trust. SteerSolo gives you a verified store page, structured product catalog, reviews, and payment-ready checkout in minutes.
               </p>
 
               <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 pt-2 animate-fade-up" style={{ animationDelay: '240ms' }}>
@@ -101,16 +109,32 @@ const Index = () => {
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-5 text-sm text-muted-foreground animate-fade-up" style={{ animationDelay: '320ms' }}>
                 <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-4 py-2 shadow-sm hover:border-accent/40 transition-colors">
                   <CheckCircle className="w-4 h-4 text-accent" />
-                  Proven 30-Day Ritual
+                  Verification-first trust signals
                 </div>
                 <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-4 py-2 shadow-sm hover:border-primary/40 transition-colors">
                   <Zap className="w-4 h-4 text-primary" />
-                  Free Forever Plan
+                  Free plan to start
                 </div>
                 <div className="flex items-center gap-1.5 bg-card border border-border/60 rounded-full px-4 py-2 shadow-sm hover:border-gold/40 transition-colors">
                   <Shield className="w-4 h-4 text-gold" />
-                  Trusted & Secure
+                  Built for mobile buyers
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-up" style={{ animationDelay: '360ms' }}>
+                {[
+                  { value: "$8.8B", label: "Nigeria e-commerce (2024)" },
+                  { value: "69%", label: "Social commerce penetration" },
+                  { value: "95%", label: "Nigerians on WhatsApp" },
+                  { value: "82%", label: "Transactions on mobile" },
+                ].map((stat) => (
+                  <Card key={stat.label} className="p-3 text-center border-border/60">
+                    <CardContent className="p-0">
+                      <p className="text-lg sm:text-xl font-extrabold text-primary">{stat.value}</p>
+                      <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">{stat.label}</p>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
 
@@ -157,6 +181,32 @@ const Index = () => {
       </section>
 
       {/* SECTION 3: WHAT IS STEERSOLO + WHY — Show the solution */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-10">
+              <p className="text-xs font-bold text-primary tracking-widest uppercase mb-3">Beauty Market Focus</p>
+              <h2 className="font-display text-3xl md:text-4xl font-extrabold mb-3">SafeBeauty: our trust layer for beauty sellers</h2>
+              <p className="text-muted-foreground max-w-3xl mx-auto">
+                We are renovating SteerSolo around beauty-commerce trust: verified sellers, transparent badges, and safer buyer discovery.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-4 gap-4">
+              {safeBeautyBadges.map((badge) => (
+                <Card key={badge.title} className="border-primary/15">
+                  <CardContent className="p-5">
+                    <p className="font-bold text-primary mb-1">{badge.title}</p>
+                    <p className="text-sm text-muted-foreground">{badge.detail}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 3B: WHAT IS STEERSOLO + WHY — Show the solution */}
       <WhySteerSolo />
 
       {/* SECTION 4: HOW IT WORKS — Make it feel easy */}
