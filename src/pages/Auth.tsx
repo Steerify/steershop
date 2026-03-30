@@ -252,25 +252,11 @@ const Auth = () => {
       return;
     }
 
-    const validation = z.string().email().safeParse(email);
-    if (!validation.success) {
-      toast({ title: "Invalid email", description: "Please enter a valid email address.", variant: "destructive" });
-      return;
-    }
-    if (isDisposableEmail(validation.data)) {
-      toast({
-        title: "Use a real inbox",
-        description: "Disposable inboxes may not receive sign-in emails. Please use Gmail, Outlook, or a business email.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     setAuthError(null);
     try {
       const { error } = await supabase.auth.signInWithOtp({
-        email: validation.data,
+        email,
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
 
