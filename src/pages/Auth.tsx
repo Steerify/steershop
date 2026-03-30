@@ -77,6 +77,21 @@ const loginSchema = z.object({
 type SignupFormData = z.infer<typeof signupSchema>;
 type LoginFormData = z.infer<typeof loginSchema>;
 
+const DISPOSABLE_EMAIL_DOMAINS = new Set([
+  "yopmail.com",
+  "mailinator.com",
+  "guerrillamail.com",
+  "10minutemail.com",
+  "tempmail.com",
+  "trashmail.com",
+  "sharklasers.com",
+]);
+
+const isDisposableEmail = (email: string) => {
+  const domain = email.split("@")[1]?.toLowerCase().trim();
+  return Boolean(domain && DISPOSABLE_EMAIL_DOMAINS.has(domain));
+};
+
 const Auth = () => {
   const { theme } = useTheme();
   const logo = theme === 'dark' ? logoDark : logoLight;
@@ -171,8 +186,14 @@ const Auth = () => {
     setAuthError(null);
 
     try {
+      const normalizedEmail = data.email.trim().toLowerCase();
+      if (isDisposableEmail(normalizedEmail)) {
+        setAuthError("Please use a real email provider (e.g. Gmail/Outlook). Disposable inboxes often block verification emails.");
+        return;
+      }
+
       const signUpData: SignUpData = {
-        email: data.email,
+        email: normalizedEmail,
         password: data.password,
         firstName: "", // Will be collected in onboarding
         lastName: "",
@@ -187,7 +208,7 @@ const Auth = () => {
       } else {
         // Show email verification notice instead of immediate redirect
         // Supabase requires email confirmation before user can log in
-        setRegisteredEmail(data.email);
+        setRegisteredEmail(normalizedEmail);
         setShowEmailVerification(true);
         
         toast({
@@ -257,7 +278,15 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      const emailValidation = z.string().email().parse(forgotEmail);
+      const emailValidation = z.string().email().parse(forgotEmail.trim().toLowerCase());
+      if (isDisposableEmail(emailValidation)) {
+        toast({
+          title: "Use a real inbox",
+          description: "Disposable inboxes may not receive password reset emails.",
+          variant: "destructive",
+        });
+        return;
+      }
       const result = await resetPassword(emailValidation);
 
       if (result.error) {
@@ -384,6 +413,7 @@ const Auth = () => {
               <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
                 <p>Click the link in the email to activate your account.</p>
                 <p className="text-xs">Check your spam folder if you don't see it within a few minutes.</p>
+                <p className="text-xs">Some temporary/disposable inboxes may delay or block auth emails.</p>
               </div>
               <Button 
                 variant="outline" 
