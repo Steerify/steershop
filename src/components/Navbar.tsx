@@ -132,9 +132,19 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
           <div className="flex items-center justify-between">
             
             {/* Logo Section */}
-            <Link to={shopBranding ? "#" : "/"} onClick={shopBranding ? (e) => e.preventDefault() : undefined} className="flex items-center gap-3 group relative">
-              <div className={`w-14 h-14 rounded-2xl overflow-hidden shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 relative ${theme === 'dark' ? '' : 'bg-white'}`}>
-                <img src={shopBranding?.logoUrl || logo} alt={shopBranding?.name || "SteerSolo"} className="w-full h-full object-cover" />
+            <div className="flex items-center gap-3 group relative">
+              <div
+                className={`w-14 h-14 rounded-2xl overflow-hidden shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 relative select-none ${theme === 'dark' ? '' : 'bg-white'}`}
+                onContextMenu={(e) => e.preventDefault()}
+                aria-label="Brand logo"
+              >
+                <img
+                  src={shopBranding?.logoUrl || logo}
+                  alt={shopBranding?.name || "SteerSolo"}
+                  className="w-full h-full object-cover"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                />
                 
                 {/* Visual Effects (Non-animated) */}
                 {!shopBranding && isNewYear && <FireworkFlare />}
@@ -143,15 +153,21 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
               </div>
 
               {/* Updated typography to match index page */}
-              <span className="font-display text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                {shopBranding?.name || "SteerSolo"}
-                {!shopBranding && primary && (
-                  <span className="ml-2 text-lg inline-block text-primary">
-                    {isChristmas ? "🎄" : <Sparkles className="inline w-5 h-5" />}
-                  </span>
-                )}
-              </span>
-            </Link>
+              {shopBranding ? (
+                <span className="hidden min-[360px]:inline font-display text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  {shopBranding.name}
+                </span>
+              ) : (
+                <Link to="/" className="hidden min-[360px]:inline font-display text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  SteerSolo
+                  {primary && (
+                    <span className="ml-2 text-lg inline-block text-primary">
+                      {isChristmas ? "🎄" : <Sparkles className="inline w-5 h-5" />}
+                    </span>
+                  )}
+                </Link>
+              )}
+            </div>
 
             {/* Desktop Nav - Updated typography */}
             <div className="hidden md:flex items-center gap-8 font-display">

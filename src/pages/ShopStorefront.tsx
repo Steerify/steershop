@@ -438,7 +438,13 @@ const ShopStorefront = () => {
                   <div className="relative w-20 h-20 md:w-24 md:h-24">
                     <div className="w-full h-full rounded-2xl md:rounded-3xl overflow-hidden ring-4 ring-background shadow-xl bg-muted flex items-center justify-center">
                       {shop.logo_url ? (
-                        <img src={shop.logo_url} alt={shop.shop_name} className="w-full h-full object-cover" />
+                        <img
+                          src={shop.logo_url}
+                          alt={shop.shop_name}
+                          className="w-full h-full object-cover select-none"
+                          draggable={false}
+                          onContextMenu={(e) => e.preventDefault()}
+                        />
                       ) : (
                         <Store className="w-10 h-10 text-muted-foreground" />
                       )}
@@ -767,7 +773,7 @@ const ShopStorefront = () => {
                   {/* Price Row */}
                   <div className="flex items-center justify-between mt-2 mb-3">
                     <div className="flex items-baseline gap-1.5 flex-wrap">
-                      <span className="text-base sm:text-lg font-bold gradient-text tabular-nums">
+                      <span className="text-base sm:text-lg font-bold text-primary dark:text-accent tabular-nums tracking-tight">
                         ₦{product.price.toLocaleString()}
                       </span>
                       {product.compare_price && Number(product.compare_price) > product.price && (

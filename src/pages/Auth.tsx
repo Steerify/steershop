@@ -77,6 +77,21 @@ const loginSchema = z.object({
 type SignupFormData = z.infer<typeof signupSchema>;
 type LoginFormData = z.infer<typeof loginSchema>;
 
+const DISPOSABLE_EMAIL_DOMAINS = new Set([
+  "yopmail.com",
+  "mailinator.com",
+  "guerrillamail.com",
+  "10minutemail.com",
+  "tempmail.com",
+  "trashmail.com",
+  "sharklasers.com",
+]);
+
+const isDisposableEmail = (email: string) => {
+  const domain = email.split("@")[1]?.toLowerCase().trim();
+  return Boolean(domain && DISPOSABLE_EMAIL_DOMAINS.has(domain));
+};
+
 const Auth = () => {
   const { theme } = useTheme();
   const logo = theme === 'dark' ? logoDark : logoLight;
@@ -88,7 +103,7 @@ const Auth = () => {
   const { toast } = useToast();
   const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState(defaultTab);
-  const { signIn, signUp, signInWithGoogle, resetPassword, user, isLoading: authLoading } = useAuth();
+  const { signIn, signUp, resetPassword, user, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -98,6 +113,7 @@ const Auth = () => {
   );
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [magicLinkEmail, setMagicLinkEmail] = useState("");
 
   const returnUrl = useAppSelector((state) => state.ui.returnUrl);
   const lastRoute = useAppSelector((state) => state.ui.lastRoute);
@@ -170,8 +186,14 @@ const Auth = () => {
     setAuthError(null);
 
     try {
+      const normalizedEmail = data.email.trim().toLowerCase();
+      if (isDisposableEmail(normalizedEmail)) {
+        setAuthError("Please use a real email provider (e.g. Gmail/Outlook). Disposable inboxes often block verification emails.");
+        return;
+      }
+
       const signUpData: SignUpData = {
-        email: data.email,
+        email: normalizedEmail,
         password: data.password,
         firstName: "", // Will be collected in onboarding
         lastName: "",
@@ -186,7 +208,7 @@ const Auth = () => {
       } else {
         // Show email verification notice instead of immediate redirect
         // Supabase requires email confirmation before user can log in
-        setRegisteredEmail(data.email);
+        setRegisteredEmail(normalizedEmail);
         setShowEmailVerification(true);
         
         toast({
@@ -223,12 +245,62 @@ const Auth = () => {
     }
   };
 
+  const handleMagicLinkLogin = async () => {
+    const email = (magicLinkEmail || loginForm.getValues("email") || "").trim();
+    if (!email) {
+      toast({ title: "Enter your email", description: "We need your email to send a secure login link.", variant: "destructive" });
+      return;
+    }
+
+    const validation = z.string().email().safeParse(email);
+    if (!validation.success) {
+      toast({ title: "Invalid email", description: "Please enter a valid email address.", variant: "destructive" });
+      return;
+    }
+    if (isDisposableEmail(validation.data)) {
+      toast({
+        title: "Use a real inbox",
+        description: "Disposable inboxes may not receive sign-in emails. Please use Gmail, Outlook, or a business email.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setAuthError(null);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: validation.data,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
+
+      if (error) {
+        setAuthError(error.message);
+      } else {
+        toast({
+          title: "Magic link sent",
+          description: "Check your email and tap the login link to continue.",
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const emailValidation = z.string().email().parse(forgotEmail);
+      const emailValidation = z.string().email().parse(forgotEmail.trim().toLowerCase());
+      if (isDisposableEmail(emailValidation)) {
+        toast({
+          title: "Use a real inbox",
+          description: "Disposable inboxes may not receive password reset emails.",
+          variant: "destructive",
+        });
+        return;
+      }
       const result = await resetPassword(emailValidation);
 
       if (result.error) {
@@ -355,6 +427,7 @@ const Auth = () => {
               <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
                 <p>Click the link in the email to activate your account.</p>
                 <p className="text-xs">Check your spam folder if you don't see it within a few minutes.</p>
+                <p className="text-xs">Some temporary/disposable inboxes may delay or block auth emails.</p>
               </div>
               <Button 
                 variant="outline" 
@@ -464,6 +537,26 @@ const Auth = () => {
                     </Button>
                   </form>
                 </Form>
+
+                <div className="relative">
+                  <Separator />
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">
+                    easier login
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <Input
+                    type="email"
+                    value={magicLinkEmail}
+                    onChange={(e) => setMagicLinkEmail(e.target.value)}
+                    placeholder="Email for magic login link"
+                  />
+                  <Button type="button" variant="outline" className="w-full" onClick={handleMagicLinkLogin} disabled={isLoading}>
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+                    Send me a magic link
+                  </Button>
+                </div>
               </TabsContent>
 
               {/* ================= SIGNUP TAB ================= */}
