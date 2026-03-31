@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 interface NotificationRequest {
-  type: 'profile_incomplete' | 'subscription_expiring' | 'milestone_achieved' | 'setup_complete';
+  type: 'profile_incomplete' | 'subscription_expiring' | 'milestone_achieved' | 'setup_complete' | 'store_approved';
   user_id?: string;
   data?: Record<string, any>;
 }
@@ -82,6 +82,46 @@ const getEmailTemplate = (type: string, data: Record<string, any>) => {
           <p style="color: #666; margin-top: 30px; font-size: 14px;">
             Go make those sales! - The SteerSolo Team
           </p>
+        </div>`,
+      };
+
+    case 'store_approved':
+      return {
+        subject: `🎉 Your store "${data.storeName || 'Store'}" has been approved`,
+        html: `<div style="${baseStyles} background: #FAFAF8; border: 1px solid #E8E5DD; border-radius: 16px; padding: 0; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #123C72, #0EA46E); color: #fff; padding: 24px 24px 20px;">
+            <p style="margin: 0; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; opacity: .9;">SteerSolo Admin Update</p>
+            <h1 style="margin: 8px 0 0; font-size: 26px; line-height: 1.2;">Your store is now approved ✅</h1>
+          </div>
+
+          <div style="padding: 24px;">
+            <p style="margin-top: 0; color: #1D2939; font-size: 15px;">Hi ${data.name || 'there'},</p>
+            <p style="color: #344054; line-height: 1.7; font-size: 15px;">
+              Congratulations! Your storefront <strong>${data.storeName || 'Store'}</strong> has successfully passed review and is now live for customers.
+            </p>
+
+            <div style="background: #FFFFFF; border: 1px solid #E4E7EC; border-radius: 12px; padding: 16px; margin: 16px 0;">
+              <p style="margin: 0 0 8px; color: #0EA46E; font-weight: 700;">What you can do now:</p>
+              <ul style="margin: 0; padding-left: 18px; color: #475467; line-height: 1.7;">
+                <li>Share your store link on WhatsApp, Instagram, and other channels.</li>
+                <li>Upload fresh products and services to attract more buyers.</li>
+                <li>Track orders and performance from your dashboard.</li>
+              </ul>
+            </div>
+
+            <div style="margin: 22px 0 8px;">
+              <a href="${data.storefrontUrl || data.dashboardUrl || 'https://steersolo.com/dashboard'}" style="${buttonStyle} margin-right: 10px;">
+                View My Live Store
+              </a>
+              <a href="${data.dashboardUrl || 'https://steersolo.com/dashboard'}" style="display: inline-block; color: #123C72; text-decoration: none; font-weight: 600; font-size: 14px;">
+                Open Dashboard →
+              </a>
+            </div>
+
+            <p style="color: #667085; margin-top: 22px; font-size: 13px;">
+              Need support? Reply to this email and our team will help you quickly.
+            </p>
+          </div>
         </div>`,
       };
 

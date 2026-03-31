@@ -135,6 +135,21 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Poppins', sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: hidden;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: clip;
+  }
+
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -154,9 +169,43 @@
   h3 {
     @apply text-xl sm:text-2xl;
   }
+
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
 }
 
 @layer components {
+  .app-shell {
+    background-image:
+      radial-gradient(circle at 10% -10%, hsl(var(--primary) / 0.08), transparent 38%),
+      radial-gradient(circle at 100% 0%, hsl(var(--accent) / 0.06), transparent 32%);
+  }
+
+  .app-shell-glow {
+    background:
+      linear-gradient(180deg, hsl(var(--primary) / 0.04), transparent 28%),
+      linear-gradient(0deg, hsl(var(--accent) / 0.03), transparent 24%);
+  }
+
   /* Adire Pattern Backgrounds */
   .adire-pattern {
     background-image: 
