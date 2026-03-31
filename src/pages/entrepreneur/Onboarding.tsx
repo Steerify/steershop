@@ -196,7 +196,7 @@ const Onboarding = () => {
     // Refresh user context so ProtectedRoute sees updated state
     await refreshUser();
 
-    navigate("/dashboard", { replace: true });
+    navigate("/dashboard");
   };
 
   const handleSubmit = async () => {
@@ -225,7 +225,7 @@ const Onboarding = () => {
       // Refresh user context so ProtectedRoute sees onboardingCompleted = true
       await refreshUser();
 
-      navigate("/dashboard", { replace: true });
+      navigate("/dashboard?show_dfy=true");
     } catch (error: any) {
       toast({
         title: "Error",
