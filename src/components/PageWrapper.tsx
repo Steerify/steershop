@@ -14,8 +14,7 @@ export const PageWrapper = ({
   patternVariant = "dots",
   patternOpacity = 0.5
 }: PageWrapperProps) => (
-  <div className={cn("min-h-screen bg-background relative overflow-x-hidden app-shell", className)}>
-    <div className="pointer-events-none absolute inset-0 app-shell-glow" />
+  <div className={cn("min-h-screen bg-background relative overflow-x-hidden", className)}>
     <AdirePattern 
       variant={patternVariant} 
       className="fixed inset-0 pointer-events-none z-0" 
