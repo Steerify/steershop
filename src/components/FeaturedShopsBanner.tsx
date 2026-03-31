@@ -26,6 +26,7 @@ interface FeaturedShop {
 export const FeaturedShopsBanner = () => {
   const [featuredShops, setFeaturedShops] = useState<FeaturedShop[]>([]);
   const [loading, setLoading] = useState(true);
+  const [brokenLogos, setBrokenLogos] = useState<Record<string, boolean>>({});
   
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { 
@@ -104,6 +105,25 @@ export const FeaturedShopsBanner = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const resolveLogoUrl = (logoUrl: string | null) => {
+    if (!logoUrl) return null;
+
+    // Force https for mixed-content-safe rendering.
+    if (logoUrl.startsWith("http://")) {
+      return logoUrl.replace("http://", "https://");
+    }
+
+    // If already absolute (https), use directly.
+    if (/^https?:\/\//i.test(logoUrl)) {
+      return logoUrl;
+    }
+
+    // Fallback for paths saved without public URL.
+    const cleanedPath = logoUrl.replace(/^\/+/, "");
+    const { data } = supabase.storage.from("shop-images").getPublicUrl(cleanedPath);
+    return data.publicUrl;
   };
 
   if (!loading && featuredShops.length === 0) return null;
@@ -196,11 +216,15 @@ export const FeaturedShopsBanner = () => {
                   <div className="relative flex items-center gap-4">
                     {/* Logo */}
                     <div className="w-14 h-14 rounded-2xl overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/50">
-                      {featured.shop.logo_url ? (
+                      {featured.shop.logo_url && !brokenLogos[featured.id] ? (
                         <img
-                          src={featured.shop.logo_url}
+                          src={resolveLogoUrl(featured.shop.logo_url) || undefined}
                           alt={featured.shop.shop_name}
                           className="w-full h-full object-cover"
+                          loading="lazy"
+                          onError={() =>
+                            setBrokenLogos((prev) => ({ ...prev, [featured.id]: true }))
+                          }
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
