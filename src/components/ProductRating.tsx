@@ -33,7 +33,7 @@ export const ProductRating = ({
             key={star}
             className={`${sizeClasses[size]} ${
               star <= Math.round(rating)
-                ? "fill-yellow-400 text-yellow-400"
+                ? "fill-gold text-gold"
                 : "text-gray-300"
             }`}
           />

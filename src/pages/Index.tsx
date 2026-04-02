@@ -8,24 +8,23 @@ import { HomepageReviews } from "@/components/HomepageReviews";
 import { DynamicPricing } from "@/components/DynamicPricing";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 
-/* ─── Brand tokens (always-dark sections only — hero, cta, etc.) ─── */
+/* ─── Brand tokens (always-dark sections only) ─── */
 const HERO_BG   = "linear-gradient(135deg, hsl(215,65%,18%) 0%, hsl(215,65%,25%) 60%, hsl(215,58%,30%) 100%)";
 const CTA_BG    = "linear-gradient(135deg, hsl(215,65%,18%) 0%, hsl(215,65%,25%) 55%, hsl(215,52%,32%) 100%)";
-const INK_BG    = "hsl(220,45%,10%)";
-const BRAND_BG  = "hsl(215,65%,25%)";  // SafeBeauty badges section
-const GOLD      = "hsl(42,90%,55%)";
 const INDIGO    = "hsl(215,65%,25%)";
 const INK       = "hsl(220,45%,12%)";
+const ACCENT    = "hsl(145,60%,38%)";
+const ACCENT_BRIGHT = "hsl(145,60%,48%)";
 
 /* ─── Photos ─── */
 const P = {
-  heroVendor:   "https://images.unsplash.com/photo-1614257135031-5f1e96ed1b45?auto=format&fit=crop&w=900&q=80",
+  heroVendor:   "https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&w=900&q=80",
   heroProducts: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=900&q=80",
   whatsapp:     "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=700&q=80",
   instagram:    "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=700&q=80",
   tiktok:       "https://images.unsplash.com/photo-1611162616305-c69b3396e46a?auto=format&fit=crop&w=700&q=80",
   trustFace:    "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=1400&q=80",
-  organic:      "https://images.unsplash.com/photo-1607006344380-b6775a0824a7?auto=format&fit=crop&w=800&q=80",
+  organic:      "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=800&q=80",
   orders:       "https://images.unsplash.com/photo-1586880244406-556ebe35f282?auto=format&fit=crop&w=700&q=80",
   storefront:   "https://images.unsplash.com/photo-1607082349566-187342175e2f?auto=format&fit=crop&w=800&q=80",
   av1: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=100&q=80",
@@ -69,10 +68,10 @@ const JOURNEY = [
 ];
 
 const BADGES = [
-  { num:"01", label:"SafeBeauty Listed",   desc:"Vendor verified, store live. Entry-level trust signal for new buyers.",                      gold:false },
-  { num:"02", label:"SafeBeauty Checked",  desc:"At least one product batch confirmed genuine through our process.",                           gold:false },
-  { num:"03", label:"SafeBeauty Trusted",  desc:"30+ days active, real buyer reviews, zero unresolved complaints.",                            gold:false },
-  { num:"04", label:"SafeBeauty Verified", desc:"Full NAFDAC-aligned identity check — the highest trust signal on the platform.",               gold:true  },
+  { num:"01", label:"SafeBeauty Listed",   desc:"Vendor verified, store live. Entry-level trust signal for new buyers.",                      top:false },
+  { num:"02", label:"SafeBeauty Checked",  desc:"At least one product batch confirmed genuine through our process.",                           top:false },
+  { num:"03", label:"SafeBeauty Trusted",  desc:"30+ days active, real buyer reviews, zero unresolved complaints.",                            top:false },
+  { num:"04", label:"SafeBeauty Verified", desc:"Full NAFDAC-aligned identity check — the highest trust signal on the platform.",               top:true  },
 ];
 
 const TESTIMONIALS = [
@@ -126,11 +125,11 @@ const Index = () => (
         position:"absolute",inset:0,pointerEvents:"none",opacity:0.035,
         backgroundImage:"repeating-linear-gradient(-55deg,transparent,transparent 48px,rgba(255,255,255,.9) 48px,rgba(255,255,255,.9) 49px)",
       }}/>
-      {/* gold glow — bottom right */}
+      {/* accent glow — bottom right */}
       <div style={{
         position:"absolute",bottom:"-10%",right:"-5%",width:"55%",height:"70%",
         pointerEvents:"none",
-        background:`radial-gradient(ellipse at 80% 80%, hsl(42,90%,55%,0.20) 0%, transparent 65%)`,
+        background:`radial-gradient(ellipse at 80% 80%, hsl(145,60%,38%,0.15) 0%, transparent 65%)`,
       }}/>
       {/* soft indigo glow — top left */}
       <div style={{
@@ -145,13 +144,13 @@ const Index = () => (
           {/* ── TEXT ── */}
           <div style={{ flex:"1 1 420px",maxWidth:600 }} className="f1">
 
-            {/* eyebrow — gold, not green */}
+            {/* eyebrow */}
             <div style={{
               display:"inline-flex",alignItems:"center",gap:8,marginBottom:28,
-              borderBottom:`1.5px solid ${GOLD}`,paddingBottom:6,
+              borderBottom:`1.5px solid rgba(255,255,255,0.3)`,paddingBottom:6,
             }}>
-              <Sparkles style={{ width:14,height:14,color:GOLD }} />
-              <span style={{ fontSize:"0.72rem",fontWeight:600,textTransform:"uppercase",letterSpacing:"0.22em",color:GOLD }}>
+              <Sparkles style={{ width:14,height:14,color:"rgba(255,255,255,0.6)" }} />
+              <span style={{ fontSize:"0.72rem",fontWeight:600,textTransform:"uppercase",letterSpacing:"0.22em",color:"rgba(255,255,255,0.6)" }}>
                 For WhatsApp · Instagram · TikTok vendors
               </span>
             </div>
@@ -159,7 +158,7 @@ const Index = () => (
             <h1 style={{ fontWeight:800,color:"#fff",lineHeight:1.05,marginBottom:24,fontSize:"clamp(2.6rem,5.2vw,4.6rem)" }}>
               You already have<br />
               the audience.<br />
-              <em style={{ fontStyle:"normal",color:GOLD }}>Give them somewhere to buy.</em>
+              <em style={{ fontStyle:"normal",color:ACCENT_BRIGHT }}>Give them somewhere to buy.</em>
             </h1>
 
             <p style={{ fontSize:"1.1rem",lineHeight:1.7,color:"rgba(255,255,255,.62)",fontWeight:300,maxWidth:500,marginBottom:36 }}>
@@ -167,20 +166,19 @@ const Index = () => (
               because there's nowhere to send them after the DM. SteerSolo is that place.
             </p>
 
-            {/* CTAs — Indigo primary, not green */}
+            {/* CTAs */}
             <div style={{ display:"flex",flexWrap:"wrap",gap:14,marginBottom:28 }} className="f2">
               <Link to="/auth/signup">
                 <button style={{
                   display:"flex",alignItems:"center",gap:10,padding:"14px 32px",
-                  borderRadius:9999,fontWeight:700,fontSize:"1rem",color:"#fff",
-                  background:"rgba(255,255,255,0.15)",
-                  boxShadow:`0 0 0 1.5px rgba(255,255,255,0.3), 0 8px 32px rgba(0,0,0,0.25)`,
+                  borderRadius:9999,fontWeight:700,fontSize:"1rem",color:INDIGO,
+                  background:"#fff",
+                  boxShadow:`0 8px 32px rgba(0,0,0,0.25)`,
                   border:"none",cursor:"pointer",
-                  backdropFilter:"blur(10px)",
                   transition:"all .25s ease",
                 }}
-                  onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.22)")}
-                  onMouseLeave={e=>(e.currentTarget.style.background="rgba(255,255,255,0.15)")}>
+                  onMouseEnter={e=>(e.currentTarget.style.transform="translateY(-2px)")}
+                  onMouseLeave={e=>(e.currentTarget.style.transform="translateY(0)")}>
                   Claim your free store
                   <ArrowRight style={{ width:16,height:16 }} />
                 </button>
@@ -189,12 +187,12 @@ const Index = () => (
                 <button style={{
                   display:"flex",alignItems:"center",gap:8,padding:"14px 28px",
                   borderRadius:9999,fontWeight:600,fontSize:"0.9rem",
-                  background:`${GOLD}`,border:"none",
-                  color:INK,cursor:"pointer",transition:"all .25s ease",
-                  boxShadow:`0 6px 20px ${GOLD}55`,
+                  background:"rgba(255,255,255,0.12)",border:"1.5px solid rgba(255,255,255,0.25)",
+                  color:"#fff",cursor:"pointer",transition:"all .25s ease",
+                  backdropFilter:"blur(10px)",
                 }}
-                  onMouseEnter={e=>(e.currentTarget.style.opacity="0.88")}
-                  onMouseLeave={e=>(e.currentTarget.style.opacity="1")}>
+                  onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.2)")}
+                  onMouseLeave={e=>(e.currentTarget.style.background="rgba(255,255,255,0.12)")}>
                   See a demo store
                 </button>
               </Link>
@@ -207,7 +205,7 @@ const Index = () => (
                   <span key={t} style={{
                     display:"inline-flex",alignItems:"center",gap:6,fontSize:"0.75rem",
                     padding:"6px 14px",borderRadius:9999,fontWeight:500,
-                    background:`hsl(42,90%,55%,0.15)`,color:GOLD,
+                    background:"rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.75)",
                   }}>
                     <I style={{ width:13,height:13 }}/>{t}
                   </span>
@@ -239,7 +237,7 @@ const Index = () => (
               padding:"28px 20px",textAlign:"center",
               borderRight: i < 3 ? "1px solid rgba(255,255,255,.08)" : "none",
             }}>
-              <p style={{ fontWeight:800,color:GOLD,fontSize:"clamp(1.6rem,2.8vw,2.4rem)",marginBottom:4 }}>{s.v}</p>
+              <p style={{ fontWeight:800,color:"#fff",fontSize:"clamp(1.6rem,2.8vw,2.4rem)",marginBottom:4 }}>{s.v}</p>
               <p style={{ fontSize:"0.72rem",color:"rgba(255,255,255,.38)",lineHeight:1.4 }}>{s.l}</p>
             </div>
           ))}
@@ -248,9 +246,9 @@ const Index = () => (
     </section>
 
     {/* ══════════════════════════════════════════════════════
-        §2  TICKER — Gold strip (always gold)
+        §2  TICKER — Accent green strip
     ══════════════════════════════════════════════════════ */}
-    <div style={{ overflow:"hidden",padding:"14px 0",background:GOLD }}>
+    <div style={{ overflow:"hidden",padding:"14px 0",background:ACCENT }}>
       <div style={{ animation:"tick 32s linear infinite",width:"max-content",display:"flex",alignItems:"center" }}>
         {Array(2).fill([
           "Nigeria's Only Verified Beauty Marketplace",
@@ -263,9 +261,9 @@ const Index = () => (
           <span key={i} style={{
             display:"inline-flex",alignItems:"center",gap:20,padding:"0 28px",
             fontSize:"0.82rem",fontWeight:700,letterSpacing:"0.04em",
-            color:"hsl(215,65%,18%)",whiteSpace:"nowrap",
+            color:"#fff",whiteSpace:"nowrap",
           }}>
-            <span style={{ color:"hsl(215,65%,18%,0.5)",fontSize:"0.45rem" }}>◆</span>{t}
+            <span style={{ color:"rgba(255,255,255,0.4)",fontSize:"0.45rem" }}>◆</span>{t}
           </span>
         ))}
       </div>
@@ -396,12 +394,10 @@ const Index = () => (
         <div className="journey-grid" style={{ display:"grid",gap:"40px 64px",marginBottom:56 }}>
           {JOURNEY.map((s,i)=>(
             <div key={s.n} style={{ display:"flex",gap:20 }}>
-              <div style={{
+              <div className={i===0 ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"} style={{
                 width:44,height:44,borderRadius:"50%",flexShrink:0,
                 display:"flex",alignItems:"center",justifyContent:"center",
                 fontSize:"0.8rem",fontWeight:700,
-                background: i===0 ? INDIGO : `hsl(215,65%,25%,0.12)`,
-                color: i===0 ? "#fff" : INDIGO,
               }}>{s.n}</div>
               <div>
                 <p className="text-foreground font-semibold" style={{ fontSize:"0.95rem",margin:"0 0 8px" }}>{s.title}</p>
@@ -451,7 +447,7 @@ const Index = () => (
           <img src={P.storefront} alt="Online storefront" style={{ width:"100%",height:"100%",objectFit:"cover",minHeight:320 }}/>
         </div>
         <div style={{ flex:1,display:"flex",flexDirection:"column",justifyContent:"center",padding:"60px 56px" }}>
-          <p style={{ fontSize:"0.72rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.22em",color:GOLD,marginBottom:32 }}>
+          <p style={{ fontSize:"0.72rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.22em",color:ACCENT_BRIGHT,marginBottom:32 }}>
             The reality of selling online in Nigeria
           </p>
           {[
@@ -460,7 +456,7 @@ const Index = () => (
             { n:"0",   t:"platforms verified social-media beauty vendors — before SteerSolo" },
           ].map(s=>(
             <div key={s.n} style={{ display:"flex",alignItems:"flex-start",gap:20,marginBottom:28 }}>
-              <span style={{ fontWeight:800,color:GOLD,fontSize:"2.6rem",lineHeight:1,flexShrink:0 }}>{s.n}</span>
+              <span style={{ fontWeight:800,color:"#fff",fontSize:"2.6rem",lineHeight:1,flexShrink:0 }}>{s.n}</span>
               <p style={{ fontSize:"0.95rem",lineHeight:1.65,color:"rgba(255,255,255,.48)",fontWeight:300,margin:"4px 0 0" }}>{s.t}</p>
             </div>
           ))}
@@ -468,9 +464,9 @@ const Index = () => (
             <Link to="/auth/signup">
               <button style={{
                 display:"inline-flex",alignItems:"center",gap:8,padding:"13px 26px",
-                borderRadius:9999,fontWeight:700,fontSize:"0.875rem",color:INK,
-                background:GOLD,border:"none",cursor:"pointer",transition:"all .25s ease",
-                boxShadow:`0 6px 20px ${GOLD}55`,
+                borderRadius:9999,fontWeight:700,fontSize:"0.875rem",color:INDIGO,
+                background:"#fff",border:"none",cursor:"pointer",transition:"all .25s ease",
+                boxShadow:"0 6px 20px rgba(0,0,0,0.25)",
               }}
                 onMouseEnter={e=>(e.currentTarget.style.transform="translateY(-2px)")}
                 onMouseLeave={e=>(e.currentTarget.style.transform="translateY(0)")}>
@@ -488,10 +484,10 @@ const Index = () => (
     <section className="bg-brand-section" style={{ padding:"96px 0" }}>
       <div style={{ maxWidth:1000,margin:"0 auto",padding:"0 1.5rem" }}>
         <div style={{ textAlign:"center",marginBottom:56 }}>
-          <p style={{ fontSize:"0.72rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.22em",color:GOLD,marginBottom:16 }}>The trust layer</p>
+          <p style={{ fontSize:"0.72rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.22em",color:ACCENT_BRIGHT,marginBottom:16 }}>The trust layer</p>
           <h2 style={{ fontWeight:800,color:"#fff",lineHeight:1.2,fontSize:"clamp(1.9rem,4vw,3rem)",margin:0 }}>
             SafeBeauty — our Michelin Star<br />
-            <span style={{ color:GOLD }}>for verified beauty vendors.</span>
+            <span style={{ color:ACCENT_BRIGHT }}>for verified beauty vendors.</span>
           </h2>
           <p style={{ marginTop:16,maxWidth:520,marginLeft:"auto",marginRight:"auto",color:"rgba(255,255,255,.45)",fontSize:"0.9rem" }}>
             Every badge is earned, not bought. Buyers instantly know how trusted your store is before they spend a kobo.
@@ -503,15 +499,15 @@ const Index = () => (
           {BADGES.map(b=>(
             <div key={b.label} className="lift" style={{
               borderRadius:20,padding:24,display:"flex",flexDirection:"column",gap:12,
-              background: b.gold
-                ? `linear-gradient(135deg, ${GOLD}, hsl(35,85%,48%))`
+              background: b.top
+                ? `linear-gradient(135deg, ${ACCENT}, hsl(145,55%,30%))`
                 : "rgba(255,255,255,.07)",
-              border: b.gold ? "none" : "1px solid rgba(255,255,255,.1)",
-              boxShadow: b.gold ? `0 8px 32px ${GOLD}66` : "none",
+              border: b.top ? "none" : "1px solid rgba(255,255,255,.1)",
+              boxShadow: b.top ? `0 8px 32px hsl(145,60%,38%,0.4)` : "none",
             }}>
-              <span style={{ fontWeight:800,fontSize:"2rem",opacity:.18,lineHeight:1,color:b.gold?INK:"#fff" }}>{b.num}</span>
-              <p style={{ fontWeight:600,fontSize:"0.875rem",color:b.gold?INK:GOLD,margin:0 }}>{b.label}</p>
-              <p style={{ fontSize:"0.8rem",lineHeight:1.6,color:b.gold?"rgba(20,10,0,.58)":"rgba(255,255,255,.45)",margin:0 }}>{b.desc}</p>
+              <span style={{ fontWeight:800,fontSize:"2rem",opacity:.18,lineHeight:1,color:"#fff" }}>{b.num}</span>
+              <p style={{ fontWeight:600,fontSize:"0.875rem",color:"#fff",margin:0 }}>{b.label}</p>
+              <p style={{ fontSize:"0.8rem",lineHeight:1.6,color: b.top ? "rgba(255,255,255,.7)" : "rgba(255,255,255,.45)",margin:0 }}>{b.desc}</p>
             </div>
           ))}
         </div>
@@ -561,7 +557,7 @@ const Index = () => (
                 "'Pack my orders' content — TikTok's most trusted beauty vendor format",
               ].map(t=>(
                 <div key={t} style={{ display:"flex",alignItems:"flex-start",gap:12 }}>
-                  <CheckCircle className="text-primary" style={{ width:16,height:16,flexShrink:0,marginTop:2 }}/>
+                  <CheckCircle className="text-accent" style={{ width:16,height:16,flexShrink:0,marginTop:2 }}/>
                   <p className="text-muted-foreground" style={{ fontSize:"0.875rem",lineHeight:1.65,margin:0 }}>{t}</p>
                 </div>
               ))}
@@ -577,7 +573,7 @@ const Index = () => (
     <section className="bg-ink-section" style={{ padding:"96px 0" }}>
       <div style={{ maxWidth:1000,margin:"0 auto",padding:"0 1.5rem" }}>
         <div style={{ textAlign:"center",marginBottom:56 }}>
-          <p style={{ fontSize:"0.72rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.22em",color:GOLD,marginBottom:16 }}>Vendor stories</p>
+          <p style={{ fontSize:"0.72rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.22em",color:ACCENT_BRIGHT,marginBottom:16 }}>Vendor stories</p>
           <h2 style={{ fontWeight:800,color:"#fff",fontSize:"clamp(1.9rem,4vw,2.8rem)",margin:0 }}>
             Social sellers who made the switch.
           </h2>
@@ -590,13 +586,13 @@ const Index = () => (
               background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.08)",
             }}>
               <div style={{ display:"flex",gap:4,marginBottom:4 }}>
-                {[1,2,3,4,5].map(s=><Star key={s} style={{ width:13,height:13,fill:GOLD,color:GOLD }}/>)}
+                {[1,2,3,4,5].map(s=><Star key={s} style={{ width:13,height:13,fill:ACCENT,color:ACCENT }}/>)}
               </div>
               <p style={{ fontWeight:400,fontStyle:"italic",color:"rgba(255,255,255,.88)",lineHeight:1.65,fontSize:"1rem",margin:0 }}>
                 "{t.quote}"
               </p>
               <div style={{ display:"flex",alignItems:"center",gap:12,marginTop:"auto" }}>
-                <img src={t.av} alt={t.name} style={{ width:40,height:40,borderRadius:"50%",objectFit:"cover",flexShrink:0,border:`2px solid ${GOLD}` }}/>
+                <img src={t.av} alt={t.name} style={{ width:40,height:40,borderRadius:"50%",objectFit:"cover",flexShrink:0,border:"2px solid rgba(255,255,255,0.3)" }}/>
                 <div>
                   <p style={{ fontWeight:600,fontSize:"0.875rem",color:"#fff",margin:0 }}>{t.name}</p>
                   <p style={{ fontSize:"0.72rem",color:"rgba(255,255,255,.38)",margin:0 }}>{t.role}</p>
@@ -626,16 +622,16 @@ const Index = () => (
         position:"absolute",inset:0,pointerEvents:"none",opacity:.04,
         backgroundImage:"repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,.6) 40px,rgba(255,255,255,.6) 41px)",
       }}/>
-      {/* gold glow */}
+      {/* accent glow */}
       <div style={{
         position:"absolute",top:"-20%",right:"-10%",width:"50%",height:"80%",pointerEvents:"none",
-        background:`radial-gradient(ellipse, ${GOLD}30 0%, transparent 65%)`,
+        background:`radial-gradient(ellipse, hsl(145,60%,38%,0.15) 0%, transparent 65%)`,
       }}/>
 
       <div style={{ maxWidth:680,margin:"0 auto",padding:"0 1.5rem",position:"relative",zIndex:10 }}>
         <ShoppingBag style={{ width:32,height:32,margin:"0 auto 24px",color:"rgba(255,255,255,.35)" }}/>
         <h2 style={{ fontWeight:800,color:"#fff",lineHeight:1.1,fontSize:"clamp(2.2rem,5vw,3.8rem)",marginBottom:20 }}>
-          Your audience is ready.<br /><em style={{ fontStyle:"normal",color:GOLD }}>Is your storefront?</em>
+          Your audience is ready.<br /><em style={{ fontStyle:"normal",color:ACCENT_BRIGHT }}>Is your storefront?</em>
         </h2>
         <p style={{ fontSize:"1.05rem",color:"rgba(255,255,255,.58)",maxWidth:460,margin:"0 auto 12px" }}>
           Join verified Nigerian beauty vendors turning their social following into a real, trusted business.
@@ -661,12 +657,12 @@ const Index = () => (
             <button style={{
               display:"inline-flex",alignItems:"center",gap:8,padding:"15px 30px",
               borderRadius:9999,fontWeight:600,fontSize:"0.9rem",
-              background:GOLD,border:"none",
-              color:INK,cursor:"pointer",transition:"all .25s ease",
-              boxShadow:`0 6px 20px ${GOLD}55`,
+              background:"rgba(255,255,255,0.12)",border:"1.5px solid rgba(255,255,255,0.25)",
+              color:"#fff",cursor:"pointer",transition:"all .25s ease",
+              backdropFilter:"blur(10px)",
             }}
-              onMouseEnter={e=>(e.currentTarget.style.opacity="0.88")}
-              onMouseLeave={e=>(e.currentTarget.style.opacity="1")}>
+              onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.2)")}
+              onMouseLeave={e=>(e.currentTarget.style.background="rgba(255,255,255,0.12)")}>
               View a demo store first
             </button>
           </Link>
