@@ -9,7 +9,7 @@ export const Footer = () => {
   const { theme } = useTheme();
   const logo = theme === 'dark' ? logoDark : logoLight;
   return (
-    <footer className="relative bg-primary text-primary-foreground overflow-hidden">
+    <footer className="relative bg-[#0f295c] text-white overflow-hidden">
       {/* Adire Pattern Overlay */}
       <AdirePattern variant="circles" className="text-white" opacity={0.1} />
       

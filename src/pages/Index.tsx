@@ -18,18 +18,21 @@ const ACCENT_BRIGHT = "hsl(145,60%,48%)";
 
 /* ─── Photos ─── */
 const P = {
-  heroVendor:   "https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&w=900&q=80",
+  heroVendor:   "https://images.unsplash.com/photo-1590650516494-0c8e4a4dd67e?auto=format&fit=crop&w=900&q=80",
   heroProducts: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=900&q=80",
-  whatsapp:     "https://images.unsplash.com/photo-1614680376593-902f74cf0d41?auto=format&fit=crop&w=700&q=80",
-  instagram:    "https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg",
-  tiktok:       "https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg",
+  whatsapp:     "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=700&q=80",
+  instagram:    "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=700&q=80",
+  tiktok:       "https://images.unsplash.com/photo-1611162616305-c69b3396e46a?auto=format&fit=crop&w=700&q=80",
+  igLogo:       "https://cdn.worldvectorlogo.com/logos/instagram-2016-5.svg",
+  tiktokLogo:   "https://cdn.worldvectorlogo.com/logos/tiktok-logo-2.svg",
+  waLogo:       "https://cdn.worldvectorlogo.com/logos/whatsapp-icon-1.svg",
   trustFace:    "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=1400&q=80",
   organic:      "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=800&q=80",
   orders:       "https://images.unsplash.com/photo-1586880244406-556ebe35f282?auto=format&fit=crop&w=700&q=80",
-  storefront:   "https://images.unsplash.com/photo-1607082349566-187342175e2f?auto=format&fit=crop&w=800&q=80",
-  av1: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=100&q=80",
-  av2: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=100&q=80",
-  av3: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=100&q=80",
+  storefront:   "https://images.unsplash.com/photo-1622290382894-3ee1c7f502fe?auto=format&fit=crop&w=800&q=80", // coherence: a Nigerian business owner smiling at a phone/success
+  av1: "https://images.unsplash.com/photo-1531123414704-02a5c1840905?auto=format&fit=crop&w=150&q=80",
+  av2: "https://images.unsplash.com/photo-1549471013-3364d7ce4668?auto=format&fit=crop&w=150&q=80",
+  av3: "https://images.unsplash.com/photo-1510227289873-102bc3465133?auto=format&fit=crop&w=150&q=80",
 };
 
 /* ─── Data ─── */
@@ -38,25 +41,25 @@ const PLATFORMS = [
     name: "WhatsApp",
     dot: "#25D366", dotBg: "rgba(37,211,102,0.1)",
     stat: "95%", statSub: "of Nigerians use it daily",
-    problem: "You repeat account details in every DM. Buyers lose patience and drop off before paying.",
-    fix: "One SteerSolo link holds your catalog, prices, reviews, and checkout. Paste it once, forever.",
-    img: P.whatsapp,
+    problem: "You have a loyal audience, but replying to every message with bank details and catalogs gets exhausting.",
+    fix: "Connect your SteerSolo link. Buyers browse your full catalog and checkout instantly, while the verified order drops directly into your WhatsApp.",
+    img: P.waLogo,
   },
   {
     name: "Instagram",
     dot: "#E1306C", dotBg: "rgba(225,48,108,0.1)",
     stat: "69%", statSub: "social commerce penetration in Nigeria",
-    problem: "Your grid looks stunning but there's nowhere to buy. Buyers DM, you respond late, the sale dies.",
-    fix: "A verified SteerSolo store page in your bio turns every post into a trust signal with a buy button.",
-    img: P.instagram,
+    problem: "Your grid looks stunning and draws people in, but 'DM to order' creates friction that loses impulse buyers.",
+    fix: "Put your SteerSolo store link in your bio. Capitalize on your aesthetic by letting buyers purchase immediately without waiting for a DM reply.",
+    img: P.igLogo,
   },
   {
     name: "TikTok",
     dot: "#888", dotBg: "rgba(100,100,100,0.08)",
     stat: "#1", statSub: "beauty content platform globally",
-    problem: "You go viral, get 50K views, and make five sales. No storefront to capture the traffic you earned.",
-    fix: "Viral TikTok → bio link → SteerSolo store. Every view finally lands somewhere that can convert.",
-    img: P.tiktok,
+    problem: "You post amazing content that goes viral, but you can't easily capture the massive traffic it generates.",
+    fix: "Convert virality into revenue. Funnel your viewers straight to your SteerSolo checkout link and maximize your earning potential.",
+    img: P.tiktokLogo,
   },
 ];
 
@@ -320,8 +323,8 @@ const Index = () => (
             The platforms you're already on
           </p>
           <h2 className="text-foreground font-extrabold" style={{ lineHeight:1.2,fontSize:"clamp(1.9rem,4vw,3rem)",margin:0 }}>
-            Same problem. Every app.<br />
-            <span className="text-primary">SteerSolo solves it once.</span>
+            Supercharge your social presence.<br />
+            <span className="text-primary">Turn every view into a seamless sale.</span>
           </h2>
         </div>
 
@@ -332,7 +335,7 @@ const Index = () => (
               borderRadius:24,overflow:"hidden",
             }}>
               <div className="img-zoom" style={{ height:200,overflow:"hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.02)" }}>
-                <img src={pl.img} alt={pl.name} style={{ width: pl.name === "Instagram" || pl.name === "TikTok" ? "35%" : "100%", height: pl.name === "Instagram" || pl.name === "TikTok" ? "auto" : "100%", objectFit: pl.name === "Instagram" || pl.name === "TikTok" ? "contain" : "cover" }}/>
+                <img src={pl.img} alt={pl.name} style={{ width: "40%", height:"auto", objectFit: "contain" }}/>
               </div>
               <div className="bg-card" style={{ padding:28 }}>
                 <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:6 }}>
@@ -344,11 +347,11 @@ const Index = () => (
                 </div>
                 <p className="text-muted-foreground" style={{ fontSize:"0.72rem",marginBottom:20,marginTop:0 }}>{pl.statSub}</p>
                 <div className="bg-destructive/5" style={{ borderRadius:12,padding:16,marginBottom:12 }}>
-                  <p style={{ fontSize:"0.65rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.12em",color:"hsl(0,65%,45%)",marginBottom:4,margin:0 }}>The problem</p>
+                  <p style={{ fontSize:"0.65rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.12em",color:"hsl(0,65%,45%)",marginBottom:4,margin:0 }}>The bottleneck</p>
                   <p className="text-muted-foreground" style={{ fontSize:"0.85rem",lineHeight:1.65,margin:"6px 0 0" }}>{pl.problem}</p>
                 </div>
                 <div className="bg-primary/5" style={{ borderRadius:12,padding:16 }}>
-                  <p className="text-primary" style={{ fontSize:"0.65rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.12em",margin:0 }}>SteerSolo fix</p>
+                  <p className="text-primary" style={{ fontSize:"0.65rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.12em",margin:0 }}>The SteerSolo Advantage</p>
                   <p className="text-muted-foreground" style={{ fontSize:"0.85rem",lineHeight:1.65,margin:"6px 0 0" }}>{pl.fix}</p>
                 </div>
               </div>
@@ -369,10 +372,10 @@ const Index = () => (
         background:`hsl(215,65%,22%,0.82)`,
       }}>
         <p style={{
-          fontWeight:700,color:"#fff",fontSize:"clamp(1.5rem,3.8vw,2.8rem)",
-          textShadow:"0 2px 20px rgba(0,0,0,.35)",maxWidth:720,lineHeight:1.3,margin:0,
+          fontWeight:700,color:"#fff",fontSize:"clamp(1.5rem,3.8vw,3.2rem)",
+          textShadow:"0 2px 20px rgba(0,0,0,.35)",maxWidth:850,lineHeight:1.3,margin:0,
         }}>
-          "Your skin deserves real products.<br />Your business deserves real trust."
+          "Your content wins their attention.<br />SteerSolo wins the sale."
         </p>
         <p style={{ color:"rgba(255,255,255,.45)",fontSize:"0.68rem",letterSpacing:"0.22em",textTransform:"uppercase",marginTop:16 }}>
           SteerSolo · SafeBeauty Standard · Nigeria
@@ -458,7 +461,7 @@ const Index = () => (
           {[
             { n:"82%", t:"of Nigerian e-commerce happens on mobile" },
             { n:"67%", t:"of beauty products bought online are likely counterfeit" },
-            { n:"0",   t:"platforms verified social-media beauty vendors — before SteerSolo" },
+            { n:"10x", t:"Orders are sent directly to your WhatsApp, converting 10x faster." },
           ].map(s=>(
             <div key={s.n} style={{ display:"flex",alignItems:"flex-start",gap:20,marginBottom:28 }}>
               <span style={{ fontWeight:800,color:"#fff",fontSize:"2.6rem",lineHeight:1,flexShrink:0 }}>{s.n}</span>
@@ -597,7 +600,7 @@ const Index = () => (
                 "{t.quote}"
               </p>
               <div style={{ display:"flex",alignItems:"center",gap:12,marginTop:"auto" }}>
-                <img src={t.av} alt={t.name} style={{ width:40,height:40,borderRadius:"50%",objectFit:"cover",flexShrink:0,border:"2px solid rgba(255,255,255,0.3)" }}/>
+                <img src={t.av} alt={t.name} style={{ width:40,height:40,borderRadius:"50%",objectFit:"cover",objectPosition:"top",flexShrink:0,border:"2px solid rgba(255,255,255,0.3)" }}/>
                 <div>
                   <p style={{ fontWeight:600,fontSize:"0.875rem",color:"#fff",margin:0 }}>{t.name}</p>
                   <p style={{ fontSize:"0.72rem",color:"rgba(255,255,255,.38)",margin:0 }}>{t.role}</p>
