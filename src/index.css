@@ -8,117 +8,118 @@
 
 @layer base {
   :root {
-    /* African-inspired color palette */
-    --background: 40 20% 98%;
-    --foreground: 220 45% 15%;
+    /* Adire-inspired brand palette — SteerSolo */
+    --background: 215 20% 98%;      /* calm cool-white, no green tint */
+    --foreground: 220 45% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 45% 15%;
+    --card-foreground: 220 45% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 45% 15%;
+    --popover-foreground: 220 45% 12%;
 
-    /* Adire Indigo Blue */
+    /* Adire Indigo Blue — primary brand */
     --primary: 215 65% 25%;
-    --primary-foreground: 40 20% 98%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Soft cream/sand */
-    --secondary: 40 30% 95%;
+    /* Warm pearl — section alternates */
+    --secondary: 215 18% 94%;
     --secondary-foreground: 215 65% 25%;
 
-    --muted: 40 20% 92%;
-    --muted-foreground: 220 15% 45%;
+    --muted: 215 15% 90%;
+    --muted-foreground: 220 15% 44%;
 
-    /* Nigerian Green */
+    /* Nigerian Green — small accents only */
     --accent: 145 60% 38%;
     --accent-foreground: 0 0% 100%;
 
     /* Gold/Amber highlight */
     --gold: 42 90% 55%;
-    --gold-foreground: 220 45% 15%;
+    --gold-foreground: 220 45% 12%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 40 20% 88%;
-    --input: 40 20% 88%;
-    --ring: 145 60% 38%;
+    --border: 215 20% 86%;
+    --input: 215 20% 86%;
+    --ring: 215 65% 25%;            /* ring = primary (indigo) */
 
     --radius: 0.75rem;
 
-    /* African-inspired gradients */
-    --hero-gradient: linear-gradient(135deg, hsl(215 65% 25%), hsl(145 60% 38%));
+    /* Brand gradients */
+    --hero-gradient: linear-gradient(135deg, hsl(215 65% 18%), hsl(215 65% 25%) 60%, hsl(215 58% 30%));
     --adire-gradient: linear-gradient(135deg, hsl(215 65% 30%), hsl(215 50% 45%));
     --gold-gradient: linear-gradient(135deg, hsl(42 90% 55%), hsl(35 85% 50%));
-    --card-gradient: linear-gradient(180deg, hsl(0 0% 100%), hsl(40 30% 97%));
+    --card-gradient: linear-gradient(180deg, hsl(0 0% 100%), hsl(215 18% 97%));
     --pattern-overlay: linear-gradient(180deg, hsl(215 65% 25% / 0.03), transparent);
-    
-    /* Shadows with African warmth */
+
+    /* Shadows */
     --shadow-elegant: 0 10px 40px -10px hsl(215 65% 25% / 0.15);
-    --shadow-glow: 0 0 30px hsl(145 60% 38% / 0.2);
+    --shadow-glow: 0 0 30px hsl(215 65% 25% / 0.2);
     --shadow-gold: 0 0 20px hsl(42 90% 55% / 0.3);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     /* Sidebar */
-    --sidebar-background: 40 20% 98%;
+    --sidebar-background: 215 20% 98%;
     --sidebar-foreground: 215 65% 25%;
-    --sidebar-primary: 145 60% 38%;
+    --sidebar-primary: 215 65% 25%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 40 30% 95%;
+    --sidebar-accent: 215 18% 94%;
     --sidebar-accent-foreground: 215 65% 25%;
-    --sidebar-border: 40 20% 88%;
-    --sidebar-ring: 145 60% 38%;
+    --sidebar-border: 215 20% 86%;
+    --sidebar-ring: 215 65% 25%;
   }
 
   .dark {
-    --background: 220 40% 8%;
-    --foreground: 40 20% 98%;
+    --background: 220 38% 7%;       /* deep blue-black */
+    --foreground: 215 20% 94%;
 
-    --card: 220 35% 14%;
-    --card-foreground: 40 20% 98%;
+    --card: 220 33% 12%;
+    --card-foreground: 215 20% 94%;
 
-    --popover: 220 35% 12%;
-    --popover-foreground: 40 20% 98%;
+    --popover: 220 33% 10%;
+    --popover-foreground: 215 20% 94%;
 
-    /* Brighter Adire Blue for dark mode */
-    --primary: 145 55% 45%;
-    --primary-foreground: 220 40% 8%;
+    /* Brightened Adire Indigo Blue for dark mode */
+    --primary: 215 60% 60%;
+    --primary-foreground: 220 38% 7%;
 
-    --secondary: 220 30% 18%;
-    --secondary-foreground: 40 20% 98%;
+    --secondary: 220 28% 16%;
+    --secondary-foreground: 215 20% 94%;
 
-    --muted: 220 30% 18%;
-    --muted-foreground: 40 15% 75%;
+    --muted: 220 28% 16%;
+    --muted-foreground: 215 15% 68%;
 
-    /* Vibrant Green for dark mode */
-    --accent: 145 60% 45%;
-    --accent-foreground: 220 40% 8%;
+    /* Nigerian Green — accent only, vibrant on dark */
+    --accent: 145 58% 48%;
+    --accent-foreground: 220 38% 7%;
 
-    --gold: 42 85% 58%;
-    --gold-foreground: 220 40% 8%;
+    --gold: 42 88% 58%;
+    --gold-foreground: 220 38% 7%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 70% 54%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 30% 24%;
-    --input: 220 30% 24%;
-    --ring: 145 60% 45%;
-    
-    --hero-gradient: linear-gradient(135deg, hsl(220 40% 12%), hsl(145 55% 35%));
-    --adire-gradient: linear-gradient(135deg, hsl(215 50% 35%), hsl(215 45% 50%));
-    --card-gradient: linear-gradient(180deg, hsl(220 35% 12%), hsl(220 35% 10%));
-    --pattern-overlay: linear-gradient(180deg, hsl(145 60% 45% / 0.05), transparent);
-    --shadow-elegant: 0 10px 40px -10px hsl(0 0% 0% / 0.5);
-    --shadow-glow: 0 0 30px hsl(145 60% 45% / 0.25);
-    
-    --sidebar-background: 220 35% 10%;
-    --sidebar-foreground: 40 20% 98%;
-    --sidebar-primary: 145 55% 45%;
-    --sidebar-primary-foreground: 220 40% 8%;
-    --sidebar-accent: 220 30% 18%;
-    --sidebar-accent-foreground: 40 20% 98%;
-    --sidebar-border: 220 30% 20%;
-    --sidebar-ring: 145 60% 45%;
+    --border: 220 28% 22%;
+    --input: 220 28% 22%;
+    --ring: 215 60% 60%;            /* ring = primary (indigo) */
+
+    /* All gradients stay indigo-based, never green */
+    --hero-gradient: linear-gradient(135deg, hsl(215 65% 10%), hsl(215 60% 17%) 60%, hsl(215 55% 22%));
+    --adire-gradient: linear-gradient(135deg, hsl(215 50% 32%), hsl(215 45% 48%));
+    --card-gradient: linear-gradient(180deg, hsl(220 33% 12%), hsl(220 33% 10%));
+    --pattern-overlay: linear-gradient(180deg, hsl(215 60% 60% / 0.04), transparent);
+    --shadow-elegant: 0 10px 40px -10px hsl(0 0% 0% / 0.55);
+    --shadow-glow: 0 0 30px hsl(215 60% 60% / 0.2);
+
+    --sidebar-background: 220 33% 8%;
+    --sidebar-foreground: 215 20% 94%;
+    --sidebar-primary: 215 60% 60%;
+    --sidebar-primary-foreground: 220 38% 7%;
+    --sidebar-accent: 220 28% 16%;
+    --sidebar-accent-foreground: 215 20% 94%;
+    --sidebar-border: 220 28% 18%;
+    --sidebar-ring: 215 60% 60%;
   }
 }
 
@@ -683,4 +684,29 @@ iframe[src*="accounts.google.com"] {
 
 .gradient-hero-spotify {
   background: linear-gradient(180deg, hsl(var(--accent) / 0.12) 0%, hsl(var(--background)) 100%);
+}
+
+/* ===== ALWAYS-DARK SECTION BACKGROUNDS (intentionally dark regardless of theme) ===== */
+/* Hero / primary-brand dark sections */
+.bg-hero-section {
+  background: linear-gradient(150deg, hsl(215 65% 17%) 0%, hsl(215 62% 24%) 65%, hsl(215 58% 20%) 100%);
+}
+.dark .bg-hero-section {
+  background: linear-gradient(150deg, hsl(215 70% 10%) 0%, hsl(215 64% 15%) 65%, hsl(215 60% 12%) 100%);
+}
+
+/* Ink-dark sections (testimonials, reality stats) */
+.bg-ink-section {
+  background: hsl(220 50% 9%);
+}
+.dark .bg-ink-section {
+  background: hsl(220 58% 5%);
+}
+
+/* Indigo brand sections (SafeBeauty badges, etc.) */
+.bg-brand-section {
+  background: hsl(215 65% 24%);
+}
+.dark .bg-brand-section {
+  background: hsl(215 65% 17%);
 }
