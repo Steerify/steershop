@@ -22,11 +22,10 @@ const CopyButton = ({ text }: { text: string }) => {
 };
 
 const BRAND_COLORS = [
-  { name: "Adire Indigo", css: "--primary", light: "215 65% 25%", hex: "#1A365D", desc: "Primary brand color. Used for headers, buttons, and key UI elements." },
-  { name: "Nigerian Green", css: "--accent", light: "145 60% 38%", hex: "#2E7D32", desc: "Accent color. Used for CTAs, success states, and growth indicators." },
-  { name: "Gold / Amber", css: "--gold", light: "42 90% 55%", hex: "#E5A100", desc: "Highlight color. Used for badges, premium features, and celebrations." },
-  { name: "Cream / Sand", css: "--secondary", light: "40 30% 95%", hex: "#F5F0E8", desc: "Background accent. Used for cards and soft sections." },
-  { name: "Deep Foreground", css: "--foreground", light: "220 45% 15%", hex: "#151D2B", desc: "Text color. Used for body copy and headings." },
+  { name: "Adire Indigo (Dark Blue)", css: "--primary", light: "215 65% 25%", hex: "#1A365D", desc: "Primary brand color. Used for headers, buttons, hero sections, and key UI elements." },
+  { name: "Nigerian Green (Light Green)", css: "--accent", light: "145 60% 38%", hex: "#2E7D32", desc: "Accent color. Used for CTAs, success states, highlights, and growth indicators." },
+  { name: "White / Black", css: "--foreground", light: "220 45% 15%", hex: "#151D2B", desc: "Foreground color. White on dark backgrounds, black/dark on light backgrounds." },
+  { name: "Cream / Sand", css: "--secondary", light: "215 18% 94%", hex: "#EDEEF2", desc: "Background accent. Used for cards and soft sections." },
 ];
 
 const TYPOGRAPHY = [

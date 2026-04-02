@@ -49,14 +49,14 @@
     /* Brand gradients */
     --hero-gradient: linear-gradient(135deg, hsl(215 65% 18%), hsl(215 65% 25%) 60%, hsl(215 58% 30%));
     --adire-gradient: linear-gradient(135deg, hsl(215 65% 30%), hsl(215 50% 45%));
-    --gold-gradient: linear-gradient(135deg, hsl(42 90% 55%), hsl(35 85% 50%));
+    /* gold-gradient kept for semantic star/badge use only */
     --card-gradient: linear-gradient(180deg, hsl(0 0% 100%), hsl(215 18% 97%));
     --pattern-overlay: linear-gradient(180deg, hsl(215 65% 25% / 0.03), transparent);
 
     /* Shadows */
     --shadow-elegant: 0 10px 40px -10px hsl(215 65% 25% / 0.15);
     --shadow-glow: 0 0 30px hsl(215 65% 25% / 0.2);
-    --shadow-gold: 0 0 20px hsl(42 90% 55% / 0.3);
+    /* shadow-gold removed — not in brand palette */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     /* Sidebar */
