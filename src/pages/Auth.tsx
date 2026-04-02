@@ -206,15 +206,25 @@ const Auth = () => {
       if (result.error) {
         setAuthError(result.error);
       } else {
-        // Show email verification notice instead of immediate redirect
-        // Supabase requires email confirmation before user can log in
-        setRegisteredEmail(normalizedEmail);
-        setShowEmailVerification(true);
+        // Check if Supabase auto-logged them in (occurs if "Confirm Email" is disabled in settings)
+        const { data } = await supabase.auth.getSession();
         
-        toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account.",
-        });
+        if (data.session) {
+          toast({
+            title: "Welcome to SteerSolo!",
+            description: "Logging you in seamlessly...",
+          });
+          // The useEffect at the top of Auth.tsx will catch the session and navigate automatically.
+        } else {
+          // Fallback UI if "Confirm Email" is left enabled in Supabase
+          setRegisteredEmail(normalizedEmail);
+          setShowEmailVerification(true);
+          
+          toast({
+            title: "Account created!",
+            description: "Please check your email to verify your account.",
+          });
+        }
       }
     } catch (error: any) {
       setAuthError(error.message || "Please try again");

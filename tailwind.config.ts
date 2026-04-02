@@ -129,7 +129,7 @@ export default {
       },
       backgroundImage: {
         'hero-gradient': 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)))',
-        'adire-gradient': 'linear-gradient(135deg, hsl(215 65% 30%), hsl(215 50% 45%))',
+        'adire-gradient': 'linear-gradient(135deg, hsl(220 72% 30%), hsl(220 50% 45%))',
         'gold-gradient': 'linear-gradient(135deg, hsl(var(--gold)), hsl(35 85% 50%))',
       },
     },

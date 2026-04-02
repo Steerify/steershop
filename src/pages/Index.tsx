@@ -20,9 +20,9 @@ const ACCENT_BRIGHT = "hsl(145,60%,48%)";
 const P = {
   heroVendor:   "https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&w=900&q=80",
   heroProducts: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=900&q=80",
-  whatsapp:     "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=700&q=80",
-  instagram:    "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=700&q=80",
-  tiktok:       "https://images.unsplash.com/photo-1611162616305-c69b3396e46a?auto=format&fit=crop&w=700&q=80",
+  whatsapp:     "https://images.unsplash.com/photo-1614680376593-902f74cf0d41?auto=format&fit=crop&w=700&q=80",
+  instagram:    "https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg",
+  tiktok:       "https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg",
   trustFace:    "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=1400&q=80",
   organic:      "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=800&q=80",
   orders:       "https://images.unsplash.com/photo-1586880244406-556ebe35f282?auto=format&fit=crop&w=700&q=80",
@@ -279,17 +279,17 @@ const Index = () => (
             Sound familiar?
           </p>
           <h2 className="text-foreground font-extrabold" style={{ lineHeight:1.2,fontSize:"clamp(1.9rem,4vw,3rem)",margin:0 }}>
-            The selling chaos that kills<br />
-            <span className="text-primary">legitimate businesses every day.</span>
+            SteerSolo removes 3 questions<br />
+            <span className="text-primary">from the minds of your customers.</span>
           </h2>
         </div>
 
         <style>{`@media(min-width:768px){.pain-grid{grid-template-columns:repeat(3,1fr)!important;}}`}</style>
         <div className="pain-grid" style={{ display:"grid",gap:48 }}>
           {[
-            { q:'"Send your account details"',     b:"Repeated in every DM, every sale. Buyers lose patience and leave before they ever pay." },
-            { q:'"Is this still available?"',       b:"No catalog, no prices. Buyers can't browse so they bounce to the next page instead." },
-            { q:'"I sent the money yesterday"',     b:"No order tracking. You can't tell who paid, who's pending, or who has gone quiet." },
+            { q:'"What do you sell?"',     b:"Buyers hate guessing. SteerSolo gives you a beautiful catalog that shows exactly what you offer, instantly." },
+            { q:'"How much is it?"',       b:"Hide-and-seek pricing kills sales. Clear prices and discounts build urgent trust and convert faster." },
+            { q:'"How do I pay?"',         b:"No more sending account numbers manually. Secure checkout is built-in." },
           ].map(p=>(
             <div key={p.q} style={{ display:"flex",flexDirection:"column",gap:16 }}>
               <p className="text-foreground font-bold" style={{ fontSize:"1.25rem",margin:0 }}>{p.q}</p>
@@ -299,9 +299,14 @@ const Index = () => (
           ))}
         </div>
 
-        <p className="text-primary text-center font-bold" style={{ marginTop:64,fontSize:"1.3rem" }}>
-          SteerSolo fixes all of this — in one link.
-        </p>
+        <div className="bg-primary/5 rounded-2xl p-6 md:p-8 mt-12 border border-primary/20 text-center shadow-sm">
+          <p className="text-foreground font-bold" style={{ fontSize:"1.4rem", margin:0, display:"flex", alignItems:"center", justifyContent:"center", gap:"10px" }}>
+            <span style={{ fontSize:"1.8rem" }}>💬</span> And the best part?
+          </p>
+          <p className="text-primary font-extrabold" style={{ fontSize:"1.7rem", margin:"12px 0 0" }}>
+            Every order goes straight to your WhatsApp!
+          </p>
+        </div>
       </div>
     </section>
 
@@ -326,8 +331,8 @@ const Index = () => (
             <div key={pl.name} className="lift card-elevated" style={{
               borderRadius:24,overflow:"hidden",
             }}>
-              <div className="img-zoom" style={{ height:200,overflow:"hidden" }}>
-                <img src={pl.img} alt={pl.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
+              <div className="img-zoom" style={{ height:200,overflow:"hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.02)" }}>
+                <img src={pl.img} alt={pl.name} style={{ width: pl.name === "Instagram" || pl.name === "TikTok" ? "35%" : "100%", height: pl.name === "Instagram" || pl.name === "TikTok" ? "auto" : "100%", objectFit: pl.name === "Instagram" || pl.name === "TikTok" ? "contain" : "cover" }}/>
               </div>
               <div className="bg-card" style={{ padding:28 }}>
                 <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:6 }}>

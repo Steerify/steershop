@@ -193,10 +193,10 @@ const Onboarding = () => {
       description: "You can complete this anytime from settings.",
     });
     
-    // Refresh user context so ProtectedRoute sees updated state
+    // Refresh user context
     await refreshUser();
 
-    navigate("/dashboard");
+    window.location.href = "/dashboard";
   };
 
   const handleSubmit = async () => {
@@ -225,7 +225,8 @@ const Onboarding = () => {
       // Refresh user context so ProtectedRoute sees onboardingCompleted = true
       await refreshUser();
 
-      navigate("/dashboard?show_dfy=true");
+      // Force full reload to dashboard to guarantee fresh auth state/role resolution
+      window.location.href = "/dashboard?show_dfy=true";
     } catch (error: any) {
       toast({
         title: "Error",

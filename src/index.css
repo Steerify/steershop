@@ -18,8 +18,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 45% 12%;
 
-    /* Adire Indigo Blue — primary brand */
-    --primary: 215 65% 25%;
+    /* Navy Blue — primary brand (#0f295c) */
+    --primary: 220 72% 21%;
     --primary-foreground: 0 0% 100%;
 
     /* Warm pearl — section alternates */
@@ -29,8 +29,8 @@
     --muted: 215 15% 90%;
     --muted-foreground: 220 15% 44%;
 
-    /* Nigerian Green — small accents only */
-    --accent: 145 60% 38%;
+    /* Vibrant Green — small accents (#32cd33) */
+    --accent: 120 61% 50%;
     --accent-foreground: 0 0% 100%;
 
     /* Gold/Amber highlight */
@@ -42,13 +42,13 @@
 
     --border: 215 20% 86%;
     --input: 215 20% 86%;
-    --ring: 215 65% 25%;            /* ring = primary (indigo) */
+    --ring: 220 72% 21%;            /* ring = primary (navy blue) */
 
     --radius: 0.75rem;
 
     /* Brand gradients */
-    --hero-gradient: linear-gradient(135deg, hsl(215 65% 18%), hsl(215 65% 25%) 60%, hsl(215 58% 30%));
-    --adire-gradient: linear-gradient(135deg, hsl(215 65% 30%), hsl(215 50% 45%));
+    --hero-gradient: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent)));
+    --adire-gradient: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent)));
     /* gold-gradient kept for semantic star/badge use only */
     --card-gradient: linear-gradient(180deg, hsl(0 0% 100%), hsl(215 18% 97%));
     --pattern-overlay: linear-gradient(180deg, hsl(215 65% 25% / 0.03), transparent);
@@ -80,8 +80,8 @@
     --popover: 220 33% 10%;
     --popover-foreground: 215 20% 94%;
 
-    /* Brightened Adire Indigo Blue for dark mode */
-    --primary: 215 60% 60%;
+    /* Brightened Navy Blue for dark mode */
+    --primary: 220 72% 60%;
     --primary-foreground: 220 38% 7%;
 
     --secondary: 220 28% 16%;
@@ -90,8 +90,8 @@
     --muted: 220 28% 16%;
     --muted-foreground: 215 15% 68%;
 
-    /* Nigerian Green — accent only, vibrant on dark */
-    --accent: 145 58% 48%;
+    /* Bright Green — accent only, vibrant on dark */
+    --accent: 120 61% 55%;
     --accent-foreground: 220 38% 7%;
 
     --gold: 42 88% 58%;
@@ -102,11 +102,11 @@
 
     --border: 220 28% 22%;
     --input: 220 28% 22%;
-    --ring: 215 60% 60%;            /* ring = primary (indigo) */
+    --ring: 220 72% 60%;            /* ring = primary (navy blue) */
 
-    /* All gradients stay indigo-based, never green */
-    --hero-gradient: linear-gradient(135deg, hsl(215 65% 10%), hsl(215 60% 17%) 60%, hsl(215 55% 22%));
-    --adire-gradient: linear-gradient(135deg, hsl(215 50% 32%), hsl(215 45% 48%));
+    /* All gradients stay green */
+    --hero-gradient: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent)));
+    --adire-gradient: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent)));
     --card-gradient: linear-gradient(180deg, hsl(220 33% 12%), hsl(220 33% 10%));
     --pattern-overlay: linear-gradient(180deg, hsl(215 60% 60% / 0.04), transparent);
     --shadow-elegant: 0 10px 40px -10px hsl(0 0% 0% / 0.55);
@@ -241,8 +241,7 @@
 
   /* Gradient text */
   .gradient-text {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    @apply text-accent;
   }
 
   .gradient-text-gold {
@@ -253,13 +252,13 @@
   /* African-inspired buttons */
   .btn-african {
     @apply relative overflow-hidden transition-all duration-300;
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    background: hsl(var(--accent));
   }
 
   .btn-african::before {
     content: '';
     @apply absolute inset-0 opacity-0 transition-opacity duration-300;
-    background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)));
+    background: hsl(var(--accent));
   }
 
   .btn-african:hover::before {
@@ -572,10 +571,7 @@ iframe[src*="accounts.google.com"] {
 
 /* ===== GRADIENT TEXT UTILITIES ===== */
 .text-gradient {
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: hsl(var(--accent));
 }
 .text-gradient-gold {
   background: linear-gradient(135deg, hsl(var(--gold)), hsl(35 80% 48%));
@@ -604,6 +600,25 @@ iframe[src*="accounts.google.com"] {
   border-radius: 1.5rem;
   background: hsl(var(--card) / 0.88);
 }
+
+/* ===== GRADIENT OVERRIDES FOR SOLID GREEN ===== */
+/* User requested that all things with the primary-to-accent gradient become solid green */
+.bg-gradient-to-r.from-primary.to-accent,
+.bg-gradient-to-br.from-primary.to-accent,
+.bg-gradient-to-r.from-primary.via-accent.to-primary,
+.bg-gradient-to-br.from-primary.via-accent.to-primary {
+  background: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+}
+
+.text-transparent.bg-clip-text.from-primary.to-accent,
+.text-transparent.bg-clip-text.from-primary.via-accent.to-primary,
+.bg-clip-text.from-primary.to-accent {
+  background: none !important;
+  color: hsl(var(--accent)) !important;
+  -webkit-text-fill-color: hsl(var(--accent)) !important;
+}
+
 
 /* ===== TEXT WRAP BALANCE ===== */
 .text-balance { text-wrap: balance; }

@@ -272,8 +272,8 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     customer_email: checkoutDraft?.customerEmail || "",
     customer_phone: checkoutDraft?.customerPhone || "",
     delivery_address: checkoutDraft?.deliveryAddress || "",
-    delivery_city: "",
-    delivery_state: "",
+    delivery_city: checkoutDraft?.deliveryCity || "",
+    delivery_state: checkoutDraft?.deliveryState || "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -306,6 +306,8 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       customerEmail: field === 'customer_email' ? value : formData.customer_email,
       customerPhone: field === 'customer_phone' ? value : formData.customer_phone,
       deliveryAddress: field === 'delivery_address' ? value : formData.delivery_address,
+      deliveryCity: field === 'delivery_city' ? value : formData.delivery_city,
+      deliveryState: field === 'delivery_state' ? value : formData.delivery_state,
     }));
   };
 
@@ -681,6 +683,20 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
 
       if (itemsError) throw itemsError;
 
+      // Decrement stock for each ordered product (best-effort, non-blocking)
+      try {
+        await Promise.all(
+          cart.map((item) =>
+            supabase
+              .from("products")
+              .update({ stock_quantity: Math.max(0, item.product.stock_quantity - item.quantity) })
+              .eq("id", item.product.id)
+          )
+        );
+      } catch (stockError) {
+        console.error("Stock decrement failed (non-blocking):", stockError);
+      }
+
       // Book shipping if a rate was selected
       if (selectedRate) {
         try {
@@ -889,7 +905,9 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                   <span className="text-sm">-₦{couponDiscount.toLocaleString()}</span>
                 </div>
               )}
-              {paymentChoice === "pay_before" && (
+              {paymentChoice === "pay_before" &&
+                (selectedPaymentMethod === "paystack" || shop.payment_method === "paystack" ||
+                 (shop.payment_method === "both" && selectedPaymentMethod === "paystack")) && (
                 <div className="flex justify-between items-center text-muted-foreground">
                   <span className="text-sm">Processing fee:</span>
                   <span className="text-sm">₦{Math.round(paystackFee).toLocaleString()}</span>
@@ -1277,12 +1295,12 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                   <div className="flex justify-between items-center p-2 sm:p-3 bg-background rounded border">
                     <div className="min-w-0 flex-1 mr-2">
                       <p className="font-medium text-xs sm:text-sm">Amount to Transfer</p>
-                      <p className="text-sm sm:text-lg font-bold">₦{totalAmount.toLocaleString()}</p>
+                      <p className="text-sm sm:text-lg font-bold">₦{effectiveTotal.toLocaleString()}</p>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => copyToClipboard(totalAmount.toString(), 'Amount')}
+                      onClick={() => copyToClipboard(effectiveTotal.toString(), 'Amount')}
                     >
                       {copiedField === 'Amount' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     </Button>
