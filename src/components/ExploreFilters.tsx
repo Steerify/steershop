@@ -1,19 +1,22 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { BadgeCheck, SlidersHorizontal } from "lucide-react";
+import { BadgeCheck, SlidersHorizontal, Sparkles } from "lucide-react";
 
 const CATEGORIES = [
-  { value: 'all', label: 'All' },
-  { value: 'fashion', label: 'Fashion' },
-  { value: 'electronics', label: 'Electronics' },
-  { value: 'food-drinks', label: 'Food & Drinks' },
-  { value: 'beauty-health', label: 'Beauty & Health' },
-  { value: 'home-living', label: 'Home & Living' },
-  { value: 'art-craft', label: 'Art & Craft' },
-  { value: 'services', label: 'Services' },
-  { value: 'other', label: 'Other' },
+  { value: 'all', label: 'All', group: 'main' },
+  { value: 'beauty', label: '✨ Beauty', group: 'main' },
+  { value: 'skincare', label: 'Skincare', group: 'beauty' },
+  { value: 'haircare', label: 'Haircare', group: 'beauty' },
+  { value: 'cosmetics', label: 'Cosmetics', group: 'beauty' },
+  { value: 'fragrances', label: 'Fragrances', group: 'beauty' },
+  { value: 'natural-beauty', label: 'Natural Beauty', group: 'beauty' },
+  { value: 'fashion', label: 'Fashion', group: 'main' },
+  { value: 'electronics', label: 'Electronics', group: 'main' },
+  { value: 'food-drinks', label: 'Food & Drinks', group: 'main' },
+  { value: 'home-living', label: 'Home & Living', group: 'main' },
+  { value: 'art-craft', label: 'Art & Craft', group: 'main' },
+  { value: 'services', label: 'Services', group: 'main' },
+  { value: 'other', label: 'Other', group: 'main' },
 ];
 
 const NIGERIAN_STATES = [
@@ -49,23 +52,34 @@ export const ExploreFilters = ({
   showVerifiedOnly, onVerifiedChange,
   categoryCounts,
 }: ExploreFiltersProps) => {
+  const isBeautyExpanded = selectedCategory === 'beauty' || 
+    ['skincare', 'haircare', 'cosmetics', 'fragrances', 'natural-beauty'].includes(selectedCategory);
+
+  const visibleCategories = CATEGORIES.filter(cat => {
+    if (cat.group === 'main') return true;
+    if (cat.group === 'beauty') return isBeautyExpanded;
+    return false;
+  });
+
   return (
     <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-lg border-b py-3">
       <div className="container mx-auto px-4">
         {/* Category chips - horizontal scroll */}
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mb-3">
-          {CATEGORIES.map((cat) => (
+          {visibleCategories.map((cat) => (
             <button
               key={cat.value}
               onClick={() => onCategoryChange(cat.value)}
               className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
                 selectedCategory === cat.value
                   ? 'bg-primary text-primary-foreground'
+                  : cat.group === 'beauty'
+                  ? 'bg-accent/10 hover:bg-accent/20 text-accent-foreground border border-accent/20'
                   : 'bg-muted hover:bg-muted/80 text-muted-foreground'
               }`}
             >
               {cat.label}
-              {categoryCounts && cat.value !== 'all' && categoryCounts[cat.value] !== undefined && (
+              {categoryCounts && cat.value !== 'all' && cat.value !== 'beauty' && categoryCounts[cat.value] !== undefined && (
                 <span className="ml-1 opacity-60">({categoryCounts[cat.value]})</span>
               )}
             </button>
