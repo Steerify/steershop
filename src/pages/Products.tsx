@@ -182,6 +182,7 @@ const Products = () => {
       duration_minutes: "",
       booking_required: false,
       category: "general",
+      nafdac_number: "",
     });
     setImageUrl("");
     setVideoUrl("");
