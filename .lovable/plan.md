@@ -1,67 +1,101 @@
 
 
-# Plan: Homepage Redesign — Corrected Brand Colors
+# SteerSolo Domination Plan — Step-by-Step Implementation Roadmap
 
-## Brand Colors (Confirmed)
-- **Dark Blue** (Adire Indigo): `hsl(215, 65%, 25%)` — `--primary`
-- **Light Green** (Nigerian Green): `hsl(145, 60%, 38%)` — `--accent`
-- **White / Black** — foregrounds and backgrounds depending on theme
-- **NO yellow/gold** in any prominent visual role. Gold stays ONLY for star ratings (semantic use).
+## Documents Summary
 
-## What's Wrong Now
+You have two comprehensive strategy documents:
+1. **Online Vendor Domination Plan** — 12-phase execution from brand positioning to diaspora expansion, targeting Nigeria's $14.5B e-commerce market and 39M online vendors
+2. **Beauty Dominance Playbook** — Beauty-specific version with SafeBeauty verification system, NAFDAC alignment, and the $10.17B Nigerian beauty market
 
-The homepage uses `GOLD = "hsl(42,90%,55%)"` in **18+ places**: hero headline emphasis, eyebrow text, trust pills, ticker strip background, demo store button, stat numbers, SafeBeauty section headers, badge labels, testimonial stars/borders, CTA headline, and background glow effects. This is not on-brand.
+Both documents share the same architecture: Trust Infrastructure → Vendor Onboarding → Content Engine → Community → Monetisation → Diaspora Expansion.
 
-## Changes
+## What's Already Built vs What's Needed
 
-### `src/pages/Index.tsx` — Full color correction
+### Already Built (Platform Foundation)
+- Shop creation, product listings, store pages with slugs
+- 5-layer trust system (verification, badges, reviews, ratings)
+- SafeBeauty badge system in UI
+- Subscription tiers (Starter/Growth/Pro)
+- Paystack payments, bank transfer
+- WhatsApp integration (share links, order notifications)
+- Customer/Entrepreneur roles, onboarding flow
+- Admin dashboard with shop approval workflow
+- SEO pages, sitemap generation
+- Ambassador/referral system
+- KYC verification (Level 1 & 2)
+- Delivery tracking, order management
 
-**Remove:** `GOLD` constant from all visual uses. Replace every instance:
+### Gaps — What the Documents Require That's Missing
 
-| Current (Gold) | Replacement |
-|---|---|
-| Hero eyebrow border + text | White with 60% opacity |
-| Hero headline emphasis `color: GOLD` | `hsl(145, 60%, 48%)` (light green, brightened for dark bg) |
-| Demo store button `background: GOLD` | White bg, dark blue text |
-| Trust pills `background/color: GOLD` | White/15% bg, white text |
-| Ticker strip `background: GOLD` | `--accent` (light green) bg, white text |
-| Stat numbers `color: GOLD` | White |
-| Reality stats eyebrow + numbers | Light green |
-| Reality stats CTA button | Light green bg, dark text |
-| SafeBeauty eyebrow + heading emphasis | Light green |
-| Badge labels `color: GOLD` | White |
-| Top badge gradient | Light green gradient (not gold) |
-| Testimonial stars | Light green fill |
-| Testimonial avatar border | White border |
-| Vendor stories eyebrow | Light green |
-| Final CTA headline emphasis | Light green |
-| Final CTA demo button | White outline button |
-| Background gold glows | Green glows or remove |
+The documents are largely **marketing/operations playbooks**, not feature specs. Most of the 12 phases are about content creation, social media posting, and manual outreach — not code. However, several **platform features** are referenced that we should verify or build.
 
-**Also fix:**
-- Remove `--gold-gradient` and `--shadow-gold` references from hero/CTA glow effects
-- Broken hero images: verify Unsplash URLs load, replace any that 404
+---
 
-### `src/index.css` — Minor cleanup
-- Keep `--gold` variable for star ratings only
-- Remove `--gold-gradient` from prominent use
-- Remove `--shadow-gold`
+## Implementation Roadmap — Ordered by Document Phases
 
-### `src/components/ProductRating.tsx`
-- Change `fill-yellow-400 text-yellow-400` → `fill-gold text-gold` (semantic, stars only)
+### Sprint 0: Fix Build Errors (Immediate)
+- Add `deliveryCity` and `deliveryState` to `CheckoutDraft` interface in `formSlice.ts`
+- Fix the `"bank_transfer" === "paystack"` type comparison in `CheckoutDialog.tsx`
 
-### `src/components/TestimonialCard.tsx`
-- Change `text-gold fill-gold` stars — keep as-is (stars are acceptable gold use)
+### Sprint 1: Beauty-First Category System (Phase 1-2)
+**Why**: Documents say "own skincare first, then cosmetics, then haircare" — the platform needs proper beauty sub-categories
+- Add beauty sub-categories to the product category system: Skincare, Colour Cosmetics, Haircare, Fragrances, Personal Care, Organic/Natural Beauty
+- Add a "beauty" tag/vertical to shops so the explore page can filter by beauty vendors specifically
+- Update the explore page filters to support beauty sub-niche browsing
 
-### `src/pages/BrandPage.tsx`
-- Update `BRAND_COLORS` array: remove Gold/Amber as a primary brand color, demote to "Semantic only — star ratings"
-- Update brand story to reflect light green + dark blue + white/black as the 3 brand colors
+### Sprint 2: SafeBeauty Badge Tiers (Phase 3, 6)
+**Why**: Documents define 5 specific SafeBeauty tiers that vendors earn progressively
+- Already have badges in UI — verify the tiers match: Listed → Checked → Trusted → Verified → Approved
+- Add NAFDAC number field to product listings (optional, earns higher badge tier)
+- Add badge tier progression logic: auto-calculate based on orders, reviews, days active, NAFDAC numbers
 
-## Files to Edit
-1. `src/pages/Index.tsx` — Replace all 18+ gold usages with green/white/blue
-2. `src/index.css` — Remove gold from gradients/shadows
-3. `src/components/ProductRating.tsx` — Yellow → gold CSS var
-4. `src/pages/BrandPage.tsx` — Update brand color documentation
+### Sprint 3: Vendor Invite & Onboarding Polish (Phase 2)
+**Why**: "White-glove onboarding for first 10 vendors" — the DFY flow already exists but needs polish
+- Add vendor invite link generator (shareable referral URL with pre-filled shop creation)
+- Add "Vendor Invite Script" template in the marketing tools section (from Appendix A)
+- Ensure the Done-For-You setup flow is smooth for beauty vendors specifically
 
-## No database changes needed
+### Sprint 4: Buyer-Vendor Matching System (Phase 4)
+**Why**: "Create 'Find a Vendor' service" — buyers post what they need, matched to vendors
+- Add a "Buyer Request" feature: buyers post what they're looking for
+- Admin/system matches requests to verified vendors
+- Public display of matches ("We matched this buyer to 3 vendors in 5 minutes")
+
+### Sprint 5: Vendor Rankings & Leaderboards (Phase 6)
+**Why**: "Weekly top vendor list" and "Vendor of the Week" are key retention mechanics
+- Add weekly auto-calculated vendor rankings by category (orders + reviews + rating)
+- Add "Vendor of the Week" spotlight feature on homepage/explore
+- Add vendor leaderboard page showing top vendors per category
+
+### Sprint 6: Diaspora Landing Page (Phase 12)
+**Why**: "Create 'SteerSolo Diaspora' landing" targeting UK/US/Canada Nigerians
+- Add `/diaspora` landing page: "Buy from trusted Nigerian vendors. Pay in GBP/USD."
+- Multi-currency display option for products
+- Diaspora-specific vendor filter in explore
+
+### Sprint 7: Content & Marketing Dashboard (Phase 5, 9)
+**Why**: Documents describe a 7-day content calendar and daily posting rhythm
+- Add content calendar tool in entrepreneur dashboard
+- Add WhatsApp broadcast templates (the 10 status templates from Appendix B)
+- Social media post generator using AI (already partially built)
+
+### Sprint 8: KPI Dashboard (Chapter 8)
+**Why**: "Track these 8 numbers every week" — admin needs a KPI tracking view
+- Add admin KPI dashboard tracking: Active Vendors, Buyer Traffic/Week, Daily List Views, Vendor Sign-Up Rate, Buyer-Vendor Matches, Community Members, Monthly Revenue, Diaspora Vendors
+- Weekly auto-generated KPI report
+
+---
+
+## How We'll Work Through This
+
+Each sprint is self-contained and resumable. When credits run low, we stop at the current sprint boundary. When you return, just say "continue from Sprint X" and we pick up exactly where we left off.
+
+**Recommended start**: Sprint 0 (fix build errors) → Sprint 1 (beauty categories) → Sprint 2 (SafeBeauty tiers)
+
+These first sprints align with Phase 1-2 of both documents and set the foundation for everything else.
+
+## Important Note
+
+About 70% of both documents describe **marketing operations** (posting on TikTok, joining Facebook groups, DMing vendors, WhatsApp statuses) — these are actions YOU take outside the platform. The platform's job is to be ready when those vendors and buyers arrive. That's what these sprints build.
 
