@@ -240,6 +240,7 @@ const Products = () => {
         duration_minutes: product.duration_minutes?.toString() || "",
         booking_required: product.booking_required ?? false,
         category: (product as any).category || "general",
+        nafdac_number: (product as any).nafdac_number || "",
       });
       setImageUrl(product.images?.[0]?.url || "");
       setVideoUrl(product.video_url || "");
