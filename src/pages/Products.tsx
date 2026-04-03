@@ -600,6 +600,23 @@ const Products = () => {
               </select>
             </div>
 
+            {/* NAFDAC Number - shown for beauty categories */}
+            {['skincare', 'haircare', 'cosmetics', 'fragrances', 'natural-beauty', 'beauty-health'].includes(formData.category) && (
+              <div className="space-y-2">
+                <Label htmlFor="nafdac_number">NAFDAC Number (Optional)</Label>
+                <Input
+                  id="nafdac_number"
+                  value={formData.nafdac_number}
+                  onChange={(e) => setFormData({ ...formData, nafdac_number: e.target.value })}
+                  placeholder="e.g. A1-0123456"
+                  className="font-mono"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Adding a NAFDAC registration number earns your shop a higher SafeBeauty tier
+                </p>
+              </div>
+            )}
+
             {/* Type Toggle */}
             <div className="flex items-center justify-center gap-4 p-4 bg-muted/50 rounded-lg" data-tour="item-type-toggle">
               <Label className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg transition-all ${formData.type === 'product' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
