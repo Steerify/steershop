@@ -907,7 +907,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
               )}
               {paymentChoice === "pay_before" &&
                 (selectedPaymentMethod === "paystack" || shop.payment_method === "paystack" ||
-                 (shop.payment_method === "both" && selectedPaymentMethod === "paystack")) && (
+                 (shop.payment_method === "both" && (selectedPaymentMethod as string) === "paystack")) && (
                 <div className="flex justify-between items-center text-muted-foreground">
                   <span className="text-sm">Processing fee:</span>
                   <span className="text-sm">₦{Math.round(paystackFee).toLocaleString()}</span>
