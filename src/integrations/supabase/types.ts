@@ -1365,6 +1365,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_available: boolean
+          nafdac_number: string | null
           name: string
           price: number
           shop_id: string
@@ -1385,6 +1386,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_available?: boolean
+          nafdac_number?: string | null
           name: string
           price: number
           shop_id: string
@@ -1405,6 +1407,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_available?: boolean
+          nafdac_number?: string | null
           name?: string
           price?: number
           shop_id?: string
@@ -1825,6 +1828,63 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      safebeauty_tiers: {
+        Row: {
+          average_rating: number | null
+          created_at: string | null
+          days_active: number | null
+          id: string
+          last_calculated_at: string | null
+          nafdac_products_count: number | null
+          shop_id: string
+          tier: string
+          total_orders: number | null
+          total_reviews: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          average_rating?: number | null
+          created_at?: string | null
+          days_active?: number | null
+          id?: string
+          last_calculated_at?: string | null
+          nafdac_products_count?: number | null
+          shop_id: string
+          tier?: string
+          total_orders?: number | null
+          total_reviews?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          average_rating?: number | null
+          created_at?: string | null
+          days_active?: number | null
+          id?: string
+          last_calculated_at?: string | null
+          nafdac_products_count?: number | null
+          shop_id?: string
+          tier?: string
+          total_orders?: number | null
+          total_reviews?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safebeauty_tiers_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safebeauty_tiers_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       setup_requests: {
         Row: {
@@ -2662,6 +2722,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_safebeauty_tier: {
+        Args: { shop_uuid: string }
+        Returns: string
+      }
       check_feature_usage: {
         Args: { _feature_name: string; _user_id: string }
         Returns: Json
