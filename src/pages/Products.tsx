@@ -317,6 +317,7 @@ const Products = () => {
         is_available: formData.is_available,
         video_url: videoUrl || undefined,
         category: formData.category,
+        nafdac_number: formData.nafdac_number || undefined,
       };
 
       let response;
