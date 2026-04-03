@@ -232,7 +232,13 @@ const Shops = () => {
 
   const sortedShops = useMemo(() => {
     let filtered = [...shops];
-    if (selectedCategory !== 'all') filtered = filtered.filter(s => shopCategories[s.id] === selectedCategory);
+    if (selectedCategory !== 'all') {
+      if (selectedCategory === 'beauty') {
+        filtered = filtered.filter(s => BEAUTY_SUBCATEGORIES.includes(shopCategories[s.id]));
+      } else {
+        filtered = filtered.filter(s => shopCategories[s.id] === selectedCategory);
+      }
+    }
     switch (selectedSort) {
       case 'rating': filtered.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0)); break;
       case 'name': filtered.sort((a, b) => (a.name || a.shop_name || '').localeCompare(b.name || b.shop_name || '')); break;
