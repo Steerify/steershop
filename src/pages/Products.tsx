@@ -82,11 +82,14 @@ const Products = () => {
     plan_slug: string;
   } | null>(null);
   const PRODUCT_CATEGORIES = [
-    'general', 'fashion', 'electronics', 'food-drinks', 'beauty-health', 
+    'general', 'skincare', 'haircare', 'cosmetics', 'fragrances', 'natural-beauty',
+    'fashion', 'electronics', 'food-drinks', 'beauty-health', 
     'home-living', 'art-craft', 'services', 'other'
   ];
   const CATEGORY_LABELS: Record<string, string> = {
-    'general': 'General', 'fashion': 'Fashion', 'electronics': 'Electronics',
+    'general': 'General', 'skincare': 'Skincare', 'haircare': 'Haircare',
+    'cosmetics': 'Cosmetics', 'fragrances': 'Fragrances', 'natural-beauty': 'Natural Beauty',
+    'fashion': 'Fashion', 'electronics': 'Electronics',
     'food-drinks': 'Food & Drinks', 'beauty-health': 'Beauty & Health',
     'home-living': 'Home & Living', 'art-craft': 'Art & Craft',
     'services': 'Services', 'other': 'Other'
@@ -102,6 +105,7 @@ const Products = () => {
     duration_minutes: "",
     booking_required: false,
     category: "general",
+    nafdac_number: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
