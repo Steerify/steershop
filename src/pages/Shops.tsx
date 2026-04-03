@@ -18,7 +18,7 @@ import { Shop, Product } from "@/types/api";
 import { ExploreFilters } from "@/components/ExploreFilters";
 import { ShopCardEnhanced } from "@/components/ShopCardEnhanced";
 import { supabase } from "@/integrations/supabase/client";
-import { autoCategorize, getCategoryLabel } from "@/utils/autoCategorize";
+import { autoCategorize, getCategoryLabel, BEAUTY_SUBCATEGORIES } from "@/utils/autoCategorize";
 import { Button } from "@/components/ui/button";
 
 const VERIFIED_NOTICE_KEY = "steersolo_verified_notice_dismissed";
