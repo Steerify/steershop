@@ -42,6 +42,7 @@ const productService = {
         booking_required: data.booking_required || false,
         video_url: data.video_url || null,
         category: (data as any).category || 'general',
+        nafdac_number: (data as any).nafdac_number || null,
       })
       .select()
       .single();
