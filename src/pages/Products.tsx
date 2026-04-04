@@ -82,11 +82,14 @@ const Products = () => {
     plan_slug: string;
   } | null>(null);
   const PRODUCT_CATEGORIES = [
-    'general', 'fashion', 'electronics', 'food-drinks', 'beauty-health', 
+    'general', 'skincare', 'haircare', 'cosmetics', 'fragrances', 'natural-beauty',
+    'fashion', 'electronics', 'food-drinks', 'beauty-health', 
     'home-living', 'art-craft', 'services', 'other'
   ];
   const CATEGORY_LABELS: Record<string, string> = {
-    'general': 'General', 'fashion': 'Fashion', 'electronics': 'Electronics',
+    'general': 'General', 'skincare': 'Skincare', 'haircare': 'Haircare',
+    'cosmetics': 'Cosmetics', 'fragrances': 'Fragrances', 'natural-beauty': 'Natural Beauty',
+    'fashion': 'Fashion', 'electronics': 'Electronics',
     'food-drinks': 'Food & Drinks', 'beauty-health': 'Beauty & Health',
     'home-living': 'Home & Living', 'art-craft': 'Art & Craft',
     'services': 'Services', 'other': 'Other'
@@ -102,6 +105,7 @@ const Products = () => {
     duration_minutes: "",
     booking_required: false,
     category: "general",
+    nafdac_number: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -178,6 +182,7 @@ const Products = () => {
       duration_minutes: "",
       booking_required: false,
       category: "general",
+      nafdac_number: "",
     });
     setImageUrl("");
     setVideoUrl("");
@@ -235,6 +240,7 @@ const Products = () => {
         duration_minutes: product.duration_minutes?.toString() || "",
         booking_required: product.booking_required ?? false,
         category: (product as any).category || "general",
+        nafdac_number: (product as any).nafdac_number || "",
       });
       setImageUrl(product.images?.[0]?.url || "");
       setVideoUrl(product.video_url || "");
@@ -311,6 +317,7 @@ const Products = () => {
         is_available: formData.is_available,
         video_url: videoUrl || undefined,
         category: formData.category,
+        nafdac_number: formData.nafdac_number || undefined,
       };
 
       let response;
@@ -593,6 +600,23 @@ const Products = () => {
                 ))}
               </select>
             </div>
+
+            {/* NAFDAC Number - shown for beauty categories */}
+            {['skincare', 'haircare', 'cosmetics', 'fragrances', 'natural-beauty', 'beauty-health'].includes(formData.category) && (
+              <div className="space-y-2">
+                <Label htmlFor="nafdac_number">NAFDAC Number (Optional)</Label>
+                <Input
+                  id="nafdac_number"
+                  value={formData.nafdac_number}
+                  onChange={(e) => setFormData({ ...formData, nafdac_number: e.target.value })}
+                  placeholder="e.g. A1-0123456"
+                  className="font-mono"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Adding a NAFDAC registration number earns your shop a higher SafeBeauty tier
+                </p>
+              </div>
+            )}
 
             {/* Type Toggle */}
             <div className="flex items-center justify-center gap-4 p-4 bg-muted/50 rounded-lg" data-tour="item-type-toggle">

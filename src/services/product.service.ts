@@ -42,6 +42,7 @@ const productService = {
         booking_required: data.booking_required || false,
         video_url: data.video_url || null,
         category: (data as any).category || 'general',
+        nafdac_number: (data as any).nafdac_number || null,
       })
       .select()
       .single();
@@ -172,6 +173,7 @@ const productService = {
     if (data.is_available !== undefined) updateData.is_available = data.is_available;
     if (data.video_url !== undefined) updateData.video_url = data.video_url || null;
     if ((data as any).category) updateData.category = (data as any).category;
+    if ((data as any).nafdac_number !== undefined) updateData.nafdac_number = (data as any).nafdac_number || null;
 
     const { data: product, error } = await supabase
       .from('products')

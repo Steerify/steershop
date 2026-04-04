@@ -77,6 +77,7 @@ const FAQ = lazy(() => import("./pages/FAQ"));
 const Ambassador = lazy(() => import("./pages/Ambassador"));
 const AdsAssistant = lazy(() => import("./pages/entrepreneur/AdsAssistant"));
 const GoogleBusinessProfile = lazy(() => import("./pages/entrepreneur/GoogleBusinessProfile"));
+const VendorInvite = lazy(() => import("./pages/entrepreneur/VendorInvite"));
 
 // Feature pages
 const WhatsAppFeature = lazy(() => import("./pages/features/WhatsAppFeature"));
@@ -251,6 +252,11 @@ const App = () => (
             <Route path="/customers" element={
               <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
                 <Customers />
+              </ProtectedRoute>
+            } />
+            <Route path="/vendor-invite" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <VendorInvite />
               </ProtectedRoute>
             } />
             

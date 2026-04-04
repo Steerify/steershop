@@ -16,23 +16,23 @@ const INK       = "hsl(220,45%,12%)";
 const ACCENT    = "hsl(145,60%,38%)";
 const ACCENT_BRIGHT = "hsl(145,60%,48%)";
 
-/* ─── Photos ─── */
+/* ─── Photos (real Unsplash) ─── */
 const P = {
-  heroVendor:   "https://images.unsplash.com/photo-1590650516494-0c8e4a4dd67e?auto=format&fit=crop&w=900&q=80",
-  heroProducts: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=900&q=80",
-  whatsapp:     "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=700&q=80",
-  instagram:    "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=700&q=80",
-  tiktok:       "https://images.unsplash.com/photo-1611162616305-c69b3396e46a?auto=format&fit=crop&w=700&q=80",
+  heroVendor:   "https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&w=800&q=80",
+  heroProducts: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=800&q=80",
+  whatsapp:     "https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&w=800&q=80",
+  instagram:    "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
+  tiktok:       "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?auto=format&fit=crop&w=800&q=80",
   igLogo:       "https://cdn.worldvectorlogo.com/logos/instagram-2016-5.svg",
   tiktokLogo:   "https://cdn.worldvectorlogo.com/logos/tiktok-logo-2.svg",
   waLogo:       "https://cdn.worldvectorlogo.com/logos/whatsapp-icon-1.svg",
-  trustFace:    "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=1400&q=80",
+  trustFace:    "https://images.unsplash.com/photo-1531123414780-f74242c2b052?auto=format&fit=crop&w=800&q=80",
   organic:      "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=800&q=80",
-  orders:       "https://images.unsplash.com/photo-1586880244406-556ebe35f282?auto=format&fit=crop&w=700&q=80",
-  storefront:   "https://images.unsplash.com/photo-1622290382894-3ee1c7f502fe?auto=format&fit=crop&w=800&q=80", // coherence: a Nigerian business owner smiling at a phone/success
-  av1: "https://images.unsplash.com/photo-1531123414704-02a5c1840905?auto=format&fit=crop&w=150&q=80",
-  av2: "https://images.unsplash.com/photo-1549471013-3364d7ce4668?auto=format&fit=crop&w=150&q=80",
-  av3: "https://images.unsplash.com/photo-1510227289873-102bc3465133?auto=format&fit=crop&w=150&q=80",
+  orders:       "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
+  storefront:   "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80",
+  av1: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=200&q=80",
+  av2: "https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&w=200&q=80",
+  av3: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
 };
 
 /* ─── Data ─── */

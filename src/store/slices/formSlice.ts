@@ -5,6 +5,8 @@ interface CheckoutDraft {
   customerEmail?: string;
   customerPhone?: string;
   deliveryAddress?: string;
+  deliveryCity?: string;
+  deliveryState?: string;
   paymentOption?: string;
 }
 
