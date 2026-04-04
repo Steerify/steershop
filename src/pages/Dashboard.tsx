@@ -674,7 +674,8 @@ const Dashboard = () => {
     { icon: Target, label: "Services", description: "Google & Ad consults", path: "/marketing-services", color: "from-cyan-500/20 to-cyan-500/10", textColor: "text-cyan-500" },
     { icon: BookOpen, label: "Tutorials", description: "Learn & earn points", path: "/courses", color: "from-indigo-500/20 to-indigo-500/10", textColor: "text-indigo-500" },
     { icon: Users, label: "Customers", description: "Customer records", path: "/customers", color: "from-teal-500/20 to-teal-500/10", textColor: "text-teal-500" },
-    { icon: Crown, label: "Ambassador", description: "Refer & earn", path: "/ambassador", color: "from-yellow-500/20 to-yellow-500/10", textColor: "text-yellow-600" },
+    { icon: Crown, label: "Ambassador", description: "Refer & earn", path: "/ambassador", color: "from-accent/20 to-accent/10", textColor: "text-accent" },
+    { icon: Share2, label: "Invite Vendors", description: "Grow community", path: "/vendor-invite", color: "from-primary/20 to-primary/10", textColor: "text-primary" },
   ];
 
   if (isLoading) {

@@ -254,6 +254,11 @@ const App = () => (
                 <Customers />
               </ProtectedRoute>
             } />
+            <Route path="/vendor-invite" element={
+              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+                <VendorInvite />
+              </ProtectedRoute>
+            } />
             
             {/* Customer routes */}
             <Route path="/customer_dashboard" element={
