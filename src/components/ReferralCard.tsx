@@ -17,9 +17,9 @@ interface AmbassadorTier {
 }
 
 const TIERS = [
-  { key: "bronze", label: "Bronze", threshold: 10, reward: "Free month", icon: Gift, color: "text-amber-600" },
-  { key: "silver", label: "Silver", threshold: 50, reward: "Featured shop", icon: Star, color: "text-slate-500" },
-  { key: "gold", label: "Gold", threshold: 100, reward: "Reseller status", icon: Crown, color: "text-yellow-500" },
+  { key: "bronze", label: "Bronze", threshold: 10, reward: "Free month", icon: Gift, color: "text-accent" },
+  { key: "silver", label: "Silver", threshold: 50, reward: "Featured shop", icon: Star, color: "text-primary" },
+  { key: "gold", label: "Gold", threshold: 100, reward: "Reseller status", icon: Crown, color: "text-accent" },
 ];
 
 export const ReferralCard = () => {
