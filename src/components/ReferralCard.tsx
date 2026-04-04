@@ -17,9 +17,9 @@ interface AmbassadorTier {
 }
 
 const TIERS = [
-  { key: "bronze", label: "Bronze", threshold: 10, reward: "Free month", icon: Gift, color: "text-amber-600" },
-  { key: "silver", label: "Silver", threshold: 50, reward: "Featured shop", icon: Star, color: "text-slate-500" },
-  { key: "gold", label: "Gold", threshold: 100, reward: "Reseller status", icon: Crown, color: "text-yellow-500" },
+  { key: "bronze", label: "Bronze", threshold: 10, reward: "Free month", icon: Gift, color: "text-accent" },
+  { key: "silver", label: "Silver", threshold: 50, reward: "Featured shop", icon: Star, color: "text-primary" },
+  { key: "gold", label: "Gold", threshold: 100, reward: "Reseller status", icon: Crown, color: "text-accent" },
 ];
 
 export const ReferralCard = () => {
@@ -94,7 +94,7 @@ export const ReferralCard = () => {
       <CardHeader className="relative">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-accent to-primary rounded-xl flex items-center justify-center">
               <Crown className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -102,7 +102,7 @@ export const ReferralCard = () => {
               <CardDescription>Refer friends, unlock rewards</CardDescription>
             </div>
           </div>
-          <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700 border-yellow-500/20">
+          <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20">
             <Sparkles className="w-3 h-3 mr-1" />
             {stats.rewardedReferrals} qualified
           </Badge>
