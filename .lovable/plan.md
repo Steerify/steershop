@@ -1,101 +1,84 @@
 
 
-# SteerSolo Domination Plan — Step-by-Step Implementation Roadmap
+# Sprint 3: Vendor Invite & Onboarding Polish + Fix All Images
 
-## Documents Summary
+## Scope
 
-You have two comprehensive strategy documents:
-1. **Online Vendor Domination Plan** — 12-phase execution from brand positioning to diaspora expansion, targeting Nigeria's $14.5B e-commerce market and 39M online vendors
-2. **Beauty Dominance Playbook** — Beauty-specific version with SafeBeauty verification system, NAFDAC alignment, and the $10.17B Nigerian beauty market
-
-Both documents share the same architecture: Trust Infrastructure → Vendor Onboarding → Content Engine → Community → Monetisation → Diaspora Expansion.
-
-## What's Already Built vs What's Needed
-
-### Already Built (Platform Foundation)
-- Shop creation, product listings, store pages with slugs
-- 5-layer trust system (verification, badges, reviews, ratings)
-- SafeBeauty badge system in UI
-- Subscription tiers (Starter/Growth/Pro)
-- Paystack payments, bank transfer
-- WhatsApp integration (share links, order notifications)
-- Customer/Entrepreneur roles, onboarding flow
-- Admin dashboard with shop approval workflow
-- SEO pages, sitemap generation
-- Ambassador/referral system
-- KYC verification (Level 1 & 2)
-- Delivery tracking, order management
-
-### Gaps — What the Documents Require That's Missing
-
-The documents are largely **marketing/operations playbooks**, not feature specs. Most of the 12 phases are about content creation, social media posting, and manual outreach — not code. However, several **platform features** are referenced that we should verify or build.
+Two parallel tracks:
+1. **Sprint 3 features**: Vendor invite link generator, invite script templates, beauty-specific DFY polish
+2. **Image fixes**: Replace all Unsplash photos with Nigerian vendor/beauty-specific images, fix any broken URLs
 
 ---
 
-## Implementation Roadmap — Ordered by Document Phases
+## Track 1: Vendor Invite System
 
-### Sprint 0: Fix Build Errors (Immediate)
-- Add `deliveryCity` and `deliveryState` to `CheckoutDraft` interface in `formSlice.ts`
-- Fix the `"bank_transfer" === "paystack"` type comparison in `CheckoutDialog.tsx`
+### New file: `src/pages/entrepreneur/VendorInvite.tsx`
+A dashboard page where existing vendors can generate and share personalized invite links. Features:
+- Auto-generates invite URL using existing referral code system (`referralService.getReferralCode()`)
+- Pre-written WhatsApp invite scripts (from the Domination Plan Appendix A) — copy-to-clipboard
+- 3 invite script variants: "Personal invite", "Success story", "Business opportunity"
+- Share via WhatsApp button with pre-filled message
+- Stats: how many vendors invited, how many signed up
 
-### Sprint 1: Beauty-First Category System (Phase 1-2)
-**Why**: Documents say "own skincare first, then cosmetics, then haircare" — the platform needs proper beauty sub-categories
-- Add beauty sub-categories to the product category system: Skincare, Colour Cosmetics, Haircare, Fragrances, Personal Care, Organic/Natural Beauty
-- Add a "beauty" tag/vertical to shops so the explore page can filter by beauty vendors specifically
-- Update the explore page filters to support beauty sub-niche browsing
+### Edit: `src/App.tsx`
+- Add route `/vendor-invite` (protected, shop_owner only)
 
-### Sprint 2: SafeBeauty Badge Tiers (Phase 3, 6)
-**Why**: Documents define 5 specific SafeBeauty tiers that vendors earn progressively
-- Already have badges in UI — verify the tiers match: Listed → Checked → Trusted → Verified → Approved
-- Add NAFDAC number field to product listings (optional, earns higher badge tier)
-- Add badge tier progression logic: auto-calculate based on orders, reviews, days active, NAFDAC numbers
+### Edit: `src/components/AdminSidebar.tsx` or Dashboard
+- Add "Invite Vendors" link in the entrepreneur sidebar/dashboard
 
-### Sprint 3: Vendor Invite & Onboarding Polish (Phase 2)
-**Why**: "White-glove onboarding for first 10 vendors" — the DFY flow already exists but needs polish
-- Add vendor invite link generator (shareable referral URL with pre-filled shop creation)
-- Add "Vendor Invite Script" template in the marketing tools section (from Appendix A)
-- Ensure the Done-For-You setup flow is smooth for beauty vendors specifically
-
-### Sprint 4: Buyer-Vendor Matching System (Phase 4)
-**Why**: "Create 'Find a Vendor' service" — buyers post what they need, matched to vendors
-- Add a "Buyer Request" feature: buyers post what they're looking for
-- Admin/system matches requests to verified vendors
-- Public display of matches ("We matched this buyer to 3 vendors in 5 minutes")
-
-### Sprint 5: Vendor Rankings & Leaderboards (Phase 6)
-**Why**: "Weekly top vendor list" and "Vendor of the Week" are key retention mechanics
-- Add weekly auto-calculated vendor rankings by category (orders + reviews + rating)
-- Add "Vendor of the Week" spotlight feature on homepage/explore
-- Add vendor leaderboard page showing top vendors per category
-
-### Sprint 6: Diaspora Landing Page (Phase 12)
-**Why**: "Create 'SteerSolo Diaspora' landing" targeting UK/US/Canada Nigerians
-- Add `/diaspora` landing page: "Buy from trusted Nigerian vendors. Pay in GBP/USD."
-- Multi-currency display option for products
-- Diaspora-specific vendor filter in explore
-
-### Sprint 7: Content & Marketing Dashboard (Phase 5, 9)
-**Why**: Documents describe a 7-day content calendar and daily posting rhythm
-- Add content calendar tool in entrepreneur dashboard
-- Add WhatsApp broadcast templates (the 10 status templates from Appendix B)
-- Social media post generator using AI (already partially built)
-
-### Sprint 8: KPI Dashboard (Chapter 8)
-**Why**: "Track these 8 numbers every week" — admin needs a KPI tracking view
-- Add admin KPI dashboard tracking: Active Vendors, Buyer Traffic/Week, Daily List Views, Vendor Sign-Up Rate, Buyer-Vendor Matches, Community Members, Monthly Revenue, Diaspora Vendors
-- Weekly auto-generated KPI report
+### Edit: `src/pages/Dashboard.tsx`
+- Add a "Grow the Community" card linking to `/vendor-invite` with invite count
 
 ---
 
-## How We'll Work Through This
+## Track 2: Fix All Images — Nigerian Vendor Photos
 
-Each sprint is self-contained and resumable. When credits run low, we stop at the current sprint boundary. When you return, just say "continue from Sprint X" and we pick up exactly where we left off.
+### Problem
+The homepage uses generic Unsplash photos that don't depict Nigerian vendors. Several may be broken (404). The images need to show:
+- African/Nigerian women entrepreneurs
+- Beauty products (skincare, makeup)
+- Mobile commerce / phone usage
+- Market/vendor scenes
 
-**Recommended start**: Sprint 0 (fix build errors) → Sprint 1 (beauty categories) → Sprint 2 (SafeBeauty tiers)
+### Edit: `src/pages/Index.tsx` — Replace the `P` object
+Replace all 12 photo URLs with verified, working Unsplash photos depicting Nigerian/African vendors and beauty commerce:
 
-These first sprints align with Phase 1-2 of both documents and set the foundation for everything else.
+| Key | Current (generic) | Replacement (Nigerian-relevant) |
+|---|---|---|
+| `heroVendor` | Generic photo | African woman entrepreneur with phone/products |
+| `heroProducts` | Generic beauty products | Nigerian beauty/skincare products close-up |
+| `organic` | Generic organic | Natural/organic African beauty ingredients |
+| `trustFace` | Non-African face | Nigerian woman's confident portrait |
+| `orders` | Generic packages | Product packaging/shipping in African context |
+| `storefront` | Generic storefront | African business owner with phone |
+| `whatsapp` | Generic commerce | Mobile phone/WhatsApp commerce scene |
+| `instagram` | Generic social | Social media content creation |
+| `tiktok` | Generic TikTok | Content creator filming |
+| `av1`, `av2`, `av3` | Non-African avatars | African women portrait thumbnails |
 
-## Important Note
+All URLs will be verified working Unsplash photos with Nigerian/African subjects.
 
-About 70% of both documents describe **marketing operations** (posting on TikTok, joining Facebook groups, DMing vendors, WhatsApp statuses) — these are actions YOU take outside the platform. The platform's job is to be ready when those vendors and buyers arrive. That's what these sprints build.
+### Edit: `src/pages/DemoStoreFront.tsx`
+- Replace the demo store owner avatar and product images with African fashion/beauty-relevant photos
+
+### Edit: `src/components/ReferralCard.tsx` — Brand color fix
+- Replace remaining `yellow-500` and `yellow-700` references with `accent` (light green) brand colors
+- Replace gold gradient on Crown icon with green gradient
+
+---
+
+## Files Summary
+
+**New:**
+- `src/pages/entrepreneur/VendorInvite.tsx` — Invite page with scripts & sharing
+
+**Edited:**
+- `src/pages/Index.tsx` — All 12+ photo URLs replaced with Nigerian vendor imagery
+- `src/pages/DemoStoreFront.tsx` — Demo store images updated
+- `src/components/ReferralCard.tsx` — Yellow → brand green
+- `src/App.tsx` — Add `/vendor-invite` route
+- `src/pages/Dashboard.tsx` — Add invite vendors card
+
+## No database changes needed
+Invite system reuses existing `referral_codes` and `referrals` tables.
 
