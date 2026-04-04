@@ -102,7 +102,7 @@ export const ReferralCard = () => {
               <CardDescription>Refer friends, unlock rewards</CardDescription>
             </div>
           </div>
-          <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700 border-yellow-500/20">
+          <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20">
             <Sparkles className="w-3 h-3 mr-1" />
             {stats.rewardedReferrals} qualified
           </Badge>
