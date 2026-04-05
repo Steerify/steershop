@@ -1,84 +1,60 @@
 
 
-# Sprint 3: Vendor Invite & Onboarding Polish + Fix All Images
+# Plan: Real Nigerian Images + Email Authentication Fix
 
-## Scope
-
-Two parallel tracks:
-1. **Sprint 3 features**: Vendor invite link generator, invite script templates, beauty-specific DFY polish
-2. **Image fixes**: Replace all Unsplash photos with Nigerian vendor/beauty-specific images, fix any broken URLs
-
----
-
-## Track 1: Vendor Invite System
-
-### New file: `src/pages/entrepreneur/VendorInvite.tsx`
-A dashboard page where existing vendors can generate and share personalized invite links. Features:
-- Auto-generates invite URL using existing referral code system (`referralService.getReferralCode()`)
-- Pre-written WhatsApp invite scripts (from the Domination Plan Appendix A) — copy-to-clipboard
-- 3 invite script variants: "Personal invite", "Success story", "Business opportunity"
-- Share via WhatsApp button with pre-filled message
-- Stats: how many vendors invited, how many signed up
-
-### Edit: `src/App.tsx`
-- Add route `/vendor-invite` (protected, shop_owner only)
-
-### Edit: `src/components/AdminSidebar.tsx` or Dashboard
-- Add "Invite Vendors" link in the entrepreneur sidebar/dashboard
-
-### Edit: `src/pages/Dashboard.tsx`
-- Add a "Grow the Community" card linking to `/vendor-invite` with invite count
-
----
-
-## Track 2: Fix All Images — Nigerian Vendor Photos
+## Part 1: Replace Images with Real Nigerian Vendor Photos
 
 ### Problem
-The homepage uses generic Unsplash photos that don't depict Nigerian vendors. Several may be broken (404). The images need to show:
-- African/Nigerian women entrepreneurs
-- Beauty products (skincare, makeup)
-- Mobile commerce / phone usage
-- Market/vendor scenes
+Current Unsplash images are generic — many depict non-Nigerian subjects (e.g., `photo-1531746020798` is a generic portrait, `photo-1556740758` is generic commerce). SteerSolo's brand requires authentic Nigerian entrepreneur imagery.
 
-### Edit: `src/pages/Index.tsx` — Replace the `P` object
-Replace all 12 photo URLs with verified, working Unsplash photos depicting Nigerian/African vendors and beauty commerce:
+### Approach
+Replace all photo URLs in `src/pages/Index.tsx` (the `P` object) and `src/pages/DemoStoreFront.tsx` with carefully selected Unsplash photos that specifically feature:
+- **Nigerian/African women entrepreneurs** selling products
+- **Beauty products** in African market contexts (shea butter, skincare, braiding)
+- **Mobile phone commerce** scenes (WhatsApp selling)
+- **African market/shop** environments
+- **Nigerian fashion** (Ankara, lace, gele)
 
-| Key | Current (generic) | Replacement (Nigerian-relevant) |
-|---|---|---|
-| `heroVendor` | Generic photo | African woman entrepreneur with phone/products |
-| `heroProducts` | Generic beauty products | Nigerian beauty/skincare products close-up |
-| `organic` | Generic organic | Natural/organic African beauty ingredients |
-| `trustFace` | Non-African face | Nigerian woman's confident portrait |
-| `orders` | Generic packages | Product packaging/shipping in African context |
-| `storefront` | Generic storefront | African business owner with phone |
-| `whatsapp` | Generic commerce | Mobile phone/WhatsApp commerce scene |
-| `instagram` | Generic social | Social media content creation |
-| `tiktok` | Generic TikTok | Content creator filming |
-| `av1`, `av2`, `av3` | Non-African avatars | African women portrait thumbnails |
+Each URL will be tested in a browser before committing. Specific replacements:
 
-All URLs will be verified working Unsplash photos with Nigerian/African subjects.
+| Image Key | New Subject |
+|---|---|
+| `heroVendor` | African woman entrepreneur with products/phone |
+| `heroProducts` | African beauty/skincare products display |
+| `trustFace` | Confident Nigerian businesswoman portrait |
+| `organic` | Natural African beauty ingredients (shea, black soap) |
+| `orders` | African vendor packaging/shipping products |
+| `storefront` | Nigerian shop owner at her store |
+| `whatsapp` | African person using phone for business |
+| `av1-av3` | Nigerian women entrepreneur headshots |
+| Demo store logo | Nigerian fashion vendor |
+| Demo store banner | African fashion display |
+| Demo product images | Ankara/lace/African fashion items |
 
-### Edit: `src/pages/DemoStoreFront.tsx`
-- Replace the demo store owner avatar and product images with African fashion/beauty-relevant photos
-
-### Edit: `src/components/ReferralCard.tsx` — Brand color fix
-- Replace remaining `yellow-500` and `yellow-700` references with `accent` (light green) brand colors
-- Replace gold gradient on Crown icon with green gradient
+### Files
+- `src/pages/Index.tsx` — Replace `P` object URLs
+- `src/pages/DemoStoreFront.tsx` — Replace demo shop images
 
 ---
 
-## Files Summary
+## Part 2: Fix Email Authentication
 
-**New:**
-- `src/pages/entrepreneur/VendorInvite.tsx` — Invite page with scripts & sharing
+### Current State
+The `auth-email-hook` edge function uses **Resend directly** (old pattern). The domain `notify.steersolo.com` is verified. However, this old pattern bypasses the Lovable managed email queue, which means:
+- No retry on failure
+- No rate-limit handling
+- No send logging
 
-**Edited:**
-- `src/pages/Index.tsx` — All 12+ photo URLs replaced with Nigerian vendor imagery
-- `src/pages/DemoStoreFront.tsx` — Demo store images updated
-- `src/components/ReferralCard.tsx` — Yellow → brand green
-- `src/App.tsx` — Add `/vendor-invite` route
-- `src/pages/Dashboard.tsx` — Add invite vendors card
+### Fix
+Re-scaffold the auth-email-hook using Lovable's managed email system (queue-based), then re-apply brand styling and redeploy. This ensures email auth works reliably through the managed infrastructure.
 
-## No database changes needed
-Invite system reuses existing `referral_codes` and `referrals` tables.
+Steps:
+1. Call `scaffold_auth_email_templates` (with `confirm_overwrite: true`)
+2. Re-apply SteerSolo brand styling (Adire Indigo primary, Nigerian Green accent, logo, copy tone)
+3. Deploy `auth-email-hook`
+4. Verify the queue infrastructure exists (setup_email_infra if needed)
+
+### Files affected
+- `supabase/functions/auth-email-hook/index.ts` — Replaced by scaffold
+- `supabase/functions/_shared/email-templates/*.tsx` — Re-branded
 
