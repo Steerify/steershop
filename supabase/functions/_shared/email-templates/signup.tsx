@@ -72,7 +72,7 @@ export const SignupEmail = ({
 
 export default SignupEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: "'Roboto', 'Inter', Arial, sans-serif" }
+const main = { backgroundColor: '#ffffff', fontFamily: "'Poppins', 'Inter', Arial, sans-serif" }
 const container = { padding: '30px 25px', maxWidth: '560px', margin: '0 auto' }
 const logoSection = { marginBottom: '24px' }
 const logo = { borderRadius: '8px' }
@@ -93,7 +93,7 @@ const link = { color: 'hsl(215, 65%, 25%)', textDecoration: 'underline' }
 const buttonSection = { textAlign: 'center' as const, margin: '28px 0' }
 const button = {
   backgroundColor: 'hsl(215, 65%, 25%)',
-  color: 'hsl(40, 20%, 98%)',
+  color: '#ffffff',
   fontSize: '15px',
   fontWeight: 'bold' as const,
   borderRadius: '12px',
