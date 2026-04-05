@@ -9,10 +9,8 @@ import {
   Head,
   Heading,
   Html,
-  Img,
   Link,
   Preview,
-  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
@@ -23,8 +21,6 @@ interface SignupEmailProps {
   confirmationUrl: string
 }
 
-const LOGO_URL = 'https://hwkcqgmtinbgyjjgcgmp.supabase.co/storage/v1/object/public/email-assets/steersolo-logo.jpg'
-
 export const SignupEmail = ({
   siteName,
   siteUrl,
@@ -33,37 +29,29 @@ export const SignupEmail = ({
 }: SignupEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Welcome to SteerSolo — verify your email to get started!</Preview>
+    <Preview>Confirm your email for {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Section style={logoSection}>
-          <Img src={LOGO_URL} width="120" alt="SteerSolo" style={logo} />
-        </Section>
-        <Heading style={h1}>Welcome aboard! 🎉</Heading>
+        <Heading style={h1}>Confirm your email</Heading>
         <Text style={text}>
-          You're one step away from launching your WhatsApp-powered online store on{' '}
+          Thanks for signing up for{' '}
           <Link href={siteUrl} style={link}>
-            <strong>SteerSolo</strong>
+            <strong>{siteName}</strong>
           </Link>
-          .
+          !
         </Text>
         <Text style={text}>
-          Please verify your email (
+          Please confirm your email address (
           <Link href={`mailto:${recipient}`} style={link}>
             {recipient}
           </Link>
-          ) to get started:
+          ) by clicking the button below:
         </Text>
-        <Section style={buttonSection}>
-          <Button style={button} href={confirmationUrl}>
-            Verify My Email
-          </Button>
-        </Section>
+        <Button style={button} href={confirmationUrl}>
+          Verify Email
+        </Button>
         <Text style={footer}>
           If you didn't create an account, you can safely ignore this email.
-        </Text>
-        <Text style={footerBrand}>
-          SteerSolo — Launch your online store in minutes 🚀
         </Text>
       </Container>
     </Body>
@@ -72,33 +60,27 @@ export const SignupEmail = ({
 
 export default SignupEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: "'Roboto', 'Inter', Arial, sans-serif" }
-const container = { padding: '30px 25px', maxWidth: '560px', margin: '0 auto' }
-const logoSection = { marginBottom: '24px' }
-const logo = { borderRadius: '8px' }
+const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
+const container = { padding: '20px 25px' }
 const h1 = {
-  fontSize: '24px',
+  fontSize: '22px',
   fontWeight: 'bold' as const,
-  color: 'hsl(220, 45%, 15%)',
-  margin: '0 0 16px',
-  fontFamily: "'Poppins', Arial, sans-serif",
-}
-const text = {
-  fontSize: '15px',
-  color: 'hsl(220, 15%, 45%)',
-  lineHeight: '1.6',
+  color: '#000000',
   margin: '0 0 20px',
 }
-const link = { color: 'hsl(215, 65%, 25%)', textDecoration: 'underline' }
-const buttonSection = { textAlign: 'center' as const, margin: '28px 0' }
+const text = {
+  fontSize: '14px',
+  color: '#55575d',
+  lineHeight: '1.5',
+  margin: '0 0 25px',
+}
+const link = { color: 'inherit', textDecoration: 'underline' }
 const button = {
-  backgroundColor: 'hsl(215, 65%, 25%)',
-  color: 'hsl(40, 20%, 98%)',
-  fontSize: '15px',
-  fontWeight: 'bold' as const,
-  borderRadius: '12px',
-  padding: '14px 28px',
+  backgroundColor: '#000000',
+  color: '#ffffff',
+  fontSize: '14px',
+  borderRadius: '8px',
+  padding: '12px 20px',
   textDecoration: 'none',
 }
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
-const footerBrand = { fontSize: '12px', color: 'hsl(220, 15%, 45%)', margin: '8px 0 0', fontStyle: 'italic' as const }
