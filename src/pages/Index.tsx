@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle, Shield, Zap, Sparkles, ShoppingBag, Star } from "lucide-react";
+import { ArrowRight, CheckCircle, Shield, Zap, Sparkles, ShoppingBag, Star, Instagram, MessageCircle, Music2 } from "lucide-react";
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { FeaturedShopsBanner } from "@/components/FeaturedShopsBanner";
@@ -7,6 +8,9 @@ import { ShopperDiscovery } from "@/components/ShopperDiscovery";
 import { HomepageReviews } from "@/components/HomepageReviews";
 import { DynamicPricing } from "@/components/DynamicPricing";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
+import whatsappLogo from "@/assets/social/whatsapp-logo.svg";
+import instagramLogo from "@/assets/social/instagram-logo.svg";
+import tiktokLogo from "@/assets/social/tiktok-logo.svg";
 
 /* ─── Brand tokens (always-dark sections only) ─── */
 const HERO_BG   = "linear-gradient(135deg, hsl(215,65%,18%) 0%, hsl(215,65%,25%) 60%, hsl(215,58%,30%) 100%)";
@@ -23,9 +27,9 @@ const P = {
   whatsapp:     "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80",
   instagram:    "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
   tiktok:       "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?auto=format&fit=crop&w=800&q=80",
-  igLogo:       "https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png",
-  tiktokLogo:   "https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg",
-  waLogo:       "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg",
+  igLogo:       instagramLogo,
+  tiktokLogo:   tiktokLogo,
+  waLogo:       whatsappLogo,
   trustFace:    "https://images.unsplash.com/photo-1531123414780-f74242c2b052?auto=format&fit=crop&w=800&q=80",
   organic:      "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?auto=format&fit=crop&w=800&q=80",
   orders:       "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80",
@@ -62,6 +66,49 @@ const PLATFORMS = [
     img: P.tiktokLogo,
   },
 ];
+
+type Platform = (typeof PLATFORMS)[number];
+
+const PlatformLogo = ({ platform }: { platform: Platform }) => {
+  const [hasImageError, setHasImageError] = useState(false);
+
+  const iconMap = {
+    WhatsApp: MessageCircle,
+    Instagram,
+    TikTok: Music2,
+  } as const;
+
+  const Icon = iconMap[platform.name as keyof typeof iconMap];
+
+  if (!hasImageError) {
+    return (
+      <img
+        src={platform.img}
+        alt={`${platform.name} logo`}
+        style={{ width: "40%", height: "auto", objectFit: "contain" }}
+        onError={() => setHasImageError(true)}
+      />
+    );
+  }
+
+  return (
+    <div
+      style={{
+        width: 92,
+        height: 92,
+        borderRadius: 9999,
+        background: platform.dotBg,
+        border: `2px solid ${platform.dot}40`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+      aria-label={`${platform.name} icon`}
+    >
+      <Icon style={{ width: 42, height: 42, color: platform.dot }} />
+    </div>
+  );
+};
 
 const JOURNEY = [
   { n:"01", title:"Keep your existing audience",      body:"Don't leave WhatsApp or Instagram. SteerSolo lives behind your social presence as your store." },
@@ -324,7 +371,7 @@ const Index = () => (
           </p>
           <h2 className="text-foreground font-extrabold" style={{ lineHeight:1.2,fontSize:"clamp(1.9rem,4vw,3rem)",margin:0 }}>
             Supercharge your social presence.<br />
-            <span className="text-primary">Turn every view into a seamless sale.</span>
+            <span className="text-primary">Turn every view into a seamless sale for Nigerian shoppers.</span>
           </h2>
         </div>
 
@@ -335,7 +382,7 @@ const Index = () => (
               borderRadius:24,overflow:"hidden",
             }}>
               <div className="img-zoom" style={{ height:200,overflow:"hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.02)" }}>
-                <img src={pl.img} alt={pl.name} style={{ width: "40%", height:"auto", objectFit: "contain" }}/>
+                <PlatformLogo platform={pl} />
               </div>
               <div className="bg-card" style={{ padding:28 }}>
                 <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:6 }}>

@@ -139,6 +139,33 @@
     overflow-x: hidden;
   }
 
+  body.app-page-theme {
+    background-image:
+      radial-gradient(circle at 8% 0%, hsl(215 65% 25% / 0.09), transparent 28%),
+      radial-gradient(circle at 92% 8%, hsl(145 60% 38% / 0.08), transparent 26%),
+      repeating-linear-gradient(
+        -55deg,
+        transparent,
+        transparent 42px,
+        hsl(215 65% 25% / 0.035) 42px,
+        hsl(215 65% 25% / 0.035) 43px
+      );
+    background-attachment: fixed;
+  }
+
+  body.app-page-theme::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.22;
+    background-image:
+      radial-gradient(circle at 22% 22%, hsl(215 65% 25% / 0.08) 0 2px, transparent 2px),
+      radial-gradient(circle at 78% 78%, hsl(145 60% 38% / 0.08) 0 2px, transparent 2px);
+    background-size: 34px 34px;
+  }
+
   #root {
     width: 100%;
     min-height: 100vh;
