@@ -139,6 +139,20 @@
     overflow-x: hidden;
   }
 
+  body.app-page-theme {
+    background-image:
+      radial-gradient(circle at 8% 0%, hsl(215 65% 25% / 0.09), transparent 28%),
+      radial-gradient(circle at 92% 8%, hsl(145 60% 38% / 0.08), transparent 26%),
+      repeating-linear-gradient(
+        -55deg,
+        transparent,
+        transparent 42px,
+        hsl(215 65% 25% / 0.035) 42px,
+        hsl(215 65% 25% / 0.035) 43px
+      );
+    background-attachment: fixed;
+  }
+
   #root {
     width: 100%;
     min-height: 100vh;
