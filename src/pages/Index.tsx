@@ -8,6 +8,9 @@ import { ShopperDiscovery } from "@/components/ShopperDiscovery";
 import { HomepageReviews } from "@/components/HomepageReviews";
 import { DynamicPricing } from "@/components/DynamicPricing";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
+import whatsappLogo from "@/assets/social/whatsapp-logo.svg";
+import instagramLogo from "@/assets/social/instagram-logo.svg";
+import tiktokLogo from "@/assets/social/tiktok-logo.svg";
 
 /* ─── Brand tokens (always-dark sections only) ─── */
 const HERO_BG   = "linear-gradient(135deg, hsl(215,65%,18%) 0%, hsl(215,65%,25%) 60%, hsl(215,58%,30%) 100%)";
@@ -24,9 +27,9 @@ const P = {
   whatsapp:     "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80",
   instagram:    "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
   tiktok:       "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?auto=format&fit=crop&w=800&q=80",
-  igLogo:       "https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png",
-  tiktokLogo:   "https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg",
-  waLogo:       "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg",
+  igLogo:       instagramLogo,
+  tiktokLogo:   tiktokLogo,
+  waLogo:       whatsappLogo,
   trustFace:    "https://images.unsplash.com/photo-1531123414780-f74242c2b052?auto=format&fit=crop&w=800&q=80",
   organic:      "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?auto=format&fit=crop&w=800&q=80",
   orders:       "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80",

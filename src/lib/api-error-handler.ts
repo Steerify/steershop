@@ -15,15 +15,15 @@ export const handleApiError = (error: unknown) => {
       toast.error("Authentication Error", {
         description: message,
       });
-      
-      // Auto-logout for auth errors
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/auth')) {
-        window.location.href = '/auth/login';
-      }
+
+      /**
+       * Important:
+       * This project authenticates with Supabase sessions, not legacy localStorage tokens.
+       * Force-redirecting to /auth on any 401/403 here causes false "instant logout" behavior
+       * when a single protected API call fails.
+       *
+       * We now surface the error only and let feature-specific auth logic decide whether to sign out.
+       */
       return;
     }
 
