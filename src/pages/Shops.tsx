@@ -436,6 +436,10 @@ const Shops = () => {
           showVerifiedOnly={showVerifiedOnly}
           onVerifiedChange={(v) => { setShowVerifiedOnly(v); setShopsPage(1); }}
           categoryCounts={categoryCounts}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          onMinPriceChange={setMinPrice}
+          onMaxPriceChange={setMaxPrice}
         />
       </div>
 
@@ -443,6 +447,41 @@ const Shops = () => {
       <div className="container mx-auto px-4 mt-5 mb-2">
         <TopSellerBanner />
       </div>
+
+      {/* ══════════ TRENDING STORES ══════════ */}
+      {isPhaseEnabled(2) && trendingShops.length > 0 && !debouncedSearchQuery.trim() && (
+        <div className="container mx-auto px-4 mt-4 mb-2">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center">
+              <Flame className="w-3.5 h-3.5 text-accent" />
+            </div>
+            <h2 className="font-display text-base sm:text-lg font-bold">Trending Stores</h2>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {trendingShops.map((shop: any) => (
+              <Link
+                key={shop.id}
+                to={`/shop/${shop.shop_slug || shop.id}`}
+                className="flex-shrink-0 w-40 sm:w-48 bg-card border border-border/60 rounded-xl p-3 hover:border-accent/40 hover:shadow-md transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted mb-2">
+                  {shop.logo_url ? (
+                    <img src={shop.logo_url} alt={shop.shop_name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-primary/10">
+                      <Store className="w-5 h-5 text-primary" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm font-semibold truncate group-hover:text-accent transition-colors">
+                  {shop.shop_name || shop.name}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">{shop.state || 'Nigeria'}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ══════════ MAIN CONTENT ══════════ */}
       <main className="flex-1 container mx-auto px-4 pb-20 mt-4">
