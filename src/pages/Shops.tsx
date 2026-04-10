@@ -168,6 +168,25 @@ const Shops = () => {
 
     fetchStats();
     fetchBusinessPlanShops();
+
+    // Fetch trending shops (most recent orders)
+    const fetchTrending = async () => {
+      const { data } = await supabase
+        .from('orders')
+        .select('shop_id')
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .limit(200);
+      if (data?.length) {
+        const counts: Record<string, number> = {};
+        data.forEach((o) => { counts[o.shop_id] = (counts[o.shop_id] || 0) + 1; });
+        const topIds = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id]) => id);
+        if (topIds.length) {
+          const { data: tShops } = await supabase.from('shops').select('*').in('id', topIds).eq('is_active', true);
+          if (tShops) setTrendingShops(tShops as any);
+        }
+      }
+    };
+    fetchTrending();
   }, []);
 
   /* ─── Shop Product Previews ─── */
