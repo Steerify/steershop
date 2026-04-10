@@ -1,60 +1,95 @@
 
 
-# Plan: Real Nigerian Images + Email Authentication Fix
+# Plan: Fix Build Errors + Feature Phase System + Marketplace Enhancements
 
-## Part 1: Replace Images with Real Nigerian Vendor Photos
+## Part 1: Fix Build Errors (process-email-queue)
 
-### Problem
-Current Unsplash images are generic — many depict non-Nigerian subjects (e.g., `photo-1531746020798` is a generic portrait, `photo-1556740758` is generic commerce). SteerSolo's brand requires authentic Nigerian entrepreneur imagery.
+The TypeScript errors are caused by the Supabase client's strict typing not recognizing the `email_send_log` table columns and `move_to_dlq` RPC function parameters. 
 
-### Approach
-Replace all photo URLs in `src/pages/Index.tsx` (the `P` object) and `src/pages/DemoStoreFront.tsx` with carefully selected Unsplash photos that specifically feature:
-- **Nigerian/African women entrepreneurs** selling products
-- **Beauty products** in African market contexts (shea butter, skincare, braiding)
-- **Mobile phone commerce** scenes (WhatsApp selling)
-- **African market/shop** environments
-- **Nigerian fashion** (Ankara, lace, gele)
+**Fix**: Add explicit type casting (`as any`) to the Supabase client in `process-email-queue/index.ts` for:
+- All `.from('email_send_log').insert(...)` calls (lines 63, 271, 298, 335)
+- The `.rpc('move_to_dlq', ...)` call (line 70)
+- Add explicit types to `.map((msg: any)` (line 159) and `.filter((id: any)` (line 164)
 
-Each URL will be tested in a browser before committing. Specific replacements:
-
-| Image Key | New Subject |
-|---|---|
-| `heroVendor` | African woman entrepreneur with products/phone |
-| `heroProducts` | African beauty/skincare products display |
-| `trustFace` | Confident Nigerian businesswoman portrait |
-| `organic` | Natural African beauty ingredients (shea, black soap) |
-| `orders` | African vendor packaging/shipping products |
-| `storefront` | Nigerian shop owner at her store |
-| `whatsapp` | African person using phone for business |
-| `av1-av3` | Nigerian women entrepreneur headshots |
-| Demo store logo | Nigerian fashion vendor |
-| Demo store banner | African fashion display |
-| Demo product images | Ankara/lace/African fashion items |
-
-### Files
-- `src/pages/Index.tsx` — Replace `P` object URLs
-- `src/pages/DemoStoreFront.tsx` — Replace demo shop images
+**File**: `supabase/functions/process-email-queue/index.ts`
 
 ---
 
-## Part 2: Fix Email Authentication
+## Part 2: Admin Feature Phase Toggle System
 
-### Current State
-The `auth-email-hook` edge function uses **Resend directly** (old pattern). The domain `notify.steersolo.com` is verified. However, this old pattern bypasses the Lovable managed email queue, which means:
-- No retry on failure
-- No rate-limit handling
-- No send logging
+Create a system where admin can activate/deactivate feature phases from the dashboard. Uses the existing `platform_settings` table.
 
-### Fix
-Re-scaffold the auth-email-hook using Lovable's managed email system (queue-based), then re-apply brand styling and redeploy. This ensures email auth works reliably through the managed infrastructure.
+### Database: Insert feature phase settings
+Insert 4 rows into `platform_settings` using the insert tool:
+- `feature_phase_1` → `{"enabled": true, "label": "Core Store"}` (MVP — always on)
+- `feature_phase_2` → `{"enabled": true, "label": "Marketplace Discovery"}`
+- `feature_phase_3` → `{"enabled": false, "label": "Trust & Payments"}`
+- `feature_phase_4` → `{"enabled": false, "label": "Domination Engine"}`
 
-Steps:
-1. Call `scaffold_auth_email_templates` (with `confirm_overwrite: true`)
-2. Re-apply SteerSolo brand styling (Adire Indigo primary, Nigerian Green accent, logo, copy tone)
-3. Deploy `auth-email-hook`
-4. Verify the queue infrastructure exists (setup_email_infra if needed)
+### New: `src/hooks/useFeaturePhases.ts`
+Hook that reads `platform_settings` for `feature_phase_*` keys and returns which phases are enabled. Caches in memory. Used by components to conditionally render features.
 
-### Files affected
-- `supabase/functions/auth-email-hook/index.ts` — Replaced by scaffold
-- `supabase/functions/_shared/email-templates/*.tsx` — Re-branded
+### New: `src/pages/admin/AdminFeaturePhases.tsx`
+Admin page with 4 toggle cards (one per phase), each showing:
+- Phase name and description
+- List of features included
+- Toggle switch to enable/disable
+- Visual indicator (locked/unlocked)
+
+Phase definitions:
+- **Phase 1 (Core)**: Store creation, product upload, store link, WhatsApp order button
+- **Phase 2 (Discovery)**: Marketplace browsing, categories, featured vendors, search
+- **Phase 3 (Trust)**: Verified vendors, reviews/ratings, Paystack payments
+- **Phase 4 (Domination)**: Vendor analytics, paid promotions, recommendation system
+
+### Edit: `src/App.tsx`
+Add route `/admin/feature-phases`
+
+### Edit: `src/components/AdminSidebar.tsx`
+Add "Feature Phases" link
+
+### Edit: `src/pages/Shops.tsx`
+Wrap trending products section and advanced filters behind phase 2 check. Wrap reviews/verified badge behind phase 3 check.
+
+---
+
+## Part 3: Marketplace Enhancements
+
+### Edit: `src/pages/Shops.tsx` — Price filter
+Add min/max price filter inputs to the filter bar. Filter products by price range.
+
+### Edit: `src/pages/Shops.tsx` — Trending stores section
+Add a "Trending Stores" row at the top (based on recent order count or view count), showing top 5 shops in a horizontal scroll.
+
+### Edit: `src/pages/Shops.tsx` — Product cards with visible prices
+Ensure every product card shows price prominently, store name, and "Order on WhatsApp" button.
+
+### Edit: `src/components/ExploreFilters.tsx`
+Add price range filter (min/max inputs) to the filter bar.
+
+---
+
+## Part 4: Security Audit Quick Fixes
+
+- Run the Supabase linter to check for RLS issues
+- Verify all sensitive tables have proper RLS
+- Ensure no client-side admin checks
+
+---
+
+## Files Summary
+
+**New:**
+- `src/hooks/useFeaturePhases.ts` — Feature phase hook
+- `src/pages/admin/AdminFeaturePhases.tsx` — Admin toggle page
+
+**Edited:**
+- `supabase/functions/process-email-queue/index.ts` — Fix type errors
+- `src/App.tsx` — Add admin route
+- `src/components/AdminSidebar.tsx` — Add sidebar link
+- `src/pages/Shops.tsx` — Trending stores, price filters
+- `src/components/ExploreFilters.tsx` — Price range filter
+
+**Database:**
+- Insert 4 feature phase rows into `platform_settings` table
 
