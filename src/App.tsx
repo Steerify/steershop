@@ -58,6 +58,7 @@ const AdminPlatformEarnings = lazy(() => import("./pages/admin/AdminPlatformEarn
 const AdminPlatformUpdates = lazy(() => import("./pages/admin/AdminPlatformUpdates"));
 const AdminAds = lazy(() => import("./pages/admin/AdminAds"));
 const AdminUXAudit = lazy(() => import("./pages/admin/AdminUXAudit"));
+const AdminFeaturePhases = lazy(() => import("./pages/admin/AdminFeaturePhases"));
 const GrowthPage = lazy(() => import("./pages/GrowthPage"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const DemoStoreFront = lazy(() => import("./pages/DemoStoreFront"));
@@ -379,7 +380,11 @@ const App = () => (
                 <AdminUXAudit />
               </ProtectedRoute>
             } />
-            
+            <Route path="/admin/feature-phases" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminFeaturePhases />
+              </ProtectedRoute>
+            } />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
