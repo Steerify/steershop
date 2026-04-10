@@ -20,6 +20,7 @@ import { ShopCardEnhanced } from "@/components/ShopCardEnhanced";
 import { supabase } from "@/integrations/supabase/client";
 import { autoCategorize, getCategoryLabel, BEAUTY_SUBCATEGORIES } from "@/utils/autoCategorize";
 import { Button } from "@/components/ui/button";
+import { useFeaturePhases } from "@/hooks/useFeaturePhases";
 
 const VERIFIED_NOTICE_KEY = "steersolo_verified_notice_dismissed";
 const StatChip = ({
@@ -106,7 +107,9 @@ const ProductCardSkeleton = () => (
    MAIN SHOPS PAGE
 ══════════════════════════════════════════════════════ */
 const Shops = () => {
+  const { isPhaseEnabled } = useFeaturePhases();
   const [shops, setShops] = useState<Shop[]>([]);
+  const [trendingShops, setTrendingShops] = useState<Shop[]>([]);
   const [businessPlanShopIds, setBusinessPlanShopIds] = useState<Set<string>>(new Set());
   const [productResults, setProductResults] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -123,6 +126,8 @@ const Shops = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSort, setSelectedSort] = useState('newest');
   const [selectedState, setSelectedState] = useState('All Locations');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
   const [shopProducts, setShopProducts] = useState<Record<string, { image_url: string; name: string }[]>>({});
   const [shopProductCounts, setShopProductCounts] = useState<Record<string, number>>({});
   const [stats, setStats] = useState({ shops: 0, products: 0 });
