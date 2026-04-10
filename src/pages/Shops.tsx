@@ -20,6 +20,7 @@ import { ShopCardEnhanced } from "@/components/ShopCardEnhanced";
 import { supabase } from "@/integrations/supabase/client";
 import { autoCategorize, getCategoryLabel, BEAUTY_SUBCATEGORIES } from "@/utils/autoCategorize";
 import { Button } from "@/components/ui/button";
+import { useFeaturePhases } from "@/hooks/useFeaturePhases";
 
 const VERIFIED_NOTICE_KEY = "steersolo_verified_notice_dismissed";
 const StatChip = ({
@@ -106,7 +107,9 @@ const ProductCardSkeleton = () => (
    MAIN SHOPS PAGE
 ══════════════════════════════════════════════════════ */
 const Shops = () => {
+  const { isPhaseEnabled } = useFeaturePhases();
   const [shops, setShops] = useState<Shop[]>([]);
+  const [trendingShops, setTrendingShops] = useState<Shop[]>([]);
   const [businessPlanShopIds, setBusinessPlanShopIds] = useState<Set<string>>(new Set());
   const [productResults, setProductResults] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -123,6 +126,8 @@ const Shops = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSort, setSelectedSort] = useState('newest');
   const [selectedState, setSelectedState] = useState('All Locations');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
   const [shopProducts, setShopProducts] = useState<Record<string, { image_url: string; name: string }[]>>({});
   const [shopProductCounts, setShopProductCounts] = useState<Record<string, number>>({});
   const [stats, setStats] = useState({ shops: 0, products: 0 });
@@ -163,6 +168,25 @@ const Shops = () => {
 
     fetchStats();
     fetchBusinessPlanShops();
+
+    // Fetch trending shops (most recent orders)
+    const fetchTrending = async () => {
+      const { data } = await supabase
+        .from('orders')
+        .select('shop_id')
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .limit(200);
+      if (data?.length) {
+        const counts: Record<string, number> = {};
+        data.forEach((o) => { counts[o.shop_id] = (counts[o.shop_id] || 0) + 1; });
+        const topIds = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id]) => id);
+        if (topIds.length) {
+          const { data: tShops } = await supabase.from('shops').select('*').in('id', topIds).eq('is_active', true);
+          if (tShops) setTrendingShops(tShops as any);
+        }
+      }
+    };
+    fetchTrending();
   }, []);
 
   /* ─── Shop Product Previews ─── */
@@ -412,6 +436,10 @@ const Shops = () => {
           showVerifiedOnly={showVerifiedOnly}
           onVerifiedChange={(v) => { setShowVerifiedOnly(v); setShopsPage(1); }}
           categoryCounts={categoryCounts}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          onMinPriceChange={setMinPrice}
+          onMaxPriceChange={setMaxPrice}
         />
       </div>
 
@@ -419,6 +447,41 @@ const Shops = () => {
       <div className="container mx-auto px-4 mt-5 mb-2">
         <TopSellerBanner />
       </div>
+
+      {/* ══════════ TRENDING STORES ══════════ */}
+      {isPhaseEnabled(2) && trendingShops.length > 0 && !debouncedSearchQuery.trim() && (
+        <div className="container mx-auto px-4 mt-4 mb-2">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center">
+              <Flame className="w-3.5 h-3.5 text-accent" />
+            </div>
+            <h2 className="font-display text-base sm:text-lg font-bold">Trending Stores</h2>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {trendingShops.map((shop: any) => (
+              <Link
+                key={shop.id}
+                to={`/shop/${shop.shop_slug || shop.id}`}
+                className="flex-shrink-0 w-40 sm:w-48 bg-card border border-border/60 rounded-xl p-3 hover:border-accent/40 hover:shadow-md transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted mb-2">
+                  {shop.logo_url ? (
+                    <img src={shop.logo_url} alt={shop.shop_name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-primary/10">
+                      <Store className="w-5 h-5 text-primary" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm font-semibold truncate group-hover:text-accent transition-colors">
+                  {shop.shop_name || shop.name}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">{shop.state || 'Nigeria'}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ══════════ MAIN CONTENT ══════════ */}
       <main className="flex-1 container mx-auto px-4 pb-20 mt-4">
