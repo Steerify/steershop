@@ -1,6 +1,7 @@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { BadgeCheck, SlidersHorizontal, Sparkles } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { BadgeCheck, SlidersHorizontal } from "lucide-react";
 
 const CATEGORIES = [
   { value: 'all', label: 'All', group: 'main' },
@@ -43,6 +44,10 @@ interface ExploreFiltersProps {
   showVerifiedOnly: boolean;
   onVerifiedChange: (verified: boolean) => void;
   categoryCounts?: Record<string, number>;
+  minPrice?: string;
+  maxPrice?: string;
+  onMinPriceChange?: (val: string) => void;
+  onMaxPriceChange?: (val: string) => void;
 }
 
 export const ExploreFilters = ({
@@ -51,6 +56,8 @@ export const ExploreFilters = ({
   selectedState, onStateChange,
   showVerifiedOnly, onVerifiedChange,
   categoryCounts,
+  minPrice = '', maxPrice = '',
+  onMinPriceChange, onMaxPriceChange,
 }: ExploreFiltersProps) => {
   const isBeautyExpanded = selectedCategory === 'beauty' || 
     ['skincare', 'haircare', 'cosmetics', 'fragrances', 'natural-beauty'].includes(selectedCategory);
@@ -64,7 +71,7 @@ export const ExploreFilters = ({
   return (
     <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-lg border-b py-3">
       <div className="container mx-auto px-4">
-        {/* Category chips - horizontal scroll */}
+        {/* Category chips */}
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mb-3">
           {visibleCategories.map((cat) => (
             <button
@@ -86,7 +93,7 @@ export const ExploreFilters = ({
           ))}
         </div>
 
-        {/* Sort, Location, Verified row */}
+        {/* Sort, Location, Price, Verified row */}
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <div className="flex items-center gap-1.5">
             <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
@@ -111,6 +118,28 @@ export const ExploreFilters = ({
             ))}
           </select>
 
+          {/* Price Range */}
+          {onMinPriceChange && onMaxPriceChange && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-foreground">₦</span>
+              <Input
+                type="number"
+                placeholder="Min"
+                value={minPrice}
+                onChange={(e) => onMinPriceChange(e.target.value)}
+                className="w-16 sm:w-20 h-7 text-xs px-1.5 bg-muted border-0"
+              />
+              <span className="text-xs text-muted-foreground">–</span>
+              <Input
+                type="number"
+                placeholder="Max"
+                value={maxPrice}
+                onChange={(e) => onMaxPriceChange(e.target.value)}
+                className="w-16 sm:w-20 h-7 text-xs px-1.5 bg-muted border-0"
+              />
+            </div>
+          )}
+
           <div className="flex items-center gap-1.5 ml-auto">
             <Switch
               id="verified-explore"
@@ -119,7 +148,7 @@ export const ExploreFilters = ({
               className="scale-90"
             />
             <Label htmlFor="verified-explore" className="flex items-center gap-1 cursor-pointer text-xs sm:text-sm">
-              <BadgeCheck className="w-3.5 h-3.5 text-green-600" />
+              <BadgeCheck className="w-3.5 h-3.5 text-emerald-600" />
               <span className="hidden sm:inline">Verified</span>
             </Label>
           </div>
