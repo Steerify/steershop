@@ -83,7 +83,7 @@ const shopService = {
       throw new Error(error.message);
     }
 
-    // Map database fields to API types - return ALL active shops
+    // Map database fields to API types - exclude sensitive bank details from public queries
     const mappedShops: Shop[] = (shops || []).map(({ products: _products, ...s }: any) => ({
       id: s.id,
       name: s.shop_name,
@@ -93,10 +93,6 @@ const shopService = {
       description: s.description,
       whatsapp_number: s.whatsapp_number,
       payment_method: s.payment_method,
-      bank_name: s.bank_name,
-      bank_account_name: s.bank_account_name,
-      bank_account_number: s.bank_account_number,
-      paystack_public_key: s.paystack_public_key,
       logo_url: s.logo_url,
       banner_url: s.banner_url,
       is_active: s.is_active,
@@ -177,6 +173,7 @@ const shopService = {
       throw new Error(error.message);
     }
 
+    // Public query - exclude sensitive bank details
     const mappedShop: Shop = {
       id: shop.id,
       name: shop.shop_name,
@@ -186,10 +183,6 @@ const shopService = {
       description: shop.description,
       whatsapp_number: shop.whatsapp_number,
       payment_method: shop.payment_method,
-      bank_name: shop.bank_name,
-      bank_account_name: shop.bank_account_name,
-      bank_account_number: shop.bank_account_number,
-      paystack_public_key: shop.paystack_public_key,
       logo_url: shop.logo_url,
       banner_url: shop.banner_url,
       is_active: shop.is_active,

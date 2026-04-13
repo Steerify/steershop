@@ -2779,57 +2779,86 @@ export type Database = {
     Views: {
       shops_public: {
         Row: {
+          accent_color: string | null
           average_rating: number | null
           banner_url: string | null
+          country: string | null
           created_at: string | null
           description: string | null
+          font_style: string | null
           id: string | null
           is_active: boolean | null
           is_verified: boolean | null
           logo_url: string | null
+          owner_id: string | null
           payment_method: string | null
-          paystack_public_key: string | null
+          primary_color: string | null
+          secondary_color: string | null
           shop_name: string | null
           shop_slug: string | null
+          state: string | null
+          theme_mode: string | null
           total_reviews: number | null
           updated_at: string | null
           whatsapp_number: string | null
         }
         Insert: {
+          accent_color?: string | null
           average_rating?: number | null
           banner_url?: string | null
+          country?: string | null
           created_at?: string | null
           description?: string | null
+          font_style?: string | null
           id?: string | null
           is_active?: boolean | null
           is_verified?: boolean | null
           logo_url?: string | null
+          owner_id?: string | null
           payment_method?: string | null
-          paystack_public_key?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
           shop_name?: string | null
           shop_slug?: string | null
+          state?: string | null
+          theme_mode?: string | null
           total_reviews?: number | null
           updated_at?: string | null
           whatsapp_number?: string | null
         }
         Update: {
+          accent_color?: string | null
           average_rating?: number | null
           banner_url?: string | null
+          country?: string | null
           created_at?: string | null
           description?: string | null
+          font_style?: string | null
           id?: string | null
           is_active?: boolean | null
           is_verified?: boolean | null
           logo_url?: string | null
+          owner_id?: string | null
           payment_method?: string | null
-          paystack_public_key?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
           shop_name?: string | null
           shop_slug?: string | null
+          state?: string | null
+          theme_mode?: string | null
           total_reviews?: number | null
           updated_at?: string | null
           whatsapp_number?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shops_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {

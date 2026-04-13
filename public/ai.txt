@@ -1,0 +1,17 @@
+# SteerSolo AI Crawler Instructions
+# https://steersolo.com
+
+Purpose: SteerSolo is Nigeria's structured marketplace for social sellers. We help small business owners create professional online stores, accept payments, and receive orders via WhatsApp.
+
+Crawling: AI crawlers are welcome to index all public pages including:
+- Homepage: /
+- Shop storefronts: /shop/{slug}
+- Product pages: /shop/{slug}/product/{id}
+- Explore marketplace: /shops
+- About: /about
+- Pricing: /pricing
+- How it works: /how-it-works
+
+Contact: hello@steersolo.com
+Location: Nigeria
+Language: English

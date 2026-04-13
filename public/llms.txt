@@ -1,0 +1,23 @@
+# SteerSolo
+
+> Nigeria's structured marketplace for social sellers
+
+SteerSolo helps Nigerian entrepreneurs create professional online stores with WhatsApp-native commerce. Vendors get a clean storefront, visible pricing, automated order flow, and payment integration — solving the chaos of selling in DMs.
+
+## Key Features
+- Professional store creation with custom branding
+- Product catalog with visible pricing
+- WhatsApp order integration
+- Paystack payment processing
+- Delivery tracking
+- Verified vendor badges
+- Marketing tools and AI assistance
+
+## Links
+- Website: https://steersolo.com
+- Marketplace: https://steersolo.com/shops
+- Pricing: https://steersolo.com/pricing
+- About: https://steersolo.com/about
+
+## Target Market
+Nigerian small business owners, social media sellers, beauty entrepreneurs, fashion vendors, and service providers who currently sell through Instagram, WhatsApp, and other social platforms.
