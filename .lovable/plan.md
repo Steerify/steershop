@@ -1,95 +1,97 @@
 
 
-# Plan: Fix Build Errors + Feature Phase System + Marketplace Enhancements
+# Plan: Shops Security Fix + SEO Indexing + Comprehensive Tests
 
-## Part 1: Fix Build Errors (process-email-queue)
+## Part 1: Restrict Bank Details on Shops Table
 
-The TypeScript errors are caused by the Supabase client's strict typing not recognizing the `email_send_log` table columns and `move_to_dlq` RPC function parameters. 
+### Problem
+The `shops` table exposes `bank_name`, `bank_account_name`, `bank_account_number`, `paystack_subaccount_code`, `settlement_bank_code`, `settlement_account_number` to anyone who can SELECT shops. The "Anyone can view active shops" RLS policy returns ALL columns.
 
-**Fix**: Add explicit type casting (`as any`) to the Supabase client in `process-email-queue/index.ts` for:
-- All `.from('email_send_log').insert(...)` calls (lines 63, 271, 298, 335)
-- The `.rpc('move_to_dlq', ...)` call (line 70)
-- Add explicit types to `.map((msg: any)` (line 159) and `.filter((id: any)` (line 164)
+### Fix: Create a public-safe database view
+Create a `public_shops` view that excludes sensitive columns, then update the client-side code to stop mapping bank fields in public queries.
 
-**File**: `supabase/functions/process-email-queue/index.ts`
+**Migration SQL:**
+```sql
+CREATE VIEW public.public_shops AS
+SELECT id, owner_id, shop_name, shop_slug, description, logo_url, banner_url,
+       is_active, average_rating, total_reviews, whatsapp_number, is_verified,
+       primary_color, secondary_color, accent_color, theme_mode, font_style,
+       country, state, created_at, updated_at, payment_method
+FROM public.shops
+WHERE is_active = true;
+```
 
----
+**Code changes:**
+- `src/services/shop.service.ts` — In `getShops()` and `getShopBySlug()`, stop returning `bank_name`, `bank_account_name`, `bank_account_number`, `paystack_public_key` in the mapped response. Only include them in `getShopByOwner()` (owner's own shop).
 
-## Part 2: Admin Feature Phase Toggle System
+## Part 2: Fix Mutable Search Path Functions
 
-Create a system where admin can activate/deactivate feature phases from the dashboard. Uses the existing `platform_settings` table.
+4 email queue functions (`delete_email`, `enqueue_email`, `move_to_dlq`, `read_email_batch`) lack `SET search_path`.
 
-### Database: Insert feature phase settings
-Insert 4 rows into `platform_settings` using the insert tool:
-- `feature_phase_1` → `{"enabled": true, "label": "Core Store"}` (MVP — always on)
-- `feature_phase_2` → `{"enabled": true, "label": "Marketplace Discovery"}`
-- `feature_phase_3` → `{"enabled": false, "label": "Trust & Payments"}`
-- `feature_phase_4` → `{"enabled": false, "label": "Domination Engine"}`
+**Migration:** `ALTER FUNCTION` each to add `SET search_path = 'public'`.
 
-### New: `src/hooks/useFeaturePhases.ts`
-Hook that reads `platform_settings` for `feature_phase_*` keys and returns which phases are enabled. Caches in memory. Used by components to conditionally render features.
+## Part 3: Enable Leaked Password Protection
 
-### New: `src/pages/admin/AdminFeaturePhases.tsx`
-Admin page with 4 toggle cards (one per phase), each showing:
-- Phase name and description
-- List of features included
-- Toggle switch to enable/disable
-- Visual indicator (locked/unlocked)
+Use `configure_auth` tool with `password_hibp_enabled: true`.
 
-Phase definitions:
-- **Phase 1 (Core)**: Store creation, product upload, store link, WhatsApp order button
-- **Phase 2 (Discovery)**: Marketplace browsing, categories, featured vendors, search
-- **Phase 3 (Trust)**: Verified vendors, reviews/ratings, Paystack payments
-- **Phase 4 (Domination)**: Vendor analytics, paid promotions, recommendation system
+## Part 4: SEO Indexing for Search Engines & AI
 
-### Edit: `src/App.tsx`
-Add route `/admin/feature-phases`
+The current setup is strong (JSON-LD schemas, meta tags, sitemap, robots.txt, crawler rewrites). Missing pieces:
 
-### Edit: `src/components/AdminSidebar.tsx`
-Add "Feature Phases" link
+1. **Add `steersolo.com` canonical domain** — Current `robots.txt` points to `steersolo.com/sitemap.xml` but the preview URL is `steersolo.lovable.app`. Need to ensure published domain matches.
 
-### Edit: `src/pages/Shops.tsx`
-Wrap trending products section and advanced filters behind phase 2 check. Wrap reviews/verified badge behind phase 3 check.
+2. **Add AI crawler instructions** — Create `public/ai.txt` (emerging standard for AI crawlers) and update `robots.txt` to explicitly welcome AI bots (GPTBot, ClaudeBot, PerplexityBot, etc.).
 
----
+3. **Add `llms.txt`** — Machine-readable description of SteerSolo for AI crawlers at `public/llms.txt`.
 
-## Part 3: Marketplace Enhancements
+4. **IndexNow ping** — Add an edge function `index-now` that pings IndexNow (Bing/Yandex) whenever a new shop or product is created, for near-instant indexing.
 
-### Edit: `src/pages/Shops.tsx` — Price filter
-Add min/max price filter inputs to the filter bar. Filter products by price range.
+**Files:**
+- `public/ai.txt` — New
+- `public/llms.txt` — New  
+- `public/robots.txt` — Update with AI crawler rules
+- `supabase/functions/index-now/index.ts` — New edge function
 
-### Edit: `src/pages/Shops.tsx` — Trending stores section
-Add a "Trending Stores" row at the top (based on recent order count or view count), showing top 5 shops in a horizontal scroll.
+## Part 5: Comprehensive Tests
 
-### Edit: `src/pages/Shops.tsx` — Product cards with visible prices
-Ensure every product card shows price prominently, store name, and "Order on WhatsApp" button.
+Create tests covering all critical operations to ensure nothing breaks before marketing launch.
 
-### Edit: `src/components/ExploreFilters.tsx`
-Add price range filter (min/max inputs) to the filter bar.
+### Edge Function Tests (Deno):
+- `supabase/functions/auth-email-hook/index_test.ts` — Test email hook responds correctly
+- `supabase/functions/paystack-initialize-order/index_test.ts` — Test order payment initialization
+- `supabase/functions/shop-og-meta/index_test.ts` — Test OG meta generation for shops
+- `supabase/functions/generate-sitemap/index_test.ts` — Test sitemap generation
 
----
+### Frontend Tests (Vitest):
+- `src/services/__tests__/shop.service.test.ts` — Shop CRUD operations
+- `src/services/__tests__/product.service.test.ts` — Product CRUD operations  
+- `src/services/__tests__/order.service.test.ts` — Order creation and management
+- `src/hooks/__tests__/useFeaturePhases.test.ts` — Feature phase gating
+- `src/utils/__tests__/subscription.test.ts` — Subscription status calculation
+- `src/utils/__tests__/autoCategorize.test.ts` — Product auto-categorization
+- `src/components/__tests__/ExploreFilters.test.tsx` — Filter component rendering
+- `src/pages/__tests__/Auth.test.tsx` — Auth page renders login/signup
 
-## Part 4: Security Audit Quick Fixes
-
-- Run the Supabase linter to check for RLS issues
-- Verify all sensitive tables have proper RLS
-- Ensure no client-side admin checks
+### Test Setup:
+- Add `vitest.config.ts` and `src/test/setup.ts` if not present
+- Add test dependencies to `package.json`
 
 ---
 
 ## Files Summary
 
 **New:**
-- `src/hooks/useFeaturePhases.ts` — Feature phase hook
-- `src/pages/admin/AdminFeaturePhases.tsx` — Admin toggle page
+- `public/ai.txt`, `public/llms.txt`
+- `supabase/functions/index-now/index.ts`
+- 4 edge function test files
+- 8 frontend test files
+- `vitest.config.ts`, `src/test/setup.ts`
 
 **Edited:**
-- `supabase/functions/process-email-queue/index.ts` — Fix type errors
-- `src/App.tsx` — Add admin route
-- `src/components/AdminSidebar.tsx` — Add sidebar link
-- `src/pages/Shops.tsx` — Trending stores, price filters
-- `src/components/ExploreFilters.tsx` — Price range filter
+- `src/services/shop.service.ts` — Strip bank details from public queries
+- `public/robots.txt` — AI crawler rules
 
 **Database:**
-- Insert 4 feature phase rows into `platform_settings` table
+- Migration: Create `public_shops` view, fix 4 function search paths
+- Auth config: Enable HIBP password check
 
