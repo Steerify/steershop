@@ -704,7 +704,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
              order_id: orderId,
              shop_id: shop.id,
              rate_id: selectedRate.rate_id,
-             provider: 'terminal',
+             provider: 'sendbox',
              pickup_address: {
                name: shop.shop_name,
                phone: shop.whatsapp_number || '0000000000',

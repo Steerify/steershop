@@ -1,5 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -126,31 +127,11 @@ const ShopStorefront = () => {
     return () => observer.disconnect();
   }, [shop]);
 
-  useEffect(() => {
-    if (!shop) return;
+  const schemaData = useMemo(() => {
+    if (!shop) return null;
     const shopUrl = `https://steersolo.com/shop/${shop.shop_slug}`;
     const imageUrl = shop.logo_url || shop.banner_url || '';
-    document.title = isPremiumPlan ? `${shop.shop_name} — Shop Online` : `${shop.shop_name} | SteerSolo`;
-    const setMeta = (attr: string, key: string, content: string) => {
-      let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement;
-      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, key); document.head.appendChild(el); }
-      el.setAttribute('content', content);
-    };
-    setMeta('name', 'description', shop.description || `Shop at ${shop.shop_name} on SteerSolo`);
-    setMeta('name', 'robots', 'index, follow');
-    setMeta('property', 'og:title', shop.shop_name);
-    setMeta('property', 'og:description', shop.description || `Shop at ${shop.shop_name} on SteerSolo`);
-    setMeta('property', 'og:url', shopUrl);
-    setMeta('property', 'og:type', 'website');
-    setMeta('property', 'og:site_name', 'SteerSolo');
-    if (imageUrl) { setMeta('property', 'og:image', imageUrl); setMeta('name', 'twitter:image', imageUrl); }
-    setMeta('name', 'twitter:card', 'summary_large_image');
-    setMeta('name', 'twitter:title', shop.shop_name);
-    setMeta('name', 'twitter:description', shop.description || `Shop at ${shop.shop_name} on SteerSolo`);
-    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
-    if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
-    canonical.href = shopUrl;
-    const schemaData: any = {
+    const data: any = {
       "@context": "https://schema.org",
       "@type": isPremiumPlan ? "Store" : "LocalBusiness",
       "name": shop.shop_name,
@@ -172,25 +153,25 @@ const ShopStorefront = () => {
       }),
     };
     if (isPremiumPlan) {
-      schemaData["@id"] = shopUrl;
-      schemaData.brand = { "@type": "Brand", "name": shop.shop_name };
-      schemaData.isPartOf = { "@type": "WebSite", "name": "SteerSolo", "url": "https://steersolo.com" };
+      data["@id"] = shopUrl;
+      data.brand = { "@type": "Brand", "name": shop.shop_name };
+      data.isPartOf = { "@type": "WebSite", "name": "SteerSolo", "url": "https://steersolo.com" };
       if (shop.whatsapp_number) {
         let phone = shop.whatsapp_number.replace(/[^\d+]/g, '');
         if (!phone.startsWith('+')) {
           phone = phone.startsWith('234') ? `+${phone}` : `+234${phone.replace(/^0+/, '')}`;
         }
-        schemaData.contactPoint = { "@type": "ContactPoint", "telephone": phone, "contactType": "customer service", "availableLanguage": ["English"] };
-        schemaData.sameAs = [`https://wa.me/${phone.replace('+', '')}`];
+        data.contactPoint = { "@type": "ContactPoint", "telephone": phone, "contactType": "customer service", "availableLanguage": ["English"] };
+        data.sameAs = [`https://wa.me/${phone.replace('+', '')}`];
       }
-      schemaData.potentialAction = {
+      data.potentialAction = {
         "@type": "SearchAction",
         "target": `${shopUrl}?search={search_term}`,
         "query-input": "required name=search_term"
       };
     }
     if (products.length > 0) {
-      schemaData.hasOfferCatalog = {
+      data.hasOfferCatalog = {
         "@type": "OfferCatalog",
         "name": `${shop.shop_name} Products`,
         "itemListElement": products.slice(0, 20).map((p, i) => ({
@@ -207,13 +188,8 @@ const ShopStorefront = () => {
         }))
       };
     }
-    const script = document.createElement("script");
-    script.type = "application/ld+json";
-    script.text = JSON.stringify(schemaData);
-    script.id = "shop-jsonld";
-    document.head.appendChild(script);
-    return () => { const el = document.getElementById("shop-jsonld"); if (el) el.remove(); };
-  }, [shop, products]);
+    return data;
+  }, [shop, products, isPremiumPlan]);
 
   useEffect(() => {
     let filtered = products;
@@ -399,11 +375,36 @@ const ShopStorefront = () => {
   }
 
   /* ─── Main Storefront ─── */
+  const shopUrl = shop ? `https://steersolo.com/shop/${shop.shop_slug}` : '';
+  const metaDescription = shop?.description || (shop ? `Shop at ${shop.shop_name} on SteerSolo` : '');
+
   return (
     <div
       className="min-h-screen bg-background flex flex-col"
       style={{ ...(shop?.accent_color ? { '--accent': shop.accent_color } as any : {}) }}
     >
+      {shop && (
+        <Helmet>
+          <title>{isPremiumPlan ? `${shop.shop_name} — Shop Online` : `${shop.shop_name} | SteerSolo`}</title>
+          <meta name="description" content={metaDescription} />
+          <meta property="og:title" content={shop.shop_name} />
+          <meta property="og:description" content={metaDescription} />
+          <meta property="og:url" content={shopUrl} />
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="SteerSolo" />
+          {shop.logo_url || shop.banner_url ? <meta property="og:image" content={shop.logo_url || shop.banner_url || ''} /> : null}
+          {shop.logo_url || shop.banner_url ? <meta name="twitter:image" content={shop.logo_url || shop.banner_url || ''} /> : null}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={shop.shop_name} />
+          <meta name="twitter:description" content={metaDescription} />
+          <link rel="canonical" href={shopUrl} />
+          {schemaData && (
+            <script type="application/ld+json">
+              {JSON.stringify(schemaData)}
+            </script>
+          )}
+        </Helmet>
+      )}
       <Navbar shopBranding={isPremiumPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
 
       {/* ══════════════════ HERO SECTION ══════════════════ */}

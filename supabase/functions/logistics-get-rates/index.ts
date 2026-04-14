@@ -21,11 +21,10 @@ interface RateRequest {
   weight_kg?: number;
 }
 
-const TERMINAL_API_KEY = Deno.env.get('TERMINAL_API_KEY');
-const TERMINAL_BASE_URL = 'https://api.terminal.africa/v1';
+const SENDBOX_API_KEY = Deno.env.get('SENDBOX_API_KEY');
+const SENDBOX_BASE_URL = 'https://live.sendbox.co/shipping';
 
 serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -34,143 +33,71 @@ serve(async (req: Request) => {
     const body: RateRequest = await req.json();
     const { pickup_address, delivery_address, weight_kg = 1 } = body;
 
-    // If Terminal API key is not configured, return mock rates for testing
-    if (!TERMINAL_API_KEY) {
-      console.log('Terminal API key not configured, returning mock rates');
-      
-      // Calculate mock prices based on cities
+    // Optional mock fallback if no API key
+    if (!SENDBOX_API_KEY) {
+      console.log('Sendbox API key not configured, returning mock rates');
       const basePrice = pickup_address.city === delivery_address.city ? 1500 : 3000;
-      
       return new Response(
         JSON.stringify({
           success: true,
           rates: [
             {
-              carrier: 'GIG Logistics',
-              carrier_logo: 'https://terminal.africa/carriers/gig.png',
+              carrier: 'Sendbox Delivery',
+              carrier_logo: 'https://sendbox.co/logo.png',
               price: basePrice,
               currency: 'NGN',
               estimated_days: 2,
-              rate_id: 'mock_gig_' + Date.now(),
-            },
-            {
-              carrier: 'DHL Express',
-              carrier_logo: 'https://terminal.africa/carriers/dhl.png',
-              price: basePrice * 1.5,
-              currency: 'NGN',
-              estimated_days: 1,
-              rate_id: 'mock_dhl_' + Date.now(),
-            },
-            {
-              carrier: 'Kobo360',
-              carrier_logo: 'https://terminal.africa/carriers/kobo.png',
-              price: basePrice * 0.8,
-              currency: 'NGN',
-              estimated_days: 3,
-              rate_id: 'mock_kobo_' + Date.now(),
-            },
+              rate_id: 'mock_sb_' + Date.now(),
+            }
           ],
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Create addresses in Terminal Africa
-    const pickupAddressRes = await fetch(`${TERMINAL_BASE_URL}/addresses`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${TERMINAL_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        first_name: pickup_address.name.split(' ')[0],
-        last_name: pickup_address.name.split(' ').slice(1).join(' ') || pickup_address.name,
-        phone: pickup_address.phone,
-        line1: pickup_address.address,
-        city: pickup_address.city,
-        state: pickup_address.state,
-        country: pickup_address.country || 'NG',
-        is_residential: false,
-      }),
+    const mapAddress = (addr: DeliveryAddress) => ({
+      name: addr.name,
+      street: addr.address,
+      city: addr.city,
+      state: addr.state,
+      country: addr.country || 'NG',
+      phone: addr.phone
     });
 
-    const pickupData = await pickupAddressRes.json();
-    if (!pickupData.data?.id) {
-      throw new Error(`Failed to create pickup address: ${pickupData.message || JSON.stringify(pickupData.error || pickupData)}`);
-    }
-
-    const deliveryAddressRes = await fetch(`${TERMINAL_BASE_URL}/addresses`, {
+    const quoteRes = await fetch(`${SENDBOX_BASE_URL}/shipment_delivery_quote`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${TERMINAL_API_KEY}`,
+        'Authorization': `Sendbox ${SENDBOX_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        first_name: delivery_address.name.split(' ')[0],
-        last_name: delivery_address.name.split(' ').slice(1).join(' ') || delivery_address.name,
-        phone: delivery_address.phone,
-        line1: delivery_address.address,
-        city: delivery_address.city,
-        state: delivery_address.state,
-        country: delivery_address.country || 'NG',
-        is_residential: true,
-      }),
-    });
-
-    const deliveryData = await deliveryAddressRes.json();
-    if (!deliveryData.data?.id) {
-      throw new Error(`Failed to create delivery address: ${deliveryData.message || JSON.stringify(deliveryData.error || deliveryData)}`);
-    }
-
-    // Create parcel
-    const parcelRes = await fetch(`${TERMINAL_BASE_URL}/parcels`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${TERMINAL_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+        origin: mapAddress(pickup_address),
+        destination: mapAddress(delivery_address),
         weight: weight_kg,
-        weight_unit: 'kg',
-        length: 20,
-        width: 15,
-        height: 10,
-        dimension_unit: 'cm',
-        packaging: 'box',
-        description: 'SteerSolo order package',
+        channel_code: 'api',
+        service_type: 'local',
+        incoming_option: 'pickup'
       }),
     });
 
-    const parcelData = await parcelRes.json();
-    if (!parcelData.data?.id) {
-      throw new Error(`Failed to create parcel: ${parcelData.message || JSON.stringify(parcelData.error || parcelData)}`);
+    if (!quoteRes.ok) {
+      const errTxt = await quoteRes.text();
+      throw new Error(`Sendbox Quote Error: ${quoteRes.status} ${errTxt}`);
     }
 
-    // Get shipping rates
-    const ratesRes = await fetch(`${TERMINAL_BASE_URL}/rates/shipment`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${TERMINAL_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        pickup_address: pickupData.data.id,
-        delivery_address: deliveryData.data.id,
-        parcel_id: parcelData.data.id,
+    const quoteData = await quoteRes.json();
+    const fee = quoteData.fee || quoteData.data?.fee || 2000;
+    
+    const rates = [
+      {
+        carrier: 'Sendbox',
+        carrier_logo: 'https://sendbox.co/logo.png',
+        price: fee,
         currency: 'NGN',
-      }),
-    });
-
-    const ratesData = await ratesRes.json();
-
-    const rates = (ratesData.data || []).map((rate: any) => ({
-      carrier: rate.carrier_name,
-      carrier_logo: rate.carrier_logo,
-      price: rate.amount,
-      currency: 'NGN',
-      estimated_days: rate.estimated_delivery_days || 3,
-      rate_id: rate.rate_id,
-    }));
+        estimated_days: 3,
+        rate_id: `sb_rate_${Date.now()}`,
+      }
+    ];
 
     return new Response(
       JSON.stringify({ success: true, rates }),
