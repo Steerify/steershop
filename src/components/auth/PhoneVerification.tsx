@@ -100,7 +100,7 @@ export const PhoneVerification = ({ onVerified, onSkip }: PhoneVerificationProps
         toast({
           title: isFallbackDelivery ? "Fallback Code Ready" : "Code Sent!",
           description: isFallbackDelivery
-            ? "SMS is unavailable right now. Use the fallback code shown on this screen."
+            ? "SMS is not configured yet. Use the fallback code shown on this screen."
             : "Check your phone for the 6-digit verification code",
         });
       } else {
