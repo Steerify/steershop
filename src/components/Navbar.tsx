@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   User, Menu, X, Gift, Moon, Sun, Star, 
-  Heart, Flag, Ghost, Egg, Sparkles, Store, MessageSquare
+  Heart, Flag, Ghost, Egg, Sparkles, Store, MessageSquare, CalendarDays
 } from "lucide-react";
 import { AdireAccent } from "./patterns/AdirePattern";
 import logoLight from "@/assets/steersolo-logo.jpg";
@@ -16,17 +16,20 @@ interface Celebration {
   startDate: string; // MM-DD
   endDate: string;   // MM-DD
   type: 'christian' | 'muslim' | 'general' | 'cultural';
+  vibe: string;
+  ctaLabel: string;
+  ctaHref: string;
 }
 
 // --- Configuration ---
 const CELEBRATIONS: Celebration[] = [
-  { name: "Christmas", startDate: "12-20", endDate: "12-27", type: 'christian' },
-  { name: "New Year", startDate: "12-31", endDate: "01-02", type: 'general' },
-  { name: "Eid al-Fitr", startDate: "04-09", endDate: "04-11", type: 'muslim' },
-  { name: "Valentine's Day", startDate: "02-14", endDate: "02-14", type: 'general' },
-  { name: "Independence Day", startDate: "10-01", endDate: "10-01", type: 'cultural' },
-  { name: "Halloween", startDate: "10-31", endDate: "10-31", type: 'general' },
-  { name: "Easter", startDate: "04-07", endDate: "04-07", type: 'christian' }
+  { name: "Christmas", startDate: "12-20", endDate: "12-27", type: 'christian', vibe: "Festive gifting season", ctaLabel: "Holiday-ready shops", ctaHref: "/shops" },
+  { name: "New Year", startDate: "12-31", endDate: "01-02", type: 'general', vibe: "Fresh goals, fresh products", ctaLabel: "Start selling stronger", ctaHref: "/pricing" },
+  { name: "Eid al-Fitr", startDate: "04-09", endDate: "04-11", type: 'muslim', vibe: "Celebrate with trusted vendors", ctaLabel: "Explore Eid specials", ctaHref: "/shops" },
+  { name: "Valentine's Day", startDate: "02-14", endDate: "02-14", type: 'general', vibe: "Love-inspired gifting", ctaLabel: "Discover gift shops", ctaHref: "/shops" },
+  { name: "Independence Day", startDate: "10-01", endDate: "10-01", type: 'cultural', vibe: "Naija-made excellence", ctaLabel: "Support local brands", ctaHref: "/shops" },
+  { name: "Halloween", startDate: "10-31", endDate: "10-31", type: 'general', vibe: "Bold looks, spooky vibes", ctaLabel: "See trending stores", ctaHref: "/shops" },
+  { name: "Easter", startDate: "04-07", endDate: "04-07", type: 'christian', vibe: "Seasonal deals and joy", ctaLabel: "Shop Easter picks", ctaHref: "/shops" }
 ];
 
 // --- Static Decorations ---
@@ -77,6 +80,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeCelebrations, setActiveCelebrations] = useState<Celebration[]>([]);
   const [showCelebrationHint, setShowCelebrationHint] = useState(false);
+  const [daysRemaining, setDaysRemaining] = useState(0);
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
 
@@ -87,7 +91,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
   useEffect(() => {
     const today = new Date();
     const currentYear = today.getFullYear();
-    
+
     const active = CELEBRATIONS.filter(c => {
       const [sM, sD] = c.startDate.split('-').map(Number);
       const [eM, eD] = c.endDate.split('-').map(Number);
@@ -98,29 +102,54 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
     });
 
     setActiveCelebrations(active);
+
     if (active.length > 0) {
-      setShowCelebrationHint(true);
-      const timer = setTimeout(() => setShowCelebrationHint(false), 5000);
-      return () => clearTimeout(timer);
+      const [sM, sD] = active[0].startDate.split('-').map(Number);
+      const [eM, eD] = active[0].endDate.split('-').map(Number);
+      const start = new Date(currentYear, sM - 1, sD);
+      let end = new Date(currentYear, eM - 1, eD);
+      if (end < start) end.setFullYear(currentYear + 1);
+      const msLeft = end.getTime() - today.getTime();
+      setDaysRemaining(Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24))));
+
+      const dismissedKey = `season_banner_dismissed_${active[0].name}_${currentYear}`;
+      const dismissed = localStorage.getItem(dismissedKey) === 'true';
+      setShowCelebrationHint(!dismissed);
     }
   }, []);
 
   const primary = activeCelebrations[0];
   const isChristmas = primary?.name.toLowerCase().includes("christmas");
   const isNewYear = primary?.name.toLowerCase().includes("new year");
+  const dismissCelebrationHint = () => {
+    if (!primary) return;
+    const year = new Date().getFullYear();
+    localStorage.setItem(`season_banner_dismissed_${primary.name}_${year}`, 'true');
+    setShowCelebrationHint(false);
+  };
+
   const logo = theme === 'dark' ? logoDark : logoLight;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
       {/* Celebration Hint Banner */}
       {showCelebrationHint && primary && (
-        <div className="bg-gradient-to-r from-primary/20 to-accent/20 border-b border-primary/30">
-          <div className="container mx-auto px-4 py-1 text-center">
-            <span className="text-sm font-medium flex items-center justify-center gap-2 font-sans">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span>Celebrating {primary.name}!</span>
-              <Sparkles className="w-4 h-4 text-primary" />
-            </span>
+        <div className="bg-gradient-to-r from-primary via-primary/90 to-accent text-white border-b border-primary/40">
+          <div className="container mx-auto px-3 py-2">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm font-medium">
+              <Sparkles className="w-4 h-4" />
+              <span className="font-semibold">{primary.name} Season</span>
+              <span className="text-white/80 hidden sm:inline">• {primary.vibe}</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px]">
+                <CalendarDays className="w-3 h-3" /> {daysRemaining === 0 ? 'Today only' : `${daysRemaining} day${daysRemaining > 1 ? 's' : ''} left`}
+              </span>
+              <Link to={primary.ctaHref} className="underline underline-offset-2 font-semibold">
+                {primary.ctaLabel}
+              </Link>
+              <button onClick={dismissCelebrationHint} className="rounded-md px-1.5 py-0.5 hover:bg-white/15" aria-label="Dismiss celebration banner">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -128,13 +157,13 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
       <AdireAccent className="h-1" />
       
       <div className="bg-card/90 backdrop-blur-xl border-b border-border/50">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3 md:py-2.5">
           <div className="flex items-center justify-between">
             
             {/* Logo Section */}
             <div className="flex items-center gap-3 group relative">
               <div
-                className={`w-14 h-14 rounded-2xl overflow-hidden shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 relative select-none ${theme === 'dark' ? '' : 'bg-white'}`}
+                className={`w-12 h-12 rounded-xl overflow-hidden shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 relative select-none ${theme === 'dark' ? '' : 'bg-white'}`}
                 onContextMenu={(e) => e.preventDefault()}
                 aria-label="Brand logo"
               >
@@ -153,7 +182,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
               </div>
 
               {/* Updated typography to match index page */}
-              <span className="hidden min-[360px]:inline font-display text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <span className="hidden min-[360px]:inline font-display text-lg sm:text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 {shopBranding?.name || "SteerSolo"}
                 {!shopBranding && primary && (
                   <span className="ml-2 text-lg inline-block text-primary">
@@ -164,12 +193,12 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
             </div>
 
             {/* Desktop Nav - Updated typography */}
-            <div className="hidden md:flex items-center gap-8 font-display">
+            <div className="hidden md:flex items-center gap-6 font-display">
               {["Shops", "About", "Feedback"].map((label) => (
                 <Link 
                   key={label}
                   to={`/${label.toLowerCase()}`} 
-                  className="text-foreground/80 hover:text-primary transition-colors font-medium relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full"
+                  className="text-sm lg:text-base text-foreground/80 hover:text-primary transition-colors font-medium relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full"
                 >
                   Explore {label}
                 </Link>
@@ -177,7 +206,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
             </div>
 
             {/* Desktop Auth - Updated typography */}
-            <div className="hidden md:flex items-center gap-3 font-display">
+            <div className="hidden md:flex items-center gap-2.5 font-display">
               {/* Dark Mode Toggle */}
               {mounted && (
                 <Button
@@ -195,13 +224,13 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                 </Button>
               )}
               <Link to="/auth/login">
-                <Button variant="ghost" size="sm" className="font-medium hover:bg-primary/10 hover:text-primary">
+                <Button variant="ghost" size="sm" className="h-9 px-3 text-sm font-medium hover:bg-primary/10 hover:text-primary">
                   <User className="w-4 h-4 mr-2" />
                   Login
                 </Button>
               </Link>
               <Link to="/auth/login?tab=signup">
-                <Button size="sm" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity font-medium shadow-lg shadow-primary/20">
+                <Button size="sm" className="h-9 px-4 text-sm bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity font-medium shadow-lg shadow-primary/20">
                   Get Started
                 </Button>
               </Link>

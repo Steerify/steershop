@@ -22,6 +22,7 @@ export const PhoneVerification = ({ onVerified, onSkip }: PhoneVerificationProps
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [fallbackCode, setFallbackCode] = useState("");
 
   // Cooldown timer
   useEffect(() => {
@@ -92,9 +93,15 @@ export const PhoneVerification = ({ onVerified, onSkip }: PhoneVerificationProps
       if (data && data.success) {
         setStep("otp");
         setCooldown(60);
+
+        const isFallbackDelivery = data.delivery === "fallback";
+        setFallbackCode(isFallbackDelivery ? data.fallbackCode || "" : "");
+
         toast({
-          title: "Code Sent!",
-          description: "Check your phone for the 6-digit verification code",
+          title: isFallbackDelivery ? "Fallback Code Ready" : "Code Sent!",
+          description: isFallbackDelivery
+            ? "SMS is unavailable right now. Use the fallback code shown on this screen."
+            : "Check your phone for the 6-digit verification code",
         });
       } else {
         throw new Error(data?.error || "Failed to send code");
@@ -261,6 +268,13 @@ export const PhoneVerification = ({ onVerified, onSkip }: PhoneVerificationProps
           </>
         ) : (
           <>
+
+            {fallbackCode && (
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
+                <p className="font-medium">Free test mode enabled</p>
+                <p>Use this code to verify now: <span className="font-mono text-base">{fallbackCode}</span></p>
+              </div>
+            )}
 
             <div className="flex flex-col items-center space-y-4">
               <InputOTP

@@ -53,7 +53,10 @@ interface Shop {
   accent_color?: string | null;
   font_style?: string | null;
   theme_mode?: string | null;
+  primary_color?: string | null;
+  secondary_color?: string | null;
 }
+
 
 interface OwnerPlan {
   slug: string | null;
@@ -381,7 +384,10 @@ const ShopStorefront = () => {
   return (
     <div
       className="min-h-screen bg-background flex flex-col"
-      style={{ ...(shop?.accent_color ? { '--accent': shop.accent_color } as any : {}) }}
+      style={{
+        ...(shop?.accent_color ? { '--accent': shop.accent_color } as any : {}),
+        ...(shop?.font_style ? { fontFamily: shop.font_style } : {}),
+      }}
     >
       {shop && (
         <Helmet>
@@ -462,7 +468,7 @@ const ShopStorefront = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight truncate">{shop.shop_name}</h1>
+                      <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight truncate" style={{ color: shop.primary_color || undefined }}>{shop.shop_name}</h1>
                       {shop.description && (
                         <p className="text-muted-foreground mt-1 text-sm md:text-base line-clamp-2 leading-relaxed max-w-lg">{shop.description}</p>
                       )}
@@ -501,7 +507,7 @@ const ShopStorefront = () => {
                         <Button
                           size="sm"
                           onClick={() => setIsCheckoutOpen(true)}
-                          className="rounded-xl h-10 px-4 bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/30 font-semibold transition-all gap-2"
+                          className="rounded-xl h-10 px-4 hover:opacity-90 shadow-lg shadow-accent/30 font-semibold transition-all gap-2" style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
                           data-tour="cart-button"
                         >
                           <ShoppingCart className="w-4 h-4" />
@@ -578,7 +584,7 @@ const ShopStorefront = () => {
                 <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-accent" />
                 </div>
-                <h2 className="font-display text-xl md:text-2xl font-bold tracking-tight">Catalog</h2>
+                <h2 className="font-display text-xl md:text-2xl font-bold tracking-tight" style={{ color: shop.primary_color || undefined }}>Catalog</h2>
               </div>
             </div>
 
@@ -817,7 +823,7 @@ const ShopStorefront = () => {
                       </Button>
                     ) : (
                       <Button
-                        className="flex-1 h-10 rounded-xl bg-gradient-to-r from-accent to-primary hover:opacity-90 font-semibold text-sm shadow-sm shadow-accent/20 gap-2 transition-all"
+                        className="flex-1 h-10 rounded-xl hover:opacity-90 font-semibold text-sm shadow-sm shadow-accent/20 gap-2 transition-all" style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
                         onClick={(e) => { e.preventDefault(); addToCart(product); }}
                         disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                       >
@@ -870,7 +876,7 @@ const ShopStorefront = () => {
               {getTotalItems() > 0 && (
                 <Button
                   onClick={() => setIsCheckoutOpen(true)}
-                  className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-accent to-primary hover:opacity-90 font-bold shadow-xl shadow-accent/30 gap-2 transition-all"
+                  className="flex-1 h-12 rounded-2xl hover:opacity-90 font-bold shadow-xl shadow-accent/30 gap-2 transition-all" style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
                 >
                   <ShoppingCart className="w-4 h-4" />
                   <span>View Cart</span>

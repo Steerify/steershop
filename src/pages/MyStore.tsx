@@ -727,7 +727,10 @@ const MyStore = () => {
         {shop && isPremiumPlan && (
           <StorefrontCustomizer 
             shopId={shop.id}
+            logoUrl={shop.logo_url}
             currentAccentColor={shop.accent_color}
+            currentPrimaryColor={shop.primary_color}
+            currentSecondaryColor={shop.secondary_color}
             currentFontStyle={shop.font_style}
             currentThemeMode={shop.theme_mode}
           />

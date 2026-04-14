@@ -167,7 +167,7 @@ const Index = () => (
         minHeight: "92vh",
         position: "relative",
         overflow: "hidden",
-        paddingTop: 96,
+        paddingTop: 84,
       }}>
 
       {/* subtle adire diagonal texture */}
@@ -188,11 +188,11 @@ const Index = () => (
         background:`radial-gradient(ellipse at 20% 20%, hsl(215,65%,45%,0.35) 0%, transparent 65%)`,
       }}/>
 
-      <div style={{ maxWidth:1280,margin:"0 auto",padding:"0 1.5rem",position:"relative",zIndex:10 }}>
-        <div style={{ display:"flex",flexWrap:"wrap",alignItems:"center",gap:"2.5rem",paddingBottom:"3rem" }}>
+      <div style={{ maxWidth:1200,margin:"0 auto",padding:"0 1.25rem",position:"relative",zIndex:10 }}>
+        <div style={{ display:"flex",flexWrap:"wrap",alignItems:"center",gap:"2rem",paddingBottom:"2.5rem" }}>
 
           {/* ── TEXT ── */}
-          <div style={{ flex:"1 1 420px",maxWidth:600 }} className="f1">
+          <div style={{ flex:"1 1 420px",maxWidth:560 }} className="f1">
 
             {/* eyebrow */}
             <div style={{
@@ -205,13 +205,13 @@ const Index = () => (
               </span>
             </div>
 
-            <h1 style={{ fontWeight:800,color:"#fff",lineHeight:1.05,marginBottom:24,fontSize:"clamp(2.6rem,5.2vw,4.6rem)" }}>
+            <h1 style={{ fontWeight:800,color:"#fff",lineHeight:1.08,marginBottom:20,fontSize:"clamp(2.15rem,4.25vw,3.8rem)" }}>
               You already have<br />
               the audience.<br />
               <em style={{ fontStyle:"normal",color:ACCENT_BRIGHT }}>Give them somewhere to buy.</em>
             </h1>
 
-            <p style={{ fontSize:"1.1rem",lineHeight:1.7,color:"rgba(255,255,255,.62)",fontWeight:300,maxWidth:500,marginBottom:36 }}>
+            <p style={{ fontSize:"clamp(1rem,1.35vw,1.08rem)",lineHeight:1.65,color:"rgba(255,255,255,.62)",fontWeight:300,maxWidth:500,marginBottom:30 }}>
               500,000+ Nigerian beauty vendors sell on social media every day — and lose buyers
               because there's nowhere to send them after the DM. SteerSolo is that place.
             </p>
@@ -220,7 +220,7 @@ const Index = () => (
             <div style={{ display:"flex",flexWrap:"wrap",gap:14,marginBottom:28 }} className="f2">
               <Link to="/auth/signup">
                 <button style={{
-                  display:"flex",alignItems:"center",gap:10,padding:"14px 32px",
+                  display:"flex",alignItems:"center",gap:10,padding:"12px 26px",
                   borderRadius:9999,fontWeight:700,fontSize:"1rem",color:INDIGO,
                   background:"#fff",
                   boxShadow:`0 8px 32px rgba(0,0,0,0.25)`,
@@ -235,7 +235,7 @@ const Index = () => (
               </Link>
               <Link to="/demo">
                 <button style={{
-                  display:"flex",alignItems:"center",gap:8,padding:"14px 28px",
+                  display:"flex",alignItems:"center",gap:8,padding:"12px 24px",
                   borderRadius:9999,fontWeight:600,fontSize:"0.9rem",
                   background:"rgba(255,255,255,0.12)",border:"1.5px solid rgba(255,255,255,0.25)",
                   color:"#fff",cursor:"pointer",transition:"all .25s ease",
@@ -287,7 +287,7 @@ const Index = () => (
               padding:"28px 20px",textAlign:"center",
               borderRight: i < 3 ? "1px solid rgba(255,255,255,.08)" : "none",
             }}>
-              <p style={{ fontWeight:800,color:"#fff",fontSize:"clamp(1.6rem,2.8vw,2.4rem)",marginBottom:4 }}>{s.v}</p>
+              <p style={{ fontWeight:800,color:"#fff",fontSize:"clamp(1.35rem,2.2vw,2rem)",marginBottom:4 }}>{s.v}</p>
               <p style={{ fontSize:"0.72rem",color:"rgba(255,255,255,.38)",lineHeight:1.4 }}>{s.l}</p>
             </div>
           ))}
