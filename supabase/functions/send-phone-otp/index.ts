@@ -188,7 +188,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (isSmsConfigured) {
       console.log("Sending OTP via Termii...");
       try {
-        const termiiResponse = await fetch("https://api.ng.termii.com/api/sms/send", {
+        const termiiResponse = await fetch(`${termiiBaseUrl}/api/sms/send`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -206,12 +206,12 @@ const handler = async (req: Request): Promise<Response> => {
         console.log("Termii response:", JSON.stringify(termiiResult));
 
         if (!termiiResponse.ok) {
-          console.error("Termii API error:", termiiResult);
-          throw new Error("Failed to send SMS. Please try again.");
+          console.error("Termii API error, switching to fallback:", termiiResult);
+          delivery = "fallback";
         }
       } catch (termiiError) {
-        console.error("Termii API call failed:", termiiError);
-        throw new Error("SMS service unavailable. Please try again later.");
+        console.error("Termii API call failed, switching to fallback:", termiiError);
+        delivery = "fallback";
       }
     } else {
       // Fallback mode when SMS provider is not configured
