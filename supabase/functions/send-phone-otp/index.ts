@@ -182,11 +182,20 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check if Termii API key is configured
     const termiiApiKey = Deno.env.get("TERMII_API_KEY");
-    
-    if (termiiApiKey && termiiApiKey.length > 10) {
+    const termiiBaseUrl = (Deno.env.get("TERMII_BASE_URL") || "https://api.ng.termii.com").replace(/\/$/, "");
+    const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+    const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+    const twilioFromNumber = Deno.env.get("TWILIO_FROM_NUMBER");
+
+    const hasTermii = !!(termiiApiKey && termiiApiKey.length > 10);
+    const hasTwilio = !!(twilioAccountSid && twilioAuthToken && twilioFromNumber);
+
+    let delivery: "sms" | "fallback" = (hasTermii || hasTwilio) ? "sms" : "fallback";
+
+    if (hasTermii) {
       console.log("Sending OTP via Termii...");
       try {
-        const termiiResponse = await fetch("https://api.ng.termii.com/api/sms/send", {
+        const termiiResponse = await fetch(`${termiiBaseUrl}/api/sms/send`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -204,26 +213,65 @@ const handler = async (req: Request): Promise<Response> => {
         console.log("Termii response:", JSON.stringify(termiiResult));
 
         if (!termiiResponse.ok) {
-          console.error("Termii API error:", termiiResult);
-          throw new Error("Failed to send SMS. Please try again.");
+          console.error("Termii API error, switching to fallback:", termiiResult);
+          delivery = "fallback";
         }
       } catch (termiiError) {
-        console.error("Termii API call failed:", termiiError);
-        throw new Error("SMS service unavailable. Please try again later.");
+        console.error("Termii API call failed, switching to fallback:", termiiError);
+        delivery = "fallback";
       }
-    } else {
-      // Development mode - log OTP
-      console.log(`[DEV MODE] =====================`);
-      console.log(`[DEV MODE] OTP for ${cleanPhone}: ${otp}`);
-      console.log(`[DEV MODE] =====================`);
+    } else if (hasTwilio) {
+      console.log("Sending OTP via Twilio...");
+      try {
+        const authHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
+        const body = new URLSearchParams({
+          To: cleanPhone,
+          From: twilioFromNumber!,
+          Body: `Your SteerSolo verification code is: ${otp}. This code expires in 5 minutes. Do not share this code with anyone.`,
+        });
+
+        const twilioResponse = await fetch(
+          `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`,
+          {
+            method: "POST",
+            headers: {
+              "Authorization": `Basic ${authHeader}`,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body,
+          }
+        );
+
+        const twilioResult = await twilioResponse.json();
+        console.log("Twilio response status:", twilioResponse.status);
+        console.log("Twilio response:", JSON.stringify(twilioResult));
+
+        if (!twilioResponse.ok) {
+          console.error("Twilio API error, switching to fallback:", twilioResult);
+          delivery = "fallback";
+        }
+      } catch (twilioError) {
+        console.error("Twilio API call failed, switching to fallback:", twilioError);
+        delivery = "fallback";
+      }
+    }
+
+    if (delivery === "fallback") {
+      console.log(`[FALLBACK MODE] =====================`);
+      console.log(`[FALLBACK MODE] OTP for ${cleanPhone}: ${otp}`);
+      console.log(`[FALLBACK MODE] =====================`);
     }
 
     console.log("=== OTP sent successfully ===");
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        message: "Verification code sent to your phone",
+        success: true,
+        message: delivery === "sms"
+          ? "Verification code sent to your phone"
+          : "SMS delivery unavailable. Use the fallback code shown in-app.",
         expiresIn: 300, // 5 minutes in seconds
+        delivery,
+        fallbackCode: delivery === "fallback" ? otp : undefined,
       }),
       {
         status: 200,
