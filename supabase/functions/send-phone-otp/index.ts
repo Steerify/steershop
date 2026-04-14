@@ -182,17 +182,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check if Termii API key is configured
     const termiiApiKey = Deno.env.get("TERMII_API_KEY");
-    const termiiBaseUrl = (Deno.env.get("TERMII_BASE_URL") || "https://api.ng.termii.com").replace(/\/$/, "");
-    const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-    const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-    const twilioFromNumber = Deno.env.get("TWILIO_FROM_NUMBER");
+    
+    const isSmsConfigured = !!(termiiApiKey && termiiApiKey.length > 10);
 
-    const hasTermii = !!(termiiApiKey && termiiApiKey.length > 10);
-    const hasTwilio = !!(twilioAccountSid && twilioAuthToken && twilioFromNumber);
-
-    let delivery: "sms" | "fallback" = (hasTermii || hasTwilio) ? "sms" : "fallback";
-
-    if (hasTermii) {
+    if (isSmsConfigured) {
       console.log("Sending OTP via Termii...");
       try {
         const termiiResponse = await fetch(`${termiiBaseUrl}/api/sms/send`, {
@@ -220,43 +213,8 @@ const handler = async (req: Request): Promise<Response> => {
         console.error("Termii API call failed, switching to fallback:", termiiError);
         delivery = "fallback";
       }
-    } else if (hasTwilio) {
-      console.log("Sending OTP via Twilio...");
-      try {
-        const authHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
-        const body = new URLSearchParams({
-          To: cleanPhone,
-          From: twilioFromNumber!,
-          Body: `Your SteerSolo verification code is: ${otp}. This code expires in 5 minutes. Do not share this code with anyone.`,
-        });
-
-        const twilioResponse = await fetch(
-          `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`,
-          {
-            method: "POST",
-            headers: {
-              "Authorization": `Basic ${authHeader}`,
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body,
-          }
-        );
-
-        const twilioResult = await twilioResponse.json();
-        console.log("Twilio response status:", twilioResponse.status);
-        console.log("Twilio response:", JSON.stringify(twilioResult));
-
-        if (!twilioResponse.ok) {
-          console.error("Twilio API error, switching to fallback:", twilioResult);
-          delivery = "fallback";
-        }
-      } catch (twilioError) {
-        console.error("Twilio API call failed, switching to fallback:", twilioError);
-        delivery = "fallback";
-      }
-    }
-
-    if (delivery === "fallback") {
+    } else {
+      // Fallback mode when SMS provider is not configured
       console.log(`[FALLBACK MODE] =====================`);
       console.log(`[FALLBACK MODE] OTP for ${cleanPhone}: ${otp}`);
       console.log(`[FALLBACK MODE] =====================`);
@@ -266,12 +224,12 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: delivery === "sms"
+        message: isSmsConfigured
           ? "Verification code sent to your phone"
-          : "SMS delivery unavailable. Use the fallback code shown in-app.",
+          : "SMS is not configured. Use the fallback code shown in-app.",
         expiresIn: 300, // 5 minutes in seconds
-        delivery,
-        fallbackCode: delivery === "fallback" ? otp : undefined,
+        delivery: isSmsConfigured ? "sms" : "fallback",
+        fallbackCode: isSmsConfigured ? undefined : otp,
       }),
       {
         status: 200,
