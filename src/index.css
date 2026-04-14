@@ -206,6 +206,32 @@
       padding-right: 1.5rem;
     }
   }
+
+  @media (max-width: 640px) {
+    .container {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+
+    table {
+      display: block;
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      white-space: nowrap;
+    }
+
+    .overflow-x-auto {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
 }
 
 @layer components {
