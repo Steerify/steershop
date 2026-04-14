@@ -128,13 +128,13 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
       <AdireAccent className="h-1" />
       
       <div className="bg-card/90 backdrop-blur-xl border-b border-border/50">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3 md:py-2.5">
           <div className="flex items-center justify-between">
             
             {/* Logo Section */}
             <div className="flex items-center gap-3 group relative">
               <div
-                className={`w-14 h-14 rounded-2xl overflow-hidden shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 relative select-none ${theme === 'dark' ? '' : 'bg-white'}`}
+                className={`w-12 h-12 rounded-xl overflow-hidden shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 relative select-none ${theme === 'dark' ? '' : 'bg-white'}`}
                 onContextMenu={(e) => e.preventDefault()}
                 aria-label="Brand logo"
               >
@@ -153,7 +153,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
               </div>
 
               {/* Updated typography to match index page */}
-              <span className="hidden min-[360px]:inline font-display text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <span className="hidden min-[360px]:inline font-display text-lg sm:text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 {shopBranding?.name || "SteerSolo"}
                 {!shopBranding && primary && (
                   <span className="ml-2 text-lg inline-block text-primary">
@@ -164,12 +164,12 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
             </div>
 
             {/* Desktop Nav - Updated typography */}
-            <div className="hidden md:flex items-center gap-8 font-display">
+            <div className="hidden md:flex items-center gap-6 font-display">
               {["Shops", "About", "Feedback"].map((label) => (
                 <Link 
                   key={label}
                   to={`/${label.toLowerCase()}`} 
-                  className="text-foreground/80 hover:text-primary transition-colors font-medium relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full"
+                  className="text-sm lg:text-base text-foreground/80 hover:text-primary transition-colors font-medium relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full"
                 >
                   Explore {label}
                 </Link>
@@ -177,7 +177,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
             </div>
 
             {/* Desktop Auth - Updated typography */}
-            <div className="hidden md:flex items-center gap-3 font-display">
+            <div className="hidden md:flex items-center gap-2.5 font-display">
               {/* Dark Mode Toggle */}
               {mounted && (
                 <Button
@@ -195,13 +195,13 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                 </Button>
               )}
               <Link to="/auth/login">
-                <Button variant="ghost" size="sm" className="font-medium hover:bg-primary/10 hover:text-primary">
+                <Button variant="ghost" size="sm" className="h-9 px-3 text-sm font-medium hover:bg-primary/10 hover:text-primary">
                   <User className="w-4 h-4 mr-2" />
                   Login
                 </Button>
               </Link>
               <Link to="/auth/login?tab=signup">
-                <Button size="sm" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity font-medium shadow-lg shadow-primary/20">
+                <Button size="sm" className="h-9 px-4 text-sm bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity font-medium shadow-lg shadow-primary/20">
                   Get Started
                 </Button>
               </Link>
