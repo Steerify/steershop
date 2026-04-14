@@ -174,6 +174,7 @@ const Onboarding = () => {
     "deliveryMethod",
   ];
   const totalQuestions = 6;
+  const minRequiredQuestionIndex = requiredQuestions.length - 1;
 
   const handleSkipPhone = () => {
     toast({
@@ -209,12 +210,7 @@ const Onboarding = () => {
         setupPreference: wantsDoneForYou ? 'done_for_you' : 'self_setup',
       };
 
-      // Store to Supabase for analytics
-      if (user?.id) {
-        await onboardingService.storeOnboardingResponse(user.id, submitData);
-      }
-
-      // Also submit to Render backend
+      // Persist onboarding once (single insert) to avoid duplicate-row failures
       await onboardingService.submitOnboarding(submitData);
       
       toast({
@@ -444,43 +440,45 @@ const Onboarding = () => {
                 )}
               </div>
 
-              <div className="flex items-center justify-between gap-3 mt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setActiveQuestionIndex((prev) => Math.max(prev - 1, 0))}
-                  disabled={activeQuestionIndex === 0}
-                >
-                  Previous
-                </Button>
+              <div className="mt-4 space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setActiveQuestionIndex((prev) => Math.max(prev - 1, 0))}
+                    disabled={activeQuestionIndex === 0}
+                  >
+                    Previous
+                  </Button>
 
-                <Button
-                  variant="outline"
-                  onClick={() => setActiveQuestionIndex((prev) => Math.min(prev + 1, totalQuestions - 1))}
-                  disabled={activeQuestionIndex >= totalQuestions - 1 || (activeQuestionIndex < 5 && !formData[requiredQuestions[activeQuestionIndex]])}
-                >
-                  Next
-                </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setActiveQuestionIndex((prev) => Math.min(prev + 1, totalQuestions - 1))}
+                    disabled={activeQuestionIndex >= totalQuestions - 1 || (activeQuestionIndex < 5 && !formData[requiredQuestions[activeQuestionIndex]])}
+                  >
+                    Next
+                  </Button>
 
-                <Button 
-                  variant="ghost" 
-                  onClick={handleSkipQuestions}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <SkipForward className="w-4 h-4 mr-2" />
-                  Skip for now
-                </Button>
+                  <Button 
+                    variant="ghost" 
+                    onClick={handleSkipQuestions}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <SkipForward className="w-4 h-4 mr-2" />
+                    Skip for now
+                  </Button>
+                </div>
 
                 <Button 
                   onClick={handleSubmit} 
-                  className="bg-gradient-to-r from-primary to-accent py-6 text-lg"
-                  disabled={!isFormValid() || isLoading || activeQuestionIndex < totalQuestions - 1}
+                  className="w-full bg-gradient-to-r from-primary to-accent py-6 text-lg"
+                  disabled={!isFormValid() || isLoading || activeQuestionIndex < minRequiredQuestionIndex}
                 >
                   {isLoading ? (
                      <>
                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                        Saving preferences...
                      </>
-                  ) : "Complete Setup"}
+                  ) : "Finish & Go to Dashboard"}
                 </Button>
               </div>
             </div>

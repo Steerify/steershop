@@ -183,7 +183,9 @@ const handler = async (req: Request): Promise<Response> => {
     // Check if Termii API key is configured
     const termiiApiKey = Deno.env.get("TERMII_API_KEY");
     
-    if (termiiApiKey && termiiApiKey.length > 10) {
+    const isSmsConfigured = !!(termiiApiKey && termiiApiKey.length > 10);
+
+    if (isSmsConfigured) {
       console.log("Sending OTP via Termii...");
       try {
         const termiiResponse = await fetch("https://api.ng.termii.com/api/sms/send", {
@@ -212,18 +214,22 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error("SMS service unavailable. Please try again later.");
       }
     } else {
-      // Development mode - log OTP
-      console.log(`[DEV MODE] =====================`);
-      console.log(`[DEV MODE] OTP for ${cleanPhone}: ${otp}`);
-      console.log(`[DEV MODE] =====================`);
+      // Fallback mode when SMS provider is not configured
+      console.log(`[FALLBACK MODE] =====================`);
+      console.log(`[FALLBACK MODE] OTP for ${cleanPhone}: ${otp}`);
+      console.log(`[FALLBACK MODE] =====================`);
     }
 
     console.log("=== OTP sent successfully ===");
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        message: "Verification code sent to your phone",
+        success: true,
+        message: isSmsConfigured
+          ? "Verification code sent to your phone"
+          : "SMS is not configured. Use the fallback code shown in-app.",
         expiresIn: 300, // 5 minutes in seconds
+        delivery: isSmsConfigured ? "sms" : "fallback",
+        fallbackCode: isSmsConfigured ? undefined : otp,
       }),
       {
         status: 200,

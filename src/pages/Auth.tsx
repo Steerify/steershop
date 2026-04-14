@@ -238,10 +238,16 @@ const Auth = () => {
     setAuthError(null);
 
     try {
-      const result = await signIn(data.email, data.password);
+      const normalizedEmail = data.email.trim().toLowerCase();
+      const result = await signIn(normalizedEmail, data.password);
 
       if (result.error) {
-        setAuthError(result.error);
+        const normalizedError = result.error.toLowerCase();
+        if (normalizedError.includes("invalid login credentials")) {
+          setAuthError("Invalid email or password. If you just signed up, verify your email first, then try again.");
+        } else {
+          setAuthError(result.error);
+        }
       } else {
         toast({
           title: "Welcome back!",

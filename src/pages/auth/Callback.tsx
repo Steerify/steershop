@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { EmailOtpType } from "@supabase/supabase-js";
 import { Loader2 } from "lucide-react";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 
@@ -12,6 +13,8 @@ const Callback = () => {
       try {
         const params = new URLSearchParams(window.location.search);
         const code = params.get("code");
+        const tokenHash = params.get("token_hash");
+        const typeParam = params.get("type");
         const next = params.get("next");
 
         if (code) {
@@ -19,6 +22,18 @@ const Callback = () => {
           if (exchangeError) {
             console.error("Auth code exchange error:", exchangeError);
             navigate("/auth/login");
+            return;
+          }
+        } else if (tokenHash && typeParam) {
+          const otpType = typeParam as EmailOtpType;
+          const { error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: otpType,
+          });
+
+          if (verifyError) {
+            console.error("Email verification callback error:", verifyError);
+            navigate("/auth/login?tab=login");
             return;
           }
         }
