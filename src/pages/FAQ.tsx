@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { 
   Search, 
   Rocket, 
@@ -10,7 +9,6 @@ import {
   HelpCircle,
   MessageCircle,
   ArrowRight,
-  ChevronDown,
   Target
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -20,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AdirePattern, AdireDivider } from "@/components/patterns/AdirePattern";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface FAQItem {
   question: string;
@@ -224,7 +221,7 @@ const faqCategories: FAQCategory[] = [
 
 const FAQ = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState(faqCategories[0]?.id ?? "all");
 
   const filteredCategories = faqCategories.map(category => ({
     ...category,
@@ -294,25 +291,27 @@ const FAQ = () => {
       <section className="py-12">
         <div className="container mx-auto px-4">
           {/* Category Filter */}
-          <div className="flex flex-wrap justify-center gap-2 mb-10">
-            <Button
-              variant={activeCategory === "all" ? "default" : "outline"}
-              onClick={() => setActiveCategory("all")}
-              className="rounded-full"
-            >
-              All Topics
-            </Button>
-            {faqCategories.map((category) => (
+          <div className="mb-10 overflow-x-auto pb-2">
+            <div className="flex w-max min-w-full flex-nowrap justify-start gap-2 whitespace-nowrap md:w-full md:flex-wrap md:justify-center md:whitespace-normal">
               <Button
-                key={category.id}
-                variant={activeCategory === category.id ? "default" : "outline"}
-                onClick={() => setActiveCategory(category.id)}
-                className="rounded-full gap-2"
+                variant={activeCategory === "all" ? "default" : "outline"}
+                onClick={() => setActiveCategory("all")}
+                className="hidden rounded-full md:inline-flex"
               >
-                <category.icon className="w-4 h-4" />
-                {category.name}
+                All Topics
               </Button>
-            ))}
+              {faqCategories.map((category) => (
+                <Button
+                  key={category.id}
+                  variant={activeCategory === category.id ? "default" : "outline"}
+                  onClick={() => setActiveCategory(category.id)}
+                  className="rounded-full gap-2"
+                >
+                  <category.icon className="w-4 h-4" />
+                  {category.name}
+                </Button>
+              ))}
+            </div>
           </div>
 
           {/* FAQ Accordions */}
@@ -332,7 +331,7 @@ const FAQ = () => {
               </Card>
             ) : (
               filteredCategories.map((category) => (
-                <div key={category.id} className="space-y-4">
+                <div key={category.id} className="space-y-4 py-2">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 bg-gradient-to-br from-accent/20 to-primary/20 rounded-lg flex items-center justify-center">
                       <category.icon className="w-5 h-5 text-primary" />
