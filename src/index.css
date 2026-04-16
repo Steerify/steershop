@@ -11,6 +11,12 @@
     /* Adire-inspired brand palette — SteerSolo */
     --background: 215 20% 98%;      /* calm cool-white, no green tint */
     --foreground: 220 45% 12%;
+    --brand-blue: 215 65% 25%;
+    --brand-blue-deep: 215 65% 18%;
+    --brand-blue-soft: 215 58% 30%;
+    --brand-blue-strong: 215 65% 45%;
+    --accent-deep: 145 55% 30%;
+    --accent-bright: 145 60% 48%;
 
     --card: 0 0% 100%;
     --card-foreground: 220 45% 12%;
@@ -19,7 +25,7 @@
     --popover-foreground: 220 45% 12%;
 
     /* Navy Blue — primary brand (#0f295c) */
-    --primary: 220 72% 21%;
+    --primary: var(--brand-blue);
     --primary-foreground: 0 0% 100%;
 
     /* Warm pearl — section alternates */
@@ -739,6 +745,15 @@ iframe[src*="accounts.google.com"] {
 
 .gradient-hero-spotify {
   background: linear-gradient(180deg, hsl(var(--accent) / 0.12) 0%, hsl(var(--background)) 100%);
+}
+
+/* Homepage-specific brand gradients */
+.bg-brand-hero {
+  background: linear-gradient(135deg, hsl(var(--brand-blue-deep)) 0%, hsl(var(--brand-blue)) 60%, hsl(var(--brand-blue-soft)) 100%);
+}
+
+.bg-brand-cta {
+  background: linear-gradient(135deg, hsl(var(--brand-blue-deep)) 0%, hsl(var(--brand-blue)) 55%, hsl(var(--brand-blue-soft)) 100%);
 }
 
 /* ===== ALWAYS-DARK SECTION BACKGROUNDS (intentionally dark regardless of theme) ===== */
