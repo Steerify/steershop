@@ -671,6 +671,7 @@ const ShopStorefront = () => {
           )}
         </div>
 
+        <div className="mx-auto w-full max-w-[26rem] xs:max-w-none">
         {/* ── Empty State ── */}
         {filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -691,11 +692,11 @@ const ShopStorefront = () => {
           </div>
         ) : (
           /* ── Product Grid ── */
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
             {filteredProducts.map((product, index) => (
               <div
                 key={product.id}
-                className="group bg-card border border-border/60 rounded-2xl overflow-hidden hover:border-accent/40 hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col animate-fade-up"
+                className="group min-h-0 bg-card border border-border/60 rounded-2xl overflow-hidden hover:border-accent/40 hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col animate-fade-up"
                 style={{ animationDelay: `${index * 0.04}s` }}
                 data-tour={index === 0 ? "product-card" : undefined}
               >
@@ -718,9 +719,9 @@ const ShopStorefront = () => {
                     {/* Hover Overlay */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300 flex items-center justify-center">
                       <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                        <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm rounded-xl px-4 py-2 flex items-center gap-2 shadow-lg">
-                          <Eye className="w-4 h-4" />
-                          <span className="text-sm font-medium">Quick View</span>
+                        <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm rounded-xl px-3 py-2 flex items-center gap-1.5 shadow-lg">
+                          <Eye className="w-3.5 h-3.5" />
+                          <span className="text-xs font-semibold">View Details</span>
                         </div>
                       </div>
                     </div>
@@ -762,15 +763,15 @@ const ShopStorefront = () => {
                 </Link>
 
                 {/* Product Info */}
-                <div className="flex flex-col flex-1 p-3 sm:p-4">
+                <div className="flex min-h-0 flex-col flex-1 p-3 sm:p-4">
                   <Link to={`/shop/${slug}/product/${product.id}`}>
-                    <h3 className="font-semibold text-sm sm:text-base leading-snug line-clamp-2 hover:text-accent transition-colors mb-1">
+                    <h3 className="min-h-0 font-semibold text-sm sm:text-base leading-snug line-clamp-2 hover:text-accent transition-colors mb-1">
                       {product.name}
                     </h3>
                   </Link>
 
                   {product.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2 hidden sm:block leading-relaxed">
+                    <p className="min-h-0 text-xs text-muted-foreground line-clamp-2 mb-2 hidden sm:block leading-relaxed">
                       {product.description}
                     </p>
                   )}
@@ -811,49 +812,62 @@ const ShopStorefront = () => {
                   </div>
 
                   {/* CTA Buttons */}
-                  <div className="flex gap-2 mt-auto">
+                  <div className="mt-auto flex gap-1.5 max-[430px]:flex-col">
                     {product.type === 'service' && product.booking_required ? (
                       <Button
-                        className="flex-1 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm shadow-sm shadow-purple-500/20 gap-2 transition-all"
+                        className="flex-1 h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm shadow-sm shadow-purple-500/20 gap-1.5 transition-all max-[430px]:w-full"
                         onClick={(e) => { e.preventDefault(); handleBookService(product); }}
                         disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                       >
-                        <Calendar className="w-4 h-4" />
+                        <Calendar className="w-3.5 h-3.5" />
                         <span className="hidden xs:inline">Book</span> Now
                       </Button>
                     ) : (
                       <Button
-                        className="flex-1 h-10 rounded-xl hover:opacity-90 font-semibold text-sm shadow-sm shadow-accent/20 gap-2 transition-all" style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
+                        className="flex-1 h-9 rounded-xl hover:opacity-90 font-semibold text-sm shadow-sm shadow-accent/20 gap-1.5 transition-all max-[430px]:w-full" style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
                         onClick={(e) => { e.preventDefault(); addToCart(product); }}
                         disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                       >
-                        <ShoppingCart className="w-3.5 h-3.5" />
+                        <ShoppingCart className="w-3 h-3" />
                         <span className="hidden xs:inline">Add to</span> Cart
                       </Button>
                     )}
 
-                    <Link to={`/shop/${slug}/product/${product.id}`}>
-                      <Button variant="outline" size="icon"
-                        className="h-10 w-10 rounded-xl border-border hover:border-accent/50 hover:bg-accent/5 flex-shrink-0 transition-all">
-                        <ChevronRight className="w-4 h-4" />
+                    <Link to={`/shop/${slug}/product/${product.id}`} className="md:hidden">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-9 rounded-xl border-border hover:border-accent/50 hover:bg-accent/5 flex-shrink-0 transition-all max-[430px]:w-full"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
                       </Button>
                     </Link>
-                    <WishlistButton productId={product.id} />
+                    <WishlistButton productId={product.id} className="h-9 w-9 p-0 rounded-xl max-[430px]:w-full" />
                   </div>
 
-                  {/* Review Form */}
-                  <div className="mt-2">
-                    <ProductReviewForm
-                      productId={product.id}
-                      productName={product.name}
-                      onReviewSubmitted={loadShopData}
-                    />
+                  {/* Review Actions */}
+                  <div className="mt-2 min-h-0">
+                    <Link
+                      to={`/shop/${slug}/product/${product.id}`}
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors md:hidden"
+                    >
+                      <Star className="w-3.5 h-3.5" />
+                      <span className="line-clamp-1">Rate & review</span>
+                    </Link>
+                    <div className="hidden md:block">
+                      <ProductReviewForm
+                        productId={product.id}
+                        productName={product.name}
+                        onReviewSubmitted={loadShopData}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         )}
+        </div>
       </section>
 
       {/* ══════════════════ FLOATING CART BAR ══════════════════ */}
