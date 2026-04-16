@@ -42,7 +42,7 @@ const VendorInvite = () => {
   const { isLoading: authLoading } = useShopOwnerAuth();
   const [referralCode, setReferralCode] = useState("");
   const [stats, setStats] = useState<ReferralStats>({
-    totalReferrals: 0, pendingReferrals: 0, rewardedReferrals: 0, totalPointsEarned: 0
+    totalReferrals: 0, pendingReferrals: 0, approvedReferrals: 0, paidReferrals: 0, reversedReferrals: 0, pendingCommission: 0, paidCommission: 0, totalCommission: 0
   });
   const [isLoading, setIsLoading] = useState(true);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -122,15 +122,15 @@ const VendorInvite = () => {
             <Card className="border-border">
               <CardContent className="p-4 text-center">
                 <CheckCircle2 className="w-5 h-5 mx-auto mb-1 text-accent" />
-                <p className="text-2xl font-bold text-foreground">{stats.rewardedReferrals}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.paidReferrals + stats.approvedReferrals + stats.pendingReferrals}</p>
                 <p className="text-xs text-muted-foreground">Signed Up</p>
               </CardContent>
             </Card>
             <Card className="border-border">
               <CardContent className="p-4 text-center">
                 <Sparkles className="w-5 h-5 mx-auto mb-1 text-primary" />
-                <p className="text-2xl font-bold text-foreground">{stats.totalPointsEarned}</p>
-                <p className="text-xs text-muted-foreground">Points Earned</p>
+                <p className="text-2xl font-bold text-foreground">₦{stats.totalCommission.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">Commission</p>
               </CardContent>
             </Card>
           </div>

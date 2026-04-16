@@ -8,6 +8,8 @@ export interface ReferralCode {
   is_active: boolean;
 }
 
+export type CommissionStatus = 'pending' | 'approved' | 'paid' | 'reversed';
+
 export interface Referral {
   id: string;
   referrer_id: string;
@@ -18,14 +20,53 @@ export interface Referral {
   created_at: string;
   qualified_at: string | null;
   rewarded_at: string | null;
+  commission_rate: number;
+  source_payment_reference: string | null;
+  source_subscription_id: string | null;
+  commission_amount: number | null;
+  commission_currency: string | null;
+  commission_status: CommissionStatus;
+  commission_created_at: string | null;
+}
+
+export interface AmbassadorProfile {
+  id: string;
+  user_id: string;
+  legal_name: string;
+  phone: string | null;
+  payout_bank_name: string | null;
+  payout_bank_code: string | null;
+  payout_account_number: string | null;
+  payout_account_name: string | null;
+  tax_id: string | null;
+  compliance_notes: string | null;
+  enrollment_status: 'active' | 'suspended';
+  enrolled_at: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ReferralStats {
   totalReferrals: number;
   pendingReferrals: number;
-  rewardedReferrals: number;
-  totalPointsEarned: number;
+  approvedReferrals: number;
+  paidReferrals: number;
+  reversedReferrals: number;
+  pendingCommission: number;
+  paidCommission: number;
+  totalCommission: number;
 }
+
+const EMPTY_STATS: ReferralStats = {
+  totalReferrals: 0,
+  pendingReferrals: 0,
+  approvedReferrals: 0,
+  paidReferrals: 0,
+  reversedReferrals: 0,
+  pendingCommission: 0,
+  paidCommission: 0,
+  totalCommission: 0,
+};
 
 const generateUniqueCode = (): string => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -36,14 +77,14 @@ const generateUniqueCode = (): string => {
   return code;
 };
 
+const toNumber = (value: unknown): number => (typeof value === 'number' ? value : 0);
+
 export const referralService = {
-  // Get or create user's referral code
   getReferralCode: async (): Promise<{ success: boolean; data: ReferralCode | null; message: string }> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, data: null, message: 'Not authenticated' };
 
-    // Check if user already has a code
-    const { data: existingCode, error: fetchError } = await supabase
+    const { data: existingCode } = await supabase
       .from('referral_codes')
       .select('*')
       .eq('user_id', user.id)
@@ -53,7 +94,6 @@ export const referralService = {
       return { success: true, data: existingCode as ReferralCode, message: 'Code found' };
     }
 
-    // Generate new code
     const newCode = generateUniqueCode();
     const { data: newCodeData, error: insertError } = await supabase
       .from('referral_codes')
@@ -69,7 +109,6 @@ export const referralService = {
     return { success: true, data: newCodeData as ReferralCode, message: 'Code created' };
   },
 
-  // Validate a referral code
   validateReferralCode: async (code: string): Promise<{ success: boolean; valid: boolean; referrerId?: string; message: string }> => {
     const { data, error } = await supabase
       .from('referral_codes')
@@ -85,20 +124,17 @@ export const referralService = {
     return { success: true, valid: true, referrerId: data.user_id, message: 'Valid code' };
   },
 
-  // Apply referral code (create referral relationship)
   applyReferralCode: async (code: string, referredUserId: string): Promise<{ success: boolean; message: string }> => {
     const validation = await referralService.validateReferralCode(code);
-    
+
     if (!validation.valid || !validation.referrerId) {
       return { success: false, message: 'Invalid referral code' };
     }
 
-    // Don't allow self-referral
     if (validation.referrerId === referredUserId) {
       return { success: false, message: 'Cannot use your own referral code' };
     }
 
-    // Check if user was already referred
     const { data: existingReferral } = await supabase
       .from('referrals')
       .select('id')
@@ -109,14 +145,13 @@ export const referralService = {
       return { success: false, message: 'You have already been referred' };
     }
 
-    // Create referral
     const { error } = await supabase
       .from('referrals')
       .insert({
         referrer_id: validation.referrerId,
         referred_id: referredUserId,
         referral_code: code.toUpperCase(),
-        status: 'pending'
+        status: 'pending',
       });
 
     if (error) {
@@ -124,10 +159,9 @@ export const referralService = {
       return { success: false, message: error.message };
     }
 
-    return { success: true, message: 'Referral code applied! You\'ll both earn points after your first purchase.' };
+    return { success: true, message: 'Referral code applied! Commission is tracked after successful subscription payment.' };
   },
 
-  // Get user's referrals
   getReferrals: async (): Promise<{ success: boolean; data: Referral[]; message: string }> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, data: [], message: 'Not authenticated' };
@@ -145,45 +179,48 @@ export const referralService = {
     return { success: true, data: (data || []) as Referral[], message: 'Referrals fetched' };
   },
 
-  // Get referral statistics
   getReferralStats: async (): Promise<{ success: boolean; data: ReferralStats; message: string }> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return { 
-        success: false, 
-        data: { totalReferrals: 0, pendingReferrals: 0, rewardedReferrals: 0, totalPointsEarned: 0 }, 
-        message: 'Not authenticated' 
-      };
+      return { success: false, data: EMPTY_STATS, message: 'Not authenticated' };
     }
 
     const { data, error } = await supabase
       .from('referrals')
-      .select('status, points_earned')
+      .select('commission_status, commission_amount')
       .eq('referrer_id', user.id);
 
     if (error) {
-      return { 
-        success: false, 
-        data: { totalReferrals: 0, pendingReferrals: 0, rewardedReferrals: 0, totalPointsEarned: 0 }, 
-        message: error.message 
-      };
+      return { success: false, data: EMPTY_STATS, message: error.message };
     }
+
+    const pendingCommission = (data || [])
+      .filter((r) => r.commission_status === 'pending' || r.commission_status === 'approved')
+      .reduce((sum, r) => sum + toNumber(r.commission_amount), 0);
+
+    const paidCommission = (data || [])
+      .filter((r) => r.commission_status === 'paid')
+      .reduce((sum, r) => sum + toNumber(r.commission_amount), 0);
 
     const stats: ReferralStats = {
       totalReferrals: data?.length || 0,
-      pendingReferrals: data?.filter(r => r.status === 'pending').length || 0,
-      rewardedReferrals: data?.filter(r => r.status === 'rewarded').length || 0,
-      totalPointsEarned: data?.reduce((sum, r) => sum + (r.points_earned || 0), 0) || 0
+      pendingReferrals: data?.filter((r) => r.commission_status === 'pending').length || 0,
+      approvedReferrals: data?.filter((r) => r.commission_status === 'approved').length || 0,
+      paidReferrals: data?.filter((r) => r.commission_status === 'paid').length || 0,
+      reversedReferrals: data?.filter((r) => r.commission_status === 'reversed').length || 0,
+      pendingCommission,
+      paidCommission,
+      totalCommission: pendingCommission + paidCommission,
     };
 
     return { success: true, data: stats, message: 'Stats fetched' };
   },
 
-  // Admin: Get all referrals
   getAllReferrals: async (): Promise<{ success: boolean; data: Referral[]; message: string }> => {
     const { data, error } = await supabase
       .from('referrals')
       .select('*')
+      .order('commission_created_at', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -193,64 +230,74 @@ export const referralService = {
     return { success: true, data: (data || []) as Referral[], message: 'All referrals fetched' };
   },
 
-  // Get user's ambassador tiers
-  getAmbassadorTiers: async (): Promise<{ success: boolean; data: any[]; message: string }> => {
+  getAmbassadorProfile: async (): Promise<{ success: boolean; data: AmbassadorProfile | null; message: string }> => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, data: [], message: 'Not authenticated' };
+    if (!user) return { success: false, data: null, message: 'Not authenticated' };
 
     const { data, error } = await supabase
-      .from('ambassador_tiers')
+      .from('ambassador_profiles')
       .select('*')
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .maybeSingle();
 
-    if (error) return { success: false, data: [], message: error.message };
-    return { success: true, data: data || [], message: 'Tiers fetched' };
+    if (error) return { success: false, data: null, message: error.message };
+
+    return { success: true, data: (data || null) as AmbassadorProfile | null, message: 'Profile fetched' };
   },
 
-  // Claim ambassador rewards via edge function
-  claimAmbassadorReward: async (): Promise<{ success: boolean; message: string; rewards_granted: string[]; tiers_reached: string[] }> => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return { success: false, message: 'Not authenticated', rewards_granted: [], tiers_reached: [] };
+  upsertAmbassadorProfile: async (payload: {
+    legal_name: string;
+    phone?: string | null;
+    payout_bank_name?: string | null;
+    payout_bank_code?: string | null;
+    payout_account_number?: string | null;
+    payout_account_name?: string | null;
+    tax_id?: string | null;
+    compliance_notes?: string | null;
+  }): Promise<{ success: boolean; message: string }> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, message: 'Not authenticated' };
 
-    const response = await supabase.functions.invoke('check-ambassador-tier', {
-      headers: { Authorization: `Bearer ${session.access_token}` }
-    });
+    const { error } = await supabase.from('ambassador_profiles').upsert({
+      user_id: user.id,
+      legal_name: payload.legal_name,
+      phone: payload.phone || null,
+      payout_bank_name: payload.payout_bank_name || null,
+      payout_bank_code: payload.payout_bank_code || null,
+      payout_account_number: payload.payout_account_number || null,
+      payout_account_name: payload.payout_account_name || null,
+      tax_id: payload.tax_id || null,
+      compliance_notes: payload.compliance_notes || null,
+    }, { onConflict: 'user_id' });
 
-    if (response.error) {
-      return { success: false, message: response.error.message, rewards_granted: [], tiers_reached: [] };
+    if (error) {
+      return { success: false, message: error.message };
     }
 
-    return {
-      success: true,
-      message: 'Rewards checked',
-      rewards_granted: response.data?.rewards_granted || [],
-      tiers_reached: response.data?.tiers_reached || []
-    };
+    return { success: true, message: 'Enrollment details saved' };
   },
 
-  // Get leaderboard (top referrers)
   getLeaderboard: async (): Promise<{ success: boolean; data: any[]; message: string }> => {
     const { data, error } = await supabase
       .from('referrals')
-      .select('referrer_id')
-      .eq('status', 'rewarded');
+      .select('referrer_id, commission_amount')
+      .in('commission_status', ['pending', 'approved', 'paid']);
 
     if (error) return { success: false, data: [], message: error.message };
 
-    // Count per referrer
-    const counts: Record<string, number> = {};
+    const counts: Record<string, { referrals: number; commission: number }> = {};
     (data || []).forEach((r: any) => {
-      counts[r.referrer_id] = (counts[r.referrer_id] || 0) + 1;
+      counts[r.referrer_id] = counts[r.referrer_id] || { referrals: 0, commission: 0 };
+      counts[r.referrer_id].referrals += 1;
+      counts[r.referrer_id].commission += toNumber(r.commission_amount);
     });
 
-    // Sort and get top 5
     const sorted = Object.entries(counts)
-      .sort(([, a], [, b]) => b - a)
+      .sort(([, a], [, b]) => b.commission - a.commission)
       .slice(0, 5);
 
-    // Get anonymized names
     const leaderboard = await Promise.all(
-      sorted.map(async ([userId, count], index) => {
+      sorted.map(async ([userId, metrics], index) => {
         const { data: profile } = await supabase
           .from('profiles')
           .select('full_name, email')
@@ -262,10 +309,15 @@ export const referralService = {
           ? name[0] + '***' + name[name.length - 1]
           : '***';
 
-        return { rank: index + 1, name: anonymized, count };
+        return {
+          rank: index + 1,
+          name: anonymized,
+          count: metrics.referrals,
+          commission: metrics.commission,
+        };
       })
     );
 
     return { success: true, data: leaderboard, message: 'Leaderboard fetched' };
-  }
+  },
 };
