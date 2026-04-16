@@ -1,91 +1,55 @@
-import { useState, useEffect } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { useAuth } from "@/context/AuthContext";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { referralService, ReferralStats } from "@/services/referral.service";
+import { AmbassadorProfile, Referral, referralService, ReferralStats } from "@/services/referral.service";
 import { PageWrapper } from "@/components/PageWrapper";
-import {
-  Crown,
-  Star,
-  Trophy,
-  Gift,
-  Copy,
-  MessageCircle,
-  Share2,
-  Users,
-  CheckCircle2,
-  Loader2,
-  ArrowLeft,
-  Sparkles,
-  Shield,
-  Store,
-} from "lucide-react";
-
-interface AmbassadorTier {
-  tier: string;
-  reward_claimed: boolean;
-  reached_at: string;
-  claimed_at: string | null;
-}
+import { ArrowLeft, Copy, Loader2, MessageCircle, Share2, Users, Wallet } from "lucide-react";
 
 interface LeaderboardEntry {
   rank: number;
   name: string;
   count: number;
+  commission: number;
 }
 
-const TIERS = [
-  {
-    key: "bronze",
-    label: "Bronze",
-    icon: Gift,
-    threshold: 10,
-    reward: "Free month of SteerSolo",
-    description: "Get a full month subscription free when you refer 10 friends",
-    color: "from-amber-600 to-amber-800",
-    badgeColor: "bg-amber-100 text-amber-800 border-amber-300",
-  },
-  {
-    key: "silver",
-    label: "Silver",
-    icon: Star,
-    threshold: 50,
-    reward: "Shop featured on homepage",
-    description: "Your shop gets featured on the SteerSolo homepage for 30 days",
-    color: "from-slate-400 to-slate-600",
-    badgeColor: "bg-slate-100 text-slate-700 border-slate-300",
-  },
-  {
-    key: "gold",
-    label: "Gold",
-    icon: Crown,
-    threshold: 100,
-    reward: "Reseller status unlocked",
-    description: "Permanent reseller badge and future wholesale access",
-    color: "from-yellow-500 to-amber-600",
-    badgeColor: "bg-yellow-100 text-yellow-800 border-yellow-400",
-  },
-];
+const EMPTY_STATS: ReferralStats = {
+  totalReferrals: 0,
+  pendingReferrals: 0,
+  approvedReferrals: 0,
+  paidReferrals: 0,
+  reversedReferrals: 0,
+  pendingCommission: 0,
+  paidCommission: 0,
+  totalCommission: 0,
+};
 
 const Ambassador = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { toast } = useToast();
+
   const [referralCode, setReferralCode] = useState("");
-  const [stats, setStats] = useState<ReferralStats>({
-    totalReferrals: 0,
-    pendingReferrals: 0,
-    rewardedReferrals: 0,
-    totalPointsEarned: 0,
-  });
-  const [tiers, setTiers] = useState<AmbassadorTier[]>([]);
+  const [stats, setStats] = useState<ReferralStats>(EMPTY_STATS);
+  const [referrals, setReferrals] = useState<Referral[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [profile, setProfile] = useState<AmbassadorProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isClaiming, setIsClaiming] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [form, setForm] = useState({
+    legal_name: "",
+    phone: "",
+    payout_bank_name: "",
+    payout_bank_code: "",
+    payout_account_number: "",
+    payout_account_name: "",
+    tax_id: "",
+    compliance_notes: "",
+  });
 
   useEffect(() => {
     loadData();
@@ -93,18 +57,34 @@ const Ambassador = () => {
 
   const loadData = async () => {
     try {
-      const [codeResult, statsResult, tiersResult, leaderboardResult] =
-        await Promise.all([
-          referralService.getReferralCode(),
-          referralService.getReferralStats(),
-          referralService.getAmbassadorTiers(),
-          referralService.getLeaderboard(),
-        ]);
+      const [codeResult, statsResult, referralsResult, leaderboardResult, profileResult] = await Promise.all([
+        referralService.getReferralCode(),
+        referralService.getReferralStats(),
+        referralService.getReferrals(),
+        referralService.getLeaderboard(),
+        referralService.getAmbassadorProfile(),
+      ]);
 
       if (codeResult.success && codeResult.data) setReferralCode(codeResult.data.code);
       if (statsResult.success) setStats(statsResult.data);
-      if (tiersResult.success) setTiers(tiersResult.data);
+      if (referralsResult.success) setReferrals(referralsResult.data);
       if (leaderboardResult.success) setLeaderboard(leaderboardResult.data);
+
+      if (profileResult.success) {
+        setProfile(profileResult.data);
+        if (profileResult.data) {
+          setForm({
+            legal_name: profileResult.data.legal_name || "",
+            phone: profileResult.data.phone || "",
+            payout_bank_name: profileResult.data.payout_bank_name || "",
+            payout_bank_code: profileResult.data.payout_bank_code || "",
+            payout_account_number: profileResult.data.payout_account_number || "",
+            payout_account_name: profileResult.data.payout_account_name || "",
+            tax_id: profileResult.data.tax_id || "",
+            compliance_notes: profileResult.data.compliance_notes || "",
+          });
+        }
+      }
     } catch (error) {
       console.error("Error loading ambassador data:", error);
     } finally {
@@ -112,30 +92,7 @@ const Ambassador = () => {
     }
   };
 
-  const handleClaimReward = async () => {
-    setIsClaiming(true);
-    try {
-      const result = await referralService.claimAmbassadorReward();
-      if (result.success) {
-        toast({
-          title: "🎉 Rewards Checked!",
-          description:
-            result.rewards_granted.length > 0
-              ? `Unlocked: ${result.rewards_granted.join(", ")}`
-              : "No new rewards to claim yet. Keep referring!",
-        });
-        loadData();
-      } else {
-        toast({ title: "Error", description: result.message, variant: "destructive" });
-      }
-    } catch {
-      toast({ title: "Error", description: "Failed to check rewards", variant: "destructive" });
-    } finally {
-      setIsClaiming(false);
-    }
-  };
-
-  const referralLink = `https://steersolo.com/auth/signup?ref=${referralCode}`;
+  const referralLink = useMemo(() => `https://steersolo.com/auth/signup?ref=${referralCode}`, [referralCode]);
 
   const copyLink = async () => {
     try {
@@ -147,7 +104,7 @@ const Ambassador = () => {
   };
 
   const shareWhatsApp = () => {
-    const msg = `🚀 Join me on SteerSolo and start your online business! Use my link to sign up and we both earn rewards:\n\n${referralLink}`;
+    const msg = `Join SteerSolo with my link. Ambassadors earn 10% commission when referrals subscribe:\n\n${referralLink}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -156,16 +113,44 @@ const Ambassador = () => {
       try {
         await navigator.share({
           title: "Join SteerSolo",
-          text: `Use my referral link to sign up on SteerSolo!`,
+          text: "Use my referral link to sign up on SteerSolo!",
           url: referralLink,
         });
-      } catch {}
+      } catch {
+        // no-op
+      }
     } else {
       copyLink();
     }
   };
 
-  const reachedTiers = new Set(tiers.map((t) => t.tier));
+  const saveEnrollment = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!form.legal_name.trim()) {
+      toast({ title: "Legal name required", description: "Please enter your legal name.", variant: "destructive" });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const result = await referralService.upsertAmbassadorProfile(form);
+      if (!result.success) {
+        toast({ title: "Error", description: result.message, variant: "destructive" });
+        return;
+      }
+
+      toast({
+        title: profile ? "Enrollment details updated" : "Enrollment complete",
+        description: "Your payout profile has been saved.",
+      });
+
+      const refreshed = await referralService.getAmbassadorProfile();
+      if (refreshed.success) setProfile(refreshed.data);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -179,207 +164,118 @@ const Ambassador = () => {
 
   return (
     <PageWrapper patternVariant="dots" patternOpacity={0.3}>
-      <div className="container mx-auto px-4 py-8 max-w-4xl space-y-8">
-        {/* Back button */}
+      <div className="container mx-auto px-4 py-8 max-w-5xl space-y-8">
         <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
           <ArrowLeft className="w-4 h-4" /> Back
         </Button>
 
-        {/* Hero */}
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 rounded-full px-4 py-2">
-            <Crown className="w-5 h-5 text-yellow-600" />
-            <span className="font-semibold text-yellow-700">Ambassador Program</span>
-          </div>
-          <h1 className="text-4xl font-bold font-heading">
-            Refer. Earn.{" "}
-            <span className="bg-gradient-to-r from-yellow-500 to-amber-600 bg-clip-text text-transparent">
-              Level Up.
-            </span>
-          </h1>
-          <p className="text-muted-foreground max-w-lg mx-auto">
-            Share SteerSolo with others and unlock real rewards — free subscriptions,
-            homepage features, and exclusive reseller status.
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-bold font-heading">Ambassador Program</h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Open enrollment for everyone. Share your code and earn <span className="font-semibold text-foreground">10% commission</span> when a referred user successfully pays for subscription.
           </p>
         </div>
 
-        {/* Referral Link */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Open enrollment form</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form className="grid gap-3 md:grid-cols-2" onSubmit={saveEnrollment}>
+              <Input placeholder="Legal name" value={form.legal_name} onChange={(e) => setForm((p) => ({ ...p, legal_name: e.target.value }))} />
+              <Input placeholder="Phone number" value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} />
+              <Input placeholder="Payout bank name" value={form.payout_bank_name} onChange={(e) => setForm((p) => ({ ...p, payout_bank_name: e.target.value }))} />
+              <Input placeholder="Payout bank code" value={form.payout_bank_code} onChange={(e) => setForm((p) => ({ ...p, payout_bank_code: e.target.value }))} />
+              <Input placeholder="Account number" value={form.payout_account_number} onChange={(e) => setForm((p) => ({ ...p, payout_account_number: e.target.value }))} />
+              <Input placeholder="Account name" value={form.payout_account_name} onChange={(e) => setForm((p) => ({ ...p, payout_account_name: e.target.value }))} />
+              <Input placeholder="Tax ID / Compliance ID" value={form.tax_id} onChange={(e) => setForm((p) => ({ ...p, tax_id: e.target.value }))} />
+              <Textarea className="md:col-span-2" placeholder="Compliance notes (optional)" value={form.compliance_notes} onChange={(e) => setForm((p) => ({ ...p, compliance_notes: e.target.value }))} />
+              <div className="md:col-span-2 flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">{profile ? `Enrolled on ${new Date(profile.enrolled_at).toLocaleDateString()}` : "Anyone can register. Fill this once to get paid."}</p>
+                <Button type="submit" disabled={isSaving}>{isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save enrollment"}</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
         <Card className="border-primary/20">
           <CardContent className="pt-6 space-y-4">
             <p className="text-sm text-muted-foreground">Your referral link</p>
             <div className="flex items-center gap-2 bg-muted rounded-lg p-3">
               <code className="text-sm flex-1 truncate">{referralLink}</code>
-              <Button size="sm" variant="outline" onClick={copyLink}>
-                <Copy className="w-4 h-4" />
-              </Button>
+              <Button size="sm" variant="outline" onClick={copyLink}><Copy className="w-4 h-4" /></Button>
             </div>
             <div className="flex gap-2">
-              <Button onClick={shareWhatsApp} className="flex-1 bg-green-600 hover:bg-green-700">
-                <MessageCircle className="w-4 h-4 mr-2" /> WhatsApp
-              </Button>
-              <Button onClick={shareNative} variant="outline" className="flex-1">
-                <Share2 className="w-4 h-4 mr-2" /> Share
-              </Button>
+              <Button onClick={shareWhatsApp} className="flex-1 bg-green-600 hover:bg-green-700"><MessageCircle className="w-4 h-4 mr-2" /> WhatsApp</Button>
+              <Button onClick={shareNative} variant="outline" className="flex-1"><Share2 className="w-4 h-4 mr-2" /> Share</Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Progress Summary */}
+        <div className="grid md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Wallet className="w-4 h-4" /> Pending commission</CardTitle></CardHeader>
+            <CardContent><p className="text-3xl font-bold">₦{stats.pendingCommission.toLocaleString()}</p></CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-base">Paid commission</CardTitle></CardHeader>
+            <CardContent><p className="text-3xl font-bold text-green-600">₦{stats.paidCommission.toLocaleString()}</p></CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Users className="w-4 h-4" />Referral performance</CardTitle></CardHeader>
+            <CardContent><p className="text-3xl font-bold">{stats.totalReferrals}</p></CardContent>
+          </Card>
+        </div>
+
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-500" />
-              Your Progress
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Qualified referrals</span>
-              <span className="font-bold text-primary">{stats.rewardedReferrals}</span>
-            </div>
-            <Progress
-              value={Math.min((stats.rewardedReferrals / 100) * 100, 100)}
-              className="h-3"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>0</span>
-              <span>10</span>
-              <span>50</span>
-              <span>100</span>
-            </div>
+          <CardHeader><CardTitle>Referral performance list</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            {referrals.length === 0 ? (
+              <div className="p-6 text-center text-muted-foreground">No referral records yet.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left p-4">Referred User</th>
+                      <th className="text-left p-4">Status</th>
+                      <th className="text-left p-4">Commission</th>
+                      <th className="text-left p-4">Payment Reference</th>
+                      <th className="text-left p-4">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {referrals.map((referral) => (
+                      <tr key={referral.id} className="border-t border-border hover:bg-muted/30">
+                        <td className="p-4 text-sm font-mono">{referral.referred_id.slice(0, 8)}…</td>
+                        <td className="p-4">
+                          <Badge variant={referral.commission_status === "paid" ? "default" : "secondary"} className="capitalize">{referral.commission_status}</Badge>
+                        </td>
+                        <td className="p-4 font-semibold">{referral.commission_amount ? `₦${referral.commission_amount.toLocaleString()}` : "—"}</td>
+                        <td className="p-4 text-sm text-muted-foreground">{referral.source_payment_reference || "—"}</td>
+                        <td className="p-4 text-sm text-muted-foreground">{new Date(referral.created_at).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Tier Cards */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold font-heading">Milestone Rewards</h2>
-          <div className="grid gap-4 md:grid-cols-3">
-            {TIERS.map((tier) => {
-              const isReached = reachedTiers.has(tier.key);
-              const progress = Math.min(
-                (stats.rewardedReferrals / tier.threshold) * 100,
-                100
-              );
-
-              return (
-                <Card
-                  key={tier.key}
-                  className={`relative overflow-hidden transition-all ${
-                    isReached ? "ring-2 ring-yellow-500/50" : ""
-                  }`}
-                >
-                  {isReached && (
-                    <div className="absolute top-3 right-3">
-                      <CheckCircle2 className="w-6 h-6 text-green-500" />
-                    </div>
-                  )}
-                  <CardContent className="pt-6 space-y-4">
-                    <div
-                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tier.color} flex items-center justify-center`}
-                    >
-                      <tier.icon className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <Badge className={tier.badgeColor}>{tier.label}</Badge>
-                      <p className="text-lg font-bold mt-2">{tier.reward}</p>
-                      <p className="text-sm text-muted-foreground">{tier.description}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span>
-                          {stats.rewardedReferrals}/{tier.threshold} referrals
-                        </span>
-                        <span className="font-semibold">{Math.round(progress)}%</span>
-                      </div>
-                      <Progress value={progress} className="h-2" />
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Claim Button */}
-        <div className="text-center">
-          <Button
-            size="lg"
-            onClick={handleClaimReward}
-            disabled={isClaiming}
-            className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white gap-2"
-          >
-            {isClaiming ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Sparkles className="w-4 h-4" />
-            )}
-            Check & Claim Rewards
-          </Button>
-        </div>
-
-        {/* Leaderboard */}
         {leaderboard.length > 0 && (
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-500" />
-                Top Ambassadors
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {leaderboard.map((entry) => (
-                  <div
-                    key={entry.rank}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
-                  >
-                    <span className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center text-white font-bold text-sm">
-                      {entry.rank}
-                    </span>
-                    <span className="flex-1 font-medium">{entry.name}</span>
-                    <Badge variant="secondary">{entry.count} referrals</Badge>
-                  </div>
-                ))}
-              </div>
+            <CardHeader><CardTitle>Top ambassadors</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              {leaderboard.map((entry) => (
+                <div key={entry.rank} className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+                  <span>{entry.rank}. {entry.name}</span>
+                  <span className="text-sm text-muted-foreground">{entry.count} subs • ₦{entry.commission.toLocaleString()}</span>
+                </div>
+              ))}
             </CardContent>
           </Card>
         )}
-
-        {/* How it works */}
-        <Card className="bg-muted/30">
-          <CardContent className="pt-6">
-            <h3 className="font-bold mb-4">How it works</h3>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <Share2 className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">1. Share your link</p>
-                  <p className="text-xs text-muted-foreground">Send to friends via WhatsApp or social media</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <Users className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">2. They sign up & buy</p>
-                  <p className="text-xs text-muted-foreground">Referral counts when they make their first purchase</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <Gift className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">3. Unlock rewards</p>
-                  <p className="text-xs text-muted-foreground">Hit milestones and claim your rewards automatically</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </PageWrapper>
   );

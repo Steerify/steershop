@@ -89,6 +89,57 @@ export type Database = {
         }
         Relationships: []
       }
+      ambassador_profiles: {
+        Row: {
+          compliance_notes: string | null
+          created_at: string
+          enrolled_at: string
+          enrollment_status: string
+          id: string
+          legal_name: string
+          payout_account_name: string | null
+          payout_account_number: string | null
+          payout_bank_code: string | null
+          payout_bank_name: string | null
+          phone: string | null
+          tax_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          compliance_notes?: string | null
+          created_at?: string
+          enrolled_at?: string
+          enrollment_status?: string
+          id?: string
+          legal_name: string
+          payout_account_name?: string | null
+          payout_account_number?: string | null
+          payout_bank_code?: string | null
+          payout_bank_name?: string | null
+          phone?: string | null
+          tax_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          compliance_notes?: string | null
+          created_at?: string
+          enrolled_at?: string
+          enrollment_status?: string
+          id?: string
+          legal_name?: string
+          payout_account_name?: string | null
+          payout_account_number?: string | null
+          payout_bank_code?: string | null
+          payout_bank_name?: string | null
+          phone?: string | null
+          tax_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       auth_rate_limits: {
         Row: {
           attempt_type: string
@@ -1691,6 +1742,11 @@ export type Database = {
       }
       referrals: {
         Row: {
+          commission_amount: number | null
+          commission_created_at: string | null
+          commission_currency: string | null
+          commission_rate: number
+          commission_status: string
           created_at: string | null
           id: string
           points_earned: number | null
@@ -1699,9 +1755,16 @@ export type Database = {
           referred_id: string
           referrer_id: string
           rewarded_at: string | null
+          source_payment_reference: string | null
+          source_subscription_id: string | null
           status: string | null
         }
         Insert: {
+          commission_amount?: number | null
+          commission_created_at?: string | null
+          commission_currency?: string | null
+          commission_rate?: number
+          commission_status?: string
           created_at?: string | null
           id?: string
           points_earned?: number | null
@@ -1710,9 +1773,16 @@ export type Database = {
           referred_id: string
           referrer_id: string
           rewarded_at?: string | null
+          source_payment_reference?: string | null
+          source_subscription_id?: string | null
           status?: string | null
         }
         Update: {
+          commission_amount?: number | null
+          commission_created_at?: string | null
+          commission_currency?: string | null
+          commission_rate?: number
+          commission_status?: string
           created_at?: string | null
           id?: string
           points_earned?: number | null
@@ -1721,6 +1791,8 @@ export type Database = {
           referred_id?: string
           referrer_id?: string
           rewarded_at?: string | null
+          source_payment_reference?: string | null
+          source_subscription_id?: string | null
           status?: string | null
         }
         Relationships: []
