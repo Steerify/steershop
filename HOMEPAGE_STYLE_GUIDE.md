@@ -222,6 +222,21 @@ background: linear-gradient(180deg, hsl(0 0% 100%), hsl(40 30% 97%));
 - **Medium Sections**: `py-16`
 - **Small Sections**: `py-12`
 
+---
+
+## Theme Usage (PageThemeShell Surfaces)
+
+Use the shared `PageThemeShell` and section surface utilities to keep page rhythm and brand balance consistent:
+
+- **`primary` surfaces** (`theme-surface-primary`): use for page-intro/hero regions, high-priority education blocks, and first-view messaging.
+- **`accent` surfaces** (`theme-surface-accent`): use for conversion sections, trust/benefit strips, and CTA-heavy blocks.
+- **Neutral surfaces** (`theme-surface-neutral`): default for dense reading areas, forms, list content, and FAQs where legibility should dominate.
+
+Rule of thumb:
+1. Start with a `primary` top section.
+2. Alternate to neutral for content-heavy middle sections.
+3. Use `accent` sparingly to highlight conversion moments.
+
 ### Grid Layouts
 - **3 Columns**: `grid md:grid-cols-3 gap-6`
 - **2 Columns**: `grid md:grid-cols-2 gap-6`

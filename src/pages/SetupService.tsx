@@ -7,11 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ArrowLeft, Check, Sparkles, Clock, Palette, Package, MessageSquare, Loader2 } from "lucide-react";
-import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/steersolo-logo.jpg";
+import { PageThemeShell } from "@/components/PageThemeShell";
 
 const SetupService = () => {
   const navigate = useNavigate();
@@ -124,33 +124,33 @@ const SetupService = () => {
   const selectedPackage = packages[formData.packageType];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
-      <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
-      
-      {/* Header */}
-      <nav className="bg-card/80 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50">
-        <div className="h-1 bg-gradient-to-r from-primary via-accent to-primary" />
-        <div className="container mx-auto px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => navigate(-1)}
-                className="mr-2"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-primary/20">
-                <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+    <PageThemeShell
+      header={
+        <nav className="bg-card/80 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50">
+          <div className="h-1 bg-gradient-to-r from-primary via-accent to-primary" />
+          <div className="container mx-auto px-4 py-3 sm:py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => navigate(-1)}
+                  className="mr-2"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-primary/20">
+                  <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+                </div>
+                <span className="text-xl sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  SteerSolo
+                </span>
               </div>
-              <span className="text-xl sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                SteerSolo
-              </span>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      }
+    >
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10 max-w-5xl">
         {/* Hero */}
@@ -341,7 +341,7 @@ const SetupService = () => {
           </div>
         </div>
       </div>
-    </div>
+    </PageThemeShell>
   );
 };
 

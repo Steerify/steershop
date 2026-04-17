@@ -364,9 +364,89 @@
     @apply backdrop-blur-md;
     background: hsl(var(--primary) / 0.9);
   }
+
+  /* Shared page theme shell */
+  .theme-page-shell {
+    background: hsl(var(--background));
+  }
+
+  .theme-bg-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .theme-bg-layer-primary {
+    background: radial-gradient(circle at 8% 2%, hsl(var(--primary) / 0.12), transparent 34%);
+  }
+
+  .theme-bg-layer-accent {
+    background: radial-gradient(circle at 92% 0%, hsl(var(--accent) / 0.1), transparent 32%);
+  }
+
+  .theme-heading {
+    @apply max-w-3xl mx-auto space-y-4;
+  }
+
+  .theme-eyebrow {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold tracking-wide;
+    background: hsl(var(--primary) / 0.12);
+    color: hsl(var(--primary));
+    border: 1px solid hsl(var(--primary) / 0.2);
+  }
+
+  .theme-title {
+    @apply font-heading font-bold text-3xl sm:text-4xl lg:text-5xl tracking-tight;
+  }
+
+  .theme-description {
+    @apply text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto;
+  }
+
+  .theme-section {
+    @apply relative;
+  }
+
+  .theme-card {
+    @apply rounded-2xl border border-border/70 bg-card;
+    box-shadow: 0 10px 30px -12px hsl(var(--primary) / 0.22);
+  }
+
+  .theme-cta {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm sm:text-base font-semibold transition-all duration-200;
+  }
+
+  .theme-cta-primary {
+    @apply text-primary-foreground;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  }
+
+  .theme-cta-accent {
+    @apply text-accent-foreground;
+    background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)));
+  }
+
+  .theme-cta-ghost {
+    @apply border border-border bg-card/60 text-foreground hover:bg-muted;
+  }
+
+
 }
 
 @layer utilities {
+
+  .theme-surface-primary {
+    background: linear-gradient(180deg, hsl(var(--primary) / 0.07), transparent 70%);
+  }
+
+  .theme-surface-accent {
+    background: linear-gradient(180deg, hsl(var(--accent) / 0.08), transparent 72%);
+  }
+
+  .theme-surface-neutral {
+    background: linear-gradient(180deg, hsl(var(--card) / 0.7), hsl(var(--background) / 0.65));
+  }
   /* Animation utilities */
   .animate-fade-up {
     animation: fadeUp 0.6s ease-out forwards;

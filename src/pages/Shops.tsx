@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { autoCategorize, getCategoryLabel, BEAUTY_SUBCATEGORIES } from "@/utils/autoCategorize";
 import { Button } from "@/components/ui/button";
 import { useFeaturePhases } from "@/hooks/useFeaturePhases";
+import { PageThemeShell } from "@/components/PageThemeShell";
 
 const VERIFIED_NOTICE_KEY = "steersolo_verified_notice_dismissed";
 const StatChip = ({
@@ -335,8 +336,7 @@ const Shops = () => {
   const showShops = !hasSearchQuery || searchType === 'all' || searchType === 'shops';
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Navbar />
+    <PageThemeShell header={<Navbar />} footer={<Footer />} className="bg-background">
       <VerifiedSellerNotice />
 
       {/* ══════════ HERO ══════════ */}
@@ -705,8 +705,7 @@ const Shops = () => {
         </div>
       </main>
 
-      <Footer />
-    </div>
+    </PageThemeShell>
   );
 };
 
