@@ -418,27 +418,29 @@ const ShopStorefront = () => {
 
         {/* Full-bleed Banner */}
         <div className="relative h-52 sm:h-64 md:h-80 overflow-hidden">
-          {(shop.banner_url || shop.logo_url) && (
-            <div className="absolute inset-0 z-0">
+          {(shop.logo_url || shop.banner_url) && (
+            <div className="absolute inset-0">
               <img
-                src={shop.banner_url || shop.logo_url || ""}
+                src={shop.logo_url || shop.banner_url || ""}
                 alt=""
                 aria-hidden="true"
-                className="w-full h-full object-cover scale-110 blur-xl brightness-50"
+                className="w-full h-full object-cover scale-125 blur-2xl opacity-75"
               />
+              <div className="absolute inset-0 bg-black/55" />
             </div>
           )}
           {shop.banner_url ? (
             <img
               src={shop.banner_url}
               alt={`${shop.shop_name} banner`}
-              className="relative z-10 w-full h-full object-cover scale-105 transition-transform duration-700"
+              className="relative z-[1] w-full h-full object-cover scale-105 transition-transform duration-700 opacity-80"
             />
           ) : (
-            <div className="relative z-10 w-full h-full gradient-hero-spotify" />
+            <div className="relative z-[1] w-full h-full gradient-hero-spotify" />
           )}
           {/* Multi-layer overlay for depth */}
-          <div className="absolute inset-0 z-20 bg-gradient-to-t from-background via-background/25 to-transparent" />
+          <div className="absolute inset-0 z-[2] bg-gradient-to-t from-background via-background/40 to-transparent" />
+          <div className="absolute inset-0 z-[2] bg-gradient-to-r from-background/30 to-transparent" />
         </div>
 
         {/* Shop Identity Card — overlaps the banner */}
