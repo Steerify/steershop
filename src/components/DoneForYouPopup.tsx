@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -72,6 +72,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
   const [productType, setProductType] = useState<"product" | "service">("product");
   const [productPreviewUrl, setProductPreviewUrl] = useState("");
   const [productFile, setProductFile] = useState<File | null>(null);
+  const activeBlobPreviewUrlRef = useRef<string | null>(null);
 
   // Payment / creating
   const [isPayingLoading, setIsPayingLoading] = useState(false);
@@ -107,6 +108,26 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
     }
   }, [open]);
 
+  const revokeActiveBlobPreviewUrl = useCallback(() => {
+    const activeBlobUrl = activeBlobPreviewUrlRef.current;
+    if (activeBlobUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(activeBlobUrl);
+    }
+    activeBlobPreviewUrlRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      revokeActiveBlobPreviewUrl();
+    };
+  }, [revokeActiveBlobPreviewUrl]);
+
+  useEffect(() => {
+    if (!open) {
+      revokeActiveBlobPreviewUrl();
+    }
+  }, [open, revokeActiveBlobPreviewUrl]);
+
   const handleGoToProducts = () => {
     if (!businessName.trim() || !whatsappNumber.trim()) {
       toast({
@@ -128,6 +149,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
       ...prev,
       { name: productName, price: parseInt(productPrice), type: productType, imageUrl: productPreviewUrl, file: productFile }
     ]);
+    revokeActiveBlobPreviewUrl();
     setProductName("");
     setProductPrice("");
     setProductPreviewUrl("");
@@ -330,6 +352,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
     setDraftProducts([]);
     setProductName("");
     setProductPrice("");
+    revokeActiveBlobPreviewUrl();
     setProductPreviewUrl("");
     setProductFile(null);
     setShopId("");
@@ -337,9 +360,12 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
   };
 
   const handleFileSelect = (file: File | null) => {
+    revokeActiveBlobPreviewUrl();
     setProductFile(file);
     if (file) {
-      setProductPreviewUrl(URL.createObjectURL(file));
+      const blobPreviewUrl = URL.createObjectURL(file);
+      activeBlobPreviewUrlRef.current = blobPreviewUrl;
+      setProductPreviewUrl(blobPreviewUrl);
     } else {
       setProductPreviewUrl("");
     }
@@ -473,6 +499,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
                     // When autoUpload is false, onChange won't be called with a remote URL
                     // but we handle clear via empty string
                     if (!url) {
+                      revokeActiveBlobPreviewUrl();
                       setProductPreviewUrl("");
                       setProductFile(null);
                     }
