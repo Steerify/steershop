@@ -418,18 +418,29 @@ const ShopStorefront = () => {
 
         {/* Full-bleed Banner */}
         <div className="relative h-52 sm:h-64 md:h-80 overflow-hidden">
+          {(shop.logo_url || shop.banner_url) && (
+            <div className="absolute inset-0">
+              <img
+                src={shop.logo_url || shop.banner_url || ""}
+                alt=""
+                aria-hidden="true"
+                className="w-full h-full object-cover scale-125 blur-2xl opacity-75"
+              />
+              <div className="absolute inset-0 bg-black/55" />
+            </div>
+          )}
           {shop.banner_url ? (
             <img
               src={shop.banner_url}
               alt={`${shop.shop_name} banner`}
-              className="w-full h-full object-cover scale-105 transition-transform duration-700"
+              className="relative z-[1] w-full h-full object-cover scale-105 transition-transform duration-700 opacity-80"
             />
           ) : (
-            <div className="w-full h-full gradient-hero-spotify" />
+            <div className="relative z-[1] w-full h-full gradient-hero-spotify" />
           )}
           {/* Multi-layer overlay for depth */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/20 to-transparent" />
+          <div className="absolute inset-0 z-[2] bg-gradient-to-t from-background via-background/40 to-transparent" />
+          <div className="absolute inset-0 z-[2] bg-gradient-to-r from-background/30 to-transparent" />
         </div>
 
         {/* Shop Identity Card — overlaps the banner */}
@@ -532,7 +543,7 @@ const ShopStorefront = () => {
                 {completedOrders > 0 && (
                   <div className="flex items-center gap-1.5 bg-primary/5 border border-primary/20 rounded-xl px-3 py-1.5">
                     <ShoppingBag className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-xs font-medium text-primary">{completedOrders} orders</span>
+                    <span className="text-xs font-medium text-primary">{completedOrders} successful trades</span>
                   </div>
                 )}
                 {productCount > 0 && (
@@ -701,7 +712,11 @@ const ShopStorefront = () => {
                 data-tour={index === 0 ? "product-card" : undefined}
               >
                 {/* Product Image */}
-                <Link to={`/shop/${slug}/product/${product.id}`} className="relative block overflow-hidden bg-muted aspect-square">
+                <Link
+                  to={`/shop/${slug}/product/${product.id}`}
+                  className="relative block overflow-hidden bg-muted aspect-square"
+                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                >
                   <ProductMediaCard
                     imageUrl={product.image_url}
                     videoUrl={product.video_url}
@@ -764,7 +779,7 @@ const ShopStorefront = () => {
 
                 {/* Product Info */}
                 <div className="flex min-h-0 flex-col flex-1 p-3 sm:p-4">
-                  <Link to={`/shop/${slug}/product/${product.id}`}>
+                  <Link to={`/shop/${slug}/product/${product.id}`} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
                     <h3 className="min-h-0 font-semibold text-sm sm:text-base leading-snug line-clamp-2 hover:text-accent transition-colors mb-1">
                       {product.name}
                     </h3>
@@ -812,37 +827,39 @@ const ShopStorefront = () => {
                   </div>
 
                   {/* CTA Buttons */}
-                  <div className="mt-auto flex gap-1.5 max-[430px]:flex-col">
+                  <div className="mt-auto space-y-2">
                     {product.type === 'service' && product.booking_required ? (
                       <Button
-                        className="flex-1 h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm shadow-sm shadow-purple-500/20 gap-1.5 transition-all max-[430px]:w-full"
+                        className="w-full h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm shadow-sm shadow-purple-500/20 gap-1.5 transition-all"
                         onClick={(e) => { e.preventDefault(); handleBookService(product); }}
                         disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                       >
                         <Calendar className="w-3.5 h-3.5" />
-                        <span className="hidden xs:inline">Book</span> Now
+                        Book Now
                       </Button>
                     ) : (
                       <Button
-                        className="flex-1 h-9 rounded-xl hover:opacity-90 font-semibold text-sm shadow-sm shadow-accent/20 gap-1.5 transition-all max-[430px]:w-full" style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
+                        className="w-full h-9 rounded-xl text-white hover:opacity-90 font-semibold text-sm shadow-sm shadow-accent/20 gap-1.5 transition-all"
+                        style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
                         onClick={(e) => { e.preventDefault(); addToCart(product); }}
                         disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                       >
                         <ShoppingCart className="w-3 h-3" />
-                        <span className="hidden xs:inline">Add to</span> Cart
+                        Add to Cart
                       </Button>
                     )}
-
-                    <Link to={`/shop/${slug}/product/${product.id}`} className="md:hidden">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9 rounded-xl border-border hover:border-accent/50 hover:bg-accent/5 flex-shrink-0 transition-all max-[430px]:w-full"
-                      >
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </Button>
-                    </Link>
-                    <WishlistButton productId={product.id} className="h-9 w-9 p-0 rounded-xl max-[430px]:w-full" />
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <Link to={`/shop/${slug}/product/${product.id}`} className="w-full">
+                        <Button
+                          variant="outline"
+                          className="w-full h-9 rounded-xl border-border hover:border-accent/50 hover:bg-accent/5 transition-all"
+                        >
+                          Details
+                          <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                        </Button>
+                      </Link>
+                      <WishlistButton productId={product.id} className="h-9 w-full rounded-xl" />
+                    </div>
                   </div>
 
                   {/* Review Actions */}
