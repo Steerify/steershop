@@ -92,12 +92,21 @@ export default function AdminCourses() {
   // Collection CRUD
   const handleCollectionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const sortOrder = Number(collectionForm.sort_order);
+    if (!Number.isFinite(sortOrder) || !Number.isInteger(sortOrder) || sortOrder < 0) {
+      toast({
+        title: "Invalid sort order",
+        description: "Sort order must be a whole number of 0 or more.",
+        variant: "destructive",
+      });
+      return;
+    }
     const payload = {
       name: collectionForm.name,
       description: collectionForm.description || null,
       cover_image_url: collectionForm.cover_image_url || null,
       is_active: collectionForm.is_active,
-      sort_order: parseInt(collectionForm.sort_order) || 0,
+      sort_order: sortOrder,
     };
 
     if (editingCollection) {
@@ -130,6 +139,15 @@ export default function AdminCourses() {
   // Tutorial CRUD
   const handleTutorialSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const rewardPoints = Number(tutorialForm.reward_points);
+    if (!Number.isFinite(rewardPoints) || !Number.isInteger(rewardPoints) || rewardPoints < 0) {
+      toast({
+        title: "Invalid reward points",
+        description: "Reward points must be a whole number of 0 or more.",
+        variant: "destructive",
+      });
+      return;
+    }
     const socialLinks: Record<string, string> = {};
     if (tutorialForm.youtube_url) socialLinks.youtube = tutorialForm.youtube_url;
     if (tutorialForm.instagram_url) socialLinks.instagram = tutorialForm.instagram_url;
@@ -141,7 +159,7 @@ export default function AdminCourses() {
       content: tutorialForm.description || "Video tutorial", // content is required
       video_url: tutorialForm.video_url || null,
       image_url: tutorialForm.image_url || null,
-      reward_points: parseInt(tutorialForm.reward_points) || 0,
+      reward_points: rewardPoints,
       is_active: tutorialForm.is_active,
       target_audience: tutorialForm.target_audience,
       collection_id: tutorialForm.collection_id || null,
@@ -247,7 +265,7 @@ export default function AdminCourses() {
                     <ImageUpload label="Cover Image" value={collectionForm.cover_image_url} onChange={url => setCollectionForm({ ...collectionForm, cover_image_url: url })} />
                     <div>
                       <Label>Sort Order</Label>
-                      <Input type="number" value={collectionForm.sort_order} onChange={e => setCollectionForm({ ...collectionForm, sort_order: e.target.value })} />
+                      <Input type="number" min="0" step="1" value={collectionForm.sort_order} onChange={e => setCollectionForm({ ...collectionForm, sort_order: e.target.value })} />
                     </div>
                     <div className="flex items-center gap-2">
                       <input type="checkbox" checked={collectionForm.is_active} onChange={e => setCollectionForm({ ...collectionForm, is_active: e.target.checked })} />
@@ -368,7 +386,7 @@ export default function AdminCourses() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label>Reward Points</Label>
-                        <Input type="number" value={tutorialForm.reward_points} onChange={e => setTutorialForm({ ...tutorialForm, reward_points: e.target.value })} min="0" />
+                        <Input type="number" min="0" step="1" value={tutorialForm.reward_points} onChange={e => setTutorialForm({ ...tutorialForm, reward_points: e.target.value })} />
                       </div>
                       <div>
                         <Label>Target Audience</Label>

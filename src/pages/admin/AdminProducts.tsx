@@ -92,14 +92,36 @@ export default function AdminProducts() {
   const handleSave = async () => {
     if (!selectedProduct) return;
     setIsSaving(true);
+    const parsedPrice = Number(formData.price);
+    const parsedStock = Number(formData.stock_quantity);
+
+    if (!Number.isFinite(parsedPrice) || !Number.isInteger(parsedPrice) || parsedPrice <= 0) {
+      toast({
+        title: "Invalid price",
+        description: "Price must be a whole number greater than 0.",
+        variant: "destructive",
+      });
+      setIsSaving(false);
+      return;
+    }
+
+    if (!Number.isFinite(parsedStock) || !Number.isInteger(parsedStock) || parsedStock < 0) {
+      toast({
+        title: "Invalid stock",
+        description: "Stock quantity must be a whole number of 0 or more.",
+        variant: "destructive",
+      });
+      setIsSaving(false);
+      return;
+    }
 
     const { error } = await supabase
       .from("products")
       .update({
         name: formData.name,
         description: formData.description,
-        price: parseFloat(formData.price),
-        stock_quantity: parseInt(formData.stock_quantity),
+        price: parsedPrice,
+        stock_quantity: parsedStock,
         is_available: formData.is_available,
       })
       .eq("id", selectedProduct.id);
@@ -328,6 +350,8 @@ export default function AdminProducts() {
                   <Label>Price (₦)</Label>
                   <Input
                     type="number"
+                    min="1"
+                    step="1"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   />
@@ -336,6 +360,8 @@ export default function AdminProducts() {
                   <Label>Stock</Label>
                   <Input
                     type="number"
+                    min="0"
+                    step="1"
                     value={formData.stock_quantity}
                     onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
                   />

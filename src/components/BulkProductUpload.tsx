@@ -259,8 +259,13 @@ export const BulkProductUpload = ({ open, onClose, shopId, onSuccess }: BulkProd
                           <div className="flex gap-2">
                             <Input
                               type="number"
+                              min="1"
+                              step="1"
                               value={draft.price}
-                              onChange={(e) => updateDraft(i, "price", parseFloat(e.target.value) || 0)}
+                              onChange={(e) => {
+                                const parsedPrice = Number(e.target.value);
+                                updateDraft(i, "price", Number.isFinite(parsedPrice) && Number.isInteger(parsedPrice) && parsedPrice > 0 ? parsedPrice : 0);
+                              }}
                               placeholder="Price"
                               className="h-8 text-sm w-28"
                             />

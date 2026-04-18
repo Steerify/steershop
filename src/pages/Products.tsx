@@ -275,11 +275,52 @@ const Products = () => {
     e.preventDefault();
     setErrors({});
 
+    const parsedPrice = Number(formData.price);
+    const parsedInventory = Number(formData.inventory);
+    const parsedDuration = formData.duration_minutes ? Number(formData.duration_minutes) : undefined;
+    const parsedComparePrice = formData.comparePrice ? Number(formData.comparePrice) : undefined;
+
+    if (!Number.isFinite(parsedPrice) || !Number.isInteger(parsedPrice) || parsedPrice <= 0) {
+      toast({
+        title: "Invalid price",
+        description: "Selling price must be a whole number greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!Number.isFinite(parsedInventory) || !Number.isInteger(parsedInventory) || parsedInventory < 0) {
+      toast({
+        title: "Invalid stock",
+        description: "Stock quantity must be a whole number of 0 or more.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (parsedDuration !== undefined && (!Number.isFinite(parsedDuration) || !Number.isInteger(parsedDuration) || parsedDuration <= 0)) {
+      toast({
+        title: "Invalid duration",
+        description: "Duration must be a whole number greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (parsedComparePrice !== undefined && (!Number.isFinite(parsedComparePrice) || !Number.isInteger(parsedComparePrice) || parsedComparePrice <= 0)) {
+      toast({
+        title: "Invalid original price",
+        description: "Original price must be a whole number greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const validation = productSchema.safeParse({
       ...formData,
-      price: parseFloat(formData.price),
-      inventory: parseInt(formData.inventory),
-      duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : undefined,
+      price: parsedPrice,
+      inventory: parsedInventory,
+      duration_minutes: parsedDuration,
     });
 
     if (!validation.success) {
@@ -307,12 +348,12 @@ const Products = () => {
         name: formData.name,
         slug: formData.name.toLowerCase().replace(/ /g, '-'),
         description: formData.description,
-        price: parseFloat(formData.price),
-        comparePrice: formData.comparePrice ? parseFloat(formData.comparePrice) : undefined,
-        inventory: parseInt(formData.inventory),
+        price: parsedPrice,
+        comparePrice: parsedComparePrice,
+        inventory: parsedInventory,
         images: images,
         type: formData.type,
-        duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : undefined,
+        duration_minutes: parsedDuration,
         booking_required: formData.booking_required,
         is_available: formData.is_available,
         video_url: videoUrl || undefined,
@@ -691,6 +732,8 @@ const Products = () => {
                   <Input
                     id="comparePrice"
                     type="number"
+                    min="1"
+                    step="1"
                     value={formData.comparePrice}
                     onChange={(e) => setFormData({ ...formData, comparePrice: e.target.value })}
                     placeholder="e.g. 5000"
@@ -702,6 +745,8 @@ const Products = () => {
                   <Input
                     id="price"
                     type="number"
+                    min="1"
+                    step="1"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     placeholder="0.00"
@@ -728,6 +773,8 @@ const Products = () => {
                   <Input
                     id="inventory"
                     type="number"
+                    min="0"
+                    step="1"
                     value={formData.inventory}
                     onChange={(e) => setFormData({ ...formData, inventory: e.target.value })}
                     placeholder="0"
@@ -745,6 +792,8 @@ const Products = () => {
                   <Input
                     id="duration_minutes"
                     type="number"
+                    min="1"
+                    step="1"
                     value={formData.duration_minutes}
                     onChange={(e) => setFormData({ ...formData, duration_minutes: e.target.value })}
                     placeholder="e.g., 60"
