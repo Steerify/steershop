@@ -145,6 +145,22 @@
     overflow-x: hidden;
   }
 
+
+  body.homepage-theme {
+    /* Homepage prefers a deep-blue canvas over light blue surfaces */
+    --background: 220 42% 10%;
+    --foreground: 215 24% 94%;
+    --secondary: 220 32% 16%;
+    --secondary-foreground: 215 24% 94%;
+    --muted: 220 26% 18%;
+    --muted-foreground: 215 16% 74%;
+    --card: 220 30% 14%;
+    --card-foreground: 215 24% 94%;
+    --border: 220 22% 26%;
+    --input: 220 22% 26%;
+    --ring: 220 78% 62%;
+  }
+
   body.app-page-theme {
     background-image:
       radial-gradient(circle at 8% 0%, hsl(215 65% 25% / 0.09), transparent 28%),

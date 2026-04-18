@@ -11,6 +11,38 @@ export interface CouponData {
   valid_until?: string;
 }
 
+type CouponValidationInput = {
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number | string;
+  min_order_amount?: number | string | null;
+  max_uses?: number | null;
+  used_count?: number | null;
+  valid_from?: string | null;
+  valid_until?: string | null;
+};
+
+export const calculateCouponDiscount = (coupon: CouponValidationInput, orderTotal: number) => {
+  const now = new Date();
+  if (coupon.valid_from && new Date(coupon.valid_from) > now) {
+    return { valid: false, error: 'Coupon is not active yet', discount: 0 };
+  }
+  if (coupon.valid_until && new Date(coupon.valid_until) < now) {
+    return { valid: false, error: 'Coupon expired', discount: 0 };
+  }
+  if (coupon.max_uses && (coupon.used_count || 0) >= coupon.max_uses) {
+    return { valid: false, error: 'Coupon fully redeemed', discount: 0 };
+  }
+  if (coupon.min_order_amount && orderTotal < Number(coupon.min_order_amount)) {
+    return { valid: false, error: `Minimum order ₦${Number(coupon.min_order_amount).toLocaleString()}`, discount: 0 };
+  }
+
+  const rawDiscount = coupon.discount_type === 'percentage'
+    ? Math.round(orderTotal * Math.min(100, Math.max(0, Number(coupon.discount_value))) / 100)
+    : Math.max(0, Number(coupon.discount_value));
+
+  return { valid: true, discount: Math.min(rawDiscount, orderTotal) };
+};
+
 export const couponService = {
   createCoupon: async (data: CouponData) => {
     const { data: coupon, error } = await supabase
@@ -68,15 +100,8 @@ export const couponService = {
 
     if (error) throw error;
     if (!data) return { valid: false, error: 'Invalid coupon code', discount: 0 };
-    if (data.valid_until && new Date(data.valid_until) < new Date()) return { valid: false, error: 'Coupon expired', discount: 0 };
-    if (data.max_uses && data.used_count >= data.max_uses) return { valid: false, error: 'Coupon fully redeemed', discount: 0 };
-    if (data.min_order_amount && orderTotal < Number(data.min_order_amount)) return { valid: false, error: `Minimum order ₦${Number(data.min_order_amount).toLocaleString()}`, discount: 0 };
-
-    const discount = data.discount_type === 'percentage'
-      ? Math.round(orderTotal * Number(data.discount_value) / 100)
-      : Number(data.discount_value);
-
-    return { valid: true, discount: Math.min(discount, orderTotal), coupon: data };
+    const result = calculateCouponDiscount(data, orderTotal);
+    return { ...result, coupon: result.valid ? data : undefined };
   },
 
   incrementUsage: async (couponId: string) => {

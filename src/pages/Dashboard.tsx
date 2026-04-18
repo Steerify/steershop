@@ -440,7 +440,7 @@ const Dashboard = () => {
     // ── Trial / Expired subscription ──
     if (subscriptionStatus === 'trial') {
       slides.push(
-        <div key="trial" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-accent p-5 min-h-[120px] flex items-center">
+        <div key="trial" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(215,65%,18%)] via-primary to-[hsl(145,58%,30%)] p-5 min-h-[120px] flex items-center">
           {/* decorative blobs */}
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
           <div className="absolute -bottom-6 -left-2 w-16 h-16 rounded-full bg-white/5" />
@@ -796,7 +796,7 @@ const Dashboard = () => {
         {/* ProductNudges moved into carousel */}
 
         {/* Welcome Hero */}
-        <div className="relative rounded-3xl overflow-hidden mb-6 bg-gradient-to-br from-primary via-primary/90 to-accent p-6 shadow-xl">
+        <div className="relative rounded-3xl overflow-hidden mb-6 bg-gradient-to-br from-[hsl(215,65%,18%)] via-primary to-[hsl(145,58%,30%)] p-6 shadow-xl">
           {/* decorative circles */}
           <div className="absolute -top-6 -right-6 w-36 h-36 rounded-full bg-white/5" />
           <div className="absolute -bottom-8 -left-4 w-28 h-28 rounded-full bg-white/5" />
@@ -1074,7 +1074,7 @@ const Dashboard = () => {
 
             {/* Special Offer */}
             {activeOffer && (
-              <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary to-accent text-white shadow-lg">
+              <Card className="overflow-hidden border-0 bg-gradient-to-br from-[hsl(215,65%,20%)] to-[hsl(145,55%,30%)] text-white shadow-lg">
                 <CardContent className="p-5">
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 mt-0.5">

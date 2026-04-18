@@ -15,7 +15,7 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
   const [videoFailed, setVideoFailed] = useState(false);
 
   const handleMouseEnter = () => {
-    if (videoFailed) return;
+    if (videoFailed || isHovered) return;
     setIsHovered(true);
     if (videoRef.current) {
       videoRef.current.play().catch(() => {});
@@ -49,16 +49,18 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
         <img
           src={imageUrl}
           alt={alt}
+          data-testid="product-media-image"
           className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
         />
         <video
           ref={videoRef}
           src={effectiveVideoUrl}
+          data-testid="product-media-video"
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
           muted
           loop
           playsInline
-          preload="auto"
+          preload="metadata"
           onError={handleVideoError}
         />
         {!isHovered && (
@@ -82,11 +84,12 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
         <video
           ref={videoRef}
           src={effectiveVideoUrl}
+          data-testid="product-media-video"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           muted
           loop
           playsInline
-          preload="auto"
+          preload="metadata"
           onError={handleVideoError}
         />
         {!isHovered && (
@@ -106,6 +109,7 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
         <img
           src={imageUrl}
           alt={alt}
+          data-testid="product-media-image"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         {children}

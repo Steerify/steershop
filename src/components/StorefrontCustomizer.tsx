@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,7 @@ import { Palette, Type, LayoutGrid, Loader2, Sparkles, Check, Wand2 } from "luci
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
 
 interface StorefrontCustomizerProps {
   shopId: string;
@@ -134,85 +135,116 @@ export const StorefrontCustomizer = ({
   const [layoutMode, setLayoutMode] = useState(currentThemeMode || "comfortable");
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [autoDesignEnabled, setAutoDesignEnabled] = useState(true);
+  const hasAutoDesignedRef = useRef(false);
 
   const selectedColor = useMemo(
     () => ACCENT_COLORS.find((c) => c.value === accentColor),
     [accentColor]
   );
 
-  const handleAutoFromLogo = async () => {
+  const extractPaletteFromLogo = async () => {
     if (!logoUrl) {
-      toast({ title: "Add logo first", description: "Upload a logo so we can generate colors.", variant: "destructive" });
-      return;
+      throw new Error("Upload a logo so AI can generate your design.");
     }
 
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = logoUrl;
+    });
+
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Unable to process logo colors");
+
+    canvas.width = 80;
+    canvas.height = 80;
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    let pixels = 0;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const alpha = data[i + 3];
+      if (alpha < 40) continue;
+      r += data[i];
+      g += data[i + 1];
+      b += data[i + 2];
+      pixels += 1;
+    }
+
+    if (!pixels) throw new Error("Logo colors not detected");
+
+    const dominant = rgbToHex(r / pixels, g / pixels, b / pixels);
+    const dark = darkenHex(dominant, 0.62);
+    const light = darkenHex(dominant, 0.85);
+
+    return { dominant, dark, light };
+  };
+
+  const handleAutoFromLogo = async ({ silent = false } = {}) => {
     setIsGenerating(true);
     try {
-      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = logoUrl;
-      });
-
-      const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d");
-      if (!context) throw new Error("Unable to process logo colors");
-
-      canvas.width = 80;
-      canvas.height = 80;
-      context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
-
-      let r = 0;
-      let g = 0;
-      let b = 0;
-      let pixels = 0;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const alpha = data[i + 3];
-        if (alpha < 40) continue;
-        r += data[i];
-        g += data[i + 1];
-        b += data[i + 2];
-        pixels += 1;
+      const palette = await extractPaletteFromLogo();
+      setAccentColor(palette.dominant);
+      setPrimaryColor(palette.dark);
+      setSecondaryColor(palette.light);
+      hasAutoDesignedRef.current = true;
+      if (!silent) {
+        toast({ title: "AI design ready", description: "Store colors were generated from your logo." });
       }
-
-      if (!pixels) throw new Error("Logo colors not detected");
-
-      const dominant = rgbToHex(r / pixels, g / pixels, b / pixels);
-      const dark = darkenHex(dominant, 0.62);
-      const light = darkenHex(dominant, 0.85);
-
-      setAccentColor(dominant);
-      setPrimaryColor(dark);
-      setSecondaryColor(light);
-
-      toast({ title: "Design generated", description: "Store colors were generated from your logo." });
+      return palette;
     } catch (error: any) {
-      toast({ title: "Auto design failed", description: error.message || "Try choosing colors manually.", variant: "destructive" });
+      if (!silent) {
+        toast({ title: "Auto design failed", description: error.message || "Try choosing colors manually.", variant: "destructive" });
+      }
+      return null;
     } finally {
       setIsGenerating(false);
     }
   };
 
+  useEffect(() => {
+    if (!autoDesignEnabled || !logoUrl || hasAutoDesignedRef.current) return;
+    // Default behavior: AI prepares the design automatically for shop owners.
+    void handleAutoFromLogo({ silent: true });
+  }, [autoDesignEnabled, logoUrl]);
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      let finalAccentColor = accentColor;
+      let finalPrimaryColor = primaryColor;
+      let finalSecondaryColor = secondaryColor;
+
+      if (autoDesignEnabled && logoUrl) {
+        const palette = await handleAutoFromLogo({ silent: true });
+        if (palette) {
+          finalAccentColor = palette.dominant;
+          finalPrimaryColor = palette.dark;
+          finalSecondaryColor = palette.light;
+        }
+      }
+
       const { error } = await supabase
         .from("shops")
         .update({
-          accent_color: accentColor ? hexToHslTriplet(accentColor) : null,
-          primary_color: primaryColor || null,
-          secondary_color: secondaryColor || null,
+          accent_color: finalAccentColor ? hexToHslTriplet(finalAccentColor) : null,
+          primary_color: finalPrimaryColor || null,
+          secondary_color: finalSecondaryColor || null,
           font_style: fontStyle === "default" ? null : fontStyle,
           theme_mode: layoutMode,
         })
         .eq("id", shopId);
 
       if (error) throw error;
-      toast({ title: "Customizations saved!", description: "Your storefront has been updated." });
+      toast({ title: "Customizations saved!", description: autoDesignEnabled ? "AI autodesign applied and saved." : "Your storefront has been updated." });
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Failed to save", variant: "destructive" });
     } finally {
@@ -233,11 +265,18 @@ export const StorefrontCustomizer = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="rounded-xl border border-border/70 bg-muted/30 p-3 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium">AI Autodesign (Recommended)</p>
+            <p className="text-xs text-muted-foreground">Enabled by default for shop owners to reduce design mistakes.</p>
+          </div>
+          <Switch checked={autoDesignEnabled} onCheckedChange={setAutoDesignEnabled} />
+        </div>
         <Button
           type="button"
           variant="outline"
-          onClick={handleAutoFromLogo}
-          disabled={isGenerating}
+          onClick={() => handleAutoFromLogo()}
+          disabled={isGenerating || !logoUrl}
           className="w-full rounded-xl"
         >
           {isGenerating ? (
