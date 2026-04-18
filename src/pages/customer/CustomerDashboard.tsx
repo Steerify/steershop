@@ -108,7 +108,7 @@ const CustomerDashboard = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-primary/12 via-background to-accent/10 relative">
         <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
         <CustomerSidebar />
         

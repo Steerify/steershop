@@ -57,7 +57,8 @@ const ProductDetails = () => {
     const productUrl = `${shopUrl}/product/${product.id}`;
     const imageUrl = product.image_url || (product.images?.[0]?.url) || '';
     const shopName = shop.shop_name || shop.name || 'Shop';
-    const desc = product.description || `${product.name} available at ${shopName} on SteerSolo`;
+    const fullDescription = product.description || `${product.name} available at ${shopName} on SteerSolo.`;
+    const desc = fullDescription.length > 180 ? `${fullDescription.slice(0, 177)}...` : fullDescription;
 
     document.title = `${product.name} | ${shopName} | SteerSolo`;
 
@@ -71,10 +72,15 @@ const ProductDetails = () => {
     setMeta('name', 'robots', 'index, follow');
     setMeta('property', 'og:title', `${product.name} - ${shopName}`);
     setMeta('property', 'og:description', desc);
+    setMeta('property', 'og:locale', 'en_NG');
     setMeta('property', 'og:url', productUrl);
     setMeta('property', 'og:type', 'product');
     setMeta('property', 'og:site_name', 'SteerSolo');
-    if (imageUrl) { setMeta('property', 'og:image', imageUrl); setMeta('name', 'twitter:image', imageUrl); }
+    if (imageUrl) {
+      setMeta('property', 'og:image', imageUrl);
+      setMeta('property', 'og:image:alt', `${product.name} by ${shopName}`);
+      setMeta('name', 'twitter:image', imageUrl);
+    }
     setMeta('name', 'twitter:card', 'summary_large_image');
     setMeta('name', 'twitter:title', `${product.name} - ${shopName}`);
     setMeta('name', 'twitter:description', desc);
@@ -87,7 +93,7 @@ const ProductDetails = () => {
       "@context": "https://schema.org",
       "@type": "Product",
       "name": product.name,
-      "description": desc,
+      "description": fullDescription,
       "image": imageUrl || undefined,
       "url": productUrl,
       "brand": { "@type": "Brand", "name": shopName },

@@ -29,6 +29,8 @@ const shopService = {
         shop_slug: data.slug,
         description: data.description,
         whatsapp_number: data.whatsapp,
+        state: data.state || null,
+        country: "Nigeria",
         is_active: false,
       })
       .select()
@@ -218,6 +220,8 @@ const shopService = {
     if (data.bank_account_number) updateData.bank_account_number = data.bank_account_number;
     if (data.paystack_public_key) updateData.paystack_public_key = data.paystack_public_key;
     if (data.is_active !== undefined) updateData.is_active = data.is_active;
+    if (data.state !== undefined) updateData.state = data.state;
+    if (data.country !== undefined) updateData.country = data.country;
 
     const { data: shop, error } = await supabase
       .from('shops')

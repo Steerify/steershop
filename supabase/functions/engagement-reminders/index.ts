@@ -27,6 +27,7 @@ serve(async (req) => {
       no_products: 0,
       no_sales: 0,
       expired_subscription: 0,
+      profile_updates: 0,
       errors: [] as string[],
     };
 
@@ -382,6 +383,77 @@ serve(async (req) => {
       }
     } catch (e) {
       const msg = `Scenario 5 (Expired Subscription) failed: ${e instanceof Error ? e.message : String(e)}`;
+      console.error(msg);
+      results.errors.push(msg);
+    }
+
+    // ── Scenario 6: Missing profile/search fields reminder ──
+    try {
+      const { data: shopsToReview } = await supabase
+        .from("shops")
+        .select("id, owner_id, shop_name, shop_slug, state, country")
+        .eq("is_active", true);
+
+      for (const shop of shopsToReview || []) {
+        if (await wasRecentlySent(shop.owner_id, "missing_profile_search_fields")) continue;
+
+        const { data: owner } = await supabase
+          .from("profiles")
+          .select("email, full_name")
+          .eq("id", shop.owner_id)
+          .single();
+        if (!owner?.email) continue;
+
+        const { data: defaultAddress } = await supabase
+          .from("shop_addresses")
+          .select("address_line_1, city, state, country")
+          .eq("shop_id", shop.id)
+          .eq("is_default", true)
+          .maybeSingle();
+
+        const { data: categorizedProduct } = await supabase
+          .from("products")
+          .select("id")
+          .eq("shop_id", shop.id)
+          .neq("category", "general")
+          .limit(1)
+          .maybeSingle();
+
+        const missing: string[] = [];
+        if (!shop.state) missing.push("state");
+        if (!shop.country) missing.push("country");
+        if (!defaultAddress?.address_line_1) missing.push("shop address");
+        if (!categorizedProduct?.id) missing.push("product/shop category");
+
+        if (!missing.length) continue;
+
+        const sent = await sendEmail(
+          owner.email,
+          "Quick profile update needed for better customer search 🔎",
+          `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">
+            <h1 style="color:#1d4ed8">A quick update to improve your visibility</h1>
+            <p>Hi ${owner.full_name || "there"},</p>
+            <p>Your shop <strong>${shop.shop_name}</strong> is live. To help customers find you faster in marketplace search, please update:</p>
+            <ul>
+              ${missing.map((item) => `<li>• ${item}</li>`).join("")}
+            </ul>
+            <p>These details improve discovery by location and category, and help customers trust your profile.</p>
+            <p style="margin-top:16px">
+              <a href="https://steersolo.com/my-store" style="display:inline-block;padding:12px 24px;background:#1d4ed8;color:white;text-decoration:none;border-radius:8px;font-weight:bold">
+                Update My Store Profile →
+              </a>
+            </p>
+            <p style="color:#666;font-size:12px">Thank you for building with SteerSolo. We appreciate you.</p>
+          </div>`
+        );
+
+        if (sent) {
+          await logNotification(shop.owner_id, "missing_profile_search_fields");
+          results.profile_updates++;
+        }
+      }
+    } catch (e) {
+      const msg = `Scenario 6 (Profile Update Reminder) failed: ${e instanceof Error ? e.message : String(e)}`;
       console.error(msg);
       results.errors.push(msg);
     }
