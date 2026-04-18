@@ -1342,8 +1342,13 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                           <Label className="text-xs">Width</Label>
                           <Input
                             type="number"
+                            min="1"
+                            step="1"
                             value={selectedElementData.width}
-                            onChange={(e) => updateElement(selectedElementData.id, { width: parseInt(e.target.value) || 100 })}
+                            onChange={(e) => {
+                              const parsedWidth = Number(e.target.value);
+                              updateElement(selectedElementData.id, { width: Number.isFinite(parsedWidth) && Number.isInteger(parsedWidth) && parsedWidth > 0 ? parsedWidth : 100 });
+                            }}
                             className="h-8 text-sm"
                           />
                         </div>
@@ -1351,8 +1356,13 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                           <Label className="text-xs">Height</Label>
                           <Input
                             type="number"
+                            min="1"
+                            step="1"
                             value={selectedElementData.height}
-                            onChange={(e) => updateElement(selectedElementData.id, { height: parseInt(e.target.value) || 100 })}
+                            onChange={(e) => {
+                              const parsedHeight = Number(e.target.value);
+                              updateElement(selectedElementData.id, { height: Number.isFinite(parsedHeight) && Number.isInteger(parsedHeight) && parsedHeight > 0 ? parsedHeight : 100 });
+                            }}
                             className="h-8 text-sm"
                           />
                         </div>

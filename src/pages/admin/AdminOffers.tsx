@@ -49,10 +49,23 @@ export default function AdminOffers() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    let parsedDiscount: number | null = null;
+
+    if (formData.discount_percentage.trim()) {
+      parsedDiscount = Number(formData.discount_percentage);
+      if (!Number.isFinite(parsedDiscount) || !Number.isInteger(parsedDiscount) || parsedDiscount <= 0) {
+        toast({
+          title: "Invalid discount",
+          description: "Discount percentage must be a whole number greater than 0.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
 
     const offerData = {
       ...formData,
-      discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
+      discount_percentage: parsedDiscount,
       valid_until: formData.valid_until || null,
     };
 
@@ -182,6 +195,8 @@ export default function AdminOffers() {
                     <Input
                       id="discount"
                       type="number"
+                      min="1"
+                      step="1"
                       value={formData.discount_percentage}
                       onChange={(e) => setFormData({ ...formData, discount_percentage: e.target.value })}
                     />

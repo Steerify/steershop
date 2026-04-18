@@ -50,15 +50,46 @@ export const CouponManager = ({ shopId }: CouponManagerProps) => {
       return;
     }
 
+    const discountValue = Number(form.discount_value);
+    const minOrderAmount = form.min_order_amount ? Number(form.min_order_amount) : undefined;
+    const maxUses = form.max_uses ? Number(form.max_uses) : undefined;
+
+    if (!Number.isFinite(discountValue) || !Number.isInteger(discountValue) || discountValue <= 0) {
+      toast({
+        title: "Invalid discount value",
+        description: "Discount value must be a whole number greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (minOrderAmount !== undefined && (!Number.isFinite(minOrderAmount) || !Number.isInteger(minOrderAmount) || minOrderAmount <= 0)) {
+      toast({
+        title: "Invalid minimum order",
+        description: "Minimum order amount must be a whole number greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (maxUses !== undefined && (!Number.isFinite(maxUses) || !Number.isInteger(maxUses) || maxUses <= 0)) {
+      toast({
+        title: "Invalid max uses",
+        description: "Max uses must be a whole number greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsCreating(true);
     try {
       const data: CouponData = {
         shop_id: shopId,
         code: form.code,
         discount_type: form.discount_type,
-        discount_value: Number(form.discount_value),
-        ...(form.min_order_amount && { min_order_amount: Number(form.min_order_amount) }),
-        ...(form.max_uses && { max_uses: Number(form.max_uses) }),
+        discount_value: discountValue,
+        ...(minOrderAmount !== undefined && { min_order_amount: minOrderAmount }),
+        ...(maxUses !== undefined && { max_uses: maxUses }),
         ...(form.valid_until && { valid_until: new Date(form.valid_until).toISOString() }),
       };
 
@@ -136,6 +167,8 @@ export const CouponManager = ({ shopId }: CouponManagerProps) => {
                   <Label>Value</Label>
                   <Input
                     type="number"
+                    min="1"
+                    step="1"
                     value={form.discount_value}
                     onChange={(e) => setForm(prev => ({ ...prev, discount_value: e.target.value }))}
                     placeholder={form.discount_type === "percentage" ? "10" : "500"}
@@ -147,6 +180,8 @@ export const CouponManager = ({ shopId }: CouponManagerProps) => {
                   <Label>Min Order (₦)</Label>
                   <Input
                     type="number"
+                    min="1"
+                    step="1"
                     value={form.min_order_amount}
                     onChange={(e) => setForm(prev => ({ ...prev, min_order_amount: e.target.value }))}
                     placeholder="Optional"
@@ -156,6 +191,8 @@ export const CouponManager = ({ shopId }: CouponManagerProps) => {
                   <Label>Max Uses</Label>
                   <Input
                     type="number"
+                    min="1"
+                    step="1"
                     value={form.max_uses}
                     onChange={(e) => setForm(prev => ({ ...prev, max_uses: e.target.value }))}
                     placeholder="Unlimited"

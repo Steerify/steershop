@@ -34,6 +34,14 @@ export const PayoutRequestDialog = ({
 
   const handleSubmit = async () => {
     const amountNum = Number(amount);
+    if (!Number.isFinite(amountNum) || !Number.isInteger(amountNum) || amountNum <= 0) {
+      toast({
+        title: "Invalid amount",
+        description: "Amount must be a whole number greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (amountNum < MIN_WITHDRAWAL) {
       toast({ title: "Minimum ₦5,000", description: `Minimum withdrawal is ₦${MIN_WITHDRAWAL.toLocaleString()}`, variant: "destructive" });
       return;
@@ -96,6 +104,7 @@ export const PayoutRequestDialog = ({
             <Label>Amount (₦)</Label>
             <Input
               type="number"
+              step="1"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder={`Min ₦${MIN_WITHDRAWAL.toLocaleString()}`}

@@ -64,11 +64,31 @@ export default function AdminPrizes() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const pointsRequired = Number(formData.points_required);
+    const stockQuantity = Number(formData.stock_quantity);
+
+    if (!Number.isFinite(pointsRequired) || !Number.isInteger(pointsRequired) || pointsRequired < 0) {
+      toast({
+        title: "Invalid points",
+        description: "Points required must be a whole number of 0 or more.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!Number.isFinite(stockQuantity) || !Number.isInteger(stockQuantity) || stockQuantity < 0) {
+      toast({
+        title: "Invalid stock quantity",
+        description: "Stock quantity must be a whole number of 0 or more.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const prizeData = {
       ...formData,
-      points_required: parseInt(formData.points_required) || 0,
-      stock_quantity: parseInt(formData.stock_quantity) || 0,
+      points_required: pointsRequired,
+      stock_quantity: stockQuantity,
     };
 
     if (editingPrize) {
@@ -230,6 +250,7 @@ export default function AdminPrizes() {
                     <Input
                       id="points_required"
                       type="number"
+                      step="1"
                       value={formData.points_required}
                       onChange={(e) => setFormData({ ...formData, points_required: e.target.value })}
                       required
@@ -242,6 +263,7 @@ export default function AdminPrizes() {
                     <Input
                       id="stock_quantity"
                       type="number"
+                      step="1"
                       value={formData.stock_quantity}
                       onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
                       required
