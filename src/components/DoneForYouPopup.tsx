@@ -124,9 +124,20 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
       toast({ title: "Missing info", description: "Enter product name and price.", variant: "destructive" });
       return;
     }
+
+    const parsedPrice = Number(productPrice);
+    if (!Number.isFinite(parsedPrice) || !Number.isInteger(parsedPrice) || parsedPrice <= 0) {
+      toast({
+        title: "Invalid price",
+        description: "Price must be a whole number greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setDraftProducts(prev => [
       ...prev,
-      { name: productName, price: parseInt(productPrice), type: productType, imageUrl: productPreviewUrl, file: productFile }
+      { name: productName, price: parsedPrice, type: productType, imageUrl: productPreviewUrl, file: productFile }
     ]);
     setProductName("");
     setProductPrice("");
@@ -454,7 +465,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
                   </div>
                   <div>
                     <Label>Price (₦) *</Label>
-                    <Input type="number" placeholder="e.g. 15000" value={productPrice} onChange={(e) => setProductPrice(e.target.value)} />
+                    <Input type="number" min="1" step="1" placeholder="e.g. 15000" value={productPrice} onChange={(e) => setProductPrice(e.target.value)} />
                   </div>
                 </div>
 
