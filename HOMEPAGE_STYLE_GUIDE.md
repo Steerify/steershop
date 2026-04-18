@@ -11,22 +11,31 @@ This document captures the complete UI/UX design system used on the homepage. Ap
 - **Adire Indigo Blue** (Primary): `hsl(215 65% 25%)` - Main brand color
 - **Nigerian Green** (Accent): `hsl(145 60% 38%)` - Success/action color
 - **Gold/Amber** (Gold): `hsl(42 90% 55%)` - Highlight/premium color
-- **Soft Cream/Sand** (Secondary): `hsl(40 30% 95%)` - Background accent
+- **Soft Slate Blue** (Secondary): `hsl(215 18% 94%)` - Background accent for app pages
 
 ### Background Colors
-- **Main Background**: `hsl(40 20% 98%)` - Warm off-white
-- **Muted Background**: `hsl(40 20% 92%)` - Section backgrounds
-- **Card Background**: `hsl(0 0% 100%)` - Pure white cards
+- **App Pages Main Background**: `hsl(215 20% 98%)` - Cool neutral canvas
+- **Homepage Main Background**: `hsl(220 42% 10%)` - Deep blue-first canvas
+- **Muted Background**: `hsl(220 32% 16%)` - Section alternates on homepage
+- **Card Background**: `hsl(220 30% 14%)` - Elevated dark cards on homepage
 
 ### Text Colors
 - **Foreground**: `hsl(220 45% 15%)` - Dark blue-gray
 - **Muted Foreground**: `hsl(220 15% 45%)` - Secondary text
 
 ### Dark Mode Colors
-- **Background**: `hsl(220 40% 8%)` - Deep dark blue
-- **Primary**: `hsl(145 55% 45%)` - Brighter green
-- **Accent**: `hsl(145 60% 45%)` - Vibrant green
-- **Gold**: `hsl(42 85% 58%)` - Brighter gold
+- **Background**: `hsl(220 38% 7%)` - Deep blue-black
+- **Primary**: `hsl(220 78% 62%)` - Indigo highlight
+- **Accent**: `hsl(132 62% 45%)` - CTA and success accent
+- **Gold**: `hsl(42 88% 58%)` - Highlight color
+
+---
+
+## Homepage Theme Mode (Important)
+
+- The landing page uses `body.homepage-theme` token overrides to keep the experience dark-blue and premium throughout the page flow.
+- Prefer `bg-background`, `bg-secondary/40`, `bg-card`, and semantic text tokens (`text-foreground`, `text-muted-foreground`) so homepage sections adapt automatically.
+- Avoid hard-coded pale blues on homepage sections unless they are part of a chart/data visualization.
 
 ---
 
