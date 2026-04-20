@@ -296,8 +296,7 @@ async function handleWebhook(req: Request): Promise<Response> {
 
       let profileName = ''
       let profileRole = ''
-      let businessName = 'Not provided yet'
-      let businessSlug = ''
+      let onboardingCompleted = false
 
       if (userId) {
         const { data: profile } = await supabase
@@ -309,22 +308,24 @@ async function handleWebhook(req: Request): Promise<Response> {
         profileName = profile?.full_name || ''
         profileRole = profile?.role || ''
 
-        const { data: shop } = await supabase
-          .from('shops')
-          .select('shop_name, shop_slug')
-          .eq('owner_id', userId)
-          .limit(1)
-          .maybeSingle()
+        if ((profile?.role || role) === 'shop_owner') {
+          const { data: onboardingRows } = await supabase
+            .from('onboarding_responses')
+            .select('id')
+            .eq('user_id', userId)
+            .limit(1)
 
-        if (shop?.shop_name) {
-          businessName = shop.shop_name
-          businessSlug = shop.shop_slug || ''
+          onboardingCompleted = !!(onboardingRows && onboardingRows.length > 0)
         }
       }
 
       const resolvedName = fullName || profileName || 'Not provided'
       const resolvedRole = profileRole || role
       const signedUpAt = new Date().toISOString()
+      const userStatus =
+        resolvedRole === 'shop_owner'
+          ? (onboardingCompleted ? 'Entrepreneur account • Onboarding completed' : 'Entrepreneur account • Onboarding pending')
+          : 'Customer account • Active'
 
       const adminSubject = `New signup on SteerSolo: ${payload.data.email}`
       const adminHtml = `
@@ -338,8 +339,7 @@ async function handleWebhook(req: Request): Promise<Response> {
               <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Name</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${resolvedName}</td></tr>
               <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Phone</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${phone}</td></tr>
               <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Role</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${resolvedRole}</td></tr>
-              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Business Name</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${businessName}</td></tr>
-              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Business URL</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${businessSlug ? `https://${ROOT_DOMAIN}/shop/${businessSlug}` : 'Not available yet'}</td></tr>
+              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">User Status</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${userStatus}</td></tr>
               <tr><td style="padding: 10px; font-weight: 700;">Registered At (UTC)</td><td style="padding: 10px;">${signedUpAt}</td></tr>
             </tbody>
           </table>
@@ -351,8 +351,7 @@ async function handleWebhook(req: Request): Promise<Response> {
         `Name: ${resolvedName}`,
         `Phone: ${phone}`,
         `Role: ${resolvedRole}`,
-        `Business Name: ${businessName}`,
-        `Business URL: ${businessSlug ? `https://${ROOT_DOMAIN}/shop/${businessSlug}` : 'Not available yet'}`,
+        `User Status: ${userStatus}`,
         `Registered At (UTC): ${signedUpAt}`,
       ].join('\n')
 
@@ -393,6 +392,77 @@ async function handleWebhook(req: Request): Promise<Response> {
         })
       } else {
         console.log('Admin signup alert queued', { run_id, adminEmail: ADMIN_SIGNUP_EMAIL })
+      }
+
+      // Onboarding / welcome email check:
+      // Explicitly queue a simple onboarding email after signup so users receive next-step guidance.
+      const onboardingSubject =
+        resolvedRole === 'shop_owner'
+          ? 'Welcome to SteerSolo — Complete your onboarding'
+          : 'Welcome to SteerSolo — Start exploring stores'
+      const onboardingMessageId = crypto.randomUUID()
+      const onboardingCtaUrl =
+        resolvedRole === 'shop_owner'
+          ? `https://${ROOT_DOMAIN}/onboarding`
+          : `https://${ROOT_DOMAIN}/shops`
+      const onboardingHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; padding: 16px;">
+          <h2 style="margin: 0 0 10px; color: #123C72;">Welcome to SteerSolo, ${resolvedName === 'Not provided' ? 'there' : resolvedName} 👋</h2>
+          <p style="margin: 0 0 14px; color: #475467;">
+            Your account is ready. ${
+              resolvedRole === 'shop_owner'
+                ? 'Complete your onboarding to set up your business details and start selling.'
+                : 'You can now browse trusted stores and start shopping.'
+            }
+          </p>
+          <a href="${onboardingCtaUrl}" style="display:inline-block;background:#123C72;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">
+            ${resolvedRole === 'shop_owner' ? 'Complete Onboarding' : 'Explore Stores'}
+          </a>
+        </div>
+      `
+      const onboardingText = [
+        `Welcome to SteerSolo, ${resolvedName === 'Not provided' ? 'there' : resolvedName}!`,
+        resolvedRole === 'shop_owner'
+          ? 'Complete your onboarding to set up your business details and start selling.'
+          : 'You can now browse trusted stores and start shopping.',
+        `Next step: ${onboardingCtaUrl}`,
+      ].join('\n')
+
+      await supabase.from('email_send_log').insert({
+        message_id: onboardingMessageId,
+        template_name: 'onboarding_welcome',
+        recipient_email: payload.data.email,
+        status: 'pending',
+      })
+
+      const { error: onboardingEnqueueError } = await supabase.rpc('enqueue_email', {
+        queue_name: 'transactional_emails',
+        payload: {
+          run_id,
+          message_id: onboardingMessageId,
+          to: payload.data.email,
+          from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+          sender_domain: SENDER_DOMAIN,
+          subject: onboardingSubject,
+          html: onboardingHtml,
+          text: onboardingText,
+          purpose: 'transactional',
+          label: 'onboarding_welcome',
+          queued_at: new Date().toISOString(),
+        },
+      })
+
+      if (onboardingEnqueueError) {
+        console.error('Failed to enqueue onboarding welcome email', { error: onboardingEnqueueError, run_id })
+        await supabase.from('email_send_log').insert({
+          message_id: onboardingMessageId,
+          template_name: 'onboarding_welcome',
+          recipient_email: payload.data.email,
+          status: 'failed',
+          error_message: 'Failed to enqueue onboarding welcome email',
+        })
+      } else {
+        console.log('Onboarding welcome email queued', { run_id, email: payload.data.email })
       }
     } catch (adminError) {
       console.error('Admin signup alert error (ignored)', { adminError, run_id })
