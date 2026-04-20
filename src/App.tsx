@@ -96,6 +96,10 @@ const OnlineStoreNigeria = lazy(() => import("./pages/seo/OnlineStoreNigeria"));
 const AcceptPayments = lazy(() => import("./pages/seo/AcceptPayments"));
 const SmallBusinessTools = lazy(() => import("./pages/seo/SmallBusinessTools"));
 const SellOnlineNigeria = lazy(() => import("./pages/seo/SellOnlineNigeria"));
+const WhatsAppStoreBuilderNigeria = lazy(() => import("./pages/seo/WhatsAppStoreBuilderNigeria"));
+const InstagramSellerToolsNigeria = lazy(() => import("./pages/seo/InstagramSellerToolsNigeria"));
+const OnlineMarketplaceNigeria = lazy(() => import("./pages/seo/OnlineMarketplaceNigeria"));
+const AcceptPaymentsOnWhatsAppNigeria = lazy(() => import("./pages/seo/AcceptPaymentsOnWhatsAppNigeria"));
 
 // Brand pages
 const BrandPage = lazy(() => import("./pages/BrandPage"));
@@ -169,6 +173,10 @@ const App = () => (
             <Route path="/accept-payments-online" element={<AcceptPayments />} />
             <Route path="/small-business-tools" element={<SmallBusinessTools />} />
             <Route path="/sell-online-nigeria" element={<SellOnlineNigeria />} />
+            <Route path="/whatsapp-store-builder-nigeria" element={<WhatsAppStoreBuilderNigeria />} />
+            <Route path="/instagram-seller-tools-nigeria" element={<InstagramSellerToolsNigeria />} />
+            <Route path="/online-marketplace-nigeria" element={<OnlineMarketplaceNigeria />} />
+            <Route path="/accept-payments-on-whatsapp-nigeria" element={<AcceptPaymentsOnWhatsAppNigeria />} />
             <Route path="/ambassador" element={
               <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR, UserRole.CUSTOMER]}>
                 <Ambassador />
