@@ -146,7 +146,7 @@
   }
 
 
-  body.homepage-theme {
+  .dark body.homepage-theme {
     /* Homepage prefers a deep-blue canvas over light blue surfaces */
     --background: 220 42% 10%;
     --foreground: 215 24% 94%;

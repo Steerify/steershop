@@ -414,23 +414,46 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
             </DialogHeader>
 
             <div className="space-y-4 mt-2">
-            <div className="bg-accent/10 rounded-lg p-4 space-y-2">
-                <p className="font-medium text-sm">What you get:</p>
-                <ul className="space-y-1.5">
+            <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-accent/10 to-primary/5 p-4 space-y-3">
+                <p className="font-semibold text-sm">What you get in 3 quick steps:</p>
+                <div className="space-y-3">
                   {[
-                    "Professional store with your business name",
-                    "AI-crafted description that builds trust",
-                    "Custom store link ready to share",
-                    "WhatsApp ordering set up instantly",
-                    "All your products listed with AI descriptions",
-                    "Free for 5 products or less • ₦5,000 for bulk AI setup (6+)",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm">
-                      <CheckCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                      <span>{item}</span>
-                    </li>
+                    {
+                      title: "1) Your brand foundation",
+                      items: [
+                        "Professional store with your business name",
+                        "AI-crafted description that builds trust",
+                        "Custom store link ready to share",
+                      ],
+                    },
+                    {
+                      title: "2) Selling setup",
+                      items: [
+                        "WhatsApp ordering set up instantly",
+                        "All your products listed with AI descriptions",
+                      ],
+                    },
+                    {
+                      title: "3) Clear pricing",
+                      items: [
+                        "Free for 5 products or less",
+                        "₦5,000 for bulk AI setup (6+)",
+                      ],
+                    },
+                  ].map((section) => (
+                    <div key={section.title} className="rounded-lg bg-background/60 border border-border/50 p-3">
+                      <p className="text-sm font-medium mb-1.5">{section.title}</p>
+                      <ul className="space-y-1.5">
+                        {section.items.map((item) => (
+                          <li key={item} className="flex items-start gap-2 text-sm">
+                            <CheckCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -448,12 +471,12 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <Button onClick={handleGoToProducts} className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90" size="lg">
+              <div className="flex flex-col gap-2 sm:gap-3">
+                <Button onClick={handleGoToProducts} className="w-full bg-gradient-to-r from-primary to-accent text-white hover:opacity-90 shadow-lg shadow-primary/25" size="lg">
                   <Package className="w-4 h-4 mr-2" />
                   Next: Add Your Products
                 </Button>
-                <Button variant="ghost" onClick={handleDismiss} className="text-muted-foreground">
+                <Button variant="outline" onClick={handleDismiss} className="w-full border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted/60">
                   I'll set it up myself
                 </Button>
               </div>
