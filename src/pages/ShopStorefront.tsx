@@ -682,7 +682,7 @@ const ShopStorefront = () => {
           )}
         </div>
 
-        <div className="mx-auto w-full max-w-[26rem] xs:max-w-none">
+        <div className="mx-auto w-full max-w-[26rem] sm:max-w-none">
         {/* ── Empty State ── */}
         {filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -848,7 +848,7 @@ const ShopStorefront = () => {
                         Add to Cart
                       </Button>
                     )}
-                    <div className="grid grid-cols-2 gap-1.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                       <Link to={`/shop/${slug}/product/${product.id}`} className="w-full">
                         <Button
                           variant="outline"
