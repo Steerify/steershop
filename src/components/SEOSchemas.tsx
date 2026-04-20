@@ -7,9 +7,22 @@ export const SEOSchemas = () => {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "SteerSolo",
-      "alternateName": ["Steerify Group", "SteerSolo Nigeria", "Steer Solo", "SteerSolo Online Store Builder", "Nigerian Online Store Creator", "SteerSolo Ecommerce", "SteerSolo WhatsApp Store"],
+      "alternateName": [
+        "Steerify Group",
+        "SteerSolo Nigeria",
+        "Steer Solo",
+        "SteerSolo Online Store Builder",
+        "Nigerian Online Store Creator",
+        "SteerSolo Ecommerce",
+        "SteerSolo WhatsApp Store",
+        "Steersolo",
+        "Steer Soloo",
+        "StearSolo",
+        "SteerSollo",
+        "SteerSoloo"
+      ],
       "url": "https://steersolo.com",
-      "logo": "https://storage.googleapis.com/gpt-engineer-file-uploads/eBsWWGRw3yXgnjWFFzlewkCjL7c2/uploads/1762513867554-SteerSolo%20icon.jpg",
+      "logo": "https://steersolo.com/favicon.jpg",
       "description": "Nigeria's #1 e-commerce platform for solo entrepreneurs. Create your professional online store, receive payments via Paystack, and grow your business.",
       "foundingDate": "2024",
       "knowsAbout": [
@@ -20,7 +33,9 @@ export const SEOSchemas = () => {
         "online checkout", "payment gateway integration", "customer management", "sales analytics",
         "business growth", "digital storefront", "social media selling", "online marketplace",
         "Nigerian entrepreneurs", "solo entrepreneur tools", "business automation", "delivery logistics",
-        "revenue tracking", "subscription commerce", "booking system", "service marketplace"
+        "revenue tracking", "subscription commerce", "booking system", "service marketplace",
+        "online marketplace Nigeria", "digital marketplace for vendors", "social selling tools Nigeria",
+        "small business marketplace", "online storefront Nigeria", "SteerSolo marketplace"
       ],
       "address": {
         "@type": "PostalAddress",

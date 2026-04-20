@@ -575,6 +575,26 @@ const ShopStorefront = () => {
         </div>
       </section>
 
+      {/* ══════════════════ MARKETPLACE EXPLAINER ══════════════════ */}
+      <section className="container mx-auto px-4 pb-8">
+        <div className="rounded-2xl border border-border/60 bg-gradient-to-r from-accent/5 via-background to-primary/5 p-5 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="space-y-1.5">
+            <p className="text-xs uppercase tracking-wider font-semibold text-accent">SteerSolo Marketplace</p>
+            <h3 className="font-display text-lg md:text-xl font-bold">Discover more verified Nigerian stores in one place</h3>
+            <p className="text-sm text-muted-foreground max-w-2xl">
+              Beyond this storefront, SteerSolo connects buyers to trusted sellers across beauty, fashion, food, gadgets, and services.
+              Explore the marketplace to compare stores, find new vendors, and shop faster with confidence.
+            </p>
+          </div>
+          <Link to="/shops" className="md:shrink-0">
+            <Button className="rounded-xl gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90">
+              Visit Marketplace
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
+      </section>
+
       {/* ══════════════════ CATALOG SECTION ══════════════════ */}
       <section className="flex-1 container mx-auto px-4 pb-32 md:pb-20">
 
