@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { FeaturedShopsBanner } from "@/components/FeaturedShopsBanner";
 import { ShopperDiscovery } from "@/components/ShopperDiscovery";
 import { HomepageReviews } from "@/components/HomepageReviews";
+import { SocialProofStats } from "@/components/SocialProofStats";
 import { DynamicPricing } from "@/components/DynamicPricing";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 import whatsappLogo from "@/assets/social/whatsapp-logo.svg";
@@ -653,8 +654,48 @@ const Index = () => (
 
     {/* ══ reused components (theme-aware via Tailwind) ════════════════════ */}
     <FeaturedShopsBanner />
+    <section className="py-8 md:py-10">
+      <div className="container mx-auto px-4 text-center">
+        <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">See why shoppers trust SteerSolo</h2>
+        <p className="text-muted-foreground max-w-2xl mx-auto mb-5">
+          Real buyer experiences show how reliable stores build confidence before checkout.
+        </p>
+        <Link to="/auth/signup" className="inline-flex">
+          <button className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity">
+            Start your trusted store
+          </button>
+        </Link>
+      </div>
+    </section>
     <HomepageReviews />
+    <section className="py-8 md:py-10">
+      <div className="container mx-auto px-4 text-center">
+        <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">Track proof in real time</h2>
+        <p className="text-muted-foreground max-w-2xl mx-auto mb-5">
+          Live performance stats make it easy to verify platform activity and buyer satisfaction.
+        </p>
+        <Link to="/shops" className="inline-flex">
+          <button className="px-6 py-2.5 rounded-full border border-border font-semibold hover:bg-muted transition-colors">
+            Browse active shops
+          </button>
+        </Link>
+      </div>
+    </section>
+    <SocialProofStats />
     <DynamicPricing />
+    <section className="py-8 md:py-10">
+      <div className="container mx-auto px-4 text-center">
+        <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">Discover trusted sellers faster</h2>
+        <p className="text-muted-foreground max-w-2xl mx-auto mb-5">
+          Shop verified businesses with clear trust signals and a straightforward path to purchase.
+        </p>
+        <Link to="/shops" className="inline-flex">
+          <button className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity">
+            Explore verified shops
+          </button>
+        </Link>
+      </div>
+    </section>
     <ShopperDiscovery />
 
     {/* ══════════════════════════════════════════════════════
