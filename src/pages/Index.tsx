@@ -287,6 +287,14 @@ const Index = () => (
       </div>
     </section>
 
+    {/* ══ social proof modules (moved above deep-dive sections) ════════════ */}
+    <section className="bg-background pt-8 md:pt-12">
+      <FeaturedShopsBanner />
+    </section>
+    <section className="bg-background mt-4 md:mt-6">
+      <HomepageReviews />
+    </section>
+
     {/* ══════════════════════════════════════════════════════
         §2  TICKER — Accent green strip
     ══════════════════════════════════════════════════════ */}
@@ -652,8 +660,6 @@ const Index = () => (
     </section>
 
     {/* ══ reused components (theme-aware via Tailwind) ════════════════════ */}
-    <FeaturedShopsBanner />
-    <HomepageReviews />
     <DynamicPricing />
     <ShopperDiscovery />
 
