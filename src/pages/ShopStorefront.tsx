@@ -445,7 +445,7 @@ const ShopStorefront = () => {
 
         {/* Shop Identity Card — overlaps the banner */}
         <div className="container mx-auto px-4">
-          <div className="relative -mt-20 md:-mt-24 pb-6">
+          <div className="relative -mt-14 sm:-mt-16 md:-mt-24 pb-8">
             <div className="bg-card/80 backdrop-blur-2xl border border-border/50 rounded-2xl md:rounded-3xl shadow-2xl shadow-black/10 p-5 md:p-8">
 
               {/* Top row: Logo + Actions */}
@@ -492,19 +492,27 @@ const ShopStorefront = () => {
                     </div>
 
                     {/* Action Buttons */}
-                    <div ref={headerCartRef} className="flex flex-wrap items-center gap-2">
+                    <div
+                      ref={headerCartRef}
+                      className="w-full sm:w-auto grid grid-cols-2 sm:flex sm:flex-wrap items-stretch sm:items-center gap-2 mt-2 sm:mt-0"
+                    >
                       {shop.whatsapp_number && (
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
-                          className="rounded-xl h-10 px-4 border-green-400/40 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/30 hover:border-green-400 transition-all font-medium gap-2"
+                          className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 border-green-400/40 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/30 hover:border-green-400 transition-all font-medium gap-2"
                         >
                           <MessageCircle className="w-4 h-4" />
-                          <span className="hidden sm:inline">Contact</span>
+                          <span>Contact</span>
                         </Button>
                       )}
-                      <TourButton onStartTour={startTour} hasSeenTour={hasSeenTour} onResetTour={resetTour} />
+                      <TourButton
+                        onStartTour={startTour}
+                        hasSeenTour={hasSeenTour}
+                        onResetTour={resetTour}
+                        className="w-full"
+                      />
                       <ShareStorefront
                         shopName={shop.shop_name}
                         shopSlug={shop.shop_slug}
@@ -518,7 +526,8 @@ const ShopStorefront = () => {
                         <Button
                           size="sm"
                           onClick={() => setIsCheckoutOpen(true)}
-                          className="rounded-xl h-10 px-4 hover:opacity-90 shadow-lg shadow-accent/30 font-semibold transition-all gap-2" style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
+                          className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 hover:opacity-90 shadow-lg shadow-accent/30 font-semibold transition-all gap-2"
+                          style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
                           data-tour="cart-button"
                         >
                           <ShoppingCart className="w-4 h-4" />
@@ -576,7 +585,7 @@ const ShopStorefront = () => {
       </section>
 
       {/* ══════════════════ MARKETPLACE EXPLAINER ══════════════════ */}
-      <section className="container mx-auto px-4 pb-8">
+      <section className="container mx-auto px-4 pt-2 md:pt-0 pb-8">
         <div className="rounded-2xl border border-border/60 bg-gradient-to-r from-accent/5 via-background to-primary/5 p-5 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-1.5">
             <p className="text-xs uppercase tracking-wider font-semibold text-accent">SteerSolo Marketplace</p>
