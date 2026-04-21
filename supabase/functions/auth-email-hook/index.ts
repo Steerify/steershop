@@ -46,8 +46,9 @@ const FROM_DOMAIN = "steersolo.com" // Domain shown in From address (may be root
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
 // can always find-and-replace it with the actual recipient when sending test emails,
 // even if the project's domain has changed since the template was scaffolded.
-const SAMPLE_PROJECT_URL = "https://steersolo.lovable.app"
+const SAMPLE_PROJECT_URL = "https://steersolo.com"
 const SAMPLE_EMAIL = "user@example.test"
+const ADMIN_SIGNUP_EMAIL = "steerifygroup@gmail.com"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {
     siteName: SITE_NAME,
@@ -283,6 +284,190 @@ async function handleWebhook(req: Request): Promise<Response> {
   }
 
   console.log('Auth email enqueued', { emailType, email: payload.data.email, run_id })
+
+  // Also notify SteerSolo admin inbox on successful signup (best-effort, non-blocking).
+  if (emailType === 'signup') {
+    try {
+      const metadata = payload?.data?.user_metadata || {}
+      const role = metadata?.role || 'unknown'
+      const fullName = typeof metadata?.full_name === 'string' ? metadata.full_name.trim() : ''
+      const phone = metadata?.phone || 'Not provided'
+      const userId = payload?.data?.user_id || payload?.data?.id || null
+
+      let profileName = ''
+      let profileRole = ''
+      let onboardingCompleted = false
+
+      if (userId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, role')
+          .eq('id', userId)
+          .maybeSingle()
+
+        profileName = profile?.full_name || ''
+        profileRole = profile?.role || ''
+
+        if ((profile?.role || role) === 'shop_owner') {
+          const { data: onboardingRows } = await supabase
+            .from('onboarding_responses')
+            .select('id')
+            .eq('user_id', userId)
+            .limit(1)
+
+          onboardingCompleted = !!(onboardingRows && onboardingRows.length > 0)
+        }
+      }
+
+      const resolvedName = fullName || profileName || 'Not provided'
+      const resolvedRole = profileRole || role
+      const signedUpAt = new Date().toISOString()
+      const userStatus =
+        resolvedRole === 'shop_owner'
+          ? (onboardingCompleted ? 'Entrepreneur account • Onboarding completed' : 'Entrepreneur account • Onboarding pending')
+          : 'Customer account • Active'
+
+      const adminSubject = `New signup on SteerSolo: ${payload.data.email}`
+      const adminHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; padding: 16px;">
+          <h2 style="margin: 0 0 12px; color: #123C72;">New SteerSolo Registration</h2>
+          <p style="margin: 0 0 16px; color: #475467;">A new user just registered successfully.</p>
+
+          <table style="border-collapse: collapse; width: 100%; border: 1px solid #E4E7EC;">
+            <tbody>
+              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Email</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${payload.data.email}</td></tr>
+              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Name</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${resolvedName}</td></tr>
+              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Phone</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${phone}</td></tr>
+              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Role</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${resolvedRole}</td></tr>
+              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">User Status</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${userStatus}</td></tr>
+              <tr><td style="padding: 10px; font-weight: 700;">Registered At (UTC)</td><td style="padding: 10px;">${signedUpAt}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `
+      const adminText = [
+        'New SteerSolo Registration',
+        `Email: ${payload.data.email}`,
+        `Name: ${resolvedName}`,
+        `Phone: ${phone}`,
+        `Role: ${resolvedRole}`,
+        `User Status: ${userStatus}`,
+        `Registered At (UTC): ${signedUpAt}`,
+      ].join('\n')
+
+      const adminMessageId = crypto.randomUUID()
+
+      await supabase.from('email_send_log').insert({
+        message_id: adminMessageId,
+        template_name: 'admin_signup_alert',
+        recipient_email: ADMIN_SIGNUP_EMAIL,
+        status: 'pending',
+      })
+
+      const { error: adminEnqueueError } = await supabase.rpc('enqueue_email', {
+        queue_name: 'transactional_emails',
+        payload: {
+          run_id,
+          message_id: adminMessageId,
+          to: ADMIN_SIGNUP_EMAIL,
+          from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+          sender_domain: SENDER_DOMAIN,
+          subject: adminSubject,
+          html: adminHtml,
+          text: adminText,
+          purpose: 'transactional',
+          label: 'admin_signup_alert',
+          queued_at: new Date().toISOString(),
+        },
+      })
+
+      if (adminEnqueueError) {
+        console.error('Failed to enqueue admin signup alert', { error: adminEnqueueError, run_id })
+        await supabase.from('email_send_log').insert({
+          message_id: adminMessageId,
+          template_name: 'admin_signup_alert',
+          recipient_email: ADMIN_SIGNUP_EMAIL,
+          status: 'failed',
+          error_message: 'Failed to enqueue admin signup alert',
+        })
+      } else {
+        console.log('Admin signup alert queued', { run_id, adminEmail: ADMIN_SIGNUP_EMAIL })
+      }
+
+      // Onboarding / welcome email check:
+      // Explicitly queue a simple onboarding email after signup so users receive next-step guidance.
+      const onboardingSubject =
+        resolvedRole === 'shop_owner'
+          ? 'Welcome to SteerSolo — Complete your onboarding'
+          : 'Welcome to SteerSolo — Start exploring stores'
+      const onboardingMessageId = crypto.randomUUID()
+      const onboardingCtaUrl =
+        resolvedRole === 'shop_owner'
+          ? `https://${ROOT_DOMAIN}/onboarding`
+          : `https://${ROOT_DOMAIN}/shops`
+      const onboardingHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; padding: 16px;">
+          <h2 style="margin: 0 0 10px; color: #123C72;">Welcome to SteerSolo, ${resolvedName === 'Not provided' ? 'there' : resolvedName} 👋</h2>
+          <p style="margin: 0 0 14px; color: #475467;">
+            Your account is ready. ${
+              resolvedRole === 'shop_owner'
+                ? 'Complete your onboarding to set up your business details and start selling.'
+                : 'You can now browse trusted stores and start shopping.'
+            }
+          </p>
+          <a href="${onboardingCtaUrl}" style="display:inline-block;background:#123C72;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">
+            ${resolvedRole === 'shop_owner' ? 'Complete Onboarding' : 'Explore Stores'}
+          </a>
+        </div>
+      `
+      const onboardingText = [
+        `Welcome to SteerSolo, ${resolvedName === 'Not provided' ? 'there' : resolvedName}!`,
+        resolvedRole === 'shop_owner'
+          ? 'Complete your onboarding to set up your business details and start selling.'
+          : 'You can now browse trusted stores and start shopping.',
+        `Next step: ${onboardingCtaUrl}`,
+      ].join('\n')
+
+      await supabase.from('email_send_log').insert({
+        message_id: onboardingMessageId,
+        template_name: 'onboarding_welcome',
+        recipient_email: payload.data.email,
+        status: 'pending',
+      })
+
+      const { error: onboardingEnqueueError } = await supabase.rpc('enqueue_email', {
+        queue_name: 'transactional_emails',
+        payload: {
+          run_id,
+          message_id: onboardingMessageId,
+          to: payload.data.email,
+          from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+          sender_domain: SENDER_DOMAIN,
+          subject: onboardingSubject,
+          html: onboardingHtml,
+          text: onboardingText,
+          purpose: 'transactional',
+          label: 'onboarding_welcome',
+          queued_at: new Date().toISOString(),
+        },
+      })
+
+      if (onboardingEnqueueError) {
+        console.error('Failed to enqueue onboarding welcome email', { error: onboardingEnqueueError, run_id })
+        await supabase.from('email_send_log').insert({
+          message_id: onboardingMessageId,
+          template_name: 'onboarding_welcome',
+          recipient_email: payload.data.email,
+          status: 'failed',
+          error_message: 'Failed to enqueue onboarding welcome email',
+        })
+      } else {
+        console.log('Onboarding welcome email queued', { run_id, email: payload.data.email })
+      }
+    } catch (adminError) {
+      console.error('Admin signup alert error (ignored)', { adminError, run_id })
+    }
+  }
 
   return new Response(
     JSON.stringify({ success: true, queued: true }),

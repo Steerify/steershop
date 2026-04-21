@@ -9,8 +9,8 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { format, differenceInDays } from "date-fns";
-import { PageWrapper } from "@/components/PageWrapper";
 import logo from "@/assets/steersolo-logo.jpg";
+import { PageThemeShell, themeCardClass } from "@/components/PageThemeShell";
 
 interface SubscriptionPlan {
   id: string;
@@ -149,30 +149,32 @@ const Subscription = () => {
   const progressPercentage = subStatus.daysRemaining > 0 ? Math.min((subStatus.daysRemaining / maxDays) * 100, 100) : 0;
 
   return (
-    <PageWrapper patternVariant="dots" patternOpacity={0.5}>
-      {/* Header */}
-      <nav className="bg-card/80 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50">
-        <div className="h-1 bg-gradient-to-r from-primary via-accent to-primary" />
-        <div className="container mx-auto px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="mr-2">
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-primary/20">
-                <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+    <PageThemeShell
+      header={
+        <nav className="bg-card/80 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50">
+          <div className="h-1 bg-gradient-to-r from-primary via-accent to-primary" />
+          <div className="container mx-auto px-4 py-3 sm:py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="mr-2">
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-primary/20">
+                  <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+                </div>
+                <span className="text-xl sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Subscription
+                </span>
               </div>
-              <span className="text-xl sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Subscription
-              </span>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      }
+    >
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-4xl">
         {/* Current Status Card */}
-        <Card className="mb-8 card-spotify">
+        <Card className={`mb-8 ${themeCardClass}`}>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -276,7 +278,7 @@ const Subscription = () => {
         </Card>
 
         {/* Subscription History */}
-        <Card className="mb-8 card-spotify">
+        <Card className={`mb-8 ${themeCardClass}`}>
           <CardHeader>
             <CardTitle className="text-xl font-heading flex items-center gap-2">
               <History className="w-5 h-5" />
@@ -325,7 +327,7 @@ const Subscription = () => {
         </Card>
 
         {/* Available Plans Preview */}
-        <Card className="card-spotify">
+        <Card className={themeCardClass}>
           <CardHeader>
             <CardTitle className="text-xl font-heading">Available Plans</CardTitle>
             <CardDescription>Compare plans and upgrade anytime</CardDescription>
@@ -379,7 +381,7 @@ const Subscription = () => {
           </CardContent>
         </Card>
       </div>
-    </PageWrapper>
+    </PageThemeShell>
   );
 };
 

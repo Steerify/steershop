@@ -38,7 +38,7 @@ export const Footer = () => {
                 SteerSolo
               </Link>
             </div>
-            <p className="text-primary-foreground/80 text-xs sm:text-sm leading-relaxed">
+            <p className="text-white/80 text-xs sm:text-sm leading-relaxed">
               Empowering Nigerian solo entrepreneurs to build, grow, and thrive in the digital economy.
             </p>
             <div className="flex items-center gap-3 sm:gap-4 mt-4 sm:mt-6">
@@ -96,32 +96,32 @@ export const Footer = () => {
             <h4 className="font-heading font-semibold text-sm sm:text-lg mb-3 sm:mb-4 text-gold">Quick Links</h4>
             <ul className="space-y-2 sm:space-y-3">
               <li>
-                <Link to="/shops" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                <Link to="/shops" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   Browse Shops
                 </Link>
               </li>
               <li>
-                <Link to="/auth/login?tab=signup" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                <Link to="/auth/login?tab=signup" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   Start Selling
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                <Link to="/about" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/brand" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                <Link to="/brand" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   Brand
                 </Link>
               </li>
               <li>
-                <Link to="/updates" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                <Link to="/updates" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   Updates
                 </Link>
               </li>
               <li>
-                <Link to="/feedback" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                <Link to="/feedback" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   Contact
                 </Link>
               </li>
@@ -133,17 +133,17 @@ export const Footer = () => {
             <h4 className="font-heading font-semibold text-sm sm:text-lg mb-3 sm:mb-4 text-gold">Support</h4>
             <ul className="space-y-2 sm:space-y-3">
               <li>
-                <Link to="/feedback" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                <Link to="/feedback" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   Help Center
                 </Link>
               </li>
               <li>
-                <Link to="/faq" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                <Link to="/faq" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   FAQs
                 </Link>
               </li>
               <li>
-                <Link to="/feedback" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                <Link to="/feedback" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   Report Issue
                 </Link>
               </li>
@@ -155,12 +155,12 @@ export const Footer = () => {
             <h4 className="font-heading font-semibold text-sm sm:text-lg mb-3 sm:mb-4 text-gold">Legal</h4>
             <ul className="space-y-2 sm:space-y-3">
               <li>
-                <Link to="/terms" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                <Link to="/terms" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link to="/privacy" className="text-primary-foreground/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                <Link to="/privacy" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   Privacy Policy
                 </Link>
               </li>
@@ -171,10 +171,10 @@ export const Footer = () => {
         {/* Bottom Bar */}
         <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/10">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-            <p className="text-primary-foreground/70 text-xs sm:text-sm text-center sm:text-left">
+            <p className="text-white/70 text-xs sm:text-sm text-center sm:text-left">
               © {new Date().getFullYear()} SteerSolo. All rights reserved.
             </p>
-            <div className="flex items-center gap-1 text-xs sm:text-sm text-primary-foreground/70">
+            <div className="flex items-center gap-1 text-xs sm:text-sm text-white/70">
               Made with <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-destructive fill-destructive animate-pulse-soft" /> in Nigeria 🇳🇬
             </div>
           </div>

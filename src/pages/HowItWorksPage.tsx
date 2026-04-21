@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { UserPlus, Palette, Rocket, ShoppingCart, MessageCircle, CreditCard, ArrowRight, CheckCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { PageWrapper } from "@/components/PageWrapper";
+import { PageThemeShell, PageThemeSection, ThemeHeading, themeCardClass, themeCtaClass } from "@/components/PageThemeShell";
 
 const HowItWorksPage = () => {
   const sellerSteps = [
@@ -66,19 +66,17 @@ const HowItWorksPage = () => {
   ];
 
   return (
-    <PageWrapper patternVariant="dots" patternOpacity={0.3}>
-      <Navbar />
+    <PageThemeShell header={<Navbar />} footer={<Footer />}>
       
       <main className="pt-24 pb-16">
         {/* Hero */}
-        <section className="container mx-auto px-4 text-center mb-16">
-          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
-            How SteerSolo Works
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Whether you're here to sell or shop, we've made it simple for everyone.
-          </p>
-        </section>
+        <PageThemeSection surface="primary" className="container mx-auto px-4 text-center mb-16 rounded-3xl">
+          <ThemeHeading
+            title="How SteerSolo Works"
+            description="Whether you're here to sell or shop, we've made it simple for everyone."
+            eyebrow="Product Tour"
+          />
+        </PageThemeSection>
 
         {/* For Sellers */}
         <section className="container mx-auto px-4 mb-20">
@@ -94,7 +92,7 @@ const HowItWorksPage = () => {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {sellerSteps.map((item) => (
-              <Card key={item.step} className="relative hover:shadow-lg transition-all">
+              <Card key={item.step} className={`${themeCardClass} relative hover:shadow-lg transition-all`}>
                 <CardContent className="p-6">
                   <div className="absolute -top-3 -left-3 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">
                     {item.step}
@@ -112,7 +110,7 @@ const HowItWorksPage = () => {
           
           <div className="text-center mt-8">
             <Link to="/auth/signup">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 min-h-[48px]">
+              <Button size="lg" className={`${themeCtaClass.primary} min-h-[48px]`}>
                 Start Selling Now
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
@@ -134,7 +132,7 @@ const HowItWorksPage = () => {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {buyerSteps.map((item) => (
-              <Card key={item.step} className="relative hover:shadow-lg transition-all">
+              <Card key={item.step} className={`${themeCardClass} relative hover:shadow-lg transition-all`}>
                 <CardContent className="p-6">
                   <div className="absolute -top-3 -left-3 w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center font-bold">
                     {item.step}
@@ -161,7 +159,7 @@ const HowItWorksPage = () => {
 
         {/* FAQ Preview */}
         <section className="container mx-auto px-4">
-          <Card className="bg-muted/50">
+          <Card className={`${themeCardClass} bg-muted/50`}>
             <CardContent className="p-8 md:p-12 text-center">
               <h2 className="font-display text-2xl font-bold mb-4">
                 Still Have Questions?
@@ -182,8 +180,7 @@ const HowItWorksPage = () => {
         </section>
       </main>
 
-      <Footer />
-    </PageWrapper>
+    </PageThemeShell>
   );
 };
 

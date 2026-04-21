@@ -216,6 +216,9 @@ const Dashboard = () => {
   const [hasNoShop, setHasNoShop] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "actions" | "wallet">("overview");
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
+  const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(true);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(true);
+  const [isSecondaryPanelsOpen, setIsSecondaryPanelsOpen] = useState(false);
 
   // Carousel state
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -440,7 +443,7 @@ const Dashboard = () => {
     // ── Trial / Expired subscription ──
     if (subscriptionStatus === 'trial') {
       slides.push(
-        <div key="trial" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-accent p-5 min-h-[120px] flex items-center">
+        <div key="trial" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(215,65%,18%)] via-primary to-[hsl(145,58%,30%)] p-5 min-h-[120px] flex items-center">
           {/* decorative blobs */}
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
           <div className="absolute -bottom-6 -left-2 w-16 h-16 rounded-full bg-white/5" />
@@ -678,6 +681,75 @@ const Dashboard = () => {
     { icon: Share2, label: "Invite Vendors", description: "Grow community", path: "/vendor-invite", color: "from-primary/20 to-primary/10", textColor: "text-primary" },
   ];
 
+  const renderSecondaryPanels = () => (
+    <>
+      {/* Profile Completion */}
+      <ProfileCompletionChecklist shop={shopFullData} productsCount={productsCount} />
+
+      {/* Payout Balance */}
+      {shopData && (
+        <Card className="overflow-hidden">
+          <div className="h-0.5 w-full bg-gradient-to-r from-accent to-primary" />
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-sm flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-accent" />
+                Wallet Balance
+              </h3>
+            </div>
+            <div className="text-center mb-4 py-3 bg-gradient-to-br from-accent/5 to-primary/5 rounded-xl">
+              <p className="text-3xl font-extrabold text-primary">₦{payoutBalance.availableBalance.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Available for withdrawal</p>
+              {payoutBalance.totalPending > 0 && (
+                <p className="text-xs text-amber-600 mt-1 font-medium">₦{payoutBalance.totalPending.toLocaleString()} pending</p>
+              )}
+            </div>
+            <Button
+              size="sm"
+              className="w-full"
+              disabled={payoutBalance.availableBalance < 5000}
+              onClick={() => setIsPayoutDialogOpen(true)}
+            >
+              <Banknote className="w-4 h-4 mr-2" />
+              Request Payout
+            </Button>
+            {payoutBalance.availableBalance < 5000 && (
+              <p className="text-xs text-muted-foreground text-center mt-2">Minimum withdrawal: ₦5,000</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Coupon Manager */}
+      {shopData && <CouponManager shopId={shopData.id} />}
+
+      {/* Special Offer */}
+      {activeOffer && (
+        <Card className="overflow-hidden border-0 bg-gradient-to-br from-[hsl(215,65%,20%)] to-[hsl(145,55%,30%)] text-white shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold mb-1 text-sm">Special Offer 🎁</h3>
+                <p className="text-sm opacity-90 mb-3">{activeOffer.description}</p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleSubscribe}
+                  className="bg-white text-primary hover:bg-white/90 font-semibold"
+                >
+                  {activeOffer.button_text || "Claim Offer"}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -796,7 +868,7 @@ const Dashboard = () => {
         {/* ProductNudges moved into carousel */}
 
         {/* Welcome Hero */}
-        <div className="relative rounded-3xl overflow-hidden mb-6 bg-gradient-to-br from-primary via-primary/90 to-accent p-6 shadow-xl">
+        <div className="relative rounded-3xl overflow-hidden mb-6 bg-gradient-to-br from-[hsl(215,65%,18%)] via-primary to-[hsl(145,58%,30%)] p-6 shadow-xl">
           {/* decorative circles */}
           <div className="absolute -top-6 -right-6 w-36 h-36 rounded-full bg-white/5" />
           <div className="absolute -bottom-8 -left-4 w-28 h-28 rounded-full bg-white/5" />
@@ -845,7 +917,10 @@ const Dashboard = () => {
             onTouchEnd={(e) => {
               if (touchStartX === null) return;
               const diff = touchStartX - e.changedTouches[0].clientX;
-              if (Math.abs(diff) > 50) { diff > 0 ? nextSlide() : prevSlide(); }
+              if (Math.abs(diff) > 50) {
+                if (diff > 0) nextSlide();
+                else prevSlide();
+              }
               setTouchStartX(null);
             }}
           >
@@ -894,7 +969,7 @@ const Dashboard = () => {
         )}
 
         {/* ─── Stat Cards ──────────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-8">
           <StatCard
             label="Total Revenue"
             value={`₦${totalRevenue.toLocaleString()}`}
@@ -956,146 +1031,130 @@ const Dashboard = () => {
         })()}
 
         {/* ─── Main Grid ───────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Quick Actions + Chart */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-8">
             {/* Quick Actions */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-bold flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-primary" />
-                  Quick Actions
-                </h2>
-                <button
-                  onClick={() => {
-                    const next = !quickActionsExpanded;
-                    setQuickActionsExpanded(next);
-                    try { localStorage.setItem('quickActionsExpanded', JSON.stringify(next)); } catch {}
-                  }}
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                >
-                  {quickActionsExpanded ? "Show less" : "Show more"}
-                  {quickActionsExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                </button>
+            <Collapsible open={isQuickActionsOpen} onOpenChange={setIsQuickActionsOpen}>
+              <div className="rounded-xl border border-border/60 bg-card/50 p-4 sm:p-5 space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <CollapsibleTrigger className="flex items-center gap-2 text-base font-bold">
+                    <Zap className="w-4 h-4 text-primary" />
+                    Quick Actions
+                    {isQuickActionsOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  </CollapsibleTrigger>
+                  <button
+                    onClick={() => {
+                      const next = !quickActionsExpanded;
+                      setQuickActionsExpanded(next);
+                      try { localStorage.setItem('quickActionsExpanded', JSON.stringify(next)); } catch { /* ignore localStorage errors */ }
+                    }}
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                  >
+                    {quickActionsExpanded ? "Show less" : "Show more"}
+                    {quickActionsExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+                <CollapsibleContent>
+                  <div className="sm:hidden -mx-4 px-4 overflow-x-auto snap-x snap-mandatory pb-2" data-tour="quick-actions">
+                    <div className="flex gap-3 w-max">
+                      {(quickActionsExpanded ? QuickActions : QuickActions.slice(0, 6)).map((action) => (
+                        <div key={action.path + action.label} className="w-[220px] shrink-0 snap-start">
+                          <QuickActionTile
+                            icon={action.icon}
+                            label={action.label}
+                            description={action.description}
+                            onClick={() => navigate(action.path)}
+                            color={action.color}
+                            textColor={action.textColor}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 gap-4" data-tour="quick-actions">
+                    {(quickActionsExpanded ? QuickActions : QuickActions.slice(0, 6)).map((action) => (
+                      <QuickActionTile
+                        key={action.path + action.label}
+                        icon={action.icon}
+                        label={action.label}
+                        description={action.description}
+                        onClick={() => navigate(action.path)}
+                        color={action.color}
+                        textColor={action.textColor}
+                      />
+                    ))}
+                  </div>
+                </CollapsibleContent>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3" data-tour="quick-actions">
-                {(quickActionsExpanded ? QuickActions : QuickActions.slice(0, 6)).map((action) => (
-                  <QuickActionTile
-                    key={action.path + action.label}
-                    icon={action.icon}
-                    label={action.label}
-                    description={action.description}
-                    onClick={() => navigate(action.path)}
-                    color={action.color}
-                    textColor={action.textColor}
-                  />
-                ))}
-              </div>
-            </div>
+            </Collapsible>
 
             {/* Revenue Chart */}
-            <Card className="overflow-hidden" data-tour="sales-analytics">
-              <div className="h-1 w-full bg-gradient-to-r from-primary via-accent to-primary" />
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-bold flex items-center gap-2">
-                    <BarChart2 className="w-4 h-4 text-primary" />
-                    Revenue Trend
-                  </CardTitle>
-                  <Badge variant="outline" className="text-xs">Last 7 days</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[220px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                      <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₦${v}`} width={55} />
-                      <Tooltip
-                        contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}
-                        formatter={(value) => [`₦${Number(value).toLocaleString()}`, 'Revenue']}
-                      />
-                      <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#revenueGrad)" dot={{ r: 3, fill: 'hsl(var(--primary))' }} activeDot={{ r: 5 }} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
+            <Collapsible open={isAnalyticsOpen} onOpenChange={setIsAnalyticsOpen}>
+              <Card className="overflow-hidden" data-tour="sales-analytics">
+                <div className="h-1 w-full bg-gradient-to-r from-primary via-accent to-primary" />
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CollapsibleTrigger className="text-sm font-bold flex items-center gap-2">
+                      <BarChart2 className="w-4 h-4 text-primary" />
+                      Revenue Trend
+                      {isAnalyticsOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                    </CollapsibleTrigger>
+                    <Badge variant="outline" className="text-xs">Last 7 days</Badge>
+                  </div>
+                </CardHeader>
+                <CollapsibleContent>
+                  <CardContent className="pt-2">
+                    <div className="h-[220px] sm:h-[240px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                          <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₦${v}`} width={55} />
+                          <Tooltip
+                            contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}
+                            formatter={(value) => [`₦${Number(value).toLocaleString()}`, 'Revenue']}
+                          />
+                          <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#revenueGrad)" dot={{ r: 3, fill: 'hsl(var(--primary))' }} activeDot={{ r: 5 }} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
           </div>
 
           {/* Right Column */}
-          <div className="space-y-4">
-            {/* Profile Completion */}
-            <ProfileCompletionChecklist shop={shopFullData} productsCount={productsCount} />
-
-            {/* Payout Balance */}
-            {shopData && (
-              <Card className="overflow-hidden">
-                <div className="h-0.5 w-full bg-gradient-to-r from-accent to-primary" />
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-sm flex items-center gap-2">
+          <div className="space-y-6">
+            <div className="lg:hidden">
+              <Collapsible open={isSecondaryPanelsOpen} onOpenChange={setIsSecondaryPanelsOpen}>
+                <div className="rounded-xl border border-border/60 bg-card/50 p-4 space-y-4">
+                  <CollapsibleTrigger className="w-full flex items-center justify-between text-sm font-semibold">
+                    <span className="flex items-center gap-2">
                       <Wallet className="w-4 h-4 text-accent" />
-                      Wallet Balance
-                    </h3>
-                  </div>
-                  <div className="text-center mb-4 py-3 bg-gradient-to-br from-accent/5 to-primary/5 rounded-xl">
-                    <p className="text-3xl font-extrabold text-primary">₦{payoutBalance.availableBalance.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Available for withdrawal</p>
-                    {payoutBalance.totalPending > 0 && (
-                      <p className="text-xs text-amber-600 mt-1 font-medium">₦{payoutBalance.totalPending.toLocaleString()} pending</p>
-                    )}
-                  </div>
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    disabled={payoutBalance.availableBalance < 5000}
-                    onClick={() => setIsPayoutDialogOpen(true)}
-                  >
-                    <Banknote className="w-4 h-4 mr-2" />
-                    Request Payout
-                  </Button>
-                  {payoutBalance.availableBalance < 5000 && (
-                    <p className="text-xs text-muted-foreground text-center mt-2">Minimum withdrawal: ₦5,000</p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Coupon Manager */}
-            {shopData && <CouponManager shopId={shopData.id} />}
-
-            {/* Special Offer */}
-            {activeOffer && (
-              <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary to-accent text-white shadow-lg">
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
-                      <Sparkles className="w-4 h-4" />
+                      Wallet & Tools
+                    </span>
+                    {isSecondaryPanelsOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="space-y-5 pt-1">
+                      {renderSecondaryPanels()}
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold mb-1 text-sm">Special Offer 🎁</h3>
-                      <p className="text-sm opacity-90 mb-3">{activeOffer.description}</p>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={handleSubscribe}
-                        className="bg-white text-primary hover:bg-white/90 font-semibold"
-                      >
-                        {activeOffer.button_text || "Claim Offer"}
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+            </div>
+
+            <div className="hidden lg:block space-y-6">
+              {renderSecondaryPanels()}
+            </div>
 
             {/* Store Status & Help moved into carousel */}
           </div>

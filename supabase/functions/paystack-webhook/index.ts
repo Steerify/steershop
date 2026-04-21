@@ -7,6 +7,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-paystack-signature',
 };
 
+const COMMISSION_RATE = 0.1;
+const VALID_REFERRAL_STATUSES = ['pending', 'qualified', 'rewarded'];
+const REVERSAL_EVENTS = new Set(['refund.processed', 'charge.dispute.create']);
+
+const logInfo = (message: string, context: Record<string, unknown> = {}) => {
+  console.log(JSON.stringify({ level: 'info', message, ...context }));
+};
+
+const logWarn = (message: string, context: Record<string, unknown> = {}) => {
+  console.warn(JSON.stringify({ level: 'warn', message, ...context }));
+};
+
+const logError = (message: string, context: Record<string, unknown> = {}) => {
+  console.error(JSON.stringify({ level: 'error', message, ...context }));
+};
+
+const getPaymentReference = (event: any): string | null => {
+  return (
+    event?.data?.reference ||
+    event?.data?.transaction?.reference ||
+    event?.data?.transaction_ref ||
+    event?.data?.id?.toString?.() ||
+    null
+  );
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -47,13 +73,14 @@ serve(async (req) => {
     }
 
     const event = JSON.parse(body);
-    console.log('Received webhook event:', event.event);
+    const paymentReference = getPaymentReference(event);
+    logInfo('Received webhook event', { event: event.event, paymentReference });
 
     // Handle successful charge event
     if (event.event === 'charge.success') {
       const { user_id, order_id, shop_id } = event.data.metadata || {};
       
-      console.log('Processing charge.success:', { user_id, order_id, shop_id });
+      logInfo('Processing charge.success', { user_id, order_id, shop_id, paymentReference });
 
       // If this is a subscription payment (has user_id OR a plan code)
       const planCode = event.data.plan?.plan_code;
@@ -121,17 +148,120 @@ serve(async (req) => {
             .eq('id', finalUserId);
 
           if (updateError) {
-            console.error('Error updating subscription:', updateError);
+            logError('Error updating subscription', { error: updateError, user_id: finalUserId });
           } else {
-            console.log('Subscription updated via webhook:', {
+            logInfo('Subscription updated via webhook', {
               user_id: finalUserId,
               expires_at: newExpiryDate.toISOString(),
               event: event.event,
               is_recurring: !!planCode
             });
           }
+
+          // Award ambassador commission for successful subscription payments
+          const amountPaidNgn = Math.round((Number(event.data.amount || 0) / 100) * 100) / 100;
+          const commissionAmountNgn = Math.round(amountPaidNgn * COMMISSION_RATE * 100) / 100;
+
+          if (!paymentReference) {
+            logWarn('Missing payment reference for commission processing', { user_id: finalUserId });
+          } else if (commissionAmountNgn <= 0) {
+            logWarn('Skipping commission because computed amount is non-positive', {
+              user_id: finalUserId,
+              amountPaidNgn,
+              commissionAmountNgn,
+              paymentReference,
+            });
+          } else {
+            const { data: referral, error: referralError } = await supabase
+              .from('referrals')
+              .select('id, referrer_id, referred_id, status')
+              .eq('referred_id', finalUserId)
+              .in('status', VALID_REFERRAL_STATUSES)
+              .maybeSingle();
+
+            if (referralError) {
+              logError('Failed to resolve referral for commission', {
+                user_id: finalUserId,
+                paymentReference,
+                error: referralError,
+              });
+            } else if (!referral?.referrer_id) {
+              logInfo('No eligible referral found for subscription commission', {
+                user_id: finalUserId,
+                paymentReference,
+              });
+            } else {
+              const commissionMetadata = {
+                paystack_event: event.event,
+                channel: event.data.channel,
+                currency: event.data.currency || 'NGN',
+                amount_kobo: event.data.amount,
+                customer_email: customerEmail,
+              };
+
+              const { data: commission, error: commissionError } = await supabase
+                .from('ambassador_commissions')
+                .upsert({
+                  referrer_id: referral.referrer_id,
+                  referred_user_id: finalUserId,
+                  referral_id: referral.id,
+                  payment_reference: paymentReference,
+                  amount_paid_ngn: amountPaidNgn,
+                  commission_amount_ngn: commissionAmountNgn,
+                  status: 'awarded',
+                  metadata: commissionMetadata,
+                }, {
+                  onConflict: 'payment_reference,referred_user_id',
+                  ignoreDuplicates: true,
+                })
+                .select('id')
+                .maybeSingle();
+
+              if (commissionError) {
+                logError('Failed to insert ambassador commission', {
+                  paymentReference,
+                  referred_user_id: finalUserId,
+                  referrer_id: referral.referrer_id,
+                  error: commissionError,
+                });
+              } else {
+                const { error: auditLogError } = await supabase.from('activity_logs').insert({
+                  user_id: referral.referrer_id,
+                  action_type: commission?.id ? 'ambassador_commission_awarded' : 'ambassador_commission_duplicate',
+                  resource_type: 'ambassador_commission',
+                  resource_id: commission?.id || null,
+                  resource_name: paymentReference,
+                  details: {
+                    referrer_id: referral.referrer_id,
+                    referred_user_id: finalUserId,
+                    referral_id: referral.id,
+                    payment_reference: paymentReference,
+                    amount_paid_ngn: amountPaidNgn,
+                    commission_amount_ngn: commissionAmountNgn,
+                  },
+                  metadata: commissionMetadata,
+                });
+                if (auditLogError) {
+                  logError('Failed to write commission audit log', {
+                    paymentReference,
+                    referred_user_id: finalUserId,
+                    error: auditLogError,
+                  });
+                }
+
+                logInfo('Ambassador commission processed', {
+                  outcome: commission?.id ? 'awarded' : 'duplicate_ignored',
+                  paymentReference,
+                  referred_user_id: finalUserId,
+                  referrer_id: referral.referrer_id,
+                  amountPaidNgn,
+                  commissionAmountNgn,
+                });
+              }
+            }
+          }
         } else {
-          console.error('Could not identify user for subscription charge:', {
+          logError('Could not identify user for subscription charge', {
             email: customerEmail,
             reference: event.data.reference
           });
@@ -169,9 +299,9 @@ serve(async (req) => {
           .single();
 
         if (revenueError) {
-          console.error('Error recording revenue:', revenueError);
+          logError('Error recording revenue', { error: revenueError, order_id, shop_id, paymentReference });
         } else {
-          console.log('Revenue recorded with platform fee:', { 
+          logInfo('Revenue recorded with platform fee', { 
             shop_id, 
             order_id, 
             grossAmount, 
@@ -193,7 +323,7 @@ serve(async (req) => {
             });
 
           if (earningsError) {
-            console.error('Error recording platform earnings:', earningsError);
+            logError('Error recording platform earnings', { error: earningsError, order_id, shop_id, paymentReference });
           }
         }
 
@@ -207,7 +337,82 @@ serve(async (req) => {
           .eq('id', order_id);
 
         if (orderError) {
-          console.error('Error updating order:', orderError);
+          logError('Error updating order', { error: orderError, order_id, paymentReference });
+        }
+      }
+    }
+
+    if (REVERSAL_EVENTS.has(event.event)) {
+      if (!paymentReference) {
+        logWarn('Skipping commission reversal due to missing payment reference', { event: event.event });
+      } else {
+        const { data: existingCommission, error: fetchError } = await supabase
+          .from('ambassador_commissions')
+          .select('id, referrer_id, referred_user_id, payment_reference, status, metadata')
+          .eq('payment_reference', paymentReference)
+          .neq('status', 'reversed')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (fetchError) {
+          logError('Failed to resolve commission for reversal', { paymentReference, event: event.event, error: fetchError });
+        } else if (!existingCommission) {
+          logInfo('No commission found to reverse', { paymentReference, event: event.event });
+        } else {
+          const reversalMetadata = {
+            reversal_event: event.event,
+            paystack_payload_id: event?.data?.id ?? null,
+            happened_at: new Date().toISOString(),
+          };
+
+          const { error: reverseError } = await supabase
+            .from('ambassador_commissions')
+            .update({
+              status: 'reversed',
+              reversed_at: new Date().toISOString(),
+              reversal_reason: event.event,
+              metadata: {
+                ...(existingCommission.metadata || {}),
+                reversal: reversalMetadata,
+              },
+            })
+            .eq('id', existingCommission.id);
+
+          if (reverseError) {
+            logError('Failed to reverse ambassador commission', {
+              commission_id: existingCommission.id,
+              paymentReference,
+              error: reverseError,
+            });
+          } else {
+            const { error: reversalAuditError } = await supabase.from('activity_logs').insert({
+              user_id: existingCommission.referrer_id,
+              action_type: 'ambassador_commission_reversed',
+              resource_type: 'ambassador_commission',
+              resource_id: existingCommission.id,
+              resource_name: existingCommission.payment_reference,
+              details: {
+                payment_reference: existingCommission.payment_reference,
+                referred_user_id: existingCommission.referred_user_id,
+                reversal_event: event.event,
+              },
+              metadata: reversalMetadata,
+            });
+            if (reversalAuditError) {
+              logError('Failed to write commission reversal audit log', {
+                commission_id: existingCommission.id,
+                paymentReference,
+                error: reversalAuditError,
+              });
+            }
+
+            logInfo('Ambassador commission reversed', {
+              commission_id: existingCommission.id,
+              paymentReference,
+              event: event.event,
+            });
+          }
         }
       }
     }
@@ -220,7 +425,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Webhook error:', error);
+    logError('Webhook error', { error });
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ error: errorMessage }),

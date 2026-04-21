@@ -57,11 +57,32 @@ export const ManualDeliveryForm = ({
       return;
     }
 
+    const deliveryFee = Number(formData.delivery_fee);
+    const estimatedDays = formData.estimated_days ? Number(formData.estimated_days) : undefined;
+
+    if (!Number.isFinite(deliveryFee) || !Number.isInteger(deliveryFee) || deliveryFee <= 0) {
+      toast({
+        title: "Invalid delivery fee",
+        description: "Delivery fee must be a whole number greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (estimatedDays !== undefined && (!Number.isFinite(estimatedDays) || !Number.isInteger(estimatedDays) || estimatedDays <= 0)) {
+      toast({
+        title: "Invalid delivery estimate",
+        description: "Estimated delivery days must be a whole number greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const estimatedDate = formData.estimated_days 
-        ? new Date(Date.now() + parseInt(formData.estimated_days) * 24 * 60 * 60 * 1000).toISOString()
+        ? new Date(Date.now() + estimatedDays! * 24 * 60 * 60 * 1000).toISOString()
         : undefined;
 
       await deliveryService.bookDelivery({
@@ -76,7 +97,7 @@ export const ManualDeliveryForm = ({
           state: formData.pickup_state || '',
         },
         delivery_address: customerAddress,
-        delivery_fee: parseFloat(formData.delivery_fee),
+        delivery_fee: deliveryFee,
         tracking_code: formData.tracking_code || undefined,
         estimated_delivery_date: estimatedDate,
       });
@@ -148,6 +169,8 @@ export const ManualDeliveryForm = ({
                 <Input
                   id="delivery_fee"
                   type="number"
+                  min="1"
+                  step="1"
                   value={formData.delivery_fee}
                   onChange={(e) => setFormData({ ...formData, delivery_fee: e.target.value })}
                   placeholder="0"
@@ -160,6 +183,8 @@ export const ManualDeliveryForm = ({
                 <Input
                   id="estimated_days"
                   type="number"
+                  min="1"
+                  step="1"
                   value={formData.estimated_days}
                   onChange={(e) => setFormData({ ...formData, estimated_days: e.target.value })}
                   placeholder="e.g. 3"

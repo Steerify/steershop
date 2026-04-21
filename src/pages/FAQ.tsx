@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { 
   Search, 
   Rocket, 
@@ -10,7 +9,6 @@ import {
   HelpCircle,
   MessageCircle,
   ArrowRight,
-  ChevronDown,
   Target
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -20,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AdirePattern, AdireDivider } from "@/components/patterns/AdirePattern";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { PageThemeShell, ThemeHeading, PageThemeSection, themeCardClass, themeCtaClass } from "@/components/PageThemeShell";
 
 interface FAQItem {
   question: string;
@@ -224,7 +222,7 @@ const faqCategories: FAQCategory[] = [
 
 const FAQ = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState(faqCategories[0]?.id ?? "all");
 
   const filteredCategories = faqCategories.map(category => ({
     ...category,
@@ -240,32 +238,20 @@ const FAQ = () => {
   const totalResults = filteredCategories.reduce((acc, cat) => acc + cat.faqs.length, 0);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <PageThemeShell header={<Navbar />} footer={<Footer />}>
       
       {/* Hero Section */}
-      <section className="relative pt-24 pb-16 overflow-hidden">
+      <section className="relative pt-24 pb-16 overflow-hidden theme-surface-primary">
         <AdirePattern variant="geometric" className="text-primary" opacity={0.05} />
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 border border-accent/20 rounded-full">
-              <HelpCircle className="w-4 h-4 text-accent" />
-              <span className="text-accent font-semibold text-sm">HELP CENTER</span>
-            </div>
-            
-            <h1 className="font-display text-4xl md:text-5xl font-bold">
-              Frequently Asked{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary">
-                Questions
-              </span>
-            </h1>
-            
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Find answers to common questions about SteerSolo. Can't find what you're looking for? 
-              Contact our support team directly.
-            </p>
+            <ThemeHeading
+              eyebrow={<><HelpCircle className="w-4 h-4" /> HELP CENTER</>}
+              title={<>Frequently Asked <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary">Questions</span></>}
+              description="Find answers to common questions about SteerSolo. Can't find what you're looking for? Contact our support team directly."
+            />
             
             {/* Search Bar */}
             <div className="max-w-xl mx-auto relative">
@@ -291,34 +277,36 @@ const FAQ = () => {
       <AdireDivider className="text-accent" />
 
       {/* Category Tabs and FAQ Content */}
-      <section className="py-12">
+      <PageThemeSection className="py-12">
         <div className="container mx-auto px-4">
           {/* Category Filter */}
-          <div className="flex flex-wrap justify-center gap-2 mb-10">
-            <Button
-              variant={activeCategory === "all" ? "default" : "outline"}
-              onClick={() => setActiveCategory("all")}
-              className="rounded-full"
-            >
-              All Topics
-            </Button>
-            {faqCategories.map((category) => (
+          <div className="mb-10 overflow-x-auto pb-2">
+            <div className="flex w-max min-w-full flex-nowrap justify-start gap-2 whitespace-nowrap md:w-full md:flex-wrap md:justify-center md:whitespace-normal">
               <Button
-                key={category.id}
-                variant={activeCategory === category.id ? "default" : "outline"}
-                onClick={() => setActiveCategory(category.id)}
-                className="rounded-full gap-2"
+                variant={activeCategory === "all" ? "default" : "outline"}
+                onClick={() => setActiveCategory("all")}
+                className="hidden rounded-full md:inline-flex"
               >
-                <category.icon className="w-4 h-4" />
-                {category.name}
+                All Topics
               </Button>
-            ))}
+              {faqCategories.map((category) => (
+                <Button
+                  key={category.id}
+                  variant={activeCategory === category.id ? "default" : "outline"}
+                  onClick={() => setActiveCategory(category.id)}
+                  className="rounded-full gap-2"
+                >
+                  <category.icon className="w-4 h-4" />
+                  {category.name}
+                </Button>
+              ))}
+            </div>
           </div>
 
           {/* FAQ Accordions */}
           <div className="max-w-4xl mx-auto space-y-8">
             {filteredCategories.length === 0 ? (
-              <Card className="text-center py-12 card-spotify">
+              <Card className={`text-center py-12 ${themeCardClass}`}>
                 <CardContent>
                   <HelpCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-xl font-semibold mb-2">No results found</h3>
@@ -332,7 +320,7 @@ const FAQ = () => {
               </Card>
             ) : (
               filteredCategories.map((category) => (
-                <div key={category.id} className="space-y-4">
+                <div key={category.id} className="space-y-4 py-2">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 bg-gradient-to-br from-accent/20 to-primary/20 rounded-lg flex items-center justify-center">
                       <category.icon className="w-5 h-5 text-primary" />
@@ -345,7 +333,7 @@ const FAQ = () => {
                       <AccordionItem 
                         key={idx} 
                         value={`${category.id}-${idx}`}
-                        className="border rounded-xl px-6 bg-card hover:bg-muted/50 transition-colors"
+                        className={`border rounded-xl px-6 bg-card hover:bg-muted/50 transition-colors ${themeCardClass}`}
                       >
                         <AccordionTrigger className="text-left font-semibold py-4 hover:no-underline">
                           {faq.question}
@@ -361,14 +349,14 @@ const FAQ = () => {
             )}
           </div>
         </div>
-      </section>
+      </PageThemeSection>
 
       <AdireDivider className="text-primary" />
 
       {/* Contact Support CTA */}
-      <section className="py-16">
+      <section className="py-16 theme-surface-accent">
         <div className="container mx-auto px-4">
-          <Card className="max-w-3xl mx-auto bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+          <Card className={`max-w-3xl mx-auto bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20 ${themeCardClass}`}>
             <CardContent className="p-8 text-center space-y-6">
               <div className="w-16 h-16 bg-gradient-to-br from-accent to-primary rounded-2xl flex items-center justify-center mx-auto">
                 <MessageCircle className="w-8 h-8 text-white" />
@@ -395,7 +383,7 @@ const FAQ = () => {
                   </Button>
                 </a>
                 <a href="mailto:steerifygroup@gmail.com">
-                  <Button size="lg" variant="outline" className="gap-2 w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className={`${themeCtaClass.ghost} gap-2 w-full sm:w-auto`}>
                     Email Support
                     <ArrowRight className="w-4 h-4" />
                   </Button>
@@ -410,8 +398,7 @@ const FAQ = () => {
         </div>
       </section>
 
-      <Footer />
-    </div>
+    </PageThemeShell>
   );
 };
 

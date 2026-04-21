@@ -18,14 +18,14 @@ interface TourButtonProps {
 export const TourButton = ({ onStartTour, hasSeenTour, onResetTour, className }: TourButtonProps) => {
   return (
     <TooltipProvider>
-      <div className={cn("flex items-center gap-2", className)}>
+      <div className={cn("flex items-center gap-2 w-full", className)}>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="outline"
               size="sm"
               onClick={onStartTour}
-              className="gap-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+              className="w-full h-11 sm:h-10 gap-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5"
             >
               <HelpCircle className="w-4 h-4" />
               {hasSeenTour ? "Help Tour" : "Take Tour"}

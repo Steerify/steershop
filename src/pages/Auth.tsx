@@ -238,10 +238,16 @@ const Auth = () => {
     setAuthError(null);
 
     try {
-      const result = await signIn(data.email, data.password);
+      const normalizedEmail = data.email.trim().toLowerCase();
+      const result = await signIn(normalizedEmail, data.password);
 
       if (result.error) {
-        setAuthError(result.error);
+        const normalizedError = result.error.toLowerCase();
+        if (normalizedError.includes("invalid login credentials")) {
+          setAuthError("Invalid email or password. If you just signed up, verify your email first, then try again.");
+        } else {
+          setAuthError(result.error);
+        }
       } else {
         toast({
           title: "Welcome back!",
@@ -318,7 +324,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex bg-background">
       {/* ── Left brand panel (hidden on mobile) ──────────── */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative overflow-hidden flex-col justify-between bg-gradient-to-br from-primary via-primary/95 to-[hsl(145,55%,28%)] p-12">
+      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative overflow-hidden flex-col justify-between bg-gradient-to-br from-[hsl(215,65%,18%)] via-primary to-[hsl(145,55%,26%)] p-12">
         {/* Background pattern */}
         <AdirePattern variant="geometric" className="absolute inset-0 opacity-10" />
         {/* Blob decorations */}

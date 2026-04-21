@@ -124,6 +124,8 @@ export const ExploreFilters = ({
               <span className="text-xs text-muted-foreground">₦</span>
               <Input
                 type="number"
+                min="1"
+                step="1"
                 placeholder="Min"
                 value={minPrice}
                 onChange={(e) => onMinPriceChange(e.target.value)}
@@ -132,6 +134,8 @@ export const ExploreFilters = ({
               <span className="text-xs text-muted-foreground">–</span>
               <Input
                 type="number"
+                min="1"
+                step="1"
                 placeholder="Max"
                 value={maxPrice}
                 onChange={(e) => onMaxPriceChange(e.target.value)}

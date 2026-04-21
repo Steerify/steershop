@@ -159,7 +159,7 @@ export const FeaturedShopsBanner = () => {
             </div>
             <div>
               <span className="text-sm font-semibold text-foreground">Featured Shops</span>
-              <span className="text-xs text-muted-foreground ml-2 hidden sm:inline">• Curated for you</span>
+              <span className="text-xs text-muted-foreground ml-2 hidden sm:inline">• Curated, active, and trusted stores</span>
             </div>
           </div>
           

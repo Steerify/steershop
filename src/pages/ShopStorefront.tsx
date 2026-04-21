@@ -53,7 +53,10 @@ interface Shop {
   accent_color?: string | null;
   font_style?: string | null;
   theme_mode?: string | null;
+  primary_color?: string | null;
+  secondary_color?: string | null;
 }
+
 
 interface OwnerPlan {
   slug: string | null;
@@ -381,7 +384,10 @@ const ShopStorefront = () => {
   return (
     <div
       className="min-h-screen bg-background flex flex-col"
-      style={{ ...(shop?.accent_color ? { '--accent': shop.accent_color } as any : {}) }}
+      style={{
+        ...(shop?.accent_color ? { '--accent': shop.accent_color } as any : {}),
+        ...(shop?.font_style ? { fontFamily: shop.font_style } : {}),
+      }}
     >
       {shop && (
         <Helmet>
@@ -412,149 +418,191 @@ const ShopStorefront = () => {
 
         {/* Full-bleed Banner */}
         <div className="relative h-52 sm:h-64 md:h-80 overflow-hidden">
+          {(shop.logo_url || shop.banner_url) && (
+            <div className="absolute inset-0">
+              <img
+                src={shop.logo_url || shop.banner_url || ""}
+                alt=""
+                aria-hidden="true"
+                className="w-full h-full object-cover scale-125 blur-2xl opacity-75"
+              />
+              <div className="absolute inset-0 bg-black/55" />
+            </div>
+          )}
           {shop.banner_url ? (
             <img
               src={shop.banner_url}
               alt={`${shop.shop_name} banner`}
-              className="w-full h-full object-cover scale-105 transition-transform duration-700"
+              className="relative z-[1] w-full h-full object-cover scale-105 transition-transform duration-700 opacity-80"
             />
           ) : (
-            <div className="w-full h-full gradient-hero-spotify" />
+            <div className="relative z-[1] w-full h-full gradient-hero-spotify" />
           )}
           {/* Multi-layer overlay for depth */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/20 to-transparent" />
+          <div className="absolute inset-0 z-[2] bg-gradient-to-t from-background via-background/40 to-transparent" />
+          <div className="absolute inset-0 z-[2] bg-gradient-to-r from-background/30 to-transparent" />
         </div>
 
         {/* Shop Identity Card */}
         <div className="container mx-auto px-4">
-          <div className="relative -mt-4 pb-6 z-10">
-            <div className="bg-card/80 backdrop-blur-2xl border border-border/50 rounded-2xl md:rounded-3xl shadow-2xl shadow-black/10 p-5 md:p-8">
+          <div className="relative -mt-14 sm:-mt-16 md:-mt-24 pb-8">
+            <div className="relative -mt-4 pb-6 z-10">
+              <div className="bg-card/80 backdrop-blur-2xl border border-border/50 rounded-2xl md:rounded-3xl shadow-2xl shadow-black/10 p-5 md:p-8">
 
-              {/* Top row: Logo + Actions */}
-              <div className="flex flex-col sm:flex-row sm:items-start gap-5 mb-5">
+                {/* Top row: Logo + Actions */}
+                <div className="flex flex-col sm:flex-row sm:items-start gap-5 mb-5">
 
-                {/* Logo */}
-                <div className="flex-shrink-0">
-                  <div className="relative w-20 h-20 md:w-24 md:h-24">
-                    <div className="w-full h-full rounded-2xl md:rounded-3xl overflow-hidden ring-4 ring-background shadow-xl bg-muted flex items-center justify-center">
-                      {shop.logo_url ? (
-                        <img
-                          src={shop.logo_url}
-                          alt={shop.shop_name}
-                          className="w-full h-full object-cover select-none"
-                          draggable={false}
-                          onContextMenu={(e) => e.preventDefault()}
-                        />
-                      ) : (
-                        <Store className="w-10 h-10 text-muted-foreground" />
-                      )}
-                    </div>
-                    {shop.is_verified && (
-                      <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-green-500 border-2 border-background flex items-center justify-center shadow-md">
-                        <BadgeCheck className="w-4 h-4 text-white" />
+                  {/* Logo */}
+                  <div className="flex-shrink-0">
+                    <div className="relative w-20 h-20 md:w-24 md:h-24">
+                      <div className="w-full h-full rounded-2xl md:rounded-3xl overflow-hidden ring-4 ring-background shadow-xl bg-muted flex items-center justify-center">
+                        {shop.logo_url ? (
+                          <img
+                            src={shop.logo_url}
+                            alt={shop.shop_name}
+                            className="w-full h-full object-cover select-none"
+                            draggable={false}
+                            onContextMenu={(e) => e.preventDefault()}
+                          />
+                        ) : (
+                          <Store className="w-10 h-10 text-muted-foreground" />
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Shop Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight truncate">{shop.shop_name}</h1>
-                      {shop.description && (
-                        <p className="text-muted-foreground mt-1 text-sm md:text-base line-clamp-2 leading-relaxed max-w-lg">{shop.description}</p>
-                      )}
-                      {(shop.state || shop.country) && (
-                        <div className="flex items-center gap-1.5 mt-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                          <span className="text-sm text-muted-foreground">{[shop.state, shop.country].filter(Boolean).join(", ")}</span>
+                      {shop.is_verified && (
+                        <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-green-500 border-2 border-background flex items-center justify-center shadow-md">
+                          <BadgeCheck className="w-4 h-4 text-white" />
                         </div>
                       )}
                     </div>
+                  </div>
 
-                    {/* Action Buttons */}
-                    <div ref={headerCartRef} className="flex flex-wrap items-center gap-2">
-                      {shop.whatsapp_number && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
-                          className="rounded-xl h-10 px-4 border-green-400/40 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/30 hover:border-green-400 transition-all font-medium gap-2"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                          <span className="hidden sm:inline">Contact</span>
-                        </Button>
-                      )}
-                      <TourButton onStartTour={startTour} hasSeenTour={hasSeenTour} onResetTour={resetTour} />
-                      <ShareStorefront
-                        shopName={shop.shop_name}
-                        shopSlug={shop.shop_slug}
-                        shopDescription={shop.description}
-                        logoUrl={shop.logo_url}
-                        rating={shop.average_rating}
-                        totalReviews={shop.total_reviews}
-                        productCount={productCount}
-                      />
-                      {getTotalItems() > 0 && (
-                        <Button
-                          size="sm"
-                          onClick={() => setIsCheckoutOpen(true)}
-                          className="rounded-xl h-10 px-4 bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg shadow-accent/30 font-semibold transition-all gap-2"
-                          data-tour="cart-button"
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          <span>Cart</span>
-                          <span className="bg-white/20 rounded-lg px-1.5 py-0.5 text-xs font-bold tabular-nums">{getTotalItems()}</span>
-                        </Button>
-                      )}
+                  {/* Shop Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight truncate" style={{ color: shop.primary_color || undefined }}>{shop.shop_name}</h1>
+                        {shop.description && (
+                          <p className="text-muted-foreground mt-1 text-sm md:text-base line-clamp-2 leading-relaxed max-w-lg">{shop.description}</p>
+                        )}
+                        {(shop.state || shop.country) && (
+                          <div className="flex items-center gap-1.5 mt-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                            <span className="text-sm text-muted-foreground">{[shop.state, shop.country].filter(Boolean).join(", ")}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div
+                        ref={headerCartRef}
+                        className="w-full sm:w-auto grid grid-cols-2 sm:flex sm:flex-wrap items-stretch sm:items-center gap-2 mt-2 sm:mt-0"
+                      >
+                        {shop.whatsapp_number && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
+                            className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 border-green-400/40 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/30 hover:border-green-400 transition-all font-medium gap-2"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            <span>Contact</span>
+                          </Button>
+                        )}
+                        <TourButton
+                          onStartTour={startTour}
+                          hasSeenTour={hasSeenTour}
+                          onResetTour={resetTour}
+                          className="w-full"
+                        />
+                        <ShareStorefront
+                          shopName={shop.shop_name}
+                          shopSlug={shop.shop_slug}
+                          shopDescription={shop.description}
+                          logoUrl={shop.logo_url}
+                          rating={shop.average_rating}
+                          totalReviews={shop.total_reviews}
+                          productCount={productCount}
+                        />
+                        {getTotalItems() > 0 && (
+                          <Button
+                            size="sm"
+                            onClick={() => setIsCheckoutOpen(true)}
+                            className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 hover:opacity-90 shadow-lg shadow-accent/30 font-semibold transition-all gap-2"
+                            style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
+                            data-tour="cart-button"
+                          >
+                            <ShoppingCart className="w-4 h-4" />
+                            <span>Cart</span>
+                            <span className="bg-white/20 rounded-lg px-1.5 py-0.5 text-xs font-bold tabular-nums">{getTotalItems()}</span>
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Stats Row */}
-              <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border/50">
-                {shop.total_reviews > 0 && (
-                  <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 rounded-xl px-3 py-1.5">
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                    <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">{shop.average_rating.toFixed(1)}</span>
-                    <span className="text-xs text-muted-foreground">({shop.total_reviews})</span>
-                  </div>
-                )}
-                {completedOrders > 0 && (
-                  <div className="flex items-center gap-1.5 bg-primary/5 border border-primary/20 rounded-xl px-3 py-1.5">
-                    <ShoppingBag className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-xs font-medium text-primary">{completedOrders} orders</span>
-                  </div>
-                )}
-                {productCount > 0 && (
-                  <div className="flex items-center gap-1.5 bg-accent/5 border border-accent/20 rounded-xl px-3 py-1.5">
-                    <Package className="w-3.5 h-3.5 text-accent" />
-                    <span className="text-xs font-medium text-accent">{productCount} products</span>
-                  </div>
-                )}
-                {serviceCount > 0 && (
-                  <div className="flex items-center gap-1.5 bg-purple-500/5 border border-purple-500/20 rounded-xl px-3 py-1.5">
-                    <Briefcase className="w-3.5 h-3.5 text-purple-500" />
-                    <span className="text-xs font-medium text-purple-500">{serviceCount} services</span>
-                  </div>
-                )}
-                <KnowThisShop shopId={shop.id} />
-              </div>
+                {/* Stats Row */}
+                <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border/50">
+                  {shop.total_reviews > 0 && (
+                    <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 rounded-xl px-3 py-1.5">
+                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                      <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">{shop.average_rating.toFixed(1)}</span>
+                      <span className="text-xs text-muted-foreground">({shop.total_reviews})</span>
+                    </div>
+                  )}
+                  {completedOrders > 0 && (
+                    <div className="flex items-center gap-1.5 bg-primary/5 border border-primary/20 rounded-xl px-3 py-1.5">
+                      <ShoppingBag className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-xs font-medium text-primary">{completedOrders} successful trades</span>
+                    </div>
+                  )}
+                  {productCount > 0 && (
+                    <div className="flex items-center gap-1.5 bg-accent/5 border border-accent/20 rounded-xl px-3 py-1.5">
+                      <Package className="w-3.5 h-3.5 text-accent" />
+                      <span className="text-xs font-medium text-accent">{productCount} products</span>
+                    </div>
+                  )}
+                  {serviceCount > 0 && (
+                    <div className="flex items-center gap-1.5 bg-purple-500/5 border border-purple-500/20 rounded-xl px-3 py-1.5">
+                      <Briefcase className="w-3.5 h-3.5 text-purple-500" />
+                      <span className="text-xs font-medium text-purple-500">{serviceCount} services</span>
+                    </div>
+                  )}
+                  <KnowThisShop shopId={shop.id} />
+                </div>
 
-              {/* Trust Badges */}
-              <div className="mt-3">
-                <TrustBadges
-                  isVerified={shop.is_verified}
-                  hasWhatsApp={!!shop.whatsapp_number}
-                  totalReviews={shop.total_reviews}
-                  averageRating={shop.average_rating}
-                />
+                {/* Trust Badges */}
+                <div className="mt-3">
+                  <TrustBadges
+                    isVerified={shop.is_verified}
+                    hasWhatsApp={!!shop.whatsapp_number}
+                    totalReviews={shop.total_reviews}
+                    averageRating={shop.average_rating}
+                  />
+                </div>
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ══════════════════ MARKETPLACE EXPLAINER ══════════════════ */}
+      <section className="container mx-auto px-4 pt-2 md:pt-0 pb-8">
+        <div className="rounded-2xl border border-border/60 bg-gradient-to-r from-accent/5 via-background to-primary/5 p-5 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="space-y-1.5">
+            <p className="text-xs uppercase tracking-wider font-semibold text-accent">SteerSolo Marketplace</p>
+            <h3 className="font-display text-lg md:text-xl font-bold">Discover more verified Nigerian stores in one place</h3>
+            <p className="text-sm text-muted-foreground max-w-2xl">
+              Beyond this storefront, SteerSolo connects buyers to trusted sellers across beauty, fashion, food, gadgets, and services.
+              Explore the marketplace to compare stores, find new vendors, and shop faster with confidence.
+            </p>
+          </div>
+          <Link to="/shops" className="md:shrink-0">
+            <Button className="rounded-xl gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90">
+              Visit Marketplace
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </Link>
         </div>
       </section>
 
@@ -578,7 +626,7 @@ const ShopStorefront = () => {
                 <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-accent" />
                 </div>
-                <h2 className="font-display text-xl md:text-2xl font-bold tracking-tight">Catalog</h2>
+                <h2 className="font-display text-xl md:text-2xl font-bold tracking-tight" style={{ color: shop.primary_color || undefined }}>Catalog</h2>
               </div>
             </div>
 
@@ -665,189 +713,209 @@ const ShopStorefront = () => {
           )}
         </div>
 
-        {/* ── Empty State ── */}
-        {filteredProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center mb-6 shadow-inner">
-              {searchQuery ? <Search className="w-9 h-9 text-muted-foreground" /> : <Package className="w-9 h-9 text-muted-foreground" />}
+        <div className="mx-auto w-full max-w-[26rem] sm:max-w-none">
+          {/* ── Empty State ── */}
+          {filteredProducts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center mb-6 shadow-inner">
+                {searchQuery ? <Search className="w-9 h-9 text-muted-foreground" /> : <Package className="w-9 h-9 text-muted-foreground" />}
+              </div>
+              <h3 className="font-display text-xl font-semibold mb-2">
+                {searchQuery ? "No Results Found" : "No Products Yet"}
+              </h3>
+              <p className="text-muted-foreground text-sm max-w-xs mb-6">
+                {searchQuery ? `We couldn't find anything matching "${searchQuery}"` : "This shop hasn't added any products yet."}
+              </p>
+              {searchQuery && (
+                <Button variant="outline" onClick={clearSearch} className="rounded-xl gap-2">
+                  <X className="w-4 h-4" /> Clear Search
+                </Button>
+              )}
             </div>
-            <h3 className="font-display text-xl font-semibold mb-2">
-              {searchQuery ? "No Results Found" : "No Products Yet"}
-            </h3>
-            <p className="text-muted-foreground text-sm max-w-xs mb-6">
-              {searchQuery ? `We couldn't find anything matching "${searchQuery}"` : "This shop hasn't added any products yet."}
-            </p>
-            {searchQuery && (
-              <Button variant="outline" onClick={clearSearch} className="rounded-xl gap-2">
-                <X className="w-4 h-4" /> Clear Search
-              </Button>
-            )}
-          </div>
-        ) : (
-          /* ── Product Grid ── */
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
-            {filteredProducts.map((product, index) => (
-              <div
-                key={product.id}
-                className="group bg-card border border-border/60 rounded-2xl overflow-hidden hover:border-accent/40 hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col animate-fade-up"
-                style={{ animationDelay: `${index * 0.04}s` }}
-                data-tour={index === 0 ? "product-card" : undefined}
-              >
-                {/* Product Image */}
-                <Link to={`/shop/${slug}/product/${product.id}`} className="relative block overflow-hidden bg-muted aspect-square">
-                  <ProductMediaCard
-                    imageUrl={product.image_url}
-                    videoUrl={product.video_url}
-                    alt={product.name}
-                    className="w-full h-full"
+          ) : (
+            /* ── Product Grid ── */
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+              {filteredProducts.map((product, index) => (
+                <div
+                  key={product.id}
+                  className="group min-h-0 bg-card border border-border/60 rounded-2xl overflow-hidden hover:border-accent/40 hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col animate-fade-up"
+                  style={{ animationDelay: `${index * 0.04}s` }}
+                  data-tour={index === 0 ? "product-card" : undefined}
+                >
+                  {/* Product Image */}
+                  <Link
+                    to={`/shop/${slug}/product/${product.id}`}
+                    className="relative block overflow-hidden bg-muted aspect-square"
+                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                   >
-                    {!product.image_url && !product.video_url && (
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-                        {product.type === 'service'
-                          ? <Briefcase className="w-12 h-12 text-accent/50" />
-                          : <Package className="w-12 h-12 text-muted-foreground/50" />
-                        }
-                      </div>
-                    )}
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300 flex items-center justify-center">
-                      <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                        <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm rounded-xl px-4 py-2 flex items-center gap-2 shadow-lg">
-                          <Eye className="w-4 h-4" />
-                          <span className="text-sm font-medium">Quick View</span>
+                    <ProductMediaCard
+                      imageUrl={product.image_url}
+                      videoUrl={product.video_url}
+                      alt={product.name}
+                      className="w-full h-full"
+                    >
+                      {!product.image_url && !product.video_url && (
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                          {product.type === 'service'
+                            ? <Briefcase className="w-12 h-12 text-accent/50" />
+                            : <Package className="w-12 h-12 text-muted-foreground/50" />
+                          }
+                        </div>
+                      )}
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300 flex items-center justify-center">
+                        <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                          <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm rounded-xl px-3 py-2 flex items-center gap-1.5 shadow-lg">
+                            <Eye className="w-3.5 h-3.5" />
+                            <span className="text-xs font-semibold">View Details</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </ProductMediaCard>
+                    </ProductMediaCard>
 
-                  {/* Type Badge — top left */}
-                  <div className="absolute top-2.5 left-2.5">
-                    <div className={`
-                      flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold backdrop-blur-sm
-                      ${product.type === 'service'
-                        ? 'bg-purple-500/85 text-white'
-                        : 'bg-foreground/80 text-background'
-                      }
-                    `}>
-                      {product.type === 'service'
-                        ? <><Briefcase className="w-3 h-3" /> Service</>
-                        : <><Package className="w-3 h-3" /> Product</>
-                      }
-                    </div>
-                  </div>
-
-                  {/* Discount Badge — top right */}
-                  {product.compare_price && Number(product.compare_price) > product.price && (
-                    <div className="absolute top-2.5 right-2.5">
-                      <div className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-sm">
-                        -{Math.round(((Number(product.compare_price) - product.price) / Number(product.compare_price)) * 100)}%
+                    {/* Type Badge — top left */}
+                    <div className="absolute top-2.5 left-2.5">
+                      <div className={`
+                        flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold backdrop-blur-sm
+                        ${product.type === 'service'
+                          ? 'bg-purple-500/85 text-white'
+                          : 'bg-foreground/80 text-background'
+                        }
+                      `}>
+                        {product.type === 'service'
+                          ? <><Briefcase className="w-3 h-3" /> Service</>
+                          : <><Package className="w-3 h-3" /> Product</>
+                        }
                       </div>
                     </div>
-                  )}
 
-                  {/* Owner-only: Unavailable badge */}
-                  {isOwner && !product.is_available && (
-                    <div className="absolute bottom-2.5 left-2.5">
-                      <div className="bg-destructive/90 text-destructive-foreground text-xs font-medium px-2 py-1 rounded-lg">
-                        Unavailable
+                    {/* Discount Badge — top right */}
+                    {product.compare_price && Number(product.compare_price) > product.price && (
+                      <div className="absolute top-2.5 right-2.5">
+                        <div className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-sm">
+                          -{Math.round(((Number(product.compare_price) - product.price) / Number(product.compare_price)) * 100)}%
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </Link>
+                    )}
 
-                {/* Product Info */}
-                <div className="flex flex-col flex-1 p-3 sm:p-4">
-                  <Link to={`/shop/${slug}/product/${product.id}`}>
-                    <h3 className="font-semibold text-sm sm:text-base leading-snug line-clamp-2 hover:text-accent transition-colors mb-1">
-                      {product.name}
-                    </h3>
+                    {/* Owner-only: Unavailable badge */}
+                    {isOwner && !product.is_available && (
+                      <div className="absolute bottom-2.5 left-2.5">
+                        <div className="bg-destructive/90 text-destructive-foreground text-xs font-medium px-2 py-1 rounded-lg">
+                          Unavailable
+                        </div>
+                      </div>
+                    )}
                   </Link>
 
-                  {product.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2 hidden sm:block leading-relaxed">
-                      {product.description}
-                    </p>
-                  )}
+                  {/* Product Info */}
+                  <div className="flex min-h-0 flex-col flex-1 p-3 sm:p-4">
+                    <Link to={`/shop/${slug}/product/${product.id}`} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+                      <h3 className="min-h-0 font-semibold text-sm sm:text-base leading-snug line-clamp-2 hover:text-accent transition-colors mb-1">
+                        {product.name}
+                      </h3>
+                    </Link>
 
-                  <ProductRating rating={product.average_rating || 0} totalReviews={product.total_reviews || 0} />
+                    {product.description && (
+                      <p className="min-h-0 text-xs text-muted-foreground line-clamp-2 mb-2 hidden sm:block leading-relaxed">
+                        {product.description}
+                      </p>
+                    )}
 
-                  {/* Price Row */}
-                  <div className="flex items-center justify-between mt-2 mb-3">
-                    <div className="flex items-baseline gap-1.5 flex-wrap">
-                      <span className="text-base sm:text-lg font-bold text-primary dark:text-accent tabular-nums tracking-tight">
-                        ₦{product.price.toLocaleString()}
-                      </span>
-                      {product.compare_price && Number(product.compare_price) > product.price && (
-                        <span className="text-xs text-muted-foreground line-through tabular-nums">
-                          ₦{Number(product.compare_price).toLocaleString()}
+                    <ProductRating rating={product.average_rating || 0} totalReviews={product.total_reviews || 0} />
+
+                    {/* Price Row */}
+                    <div className="flex items-center justify-between mt-2 mb-3">
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                        <span className="text-base sm:text-lg font-bold text-primary dark:text-accent tabular-nums tracking-tight">
+                          ₦{product.price.toLocaleString()}
                         </span>
+                        {product.compare_price && Number(product.compare_price) > product.price && (
+                          <span className="text-xs text-muted-foreground line-through tabular-nums">
+                            ₦{Number(product.compare_price).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Stock / Duration */}
+                      {product.type === 'service' && product.duration_minutes ? (
+                        <div className="flex items-center gap-1 text-xs text-purple-500 bg-purple-500/10 rounded-lg px-2 py-1">
+                          <Clock className="w-3 h-3" />
+                          <span>{product.duration_minutes}m</span>
+                        </div>
+                      ) : product.type === 'product' && (
+                        <div className={`
+                          flex items-center gap-1 text-xs rounded-lg px-2 py-1
+                          ${product.stock_quantity > 0
+                            ? 'text-emerald-600 bg-emerald-500/10'
+                            : 'text-red-500 bg-red-500/10'
+                          }
+                        `}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${product.stock_quantity > 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                          <span>{product.stock_quantity > 0 ? `${product.stock_quantity} left` : 'Out of stock'}</span>
+                        </div>
                       )}
                     </div>
 
-                    {/* Stock / Duration */}
-                    {product.type === 'service' && product.duration_minutes ? (
-                      <div className="flex items-center gap-1 text-xs text-purple-500 bg-purple-500/10 rounded-lg px-2 py-1">
-                        <Clock className="w-3 h-3" />
-                        <span>{product.duration_minutes}m</span>
+                    {/* CTA Buttons */}
+                    <div className="mt-auto space-y-2">
+                      {product.type === 'service' && product.booking_required ? (
+                        <Button
+                          className="w-full h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm shadow-sm shadow-purple-500/20 gap-1.5 transition-all"
+                          onClick={(e) => { e.preventDefault(); handleBookService(product); }}
+                          disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
+                        >
+                          <Calendar className="w-3.5 h-3.5" />
+                          Book Now
+                        </Button>
+                      ) : (
+                        <Button
+                          className="w-full h-9 rounded-xl text-white hover:opacity-90 font-semibold text-sm shadow-sm shadow-accent/20 gap-1.5 transition-all"
+                          style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
+                          onClick={(e) => { e.preventDefault(); addToCart(product); }}
+                          disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
+                        >
+                          <ShoppingCart className="w-3 h-3" />
+                          Add to Cart
+                        </Button>
+                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        <Link to={`/shop/${slug}/product/${product.id}`} className="w-full">
+                          <Button
+                            variant="outline"
+                            className="w-full h-9 rounded-xl border-border hover:border-accent/50 hover:bg-accent/5 transition-all"
+                          >
+                            Details
+                            <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                          </Button>
+                        </Link>
+                        <WishlistButton productId={product.id} className="h-9 w-full rounded-xl" />
                       </div>
-                    ) : product.type === 'product' && (
-                      <div className={`
-                        flex items-center gap-1 text-xs rounded-lg px-2 py-1
-                        ${product.stock_quantity > 0
-                          ? 'text-emerald-600 bg-emerald-500/10'
-                          : 'text-red-500 bg-red-500/10'
-                        }
-                      `}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${product.stock_quantity > 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                        <span>{product.stock_quantity > 0 ? `${product.stock_quantity} left` : 'Out of stock'}</span>
+                    </div>
+
+                    {/* Review Actions */}
+                    <div className="mt-2 min-h-0">
+                      <Link
+                        to={`/shop/${slug}/product/${product.id}`}
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors md:hidden"
+                      >
+                        <Star className="w-3.5 h-3.5" />
+                        <span className="line-clamp-1">Rate & review</span>
+                      </Link>
+                      <div className="hidden md:block">
+                        <ProductReviewForm
+                          productId={product.id}
+                          productName={product.name}
+                          onReviewSubmitted={loadShopData}
+                        />
                       </div>
-                    )}
-                  </div>
-
-                  {/* CTA Buttons */}
-                  <div className="flex gap-2 mt-auto">
-                    {product.type === 'service' && product.booking_required ? (
-                      <Button
-                        className="flex-1 h-10 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm shadow-sm shadow-green-500/20 gap-2 transition-all"
-                        onClick={(e) => { e.preventDefault(); handleBookService(product); }}
-                        disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
-                      >
-                        <Calendar className="w-4 h-4" />
-                        <span className="hidden xs:inline">Book</span> Now
-                      </Button>
-                    ) : (
-                      <Button
-                        className="flex-1 h-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm shadow-blue-500/20 gap-2 transition-all"
-                        onClick={(e) => { e.preventDefault(); addToCart(product); }}
-                        disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
-                      >
-                        <ShoppingCart className="w-3.5 h-3.5" />
-                        <span className="hidden xs:inline">Add to</span> Cart
-                      </Button>
-                    )}
-
-                    <Link to={`/shop/${slug}/product/${product.id}`}>
-                      <Button variant="outline" size="icon"
-                        className="h-10 w-10 rounded-xl border-border hover:border-accent/50 hover:bg-accent/5 flex-shrink-0 transition-all">
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </Link>
-                    <WishlistButton productId={product.id} />
-                  </div>
-
-                  {/* Review Form */}
-                  <div className="mt-2">
-                    <ProductReviewForm
-                      productId={product.id}
-                      productName={product.name}
-                      onReviewSubmitted={loadShopData}
-                    />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* ══════════════════ FLOATING CART BAR ══════════════════ */}
@@ -870,7 +938,8 @@ const ShopStorefront = () => {
               {getTotalItems() > 0 && (
                 <Button
                   onClick={() => setIsCheckoutOpen(true)}
-                  className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-accent to-primary hover:opacity-90 font-bold shadow-xl shadow-accent/30 gap-2 transition-all"
+                  className="flex-1 h-12 rounded-2xl hover:opacity-90 font-bold shadow-xl shadow-accent/30 gap-2 transition-all"
+                  style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
                 >
                   <ShoppingCart className="w-4 h-4" />
                   <span>View Cart</span>

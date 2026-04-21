@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -72,6 +72,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
   const [productType, setProductType] = useState<"product" | "service">("product");
   const [productPreviewUrl, setProductPreviewUrl] = useState("");
   const [productFile, setProductFile] = useState<File | null>(null);
+  const activeBlobPreviewUrlRef = useRef<string | null>(null);
 
   // Payment / creating
   const [isPayingLoading, setIsPayingLoading] = useState(false);
@@ -107,6 +108,26 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
     }
   }, [open]);
 
+  const revokeActiveBlobPreviewUrl = useCallback(() => {
+    const activeBlobUrl = activeBlobPreviewUrlRef.current;
+    if (activeBlobUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(activeBlobUrl);
+    }
+    activeBlobPreviewUrlRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      revokeActiveBlobPreviewUrl();
+    };
+  }, [revokeActiveBlobPreviewUrl]);
+
+  useEffect(() => {
+    if (!open) {
+      revokeActiveBlobPreviewUrl();
+    }
+  }, [open, revokeActiveBlobPreviewUrl]);
+
   const handleGoToProducts = () => {
     if (!businessName.trim() || !whatsappNumber.trim()) {
       toast({
@@ -124,10 +145,22 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
       toast({ title: "Missing info", description: "Enter product name and price.", variant: "destructive" });
       return;
     }
+
+    const parsedPrice = Number(productPrice);
+    if (!Number.isFinite(parsedPrice) || !Number.isInteger(parsedPrice) || parsedPrice <= 0) {
+      toast({
+        title: "Invalid price",
+        description: "Price must be a whole number greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setDraftProducts(prev => [
       ...prev,
-      { name: productName, price: parseInt(productPrice), type: productType, imageUrl: productPreviewUrl, file: productFile }
+      { name: productName, price: parsedPrice, type: productType, imageUrl: productPreviewUrl, file: productFile }
     ]);
+    revokeActiveBlobPreviewUrl();
     setProductName("");
     setProductPrice("");
     setProductPreviewUrl("");
@@ -320,9 +353,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
     }
   };
 
-  const handleDismiss = () => {
-    localStorage.setItem("dfy_popup_dismissed", "true");
-    // Reset form state only on explicit dismiss
+  const resetFormState = () => {
     setStep("intro");
     setBusinessName("");
     setWhatsappNumber("");
@@ -330,23 +361,40 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
     setDraftProducts([]);
     setProductName("");
     setProductPrice("");
+    revokeActiveBlobPreviewUrl();
     setProductPreviewUrl("");
     setProductFile(null);
     setShopId("");
+  };
+
+  const handleDismiss = () => {
+    localStorage.setItem("dfy_popup_dismissed", "true");
+    resetFormState();
     onClose();
   };
 
   const handleFileSelect = (file: File | null) => {
+    revokeActiveBlobPreviewUrl();
     setProductFile(file);
     if (file) {
-      setProductPreviewUrl(URL.createObjectURL(file));
+      const blobPreviewUrl = URL.createObjectURL(file);
+      activeBlobPreviewUrlRef.current = blobPreviewUrl;
+      setProductPreviewUrl(blobPreviewUrl);
     } else {
       setProductPreviewUrl("");
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o && step !== "creating") onClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen && step !== "creating") {
+          resetFormState();
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         {/* STEP: INTRO */}
         {step === "intro" && (
@@ -366,23 +414,46 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
             </DialogHeader>
 
             <div className="space-y-4 mt-2">
-            <div className="bg-accent/10 rounded-lg p-4 space-y-2">
-                <p className="font-medium text-sm">What you get:</p>
-                <ul className="space-y-1.5">
+            <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-accent/10 to-primary/5 p-4 space-y-3">
+                <p className="font-semibold text-sm">What you get in 3 quick steps:</p>
+                <div className="space-y-3">
                   {[
-                    "Professional store with your business name",
-                    "AI-crafted description that builds trust",
-                    "Custom store link ready to share",
-                    "WhatsApp ordering set up instantly",
-                    "All your products listed with AI descriptions",
-                    "Free for 5 products or less • ₦5,000 for bulk AI setup (6+)",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm">
-                      <CheckCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                      <span>{item}</span>
-                    </li>
+                    {
+                      title: "1) Your brand foundation",
+                      items: [
+                        "Professional store with your business name",
+                        "AI-crafted description that builds trust",
+                        "Custom store link ready to share",
+                      ],
+                    },
+                    {
+                      title: "2) Selling setup",
+                      items: [
+                        "WhatsApp ordering set up instantly",
+                        "All your products listed with AI descriptions",
+                      ],
+                    },
+                    {
+                      title: "3) Clear pricing",
+                      items: [
+                        "Free for 5 products or less",
+                        "₦5,000 for bulk AI setup (6+)",
+                      ],
+                    },
+                  ].map((section) => (
+                    <div key={section.title} className="rounded-lg bg-background/60 border border-border/50 p-3">
+                      <p className="text-sm font-medium mb-1.5">{section.title}</p>
+                      <ul className="space-y-1.5">
+                        {section.items.map((item) => (
+                          <li key={item} className="flex items-start gap-2 text-sm">
+                            <CheckCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -400,12 +471,12 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <Button onClick={handleGoToProducts} className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90" size="lg">
+              <div className="flex flex-col gap-2 sm:gap-3">
+                <Button onClick={handleGoToProducts} className="w-full bg-gradient-to-r from-primary to-accent text-white hover:opacity-90 shadow-lg shadow-primary/25" size="lg">
                   <Package className="w-4 h-4 mr-2" />
                   Next: Add Your Products
                 </Button>
-                <Button variant="ghost" onClick={handleDismiss} className="text-muted-foreground">
+                <Button variant="outline" onClick={handleDismiss} className="w-full border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted/60">
                   I'll set it up myself
                 </Button>
               </div>
@@ -454,7 +525,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
                   </div>
                   <div>
                     <Label>Price (₦) *</Label>
-                    <Input type="number" placeholder="e.g. 15000" value={productPrice} onChange={(e) => setProductPrice(e.target.value)} />
+                    <Input type="number" min="1" step="1" placeholder="e.g. 15000" value={productPrice} onChange={(e) => setProductPrice(e.target.value)} />
                   </div>
                 </div>
 
@@ -473,6 +544,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
                     // When autoUpload is false, onChange won't be called with a remote URL
                     // but we handle clear via empty string
                     if (!url) {
+                      revokeActiveBlobPreviewUrl();
                       setProductPreviewUrl("");
                       setProductFile(null);
                     }

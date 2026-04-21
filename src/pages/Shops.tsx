@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { autoCategorize, getCategoryLabel, BEAUTY_SUBCATEGORIES } from "@/utils/autoCategorize";
 import { Button } from "@/components/ui/button";
 import { useFeaturePhases } from "@/hooks/useFeaturePhases";
+import { PageThemeShell } from "@/components/PageThemeShell";
 
 const VERIFIED_NOTICE_KEY = "steersolo_verified_notice_dismissed";
 const StatChip = ({
@@ -219,12 +220,19 @@ const Shops = () => {
       if (!response.success) { setHasMoreShops(false); if (reset) setShops([]); return; }
       let filtered = response.data || [];
       if (searchTerm.trim()) {
-        filtered = filtered.filter(s =>
-          s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          s.shop_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          s.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          s.shop_slug?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        const q = searchTerm.toLowerCase().trim();
+        filtered = filtered.filter(s => {
+          const inferredCategory = getCategoryLabel(autoCategorize(s.name || s.shop_name || '', s.description || '')).toLowerCase();
+          return (
+            s.name?.toLowerCase().includes(q) ||
+            s.shop_name?.toLowerCase().includes(q) ||
+            s.description?.toLowerCase().includes(q) ||
+            s.shop_slug?.toLowerCase().includes(q) ||
+            s.state?.toLowerCase().includes(q) ||
+            s.country?.toLowerCase().includes(q) ||
+            inferredCategory.includes(q)
+          );
+        });
       }
       if (selectedState !== 'All Locations') filtered = filtered.filter(s => s.state === selectedState);
       const total = response.meta?.total || 0;
@@ -335,16 +343,15 @@ const Shops = () => {
   const showShops = !hasSearchQuery || searchType === 'all' || searchType === 'shops';
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Navbar />
+    <PageThemeShell header={<Navbar />} footer={<Footer />} className="bg-background">
       <VerifiedSellerNotice />
 
       {/* ══════════ HERO ══════════ */}
       <section className="relative pt-20 overflow-hidden">
         {/* Background layers */}
-        <div className="absolute inset-0 gradient-hero-spotify" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--accent)/0.12),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--primary)/0.08),transparent_60%)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(215,65%,16%)] via-[hsl(220,56%,12%)] to-[hsl(215,58%,10%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--accent)/0.16),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--primary)/0.22),transparent_62%)]" />
 
         <div className="relative z-10 container mx-auto px-4 pt-10 pb-12 sm:pt-14 sm:pb-16">
           
@@ -705,8 +712,7 @@ const Shops = () => {
         </div>
       </main>
 
-      <Footer />
-    </div>
+    </PageThemeShell>
   );
 };
 

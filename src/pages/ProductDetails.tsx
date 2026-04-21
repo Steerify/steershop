@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck, ChevronLeft, ChevronRight } from "lucide-react";
 import { WishlistButton } from "@/components/WishlistButton";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -40,10 +40,15 @@ const ProductDetails = () => {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const relatedScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadProductData();
   }, [slug, productId]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [productId]);
 
   // SEO: Inject meta tags and Product JSON-LD
   useEffect(() => {
@@ -52,7 +57,8 @@ const ProductDetails = () => {
     const productUrl = `${shopUrl}/product/${product.id}`;
     const imageUrl = product.image_url || (product.images?.[0]?.url) || '';
     const shopName = shop.shop_name || shop.name || 'Shop';
-    const desc = product.description || `${product.name} available at ${shopName} on SteerSolo`;
+    const fullDescription = product.description || `${product.name} available at ${shopName} on SteerSolo.`;
+    const desc = fullDescription.length > 180 ? `${fullDescription.slice(0, 177)}...` : fullDescription;
 
     document.title = `${product.name} | ${shopName} | SteerSolo`;
 
@@ -66,10 +72,15 @@ const ProductDetails = () => {
     setMeta('name', 'robots', 'index, follow');
     setMeta('property', 'og:title', `${product.name} - ${shopName}`);
     setMeta('property', 'og:description', desc);
+    setMeta('property', 'og:locale', 'en_NG');
     setMeta('property', 'og:url', productUrl);
     setMeta('property', 'og:type', 'product');
     setMeta('property', 'og:site_name', 'SteerSolo');
-    if (imageUrl) { setMeta('property', 'og:image', imageUrl); setMeta('name', 'twitter:image', imageUrl); }
+    if (imageUrl) {
+      setMeta('property', 'og:image', imageUrl);
+      setMeta('property', 'og:image:alt', `${product.name} by ${shopName}`);
+      setMeta('name', 'twitter:image', imageUrl);
+    }
     setMeta('name', 'twitter:card', 'summary_large_image');
     setMeta('name', 'twitter:title', `${product.name} - ${shopName}`);
     setMeta('name', 'twitter:description', desc);
@@ -82,7 +93,7 @@ const ProductDetails = () => {
       "@context": "https://schema.org",
       "@type": "Product",
       "name": product.name,
-      "description": desc,
+      "description": fullDescription,
       "image": imageUrl || undefined,
       "url": productUrl,
       "brand": { "@type": "Brand", "name": shopName },
@@ -203,6 +214,15 @@ const ProductDetails = () => {
         className={`w-4 h-4 ${i < rating ? "fill-gold text-gold" : "text-muted-foreground"}`}
       />
     ));
+  };
+
+  const scrollRelatedProducts = (direction: "left" | "right") => {
+    if (!relatedScrollRef.current) return;
+    const amount = Math.min(360, Math.round(relatedScrollRef.current.clientWidth * 0.9));
+    relatedScrollRef.current.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
   };
 
   if (isLoading) {
@@ -466,11 +486,43 @@ const ProductDetails = () => {
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div>
-            <h2 className="font-display text-2xl font-bold mb-6">More from {shop.name}</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="font-display text-2xl font-bold">More from {shop.name}</h2>
+              <div className="hidden sm:flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full"
+                  onClick={() => scrollRelatedProducts("left")}
+                  aria-label="Scroll related products left"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full"
+                  onClick={() => scrollRelatedProducts("right")}
+                  aria-label="Scroll related products right"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <div
+              ref={relatedScrollRef}
+              className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scroll-smooth"
+            >
               {relatedProducts.map((relProduct) => (
-                <Link key={relProduct.id} to={`/shop/${slug}/product/${relProduct.id}`}>
-                  <Card className="card-african overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1">
+                <Link
+                  key={relProduct.id}
+                  to={`/shop/${slug}/product/${relProduct.id}`}
+                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                  className="min-w-[78%] sm:min-w-[48%] lg:min-w-[30%] xl:min-w-[24%] snap-start"
+                >
+                  <Card className="card-african h-full overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1">
                     {relProduct.images && relProduct.images.length > 0 ? (
                       <div className="aspect-square overflow-hidden bg-muted">
                         <img

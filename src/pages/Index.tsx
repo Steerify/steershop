@@ -6,19 +6,12 @@ import { Footer } from "@/components/Footer";
 import { FeaturedShopsBanner } from "@/components/FeaturedShopsBanner";
 import { ShopperDiscovery } from "@/components/ShopperDiscovery";
 import { HomepageReviews } from "@/components/HomepageReviews";
+import { SocialProofStats } from "@/components/SocialProofStats";
 import { DynamicPricing } from "@/components/DynamicPricing";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 import whatsappLogo from "@/assets/social/whatsapp-logo.svg";
 import instagramLogo from "@/assets/social/instagram-logo.svg";
 import tiktokLogo from "@/assets/social/tiktok-logo.svg";
-
-/* ─── Brand tokens (always-dark sections only) ─── */
-const HERO_BG   = "linear-gradient(135deg, hsl(215,65%,18%) 0%, hsl(215,65%,25%) 60%, hsl(215,58%,30%) 100%)";
-const CTA_BG    = "linear-gradient(135deg, hsl(215,65%,18%) 0%, hsl(215,65%,25%) 55%, hsl(215,52%,32%) 100%)";
-const INDIGO    = "hsl(215,65%,25%)";
-const INK       = "hsl(220,45%,12%)";
-const ACCENT    = "hsl(145,60%,38%)";
-const ACCENT_BRIGHT = "hsl(145,60%,48%)";
 
 /* ─── Photos (real Nigerian vendor imagery) ─── */
 const P = {
@@ -162,12 +155,12 @@ const Index = () => (
         §1  HERO — Always dark Adire Indigo
     ══════════════════════════════════════════════════════ */}
     <section
+      className="bg-brand-hero"
       style={{
-        background: HERO_BG,
         minHeight: "92vh",
         position: "relative",
         overflow: "hidden",
-        paddingTop: 96,
+        paddingTop: 84,
       }}>
 
       {/* subtle adire diagonal texture */}
@@ -179,20 +172,20 @@ const Index = () => (
       <div style={{
         position:"absolute",bottom:"-10%",right:"-5%",width:"55%",height:"70%",
         pointerEvents:"none",
-        background:`radial-gradient(ellipse at 80% 80%, hsl(145,60%,38%,0.15) 0%, transparent 65%)`,
+        background:"radial-gradient(ellipse at 80% 80%, hsl(var(--accent) / 0.15) 0%, transparent 65%)",
       }}/>
       {/* soft indigo glow — top left */}
       <div style={{
         position:"absolute",top:"-10%",left:"-5%",width:"40%",height:"50%",
         pointerEvents:"none",
-        background:`radial-gradient(ellipse at 20% 20%, hsl(215,65%,45%,0.35) 0%, transparent 65%)`,
+        background:"radial-gradient(ellipse at 20% 20%, hsl(var(--brand-blue-strong) / 0.35) 0%, transparent 65%)",
       }}/>
 
-      <div style={{ maxWidth:1280,margin:"0 auto",padding:"0 1.5rem",position:"relative",zIndex:10 }}>
-        <div style={{ display:"flex",flexWrap:"wrap",alignItems:"center",gap:"2.5rem",paddingBottom:"3rem" }}>
+      <div style={{ maxWidth:1200,margin:"0 auto",padding:"0 1.25rem",position:"relative",zIndex:10 }}>
+        <div style={{ display:"flex",flexWrap:"wrap",alignItems:"center",gap:"2rem",paddingBottom:"2.5rem" }}>
 
           {/* ── TEXT ── */}
-          <div style={{ flex:"1 1 420px",maxWidth:600 }} className="f1">
+          <div style={{ flex:"1 1 420px",maxWidth:560 }} className="f1">
 
             {/* eyebrow */}
             <div style={{
@@ -205,13 +198,13 @@ const Index = () => (
               </span>
             </div>
 
-            <h1 style={{ fontWeight:800,color:"#fff",lineHeight:1.05,marginBottom:24,fontSize:"clamp(2.6rem,5.2vw,4.6rem)" }}>
+            <h1 style={{ fontWeight:800,color:"#fff",lineHeight:1.08,marginBottom:20,fontSize:"clamp(2.15rem,4.25vw,3.8rem)" }}>
               You already have<br />
               the audience.<br />
-              <em style={{ fontStyle:"normal",color:ACCENT_BRIGHT }}>Give them somewhere to buy.</em>
+              <em style={{ fontStyle:"normal",color:"hsl(var(--accent-bright))" }}>Give them somewhere to buy.</em>
             </h1>
 
-            <p style={{ fontSize:"1.1rem",lineHeight:1.7,color:"rgba(255,255,255,.62)",fontWeight:300,maxWidth:500,marginBottom:36 }}>
+            <p style={{ fontSize:"clamp(1rem,1.35vw,1.08rem)",lineHeight:1.65,color:"rgba(255,255,255,.62)",fontWeight:300,maxWidth:500,marginBottom:30 }}>
               500,000+ Nigerian beauty vendors sell on social media every day — and lose buyers
               because there's nowhere to send them after the DM. SteerSolo is that place.
             </p>
@@ -220,8 +213,8 @@ const Index = () => (
             <div style={{ display:"flex",flexWrap:"wrap",gap:14,marginBottom:28 }} className="f2">
               <Link to="/auth/signup">
                 <button style={{
-                  display:"flex",alignItems:"center",gap:10,padding:"14px 32px",
-                  borderRadius:9999,fontWeight:700,fontSize:"1rem",color:INDIGO,
+                  display:"flex",alignItems:"center",gap:10,padding:"12px 26px",
+                  borderRadius:9999,fontWeight:700,fontSize:"1rem",color:"hsl(var(--primary))",
                   background:"#fff",
                   boxShadow:`0 8px 32px rgba(0,0,0,0.25)`,
                   border:"none",cursor:"pointer",
@@ -235,7 +228,7 @@ const Index = () => (
               </Link>
               <Link to="/demo">
                 <button style={{
-                  display:"flex",alignItems:"center",gap:8,padding:"14px 28px",
+                  display:"flex",alignItems:"center",gap:8,padding:"12px 24px",
                   borderRadius:9999,fontWeight:600,fontSize:"0.9rem",
                   background:"rgba(255,255,255,0.12)",border:"1.5px solid rgba(255,255,255,0.25)",
                   color:"#fff",cursor:"pointer",transition:"all .25s ease",
@@ -287,7 +280,7 @@ const Index = () => (
               padding:"28px 20px",textAlign:"center",
               borderRight: i < 3 ? "1px solid rgba(255,255,255,.08)" : "none",
             }}>
-              <p style={{ fontWeight:800,color:"#fff",fontSize:"clamp(1.6rem,2.8vw,2.4rem)",marginBottom:4 }}>{s.v}</p>
+              <p style={{ fontWeight:800,color:"#fff",fontSize:"clamp(1.35rem,2.2vw,2rem)",marginBottom:4 }}>{s.v}</p>
               <p style={{ fontSize:"0.72rem",color:"rgba(255,255,255,.38)",lineHeight:1.4 }}>{s.l}</p>
             </div>
           ))}
@@ -295,10 +288,18 @@ const Index = () => (
       </div>
     </section>
 
+    {/* ══ social proof modules (moved above deep-dive sections) ════════════ */}
+    <section className="bg-background pt-8 md:pt-12">
+      <FeaturedShopsBanner />
+    </section>
+    <section className="bg-background mt-4 md:mt-6">
+      <HomepageReviews />
+    </section>
+
     {/* ══════════════════════════════════════════════════════
         §2  TICKER — Accent green strip
     ══════════════════════════════════════════════════════ */}
-    <div style={{ overflow:"hidden",padding:"14px 0",background:ACCENT }}>
+    <div style={{ overflow:"hidden",padding:"14px 0",background:"hsl(var(--accent))" }}>
       <div style={{ animation:"tick 32s linear infinite",width:"max-content",display:"flex",alignItems:"center" }}>
         {Array(2).fill([
           "Nigeria's Only Verified Beauty Marketplace",
@@ -416,7 +417,7 @@ const Index = () => (
       <div style={{
         position:"absolute",inset:0,display:"flex",flexDirection:"column",
         alignItems:"center",justifyContent:"center",textAlign:"center",padding:"0 1.5rem",
-        background:`hsl(215,65%,22%,0.82)`,
+        background:"hsl(var(--brand-blue-deep) / 0.82)",
       }}>
         <p style={{
           fontWeight:700,color:"#fff",fontSize:"clamp(1.5rem,3.8vw,3.2rem)",
@@ -467,8 +468,8 @@ const Index = () => (
           borderRadius:24,padding:"28px 32px",
           display:"flex",flexWrap:"wrap",alignItems:"center",justifyContent:"space-between",
           gap:20,textAlign:"center",
-          background:INDIGO,
-          boxShadow:`0 16px 48px ${INDIGO}55`,
+          background:"hsl(var(--primary))",
+          boxShadow:"0 16px 48px hsl(var(--primary) / 0.33)",
         }}>
           {[
             { e:"📲",l:"WhatsApp / IG / TikTok",  s:"Your existing audience" },
@@ -502,7 +503,7 @@ const Index = () => (
           <img src={P.storefront} alt="Online storefront" style={{ width:"100%",height:"100%",objectFit:"cover",minHeight:320 }}/>
         </div>
         <div style={{ flex:1,display:"flex",flexDirection:"column",justifyContent:"center",padding:"60px 56px" }}>
-          <p style={{ fontSize:"0.72rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.22em",color:ACCENT_BRIGHT,marginBottom:32 }}>
+          <p style={{ fontSize:"0.72rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.22em",color:"hsl(var(--accent-bright))",marginBottom:32 }}>
             The reality of selling online in Nigeria
           </p>
           {[
@@ -519,7 +520,7 @@ const Index = () => (
             <Link to="/auth/signup">
               <button style={{
                 display:"inline-flex",alignItems:"center",gap:8,padding:"13px 26px",
-                borderRadius:9999,fontWeight:700,fontSize:"0.875rem",color:INDIGO,
+                borderRadius:9999,fontWeight:700,fontSize:"0.875rem",color:"hsl(var(--primary))",
                 background:"#fff",border:"none",cursor:"pointer",transition:"all .25s ease",
                 boxShadow:"0 6px 20px rgba(0,0,0,0.25)",
               }}
@@ -539,10 +540,10 @@ const Index = () => (
     <section className="bg-brand-section" style={{ padding:"96px 0" }}>
       <div style={{ maxWidth:1000,margin:"0 auto",padding:"0 1.5rem" }}>
         <div style={{ textAlign:"center",marginBottom:56 }}>
-          <p style={{ fontSize:"0.72rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.22em",color:ACCENT_BRIGHT,marginBottom:16 }}>The trust layer</p>
+          <p style={{ fontSize:"0.72rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.22em",color:"hsl(var(--accent-bright))",marginBottom:16 }}>The trust layer</p>
           <h2 style={{ fontWeight:800,color:"#fff",lineHeight:1.2,fontSize:"clamp(1.9rem,4vw,3rem)",margin:0 }}>
             SafeBeauty — our Michelin Star<br />
-            <span style={{ color:ACCENT_BRIGHT }}>for verified beauty vendors.</span>
+            <span style={{ color:"hsl(var(--accent-bright))" }}>for verified beauty vendors.</span>
           </h2>
           <p style={{ marginTop:16,maxWidth:520,marginLeft:"auto",marginRight:"auto",color:"rgba(255,255,255,.45)",fontSize:"0.9rem" }}>
             Every badge is earned, not bought. Buyers instantly know how trusted your store is before they spend a kobo.
@@ -555,10 +556,10 @@ const Index = () => (
             <div key={b.label} className="lift" style={{
               borderRadius:20,padding:24,display:"flex",flexDirection:"column",gap:12,
               background: b.top
-                ? `linear-gradient(135deg, ${ACCENT}, hsl(145,55%,30%))`
+                ? "linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent-deep)))"
                 : "rgba(255,255,255,.07)",
               border: b.top ? "none" : "1px solid rgba(255,255,255,.1)",
-              boxShadow: b.top ? `0 8px 32px hsl(145,60%,38%,0.4)` : "none",
+              boxShadow: b.top ? "0 8px 32px hsl(var(--accent) / 0.4)" : "none",
             }}>
               <span style={{ fontWeight:800,fontSize:"2rem",opacity:.18,lineHeight:1,color:"#fff" }}>{b.num}</span>
               <p style={{ fontWeight:600,fontSize:"0.875rem",color:"#fff",margin:0 }}>{b.label}</p>
@@ -628,7 +629,7 @@ const Index = () => (
     <section className="bg-ink-section" style={{ padding:"96px 0" }}>
       <div style={{ maxWidth:1000,margin:"0 auto",padding:"0 1.5rem" }}>
         <div style={{ textAlign:"center",marginBottom:56 }}>
-          <p style={{ fontSize:"0.72rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.22em",color:ACCENT_BRIGHT,marginBottom:16 }}>Vendor stories</p>
+          <p style={{ fontSize:"0.72rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.22em",color:"hsl(var(--accent-bright))",marginBottom:16 }}>Vendor stories</p>
           <h2 style={{ fontWeight:800,color:"#fff",fontSize:"clamp(1.9rem,4vw,2.8rem)",margin:0 }}>
             Social sellers who made the switch.
           </h2>
@@ -641,7 +642,7 @@ const Index = () => (
               background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.08)",
             }}>
               <div style={{ display:"flex",gap:4,marginBottom:4 }}>
-                {[1,2,3,4,5].map(s=><Star key={s} style={{ width:13,height:13,fill:ACCENT,color:ACCENT }}/>)}
+                {[1,2,3,4,5].map(s=><Star key={s} style={{ width:13,height:13,fill:"hsl(var(--accent))",color:"hsl(var(--accent))" }}/>)}
               </div>
               <p style={{ fontWeight:400,fontStyle:"italic",color:"rgba(255,255,255,.88)",lineHeight:1.65,fontSize:"1rem",margin:0 }}>
                 "{t.quote}"
@@ -660,17 +661,27 @@ const Index = () => (
     </section>
 
     {/* ══ reused components (theme-aware via Tailwind) ════════════════════ */}
-    <FeaturedShopsBanner />
-    <HomepageReviews />
     <DynamicPricing />
+    <section className="py-8 md:py-10">
+      <div className="container mx-auto px-4 text-center">
+        <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">Discover trusted sellers faster</h2>
+        <p className="text-muted-foreground max-w-2xl mx-auto mb-5">
+          Shop verified businesses with clear trust signals and a straightforward path to purchase.
+        </p>
+        <Link to="/shops" className="inline-flex">
+          <button className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity">
+            Explore verified shops
+          </button>
+        </Link>
+      </div>
+    </section>
     <ShopperDiscovery />
 
     {/* ══════════════════════════════════════════════════════
         §15  FINAL CTA — Always hero indigo
     ══════════════════════════════════════════════════════ */}
-    <section style={{
+    <section className="bg-brand-cta" style={{
       position:"relative",padding:"112px 0",textAlign:"center",overflow:"hidden",
-      background:CTA_BG,
     }}>
       {/* texture */}
       <div style={{
@@ -680,13 +691,13 @@ const Index = () => (
       {/* accent glow */}
       <div style={{
         position:"absolute",top:"-20%",right:"-10%",width:"50%",height:"80%",pointerEvents:"none",
-        background:`radial-gradient(ellipse, hsl(145,60%,38%,0.15) 0%, transparent 65%)`,
+        background:"radial-gradient(ellipse, hsl(var(--accent) / 0.15) 0%, transparent 65%)",
       }}/>
 
       <div style={{ maxWidth:680,margin:"0 auto",padding:"0 1.5rem",position:"relative",zIndex:10 }}>
         <ShoppingBag style={{ width:32,height:32,margin:"0 auto 24px",color:"rgba(255,255,255,.35)" }}/>
         <h2 style={{ fontWeight:800,color:"#fff",lineHeight:1.1,fontSize:"clamp(2.2rem,5vw,3.8rem)",marginBottom:20 }}>
-          Your audience is ready.<br /><em style={{ fontStyle:"normal",color:ACCENT_BRIGHT }}>Is your storefront?</em>
+          Your audience is ready.<br /><em style={{ fontStyle:"normal",color:"hsl(var(--accent-bright))" }}>Is your storefront?</em>
         </h2>
         <p style={{ fontSize:"1.05rem",color:"rgba(255,255,255,.58)",maxWidth:460,margin:"0 auto 12px" }}>
           Join verified Nigerian beauty vendors turning their social following into a real, trusted business.
@@ -699,7 +710,7 @@ const Index = () => (
             <button style={{
               display:"inline-flex",alignItems:"center",gap:10,padding:"15px 36px",
               borderRadius:9999,fontWeight:700,fontSize:"1rem",
-              background:"#fff",color:INDIGO,border:"none",cursor:"pointer",transition:"all .25s ease",
+              background:"#fff",color:"hsl(var(--primary))",border:"none",cursor:"pointer",transition:"all .25s ease",
               boxShadow:"0 10px 32px rgba(0,0,0,.22)",
             }}
               onMouseEnter={e=>(e.currentTarget.style.transform="translateY(-2px)")}

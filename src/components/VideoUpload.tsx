@@ -21,7 +21,7 @@ const getMimeType = (file: File): string => {
 const validateVideoPlayback = (url: string): Promise<boolean> => {
   return new Promise((resolve) => {
     const video = document.createElement('video');
-    video.preload = 'auto';
+    video.preload = 'metadata';
     video.muted = true;
     video.playsInline = true;
 
@@ -229,7 +229,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
               muted
               loop
               playsInline
-              preload="auto"
+              preload="metadata"
               onError={() => setVideoError(true)}
             />
           )}
