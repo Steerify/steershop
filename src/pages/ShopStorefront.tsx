@@ -426,9 +426,9 @@ const ShopStorefront = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-background/20 to-transparent" />
         </div>
 
-        {/* Shop Identity Card — overlaps the banner */}
+        {/* Shop Identity Card */}
         <div className="container mx-auto px-4">
-          <div className="relative -mt-20 md:-mt-24 pb-6">
+          <div className="relative -mt-4 pb-6 z-10">
             <div className="bg-card/80 backdrop-blur-2xl border border-border/50 rounded-2xl md:rounded-3xl shadow-2xl shadow-black/10 p-5 md:p-8">
 
               {/* Top row: Logo + Actions */}
@@ -808,7 +808,7 @@ const ShopStorefront = () => {
                   <div className="flex gap-2 mt-auto">
                     {product.type === 'service' && product.booking_required ? (
                       <Button
-                        className="flex-1 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm shadow-sm shadow-purple-500/20 gap-2 transition-all"
+                        className="flex-1 h-10 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm shadow-sm shadow-green-500/20 gap-2 transition-all"
                         onClick={(e) => { e.preventDefault(); handleBookService(product); }}
                         disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                       >
@@ -817,7 +817,7 @@ const ShopStorefront = () => {
                       </Button>
                     ) : (
                       <Button
-                        className="flex-1 h-10 rounded-xl bg-gradient-to-r from-accent to-primary hover:opacity-90 font-semibold text-sm shadow-sm shadow-accent/20 gap-2 transition-all"
+                        className="flex-1 h-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm shadow-blue-500/20 gap-2 transition-all"
                         onClick={(e) => { e.preventDefault(); addToCart(product); }}
                         disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                       >
