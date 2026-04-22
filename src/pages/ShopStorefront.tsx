@@ -549,7 +549,8 @@ const ShopStorefront = () => {
                         <Button
                           size="sm"
                           onClick={() => setIsCheckoutOpen(true)}
-                          className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 text-white shadow-lg shadow-emerald-900/25 font-semibold transition-all gap-2 hover:brightness-110 border border-emerald-300/30 bg-gradient-to-r from-emerald-600 to-teal-600"
+                          className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 text-white shadow-lg shadow-accent/30 font-semibold transition-all gap-2 hover:brightness-110 border border-white/15"
+                          style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
                           data-tour="cart-button"
                         >
                           <ShoppingCart className="w-4 h-4" />
