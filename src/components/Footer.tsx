@@ -101,7 +101,7 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/auth/login?tab=signup" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                <Link to="/vendor" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   Start Selling
                 </Link>
               </li>
@@ -118,6 +118,16 @@ export const Footer = () => {
               <li>
                 <Link to="/updates" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   Updates
+                </Link>
+              </li>
+              <li>
+                <Link to="/ambassador-program" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                  Ambassador Program
+                </Link>
+              </li>
+              <li>
+                <Link to="/insights" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                  Insights
                 </Link>
               </li>
               <li>

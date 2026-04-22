@@ -194,13 +194,18 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
 
             {/* Desktop Nav - Updated typography */}
             <div className="hidden md:flex items-center gap-6 font-display">
-              {["Shops", "About", "Feedback"].map((label) => (
+              {[
+                { label: "Shops", href: "/shops" },
+                { label: "About", href: "/about" },
+                { label: "Ambassador", href: "/ambassador-program" },
+                { label: "Feedback", href: "/feedback" },
+              ].map((item) => (
                 <Link 
-                  key={label}
-                  to={`/${label.toLowerCase()}`} 
+                  key={item.label}
+                  to={item.href}
                   className="text-sm lg:text-base text-foreground/80 hover:text-primary transition-colors font-medium relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full"
                 >
-                  Explore {label}
+                  Explore {item.label}
                 </Link>
               ))}
             </div>
@@ -223,14 +228,14 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                   )}
                 </Button>
               )}
-              <Link to="/auth/login">
+              <Link to="/shopper">
                 <Button variant="ghost" size="sm" className="h-9 px-3 text-sm font-medium hover:bg-primary/10 hover:text-primary">
                   <User className="w-4 h-4 mr-2" />
                   Login
                 </Button>
               </Link>
-              <Link to="/auth/login?tab=signup">
-                <Button size="sm" className="h-9 px-4 text-sm bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity font-medium shadow-lg shadow-primary/20">
+              <Link to="/vendor">
+                <Button size="sm" className="h-9 px-4 text-sm bg-gradient-to-r from-primary via-accent to-primary hover:brightness-110 transition-all font-semibold shadow-lg shadow-primary/30 border border-white/20">
                   Get Started
                 </Button>
               </Link>
@@ -288,12 +293,17 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
             <MessageSquare className="w-5 h-5" />
             Feedback
           </Link>
+          <div className="section-divider my-1" />
+          <Link to="/ambassador-program" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
+            <Gift className="w-5 h-5" />
+            Ambassador Program
+          </Link>
           <div className="pt-4 border-t border-border space-y-3">
-            <Link to="/auth/login">
+            <Link to="/shopper">
               <Button variant="outline" className="w-full min-h-[48px] border-primary/30 font-display">Login</Button>
             </Link>
-            <Link to="/auth/login?tab=signup">
-              <Button className="w-full min-h-[48px] bg-gradient-to-r from-primary to-accent font-display">Get Started</Button>
+            <Link to="/vendor">
+              <Button className="w-full min-h-[48px] bg-gradient-to-r from-primary via-accent to-primary hover:brightness-110 transition-all font-display font-semibold shadow-lg shadow-primary/25 border border-white/20">Get Started</Button>
             </Link>
           </div>
         </div>

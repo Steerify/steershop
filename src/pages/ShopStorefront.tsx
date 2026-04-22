@@ -268,6 +268,29 @@ const ShopStorefront = () => {
         type: (p.type || 'product') as 'product' | 'service',
         booking_required: p.booking_required ?? false
       }));
+
+      const hasCompletePaymentSetup = (() => {
+        const method = shopData.payment_method;
+        if (!method) return false;
+        const hasBank = !!(shopData.bank_name && shopData.bank_account_name && shopData.bank_account_number);
+        const hasPaystack = !!shopData.paystack_public_key;
+        if (method === 'bank_transfer') return hasBank;
+        if (method === 'paystack') return hasPaystack;
+        if (method === 'both') return hasBank && hasPaystack;
+        return false;
+      })();
+
+      const hasProductWithImage = productsList.some(
+        (p) => p.type === 'product' && p.is_available && !!p.image_url
+      );
+
+      // Public visitors should only see storefronts that are complete for buying.
+      if ((!user || user.id !== shopData.owner_id) && (!hasCompletePaymentSetup || !hasProductWithImage)) {
+        toast({ title: "Shop Not Ready Yet", description: "This storefront is still completing setup. Please check back soon." });
+        setShop(null);
+        return;
+      }
+
       setProducts(productsList);
       setFilteredProducts(productsList);
       const { count: ordersCount } = await supabase
@@ -502,7 +525,7 @@ const ShopStorefront = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
-                            className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 border-green-400/40 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/30 hover:border-green-400 transition-all font-medium gap-2"
+                            className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 border-green-500/45 bg-green-500/10 text-green-700 dark:text-green-300 hover:bg-green-500/15 hover:border-green-500 transition-all font-semibold gap-2 shadow-sm hover:shadow-md"
                           >
                             <MessageCircle className="w-4 h-4" />
                             <span>Contact</span>
@@ -523,19 +546,16 @@ const ShopStorefront = () => {
                           totalReviews={shop.total_reviews}
                           productCount={productCount}
                         />
-                        {getTotalItems() > 0 && (
-                          <Button
-                            size="sm"
-                            onClick={() => setIsCheckoutOpen(true)}
-                            className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 hover:opacity-90 shadow-lg shadow-accent/30 font-semibold transition-all gap-2"
-                            style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
-                            data-tour="cart-button"
-                          >
-                            <ShoppingCart className="w-4 h-4" />
-                            <span>Cart</span>
-                            <span className="bg-white/20 rounded-lg px-1.5 py-0.5 text-xs font-bold tabular-nums">{getTotalItems()}</span>
-                          </Button>
-                        )}
+                        <Button
+                          size="sm"
+                          onClick={() => setIsCheckoutOpen(true)}
+                          className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 text-white shadow-lg shadow-emerald-900/25 font-semibold transition-all gap-2 hover:brightness-110 border border-emerald-300/30 bg-gradient-to-r from-emerald-600 to-teal-600"
+                          data-tour="cart-button"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          <span>Cart</span>
+                          <span className="bg-white/25 rounded-lg px-1.5 py-0.5 text-xs font-bold tabular-nums">{getTotalItems()}</span>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -598,7 +618,7 @@ const ShopStorefront = () => {
             </p>
           </div>
           <Link to="/shops" className="md:shrink-0">
-            <Button className="rounded-xl gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90">
+            <Button className="rounded-xl gap-2 text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 border border-emerald-300/30 shadow-md shadow-emerald-900/20">
               Visit Marketplace
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -607,10 +627,18 @@ const ShopStorefront = () => {
       </section>
 
       {/* ══════════════════ CATALOG SECTION ══════════════════ */}
-      <section className="flex-1 container mx-auto px-4 pb-32 md:pb-20">
+      <section className="relative flex-1 container mx-auto px-4 pb-32 md:pb-20">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-3xl opacity-50 dark:opacity-20"
+          style={{
+            backgroundImage: "radial-gradient(circle, hsl(var(--foreground) / 0.12) 1.3px, transparent 1.3px)",
+            backgroundSize: "22px 22px",
+          }}
+        />
 
         {/* Toolbar */}
-        <div className="flex flex-col gap-4 mb-8">
+        <div className="relative z-10 flex flex-col gap-4 mb-8">
 
           {/* Top Row: Back + Title + Search */}
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -870,8 +898,7 @@ const ShopStorefront = () => {
                         </Button>
                       ) : (
                         <Button
-                          className="w-full h-9 rounded-xl text-white hover:opacity-90 font-semibold text-sm shadow-sm shadow-accent/20 gap-1.5 transition-all"
-                          style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
+                          className="w-full h-9 rounded-xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 font-semibold text-sm shadow-sm shadow-emerald-900/20 gap-1.5 transition-all border border-emerald-300/30"
                           onClick={(e) => { e.preventDefault(); addToCart(product); }}
                           disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                         >
@@ -938,8 +965,7 @@ const ShopStorefront = () => {
               {getTotalItems() > 0 && (
                 <Button
                   onClick={() => setIsCheckoutOpen(true)}
-                  className="flex-1 h-12 rounded-2xl hover:opacity-90 font-bold shadow-xl shadow-accent/30 gap-2 transition-all"
-                  style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
+                  className="flex-1 h-12 rounded-2xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 font-bold shadow-xl shadow-emerald-900/25 gap-2 transition-all border border-emerald-300/30"
                 >
                   <ShoppingCart className="w-4 h-4" />
                   <span>View Cart</span>

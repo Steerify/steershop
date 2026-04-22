@@ -88,7 +88,7 @@ export const SEOPageTemplate = ({
             {heroSubtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/auth/signup">
+            <Link to="/vendor">
               <Button size="lg" className="w-full sm:w-auto text-base px-8">
                 {heroCTA} <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
@@ -173,7 +173,7 @@ export const SEOPageTemplate = ({
           <p className="text-primary-foreground/80 mb-6">
             Join 500+ Nigerian entrepreneurs already using SteerSolo. Free forever plan — no credit card required.
           </p>
-          <Link to="/auth/signup">
+          <Link to="/vendor">
             <Button size="lg" variant="secondary" className="text-base px-8">
               Create Your Free Store <ArrowRight className="ml-2 w-4 h-4" />
             </Button>

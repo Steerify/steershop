@@ -35,6 +35,8 @@ import { clearSessionExpired, setReturnUrl } from "@/store/slices/uiSlice";
 import { resetSession, setRememberMe } from "@/store/slices/activitySlice";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
+type AuthPersona = "default" | "vendor" | "shopper";
+
 // Password input component with eye toggle
 const PasswordInput = ({ field, placeholder }: { field: any; placeholder?: string }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -98,7 +100,18 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const { type } = useParams();
-  const defaultTab = type === 'signup' ? 'signup' : (searchParams.get("tab") || "login");
+  const isVendorSignupPath = location.pathname === "/vendor-signup";
+  const isShopperSignupPath = location.pathname === "/shopper-signup";
+  const persona: AuthPersona = location.pathname.startsWith("/vendor")
+    ? "vendor"
+    : location.pathname.startsWith("/shopper")
+      ? "shopper"
+      : "default";
+  const defaultTab = (isVendorSignupPath || isShopperSignupPath)
+    ? "signup"
+    : type === 'signup'
+      ? 'signup'
+      : (searchParams.get("tab") || "login");
   const navigate = useNavigate();
   const { toast } = useToast();
   const dispatch = useAppDispatch();
@@ -127,6 +140,51 @@ const Auth = () => {
       role: "ENTREPRENEUR",
     },
   });
+
+  useEffect(() => {
+    if (persona === "vendor") {
+      signupForm.setValue("role", "ENTREPRENEUR");
+    } else if (persona === "shopper") {
+      signupForm.setValue("role", "CUSTOMER");
+    }
+  }, [persona, signupForm]);
+
+  const personaContent = persona === "vendor"
+    ? {
+      title: "Launch and grow your store.",
+      subtitle: "Built for vendors: structured storefront, orders, payments, and marketing.",
+      chips: [
+        { emoji: "🏪", text: "Create your storefront fast" },
+        { emoji: "📦", text: "Upload products and services" },
+        { emoji: "💳", text: "Set up payment collection" },
+        { emoji: "📈", text: "Track growth and performance" },
+      ],
+      ctaLabel: "Vendor Portal",
+    }
+    : persona === "shopper"
+      ? {
+        title: "Discover trusted shops in one place.",
+        subtitle: "Built for shoppers: explore verified sellers, compare products, and buy with confidence.",
+        chips: [
+          { emoji: "🛍️", text: "Browse multiple categories" },
+          { emoji: "✅", text: "Find verified sellers" },
+          { emoji: "🔎", text: "Compare stores quickly" },
+          { emoji: "⚡", text: "Shop faster and safer" },
+        ],
+        ctaLabel: "Shopper Portal",
+      }
+      : {
+        title: "Turn your WhatsApp into a real business.",
+        subtitle: "Professional store, order tracking, and AI-powered marketing — all in one place.",
+        chips: [
+          { emoji: "🏪", text: "Store ready in 10 minutes" },
+          { emoji: "📦", text: "Automated order management" },
+          { emoji: "🤖", text: "AI ad copy generation" },
+          { emoji: "💰", text: "Instant payouts to your bank" },
+          { emoji: "✅", text: "Free forever — no card needed" },
+        ],
+        ctaLabel: "SteerSolo",
+      };
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -342,21 +400,15 @@ const Auth = () => {
           </div>
 
           <h2 className="text-4xl xl:text-5xl font-extrabold text-white leading-tight mb-4 text-balance">
-            Turn your WhatsApp into a real business.
+            {personaContent.title}
           </h2>
           <p className="text-white/70 text-lg mb-10 leading-relaxed max-w-md">
-            Professional store, order tracking, and AI-powered marketing — all in one place.
+            {personaContent.subtitle}
           </p>
 
           {/* Feature highlights */}
           <ul className="space-y-4">
-            {[
-              { emoji: "🏪", text: "Store ready in 10 minutes" },
-              { emoji: "📦", text: "Automated order management" },
-              { emoji: "🤖", text: "AI ad copy generation" },
-              { emoji: "💰", text: "Instant payouts to your bank" },
-              { emoji: "✅", text: "Free forever — no card needed" },
-            ].map((item, i) => (
+            {personaContent.chips.map((item, i) => (
               <li
                 key={i}
                 className="flex items-center gap-3 text-white/90 animate-slide-up"
@@ -381,7 +433,7 @@ const Auth = () => {
             </div>
             <div>
               <p className="text-white font-bold text-sm">Join growing vendors</p>
-              <p className="text-white/60 text-xs">Growing every day</p>
+              <p className="text-white/60 text-xs">{personaContent.ctaLabel}</p>
             </div>
           </div>
         </div>
@@ -402,6 +454,26 @@ const Auth = () => {
         </div>
 
         <div className="w-full max-w-md relative z-10 animate-bounce-in">
+          {(persona === "vendor" || persona === "shopper") && (
+            <div className="mb-3 grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={persona === "vendor" ? "default" : "outline"}
+                className="h-9"
+                onClick={() => navigate("/vendor")}
+              >
+                Vendor
+              </Button>
+              <Button
+                type="button"
+                variant={persona === "shopper" ? "default" : "outline"}
+                className="h-9"
+                onClick={() => navigate("/shopper")}
+              >
+                Shopper
+              </Button>
+            </div>
+          )}
           {/* Accent stripe */}
           <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-primary via-accent to-primary mb-0" />
 
@@ -608,26 +680,38 @@ const Auth = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>I want to:</FormLabel>
-                          <FormControl>
-                            <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-2 gap-3">
-                              <div className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === 'ENTREPRENEUR' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}>
-                                <RadioGroupItem value="ENTREPRENEUR" id="entrepreneur" className="sr-only" />
-                                <Label htmlFor="entrepreneur" className="cursor-pointer text-center">
-                                  <Store className={`w-8 h-8 mx-auto mb-2 ${field.value === 'ENTREPRENEUR' ? 'text-primary' : 'text-muted-foreground'}`} />
-                                  <span className="font-semibold block">Sell</span>
-                                  <span className="text-xs text-muted-foreground">Create my shop</span>
-                                </Label>
-                              </div>
-                              <div className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === 'CUSTOMER' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}>
-                                <RadioGroupItem value="CUSTOMER" id="customer" className="sr-only" />
-                                <Label htmlFor="customer" className="cursor-pointer text-center">
-                                  <ShoppingBag className={`w-8 h-8 mx-auto mb-2 ${field.value === 'CUSTOMER' ? 'text-primary' : 'text-muted-foreground'}`} />
-                                  <span className="font-semibold block">Shop</span>
-                                  <span className="text-xs text-muted-foreground">Browse stores</span>
-                                </Label>
-                              </div>
-                            </RadioGroup>
-                          </FormControl>
+                          {persona === "default" ? (
+                            <FormControl>
+                              <RadioGroup
+                                onValueChange={field.onChange}
+                                value={field.value}
+                                className="grid grid-cols-2 gap-3"
+                              >
+                                <div className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === 'ENTREPRENEUR' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}>
+                                  <RadioGroupItem value="ENTREPRENEUR" id="entrepreneur" className="sr-only" />
+                                  <Label htmlFor="entrepreneur" className="cursor-pointer text-center">
+                                    <Store className={`w-8 h-8 mx-auto mb-2 ${field.value === 'ENTREPRENEUR' ? 'text-primary' : 'text-muted-foreground'}`} />
+                                    <span className="font-semibold block">Sell</span>
+                                    <span className="text-xs text-muted-foreground">Create my shop</span>
+                                  </Label>
+                                </div>
+                                <div className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === 'CUSTOMER' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}>
+                                  <RadioGroupItem value="CUSTOMER" id="customer" className="sr-only" />
+                                  <Label htmlFor="customer" className="cursor-pointer text-center">
+                                    <ShoppingBag className={`w-8 h-8 mx-auto mb-2 ${field.value === 'CUSTOMER' ? 'text-primary' : 'text-muted-foreground'}`} />
+                                    <span className="font-semibold block">Shop</span>
+                                    <span className="text-xs text-muted-foreground">Browse stores</span>
+                                  </Label>
+                                </div>
+                              </RadioGroup>
+                            </FormControl>
+                          ) : (
+                            <div className="rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-sm">
+                              {persona === "vendor"
+                                ? "Vendor flow selected: your account will be created as an entrepreneur."
+                                : "Shopper flow selected: your account will be created as a customer."}
+                            </div>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}

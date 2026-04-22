@@ -22,13 +22,33 @@ serve(async (req) => {
     // Fetch all active shops with owner subscription info
     const { data: shops } = await supabase
       .from('shops')
-      .select('shop_slug, updated_at, logo_url, owner_id')
+      .select('id, shop_slug, updated_at, logo_url, owner_id, payment_method, bank_name, bank_account_name, bank_account_number, paystack_public_key')
       .eq('is_active', true);
+
+    const hasCompletePaymentSetup = (shop: any) => {
+      const method = shop.payment_method;
+      if (!method) return false;
+      const hasBank = !!(shop.bank_name && shop.bank_account_name && shop.bank_account_number);
+      const hasPaystack = !!shop.paystack_public_key;
+      if (method === 'bank_transfer') return hasBank;
+      if (method === 'paystack') return hasPaystack;
+      if (method === 'both') return hasBank && hasPaystack;
+      return false;
+    };
+
+    const { data: productShopRows } = await supabase
+      .from('products')
+      .select('shop_id')
+      .eq('is_available', true)
+      .not('image_url', 'is', null);
+
+    const shopsWithProductImages = new Set((productShopRows || []).map((p: any) => p.shop_id));
+    const eligibleShops = (shops || []).filter((shop: any) => hasCompletePaymentSetup(shop) && shopsWithProductImages.has(shop.id));
 
     // Fetch owner plan info for premium gating
     const ownerPlanMap: Record<string, string> = {};
-    if (shops && shops.length > 0) {
-      const ownerIds = [...new Set(shops.map(s => s.owner_id).filter(Boolean))];
+    if (eligibleShops && eligibleShops.length > 0) {
+      const ownerIds = [...new Set(eligibleShops.map(s => s.owner_id).filter(Boolean))];
       if (ownerIds.length > 0) {
         const { data: profiles } = await supabase
           .from('profiles')
@@ -86,7 +106,13 @@ serve(async (req) => {
       '/about', '/pricing', '/faq', '/how-it-works',
       '/features/growth', '/features/payments', '/features/trust', '/features/whatsapp',
       '/sell-on-whatsapp', '/sell-on-instagram', '/online-store-nigeria',
-      '/accept-payments-online', '/small-business-tools', '/sell-online-nigeria'
+      '/accept-payments-online', '/small-business-tools', '/sell-online-nigeria',
+      '/whatsapp-store-builder-nigeria', '/instagram-seller-tools-nigeria',
+      '/online-marketplace-nigeria', '/accept-payments-on-whatsapp-nigeria',
+      '/ambassador-program', '/insights',
+      '/insights/whatsapp-selling-nigeria',
+      '/insights/marketplace-growth-playbook',
+      '/insights/trusted-storefront-nigeria'
     ];
     for (const page of staticPages) {
       urls += `
@@ -99,8 +125,8 @@ serve(async (req) => {
     }
 
     // Shop pages with priority based on subscription plan
-    if (shops) {
-      for (const shop of shops) {
+    if (eligibleShops) {
+      for (const shop of eligibleShops) {
         const planSlug = shop.owner_id ? (ownerPlanMap[shop.owner_id] || 'free') : 'free';
         const isPremium = planSlug === 'pro' || planSlug === 'business';
         const lastmod = shop.updated_at ? new Date(shop.updated_at).toISOString().split('T')[0] : now;
