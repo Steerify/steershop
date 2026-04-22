@@ -6,20 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, CheckCircle2, Gift, Megaphone, Wallet } from "lucide-react";
-import { generateKeywordBank } from "@/utils/seoKeywords";
 
 const AmbassadorProgramPage = () => {
-  const keywordBank = generateKeywordBank({
-    coreTopics: [
-      "steersolo ambassador program",
-      "ambassador referral commission nigeria",
-      "refer and earn ecommerce nigeria",
-      "steersolo referral dashboard",
-      "affiliate style referral for sellers",
-    ],
-    limit: 3000,
-  });
-
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -68,7 +56,6 @@ const AmbassadorProgramPage = () => {
           name="description"
           content="Explore the SteerSolo Ambassador Program. Learn how to join, share your referral link, and earn commissions from successful referrals."
         />
-        <meta name="keywords" content={keywordBank.join(", ")} />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://steersolo.com/ambassador-program" />
         <meta property="og:title" content="SteerSolo Ambassador Program" />

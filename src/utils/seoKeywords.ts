@@ -43,11 +43,6 @@ const intents = [
   "tools",
   "resources",
   "templates",
-  "case study",
-  "growth hacks",
-  "social media plan",
-  "content strategy",
-  "ad strategy",
 ];
 
 const markets = [
@@ -61,16 +56,6 @@ const markets = [
   "ecommerce",
   "social commerce",
   "small business",
-  "facebook",
-  "tiktok",
-  "youtube",
-  "x twitter",
-  "threads",
-  "digital marketing",
-  "online branding",
-  "buyer trust",
-  "conversion optimization",
-  "local business discovery",
 ];
 
 export const generateKeywordBank = ({ coreTopics, brand = "SteerSolo", limit = 3000 }: KeywordBankOptions): string[] => {
