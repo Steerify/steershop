@@ -596,7 +596,7 @@ const ShopStorefront = () => {
             </p>
           </div>
           <Link to="/shops" className="md:shrink-0">
-            <Button className="rounded-xl gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90">
+            <Button className="rounded-xl gap-2 text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 border border-emerald-300/30 shadow-md shadow-emerald-900/20">
               Visit Marketplace
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -876,8 +876,7 @@ const ShopStorefront = () => {
                         </Button>
                       ) : (
                         <Button
-                          className="w-full h-9 rounded-xl text-white hover:opacity-90 font-semibold text-sm shadow-sm shadow-accent/20 gap-1.5 transition-all"
-                          style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
+                          className="w-full h-9 rounded-xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 font-semibold text-sm shadow-sm shadow-emerald-900/20 gap-1.5 transition-all border border-emerald-300/30"
                           onClick={(e) => { e.preventDefault(); addToCart(product); }}
                           disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                         >
@@ -944,8 +943,7 @@ const ShopStorefront = () => {
               {getTotalItems() > 0 && (
                 <Button
                   onClick={() => setIsCheckoutOpen(true)}
-                  className="flex-1 h-12 rounded-2xl hover:opacity-90 font-bold shadow-xl shadow-accent/30 gap-2 transition-all"
-                  style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
+                  className="flex-1 h-12 rounded-2xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 font-bold shadow-xl shadow-emerald-900/25 gap-2 transition-all border border-emerald-300/30"
                 >
                   <ShoppingCart className="w-4 h-4" />
                   <span>View Cart</span>

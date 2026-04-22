@@ -11,6 +11,11 @@ Crawling: AI crawlers are welcome to index all public pages including:
 - About: /about
 - Pricing: /pricing
 - How it works: /how-it-works
+- Ambassador program: /ambassador-program
+- Insights hub: /insights
+- Insight article: /insights/whatsapp-selling-nigeria
+- Insight article: /insights/marketplace-growth-playbook
+- Insight article: /insights/trusted-storefront-nigeria
 
 Contact: hello@steersolo.com
 Location: Nigeria

@@ -194,13 +194,18 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
 
             {/* Desktop Nav - Updated typography */}
             <div className="hidden md:flex items-center gap-6 font-display">
-              {["Shops", "About", "Feedback"].map((label) => (
+              {[
+                { label: "Shops", href: "/shops" },
+                { label: "About", href: "/about" },
+                { label: "Ambassador", href: "/ambassador-program" },
+                { label: "Feedback", href: "/feedback" },
+              ].map((item) => (
                 <Link 
-                  key={label}
-                  to={`/${label.toLowerCase()}`} 
+                  key={item.label}
+                  to={item.href}
                   className="text-sm lg:text-base text-foreground/80 hover:text-primary transition-colors font-medium relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full"
                 >
-                  Explore {label}
+                  Explore {item.label}
                 </Link>
               ))}
             </div>
@@ -287,6 +292,11 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
           <Link to="/feedback" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
             <MessageSquare className="w-5 h-5" />
             Feedback
+          </Link>
+          <div className="section-divider my-1" />
+          <Link to="/ambassador-program" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
+            <Gift className="w-5 h-5" />
+            Ambassador Program
           </Link>
           <div className="pt-4 border-t border-border space-y-3">
             <Link to="/auth/login">
