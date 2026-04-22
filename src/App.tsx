@@ -77,6 +77,8 @@ const EntrepreneurCourses = lazy(() => import("./pages/entrepreneur/Entrepreneur
 const Customers = lazy(() => import("./pages/Customers"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Ambassador = lazy(() => import("./pages/Ambassador"));
+const AmbassadorProgramPage = lazy(() => import("./pages/AmbassadorProgramPage"));
+const Insights = lazy(() => import("./pages/Insights"));
 const AdsAssistant = lazy(() => import("./pages/entrepreneur/AdsAssistant"));
 const GoogleBusinessProfile = lazy(() => import("./pages/entrepreneur/GoogleBusinessProfile"));
 const VendorInvite = lazy(() => import("./pages/entrepreneur/VendorInvite"));
@@ -100,6 +102,9 @@ const WhatsAppStoreBuilderNigeria = lazy(() => import("./pages/seo/WhatsAppStore
 const InstagramSellerToolsNigeria = lazy(() => import("./pages/seo/InstagramSellerToolsNigeria"));
 const OnlineMarketplaceNigeria = lazy(() => import("./pages/seo/OnlineMarketplaceNigeria"));
 const AcceptPaymentsOnWhatsAppNigeria = lazy(() => import("./pages/seo/AcceptPaymentsOnWhatsAppNigeria"));
+const WhatsappSellingNigeriaArticle = lazy(() => import("./pages/seo/WhatsappSellingNigeriaArticle"));
+const MarketplaceGrowthPlaybookArticle = lazy(() => import("./pages/seo/MarketplaceGrowthPlaybookArticle"));
+const TrustedStorefrontNigeriaArticle = lazy(() => import("./pages/seo/TrustedStorefrontNigeriaArticle"));
 
 // Brand pages
 const BrandPage = lazy(() => import("./pages/BrandPage"));
@@ -177,6 +182,11 @@ const App = () => (
             <Route path="/instagram-seller-tools-nigeria" element={<InstagramSellerToolsNigeria />} />
             <Route path="/online-marketplace-nigeria" element={<OnlineMarketplaceNigeria />} />
             <Route path="/accept-payments-on-whatsapp-nigeria" element={<AcceptPaymentsOnWhatsAppNigeria />} />
+            <Route path="/insights" element={<Insights />} />
+            <Route path="/insights/whatsapp-selling-nigeria" element={<WhatsappSellingNigeriaArticle />} />
+            <Route path="/insights/marketplace-growth-playbook" element={<MarketplaceGrowthPlaybookArticle />} />
+            <Route path="/insights/trusted-storefront-nigeria" element={<TrustedStorefrontNigeriaArticle />} />
+            <Route path="/ambassador-program" element={<AmbassadorProgramPage />} />
             <Route path="/ambassador" element={
               <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR, UserRole.CUSTOMER]}>
                 <Ambassador />

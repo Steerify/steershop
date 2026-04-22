@@ -59,7 +59,7 @@ export const ShareStorefront = ({
         <Button
           variant="outline"
           size="sm"
-          className="w-full sm:w-auto rounded-xl sm:rounded-full border-accent/30 text-accent hover:bg-accent/10 h-11 sm:h-10"
+          className="w-full sm:w-auto rounded-xl sm:rounded-full border-accent/40 bg-accent/5 text-accent hover:bg-accent/15 h-11 sm:h-10 shadow-sm hover:shadow-md transition-all"
         >
           <Share2 className="w-4 h-4 mr-2" />
           Share
