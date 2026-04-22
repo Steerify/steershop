@@ -101,7 +101,7 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/auth/login?tab=signup" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
+                <Link to="/vendor" className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm">
                   Start Selling
                 </Link>
               </li>

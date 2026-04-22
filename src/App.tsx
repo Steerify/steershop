@@ -144,6 +144,10 @@ const App = () => (
             <Route path="/about" element={<AboutPage />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/:type" element={<Auth />} />
+            <Route path="/vendor" element={<Auth />} />
+            <Route path="/shopper" element={<Auth />} />
+            <Route path="/vendor-signup" element={<Auth />} />
+            <Route path="/shopper-signup" element={<Auth />} />
             <Route path="/auth/callback" element={<Callback />} />
             {/* Add RoleSelection route - this is public but only accessible after signup */}
             <Route path="/select-role" element={<RoleSelection />} />

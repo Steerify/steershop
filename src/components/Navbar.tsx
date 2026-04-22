@@ -228,7 +228,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                   )}
                 </Button>
               )}
-              <Link to="/auth/login">
+              <Link to="/shopper">
                 <Button variant="ghost" size="sm" className="h-9 px-3 text-sm font-medium hover:bg-primary/10 hover:text-primary">
                   <User className="w-4 h-4 mr-2" />
                   Login
@@ -299,7 +299,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
             Ambassador Program
           </Link>
           <div className="pt-4 border-t border-border space-y-3">
-            <Link to="/auth/login">
+            <Link to="/shopper">
               <Button variant="outline" className="w-full min-h-[48px] border-primary/30 font-display">Login</Button>
             </Link>
             <Link to="/auth/login?tab=signup">
