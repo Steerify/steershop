@@ -502,7 +502,7 @@ const ShopStorefront = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
-                            className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 border-green-400/40 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/30 hover:border-green-400 transition-all font-medium gap-2"
+                            className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 border-green-500/45 bg-green-500/10 text-green-700 dark:text-green-300 hover:bg-green-500/15 hover:border-green-500 transition-all font-semibold gap-2 shadow-sm hover:shadow-md"
                           >
                             <MessageCircle className="w-4 h-4" />
                             <span>Contact</span>
@@ -523,19 +523,17 @@ const ShopStorefront = () => {
                           totalReviews={shop.total_reviews}
                           productCount={productCount}
                         />
-                        {getTotalItems() > 0 && (
-                          <Button
-                            size="sm"
-                            onClick={() => setIsCheckoutOpen(true)}
-                            className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 hover:opacity-90 shadow-lg shadow-accent/30 font-semibold transition-all gap-2"
-                            style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
-                            data-tour="cart-button"
-                          >
-                            <ShoppingCart className="w-4 h-4" />
-                            <span>Cart</span>
-                            <span className="bg-white/20 rounded-lg px-1.5 py-0.5 text-xs font-bold tabular-nums">{getTotalItems()}</span>
-                          </Button>
-                        )}
+                        <Button
+                          size="sm"
+                          onClick={() => setIsCheckoutOpen(true)}
+                          className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 text-white shadow-lg shadow-accent/30 font-semibold transition-all gap-2 hover:brightness-110 border border-white/15"
+                          style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
+                          data-tour="cart-button"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          <span>Cart</span>
+                          <span className="bg-white/25 rounded-lg px-1.5 py-0.5 text-xs font-bold tabular-nums">{getTotalItems()}</span>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -607,10 +605,18 @@ const ShopStorefront = () => {
       </section>
 
       {/* ══════════════════ CATALOG SECTION ══════════════════ */}
-      <section className="flex-1 container mx-auto px-4 pb-32 md:pb-20">
+      <section className="relative flex-1 container mx-auto px-4 pb-32 md:pb-20">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-3xl opacity-50 dark:opacity-20"
+          style={{
+            backgroundImage: "radial-gradient(circle, hsl(var(--foreground) / 0.12) 1.3px, transparent 1.3px)",
+            backgroundSize: "22px 22px",
+          }}
+        />
 
         {/* Toolbar */}
-        <div className="flex flex-col gap-4 mb-8">
+        <div className="relative z-10 flex flex-col gap-4 mb-8">
 
           {/* Top Row: Back + Title + Search */}
           <div className="flex flex-wrap items-center justify-between gap-3">
