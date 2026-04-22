@@ -142,6 +142,7 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const resendApiKey = Deno.env.get('RESEND_API_KEY')!;
+    const fromEmail = Deno.env.get('RESEND_FROM_EMAIL') || 'SteerSolo <onboarding@resend.dev>';
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { type, user_id, data = {} }: NotificationRequest = await req.json();
@@ -172,7 +173,7 @@ serve(async (req) => {
       throw new Error('No user_id or email provided');
     }
 
-    const template = getEmailTemplate(type, { ...data, name: userName });
+    const template = getEmailTemplate(type, { ...data, name: data.name || userName });
 
     // Send email via Resend
     const emailResponse = await fetch('https://api.resend.com/emails', {
@@ -182,7 +183,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'SteerSolo <onboarding@resend.dev>',
+        from: fromEmail,
         to: [email],
         subject: template.subject,
         html: template.html,
