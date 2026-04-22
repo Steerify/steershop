@@ -155,8 +155,30 @@ export default function AdminShops() {
   };
 
   const sendStoreApprovalEmail = async (shop: any) => {
-    const ownerEmail = shop?.profiles?.email;
-    if (!ownerEmail) return;
+    let ownerEmail = shop?.profiles?.email;
+    let ownerName = shop?.profiles?.full_name || shop.shop_name;
+
+    // Fallback fetch to guarantee we have the owner's email even when profile data
+    // was not joined in the current UI payload.
+    if (!ownerEmail && shop?.owner_id) {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", shop.owner_id)
+        .maybeSingle();
+
+      ownerEmail = profileData?.email || ownerEmail;
+      ownerName = profileData?.full_name || ownerName;
+    }
+
+    if (!ownerEmail) {
+      toast({
+        title: "Shop approved, but no owner email found",
+        description: "The store is live, but we could not find an email address to notify the owner.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const { error } = await supabase.functions.invoke("send-notification-email", {
       body: {
@@ -164,7 +186,7 @@ export default function AdminShops() {
         user_id: shop.owner_id,
         data: {
           email: ownerEmail,
-          name: shop?.profiles?.full_name || shop.shop_name,
+          name: ownerName,
           storeName: shop.shop_name,
           storefrontUrl: `${window.location.origin}/shop/${shop.shop_slug || ""}`,
           dashboardUrl: `${window.location.origin}/dashboard`,
@@ -212,7 +234,8 @@ export default function AdminShops() {
     });
 
     if (!currentStatus) {
-      await sendStoreApprovalEmail(shop);
+      // Fire approval email after successful activation.
+      await sendStoreApprovalEmail({ ...shop, is_active: true });
     }
 
     fetchShops();

@@ -25,7 +25,7 @@ export const TourButton = ({ onStartTour, hasSeenTour, onResetTour, className }:
               variant="outline"
               size="sm"
               onClick={onStartTour}
-              className="w-full h-11 sm:h-10 gap-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+              className="w-full h-11 sm:h-10 gap-2 rounded-xl border-primary/30 bg-gradient-to-r from-primary/5 via-accent/10 to-primary/5 text-foreground hover:border-primary/50 hover:shadow-md hover:shadow-primary/20 hover:-translate-y-0.5 transition-all"
             >
               <HelpCircle className="w-4 h-4" />
               {hasSeenTour ? "Help Tour" : "Take Tour"}

@@ -55,6 +55,7 @@ import { cn } from "@/lib/utils";
 import { ShopStatusBadge, ShopStatus, getShopStatusFromProfile } from "@/components/ShopStatusBadge";
 import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { StorefrontCustomizer } from "@/components/StorefrontCustomizer";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const shopSchema = z
   .object({
@@ -125,6 +126,7 @@ const MyStore = () => {
   const [isPremiumPlan, setIsPremiumPlan] = useState(false);
 
   const [showDfyPopup, setShowDfyPopup] = useState(false);
+  const [showPostCreatePrompt, setShowPostCreatePrompt] = useState(false);
 
   const [formData, setFormData] = useState({
     shop_name: "",
@@ -326,6 +328,7 @@ const MyStore = () => {
         const createRes = await shopService.createShop(createReq);
         currentShopId = createRes.data.id;
         await shopService.updateShop(currentShopId, shopData);
+        setShowPostCreatePrompt(true);
       }
 
       toast({ title: "Success", description: shop ? "Store updated" : "Store created" });
@@ -360,6 +363,31 @@ const MyStore = () => {
           loadShop();
         }}
       />
+
+      <Dialog open={showPostCreatePrompt} onOpenChange={setShowPostCreatePrompt}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Store created successfully 🎉</DialogTitle>
+            <DialogDescription>
+              Great job! Your next best step is to add products immediately so customers can discover your store.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowPostCreatePrompt(false)}>
+              I’ll do this later
+            </Button>
+            <Button
+              className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+              onClick={() => {
+                setShowPostCreatePrompt(false);
+                navigate("/products");
+              }}
+            >
+              Add Products Now
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-3xl">
         <Button variant="ghost" onClick={() => navigate("/dashboard")} className="min-h-[44px] px-2 sm:px-4 mb-4">
           <ArrowLeft className="w-4 h-4 sm:mr-2" />

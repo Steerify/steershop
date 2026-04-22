@@ -63,8 +63,9 @@ const shopService = {
 
     let query = supabase
       .from('shops')
-      .select('*, products!inner(id)', { count: 'exact' })
-      .eq('products.is_available', true);
+      .select('*, products!inner(id, image_url)', { count: 'exact' })
+      .eq('products.is_available', true)
+      .not('products.image_url', 'is', null);
 
     // Only show active shops unless explicitly told otherwise
     if (filters?.activeOnly !== false) {
@@ -85,8 +86,21 @@ const shopService = {
       throw new Error(error.message);
     }
 
+    const hasCompletePaymentSetup = (s: any) => {
+      const method = s.payment_method;
+      if (!method) return false;
+      const hasBank = !!(s.bank_name && s.bank_account_name && s.bank_account_number);
+      const hasPaystack = !!s.paystack_public_key;
+      if (method === 'bank_transfer') return hasBank;
+      if (method === 'paystack') return hasPaystack;
+      if (method === 'both') return hasBank && hasPaystack;
+      return false;
+    };
+
+    const completeShops = (shops || []).filter((s: any) => hasCompletePaymentSetup(s));
+
     // Map database fields to API types - exclude sensitive bank details from public queries
-    const mappedShops: Shop[] = (shops || []).map(({ products: _products, ...s }: any) => ({
+    const mappedShops: Shop[] = completeShops.map(({ products: _products, ...s }: any) => ({
       id: s.id,
       name: s.shop_name,
       slug: s.shop_slug,
