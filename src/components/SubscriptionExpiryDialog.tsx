@@ -127,9 +127,18 @@ export const SubscriptionExpiryDialog = ({
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open && (view === 'persuade' || canDismissFromTrim)) handleDismiss();
     }}>
-      <DialogContent className="max-w-lg p-0 overflow-hidden border-0 shadow-2xl rounded-3xl [&>button]:hidden">
+      <DialogContent className="w-[95vw] sm:max-w-lg p-0 overflow-hidden border-0 shadow-2xl rounded-2xl sm:rounded-3xl max-h-[88vh] overflow-y-auto [&>button]:hidden">
+        {(view === 'persuade' || canDismissFromTrim) && (
+          <button
+            onClick={handleDismiss}
+            className="absolute right-3 top-3 z-30 h-8 w-8 rounded-full bg-black/25 text-white hover:bg-black/40 transition-colors flex items-center justify-center"
+            aria-label="Close notification"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
         {/* Gradient header */}
-        <div className="relative bg-gradient-to-br from-primary via-primary/90 to-accent p-6 pb-8">
+        <div className="relative bg-gradient-to-br from-primary via-primary/90 to-accent px-4 sm:px-6 pt-5 sm:pt-6 pb-6 sm:pb-8">
           <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
           <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-full bg-white/5" />
 
@@ -160,14 +169,14 @@ export const SubscriptionExpiryDialog = ({
               <div className="w-16 h-16 mx-auto rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
                 <Crown className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-2xl font-extrabold text-white mb-2">You're Missing Out!</h2>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-white mb-2">You're Missing Out!</h2>
               <p className="text-white/80 text-sm">Upgrade to unlock the full power of SteerSolo</p>
             </div>
           )}
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {view === 'main' && (
             <div className="space-y-4">
               {/* Upgrade option */}

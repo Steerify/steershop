@@ -268,6 +268,29 @@ const ShopStorefront = () => {
         type: (p.type || 'product') as 'product' | 'service',
         booking_required: p.booking_required ?? false
       }));
+
+      const hasCompletePaymentSetup = (() => {
+        const method = shopData.payment_method;
+        if (!method) return false;
+        const hasBank = !!(shopData.bank_name && shopData.bank_account_name && shopData.bank_account_number);
+        const hasPaystack = !!shopData.paystack_public_key;
+        if (method === 'bank_transfer') return hasBank;
+        if (method === 'paystack') return hasPaystack;
+        if (method === 'both') return hasBank && hasPaystack;
+        return false;
+      })();
+
+      const hasProductWithImage = productsList.some(
+        (p) => p.type === 'product' && p.is_available && !!p.image_url
+      );
+
+      // Public visitors should only see storefronts that are complete for buying.
+      if ((!user || user.id !== shopData.owner_id) && (!hasCompletePaymentSetup || !hasProductWithImage)) {
+        toast({ title: "Shop Not Ready Yet", description: "This storefront is still completing setup. Please check back soon." });
+        setShop(null);
+        return;
+      }
+
       setProducts(productsList);
       setFilteredProducts(productsList);
       const { count: ordersCount } = await supabase
