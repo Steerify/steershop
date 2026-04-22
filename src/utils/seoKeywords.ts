@@ -43,11 +43,6 @@ const intents = [
   "tools",
   "resources",
   "templates",
-  "case study",
-  "growth hacks",
-  "social media plan",
-  "content strategy",
-  "ad strategy",
 ];
 
 const markets = [

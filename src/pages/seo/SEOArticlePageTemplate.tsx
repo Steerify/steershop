@@ -5,7 +5,6 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
-import { generateKeywordBank } from "@/utils/seoKeywords";
 
 interface ArticleSection {
   heading: string;
@@ -34,7 +33,6 @@ const SEOArticlePageTemplate = ({
   sections,
 }: SEOArticlePageTemplateProps) => {
   const canonical = `https://steersolo.com/insights/${slug}`;
-  const keywordBank = generateKeywordBank({ coreTopics: keywords, limit: 3000 });
 
   const articleSchema = {
     "@context": "https://schema.org",
@@ -53,7 +51,7 @@ const SEOArticlePageTemplate = ({
       url: "https://steersolo.com",
     },
     mainEntityOfPage: canonical,
-    keywords: keywordBank.join(", "),
+    keywords: keywords.join(", "),
   };
 
   return (
@@ -61,7 +59,7 @@ const SEOArticlePageTemplate = ({
       <Helmet>
         <title>{title} | SteerSolo Insights</title>
         <meta name="description" content={description} />
-        <meta name="keywords" content={keywordBank.join(", ")} />
+        <meta name="keywords" content={keywords.join(", ")} />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href={canonical} />
         <meta property="og:type" content="article" />
@@ -110,7 +108,7 @@ const SEOArticlePageTemplate = ({
               <h3 className="font-display text-xl font-bold">Ready to apply this to your store?</h3>
               <p className="text-muted-foreground text-sm mt-1">Set up your SteerSolo storefront and start selling with more structure.</p>
             </div>
-            <Link to="/vendor" className="sm:shrink-0">
+            <Link to="/auth/login?tab=signup" className="sm:shrink-0">
               <Button className="rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90">
                 Create free store <ArrowRight className="w-4 h-4 ml-2" />
               </Button>

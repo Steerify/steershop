@@ -5,7 +5,6 @@ import { Footer } from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { generateKeywordBank } from "@/utils/seoKeywords";
 
 const articles = [
   {
@@ -26,17 +25,6 @@ const articles = [
 ];
 
 const Insights = () => {
-  const keywordBank = generateKeywordBank({
-    coreTopics: [
-      "steersolo insights",
-      "nigeria ecommerce articles",
-      "whatsapp selling guide",
-      "trusted storefront growth tips",
-      "small business online sales resources",
-    ],
-    limit: 3000,
-  });
-
   const itemListSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -54,7 +42,6 @@ const Insights = () => {
       <Helmet>
         <title>SteerSolo Insights | Guides for Nigerian online sellers</title>
         <meta name="description" content="Read SteerSolo insights, guides, and practical playbooks for WhatsApp selling, storefront growth, and trusted online commerce in Nigeria." />
-        <meta name="keywords" content={keywordBank.join(", ")} />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://steersolo.com/insights" />
         <script type="application/ld+json">{JSON.stringify(itemListSchema)}</script>

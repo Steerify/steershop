@@ -234,7 +234,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                   Login
                 </Button>
               </Link>
-              <Link to="/vendor">
+              <Link to="/auth/login?tab=signup">
                 <Button size="sm" className="h-9 px-4 text-sm bg-gradient-to-r from-primary via-accent to-primary hover:brightness-110 transition-all font-semibold shadow-lg shadow-primary/30 border border-white/20">
                   Get Started
                 </Button>
@@ -302,7 +302,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
             <Link to="/shopper">
               <Button variant="outline" className="w-full min-h-[48px] border-primary/30 font-display">Login</Button>
             </Link>
-            <Link to="/vendor">
+            <Link to="/auth/login?tab=signup">
               <Button className="w-full min-h-[48px] bg-gradient-to-r from-primary via-accent to-primary hover:brightness-110 transition-all font-display font-semibold shadow-lg shadow-primary/25 border border-white/20">Get Started</Button>
             </Link>
           </div>
