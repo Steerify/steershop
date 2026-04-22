@@ -365,7 +365,7 @@ const Shops = () => {
 
           {/* Headline */}
           <div className="text-center max-w-2xl mx-auto mb-4">
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-3">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-3 text-white">
               One Mall,{" "}
               <span className="gradient-text">Endless Shops</span>
             </h1>
