@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Input } from "@/components/ui/input";
 import {
   Search, Store, Package, Sparkles, BadgeCheck, ShieldCheck,
@@ -344,6 +345,24 @@ const Shops = () => {
 
   return (
     <PageThemeShell header={<Navbar />} footer={<Footer />} className="bg-background">
+      <Helmet>
+        <title>SteerSolo Marketplace Nigeria | Discover Trusted Online Stores</title>
+        <meta
+          name="description"
+          content="Browse SteerSolo Marketplace Nigeria to discover trusted online stores for fashion, beauty, food, gadgets, and services."
+        />
+        <meta
+          name="keywords"
+          content="marketplace in nigeria, nigeria marketplace, steersolo marketplace, online marketplace nigeria, trusted stores nigeria"
+        />
+        <link rel="canonical" href="https://steersolo.com/shops" />
+        <meta property="og:title" content="SteerSolo Marketplace Nigeria" />
+        <meta
+          property="og:description"
+          content="Discover trusted Nigerian stores on SteerSolo Marketplace."
+        />
+        <meta property="og:url" content="https://steersolo.com/shops" />
+      </Helmet>
       <VerifiedSellerNotice />
 
       {/* ══════════ HERO ══════════ */}
