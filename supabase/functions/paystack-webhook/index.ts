@@ -79,6 +79,10 @@ serve(async (req) => {
     // Handle successful charge event
     if (event.event === 'charge.success') {
       const { user_id, order_id, shop_id } = event.data.metadata || {};
+      const paymentInstrumentFingerprint =
+        event.data?.authorization?.signature ||
+        event.data?.authorization?.bin ||
+        null;
       
       logInfo('Processing charge.success', { user_id, order_id, shop_id, paymentReference });
 
@@ -333,6 +337,7 @@ serve(async (req) => {
           .update({
             payment_status: 'paid',
             payment_reference: event.data.reference,
+            payment_instrument_fingerprint: paymentInstrumentFingerprint,
           })
           .eq('id', order_id);
 
