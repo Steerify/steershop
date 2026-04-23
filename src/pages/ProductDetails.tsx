@@ -389,7 +389,7 @@ const ProductDetails = () => {
                 variant={product.inventory > 0 ? "default" : "destructive"}
                 className={product.inventory > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
               >
-                {product.inventory > 0 ? `${product.inventory} in stock` : "Out of stock"}
+                {product.inventory > 0 ? `${product.inventory} ${product.stockUnit || "units"} in stock` : "Out of stock"}
               </Badge>
             </div>
 
@@ -426,7 +426,7 @@ const ProductDetails = () => {
                     </Button>
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    Max: {product.inventory}
+                    Max: {product.inventory} {product.stockUnit || "units"}
                   </span>
                 </div>
               </div>
@@ -457,7 +457,7 @@ const ProductDetails = () => {
             </div>
 
             {/* Review Form */}
-            <div className="pt-4">
+            <div className="pt-4 flex justify-center sm:justify-start">
               <ProductReviewForm
                 productId={product.id}
                 productName={product.name}
@@ -469,10 +469,10 @@ const ProductDetails = () => {
 
         {/* Reviews Section */}
         <div className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <MessageSquare className="w-5 h-5 text-accent" />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6 text-center sm:text-left">
+            <MessageSquare className="w-5 h-5 text-accent self-center sm:self-auto" />
             <h2 className="font-display text-2xl font-bold">Customer Reviews</h2>
-            <Badge variant="outline" className="ml-2">
+            <Badge variant="outline" className="sm:ml-2 self-center sm:self-auto">
               {product.totalReviews || 0} reviews
             </Badge>
           </div>
@@ -483,11 +483,13 @@ const ProductDetails = () => {
                 <Star className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="font-semibold mb-2">No reviews yet</h3>
                 <p className="text-muted-foreground mb-4">Be the first to review this product!</p>
-                <ProductReviewForm
-                  productId={product.id}
-                  productName={product.name}
-                  onReviewSubmitted={loadProductData}
-                />
+                <div className="mx-auto max-w-xs">
+                  <ProductReviewForm
+                    productId={product.id}
+                    productName={product.name}
+                    onReviewSubmitted={loadProductData}
+                  />
+                </div>
               </CardContent>
             </Card>
           ) : (

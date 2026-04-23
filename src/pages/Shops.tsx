@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Input } from "@/components/ui/input";
 import {
   Search, Store, Package, Sparkles, BadgeCheck, ShieldCheck,
@@ -344,6 +345,24 @@ const Shops = () => {
 
   return (
     <PageThemeShell header={<Navbar />} footer={<Footer />} className="bg-background">
+      <Helmet>
+        <title>SteerSolo Marketplace Nigeria | Discover Trusted Online Stores</title>
+        <meta
+          name="description"
+          content="Browse SteerSolo Marketplace Nigeria to discover trusted online stores for fashion, beauty, food, gadgets, and services."
+        />
+        <meta
+          name="keywords"
+          content="marketplace in nigeria, nigeria marketplace, steersolo marketplace, online marketplace nigeria, trusted stores nigeria"
+        />
+        <link rel="canonical" href="https://steersolo.com/shops" />
+        <meta property="og:title" content="SteerSolo Marketplace Nigeria" />
+        <meta
+          property="og:description"
+          content="Discover trusted Nigerian stores on SteerSolo Marketplace."
+        />
+        <meta property="og:url" content="https://steersolo.com/shops" />
+      </Helmet>
       <VerifiedSellerNotice />
 
       {/* ══════════ HERO ══════════ */}
@@ -432,23 +451,21 @@ const Shops = () => {
       </section>
 
       {/* ══════════ FILTERS ══════════ */}
-      <div className="sticky top-[57px] z-30 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm">
-        <ExploreFilters
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          selectedSort={selectedSort}
-          onSortChange={setSelectedSort}
-          selectedState={selectedState}
-          onStateChange={(s) => { setSelectedState(s); setShopsPage(1); }}
-          showVerifiedOnly={showVerifiedOnly}
-          onVerifiedChange={(v) => { setShowVerifiedOnly(v); setShopsPage(1); }}
-          categoryCounts={categoryCounts}
-          minPrice={minPrice}
-          maxPrice={maxPrice}
-          onMinPriceChange={setMinPrice}
-          onMaxPriceChange={setMaxPrice}
-        />
-      </div>
+      <ExploreFilters
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        selectedSort={selectedSort}
+        onSortChange={setSelectedSort}
+        selectedState={selectedState}
+        onStateChange={(s) => { setSelectedState(s); setShopsPage(1); }}
+        showVerifiedOnly={showVerifiedOnly}
+        onVerifiedChange={(v) => { setShowVerifiedOnly(v); setShopsPage(1); }}
+        categoryCounts={categoryCounts}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        onMinPriceChange={setMinPrice}
+        onMaxPriceChange={setMaxPrice}
+      />
 
       {/* ══════════ TOP SELLER BANNER ══════════ */}
       <div className="container mx-auto px-4 mt-5 mb-2">
@@ -585,7 +602,7 @@ const Shops = () => {
           )}
 
           {/* ── Shops Section ── */}
-          {showShops && (
+          {showShops && !(hasSearchQuery && searchType === "all" && sortedShops.length === 0 && productResults.length > 0) && (
             <div>
               {/* Section Header */}
               <div className="flex items-center justify-between mb-5">

@@ -35,13 +35,30 @@ const BEAUTY_SUBCATEGORIES = ['skincare', 'haircare', 'cosmetics', 'fragrances',
 
 export function autoCategorize(name: string = '', description: string = ''): string {
   const text = `${name} ${description}`.toLowerCase();
+  const scores = Object.entries(KEYWORD_MAP).map(([category, keywords]) => {
+    const score = keywords.reduce((acc, kw) => acc + (text.includes(kw) ? 1 : 0), 0);
+    return { category, score };
+  });
 
-  for (const [category, keywords] of Object.entries(KEYWORD_MAP)) {
-    if (keywords.some(kw => text.includes(kw))) {
-      return category;
-    }
-  }
-  return 'other';
+  const bestScore = Math.max(...scores.map(s => s.score));
+  if (bestScore <= 0) return 'other';
+
+  const bestMatches = scores.filter(s => s.score === bestScore).map(s => s.category);
+  const categoryPriority = [
+    'food-drinks',
+    'skincare',
+    'haircare',
+    'cosmetics',
+    'fragrances',
+    'natural-beauty',
+    'fashion',
+    'electronics',
+    'home-living',
+    'art-craft',
+    'services',
+  ];
+
+  return categoryPriority.find(category => bestMatches.includes(category)) || bestMatches[0] || 'other';
 }
 
 export function getCategoryLabel(slug: string): string {

@@ -10,6 +10,7 @@ import { SessionExpiryModal } from "@/components/SessionExpiryModal";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { RouteThemeClass } from "@/components/RouteThemeClass";
 import { VisitTracker } from "@/components/VisitTracker";
+import { NetworkStatusBanner } from "@/components/NetworkStatusBanner";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PlatformReviewPopup } from "@/components/PlatformReviewPopup";
@@ -117,7 +118,9 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
       gcTime: 10 * 60 * 1000,   // Cache retained for 10 minutes
       refetchOnWindowFocus: false, // Prevent refetch on tab focus
-      retry: 1, // Only retry once on failure
+      networkMode: "offlineFirst",
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 8000),
     },
   },
 });
@@ -135,6 +138,7 @@ const App = () => (
         }}
       >
         <RouteThemeClass />
+        <NetworkStatusBanner />
         <VisitTracker />
         <SessionExpiryModal />
         <PlatformReviewPopup />
@@ -155,6 +159,8 @@ const App = () => (
             <Route path="/select-role" element={<RoleSelection />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/shops" element={<Shops />} />
+            <Route path="/marketplace-nigeria" element={<Shops />} />
+            <Route path="/nigeria-marketplace" element={<Shops />} />
             <Route path="/shop/:slug" element={<ShopStorefront />} />
             <Route path="/s/:slug" element={<ShopStorefront />} />
             <Route path="/shop/:slug/product/:productId" element={<ProductDetails />} />

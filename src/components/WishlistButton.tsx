@@ -4,14 +4,16 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { wishlistService } from "@/services/wishlist.service";
 import { useToast } from "@/hooks/use-toast";
+import { LoginToastAction } from "@/components/LoginToastAction";
 
 interface WishlistButtonProps {
   productId: string;
   size?: "sm" | "icon";
   className?: string;
+  showLabel?: boolean;
 }
 
-export const WishlistButton = ({ productId, size = "icon", className = "" }: WishlistButtonProps) => {
+export const WishlistButton = ({ productId, size = "icon", className = "", showLabel = false }: WishlistButtonProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -32,6 +34,7 @@ export const WishlistButton = ({ productId, size = "icon", className = "" }: Wis
         title: "Login Required",
         description: "Please log in to save products to your wishlist",
         variant: "destructive",
+        action: <LoginToastAction />,
       });
       return;
     }
@@ -69,6 +72,7 @@ export const WishlistButton = ({ productId, size = "icon", className = "" }: Wis
       aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
     >
       <Heart className={`w-4 h-4 ${isWishlisted ? "fill-red-500" : ""}`} />
+      {showLabel && <span>{isWishlisted ? "Saved" : "Wishlist"}</span>}
     </Button>
   );
 };
