@@ -250,14 +250,15 @@ You MUST call the generate_product_descriptions function with the results.`;
         console.error("AI product descriptions error:", e);
       }
 
-      // Insert products (without image_url — client will upload after)
+      // Insert products with image_url when client provides one (paid flow pre-upload),
+      // otherwise keep null (free flow uploads after setup and then updates products).
       const productInserts = productList.map((p: any, i: number) => ({
         shop_id: shop.id,
         name: p.name,
         price: p.price,
         type: p.type || "product",
         description: productDescriptions[i] || `Quality ${p.name} available at ${business_name}. Order now!`,
-        image_url: null,
+        image_url: p.image_url ?? p.temp_image_url ?? null,
         is_available: true,
         stock_quantity: 100,
         category: business_category?.toLowerCase() || "general",
