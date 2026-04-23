@@ -1,18 +1,20 @@
 import { supabase } from '@/integrations/supabase/client';
 
-const adminMutationHeaders = {
-  'x-admin-intent': 'dashboard-mutation',
-};
+export interface VisitTotals {
+  today: number;
+  days7: number;
+  days30: number;
+}
 
-const invokeAdminMutation = async <T>(functionName: string, body: Record<string, unknown>): Promise<T> => {
-  const { data, error } = await supabase.functions.invoke(functionName, {
-    body,
-    headers: adminMutationHeaders,
-  });
+export interface VisitTrendPoint {
+  date: string;
+  visits: number;
+}
 
-  if (error) throw error;
-  return data as T;
-};
+export interface TopVisitPage {
+  path: string;
+  visits: number;
+}
 
 export interface AdminAnalytics {
   totalUsers: number;
@@ -23,6 +25,9 @@ export interface AdminAnalytics {
   pendingOrders: number;
   totalRevenue: number;
   recentOrders: any[];
+  visitTotals: VisitTotals;
+  topVisitPages: TopVisitPage[];
+  visitTrend: VisitTrendPoint[];
 }
 
 const adminService = {
@@ -35,7 +40,8 @@ const adminService = {
       { count: totalOrders },
       { count: pendingOrders },
       { data: revenueData },
-      { data: recentOrders }
+      { data: recentOrders },
+      visitAnalyticsResponse
     ] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
       supabase.from('shops').select('*', { count: 'exact', head: true }),
@@ -44,10 +50,21 @@ const adminService = {
       supabase.from('orders').select('*', { count: 'exact', head: true }),
       supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('orders').select('total_amount').eq('payment_status', 'paid'),
-      supabase.from('orders').select('*, order_items(*, products(*))').order('created_at', { ascending: false }).limit(10)
+      supabase.from('orders').select('*, order_items(*, products(*))').order('created_at', { ascending: false }).limit(10),
+      supabase.rpc('get_website_visit_analytics')
     ]);
 
     const totalRevenue = revenueData?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0;
+
+    if (visitAnalyticsResponse.error) {
+      throw visitAnalyticsResponse.error;
+    }
+
+    const visitAnalytics = visitAnalyticsResponse.data as {
+      totals?: VisitTotals;
+      top_pages?: TopVisitPage[];
+      daily?: VisitTrendPoint[];
+    } | null;
 
     return {
       totalUsers: totalUsers || 0,
@@ -57,7 +74,14 @@ const adminService = {
       totalOrders: totalOrders || 0,
       pendingOrders: pendingOrders || 0,
       totalRevenue,
-      recentOrders: recentOrders || []
+      recentOrders: recentOrders || [],
+      visitTotals: {
+        today: visitAnalytics?.totals?.today || 0,
+        days7: visitAnalytics?.totals?.days7 || 0,
+        days30: visitAnalytics?.totals?.days30 || 0,
+      },
+      topVisitPages: visitAnalytics?.top_pages || [],
+      visitTrend: visitAnalytics?.daily || []
     };
   },
 

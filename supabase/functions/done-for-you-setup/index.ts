@@ -40,6 +40,20 @@ serve(async (req) => {
       });
     }
     const userId = claimsData.claims.sub as string;
+    let userEmail = (claimsData.claims.email as string | undefined) ?? null;
+
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Defensive fallback: if email is missing in JWT claims, resolve from profiles
+    if (!userEmail) {
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("email")
+        .eq("id", userId)
+        .maybeSingle();
+
+      userEmail = profile?.email ?? null;
+    }
 
     const { reference, business_name, whatsapp_number, business_category, products, free_setup } = await req.json();
 
@@ -157,8 +171,6 @@ You MUST call the generate_shop_branding function with the results.`;
     }
 
     // 3. Create shop using service role — always inactive for admin approval
-    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
     // Check slug uniqueness
     let finalSlug = shopSlug;
     let slugAttempt = 0;
@@ -285,9 +297,52 @@ You MUST call the generate_product_descriptions function with the results.`;
       });
     }
 
-    // 6. Log activity
+    // 6. Persist DFY setup request details for admin tracking
+    const productNames = productList.map((p: any) => p?.name).filter(Boolean);
+    const productSummary =
+      productNames.length > 0
+        ? productNames.slice(0, 8).join(", ") + (productNames.length > 8 ? ` (+${productNames.length - 8} more)` : "")
+        : "No products submitted";
+
+    const setupRequestPayload = {
+      user_id: userId,
+      user_email: userEmail,
+      business_name,
+      whatsapp_number,
+      business_category: business_category || null,
+      product_count: productList.length,
+      product_summary: productSummary,
+      products_info: JSON.stringify(productList),
+      payment_reference: free_setup ? null : reference,
+      free_setup: !!free_setup,
+      contact_phone: whatsapp_number,
+      package_type: free_setup ? "free_setup" : "paid_setup",
+      amount_paid: free_setup ? 0 : 5000,
+      status: "completed",
+      paid_at: free_setup ? null : new Date().toISOString(),
+      completed_at: new Date().toISOString(),
+    };
+
+    if (!free_setup && reference) {
+      const { data: existingSetupRequest } = await supabaseAdmin
+        .from("setup_requests")
+        .select("id")
+        .eq("payment_reference", reference)
+        .maybeSingle();
+
+      if (existingSetupRequest?.id) {
+        await supabaseAdmin.from("setup_requests").update(setupRequestPayload).eq("id", existingSetupRequest.id);
+      } else {
+        await supabaseAdmin.from("setup_requests").insert(setupRequestPayload);
+      }
+    } else {
+      await supabaseAdmin.from("setup_requests").insert(setupRequestPayload);
+    }
+
+    // 7. Log activity
     await supabaseAdmin.from("activity_logs").insert({
       user_id: userId,
+      user_email: userEmail,
       action_type: "create",
       resource_type: "shop",
       resource_id: shop.id,

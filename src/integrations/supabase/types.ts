@@ -2965,6 +2965,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_website_visit_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       increment_feature_usage: {
         Args: { _feature_name: string; _user_id: string }
         Returns: number
