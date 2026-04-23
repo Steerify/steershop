@@ -1508,6 +1508,7 @@ export type Database = {
           price: number
           shop_id: string
           stock_quantity: number
+          stock_unit: string
           total_reviews: number | null
           type: string | null
           updated_at: string
@@ -1529,6 +1530,7 @@ export type Database = {
           price: number
           shop_id: string
           stock_quantity?: number
+          stock_unit?: string
           total_reviews?: number | null
           type?: string | null
           updated_at?: string
@@ -1550,6 +1552,7 @@ export type Database = {
           price?: number
           shop_id?: string
           stock_quantity?: number
+          stock_unit?: string
           total_reviews?: number | null
           type?: string | null
           updated_at?: string

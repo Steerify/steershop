@@ -9,9 +9,10 @@ interface WishlistButtonProps {
   productId: string;
   size?: "sm" | "icon";
   className?: string;
+  showLabel?: boolean;
 }
 
-export const WishlistButton = ({ productId, size = "icon", className = "" }: WishlistButtonProps) => {
+export const WishlistButton = ({ productId, size = "icon", className = "", showLabel = false }: WishlistButtonProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -69,6 +70,7 @@ export const WishlistButton = ({ productId, size = "icon", className = "" }: Wis
       aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
     >
       <Heart className={`w-4 h-4 ${isWishlisted ? "fill-red-500" : ""}`} />
+      {showLabel && <span>{isWishlisted ? "Saved" : "Wishlist"}</span>}
     </Button>
   );
 };

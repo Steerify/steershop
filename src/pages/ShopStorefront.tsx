@@ -21,7 +21,6 @@ import { AdirePattern, AdireAccent } from "@/components/patterns/AdirePattern";
 import CheckoutDialog from "@/components/CheckoutDialog";
 import { BookingDialog } from "@/components/BookingDialog";
 import { ProductRating } from "@/components/ProductRating";
-import { ProductReviewForm } from "@/components/ProductReviewForm";
 import Joyride, { CallBackProps, STATUS } from "react-joyride";
 import { useTour } from "@/hooks/useTour";
 import { TourTooltip } from "@/components/tours/TourTooltip";
@@ -70,6 +69,7 @@ interface Product {
   price: number;
   compare_price: number | null;
   stock_quantity: number;
+  stock_unit?: string | null;
   is_available: boolean;
   image_url: string | null;
   video_url: string | null;
@@ -108,6 +108,7 @@ const ShopStorefront = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const headerCartRef = useRef<HTMLDivElement>(null);
   const [showFloatingBar, setShowFloatingBar] = useState(false);
+  const [cartGlow, setCartGlow] = useState(false);
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('storefront');
 
   const handleTourCallback = (data: CallBackProps) => {
@@ -306,11 +307,18 @@ const ShopStorefront = () => {
   };
 
   const addToCart = (product: Product) => {
+    setCartGlow(true);
+    window.setTimeout(() => setCartGlow(false), 900);
+
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.product.id === product.id);
       if (existingItem) {
         if (existingItem.quantity >= product.stock_quantity) {
-          toast({ title: "Maximum Stock Reached", description: `Only ${product.stock_quantity} units available`, variant: "destructive" });
+          toast({
+            title: "Maximum Stock Reached",
+            description: `Only ${product.stock_quantity} ${product.stock_unit || "units"} available`,
+            variant: "destructive"
+          });
           return prevCart;
         }
         return prevCart.map((item) =>
@@ -549,8 +557,10 @@ const ShopStorefront = () => {
                         <Button
                           size="sm"
                           onClick={() => setIsCheckoutOpen(true)}
-                          className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 text-white shadow-lg shadow-accent/30 font-semibold transition-all gap-2 hover:brightness-110 border border-white/15"
-                          style={{ background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
+                          className={`w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 text-white shadow-lg shadow-accent/30 font-semibold transition-all gap-2 hover:brightness-110 border border-white/15 ${
+                            cartGlow ? "bg-gradient-to-r from-lime-300 via-lime-400 to-green-400 text-zinc-950 shadow-[0_0_24px_rgba(132,204,22,0.65)] border-lime-200 animate-pulse" : ""
+                          }`}
+                          style={cartGlow ? undefined : { background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
                           data-tour="cart-button"
                         >
                           <ShoppingCart className="w-4 h-4" />
@@ -881,7 +891,7 @@ const ShopStorefront = () => {
                           }
                         `}>
                           <div className={`w-1.5 h-1.5 rounded-full ${product.stock_quantity > 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                          <span>{product.stock_quantity > 0 ? `${product.stock_quantity} left` : 'Out of stock'}</span>
+                          <span>{product.stock_quantity > 0 ? `${product.stock_quantity} ${product.stock_unit || "units"} left` : 'Out of stock'}</span>
                         </div>
                       )}
                     </div>
@@ -907,35 +917,17 @@ const ShopStorefront = () => {
                           Add to Cart
                         </Button>
                       )}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                      <div className="grid grid-cols-2 gap-1.5">
                         <Link to={`/shop/${slug}/product/${product.id}`} className="w-full">
                           <Button
                             variant="outline"
                             className="w-full h-9 rounded-xl border-border hover:border-accent/50 hover:bg-accent/5 transition-all"
                           >
-                            Details
+                            View
                             <ChevronRight className="w-3.5 h-3.5 ml-1" />
                           </Button>
                         </Link>
-                        <WishlistButton productId={product.id} className="h-9 w-full rounded-xl" />
-                      </div>
-                    </div>
-
-                    {/* Review Actions */}
-                    <div className="mt-2 min-h-0">
-                      <Link
-                        to={`/shop/${slug}/product/${product.id}`}
-                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors md:hidden"
-                      >
-                        <Star className="w-3.5 h-3.5" />
-                        <span className="line-clamp-1">Rate & review</span>
-                      </Link>
-                      <div className="hidden md:block">
-                        <ProductReviewForm
-                          productId={product.id}
-                          productName={product.name}
-                          onReviewSubmitted={loadShopData}
-                        />
+                        <WishlistButton productId={product.id} size="sm" showLabel className="h-9 w-full rounded-xl" />
                       </div>
                     </div>
                   </div>

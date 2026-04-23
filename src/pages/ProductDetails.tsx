@@ -389,7 +389,7 @@ const ProductDetails = () => {
                 variant={product.inventory > 0 ? "default" : "destructive"}
                 className={product.inventory > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
               >
-                {product.inventory > 0 ? `${product.inventory} in stock` : "Out of stock"}
+                {product.inventory > 0 ? `${product.inventory} ${product.stockUnit || "units"} in stock` : "Out of stock"}
               </Badge>
             </div>
 
@@ -426,7 +426,7 @@ const ProductDetails = () => {
                     </Button>
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    Max: {product.inventory}
+                    Max: {product.inventory} {product.stockUnit || "units"}
                   </span>
                 </div>
               </div>
