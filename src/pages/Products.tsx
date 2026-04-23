@@ -61,6 +61,20 @@ const productSchema = z.object({
   is_available: z.boolean(),
 });
 
+const PRODUCT_STOCK_UNITS = [
+  "units",
+  "pieces",
+  "pairs",
+  "sets",
+  "cartons",
+  "packs",
+  "dozens",
+  "meters",
+  "yards",
+  "kg",
+  "liters",
+] as const;
+
 const Products = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -106,6 +120,8 @@ const Products = () => {
     booking_required: false,
     category: "general",
     nafdac_number: "",
+    stockUnit: "units",
+    customStockUnit: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -183,6 +199,8 @@ const Products = () => {
       booking_required: false,
       category: "general",
       nafdac_number: "",
+      stockUnit: "units",
+      customStockUnit: "",
     });
     setImageUrl("");
     setVideoUrl("");
@@ -229,6 +247,8 @@ const Products = () => {
     if (product) {
       // Editing existing product - no limit check needed
       setEditingProduct(product);
+      const normalizedStockUnit = (product.stockUnit || "units").toLowerCase();
+      const isPresetStockUnit = PRODUCT_STOCK_UNITS.includes(normalizedStockUnit as typeof PRODUCT_STOCK_UNITS[number]);
       setFormData({
         name: product.name,
         description: product.description || "",
@@ -241,6 +261,8 @@ const Products = () => {
         booking_required: product.booking_required ?? false,
         category: (product as any).category || "general",
         nafdac_number: (product as any).nafdac_number || "",
+        stockUnit: isPresetStockUnit ? normalizedStockUnit : "other",
+        customStockUnit: isPresetStockUnit ? "" : normalizedStockUnit,
       });
       setImageUrl(product.images?.[0]?.url || "");
       setVideoUrl(product.video_url || "");
@@ -279,6 +301,10 @@ const Products = () => {
     const parsedInventory = Number(formData.inventory);
     const parsedDuration = formData.duration_minutes ? Number(formData.duration_minutes) : undefined;
     const parsedComparePrice = formData.comparePrice ? Number(formData.comparePrice) : undefined;
+    const normalizedCustomUnit = formData.customStockUnit.trim().toLowerCase();
+    const normalizedStockUnit = formData.stockUnit === "other"
+      ? normalizedCustomUnit
+      : formData.stockUnit.trim().toLowerCase();
 
     if (!Number.isFinite(parsedPrice) || !Number.isInteger(parsedPrice) || parsedPrice <= 0) {
       toast({
@@ -311,6 +337,15 @@ const Products = () => {
       toast({
         title: "Invalid original price",
         description: "Original price must be a whole number greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.type !== "service" && !normalizedStockUnit) {
+      toast({
+        title: "Missing stock unit",
+        description: "Add a unit like pieces, pairs, cartons, or meters.",
         variant: "destructive",
       });
       return;
@@ -359,6 +394,7 @@ const Products = () => {
         video_url: videoUrl || undefined,
         category: formData.category,
         nafdac_number: formData.nafdac_number || undefined,
+        stockUnit: formData.type === "service" ? "slots" : normalizedStockUnit,
       };
 
       let response;
@@ -574,7 +610,7 @@ const Products = () => {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{product.type === 'service' ? 'Available Slots:' : 'Stock:'}</span>
                       <span className={product.inventory === 0 ? "text-destructive font-semibold" : "text-foreground"}>
-                        {product.inventory} {product.type === 'service' ? 'slots' : 'units'}
+                        {product.inventory} {product.type === 'service' ? 'slots' : (product.stockUnit || 'units')}
                       </span>
                     </div>
                     {product.type === 'service' && product.duration_minutes && (
@@ -782,7 +818,36 @@ const Products = () => {
                   />
                   {errors.inventory && <p className="text-sm text-destructive">{errors.inventory}</p>}
                 </div>
+                {formData.type !== 'service' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="stock-unit">Unit *</Label>
+                    <select
+                      id="stock-unit"
+                      value={formData.stockUnit}
+                      onChange={(e) => setFormData({ ...formData, stockUnit: e.target.value })}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {PRODUCT_STOCK_UNITS.map((unit) => (
+                        <option key={unit} value={unit}>
+                          {unit}
+                        </option>
+                      ))}
+                      <option value="other">other</option>
+                    </select>
+                  </div>
+                )}
               </div>
+              {formData.type !== 'service' && formData.stockUnit === 'other' && (
+                <div className="space-y-2">
+                  <Label htmlFor="custom-stock-unit">Custom unit *</Label>
+                  <Input
+                    id="custom-stock-unit"
+                    value={formData.customStockUnit}
+                    onChange={(e) => setFormData({ ...formData, customStockUnit: e.target.value })}
+                    placeholder="e.g. carton, bundle, roll"
+                  />
+                </div>
+              )}
 
             {/* Service-specific fields */}
             {formData.type === 'service' && (
