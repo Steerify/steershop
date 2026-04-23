@@ -1,5 +1,19 @@
 import { supabase } from '@/integrations/supabase/client';
 
+const adminMutationHeaders = {
+  'x-admin-intent': 'dashboard-mutation',
+};
+
+const invokeAdminMutation = async <T>(functionName: string, body: Record<string, unknown>): Promise<T> => {
+  const { data, error } = await supabase.functions.invoke(functionName, {
+    body,
+    headers: adminMutationHeaders,
+  });
+
+  if (error) throw error;
+  return data as T;
+};
+
 export interface AdminAnalytics {
   totalUsers: number;
   totalShops: number;
@@ -106,67 +120,29 @@ const adminService = {
 
   // Update any shop
   updateShop: async (shopId: string, updates: Record<string, any>) => {
-    const { data, error } = await supabase
-      .from('shops')
-      .update(updates)
-      .eq('id', shopId)
-      .select()
-      .single();
+    const response = await invokeAdminMutation<{ data: any }>('admin-update-shop', {
+      shop_id: shopId,
+      updates,
+    });
 
-    if (error) throw error;
-    return data;
+    return response.data;
   },
 
   // Delete a shop
   deleteShop: async (shopId: string) => {
-    const { error } = await supabase
-      .from('shops')
-      .delete()
-      .eq('id', shopId);
-
-    if (error) throw error;
+    await invokeAdminMutation<{ success: boolean }>('admin-delete-shop', { shop_id: shopId });
     return { success: true };
   },
 
   // Extend user subscription
-  extendSubscription: async (userId: string, days: number, adminId: string) => {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('subscription_expires_at')
-      .eq('id', userId)
-      .single();
-
-    const now = new Date();
-    let newExpiry: Date;
-
-    if (profile?.subscription_expires_at) {
-      const current = new Date(profile.subscription_expires_at);
-      const base = current > now ? current : now;
-      newExpiry = new Date(base.getTime() + days * 24 * 60 * 60 * 1000);
-    } else {
-      newExpiry = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
-    }
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ 
-        subscription_expires_at: newExpiry.toISOString(),
-        is_subscribed: true 
-      })
-      .eq('id', userId);
-
-    if (error) throw error;
-
-    // Log the extension
-    await supabase.from('subscription_history').insert({
+  extendSubscription: async (userId: string, days: number, _adminId: string) => {
+    const response = await invokeAdminMutation<{ success: boolean; new_expiry_at: string }>('admin-set-subscription', {
       user_id: userId,
-      event_type: 'admin_extension',
-      new_expiry_at: newExpiry.toISOString(),
-      notes: `Extended by ${days} days`,
-      created_by: adminId
+      action: 'extend_days',
+      days,
     });
 
-    return { success: true, newExpiry };
+    return { success: response.success, newExpiry: new Date(response.new_expiry_at) };
   },
 
   getOrders: async (page = 1, limit = 10) => {
@@ -225,38 +201,27 @@ const adminService = {
 
   // Update any product
   updateProduct: async (productId: string, updates: Record<string, any>) => {
-    const { data, error } = await supabase
-      .from('products')
-      .update(updates)
-      .eq('id', productId)
-      .select()
-      .single();
+    const response = await invokeAdminMutation<{ data: any }>('admin-update-product', {
+      product_id: productId,
+      updates,
+    });
 
-    if (error) throw error;
-    return data;
+    return response.data;
   },
 
   // Delete any product
   deleteProduct: async (productId: string) => {
-    const { error } = await supabase
-      .from('products')
-      .delete()
-      .eq('id', productId);
-
-    if (error) throw error;
+    await invokeAdminMutation<{ success: boolean }>('admin-delete-product', { product_id: productId });
     return { success: true };
   },
 
   updateUserRole: async (id: string, role: 'customer' | 'shop_owner' | 'admin') => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({ role })
-      .eq('id', id)
-      .select()
-      .single();
+    const response = await invokeAdminMutation<{ data: any }>('admin-update-user-role', {
+      user_id: id,
+      role,
+    });
 
-    if (error) throw error;
-    return data;
+    return response.data;
   },
 };
 
