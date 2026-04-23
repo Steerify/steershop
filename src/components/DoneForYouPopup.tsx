@@ -41,6 +41,14 @@ interface DraftProduct {
   file: File | null; // actual file to upload after shop creation
 }
 
+interface SerializedDraftProduct {
+  name: string;
+  price: number;
+  type: "product" | "service";
+  image_url?: string | null;
+  temp_image_url?: string | null;
+}
+
 interface DoneForYouPopupProps {
   open: boolean;
   onClose: () => void;
@@ -221,6 +229,54 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
     }
   };
 
+  const uploadDraftProductImagesToTempStorage = async (): Promise<Array<string | null>> => {
+    if (!user) return draftProducts.map(() => null);
+
+    const uploadedUrls: Array<string | null> = [];
+
+    for (const product of draftProducts) {
+      if (!product.file) {
+        uploadedUrls.push(null);
+        continue;
+      }
+
+      try {
+        let fileToUpload = product.file;
+        if (fileToUpload.size > 500 * 1024) {
+          try {
+            fileToUpload = await uploadService.compressImage(fileToUpload, 1920, 0.8);
+          } catch {
+            // fallback to original file
+          }
+        }
+
+        const extension = fileToUpload.name.split(".").pop()?.toLowerCase() || "jpg";
+        const filePath = `dfy-temp/${user.id}/${crypto.randomUUID()}.${extension}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("product-images")
+          .upload(filePath, fileToUpload, { cacheControl: "3600", upsert: false });
+
+        if (uploadError) {
+          console.error(`Failed temp upload for ${product.name}:`, uploadError);
+          uploadedUrls.push(null);
+          continue;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("product-images")
+          .getPublicUrl(uploadData.path);
+
+        uploadedUrls.push(publicUrl);
+      } catch (err) {
+        console.error(`Temp upload error for ${product.name}:`, err);
+        uploadedUrls.push(null);
+      }
+    }
+
+    return uploadedUrls;
+  };
+
   const handleFreeCreate = async () => {
     if (draftProducts.length === 0) {
       toast({ title: "Add products", description: "Please add at least 1 product before proceeding.", variant: "destructive" });
@@ -279,13 +335,22 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
 
     setIsPayingLoading(true);
 
-    // Store form data + products in localStorage before redirect (no File objects — they can't be serialized)
-    localStorage.setItem("dfy_business_name", businessName);
-    localStorage.setItem("dfy_whatsapp", whatsappNumber);
-    localStorage.setItem("dfy_category", businessCategory);
-    localStorage.setItem("dfy_products", JSON.stringify(draftProducts.map(p => ({ name: p.name, price: p.price, type: p.type }))));
-
     try {
+      const tempImageUrls = await uploadDraftProductImagesToTempStorage();
+      const serializedProducts: SerializedDraftProduct[] = draftProducts.map((p, index) => ({
+        name: p.name,
+        price: p.price,
+        type: p.type,
+        image_url: tempImageUrls[index] ?? null,
+        temp_image_url: tempImageUrls[index] ?? null,
+      }));
+
+      // Store form data + products in localStorage before redirect (no File objects — they can't be serialized)
+      localStorage.setItem("dfy_business_name", businessName);
+      localStorage.setItem("dfy_whatsapp", whatsappNumber);
+      localStorage.setItem("dfy_category", businessCategory);
+      localStorage.setItem("dfy_products", JSON.stringify(serializedProducts));
+
       const { data, error } = await supabase.functions.invoke("done-for-you-initialize", {
         body: {
           callback_url: `${window.location.origin}/dashboard?dfy=verify`,
@@ -313,7 +378,7 @@ export const DoneForYouPopup: React.FC<DoneForYouPopupProps> = ({
     const whatsapp = localStorage.getItem("dfy_whatsapp") || "";
     const category = localStorage.getItem("dfy_category") || "";
     const productsJson = localStorage.getItem("dfy_products");
-    let products: Array<{ name: string; price: number; type: string }> = [];
+    let products: SerializedDraftProduct[] = [];
     try { products = productsJson ? JSON.parse(productsJson) : []; } catch { /* ignore */ }
 
     try {
