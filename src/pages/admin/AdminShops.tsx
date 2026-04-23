@@ -32,6 +32,10 @@ import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+const adminMutationHeaders = {
+  'x-admin-intent': 'dashboard-mutation',
+};
+
 export default function AdminShops() {
   const [shops, setShops] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -214,10 +218,10 @@ export default function AdminShops() {
     const shopId = shop.id;
     const currentStatus = shop.is_active;
 
-    const { error } = await supabase
-      .from("shops")
-      .update({ is_active: !currentStatus })
-      .eq("id", shopId);
+    const { error } = await supabase.functions.invoke('admin-update-shop', {
+      body: { shop_id: shopId, updates: { is_active: !currentStatus } },
+      headers: adminMutationHeaders,
+    });
 
     if (error) {
       toast({ 
@@ -321,14 +325,15 @@ export default function AdminShops() {
       console.log("Updating profile ID:", selectedShop.profiles.id);
       console.log("Setting expiry to:", newExpiry.toISOString());
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ 
-          subscription_expires_at: newExpiry.toISOString(),
-          is_subscribed: true
-        })
-        .eq("id", selectedShop.profiles.id)
-        .select();
+      const { data, error } = await supabase.functions.invoke('admin-set-subscription', {
+        body: {
+          user_id: selectedShop.profiles.id,
+          action: 'extend_days',
+          days: parseInt(extensionDays),
+          plan_name: selectedShop.profiles.subscription_plan_id || null,
+        },
+        headers: adminMutationHeaders,
+      });
 
       if (error) {
         console.error("Update error:", error);
@@ -378,13 +383,15 @@ export default function AdminShops() {
       const newExpiry = new Date();
       newExpiry.setDate(newExpiry.getDate() + 30);
 
-      const { error } = await supabase
-        .from("profiles")
-        .update({ 
-          subscription_expires_at: newExpiry.toISOString(),
-          is_subscribed: false // Mark as trial
-        })
-        .eq("id", shop.profiles.id);
+      const { error } = await supabase.functions.invoke('admin-set-subscription', {
+        body: {
+          user_id: shop.profiles.id,
+          action: 'set_date',
+          custom_date: newExpiry.toISOString(),
+          plan_name: shop.profiles.subscription_plan_id || null,
+        },
+        headers: adminMutationHeaders,
+      });
 
       if (error) {
         toast({ 
@@ -421,10 +428,10 @@ export default function AdminShops() {
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('shops')
-        .delete()
-        .eq('id', shopToDelete.id);
+      const { error } = await supabase.functions.invoke('admin-delete-shop', {
+        body: { shop_id: shopToDelete.id },
+        headers: adminMutationHeaders,
+      });
 
       if (error) throw error;
 
@@ -450,14 +457,17 @@ export default function AdminShops() {
     if (!selectedShop) return;
     setIsSaving(true);
 
-    const { error } = await supabase
-      .from("shops")
-      .update({
-        shop_name: formData.shop_name,
-        description: formData.description,
-        whatsapp_number: formData.whatsapp_number,
-      })
-      .eq("id", selectedShop.id);
+    const { error } = await supabase.functions.invoke('admin-update-shop', {
+      body: {
+        shop_id: selectedShop.id,
+        updates: {
+          shop_name: formData.shop_name,
+          description: formData.description,
+          whatsapp_number: formData.whatsapp_number,
+        },
+      },
+      headers: adminMutationHeaders,
+    });
 
     if (error) {
       toast({ 

@@ -23,6 +23,10 @@ interface SubscriptionPlan {
 
 type FilterType = 'all' | 'shop_owners' | 'active' | 'trial' | 'expired';
 
+const adminMutationHeaders = {
+  'x-admin-intent': 'dashboard-mutation',
+};
+
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -100,25 +104,17 @@ export default function AdminUsers() {
       const previousExpiry = selectedUser.subscription_expires_at;
       const newExpiry = addDays(currentExpiry > new Date() ? currentExpiry : new Date(), days);
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          is_subscribed: true,
-          subscription_expires_at: newExpiry.toISOString(),
-        })
-        .eq('id', selectedUser.id);
+      const { error } = await supabase.functions.invoke('admin-set-subscription', {
+        body: {
+          user_id: selectedUser.id,
+          action: 'extend_days',
+          days,
+          plan_name: getPlanName(selectedUser.subscription_plan_id),
+        },
+        headers: adminMutationHeaders,
+      });
 
       if (error) throw error;
-
-      // Log to subscription history
-      await supabase.from('subscription_history').insert({
-        user_id: selectedUser.id,
-        event_type: 'extension',
-        plan_name: getPlanName(selectedUser.subscription_plan_id),
-        previous_expiry_at: previousExpiry,
-        new_expiry_at: newExpiry.toISOString(),
-        notes: `Extended by ${days} days by admin`,
-      });
 
       toast({
         title: "Subscription Extended",
@@ -141,27 +137,17 @@ export default function AdminUsers() {
     if (!selectedUser || !customDate) return;
 
     try {
-      const previousExpiry = selectedUser.subscription_expires_at;
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          is_subscribed: true,
-          subscription_expires_at: customDate.toISOString(),
-        })
-        .eq('id', selectedUser.id);
+      const { error } = await supabase.functions.invoke('admin-set-subscription', {
+        body: {
+          user_id: selectedUser.id,
+          action: 'set_date',
+          custom_date: customDate.toISOString(),
+          plan_name: getPlanName(selectedUser.subscription_plan_id),
+        },
+        headers: adminMutationHeaders,
+      });
 
       if (error) throw error;
-
-      // Log to subscription history
-      await supabase.from('subscription_history').insert({
-        user_id: selectedUser.id,
-        event_type: 'extension',
-        plan_name: getPlanName(selectedUser.subscription_plan_id),
-        previous_expiry_at: previousExpiry,
-        new_expiry_at: customDate.toISOString(),
-        notes: 'Extended to custom date by admin',
-      });
 
       toast({
         title: "Subscription Extended",
@@ -186,33 +172,19 @@ export default function AdminUsers() {
 
     try {
       const newExpiry = addDays(new Date(), 30);
-      const updateData: any = {
-        is_subscribed: true,
-        subscription_expires_at: newExpiry.toISOString(),
-      };
-
-      if (selectedPlanId) {
-        updateData.subscription_plan_id = selectedPlanId;
-      }
-
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', selectedUser.id);
-
-      if (error) throw error;
-
       const planName = plans.find(p => p.id === selectedPlanId)?.name || 'Basic';
 
-      // Log to subscription history
-      await supabase.from('subscription_history').insert({
-        user_id: selectedUser.id,
-        event_type: 'activation',
-        plan_id: selectedPlanId || null,
-        plan_name: planName,
-        new_expiry_at: newExpiry.toISOString(),
-        notes: 'Activated by admin',
+      const { error } = await supabase.functions.invoke('admin-set-subscription', {
+        body: {
+          user_id: selectedUser.id,
+          action: 'activate',
+          plan_id: selectedPlanId || null,
+          plan_name: planName,
+        },
+        headers: adminMutationHeaders,
       });
+
+      if (error) throw error;
 
       toast({
         title: "Subscription Activated",
