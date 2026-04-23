@@ -98,7 +98,7 @@ export const SubscriptionCard = ({ plans, currentPlanId, onSubscriptionSuccess }
           Yearly
         </Label>
         {isYearly && (
-          <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">
+          <Badge variant="secondary" className="bg-accent/15 text-accent">
             Save up to 17%!
           </Badge>
         )}
@@ -119,7 +119,7 @@ export const SubscriptionCard = ({ plans, currentPlanId, onSubscriptionSuccess }
               className={cn(
                 "relative overflow-hidden transition-all hover:shadow-lg",
                 isPopular && "border-primary shadow-lg ring-2 ring-primary/20",
-                isCurrentPlan && "border-green-500 bg-green-50/50 dark:bg-green-950/20"
+                isCurrentPlan && "border-accent/40 bg-accent/10"
               )}
             >
               {isPopular && (
@@ -129,7 +129,7 @@ export const SubscriptionCard = ({ plans, currentPlanId, onSubscriptionSuccess }
               )}
               
               {isCurrentPlan && (
-                <div className="absolute top-0 left-0 bg-green-500 text-white px-3 py-1 text-xs font-semibold rounded-br-lg">
+                <div className="absolute top-0 left-0 bg-accent text-accent-foreground px-3 py-1 text-xs font-semibold rounded-br-lg">
                   CURRENT PLAN
                 </div>
               )}
@@ -138,9 +138,9 @@ export const SubscriptionCard = ({ plans, currentPlanId, onSubscriptionSuccess }
                 <div className="flex items-center gap-2 mb-2">
                   <div className={cn(
                     "w-10 h-10 rounded-xl flex items-center justify-center",
-                    (plan.slug === 'growth' || plan.slug === 'basic') && "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300",
+                    (plan.slug === 'growth' || plan.slug === 'basic') && "bg-primary/10 text-primary",
                     plan.slug === 'pro' && "bg-primary/10 text-primary",
-                    plan.slug === 'business' && "bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-300"
+                    plan.slug === 'business' && "bg-accent/15 text-accent"
                   )}>
                     <Icon className="w-5 h-5" />
                   </div>
@@ -156,7 +156,7 @@ export const SubscriptionCard = ({ plans, currentPlanId, onSubscriptionSuccess }
                     <span className="text-muted-foreground">/{isYearly ? 'year' : 'month'}</span>
                   </div>
                   {isYearly && savings > 0 && (
-                    <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                    <p className="text-sm text-accent mt-1">
                       Save ₦{formatPrice(savings)}/year
                     </p>
                   )}
@@ -165,7 +165,7 @@ export const SubscriptionCard = ({ plans, currentPlanId, onSubscriptionSuccess }
                 <ul className="space-y-2">
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                      <Check className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -175,7 +175,7 @@ export const SubscriptionCard = ({ plans, currentPlanId, onSubscriptionSuccess }
                   className={cn(
                     "w-full",
                     isPopular && "bg-gradient-to-r from-primary to-accent hover:opacity-90",
-                    isCurrentPlan && "bg-green-500 hover:bg-green-600"
+                    isCurrentPlan && "bg-accent hover:opacity-90 text-accent-foreground"
                   )}
                   onClick={() => handleSubscribe(plan)}
                   disabled={isLoading !== null || isCurrentPlan}

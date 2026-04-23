@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Wifi, WifiOff, X } from "lucide-react";
+import { AlertTriangle, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type EffectiveConnectionType = "slow-2g" | "2g" | "3g" | "4g";
@@ -26,8 +26,6 @@ const getConnectionState = () => {
 
 export const NetworkStatusBanner = () => {
   const [networkState, setNetworkState] = useState(getConnectionState);
-  const [isDismissed, setIsDismissed] = useState(false);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   useEffect(() => {
     const updateState = () => setNetworkState(getConnectionState());
@@ -46,10 +44,6 @@ export const NetworkStatusBanner = () => {
     };
   }, []);
 
-  useEffect(() => {
-    setIsDismissed(false);
-  }, [networkState.isOnline, networkState.effectiveType, networkState.saveData]);
-
   const isSlowNetwork = useMemo(() => {
     return (
       networkState.effectiveType === "slow-2g" ||
@@ -62,23 +56,11 @@ export const NetworkStatusBanner = () => {
   if (networkState.isOnline && !isSlowNetwork) {
     return null;
   }
-  if (isDismissed) return null;
 
   const isOffline = !networkState.isOnline;
 
   return (
-    <div
-      className="fixed inset-x-0 top-0 z-[120] px-3 pt-3"
-      onTouchStart={(event) => setTouchStartX(event.touches[0]?.clientX ?? null)}
-      onTouchEnd={(event) => {
-        if (touchStartX === null) return;
-        const touchEndX = event.changedTouches[0]?.clientX ?? touchStartX;
-        if (Math.abs(touchEndX - touchStartX) > 60) {
-          setIsDismissed(true);
-        }
-        setTouchStartX(null);
-      }}
-    >
+    <div className="fixed inset-x-0 top-0 z-[120] px-3 pt-3">
       <div
         className={`mx-auto flex max-w-3xl items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm shadow-lg backdrop-blur ${
           isOffline
@@ -109,14 +91,6 @@ export const NetworkStatusBanner = () => {
           <Wifi className="mr-1 h-4 w-4" />
           Retry
         </Button>
-        <button
-          type="button"
-          aria-label="Dismiss network banner"
-          className="rounded-md p-1 opacity-80 transition hover:opacity-100"
-          onClick={() => setIsDismissed(true)}
-        >
-          <X className="h-4 w-4" />
-        </button>
       </div>
     </div>
   );

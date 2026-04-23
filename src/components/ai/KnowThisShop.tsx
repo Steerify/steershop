@@ -167,17 +167,17 @@ export const KnowThisShop = ({ shopId }: KnowThisShopProps) => {
             {/* Trust Badges */}
             <div className="flex flex-wrap gap-2">
               {data.has_whatsapp && (
-                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                <Badge variant="outline" className="bg-accent/10 text-accent border-accent/30">
                   WhatsApp Support
                 </Badge>
               )}
               {data.accepts_paystack && (
-                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
                   Secure Payments
                 </Badge>
               )}
               {data.has_logo && data.has_banner && (
-                <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/20">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
                   Verified Branding
                 </Badge>
               )}
