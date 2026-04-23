@@ -40,35 +40,86 @@ serve(async (req) => {
       console.error('Error fetching profile for deletion:', profileError);
     }
 
-    // 2. Record the email in deleted_accounts to permanently block re-registration
-    if (profile?.email) {
-      const { error: insertError } = await supabase
-        .from('deleted_accounts')
-        .insert({
-          email: profile.email,
-          role: profile.role,
-        });
+    // 2. Stage enforcement instead of immediate hard delete
+    const deletionWindowDays = 14;
+    const deletionScheduledFor = new Date(Date.now() + deletionWindowDays * 24 * 60 * 60 * 1000).toISOString();
 
-      if (insertError) {
-        console.error('Error recording deleted account:', insertError);
-        // Don't block deletion if this fails, but log it
-      } else {
-        console.log('Email recorded in deleted_accounts:', profile.email);
-      }
+    const { error: stageError } = await supabase
+      .from('profiles')
+      .update({
+        account_status: 'pending_deletion',
+        account_locked_at: new Date().toISOString(),
+        enforcement_stage: 'deletion_scheduled',
+        deletion_scheduled_for: deletionScheduledFor,
+        is_subscribed: false,
+        is_reseller: false,
+      })
+      .eq('id', user.id);
+
+    if (stageError) {
+      console.error('Error staging account deletion:', stageError);
+      throw new Error('Failed to stage account deletion');
     }
 
-    // 3. Delete user from auth.users (cascades to profiles, etc.)
-    const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
+    const { data: fraudFlagRow } = await supabase
+      .from('fraud_flags')
+      .insert({
+        user_id: user.id,
+        reason: 'user_requested_deletion',
+        confidence_score: 0.5,
+        evidence: { source: 'delete-account-function' },
+        automated_action: 'schedule_delayed_deletion',
+      })
+      .select('id')
+      .single();
 
-    if (deleteError) {
-      console.error('Error deleting user from auth:', deleteError);
-      throw new Error('Failed to delete user account');
-    }
+    await supabase
+      .from('fraud_review_queue')
+      .insert({
+        user_id: user.id,
+        fraud_flag_id: fraudFlagRow?.id ?? null,
+        queue_status: 'pending',
+        priority: 'medium',
+        notes: `User requested deletion; scheduled for ${deletionScheduledFor}`,
+      });
 
-    console.log('User account deleted successfully:', user.id);
+    await supabase
+      .from('fraud_enforcement_audit')
+      .insert([
+        {
+          user_id: user.id,
+          action: 'auto_lock_account',
+          metadata: { source: 'delete-account-function' },
+          created_by: user.id,
+        },
+        {
+          user_id: user.id,
+          action: 'revoke_benefits_commissions',
+          metadata: { source: 'delete-account-function' },
+          created_by: user.id,
+        },
+        {
+          user_id: user.id,
+          action: 'queue_admin_review',
+          metadata: { source: 'delete-account-function', fraud_flag_id: fraudFlagRow?.id ?? null },
+          created_by: user.id,
+        },
+        {
+          user_id: user.id,
+          action: 'schedule_delayed_deletion_window',
+          metadata: { source: 'delete-account-function', deletion_scheduled_for: deletionScheduledFor, window_days: deletionWindowDays },
+          created_by: user.id,
+        },
+      ]);
+
+    // 3. Keep email blocked only after admin-confirmed abuse / finalization.
+    console.log('User account moved to staged deletion workflow:', user.id);
 
     return new Response(
-      JSON.stringify({ message: 'Account deleted successfully' }),
+      JSON.stringify({
+        message: 'Account locked and queued for review. Deletion is scheduled after review window.',
+        deletionScheduledFor,
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
