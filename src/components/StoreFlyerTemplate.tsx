@@ -855,7 +855,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
             )}
             <div className="text-center w-full" style={{ color: element.color, fontSize: element.fontSize }}>
               <div className="font-semibold truncate text-sm">{product?.name}</div>
-              <div className="text-green-600 font-bold">₦{product?.price.toLocaleString()}</div>
+              <div className="text-primary font-bold">₦{product?.price.toLocaleString()}</div>
             </div>
           </div>
         );
@@ -912,7 +912,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+        <Button className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white">
           <Sparkles className="w-4 h-4" />
           Design Flyer
         </Button>
@@ -920,7 +920,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
       <DialogContent className="max-w-7xl w-[95vw] h-[95vh] p-0 overflow-hidden">
         <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <Sparkles className="w-5 h-5 text-blue-600" />
+            <Sparkles className="w-5 h-5 text-primary" />
             Design Your Store Flyer
             <span className="text-sm font-normal text-muted-foreground ml-2">
               Professional marketing flyer with QR code and contact information
@@ -945,7 +945,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
               </TabsList>
 
               <TabsContent value="design" className="space-y-4 mt-4">
-                <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-purple-50">
+                <Card className="border-0 shadow-sm bg-gradient-to-br from-primary/10 to-accent/10">
                   <CardContent className="p-4 space-y-4">
                     <div className="space-y-3">
                       <Label className="text-sm font-semibold flex items-center gap-2">
@@ -1123,33 +1123,33 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                         <Button 
                           variant="outline" 
                           onClick={() => addElement('text')} 
-                          className="h-16 flex-col gap-1 hover:bg-blue-50 hover:border-blue-200 transition-colors"
+                          className="h-16 flex-col gap-1 hover:bg-primary/10 hover:border-primary/30 transition-colors"
                         >
-                          <Type className="w-5 h-5 text-blue-600" />
+                          <Type className="w-5 h-5 text-primary" />
                           <span className="text-xs">Text</span>
                         </Button>
                         <Button 
                           variant="outline" 
                           onClick={() => addElement('image')} 
-                          className="h-16 flex-col gap-1 hover:bg-green-50 hover:border-green-200 transition-colors"
+                          className="h-16 flex-col gap-1 hover:bg-accent/10 hover:border-accent/30 transition-colors"
                         >
-                          <Image className="w-5 h-5 text-green-600" />
+                          <Image className="w-5 h-5 text-accent" />
                           <span className="text-xs">Image</span>
                         </Button>
                         <Button 
                           variant="outline" 
                           onClick={() => addElement('qr')} 
-                          className="h-16 flex-col gap-1 hover:bg-purple-50 hover:border-purple-200 transition-colors"
+                          className="h-16 flex-col gap-1 hover:bg-primary/10 hover:border-primary/30 transition-colors"
                         >
-                          <Layout className="w-5 h-5 text-purple-600" />
+                          <Layout className="w-5 h-5 text-primary" />
                           <span className="text-xs">QR Code</span>
                         </Button>
                         <Button 
                           variant="outline" 
                           onClick={() => addElement('shape', 'rectangle')} 
-                          className="h-16 flex-col gap-1 hover:bg-orange-50 hover:border-orange-200 transition-colors"
+                          className="h-16 flex-col gap-1 hover:bg-accent/10 hover:border-accent/30 transition-colors"
                         >
-                          <Palette className="w-5 h-5 text-orange-600" />
+                          <Palette className="w-5 h-5 text-accent" />
                           <span className="text-xs">Shape</span>
                         </Button>
                       </div>
@@ -1446,7 +1446,7 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                             <p className="text-sm font-medium truncate">{product.name}</p>
                             <p className="text-xs text-muted-foreground">₦{product.price.toLocaleString()}</p>
                           </div>
-                          <Plus className="w-4 h-4 text-muted-foreground group-hover:text-blue-600 transition-colors" />
+                          <Plus className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
                       ))}
                       {products.length === 0 && (
@@ -1497,14 +1497,14 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                   <Download className="w-4 h-4" />
                   Download
                 </Button>
-                <Button onClick={handlePrint} className="gap-2 h-9 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                <Button onClick={handlePrint} className="gap-2 h-9 bg-gradient-to-r from-primary to-accent hover:opacity-90">
                   <Printer className="w-4 h-4" />
                   Print Flyer
                 </Button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-6 flex items-center justify-center">
+            <div className="flex-1 overflow-auto bg-gradient-to-br from-muted/40 to-primary/10 rounded-xl p-6 flex items-center justify-center">
               <div
                 ref={canvasRef}
                 className="relative bg-white border-2 border-gray-200 rounded-xl shadow-lg"
@@ -1534,8 +1534,8 @@ export const StoreFlyerTemplate = ({ shop, products = [] }: StoreFlyerTemplatePr
                 {elements.length === 0 && (
                   <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                     <div className="text-center p-8">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Sparkles className="w-8 h-8 text-blue-600" />
+                      <div className="w-16 h-16 bg-gradient-to-br from-primary/15 to-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Sparkles className="w-8 h-8 text-primary" />
                       </div>
                       <h4 className="font-semibold mb-2">Professional Flyer Template</h4>
                       <p className="text-sm text-muted-foreground max-w-xs">

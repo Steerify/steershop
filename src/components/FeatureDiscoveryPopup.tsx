@@ -19,7 +19,7 @@ const FEATURE_POPUPS: Record<string, FeaturePopupConfig> = {
     description: "Our AI will analyze your shop and give you honest, actionable feedback in Pidgin English!",
     actionText: "Try Stroke My Shop",
     icon: <Flame className="w-5 h-5" />,
-    gradient: "from-orange-500 to-red-500",
+    gradient: "from-primary to-accent",
   },
   ai_features: {
     id: "ai_features",
@@ -27,7 +27,7 @@ const FEATURE_POPUPS: Record<string, FeaturePopupConfig> = {
     description: "Upgrade to Pro or Business to access AI-powered tools that help grow your business!",
     actionText: "View Plans",
     icon: <Sparkles className="w-5 h-5" />,
-    gradient: "from-purple-500 to-pink-500",
+    gradient: "from-primary to-accent",
   },
   business_perks: {
     id: "business_perks",
@@ -35,7 +35,7 @@ const FEATURE_POPUPS: Record<string, FeaturePopupConfig> = {
     description: "Business users get priority listing and a chance to be featured as Top Seller of the Month!",
     actionText: "Upgrade Now",
     icon: <Zap className="w-5 h-5" />,
-    gradient: "from-yellow-500 to-orange-500",
+    gradient: "from-primary to-accent",
   },
 };
 
