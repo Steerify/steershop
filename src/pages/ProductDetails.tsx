@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { WishlistButton } from "@/components/WishlistButton";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -207,6 +207,44 @@ const ProductDetails = () => {
     });
   };
 
+
+
+  const handleShareProduct = async () => {
+    if (!product || !slug) return;
+
+    const sharePath = `/shop/${slug}/product/${product.id}`;
+    const shareUrl = `${window.location.origin}${sharePath}?utm_source=product_share`;
+    const shareData = {
+      title: `${product.name} | ${shop?.name || "Shop"}`,
+      text: `Check out ${product.name}${shop?.name ? ` from ${shop.name}` : ""} on SteerSolo`,
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        toast({
+          title: "Product shared",
+          description: "Thanks for sharing this product!",
+        });
+        return;
+      }
+
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Link copied",
+        description: "Product link copied to clipboard.",
+      });
+    } catch (error) {
+      console.error("Failed to share product:", error);
+      toast({
+        title: "Unable to share",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
@@ -395,7 +433,7 @@ const ProductDetails = () => {
             )}
 
             {/* Add to Cart Button */}
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               <Button
                 size="lg"
                 className="flex-1 bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg"
@@ -404,6 +442,16 @@ const ProductDetails = () => {
               >
                 <ShoppingCart className="w-5 h-5 mr-2" />
                 Add to Cart - ₦{(product.price * quantity).toLocaleString()}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-12 w-12"
+                onClick={handleShareProduct}
+                aria-label={`Share ${product.name}`}
+              >
+                <Share2 className="w-5 h-5" />
               </Button>
               <WishlistButton productId={product.id} size="sm" className="h-12 w-12" />
             </div>
