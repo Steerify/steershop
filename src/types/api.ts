@@ -112,6 +112,7 @@ export interface Product {
   shop_slug?: string;
   image_url?: string;
   stock_quantity?: number;
+  stockUnit?: string;
 }
 
 export interface OrderItem {
