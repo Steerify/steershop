@@ -9,6 +9,7 @@ import { PageLoadingSkeleton } from "@/components/PageLoadingSkeleton";
 import { SessionExpiryModal } from "@/components/SessionExpiryModal";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { RouteThemeClass } from "@/components/RouteThemeClass";
+import { VisitTracker } from "@/components/VisitTracker";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PlatformReviewPopup } from "@/components/PlatformReviewPopup";
@@ -134,6 +135,7 @@ const App = () => (
         }}
       >
         <RouteThemeClass />
+        <VisitTracker />
         <SessionExpiryModal />
         <PlatformReviewPopup />
         <ScrollToTop />

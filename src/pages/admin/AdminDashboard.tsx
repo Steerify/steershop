@@ -7,11 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import {
   Store, Package, ShoppingCart, Users, Bell, Loader2, CheckCircle,
   TrendingUp, DollarSign, Activity, Megaphone, Award, Sparkles,
-  ArrowRight, Tv, GraduationCap, Gift, UserPlus, BarChart2
+  ArrowRight, Tv, GraduationCap, Gift, UserPlus, BarChart2, Globe, MousePointerClick
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar } from "recharts";
 
 // ─── Admin Stat Card ──────────────────────────────────────────────────────────
 const AdminStatCard = ({
@@ -79,7 +80,15 @@ const AdminQuickLink = ({
 // ─── Main Admin Dashboard ─────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const { toast } = useToast();
-  const [stats, setStats] = useState({ totalShops: 0, totalProducts: 0, totalOrders: 0, totalUsers: 0 });
+  const [stats, setStats] = useState({
+    totalShops: 0,
+    totalProducts: 0,
+    totalOrders: 0,
+    totalUsers: 0,
+    visitTotals: { today: 0, days7: 0, days30: 0 },
+    topVisitPages: [] as Array<{ path: string; visits: number }>,
+    visitTrend: [] as Array<{ date: string; visits: number }>,
+  });
   const [isRunningReminders, setIsRunningReminders] = useState(false);
   const [reminderResults, setReminderResults] = useState<any>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
@@ -95,6 +104,9 @@ export default function AdminDashboard() {
         totalProducts: analytics.totalProducts || 0,
         totalOrders: analytics.totalOrders || 0,
         totalUsers: analytics.totalUsers || 0,
+        visitTotals: analytics.visitTotals,
+        topVisitPages: analytics.topVisitPages,
+        visitTrend: analytics.visitTrend,
       });
     } catch (error) {
       console.error("Error fetching admin stats:", error);
@@ -127,6 +139,12 @@ export default function AdminDashboard() {
     { title: "Total Products", value: stats.totalProducts, icon: Package, gradient: "bg-gradient-to-br from-emerald-500 to-emerald-700", subtitle: "Listed items" },
     { title: "Total Orders", value: stats.totalOrders, icon: ShoppingCart, gradient: "bg-gradient-to-br from-purple-600 to-purple-700", subtitle: "All time" },
     { title: "Total Users", value: stats.totalUsers, icon: Users, gradient: "bg-gradient-to-br from-orange-500 to-orange-600", subtitle: "Registered accounts" },
+  ];
+
+  const visitCards = [
+    { title: "Visits Today", value: stats.visitTotals.today, icon: MousePointerClick, gradient: "bg-gradient-to-br from-cyan-600 to-blue-600", subtitle: "Last 24h" },
+    { title: "Visits (7d)", value: stats.visitTotals.days7, icon: Globe, gradient: "bg-gradient-to-br from-teal-600 to-emerald-600", subtitle: "Rolling week" },
+    { title: "Visits (30d)", value: stats.visitTotals.days30, icon: TrendingUp, gradient: "bg-gradient-to-br from-indigo-600 to-purple-600", subtitle: "Rolling month" },
   ];
 
   const quickLinks = [
@@ -173,6 +191,71 @@ export default function AdminDashboard() {
           {statCards.map((card) => (
             <AdminStatCard key={card.title} {...card} value={isLoadingStats ? "..." : card.value} />
           ))}
+        </div>
+
+        <div>
+          <h2 className="text-base font-bold mb-4 flex items-center gap-2">
+            <Globe className="w-4 h-4 text-primary" />
+            Website Visit Analytics
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {visitCards.map((card) => (
+              <AdminStatCard key={card.title} {...card} value={isLoadingStats ? "..." : card.value} />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-base">Daily Visit Trend (30 days)</CardTitle>
+                <CardDescription>Route-level page visits across the last 30 days.</CardDescription>
+              </CardHeader>
+              <CardContent className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={stats.visitTrend}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tickFormatter={(value) => value.slice(5)} />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="visits" stroke="#16a34a" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Top Pages (30 days)</CardTitle>
+                <CardDescription>Most visited routes on the site.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {stats.topVisitPages.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No visit data yet.</p>
+                ) : (
+                  <>
+                    <div className="h-44">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={stats.topVisitPages.slice(0, 5)} layout="vertical" margin={{ left: 8, right: 8 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis type="number" />
+                          <YAxis type="category" width={120} dataKey="path" tickFormatter={(v) => v.length > 18 ? `${v.slice(0, 18)}…` : v} />
+                          <Tooltip />
+                          <Bar dataKey="visits" fill="#6366f1" radius={[4, 4, 4, 4]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="space-y-2">
+                      {stats.topVisitPages.slice(0, 5).map((page) => (
+                        <div key={page.path} className="flex items-center justify-between text-sm">
+                          <span className="truncate max-w-[75%] text-muted-foreground">{page.path}</span>
+                          <Badge variant="outline">{page.visits}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Quick Links Grid */}
