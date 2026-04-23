@@ -16,6 +16,7 @@ export interface CreateProductRequest {
   booking_required?: boolean;
   is_available?: boolean;
   video_url?: string;
+  stockUnit?: string;
 }
 
 const productService = {
@@ -43,6 +44,7 @@ const productService = {
         video_url: data.video_url || null,
         category: (data as any).category || 'general',
         nafdac_number: (data as any).nafdac_number || null,
+        stock_unit: data.stockUnit || 'units',
       })
       .select()
       .single();
@@ -105,6 +107,7 @@ const productService = {
       duration_minutes: p.duration_minutes,
       booking_required: p.booking_required,
       video_url: p.video_url || undefined,
+      stockUnit: p.stock_unit || 'units',
     }));
 
     return {
@@ -149,6 +152,7 @@ const productService = {
       duration_minutes: product.duration_minutes,
       booking_required: product.booking_required,
       video_url: product.video_url || undefined,
+      stockUnit: product.stock_unit || 'units',
     };
 
     return {
@@ -174,6 +178,7 @@ const productService = {
     if (data.video_url !== undefined) updateData.video_url = data.video_url || null;
     if ((data as any).category) updateData.category = (data as any).category;
     if ((data as any).nafdac_number !== undefined) updateData.nafdac_number = (data as any).nafdac_number || null;
+    if (data.stockUnit !== undefined) updateData.stock_unit = data.stockUnit || "units";
 
     const { data: product, error } = await supabase
       .from('products')
@@ -252,6 +257,7 @@ const productService = {
       type: p.type as 'product' | 'service' | undefined,
       averageRating: p.average_rating ? Number(p.average_rating) : undefined,
       totalReviews: p.total_reviews || 0,
+      stockUnit: p.stock_unit || "units",
     }));
 
     return {
