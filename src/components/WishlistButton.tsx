@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { wishlistService } from "@/services/wishlist.service";
 import { useToast } from "@/hooks/use-toast";
+import { LoginToastAction } from "@/components/LoginToastAction";
 
 interface WishlistButtonProps {
   productId: string;
@@ -33,6 +34,7 @@ export const WishlistButton = ({ productId, size = "icon", className = "", showL
         title: "Login Required",
         description: "Please log in to save products to your wishlist",
         variant: "destructive",
+        action: <LoginToastAction />,
       });
       return;
     }

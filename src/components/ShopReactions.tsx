@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { LoginToastAction } from "@/components/LoginToastAction";
 
 interface ShopReactionsProps {
   shopId: string;
@@ -100,6 +101,7 @@ export const ShopReactions = ({ shopId, className }: ShopReactionsProps) => {
           title: "Please log in",
           description: "You need to be logged in to react to shops",
           variant: "destructive",
+          action: <LoginToastAction />,
         });
         return;
       }

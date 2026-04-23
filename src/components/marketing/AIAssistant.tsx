@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Sparkles, Copy, Loader2, Type, Lightbulb, MessageSquare } from "lucide-react";
+import { LoginToastAction } from "@/components/LoginToastAction";
 
 interface AIAssistantProps {
   shopName: string;
@@ -62,6 +63,7 @@ export const AIAssistant = ({ shopName, onInsertText }: AIAssistantProps) => {
           title: "Please log in",
           description: "You need to be logged in to use AI features",
           variant: "destructive",
+          action: <LoginToastAction />,
         });
         return;
       }

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import reviewService from "@/services/review.service";
+import { LoginToastAction } from "@/components/LoginToastAction";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +51,7 @@ export const ProductReviewForm = ({ productId, productName, onReviewSubmitted }:
           title: "Authentication required",
           description: "Please log in to submit a review",
           variant: "destructive",
+          action: <LoginToastAction />,
         });
         return;
       }
@@ -84,11 +86,11 @@ export const ProductReviewForm = ({ productId, productName, onReviewSubmitted }:
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" className="w-full sm:w-auto">
           Write a Review
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-[500px] rounded-2xl">
         <DialogHeader>
           <DialogTitle>Review {productName}</DialogTitle>
           <DialogDescription>
@@ -98,7 +100,7 @@ export const ProductReviewForm = ({ productId, productName, onReviewSubmitted }:
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Rating *</Label>
-            <div className="flex gap-1">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
@@ -131,16 +133,17 @@ export const ProductReviewForm = ({ productId, productName, onReviewSubmitted }:
             />
           </div>
 
-          <div className="flex gap-2 justify-end">
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
             <Button
               type="button"
               variant="outline"
               onClick={() => setIsOpen(false)}
               disabled={isSubmitting}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
               {isSubmitting ? "Submitting..." : "Submit Review"}
             </Button>
           </div>
