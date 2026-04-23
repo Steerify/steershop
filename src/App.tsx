@@ -159,6 +159,8 @@ const App = () => (
             <Route path="/select-role" element={<RoleSelection />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/shops" element={<Shops />} />
+            <Route path="/marketplace-nigeria" element={<Shops />} />
+            <Route path="/nigeria-marketplace" element={<Shops />} />
             <Route path="/shop/:slug" element={<ShopStorefront />} />
             <Route path="/s/:slug" element={<ShopStorefront />} />
             <Route path="/shop/:slug/product/:productId" element={<ProductDetails />} />
