@@ -195,11 +195,11 @@ export default function AdminOrders() {
               <p className="text-muted-foreground">View and manage all orders on the platform</p>
             </div>
             <div className="flex gap-2">
-              <Badge variant="outline" className="px-3 py-1 bg-yellow-500/10 border-yellow-500/30 text-yellow-600">
+              <Badge variant="outline" className="px-3 py-1 bg-[hsl(42,90%,55%)]/10 border-[hsl(42,90%,55%)]/30 text-[hsl(42,70%,35%)]">
                 <Clock className="w-4 h-4 mr-1" />
                 {pendingCount} Pending
               </Badge>
-              <Badge variant="outline" className="px-3 py-1 bg-green-500/10 border-green-500/30 text-green-600">
+              <Badge variant="outline" className="px-3 py-1 bg-accent/10 border-accent/30 text-accent">
                 <CheckCircle className="w-4 h-4 mr-1" />
                 {completedCount} Completed
               </Badge>
@@ -264,7 +264,7 @@ export default function AdminOrders() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={order.payment_status === "paid" ? "default" : "secondary"} className={order.payment_status === "paid" ? "bg-green-600" : ""}>
+                          <Badge variant={order.payment_status === "paid" ? "default" : "secondary"} className={order.payment_status === "paid" ? "bg-accent hover:bg-accent/90" : ""}>
                             <CreditCard className="w-3 h-3 mr-1" />
                             {order.payment_status}
                           </Badge>

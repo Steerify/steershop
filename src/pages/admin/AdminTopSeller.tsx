@@ -309,12 +309,12 @@ const AdminTopSeller = () => {
                       <TableCell className="font-medium">{shop.shop_name}</TableCell>
                       <TableCell className="text-muted-foreground">{shop.owner_email}</TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className="bg-green-500/10 text-green-600">
+                        <Badge variant="secondary" className="bg-accent/10 text-accent">
                           {shop.total_sales.toLocaleString()} sales
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/20">
+                        <Badge className="bg-primary/10 text-primary border-primary/20">
                           {shop.plan_slug}
                         </Badge>
                       </TableCell>

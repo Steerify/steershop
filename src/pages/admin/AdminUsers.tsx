@@ -259,7 +259,7 @@ export default function AdminUsers() {
               variant={filter === 'active' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setFilter('active')}
-              className={filter === 'active' ? '' : 'text-green-600 border-green-200 hover:bg-green-50'}
+              className={filter === 'active' ? '' : 'text-accent border-accent/30 hover:bg-accent/10'}
             >
               <CheckCircle className="w-3 h-3 mr-1" />
               Active ({filterCounts.active})
@@ -268,7 +268,7 @@ export default function AdminUsers() {
               variant={filter === 'trial' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setFilter('trial')}
-              className={filter === 'trial' ? '' : 'text-amber-600 border-amber-200 hover:bg-amber-50'}
+              className={filter === 'trial' ? '' : 'text-[hsl(42,70%,35%)] border-[hsl(42,90%,55%)]/30 hover:bg-[hsl(42,90%,55%)]/10'}
             >
               <Clock className="w-3 h-3 mr-1" />
               Trial ({filterCounts.trial})
@@ -277,7 +277,7 @@ export default function AdminUsers() {
               variant={filter === 'expired' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setFilter('expired')}
-              className={filter === 'expired' ? '' : 'text-red-600 border-red-200 hover:bg-red-50'}
+              className={filter === 'expired' ? '' : 'text-destructive border-destructive/30 hover:bg-destructive/10'}
             >
               <XCircle className="w-3 h-3 mr-1" />
               Expired ({filterCounts.expired})

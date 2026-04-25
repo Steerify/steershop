@@ -411,6 +411,120 @@ const Dashboard = () => {
     navigate("/");
   };
 
+  // ─── Single Contextual Banner (most urgent message wins) ──────────────────
+  // Priority: expired → trial → no-products → first-sale → active → default
+  const getContextualBanner = (): React.ReactNode => {
+    // Expired subscription — most urgent
+    if (subscriptionStatus === 'expired') {
+      return (
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-destructive to-[hsl(0,70%,38%)] p-5 shadow-lg min-h-[110px] flex items-center">
+          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="relative z-10 flex items-center justify-between gap-3 w-full">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <AlertCircle className="w-4 h-4 text-white/80" />
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Subscription Expired</span>
+              </div>
+              <h3 className="text-white font-extrabold text-base">Your store is hidden from customers</h3>
+              <p className="text-white/70 text-xs mt-0.5">Reactivate now to start getting orders again.</p>
+            </div>
+            <Button size="sm" onClick={() => navigate('/pricing')} className="shrink-0 bg-white text-destructive hover:bg-white/90 font-bold shadow-lg">Reactivate →</Button>
+          </div>
+        </div>
+      );
+    }
+
+    // Trial running out
+    if (subscriptionStatus === 'trial') {
+      return (
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(215,65%,18%)] via-primary to-[hsl(145,58%,30%)] p-5 shadow-lg min-h-[110px] flex items-center">
+          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="absolute -bottom-6 -left-2 w-16 h-16 rounded-full bg-white/5" />
+          <div className="relative z-10 flex items-center justify-between gap-3 w-full">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Clock className="w-4 h-4 text-white/80" />
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Free Trial</span>
+              </div>
+              <h3 className="text-white font-extrabold text-base">{daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining</h3>
+              <p className="text-white/70 text-xs mt-0.5">Upgrade now to keep your store live and accept orders.</p>
+            </div>
+            <Button size="sm" onClick={() => navigate('/pricing')} className="shrink-0 bg-white text-primary hover:bg-white/90 font-bold shadow-lg">Upgrade Now</Button>
+          </div>
+        </div>
+      );
+    }
+
+    // Has store, no products yet
+    if (shopData && productsCount === 0) {
+      return (
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-[hsl(215,65%,38%)] p-5 shadow-lg min-h-[110px] flex items-center">
+          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="relative z-10 flex items-center justify-between gap-3 w-full">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Package className="w-4 h-4 text-white/80" />
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Next Step</span>
+              </div>
+              <h3 className="text-white font-extrabold text-base">Add your first product 🛍️</h3>
+              <p className="text-white/70 text-xs mt-0.5">Your store is live — add products so customers can buy.</p>
+            </div>
+            <Button size="sm" onClick={() => navigate('/products')} className="shrink-0 bg-white text-primary hover:bg-white/90 font-bold shadow-lg">Add Product →</Button>
+          </div>
+        </div>
+      );
+    }
+
+    // Has products but no sales yet
+    if (shopData && totalSales === 0) {
+      return (
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-accent p-5 shadow-lg min-h-[110px] flex items-center">
+          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="absolute -bottom-4 -left-2 w-16 h-16 rounded-full bg-white/5" />
+          <div className="relative z-10 w-full">
+            <div className="flex items-center gap-2 mb-1">
+              <Share2 className="w-4 h-4 text-white/80" />
+              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">First Sale Tips</span>
+            </div>
+            <h3 className="text-white font-extrabold text-base mb-1">Your first sale is 48h away 🚀</h3>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="border-white/40 text-white hover:bg-white/20 gap-1.5 text-xs h-8 font-semibold" onClick={() => {
+                const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
+                navigator.clipboard.writeText(url);
+                toast({ title: "Store link copied!" });
+              }}><ExternalLink className="w-3 h-3" />Copy Link</Button>
+              <Button size="sm" className="bg-white text-accent hover:bg-white/90 gap-1.5 text-xs h-8 font-semibold" onClick={() => {
+                const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
+                window.open(`https://wa.me/?text=${encodeURIComponent('Check out my store: ' + url)}`, '_blank');
+              }}><MessageCircle className="w-3 h-3" />Share on WhatsApp</Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Active & selling — join community banner
+    return (
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#075E54] to-[hsl(145,65%,30%)] p-5 shadow-lg min-h-[110px] flex items-center">
+        <div className="absolute -top-5 -right-5 w-28 h-28 rounded-full bg-white/10" />
+        <div className="relative z-10 flex items-center justify-between gap-3 w-full">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <MessageCircle className="w-4 h-4 text-white" />
+              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Community</span>
+            </div>
+            <h3 className="text-white font-extrabold text-base leading-tight">Join 5,000+ vendors on WhatsApp</h3>
+            <p className="text-white/70 text-xs mt-0.5">Tips, support, buyer traffic & giveaways — free!</p>
+          </div>
+          <Button size="sm" className="shrink-0 bg-white text-[#075E54] hover:bg-white/90 font-bold shadow-lg gap-1.5"
+            onClick={() => window.open('https://chat.whatsapp.com/LX2AQqaSYD5FzEuCmhwWmz', '_blank')}>
+            <MessageCircle className="w-3.5 h-3.5" />Join Now
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   const getCarouselSlides = () => {
     const slides = [];
 
@@ -665,19 +779,24 @@ const Dashboard = () => {
 
   const goToSlide = (index: number) => setCarouselIndex(index);
 
-  // Quick Actions config
-  const QuickActions = [
-    { icon: Store, label: "My Store", description: "Setup & customize", path: "/my-store", color: "from-blue-600/20 to-blue-600/10", textColor: "text-blue-600" },
+  // ─── Primary Quick Actions (always visible) ────────────────────────────────
+  const PrimaryQuickActions = [
+    { icon: Store, label: "My Store", description: "Setup & customize", path: "/my-store", color: "from-primary/20 to-primary/10", textColor: "text-primary" },
     { icon: Package, label: "Products", description: "Manage catalog", path: "/products", color: "from-accent/20 to-accent/10", textColor: "text-accent" },
-    { icon: ShoppingCart, label: "Orders", description: "View & manage", path: "/orders", color: "from-orange-500/20 to-orange-500/10", textColor: "text-orange-500" },
-    { icon: Truck, label: "Delivery", description: "Shipping & logistics", path: "/orders", color: "from-emerald-500/20 to-emerald-500/10", textColor: "text-emerald-500" },
-    { icon: CalendarCheck, label: "Bookings", description: "Appointments", path: "/bookings", color: "from-purple-500/20 to-purple-500/10", textColor: "text-purple-500" },
-    { icon: Megaphone, label: "Marketing", description: "Create with AI", path: "/marketing", color: "from-pink-500/20 to-pink-500/10", textColor: "text-pink-500" },
-    { icon: Sparkles, label: "Ads Assistant", description: "AI ad generator", path: "/ads-assistant", color: "from-orange-400/20 to-red-500/10", textColor: "text-orange-500" },
-    { icon: Target, label: "Services", description: "Google & Ad consults", path: "/marketing-services", color: "from-cyan-500/20 to-cyan-500/10", textColor: "text-cyan-500" },
-    { icon: BookOpen, label: "Tutorials", description: "Learn & earn points", path: "/courses", color: "from-indigo-500/20 to-indigo-500/10", textColor: "text-indigo-500" },
-    { icon: Users, label: "Customers", description: "Customer records", path: "/customers", color: "from-teal-500/20 to-teal-500/10", textColor: "text-teal-500" },
-    { icon: Crown, label: "Ambassador", description: "Refer & earn", path: "/ambassador", color: "from-accent/20 to-accent/10", textColor: "text-accent" },
+    { icon: ShoppingCart, label: "Orders", description: "View & manage", path: "/orders", color: "from-primary/15 to-primary/8", textColor: "text-primary" },
+    { icon: Megaphone, label: "Marketing", description: "Create with AI", path: "/marketing", color: "from-accent/15 to-accent/8", textColor: "text-accent" },
+    { icon: Wallet, label: "Wallet", description: "Earnings & payouts", path: "/dashboard", color: "from-[hsl(42,90%,55%)]/20 to-[hsl(42,90%,55%)]/10", textColor: "text-[hsl(42,80%,35%)]" },
+  ];
+
+  // ─── More Tools (shown in collapsible) ─────────────────────────────────────
+  const QuickActions = [
+    ...PrimaryQuickActions,
+    { icon: Truck, label: "Delivery", description: "Shipping & logistics", path: "/orders", color: "from-primary/12 to-primary/6", textColor: "text-primary" },
+    { icon: CalendarCheck, label: "Bookings", description: "Appointments", path: "/bookings", color: "from-accent/12 to-accent/6", textColor: "text-accent" },
+    { icon: Sparkles, label: "Ads Assistant", description: "AI ad generator", path: "/ads-assistant", color: "from-primary/20 to-accent/10", textColor: "text-primary" },
+    { icon: BookOpen, label: "Tutorials", description: "Learn & earn points", path: "/courses", color: "from-accent/15 to-accent/8", textColor: "text-accent" },
+    { icon: Users, label: "Customers", description: "Customer records", path: "/customers", color: "from-primary/15 to-primary/8", textColor: "text-primary" },
+    { icon: Crown, label: "Ambassador", description: "Refer & earn", path: "/ambassador", color: "from-[hsl(42,90%,55%)]/20 to-[hsl(42,90%,55%)]/10", textColor: "text-[hsl(42,80%,35%)]" },
     { icon: Share2, label: "Invite Vendors", description: "Grow community", path: "/vendor-invite", color: "from-primary/20 to-primary/10", textColor: "text-primary" },
   ];
 
@@ -790,7 +909,6 @@ const Dashboard = () => {
             <div className="hidden md:flex items-center gap-1.5">
               {shopData && <StrokeMyShop shopId={shopData.id} shopName={shopData.name} />}
               <NotificationBell audience="entrepreneurs" />
-              <TourButton onStartTour={startTour} hasSeenTour={hasSeenTour} onResetTour={resetTour} />
               <Button variant="ghost" size="sm" onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive gap-1.5">
                 <LogOut className="h-4 w-4" />
                 <span className="hidden lg:inline">Logout</span>
@@ -907,51 +1025,10 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Info Carousel - subscription, WhatsApp & store status */}
-        {slides.length > 0 && (
-          <div
-            className="relative w-full overflow-hidden mb-5 min-h-[120px]"
-            onMouseEnter={() => setIsCarouselPaused(true)}
-            onMouseLeave={() => setIsCarouselPaused(false)}
-            onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
-            onTouchEnd={(e) => {
-              if (touchStartX === null) return;
-              const diff = touchStartX - e.changedTouches[0].clientX;
-              if (Math.abs(diff) > 50) {
-                if (diff > 0) nextSlide();
-                else prevSlide();
-              }
-              setTouchStartX(null);
-            }}
-          >
-            <div
-              className="flex transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${carouselIndex * 100}%)` }}
-            >
-              {slides.map((slide, idx) => (
-                <div key={idx} className="w-full flex-shrink-0">{slide}</div>
-              ))}
-            </div>
-            {totalSlides > 1 && (
-              <>
-                <button onClick={prevSlide} className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-background transition-colors">
-                  <ArrowRight className="w-3.5 h-3.5 rotate-180" />
-                </button>
-                <button onClick={nextSlide} className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-background transition-colors">
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
-                  {slides.map((_, idx) => (
-                    <button key={idx} onClick={() => goToSlide(idx)} className={`h-1 rounded-full transition-all duration-300 ${idx === carouselIndex ? 'bg-white w-5' : 'bg-white/40 w-1.5'}`} />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* small spacer for dot indicator */}
-        {slides.length > 1 && <div className="h-3" />}
+        {/* Contextual Banner — single most-urgent message */}
+        <div className="mb-5">
+          {getContextualBanner()}
+        </div>
 
         {/* Pending Approval Banner */}
         {shopFullData && !shopFullData.is_active && (
@@ -990,14 +1067,14 @@ const Dashboard = () => {
             label="Products"
             value={String(productsCount)}
             icon={Package}
-            gradient="bg-gradient-to-br from-orange-500 to-orange-600"
+            gradient="bg-gradient-to-br from-[hsl(215,65%,30%)] to-[hsl(215,65%,42%)]"
             trendValue="Items in catalog"
           />
           <StatCard
             label="Pending Orders"
             value={String(pendingOrders)}
             icon={ShoppingCart}
-            gradient="bg-gradient-to-br from-purple-600 to-purple-700"
+            gradient="bg-gradient-to-br from-[hsl(215,65%,18%)] to-primary"
             trendValue={pendingOrders > 0 ? "Need attention" : "All clear!"}
           />
         </div>
@@ -1034,60 +1111,41 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Quick Actions + Chart */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Quick Actions */}
-            <Collapsible open={isQuickActionsOpen} onOpenChange={setIsQuickActionsOpen}>
-              <div className="rounded-xl border border-border/60 bg-card/50 p-4 sm:p-5 space-y-4">
-                <div className="flex items-center justify-between gap-2">
-                  <CollapsibleTrigger className="flex items-center gap-2 text-base font-bold">
-                    <Zap className="w-4 h-4 text-primary" />
-                    Quick Actions
-                    {isQuickActionsOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                  </CollapsibleTrigger>
-                  <button
-                    onClick={() => {
-                      const next = !quickActionsExpanded;
-                      setQuickActionsExpanded(next);
-                      try { localStorage.setItem('quickActionsExpanded', JSON.stringify(next)); } catch { /* ignore localStorage errors */ }
-                    }}
-                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                  >
-                    {quickActionsExpanded ? "Show less" : "Show more"}
-                    {quickActionsExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-                <CollapsibleContent>
-                  <div className="sm:hidden -mx-4 px-4 overflow-x-auto snap-x snap-mandatory pb-2" data-tour="quick-actions">
-                    <div className="flex gap-3 w-max">
-                      {(quickActionsExpanded ? QuickActions : QuickActions.slice(0, 6)).map((action) => (
-                        <div key={action.path + action.label} className="w-[220px] shrink-0 snap-start">
-                          <QuickActionTile
-                            icon={action.icon}
-                            label={action.label}
-                            description={action.description}
-                            onClick={() => navigate(action.path)}
-                            color={action.color}
-                            textColor={action.textColor}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 gap-4" data-tour="quick-actions">
-                    {(quickActionsExpanded ? QuickActions : QuickActions.slice(0, 6)).map((action) => (
-                      <QuickActionTile
-                        key={action.path + action.label}
-                        icon={action.icon}
-                        label={action.label}
-                        description={action.description}
-                        onClick={() => navigate(action.path)}
-                        color={action.color}
-                        textColor={action.textColor}
-                      />
-                    ))}
-                  </div>
-                </CollapsibleContent>
+            {/* Quick Actions — 5 primary tiles, rest in More Tools */}
+            <div className="rounded-xl border border-border/60 bg-card/50 p-4 sm:p-5 space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="flex items-center gap-2 text-base font-bold">
+                  <Zap className="w-4 h-4 text-primary" />
+                  Quick Actions
+                </h2>
+                <button
+                  onClick={() => {
+                    const next = !quickActionsExpanded;
+                    setQuickActionsExpanded(next);
+                    try { localStorage.setItem('quickActionsExpanded', JSON.stringify(next)); } catch { /* ignore */ }
+                  }}
+                  className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors font-semibold"
+                >
+                  {quickActionsExpanded ? "Show less" : "More tools"}
+                  {quickActionsExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </button>
               </div>
-            </Collapsible>
+              {/* Primary 5 tiles — always visible */}
+              <div className="sm:hidden -mx-4 px-4 overflow-x-auto snap-x snap-mandatory pb-2" data-tour="quick-actions">
+                <div className="flex gap-3 w-max">
+                  {(quickActionsExpanded ? QuickActions : PrimaryQuickActions).map((action) => (
+                    <div key={action.path + action.label} className="w-[200px] shrink-0 snap-start">
+                      <QuickActionTile icon={action.icon} label={action.label} description={action.description} onClick={() => action.label === 'Wallet' ? setIsPayoutDialogOpen(true) : navigate(action.path)} color={action.color} textColor={action.textColor} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 gap-4" data-tour="quick-actions">
+                {(quickActionsExpanded ? QuickActions : PrimaryQuickActions).map((action) => (
+                  <QuickActionTile key={action.path + action.label} icon={action.icon} label={action.label} description={action.description} onClick={() => action.label === 'Wallet' ? setIsPayoutDialogOpen(true) : navigate(action.path)} color={action.color} textColor={action.textColor} />
+                ))}
+              </div>
+            </div>
 
             {/* Revenue Chart */}
             <Collapsible open={isAnalyticsOpen} onOpenChange={setIsAnalyticsOpen}>

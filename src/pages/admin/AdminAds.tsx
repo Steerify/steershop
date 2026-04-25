@@ -521,7 +521,7 @@ const AdminAds = () => {
                     <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r ${platform.softBg} border ${platform.border}`}>
                       <span className="text-base">{platform.emoji}</span>
                       <span className={`text-xs font-bold ${platform.textColor}`}>{platform.label} Ad Copy</span>
-                      <Badge className="bg-green-500/10 text-green-600 border-0 text-xs ml-1">Ready</Badge>
+                      <Badge className="bg-accent/10 text-accent border-0 text-xs ml-1">Ready</Badge>
                     </div>
 
                     <Card className="rounded-3xl overflow-hidden border-border/60">
@@ -551,14 +551,14 @@ const AdminAds = () => {
                               <div className="bg-muted/40 rounded-2xl p-4 border border-border/60">
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center gap-1.5">
-                                    <Hash className="w-3.5 h-3.5 text-pink-500" />
+                                    <Hash className="w-3.5 h-3.5 text-primary" />
                                     <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Hashtags</span>
                                   </div>
                                   <CopyButton text={adResult.hashtags.join(" ")} field="hashtags" copiedField={copiedField} onCopy={copyToClipboard} />
                                 </div>
                                 <div className="flex flex-wrap gap-1.5">
                                   {adResult.hashtags.map((tag, i) => (
-                                    <span key={i} className="px-2.5 py-0.5 bg-pink-500/10 text-pink-600 rounded-full text-xs font-medium">{tag}</span>
+                                    <span key={i} className="px-2.5 py-0.5 bg-primary/10 text-primary rounded-full text-xs font-medium">{tag}</span>
                                   ))}
                                 </div>
                               </div>
@@ -596,20 +596,20 @@ const AdminAds = () => {
                               </div>
                             )}
                             {adResult.budgetRecommendation && (
-                              <div className="bg-green-500/5 rounded-2xl p-4 border border-green-500/20">
+                              <div className="bg-accent/5 rounded-2xl p-4 border border-accent/20">
                                 <div className="flex items-center gap-1.5 mb-1">
-                                  <DollarSign className="w-4 h-4 text-green-600" />
-                                  <span className="text-xs font-bold uppercase tracking-wider text-green-700">Budget Recommendation</span>
+                                  <DollarSign className="w-4 h-4 text-accent" />
+                                  <span className="text-xs font-bold uppercase tracking-wider text-accent">Budget Recommendation</span>
                                 </div>
                                 <p className="text-sm font-semibold text-foreground">{adResult.budgetRecommendation}</p>
                               </div>
                             )}
                             {adResult.imagePrompt && (
-                              <div className="bg-purple-500/5 rounded-2xl p-4 border border-purple-500/20">
+                              <div className="bg-primary/5 rounded-2xl p-4 border border-primary/20">
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center gap-1.5">
-                                    <Image className="w-4 h-4 text-purple-500" />
-                                    <span className="text-xs font-bold uppercase tracking-wider text-purple-700">Image Idea</span>
+                                    <Image className="w-4 h-4 text-primary" />
+                                    <span className="text-xs font-bold uppercase tracking-wider text-primary">Image Idea</span>
                                   </div>
                                   <CopyButton text={adResult.imagePrompt} field="imgprompt" copiedField={copiedField} onCopy={copyToClipboard} />
                                 </div>
@@ -707,10 +707,10 @@ const AdminAds = () => {
               {/* Stats bar */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { icon: <Globe className="w-4 h-4 text-blue-500" />, label: "Platforms Available", value: "8" },
-                  { icon: <Users className="w-4 h-4 text-green-500" />, label: "Total Global Reach", value: "12B+" },
-                  { icon: <TrendingUp className="w-4 h-4 text-purple-500" />, label: "Avg. ROAS (Nigeria)", value: "4–8×" },
-                  { icon: <Zap className="w-4 h-4 text-amber-500" />, label: "Lowest Cost/Day", value: "Free" },
+                  { icon: <Globe className="w-4 h-4 text-primary" />, label: "Platforms Available", value: "8" },
+                  { icon: <Users className="w-4 h-4 text-accent" />, label: "Total Global Reach", value: "12B+" },
+                  { icon: <TrendingUp className="w-4 h-4 text-primary" />, label: "Avg. ROAS (Nigeria)", value: "4–8×" },
+                  { icon: <Zap className="w-4 h-4 text-[hsl(42,90%,40%)]" />, label: "Lowest Cost/Day", value: "Free" },
                 ].map((stat) => (
                   <Card key={stat.label} className="rounded-2xl border-border/60">
                     <CardContent className="p-4 flex items-center gap-3">

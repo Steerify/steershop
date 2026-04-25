@@ -135,38 +135,38 @@ export default function AdminDashboard() {
   };
 
   const statCards = [
-    { title: "Total Shops", value: stats.totalShops, icon: Store, gradient: "bg-gradient-to-br from-blue-600 to-blue-700", subtitle: "Active storefronts" },
-    { title: "Total Products", value: stats.totalProducts, icon: Package, gradient: "bg-gradient-to-br from-emerald-500 to-emerald-700", subtitle: "Listed items" },
-    { title: "Total Orders", value: stats.totalOrders, icon: ShoppingCart, gradient: "bg-gradient-to-br from-purple-600 to-purple-700", subtitle: "All time" },
-    { title: "Total Users", value: stats.totalUsers, icon: Users, gradient: "bg-gradient-to-br from-orange-500 to-orange-600", subtitle: "Registered accounts" },
+    { title: "Total Shops", value: stats.totalShops, icon: Store, gradient: "bg-gradient-to-br from-[hsl(215,65%,25%)] to-[hsl(215,65%,35%)]", subtitle: "Active storefronts" },
+    { title: "Total Products", value: stats.totalProducts, icon: Package, gradient: "bg-gradient-to-br from-[hsl(132,68%,31%)] to-[hsl(132,68%,40%)]", subtitle: "Listed items" },
+    { title: "Total Orders", value: stats.totalOrders, icon: ShoppingCart, gradient: "bg-gradient-to-br from-[hsl(215,65%,25%)] to-[hsl(132,68%,31%)]", subtitle: "All time" },
+    { title: "Total Users", value: stats.totalUsers, icon: Users, gradient: "bg-gradient-to-br from-[hsl(215,65%,18%)] to-[hsl(215,65%,28%)]", subtitle: "Registered accounts" },
   ];
 
   const visitCards = [
-    { title: "Visits Today", value: stats.visitTotals.today, icon: MousePointerClick, gradient: "bg-gradient-to-br from-cyan-600 to-blue-600", subtitle: "Last 24h" },
-    { title: "Visits (7d)", value: stats.visitTotals.days7, icon: Globe, gradient: "bg-gradient-to-br from-teal-600 to-emerald-600", subtitle: "Rolling week" },
-    { title: "Visits (30d)", value: stats.visitTotals.days30, icon: TrendingUp, gradient: "bg-gradient-to-br from-indigo-600 to-purple-600", subtitle: "Rolling month" },
+    { title: "Visits Today", value: stats.visitTotals.today, icon: MousePointerClick, gradient: "bg-gradient-to-br from-[hsl(215,65%,30%)] to-[hsl(215,65%,42%)]", subtitle: "Last 24h" },
+    { title: "Visits (7d)", value: stats.visitTotals.days7, icon: Globe, gradient: "bg-gradient-to-br from-[hsl(132,68%,28%)] to-[hsl(132,68%,38%)]", subtitle: "Rolling week" },
+    { title: "Visits (30d)", value: stats.visitTotals.days30, icon: TrendingUp, gradient: "bg-gradient-to-br from-[hsl(215,55%,22%)] to-[hsl(132,60%,30%)]", subtitle: "Rolling month" },
   ];
 
   const quickLinks = [
-    { title: "Manage Shops", description: "View, approve & feature shops", icon: Store, path: "/admin/shops", color: "from-blue-500/20 to-blue-500/10", textColor: "text-blue-600" },
-    { title: "Platform Orders", description: "Review all customer orders", icon: ShoppingCart, path: "/admin/orders", color: "from-purple-500/20 to-purple-500/10", textColor: "text-purple-600" },
-    { title: "User Management", description: "Manage accounts & roles", icon: Users, path: "/admin/users", color: "from-orange-500/20 to-orange-500/10", textColor: "text-orange-500" },
-    { title: "Ads Manager", description: "Generate AI ad copy for shops", icon: Tv, path: "/admin/ads", color: "from-pink-500/20 to-pink-500/10", textColor: "text-pink-600" },
-    { title: "Featured Shops", description: "Spotlight top performers", icon: Sparkles, path: "/admin/featured-shops", color: "from-yellow-500/20 to-yellow-500/10", textColor: "text-yellow-600" },
-    { title: "Platform Earnings", description: "Revenue analytics & payouts", icon: DollarSign, path: "/admin/earnings", color: "from-green-500/20 to-green-500/10", textColor: "text-green-600" },
-    { title: "Marketing Hub", description: "Handle consultation requests", icon: Megaphone, path: "/admin/marketing", color: "from-red-500/20 to-red-500/10", textColor: "text-red-500" },
-    { title: "Courses", description: "Manage learning content", icon: GraduationCap, path: "/admin/courses", color: "from-indigo-500/20 to-indigo-500/10", textColor: "text-indigo-600" },
-    { title: "Rewards & Prizes", description: "Manage points & gifts", icon: Gift, path: "/admin/prizes", color: "from-teal-500/20 to-teal-500/10", textColor: "text-teal-600" },
-    { title: "Referral Program", description: "Track ambassador referrals", icon: UserPlus, path: "/admin/referrals", color: "from-cyan-500/20 to-cyan-500/10", textColor: "text-cyan-600" },
-    { title: "Top Sellers", description: "Recognize your best vendors", icon: Award, path: "/admin/top-sellers", color: "from-amber-500/20 to-amber-500/10", textColor: "text-amber-600" },
-    { title: "Activity Logs", description: "Platform-wide audit trail", icon: Activity, path: "/admin/activity-logs", color: "from-slate-500/20 to-slate-500/10", textColor: "text-slate-600" },
+    { title: "Manage Shops", description: "View, approve & feature shops", icon: Store, path: "/admin/shops", color: "from-primary/20 to-primary/10", textColor: "text-primary" },
+    { title: "Platform Orders", description: "Review all customer orders", icon: ShoppingCart, path: "/admin/orders", color: "from-primary/15 to-primary/8", textColor: "text-primary" },
+    { title: "User Management", description: "Manage accounts & roles", icon: Users, path: "/admin/users", color: "from-accent/20 to-accent/10", textColor: "text-accent" },
+    { title: "Ads Manager", description: "Generate AI ad copy for shops", icon: Tv, path: "/admin/ads", color: "from-primary/20 to-accent/10", textColor: "text-primary" },
+    { title: "Featured Shops", description: "Spotlight top performers", icon: Sparkles, path: "/admin/featured-shops", color: "from-gold/20 to-gold/10", textColor: "text-[hsl(42,90%,40%)]" },
+    { title: "Platform Earnings", description: "Revenue analytics & payouts", icon: DollarSign, path: "/admin/earnings", color: "from-accent/20 to-accent/10", textColor: "text-accent" },
+    { title: "Marketing Hub", description: "Handle consultation requests", icon: Megaphone, path: "/admin/marketing", color: "from-primary/20 to-primary/10", textColor: "text-primary" },
+    { title: "Courses", description: "Manage learning content", icon: GraduationCap, path: "/admin/courses", color: "from-accent/15 to-accent/8", textColor: "text-accent" },
+    { title: "Rewards & Prizes", description: "Manage points & gifts", icon: Gift, path: "/admin/prizes", color: "from-gold/20 to-gold/10", textColor: "text-[hsl(42,90%,40%)]" },
+    { title: "Referral Program", description: "Track ambassador referrals", icon: UserPlus, path: "/admin/referrals", color: "from-primary/15 to-accent/10", textColor: "text-primary" },
+    { title: "Top Sellers", description: "Recognize your best vendors", icon: Award, path: "/admin/top-sellers", color: "from-gold/20 to-gold/10", textColor: "text-[hsl(42,90%,40%)]" },
+    { title: "Activity Logs", description: "Platform-wide audit trail", icon: Activity, path: "/admin/activity-logs", color: "from-primary/10 to-primary/5", textColor: "text-primary" },
   ];
 
   const reminderMetrics = reminderResults ? [
-    { label: "Incomplete Registration", value: reminderResults.incomplete_registration || 0, color: "bg-blue-500/10 text-blue-700 border-blue-500/20" },
-    { label: "No Shop Created", value: reminderResults.no_shop || 0, color: "bg-amber-500/10 text-amber-700 border-amber-500/20" },
-    { label: "No Products", value: reminderResults.no_products || 0, color: "bg-orange-500/10 text-orange-700 border-orange-500/20" },
-    { label: "No Sales (7d)", value: reminderResults.no_sales || 0, color: "bg-purple-500/10 text-purple-700 border-purple-500/20" },
+    { label: "Incomplete Registration", value: reminderResults.incomplete_registration || 0, color: "bg-primary/10 text-primary border-primary/20" },
+    { label: "No Shop Created", value: reminderResults.no_shop || 0, color: "bg-[hsl(42,90%,55%)]/10 text-[hsl(42,80%,35%)] border-[hsl(42,90%,55%)]/20" },
+    { label: "No Products", value: reminderResults.no_products || 0, color: "bg-accent/10 text-accent border-accent/20" },
+    { label: "No Sales (7d)", value: reminderResults.no_sales || 0, color: "bg-primary/15 text-primary border-primary/25" },
   ] : [];
 
   return (

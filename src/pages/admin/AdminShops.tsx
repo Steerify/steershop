@@ -489,7 +489,7 @@ export default function AdminShops() {
   const getSubscriptionBadge = (profile: any) => {
     if (!profile) {
       return (
-        <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300">
+        <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
           <Shield className="w-3 h-3 mr-1" />
           No Profile
         </Badge>
@@ -500,14 +500,14 @@ export default function AdminShops() {
     
     if (status.status === 'active') {
       return (
-        <Badge className="bg-green-600 hover:bg-green-700">
+        <Badge className="bg-accent hover:bg-accent/90">
           <Check className="w-3 h-3 mr-1" />
           Active ({status.daysRemaining}d)
         </Badge>
       );
     } else if (status.status === 'trial') {
       return (
-        <Badge className="bg-blue-600 hover:bg-blue-700">
+        <Badge className="bg-primary hover:bg-primary/90">
           <Calendar className="w-3 h-3 mr-1" />
           Trial ({status.daysRemaining}d)
         </Badge>
@@ -674,15 +674,15 @@ export default function AdminShops() {
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-              <Badge variant="outline" className="px-3 py-1 bg-orange-500/10 border-orange-500/30 text-orange-600 cursor-pointer" onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}>
+              <Badge variant="outline" className="px-3 py-1 bg-[hsl(42,90%,55%)]/10 border-[hsl(42,90%,55%)]/30 text-[hsl(42,70%,35%)] cursor-pointer" onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}>
                 <Clock className="w-4 h-4 mr-1" />
                 {pendingCount} Pending
               </Badge>
-              <Badge variant="outline" className="px-3 py-1 bg-green-500/10 border-green-500/30 text-green-600 cursor-pointer" onClick={() => setStatusFilter(statusFilter === 'active' ? 'all' : 'active')}>
+              <Badge variant="outline" className="px-3 py-1 bg-accent/10 border-accent/30 text-accent cursor-pointer" onClick={() => setStatusFilter(statusFilter === 'active' ? 'all' : 'active')}>
                 <Store className="w-4 h-4 mr-1" />
                 {activeCount} Active
               </Badge>
-              <Badge variant="outline" className="px-3 py-1 bg-red-500/10 border-red-500/30 text-red-600 cursor-pointer" onClick={() => setStatusFilter(statusFilter === 'inactive' ? 'all' : 'inactive')}>
+              <Badge variant="outline" className="px-3 py-1 bg-destructive/10 border-destructive/30 text-destructive cursor-pointer" onClick={() => setStatusFilter(statusFilter === 'inactive' ? 'all' : 'inactive')}>
                 <Store className="w-4 h-4 mr-1" />
                 {inactiveCount} Inactive
               </Badge>
@@ -742,7 +742,7 @@ export default function AdminShops() {
 
                     <div className="grid grid-cols-2 gap-2">
                       {isPending(shop) && (
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => toggleShopStatus(shop)}>
+                        <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground" onClick={() => toggleShopStatus(shop)}>
                           Approve
                         </Button>
                       )}
@@ -829,17 +829,16 @@ export default function AdminShops() {
                         <TableCell>
                           {getSubscriptionBadge(shop.profiles)}
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
+                                                  <div className="flex items-center gap-2">
                             {isPending(shop) ? (
-                              <Badge className="bg-orange-500 hover:bg-orange-600">
+                              <Badge style={{ background: 'hsl(42,90%,40%)', color: 'white' }}>
                                 <Clock className="w-3 h-3 mr-1" />
                                 Pending
                               </Badge>
                             ) : (
                               <Badge 
                                 variant={shop.is_active ? "default" : "secondary"} 
-                                className={shop.is_active ? "bg-green-600 hover:bg-green-700" : ""}
+                                className={shop.is_active ? "bg-accent hover:bg-accent/90" : ""}
                               >
                                 {shop.is_active ? "Active" : "Inactive"}
                               </Badge>
@@ -847,7 +846,7 @@ export default function AdminShops() {
                             {isPending(shop) && (
                               <Button 
                                 size="sm" 
-                                className="h-7 px-2 bg-green-600 hover:bg-green-700 text-white"
+                                className="h-7 px-2 bg-accent hover:bg-accent/90 text-accent-foreground"
                                 onClick={() => toggleShopStatus(shop)}
                               >
                                 <Check className="w-3 h-3 mr-1" />
