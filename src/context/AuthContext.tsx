@@ -36,6 +36,10 @@ export interface SignUpData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const ADMIN_EMAILS = new Set(['steerifygroup@gmail.com']);
+
+const normalizeEmail = (email: string | null | undefined): string => (email || '').trim().toLowerCase();
+
 // Helper to map DB role to UserRole enum
 const mapDbRole = (dbRole: string | null | undefined): UserRole => {
   if (!dbRole) return UserRole.CUSTOMER;
@@ -74,10 +78,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const role = mapDbRole(profile.role);
+      const normalizedEmail = normalizeEmail(profile.email || supabaseUser.email);
+      const resolvedRole = ADMIN_EMAILS.has(normalizedEmail) ? UserRole.ADMIN : role;
 
       // Check onboarding completion for entrepreneurs
       let onboardingCompleted = false;
-      if (role === UserRole.ENTREPRENEUR) {
+      if (resolvedRole === UserRole.ENTREPRENEUR) {
         const { data: onboardingData } = await supabase
           .from('onboarding_responses')
           .select('id')
@@ -89,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return {
         id: supabaseUser.id,
         email: profile.email || supabaseUser.email || '',
-        role,
+        role: resolvedRole,
         firstName: profile.full_name?.split(' ')[0] || supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
         lastName: profile.full_name?.split(' ').slice(1).join(' ') || supabaseUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
         phone: profile.phone || '',
