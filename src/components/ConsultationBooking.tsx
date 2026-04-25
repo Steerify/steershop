@@ -33,6 +33,21 @@ export const ConsultationBooking = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const resetFormState = () => {
+    setServiceType("youtube_ads");
+    setNotes("");
+    setIsSuccess(false);
+  };
+
+  const handleCloseRequest = () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    resetFormState();
+    onOpenChange(false);
+  };
+
   const services = [
     {
       id: "youtube_ads",
@@ -71,9 +86,7 @@ export const ConsultationBooking = ({
       
       // Reset after a delay
       setTimeout(() => {
-        setIsSuccess(false);
-        setNotes("");
-        setServiceType("youtube_ads");
+        resetFormState();
         onOpenChange(false);
       }, 2000);
     } catch (error: any) {
@@ -90,7 +103,12 @@ export const ConsultationBooking = ({
 
   if (isSuccess) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog
+        open={open}
+        onOpenChange={(open) => {
+          if (!open) handleCloseRequest();
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
@@ -107,7 +125,12 @@ export const ConsultationBooking = ({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        if (!open) handleCloseRequest();
+      }}
+    >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Book a Marketing Consultation</DialogTitle>
@@ -171,7 +194,7 @@ export const ConsultationBooking = ({
           <div className="flex gap-3">
             <Button
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={handleCloseRequest}
               className="flex-1"
             >
               Cancel
