@@ -40,6 +40,23 @@ serve(async (req) => {
 
     if (error) throw error;
 
+    const { error: cleanupRolesError } = await adminClient
+      .from("user_roles")
+      .delete()
+      .eq("user_id", userId)
+      .neq("role", role);
+
+    if (cleanupRolesError) throw cleanupRolesError;
+
+    const { error: syncRoleError } = await adminClient
+      .from("user_roles")
+      .upsert({
+        user_id: userId,
+        role,
+      }, { onConflict: "user_id,role" });
+
+    if (syncRoleError) throw syncRoleError;
+
     await writeAdminAudit(adminClient, adminId, "admin_update_user_role", "profiles", userId, { role });
     await maybeWriteSecurityAlerts(adminClient, { adminId, action: "admin_update_user_role", resourceType: "profiles" });
 
