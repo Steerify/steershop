@@ -10,7 +10,6 @@ import { SessionExpiryModal } from "@/components/SessionExpiryModal";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { RouteThemeClass } from "@/components/RouteThemeClass";
 import { VisitTracker } from "@/components/VisitTracker";
-import { NetworkStatusBanner } from "@/components/NetworkStatusBanner";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PlatformReviewPopup } from "@/components/PlatformReviewPopup";
@@ -138,7 +137,6 @@ const App = () => (
         }}
       >
         <RouteThemeClass />
-        <NetworkStatusBanner />
         <VisitTracker />
         <SessionExpiryModal />
         <PlatformReviewPopup />

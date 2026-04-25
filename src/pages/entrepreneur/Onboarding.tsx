@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle2, SkipForward, Phone, Shield, Sparkles, Truck } from "lucide-react";
+import { Loader2, CheckCircle2, SkipForward, Phone, Shield, Sparkles, Truck, Store, ShoppingBag } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
@@ -265,12 +265,12 @@ const Onboarding = () => {
             </div>
           </div>
           <CardTitle className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            {currentStep === "phone" ? "Secure Your Account" : "SteerSolo Quick Setup"}
+            {currentStep === "phone" ? "Secure Your Account" : "Create your store in minutes"}
           </CardTitle>
           <CardDescription className="text-lg">
             {currentStep === "phone" 
               ? "Verify your phone for order notifications & security"
-              : "Help us tailor your store (2 mins)"}
+              : "Simple setup for vendors, clearer shopping for buyers."}
           </CardDescription>
 
           {/* Progress Indicator */}
@@ -284,7 +284,7 @@ const Onboarding = () => {
               ) : (
                 <>
                   <Shield className="w-4 h-4 text-green-500" />
-                  Step 2: Question {activeQuestionIndex + 1} of {totalQuestions}
+                  Step 2: Setup questions ({Math.min(activeQuestionIndex + 1, totalQuestions)}/{totalQuestions})
                 </>
               )}
             </p>
@@ -316,6 +316,23 @@ const Onboarding = () => {
             </div>
           ) : (
             <div className="space-y-8">
+              <div className="rounded-xl border bg-background/90 p-4 grid gap-3 sm:grid-cols-2">
+                <div className="flex items-start gap-2">
+                  <Store className="h-4 w-4 mt-1 text-primary" />
+                  <div>
+                    <p className="text-sm font-semibold">For vendors</p>
+                    <p className="text-xs text-muted-foreground">Clear store structure, payment setup, and delivery preferences.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <ShoppingBag className="h-4 w-4 mt-1 text-primary" />
+                  <div>
+                    <p className="text-sm font-semibold">For buyers</p>
+                    <p className="text-xs text-muted-foreground">Better product clarity, easier checkout, and fewer confusing chats.</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Done-For-You Toggle Card */}
               <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-5 space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex items-center justify-between">
@@ -345,6 +362,7 @@ const Onboarding = () => {
                 {activeQuestionIndex === 0 && (
                   <>
                     <Label className="text-base font-semibold">1. What best describes your business?</Label>
+                    <p className="text-sm text-muted-foreground">We use this to suggest the right store layout and product sections.</p>
                     <RadioGroup value={formData.businessType} onValueChange={(val) => handleChange("businessType", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {["Fashion / Clothing", "Food / Bakery", "Beauty / Skincare", "Gadgets / Accessories", "Digital services", "Other"].map((opt) => (
                         <div key={opt}>
@@ -362,6 +380,7 @@ const Onboarding = () => {
                 {activeQuestionIndex === 1 && (
                   <>
                     <Label className="text-base font-semibold">2. Where do most of your customers come from right now?</Label>
+                    <p className="text-sm text-muted-foreground">This helps us prioritize the channels you already use.</p>
                     <RadioGroup value={formData.customerSource} onValueChange={(val) => handleChange("customerSource", val)} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {["WhatsApp", "Instagram", "TikTok", "Facebook", "Offline / Referrals"].map((opt) => (
                         <div key={opt}>
@@ -379,6 +398,7 @@ const Onboarding = () => {
                 {activeQuestionIndex === 2 && (
                   <>
                     <Label className="text-base font-semibold">3. What's your biggest struggle with selling online?</Label>
+                    <p className="text-sm text-muted-foreground">We use this answer to tailor recommendations in your dashboard.</p>
                     <RadioGroup value={formData.biggestStruggle} onValueChange={(val) => handleChange("biggestStruggle", val)} className="space-y-2">
                       {["Repeating prices & details", "Losing orders in chats", "Customers not trusting payment", "Too much back-and-forth", "Organizing products & orders"].map((opt) => (
                         <div key={opt} className="flex items-center space-x-2">
@@ -393,6 +413,7 @@ const Onboarding = () => {
                 {activeQuestionIndex === 3 && (
                   <>
                     <Label className="text-base font-semibold">4. How do you currently collect payments?</Label>
+                    <p className="text-sm text-muted-foreground">Buyers convert better when payment options are clear up front.</p>
                     <RadioGroup value={formData.paymentMethod} onValueChange={(val) => handleChange("paymentMethod", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {["Bank transfer only", "Paystack", "Cash on delivery", "I want all options"].map((opt) => (
                         <div key={opt}>
@@ -413,6 +434,7 @@ const Onboarding = () => {
                       <Truck className="w-4 h-4" />
                       5. How do you handle delivery?
                     </Label>
+                    <p className="text-sm text-muted-foreground">This lets buyers see accurate delivery expectations before they pay.</p>
                     <RadioGroup value={formData.deliveryMethod || ""} onValueChange={(val) => handleChange("deliveryMethod", val)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {["I deliver myself", "I use a logistics company", "I need help with delivery", "Customers pick up from me"].map((opt) => (
                         <div key={opt}>
@@ -430,6 +452,7 @@ const Onboarding = () => {
                 {activeQuestionIndex === 5 && (
                   <>
                     <Label className="text-base font-semibold">6. What would make SteerSolo perfect for your business? <span className="text-muted-foreground font-normal text-sm">(Optional)</span></Label>
+                    <p className="text-sm text-muted-foreground">Optional feedback so we can keep simplifying your workflow.</p>
                     <Textarea
                       placeholder="Tell us what you'd love to see"
                       value={formData.perfectFeature}
