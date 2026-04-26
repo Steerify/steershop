@@ -115,11 +115,22 @@ export default function AdminDashboard() {
     }
   };
 
+  const getAdminHeaders = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return {};
+    return {
+      Authorization: `Bearer ${session.access_token}`,
+    };
+  };
+
   const handleRunEngagementReminders = async () => {
     setIsRunningReminders(true);
     setReminderResults(null);
     try {
-      const { data, error } = await supabase.functions.invoke("engagement-reminders");
+      const headers = await getAdminHeaders();
+      const { data, error } = await supabase.functions.invoke("engagement-reminders", {
+        headers,
+      });
       if (error) throw error;
       const results = data?.results || data;
       setReminderResults(results);

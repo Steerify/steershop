@@ -179,12 +179,22 @@ const AdminUXAudit = () => {
   const [testRunning, setTestRunning] = useState(false);
   const [testResult, setTestResult] = useState<UserTestResult | null>(null);
 
+  const getAdminHeaders = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return {};
+    return {
+      Authorization: `Bearer ${session.access_token}`,
+    };
+  };
+
   // ─── UX Audit ───
   const runAudit = async () => {
     setAuditRunning(true);
     setAuditResult(null);
     try {
+      const headers = await getAdminHeaders();
       const { data, error } = await supabase.functions.invoke("ai-ux-audit", {
+        headers,
         body: { routes: PLATFORM_ROUTES, features: PLATFORM_FEATURES },
       });
       if (error) throw error;
@@ -203,7 +213,9 @@ const AdminUXAudit = () => {
     setTestRunning(true);
     setTestResult(null);
     try {
+      const headers = await getAdminHeaders();
       const { data, error } = await supabase.functions.invoke("ai-user-test", {
+        headers,
         body: { routes: PLATFORM_ROUTES, features: PLATFORM_FEATURES },
       });
       if (error) throw error;

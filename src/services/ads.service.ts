@@ -25,7 +25,9 @@ export interface AdCopyResult {
 
 export const adsService = {
   async generateAdCopy(request: AdCopyRequest): Promise<{ success: boolean; data?: AdCopyResult; error?: string }> {
+    const { data: { session } } = await supabase.auth.getSession();
     const { data, error } = await supabase.functions.invoke("generate-ad-copy", {
+      headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
       body: request,
     });
 
