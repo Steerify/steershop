@@ -286,7 +286,6 @@ const Index = () => {
 export default Index;
 
 
-=======
 import { Link } from "react-router-dom";
 import { ArrowRight, CheckCircle, Shield, Zap, Sparkles, ShoppingBag, Star, Instagram, MessageCircle, Music2 } from "lucide-react";
 import { useState } from "react";
@@ -301,9 +300,7 @@ import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 import whatsappLogo from "@/assets/social/whatsapp-logo.svg";
 import instagramLogo from "@/assets/social/instagram-logo.svg";
 import tiktokLogo from "@/assets/social/tiktok-logo.svg";
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 // import { Link } from "react-router-dom";
 // import { ArrowRight, CheckCircle, Shield, Zap, Sparkles, ShoppingBag } from "lucide-react";
 // import Navbar from "@/components/Navbar";
@@ -313,7 +310,6 @@ import tiktokLogo from "@/assets/social/tiktok-logo.svg";
 // import { HomepageReviews } from "@/components/HomepageReviews";
 // import { DynamicPricing } from "@/components/DynamicPricing";
 // import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
-=======
 /* ─── Photos (real Nigerian vendor imagery) ─── */
 const P = {
   heroVendor:   "https://images.unsplash.com/photo-1611432579699-484f7990b127?auto=format&fit=crop&w=800&q=80",
@@ -332,9 +328,7 @@ const P = {
   av2: "https://images.unsplash.com/photo-1611432579699-484f7990b127?auto=format&fit=crop&w=200&q=80",
   av3: "https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&w=200&q=80",
 };
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 // /* ─────────────────────────────────────────────────────
 //    PHOTOS — free-to-embed Unsplash
 // ───────────────────────────────────────────────────── */
@@ -352,7 +346,6 @@ const P = {
 //   av2: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=100&q=80",
 //   av3: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=100&q=80",
 // };
-=======
 /* ─── Data ─── */
 const PLATFORMS = [
   {
@@ -380,9 +373,7 @@ const PLATFORMS = [
     img: P.tiktokLogo,
   },
 ];
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 // /* ─────────────────────────────────────────────────────
 //    DATA
 // ───────────────────────────────────────────────────── */
@@ -412,7 +403,6 @@ const PLATFORMS = [
 //     img: P.tiktok,
 //   },
 // ];
-=======
 type Platform = (typeof PLATFORMS)[number];
 
 const PlatformLogo = ({ platform }: { platform: Platform }) => {
@@ -462,23 +452,19 @@ const JOURNEY = [
   { n:"03", title:"Buyers see proof before they pay", body:"Your SafeBeauty badge, product photos, and real reviews load instantly. No DM required." },
   { n:"04", title:"Orders arrive structured",          body:"No more 'I sent it yesterday'. Every order tracked, every payment confirmed, every buyer recorded." },
 ];
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 // const JOURNEY = [
 //   { n:"01", title:"Keep your existing audience",     body:"Don't leave WhatsApp or Instagram. SteerSolo lives behind your social presence as your store." },
 //   { n:"02", title:"Paste your SteerSolo link once",  body:"IG bio, WhatsApp status, TikTok profile. One link — catalog, prices, reviews, checkout included." },
 //   { n:"03", title:"Buyers see proof before they pay",body:"Your SafeBeauty badge, product photos, and real reviews load instantly. No DM required." },
 //   { n:"04", title:"Orders arrive structured",         body:"No more 'I sent it yesterday'. Every order tracked, every payment confirmed, every buyer recorded." },
 // ];
-=======
 const BADGES = [
   { num:"01", label:"SafeBeauty Listed",   desc:"Vendor verified, store live. Entry-level trust signal for new buyers.",                      top:false },
   { num:"02", label:"SafeBeauty Checked",  desc:"At least one product batch confirmed genuine through our process.",                           top:false },
   { num:"03", label:"SafeBeauty Trusted",  desc:"30+ days active, real buyer reviews, zero unresolved complaints.",                            top:false },
   { num:"04", label:"SafeBeauty Verified", desc:"Full NAFDAC-aligned identity check — the highest trust signal on the platform.",               top:true  },
 ];
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
 // const BADGES = [
 //   { num:"01", label:"SafeBeauty Listed",   desc:"Vendor verified, store live. Entry-level trust signal for new buyers.", gold:false },
@@ -487,22 +473,18 @@ const BADGES = [
 //   { num:"04", label:"SafeBeauty Verified", desc:"Full NAFDAC-aligned identity check — the highest trust signal on the platform.", gold:true },
 // ];
 
-<<<<<<< HEAD
 // const TESTIMONIALS = [
 //   { quote:"I used to spend 3 hours a day answering the same DMs. Now I paste my link and the store does the talking.", name:"Chidera O.", role:"Skincare vendor · Lagos", av:P.av1 },
 //   { quote:"My TikTok blew up and I had nowhere to send people. SteerSolo fixed that overnight.",                       name:"Amara S.",  role:"Makeup artist · Abuja",      av:P.av2 },
 //   { quote:"The SafeBeauty badge made buyers stop questioning if my products are real. Sales doubled in 6 weeks.",      name:"Fatima B.", role:"Natural beauty vendor · Kano", av:P.av3 },
 // ];
-=======
 const STATS = [
   { v:"$10.17B", l:"Nigeria beauty market 2025" },
   { v:"95%",     l:"Nigerians on WhatsApp" },
   { v:"67%",     l:"Online beauty items likely counterfeit" },
   { v:"500K+",   l:"Beauty micro-vendors on social" },
 ];
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 // /* ─────────────────────────────────────────────────────
 //    GLOBAL STYLES
 // ───────────────────────────────────────────────────── */
@@ -525,7 +507,6 @@ const STATS = [
 //     .f4{animation:fu .7s .39s ease both;}
 //   `}</style>
 // );
-=======
 /* ═══════════════════════════════════════════════════════ PAGE ═══ */
 const Index = () => (
   <div className="font-sans overflow-x-hidden bg-background text-foreground">
@@ -546,9 +527,7 @@ const Index = () => (
 
     <GoogleOneTap />
     <Navbar />
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 // /* ─────────────────────────────────────────────────────
 //    PAGE
 // ───────────────────────────────────────────────────── */
@@ -557,7 +536,6 @@ const Index = () => (
 //     <GS />
 //     <GoogleOneTap />
 //     <Navbar />
-=======
     {/* ══════════════════════════════════════════════════════
         §1  HERO — Always dark Adire Indigo
     ══════════════════════════════════════════════════════ */}
@@ -569,16 +547,13 @@ const Index = () => (
         overflow: "hidden",
         paddingTop: 84,
       }}>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //     {/* ══ §1  HERO ══════════════════════════════════════ */}
 //     <section className="relative overflow-hidden pt-24" style={{background:"var(--forest)",minHeight:"90vh"}}>
 //       {/* diagonal texture */}
 //       <div className="absolute inset-0 pointer-events-none opacity-[0.05]" style={{backgroundImage:"repeating-linear-gradient(-55deg,transparent,transparent 48px,rgba(255,255,255,.7) 48px,rgba(255,255,255,.7) 49px)"}}/>
 //       {/* warm glow */}
 //       <div className="absolute top-0 right-0 w-3/5 h-full pointer-events-none" style={{background:"radial-gradient(ellipse at 85% 30%,rgba(196,98,45,.22) 0%,transparent 65%)"}}/>
-=======
       {/* subtle adire diagonal texture */}
       <div style={{
         position:"absolute",inset:0,pointerEvents:"none",opacity:0.035,
@@ -596,12 +571,7 @@ const Index = () => (
         pointerEvents:"none",
         background:"radial-gradient(ellipse at 20% 20%, hsl(var(--brand-blue-strong) / 0.35) 0%, transparent 65%)",
       }}/>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
-//       <div className="container mx-auto px-6 lg:px-14 relative z-10">
-//         <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16 py-16 lg:py-24">
-=======
       <div style={{ maxWidth:1200,margin:"0 auto",padding:"0 1.25rem",position:"relative",zIndex:10 }}>
         <div style={{ display:"flex",flexWrap:"wrap",alignItems:"center",gap:"2rem",paddingBottom:"2.5rem" }}>
 
@@ -618,9 +588,7 @@ const Index = () => (
                 For WhatsApp · Instagram · TikTok vendors
               </span>
             </div>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //           {/* text */}
 //           <div className="flex-1 max-w-2xl f1">
 //             <div className="inline-flex items-center gap-2 mb-7" style={{borderBottom:"1.5px solid var(--gold)",paddingBottom:6}}>
@@ -629,33 +597,26 @@ const Index = () => (
 //                 For WhatsApp · Instagram · TikTok vendors
 //               </span>
 //             </div>
-=======
             <h1 style={{ fontWeight:800,color:"#fff",lineHeight:1.08,marginBottom:20,fontSize:"clamp(2.15rem,4.25vw,3.8rem)" }}>
               You already have<br />
               the audience.<br />
               <em style={{ fontStyle:"normal",color:"hsl(var(--accent-bright))" }}>Give them somewhere to buy.</em>
             </h1>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //             <h1 className="ss-d font-bold text-white leading-[1.04] mb-6" style={{fontSize:"clamp(2.8rem,5.5vw,4.8rem)"}}>
 //               You already have<br/>
 //               the audience.<br/>
 //               <em style={{color:"var(--gold)"}}>Give them somewhere to buy.</em>
 //             </h1>
-=======
             <p style={{ fontSize:"clamp(1rem,1.35vw,1.08rem)",lineHeight:1.65,color:"rgba(255,255,255,.62)",fontWeight:300,maxWidth:500,marginBottom:30 }}>
               500,000+ Nigerian beauty vendors sell on social media every day — and lose buyers
               because there's nowhere to send them after the DM. SteerSolo is that place.
             </p>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //             <p className="text-lg leading-relaxed mb-10" style={{color:"rgba(255,255,255,.6)",fontWeight:300,maxWidth:520}}>
 //               500,000+ Nigerian beauty vendors sell on social media every day — and lose buyers
 //               because there's nowhere to send them after the DM. SteerSolo is that place.
 //             </p>
-=======
             {/* CTAs */}
             <div style={{ display:"flex",flexWrap:"wrap",gap:14,marginBottom:28 }} className="f2">
               <Link to="/auth/signup">
@@ -687,9 +648,7 @@ const Index = () => (
                 </button>
               </Link>
             </div>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //             <div className="flex flex-col sm:flex-row gap-4 f2">
 //               <Link to="/auth/signup">
 //                 <button className="group flex items-center gap-3 px-8 py-4 rounded-full font-semibold text-white text-base transition-all hover:-translate-y-0.5"
@@ -705,7 +664,6 @@ const Index = () => (
 //                 </button>
 //               </Link>
 //             </div>
-=======
             {/* trust pills */}
             <div style={{ display:"flex",flexWrap:"wrap",gap:10 }} className="f3">
               {[{I:CheckCircle,t:"Verification-first"},{I:Zap,t:"Free plan to start"},{I:Shield,t:"SafeBeauty certified"}]
@@ -720,9 +678,7 @@ const Index = () => (
                 ))}
             </div>
           </div>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //             <div className="flex flex-wrap gap-3 mt-8 f3">
 //               {[{I:CheckCircle,t:"Verification-first"},{I:Zap,t:"Free plan to start"},{I:Shield,t:"SafeBeauty certified"}]
 //                 .map(({I,t})=>(
@@ -733,7 +689,6 @@ const Index = () => (
 //               ))}
 //             </div>
 //           </div>
-=======
           {/* ── PHOTO MOSAIC ── */}
           <div style={{ display:"flex",flexDirection:"column",gap:12,width:"clamp(280px,30vw,400px)",flexShrink:0 }} className="f2 hidden lg:flex">
             <div className="img-zoom" style={{ overflow:"hidden",borderRadius:24,height:280,boxShadow:"0 24px 48px rgba(0,0,0,0.35)" }}>
@@ -749,9 +704,7 @@ const Index = () => (
             </div>
           </div>
         </div>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //           {/* photo mosaic */}
 //           <div className="hidden lg:flex flex-col gap-3 w-[370px] xl:w-[420px] flex-shrink-0 f2">
 //             <div className="zoom overflow-hidden rounded-3xl" style={{height:290}}>
@@ -767,7 +720,6 @@ const Index = () => (
 //             </div>
 //           </div>
 //         </div>
-=======
         {/* ── STAT STRIP ── */}
         <div className="f4 stat-grid" style={{ display:"grid",gridTemplateColumns:"repeat(2,1fr)",borderTop:"1px solid rgba(255,255,255,.1)" }}>
           <style>{`@media(min-width:768px){.stat-grid{grid-template-columns:repeat(4,1fr)!important;}}`}</style>
@@ -820,9 +772,7 @@ const Index = () => (
         </div>
       </div>
     </section>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //         {/* stat strip */}
 //         <div className="grid grid-cols-2 lg:grid-cols-4 gap-px f4"
 //           style={{borderTop:"1px solid rgba(255,255,255,.1)"}}>
@@ -840,7 +790,6 @@ const Index = () => (
 //         </div>
 //       </div>
 //     </section>
-=======
     {/* ══ social proof modules (moved above deep-dive sections) ════════════ */}
     <section className="bg-background pt-8 md:pt-12">
       <FeaturedShopsBanner />
@@ -872,9 +821,7 @@ const Index = () => (
         ))}
       </div>
     </div>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //     {/* ══ §2  TICKER ════════════════════════════════════ */}
 //     <div className="overflow-hidden py-4" style={{background:"var(--terra)"}}>
 //       <div className="ticker flex items-center gap-0 whitespace-nowrap">
@@ -892,7 +839,6 @@ const Index = () => (
 //         ))}
 //       </div>
 //     </div>
-=======
     {/* ══════════════════════════════════════════════════════
         §3  PAIN MIRROR — Theme-aware background
     ══════════════════════════════════════════════════════ */}
@@ -907,9 +853,7 @@ const Index = () => (
             <span className="text-primary">from the minds of your customers.</span>
           </h2>
         </div>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //     {/* ══ §3  PAIN MIRROR ═══════════════════════════════ */}
 //     <section className="py-24" style={{background:"var(--cream)"}}>
 //       <div className="container mx-auto px-6 lg:px-14 max-w-5xl">
@@ -922,7 +866,6 @@ const Index = () => (
 //             <em style={{color:"var(--terra)"}}>legitimate businesses every day.</em>
 //           </h2>
 //         </div>
-=======
         <style>{`@media(min-width:768px){.pain-grid{grid-template-columns:repeat(3,1fr)!important;}}`}</style>
         <div className="pain-grid" style={{ display:"grid",gap:48 }}>
           {[
@@ -937,9 +880,7 @@ const Index = () => (
             </div>
           ))}
         </div>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //         <div className="grid md:grid-cols-3 gap-12">
 //           {[
 //             {q:'"Send your account details"',     b:"Repeated in every DM, every sale. Buyers lose patience and leave before they ever pay."},
@@ -953,7 +894,6 @@ const Index = () => (
 //             </div>
 //           ))}
 //         </div>
-=======
         <div className="bg-primary/5 rounded-2xl p-6 md:p-8 mt-12 border border-primary/20 text-center shadow-sm">
           <p className="text-foreground font-bold" style={{ fontSize:"1.4rem", margin:0, display:"flex", alignItems:"center", justifyContent:"center", gap:"10px" }}>
             <span style={{ fontSize:"1.8rem" }}>💬</span> And the best part?
@@ -964,15 +904,12 @@ const Index = () => (
         </div>
       </div>
     </section>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //         <p className="ss-d text-center mt-16 font-semibold italic" style={{fontSize:"1.5rem",color:"var(--forest)"}}>
 //           SteerSolo fixes all of this — in one link.
 //         </p>
 //       </div>
 //     </section>
-=======
     {/* ══════════════════════════════════════════════════════
         §4  PLATFORM BREAKDOWN — Theme-aware secondary bg
     ══════════════════════════════════════════════════════ */}
@@ -987,9 +924,7 @@ const Index = () => (
             <span className="text-primary">Turn every view into a seamless sale for Nigerian shoppers.</span>
           </h2>
         </div>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //     {/* ══ §4  PLATFORM BREAKDOWN ════════════════════════ */}
 //     <section className="py-24" style={{background:"var(--blush)"}}>
 //       <div className="container mx-auto px-6 lg:px-14 max-w-6xl">
@@ -1002,7 +937,6 @@ const Index = () => (
 //             <em style={{color:"var(--terra)"}}>SteerSolo solves it once.</em>
 //           </h2>
 //         </div>
-=======
         <style>{`@media(min-width:1024px){.platform-grid{grid-template-columns:repeat(3,1fr)!important;}}`}</style>
         <div className="platform-grid" style={{ display:"grid",gap:24 }}>
           {PLATFORMS.map(pl=>(
@@ -1035,9 +969,7 @@ const Index = () => (
         </div>
       </div>
     </section>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //         <div className="grid lg:grid-cols-3 gap-6">
 //           {PLATFORMS.map(pl=>(
 //             <div key={pl.name} className="lift rounded-3xl overflow-hidden bg-white" style={{border:"1px solid rgba(0,0,0,.07)"}}>
@@ -1067,7 +999,6 @@ const Index = () => (
 //         </div>
 //       </div>
 //     </section>
-=======
     {/* ══════════════════════════════════════════════════════
         §5  FULL-BLEED QUOTE — Always dark overlay
     ══════════════════════════════════════════════════════ */}
@@ -1089,9 +1020,7 @@ const Index = () => (
         </p>
       </div>
     </div>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //     {/* ══ §5  FULL-BLEED QUOTE ══════════════════════════ */}
 //     <div className="relative overflow-hidden" style={{height:"50vh",minHeight:300}}>
 //       <img src={P.trustFace} alt="Trust" className="absolute inset-0 w-full h-full object-cover object-top"/>
@@ -1106,7 +1035,6 @@ const Index = () => (
 //         </p>
 //       </div>
 //     </div>
-=======
     {/* ══════════════════════════════════════════════════════
         §6  HOW IT WORKS — Theme-aware background
     ══════════════════════════════════════════════════════ */}
@@ -1121,9 +1049,7 @@ const Index = () => (
             <span className="text-primary">Add the storefront they deserve.</span>
           </h2>
         </div>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //     {/* ══ §6  HOW IT WORKS ══════════════════════════════ */}
 //     <section className="py-24" style={{background:"var(--cream)"}}>
 //       <div className="container mx-auto px-6 lg:px-14 max-w-5xl">
@@ -1136,7 +1062,6 @@ const Index = () => (
 //             <em style={{color:"var(--terra)"}}>Add the storefront they deserve.</em>
 //           </h2>
 //         </div>
-=======
         <style>{`@media(min-width:768px){.journey-grid{grid-template-columns:repeat(2,1fr)!important;}}`}</style>
         <div className="journey-grid" style={{ display:"grid",gap:"40px 64px",marginBottom:56 }}>
           {JOURNEY.map((s,i)=>(
@@ -1153,9 +1078,7 @@ const Index = () => (
             </div>
           ))}
         </div>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //         <div className="grid md:grid-cols-2 gap-x-16 gap-y-10 mb-14">
 //           {JOURNEY.map((s,i)=>(
 //             <div key={s.n} className="flex gap-5">
@@ -1170,7 +1093,6 @@ const Index = () => (
 //             </div>
 //           ))}
 //         </div>
-=======
         {/* flow bar — always indigo */}
         <div style={{
           borderRadius:24,padding:"28px 32px",
@@ -1200,9 +1122,7 @@ const Index = () => (
         </div>
       </div>
     </section>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //         {/* flow bar */}
 //         <div className="rounded-3xl px-8 py-7 flex flex-col md:flex-row items-center justify-between gap-5 text-center"
 //           style={{background:"var(--forest)"}}>
@@ -1228,7 +1148,6 @@ const Index = () => (
 //         </div>
 //       </div>
 //     </section>
-=======
     {/* ══════════════════════════════════════════════════════
         §7  REALITY STATS SPLIT — Always dark (ink)
     ══════════════════════════════════════════════════════ */}
@@ -1269,9 +1188,7 @@ const Index = () => (
         </div>
       </div>
     </section>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //     {/* ══ §7  REALITY STATS SPLIT ═══════════════════════ */}
 //     <section style={{background:"var(--ink)"}}>
 //       <div className="flex flex-col lg:flex-row min-h-[420px]">
@@ -1301,7 +1218,6 @@ const Index = () => (
 //         </div>
 //       </div>
 //     </section>
-=======
     {/* ══════════════════════════════════════════════════════
         §8  SAFEBEAUTY BADGES — Always brand indigo
     ══════════════════════════════════════════════════════ */}
@@ -1317,9 +1233,7 @@ const Index = () => (
             Every badge is earned, not bought. Buyers instantly know how trusted your store is before they spend a kobo.
           </p>
         </div>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //     {/* ══ §8  SAFEBEAUTY BADGES ═════════════════════════ */}
 //     <section className="py-24" style={{background:"var(--forest)"}}>
 //       <div className="container mx-auto px-6 lg:px-14 max-w-5xl">
@@ -1333,7 +1247,6 @@ const Index = () => (
 //             Every badge is earned, not bought. Buyers instantly know how trusted your store is before they spend a kobo.
 //           </p>
 //         </div>
-=======
         <style>{`@media(min-width:640px){.badge-grid{grid-template-columns:repeat(2,1fr)!important;}}@media(min-width:1024px){.badge-grid{grid-template-columns:repeat(4,1fr)!important;}}`}</style>
         <div className="badge-grid" style={{ display:"grid",gap:16 }}>
           {BADGES.map(b=>(
@@ -1353,9 +1266,7 @@ const Index = () => (
         </div>
       </div>
     </section>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
 //           {BADGES.map(b=>(
 //             <div key={b.label} className="lift rounded-2xl p-6 flex flex-col gap-3"
@@ -1371,7 +1282,6 @@ const Index = () => (
 //         </div>
 //       </div>
 //     </section>
-=======
     {/* ══════════════════════════════════════════════════════
         §9  CONTENT STRATEGY — Theme-aware secondary bg
     ══════════════════════════════════════════════════════ */}
@@ -1379,14 +1289,11 @@ const Index = () => (
       <div style={{ maxWidth:1000,margin:"0 auto",padding:"0 1.5rem" }}>
         <style>{`@media(min-width:1024px){.content-flex{flex-direction:row!important;}}`}</style>
         <div className="content-flex" style={{ display:"flex",flexDirection:"column",alignItems:"center",gap:64 }}>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //     {/* ══ §9  CONTENT STRATEGY ══════════════════════════ */}
 //     <section className="py-24" style={{background:"var(--blush)"}}>
 //       <div className="container mx-auto px-6 lg:px-14 max-w-5xl">
 //         <div className="flex flex-col lg:flex-row items-center gap-14 lg:gap-20">
-=======
           {/* photo grid */}
           <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,width:340,flexShrink:0 }}>
             {[P.orders,P.tiktok,P.instagram,P.heroVendor].map((src,i)=>(
@@ -1401,9 +1308,7 @@ const Index = () => (
               </div>
             ))}
           </div>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //           {/* photo grid */}
 //           <div className="hidden lg:grid grid-cols-2 gap-3 w-[360px] flex-shrink-0">
 //             {[P.orders,P.tiktok,P.instagram,P.heroVendor].map((src,i)=>(
@@ -1418,7 +1323,6 @@ const Index = () => (
 //               </div>
 //             ))}
 //           </div>
-=======
           <div style={{ flex:1 }}>
             <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">
               Content that converts
@@ -1448,9 +1352,7 @@ const Index = () => (
         </div>
       </div>
     </section>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //           <div className="flex-1">
 //             <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-4" style={{color:"var(--terra)"}}>
 //               Content that converts
@@ -1480,7 +1382,6 @@ const Index = () => (
 //         </div>
 //       </div>
 //     </section>
-=======
     {/* ══════════════════════════════════════════════════════
         §10  TESTIMONIALS — Always dark (ink)
     ══════════════════════════════════════════════════════ */}
@@ -1517,9 +1418,7 @@ const Index = () => (
         </div>
       </div>
     </section>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //     {/* ══ §10  TESTIMONIALS ═════════════════════════════ */}
 //     <section className="py-24" style={{background:"var(--ink)"}}>
 //       <div className="container mx-auto px-6 lg:px-14 max-w-5xl">
@@ -1548,7 +1447,6 @@ const Index = () => (
 //         </div>
 //       </div>
 //     </section>
-=======
     {/* ══ reused components (theme-aware via Tailwind) ════════════════════ */}
     <DynamicPricing />
     <section className="py-8 md:py-10">
@@ -1565,15 +1463,12 @@ const Index = () => (
       </div>
     </section>
     <ShopperDiscovery />
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
-<<<<<<< HEAD
 //     {/* ══ existing components ═══════════════════════════ */}
 //     <FeaturedShopsBanner />
 //     <HomepageReviews />
 //     <DynamicPricing />
 //     <ShopperDiscovery />
-=======
     {/* ══════════════════════════════════════════════════════
         §15  FINAL CTA — Always hero indigo
     ══════════════════════════════════════════════════════ */}
@@ -1639,7 +1534,6 @@ const Index = () => (
         </div>
       </div>
     </section>
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
 
 //     {/* ══ §15  FINAL CTA ════════════════════════════════ */}
 //     <section className="relative py-28 text-center overflow-hidden"
@@ -1687,9 +1581,4 @@ const Index = () => (
 //   </div>
 // );
 
-<<<<<<< HEAD
 // export default Index;
-
-
-=======
->>>>>>> 0fd43cc3e1737ce5a28eaa2782251964c93a542f
