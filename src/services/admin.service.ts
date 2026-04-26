@@ -1,10 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
 
-// ─── Admin Mutation Helper ────────────────────────────────────────────────────
-// All admin write operations MUST go through this helper so that:
-//  1. The `x-admin-intent: dashboard-mutation` header is sent (required by edge functions)
-//  2. The user's JWT is forwarded so verifyAdminRequest() can authenticate the caller
-//  3. Edge-function errors are surfaced clearly instead of silently failing
 async function invokeAdminMutation<T>(
   functionName: string,
   payload: Record<string, unknown>,
