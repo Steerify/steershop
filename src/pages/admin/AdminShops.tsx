@@ -555,19 +555,15 @@ export default function AdminShops() {
     setIsCreating(true);
     try {
       const slug = generateSlug(newShopData.shop_name);
-      
-      const { error } = await supabase
-        .from("shops")
-        .insert({
-          owner_id: newShopData.owner_id,
-          shop_name: newShopData.shop_name,
-          shop_slug: slug,
-          description: newShopData.description || null,
-          whatsapp_number: newShopData.whatsapp_number || null,
-          is_active: true,
-        });
 
-      if (error) throw error;
+      await adminService.createShop({
+        owner_id: newShopData.owner_id,
+        shop_name: newShopData.shop_name,
+        shop_slug: slug,
+        description: newShopData.description || null,
+        whatsapp_number: newShopData.whatsapp_number || null,
+        is_active: true,
+      });
 
       toast({ 
         title: "✅ Shop Created", 

@@ -79,6 +79,7 @@ const AdminQuickLink = ({
 
 // ─── Main Admin Dashboard ─────────────────────────────────────────────────────
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [stats, setStats] = useState({
     totalShops: 0,
@@ -189,13 +190,30 @@ export default function AdminDashboard() {
             <h1 className="text-2xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Admin Dashboard
             </h1>
-            <p className="text-muted-foreground text-sm mt-0.5">Platform overview & management tools</p>
+            <p className="text-muted-foreground text-sm mt-0.5">Platform overview, urgent actions, and core management tools</p>
           </div>
           <Button size="sm" variant="outline" onClick={fetchStats} className="gap-1.5">
             <BarChart2 className="w-4 h-4" />
             Refresh
           </Button>
         </div>
+
+        <Card className="border-primary/15 bg-primary/5">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-wider font-semibold text-primary">Start here</p>
+                <h2 className="text-base font-bold">What do you need to do right now?</h2>
+                <p className="text-sm text-muted-foreground">Choose a workflow to review pending activity faster.</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full sm:w-auto">
+                <Button size="sm" variant="outline" onClick={() => navigate('/admin/orders')}>Review Orders</Button>
+                <Button size="sm" variant="outline" onClick={() => navigate('/admin/shops')}>Approve Shops</Button>
+                <Button size="sm" variant="outline" onClick={() => navigate('/admin/users')}>Manage Users</Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -273,7 +291,7 @@ export default function AdminDashboard() {
         <div>
           <h2 className="text-base font-bold mb-4 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
-            Management Tools
+            Management Tools (by task)
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {quickLinks.map((link) => (

@@ -63,7 +63,7 @@ const shopService = {
 
     let query = supabase
       .from('shops')
-      .select('*, products!inner(id, image_url)', { count: 'exact' })
+      .select('*, products!inner(id, image_url), profiles!inner(subscription_expires_at)', { count: 'exact' })
       .eq('products.is_available', true)
       .not('products.image_url', 'is', null);
 
@@ -97,10 +97,16 @@ const shopService = {
       return false;
     };
 
-    const completeShops = (shops || []).filter((s: any) => hasCompletePaymentSetup(s));
+    const hasActiveSubscription = (s: any) => {
+      const expiry = s?.profiles?.subscription_expires_at;
+      if (!expiry) return true;
+      return new Date(expiry).getTime() >= Date.now();
+    };
+
+    const completeShops = (shops || []).filter((s: any) => hasCompletePaymentSetup(s) && hasActiveSubscription(s));
 
     // Map database fields to API types - exclude sensitive bank details from public queries
-    const mappedShops: Shop[] = completeShops.map(({ products: _products, ...s }: any) => ({
+    const mappedShops: Shop[] = completeShops.map(({ products: _products, profiles: _profiles, ...s }: any) => ({
       id: s.id,
       name: s.shop_name,
       slug: s.shop_slug,

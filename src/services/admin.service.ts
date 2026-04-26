@@ -177,6 +177,19 @@ const adminService = {
   },
 
   // Update any shop
+  createShop: async (payload: {
+    owner_id: string;
+    shop_name: string;
+    shop_slug: string;
+    description?: string | null;
+    whatsapp_number?: string | null;
+    is_active?: boolean;
+  }) => {
+    const response = await invokeAdminMutation<{ data: any }>('admin-create-shop', payload);
+    return response.data;
+  },
+
+  // Update any shop
   updateShop: async (shopId: string, updates: Record<string, any>) => {
     const response = await invokeAdminMutation<{ data: any }>('admin-update-shop', {
       shop_id: shopId,

@@ -232,6 +232,7 @@ export default function AdminProducts() {
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
             ) : (
+              <>
               {/* Mobile View: Cards */}
               <div className="grid gap-4 p-4 md:hidden">
                 {filteredProducts.length === 0 ? (
@@ -385,6 +386,7 @@ export default function AdminProducts() {
                 </TableBody>
               </Table>
               </div>
+              </>
             )}
           </div>
         </div>
