@@ -21,7 +21,6 @@ import { ShopCardEnhanced } from "@/components/ShopCardEnhanced";
 import { supabase } from "@/integrations/supabase/client";
 import { autoCategorize, getCategoryLabel, BEAUTY_SUBCATEGORIES } from "@/utils/autoCategorize";
 import { Button } from "@/components/ui/button";
-import { useFeaturePhases } from "@/hooks/useFeaturePhases";
 import { PageThemeShell } from "@/components/PageThemeShell";
 
 const VERIFIED_NOTICE_KEY = "steersolo_verified_notice_dismissed";
@@ -109,7 +108,6 @@ const ProductCardSkeleton = () => (
    MAIN SHOPS PAGE
 ══════════════════════════════════════════════════════ */
 const Shops = () => {
-  const { isPhaseEnabled } = useFeaturePhases();
   const [shops, setShops] = useState<Shop[]>([]);
   const [trendingShops, setTrendingShops] = useState<Shop[]>([]);
   const [businessPlanShopIds, setBusinessPlanShopIds] = useState<Set<string>>(new Set());
@@ -171,22 +169,49 @@ const Shops = () => {
     fetchStats();
     fetchBusinessPlanShops();
 
-    // Fetch trending shops (most recent orders)
+    // Fetch trending shops (top 5 by orders in the last 30 days, with fallback)
     const fetchTrending = async () => {
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const { data } = await supabase
         .from('orders')
-        .select('shop_id')
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-        .limit(200);
-      if (data?.length) {
-        const counts: Record<string, number> = {};
-        data.forEach((o) => { counts[o.shop_id] = (counts[o.shop_id] || 0) + 1; });
-        const topIds = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id]) => id);
-        if (topIds.length) {
-          const { data: tShops } = await supabase.from('shops').select('*').in('id', topIds).eq('is_active', true);
-          if (tShops) setTrendingShops(tShops as any);
+        .select('shop_id, created_at')
+        .not('shop_id', 'is', null)
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(600);
+
+      const counts: Record<string, number> = {};
+      data?.forEach((o: any) => { counts[o.shop_id] = (counts[o.shop_id] || 0) + 1; });
+      const rankedIds = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([id]) => id);
+
+      if (rankedIds.length > 0) {
+        const topIds = rankedIds.slice(0, 5);
+        const { data: tShops } = await supabase
+          .from('shops')
+          .select('*')
+          .in('id', topIds)
+          .eq('is_active', true);
+
+        const ordered = (tShops || [])
+          .sort((a: any, b: any) => topIds.indexOf(a.id) - topIds.indexOf(b.id))
+          .slice(0, 5);
+
+        if (ordered.length > 0) {
+          setTrendingShops(ordered as any);
+          return;
         }
       }
+
+      // Fallback: show first 5 active stores by recency so section is never empty.
+      const { data: fallback } = await supabase
+        .from('shops')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      setTrendingShops((fallback || []) as any);
     };
     fetchTrending();
   }, []);
@@ -473,7 +498,7 @@ const Shops = () => {
       </div>
 
       {/* ══════════ TRENDING STORES ══════════ */}
-      {isPhaseEnabled(2) && trendingShops.length > 0 && !debouncedSearchQuery.trim() && (
+      {trendingShops.length > 0 && !debouncedSearchQuery.trim() && (
         <div className="container mx-auto px-4 mt-4 mb-2">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center">
@@ -482,7 +507,7 @@ const Shops = () => {
             <h2 className="font-display text-base sm:text-lg font-bold">Trending Stores</h2>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {trendingShops.map((shop: any) => (
+            {trendingShops.slice(0, 5).map((shop: any) => (
               <Link
                 key={shop.id}
                 to={`/shop/${shop.shop_slug || shop.id}`}

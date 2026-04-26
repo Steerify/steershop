@@ -58,17 +58,35 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         navigate("/auth/login");
         return;
       }
-      if (user.role === UserRole.ADMIN) {
-        setIsAdmin(true);
-        setLoading(false);
-        return;
-      }
+      const isPrimaryAdminEmail = user.email?.toLowerCase().trim() === "steerifygroup@gmail.com";
+
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
         .eq("role", "admin")
         .single();
+
+      if (!roles && (user.role === UserRole.ADMIN || isPrimaryAdminEmail)) {
+        // Self-heal role drift: profile says admin, but user_roles is missing admin.
+        // Most RLS admin policies rely on has_role() => user_roles.
+        const { error: syncError } = await supabase
+          .from("user_roles")
+          .upsert({ user_id: user.id, role: "admin" }, { onConflict: "user_id,role" });
+
+        if (syncError) {
+          toast({
+            title: "Admin role sync required",
+            description: "Your admin role is not fully provisioned. Contact support to complete setup.",
+            variant: "destructive",
+          });
+          navigate("/");
+          return;
+        }
+
+        setIsAdmin(true);
+        return;
+      }
 
       if (!roles) {
         toast({ title: "Access Denied", description: "You don't have admin privileges", variant: "destructive" });
