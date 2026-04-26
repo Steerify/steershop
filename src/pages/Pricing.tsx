@@ -9,6 +9,7 @@ import subscriptionService, { SubscriptionPlan } from "@/services/subscription.s
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/steersolo-logo.jpg";
 import { PageThemeShell } from "@/components/PageThemeShell";
+import { Helmet } from "react-helmet-async";
 
 const planProfiles: Record<string, { bestFor: string; outcome: string; timeSaved: string }> = {
   free: {
@@ -120,6 +121,10 @@ const Pricing = () => {
         </nav>
       }
     >
+      <Helmet>
+        <title>Pricing & Plans | SteerSolo - Start Free, Upgrade When You Grow</title>
+        <meta name="description" content="Simple, transparent pricing for Nigerian entrepreneurs. Start free, manage orders, accept payments on WhatsApp, and upgrade to unlock AI tools and unlimited products." />
+      </Helmet>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
         {/* Hero Section — ROI-first */}

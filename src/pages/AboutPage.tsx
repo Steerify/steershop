@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireDivider } from "@/components/patterns/AdirePattern";
 import { PageWrapper } from "@/components/PageWrapper";
+import { Helmet } from "react-helmet-async";
 
 const CORE_VALUES = [
   { icon: Zap, title: "Hustle with Structure", description: "We believe hustle is powerful — but only when paired with a system. Every feature we build brings order to the chaos." },
@@ -61,6 +62,10 @@ const TRUST_STACK = [
 const About = () => {
   return (
     <PageWrapper patternVariant="waves" patternOpacity={0.3}>
+      <Helmet>
+        <title>About SteerSolo | Building Africa's Digital Street Market</title>
+        <meta name="description" content="Learn about our mission to build the Daily Selling System for solo entrepreneurs and small businesses in Nigeria and across Africa." />
+      </Helmet>
       <Navbar />
       
       {/* Hero Section */}

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
+import { HelmetProvider } from "react-helmet-async";
 import { lazy, Suspense } from "react";
 import { PageLoadingSkeleton } from "@/components/PageLoadingSkeleton";
 import { SessionExpiryModal } from "@/components/SessionExpiryModal";
@@ -111,6 +112,10 @@ const TrustedStorefrontNigeriaArticle = lazy(() => import("./pages/seo/TrustedSt
 const BrandPage = lazy(() => import("./pages/BrandPage"));
 const UpdatesPage = lazy(() => import("./pages/UpdatesPage"));
 
+// Blog pages
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -127,10 +132,11 @@ const queryClient = new QueryClient({
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter
+      <HelmetProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter
         future={{
           v7_startTransition: true,
           v7_relativeSplatPath: true,
@@ -197,6 +203,11 @@ const App = () => (
             <Route path="/insights/marketplace-growth-playbook" element={<MarketplaceGrowthPlaybookArticle />} />
             <Route path="/insights/trusted-storefront-nigeria" element={<TrustedStorefrontNigeriaArticle />} />
             <Route path="/ambassador-program" element={<AmbassadorProgramPage />} />
+            
+            {/* Blog Routes */}
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            
             <Route path="/ambassador" element={
               <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR, UserRole.CUSTOMER]}>
                 <Ambassador />
@@ -420,6 +431,7 @@ const App = () => (
         </Suspense>
       </BrowserRouter>
       </TooltipProvider>
+      </HelmetProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

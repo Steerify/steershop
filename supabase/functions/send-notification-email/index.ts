@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 interface NotificationRequest {
-  type: 'profile_incomplete' | 'subscription_expiring' | 'milestone_achieved' | 'setup_complete' | 'store_approved';
+  type: 'profile_incomplete' | 'subscription_expiring' | 'milestone_achieved' | 'setup_complete' | 'store_approved' | 'signup_success' | 'subscription_success';
   user_id?: string;
   data?: Record<string, any>;
 }
@@ -125,6 +125,56 @@ const getEmailTemplate = (type: string, data: Record<string, any>) => {
         </div>`,
       };
 
+    case 'signup_success':
+      return {
+        subject: 'Welcome to SteerSolo! Your journey begins 🚀',
+        html: `<div style="${baseStyles} background: #FAFAF8; border: 1px solid #E8E5DD; border-radius: 16px; padding: 0; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #123C72, #0EA46E); color: #fff; padding: 24px 24px 20px;">
+            <h1 style="margin: 8px 0 0; font-size: 26px; line-height: 1.2;">Welcome, ${data.name || 'Entrepreneur'}! 👋</h1>
+          </div>
+          <div style="padding: 24px;">
+            <p style="margin-top: 0; color: #1D2939; font-size: 15px;">Your SteerSolo account has been successfully created.</p>
+            <p style="color: #344054; line-height: 1.7; font-size: 15px;">
+              You're now part of a community of Nigerian solo entrepreneurs building structured and profitable digital businesses.
+            </p>
+            <div style="background: #FFFFFF; border: 1px solid #E4E7EC; border-radius: 12px; padding: 16px; margin: 16px 0;">
+              <p style="margin: 0 0 8px; color: #0EA46E; font-weight: 700;">Next steps:</p>
+              <ul style="margin: 0; padding-left: 18px; color: #475467; line-height: 1.7;">
+                <li>Set up your storefront and add your products.</li>
+                <li>Verify your identity to unlock payouts.</li>
+                <li>Share your link to start getting orders.</li>
+              </ul>
+            </div>
+            <div style="margin: 22px 0 8px;">
+              <a href="${data.dashboardUrl || 'https://steersolo.com/dashboard'}" style="${buttonStyle}">
+                Go to Dashboard
+              </a>
+            </div>
+          </div>
+        </div>`,
+      };
+
+    case 'subscription_success':
+      return {
+        subject: 'Subscription Activated! 🎉',
+        html: `<div style="${baseStyles} background: #FAFAF8; border: 1px solid #E8E5DD; border-radius: 16px; padding: 0; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #D4AF37, #C5A028); color: #fff; padding: 24px 24px 20px;">
+            <h1 style="margin: 8px 0 0; font-size: 26px; line-height: 1.2;">Subscription Active ✅</h1>
+          </div>
+          <div style="padding: 24px;">
+            <p style="margin-top: 0; color: #1D2939; font-size: 15px;">Hi ${data.name || 'there'},</p>
+            <p style="color: #344054; line-height: 1.7; font-size: 15px;">
+              Your subscription payment was successful. Your SteerSolo store is fully active and visible to customers!
+            </p>
+            <div style="margin: 22px 0 8px;">
+              <a href="${data.dashboardUrl || 'https://steersolo.com/dashboard'}" style="${buttonStyle}">
+                Go to Dashboard
+              </a>
+            </div>
+          </div>
+        </div>`,
+      };
+
     default:
       return {
         subject: 'SteerSolo Notification',
@@ -175,6 +225,17 @@ serve(async (req) => {
 
     const template = getEmailTemplate(type, { ...data, name: data.name || userName });
 
+    const emailPayload: any = {
+      from: fromEmail,
+      to: [email],
+      subject: template.subject,
+      html: template.html,
+    };
+
+    if (type === 'signup_success' || type === 'subscription_success') {
+      emailPayload.cc = ['steerifygroup@gmail.com'];
+    }
+
     // Send email via Resend
     const emailResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -182,12 +243,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${resendApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: [email],
-        subject: template.subject,
-        html: template.html,
-      }),
+      body: JSON.stringify(emailPayload),
     });
 
     const emailResult = await emailResponse.json();

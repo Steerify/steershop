@@ -890,7 +890,7 @@ const Dashboard = () => {
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/3">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/3 overflow-x-hidden">
       {/* ─── Top Navigation ──────────────────────────────── */}
       <nav className="bg-card/95 backdrop-blur-xl border-b border-border/60 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-3">
@@ -1149,7 +1149,7 @@ const Dashboard = () => {
                 </button>
               </div>
               {/* Primary 5 tiles — always visible */}
-              <div className="sm:hidden -mx-4 px-4 overflow-x-auto snap-x snap-mandatory pb-2" data-tour="quick-actions">
+              <div className="sm:hidden -mx-4 px-4 overflow-x-auto snap-x snap-mandatory pb-2 hide-scrollbar" data-tour="quick-actions">
                 <div className="flex gap-3 w-max">
                   {(quickActionsExpanded ? QuickActions : PrimaryQuickActions).map((action) => (
                     <div key={action.path + action.label} className="w-[200px] shrink-0 snap-start">
