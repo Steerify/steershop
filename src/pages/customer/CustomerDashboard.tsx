@@ -191,8 +191,26 @@ const CustomerDashboard = () => {
               <h2 className="text-2xl sm:text-3xl font-heading font-bold mb-1">
                 Welcome back, {userName}!
               </h2>
-              <p className="text-sm sm:text-base text-muted-foreground">Here's an overview of your activity</p>
+              <p className="text-sm sm:text-base text-muted-foreground">Track orders, rewards, and next actions in one place</p>
             </div>
+
+            <Card className="border-primary/15 bg-primary/5">
+              <CardContent className="p-4 sm:p-5">
+                <p className="text-xs uppercase tracking-wider font-semibold text-primary mb-1">Start here</p>
+                <h3 className="font-semibold text-base mb-3">What would you like to do now?</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <Button variant="outline" className="justify-start" onClick={() => navigate("/shops")}>
+                    <Store className="w-4 h-4 mr-2" /> Browse Shops
+                  </Button>
+                  <Button variant="outline" className="justify-start" onClick={() => navigate("/customer/orders")}>
+                    <Package className="w-4 h-4 mr-2" /> Track Orders
+                  </Button>
+                  <Button variant="outline" className="justify-start" onClick={() => navigate("/customer/rewards")}>
+                    <Gift className="w-4 h-4 mr-2" /> View Rewards
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5" data-tour="stats-grid">

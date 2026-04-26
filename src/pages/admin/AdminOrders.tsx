@@ -224,7 +224,63 @@ export default function AdminOrders() {
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              <div className="grid gap-4 p-4 md:hidden">
+                {filteredOrders.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-2xl bg-muted/30">
+                    <Package className="w-12 h-12 opacity-20 mx-auto mb-3" />
+                    <p className="font-medium">No orders found</p>
+                  </div>
+                ) : filteredOrders.map((order) => (
+                  <div key={order.id} className="rounded-2xl border border-border/60 bg-card p-4 space-y-3 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold">#{order.id.slice(0, 8)}</p>
+                        <p className="text-xs text-muted-foreground">{order.customer_name || "N/A"}</p>
+                        <p className="text-xs text-muted-foreground">{order.customer_email || ""}</p>
+                      </div>
+                      <p className="font-bold text-primary text-sm">₦{Number(order.total_amount).toLocaleString()}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant={getStatusColor(order.status)} className="flex items-center w-fit">
+                        {getStatusIcon(order.status)}
+                        {order.status}
+                      </Badge>
+                      <Badge variant={order.payment_status === "paid" ? "default" : "secondary"} className={order.payment_status === "paid" ? "bg-accent hover:bg-accent/90" : ""}>
+                        <CreditCard className="w-3 h-3 mr-1" />
+                        {order.payment_status}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{order.shops?.shop_name || "N/A"} • {format(new Date(order.created_at), "MMM dd, yyyy")}</p>
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <Button variant="outline" size="sm" className="rounded-xl" onClick={() => handleViewDetails(order)}>
+                        <Eye className="w-4 h-4 mr-1" />
+                        View
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="rounded-xl">
+                            <MoreHorizontal className="w-4 h-4 mr-1" />
+                            Actions
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(order)}>
+                            <Package className="w-4 h-4 mr-2" />
+                            Update Status
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleUpdatePayment(order)}>
+                            <DollarSign className="w-4 h-4 mr-2" />
+                            Update Payment
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="hidden md:block overflow-x-auto">
               <Table className="min-w-[800px]">
                 <TableHeader>
                   <TableRow className="hover:bg-muted/50">
@@ -302,6 +358,7 @@ export default function AdminOrders() {
                 </TableBody>
               </Table>
               </div>
+              </>
             )}
           </div>
         </div>
