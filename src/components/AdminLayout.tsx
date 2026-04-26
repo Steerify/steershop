@@ -111,10 +111,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {/* Admin Header */}
-          <header className="h-14 border-b border-border/60 flex items-center justify-between px-4 sm:px-6 bg-card/95 sticky top-0 z-30">
+          <header className="h-14 border-b border-border/60 flex items-center justify-between px-3 sm:px-6 bg-card/95 sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
-              <div className="hidden sm:block h-4 w-px bg-border" />
+              <div className="h-4 w-px bg-border" />
+              <p className="text-xs font-semibold text-foreground sm:hidden truncate max-w-[120px]">{pageTitle}</p>
               <div className="hidden sm:block">
                 <p className="text-xs text-muted-foreground font-medium">Admin Panel</p>
                 <h1 className="text-sm font-bold text-foreground leading-none">{pageTitle}</h1>
@@ -128,11 +129,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               </Badge>
 
               {/* Admin avatar */}
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-bold shadow-sm">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-bold shadow-sm">
                 {adminName.charAt(0).toUpperCase()}
               </div>
 
-              <Button variant="ghost" size="sm" onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive gap-1.5 text-xs h-8">
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive gap-1 text-xs h-8 px-2 sm:px-3">
                 <LogOut className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Logout</span>
               </Button>
