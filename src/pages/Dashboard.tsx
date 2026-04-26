@@ -1025,6 +1025,24 @@ const Dashboard = () => {
           </div>
         </div>
 
+        <Card className="border-primary/15 bg-primary/5">
+          <CardContent className="p-4 sm:p-5">
+            <p className="text-xs uppercase tracking-wider font-semibold text-primary mb-1">Daily workflow</p>
+            <h2 className="text-base font-bold mb-3">Choose your next task</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <Button variant="outline" className="justify-start" onClick={() => navigate("/my-store")}>
+                <Package className="w-4 h-4 mr-2" /> Update Products
+              </Button>
+              <Button variant="outline" className="justify-start" onClick={() => navigate("/orders")}>
+                <ShoppingCart className="w-4 h-4 mr-2" /> Process Orders
+              </Button>
+              <Button variant="outline" className="justify-start" onClick={() => navigate("/marketing")}>
+                <Megaphone className="w-4 h-4 mr-2" /> Launch Marketing
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Contextual Banner — single most-urgent message */}
         <div className="mb-5">
           {getContextualBanner()}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { useNavigate, useSearchParams, useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth, SignUpData } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, ArrowLeft, Store, ShoppingBag, Eye, EyeOff } from "lucide-react";
+import { Loader2, Mail, ArrowLeft, Store, ShoppingBag, Eye, EyeOff, Lock, Sparkles, CircleCheck, ShieldCheck } from "lucide-react";
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logoLight from "@/assets/steersolo-logo.jpg";
@@ -59,6 +59,25 @@ const PasswordInput = ({ field, placeholder }: { field: any; placeholder?: strin
     </div>
   );
 };
+
+const InputWithIcon = ({
+  icon,
+  type = "text",
+  placeholder,
+  value,
+  onChange,
+}: {
+  icon: ReactNode;
+  type?: string;
+  placeholder?: string;
+  value?: string;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
+}) => (
+  <div className="relative">
+    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{icon}</span>
+    <Input type={type} placeholder={placeholder} value={value} onChange={onChange} className="pl-10 min-h-11" />
+  </div>
+);
 
 // Simplified signup - only email, password, role
 const signupSchema = z.object({
@@ -347,7 +366,7 @@ const Auth = () => {
     }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -440,7 +459,7 @@ const Auth = () => {
       </div>
 
       {/* ── Right form panel ─────────────────────────────── */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 relative overflow-hidden bg-gradient-to-br from-background via-background to-primary/3">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 md:p-10 relative overflow-hidden bg-gradient-to-br from-background via-background to-primary/3">
         <AdirePattern variant="dots" className="absolute inset-0 opacity-4 pointer-events-none" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-accent/10 to-transparent rounded-full blur-3xl pointer-events-none" />
@@ -454,6 +473,14 @@ const Auth = () => {
         </div>
 
         <div className="w-full max-w-md relative z-10 animate-bounce-in">
+          <div className="mb-3 rounded-2xl border border-primary/15 bg-primary/5 p-3 sm:p-4">
+            <p className="text-sm font-semibold flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />Quick start</p>
+            <ul className="mt-2 space-y-1.5 text-xs sm:text-sm text-muted-foreground">
+              <li className="flex items-center gap-2"><CircleCheck className="h-3.5 w-3.5 text-primary" />Use Google for the fastest sign-in.</li>
+              <li className="flex items-center gap-2"><CircleCheck className="h-3.5 w-3.5 text-primary" />Use Magic Link if you don't want a password.</li>
+              <li className="flex items-center gap-2"><ShieldCheck className="h-3.5 w-3.5 text-primary" />Your login is secured with encrypted authentication.</li>
+            </ul>
+          </div>
           {(persona === "vendor" || persona === "shopper") && (
             <div className="mb-3 grid grid-cols-2 gap-2">
               <Button
@@ -477,7 +504,7 @@ const Auth = () => {
           {/* Accent stripe */}
           <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-primary via-accent to-primary mb-0" />
 
-          <div className="bg-card/95 backdrop-blur-xl rounded-b-3xl rounded-tr-3xl border border-border/60 shadow-2xl p-6 sm:p-8">
+          <div className="bg-card/95 backdrop-blur-xl rounded-b-3xl rounded-tr-3xl border border-border/60 shadow-2xl p-4 sm:p-6 md:p-8">
 
           {authError && (
             <Alert variant="destructive" className="mb-4">
@@ -565,7 +592,10 @@ const Auth = () => {
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="you@example.com" {...field} />
+                            <div className="relative">
+                              <Mail className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                              <Input placeholder="you@example.com" {...field} className="pl-10 min-h-11" />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -577,7 +607,7 @@ const Auth = () => {
                       render={({ field }) => (
                         <FormItem>
                           <div className="flex justify-between">
-                            <FormLabel>Password</FormLabel>
+                            <FormLabel className="flex items-center gap-1.5"><Lock className="h-3.5 w-3.5 text-muted-foreground" />Password</FormLabel>
                             <Button type="button" variant="link" className="px-0 text-xs" onClick={() => setShowForgotPassword(true)}>
                               Forgot password?
                             </Button>
@@ -605,7 +635,7 @@ const Auth = () => {
                       </Label>
                     </div>
                     
-                    <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent" disabled={isLoading}>
+                    <Button type="submit" className="w-full min-h-11 bg-gradient-to-r from-primary to-accent" disabled={isLoading}>
                       {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                       Login
                     </Button>
@@ -620,13 +650,14 @@ const Auth = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Input
+                  <InputWithIcon
                     type="email"
                     value={magicLinkEmail}
                     onChange={(e) => setMagicLinkEmail(e.target.value)}
                     placeholder="Email for magic login link"
+                    icon={<Mail className="h-4 w-4" />}
                   />
-                  <Button type="button" variant="outline" className="w-full" onClick={handleMagicLinkLogin} disabled={isLoading}>
+                  <Button type="button" variant="outline" className="w-full min-h-11" onClick={handleMagicLinkLogin} disabled={isLoading}>
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
                     Send me a magic link
                   </Button>
@@ -653,7 +684,10 @@ const Auth = () => {
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="you@example.com" {...field} />
+                            <div className="relative">
+                              <Mail className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                              <Input placeholder="you@example.com" {...field} className="pl-10 min-h-11" />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -664,7 +698,7 @@ const Auth = () => {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel className="flex items-center gap-1.5"><Lock className="h-3.5 w-3.5 text-muted-foreground" />Password</FormLabel>
                           <FormControl>
                             <PasswordInput field={field} placeholder="Min 8 chars, 1 upper, 1 number" />
                           </FormControl>
@@ -717,7 +751,7 @@ const Auth = () => {
                       )}
                     />
                     
-                    <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent" disabled={isLoading}>
+                    <Button type="submit" className="w-full min-h-11 bg-gradient-to-r from-primary to-accent" disabled={isLoading}>
                       {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                       Create Account
                     </Button>
