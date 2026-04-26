@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Calendar as CalendarIcon, Filter, CheckCircle, XCircle, Clock, Users } from "lucide-react";
+import { Search, Calendar as CalendarIcon, Filter, CheckCircle, XCircle, Clock, Users, Phone, Store, MoreHorizontal, Shield, User } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { cn } from "@/lib/utils";
@@ -23,15 +24,10 @@ interface SubscriptionPlan {
 
 type FilterType = 'all' | 'shop_owners' | 'active' | 'trial' | 'expired';
 
-const getAdminHeaders = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  return {
-    'x-admin-intent': 'dashboard-mutation',
-    'Authorization': `Bearer ${session?.access_token}`
-  };
-};
+import adminService from "@/services/admin.service";
 
 export default function AdminUsers() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<any[]>([]);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [search, setSearch] = useState("");
@@ -108,18 +104,7 @@ export default function AdminUsers() {
       const previousExpiry = selectedUser.subscription_expires_at;
       const newExpiry = addDays(currentExpiry > new Date() ? currentExpiry : new Date(), days);
 
-      const headers = await getAdminHeaders();
-      const { error } = await supabase.functions.invoke('admin-set-subscription', {
-        body: {
-          user_id: selectedUser.id,
-          action: 'extend_days',
-          days,
-          plan_name: getPlanName(selectedUser.subscription_plan_id),
-        },
-        headers,
-      });
-
-      if (error) throw error;
+      await adminService.extendSubscription(selectedUser.id, days);
 
       toast({
         title: "Subscription Extended",
@@ -142,18 +127,7 @@ export default function AdminUsers() {
     if (!selectedUser || !customDate) return;
 
     try {
-      const headers = await getAdminHeaders();
-      const { error } = await supabase.functions.invoke('admin-set-subscription', {
-        body: {
-          user_id: selectedUser.id,
-          action: 'set_date',
-          custom_date: customDate.toISOString(),
-          plan_name: getPlanName(selectedUser.subscription_plan_id),
-        },
-        headers,
-      });
-
-      if (error) throw error;
+      await adminService.setSubscriptionDate(selectedUser.id, customDate);
 
       toast({
         title: "Subscription Extended",
@@ -180,18 +154,7 @@ export default function AdminUsers() {
       const newExpiry = addDays(new Date(), 30);
       const planName = plans.find(p => p.id === selectedPlanId)?.name || 'Basic';
 
-      const headers = await getAdminHeaders();
-      const { error } = await supabase.functions.invoke('admin-set-subscription', {
-        body: {
-          user_id: selectedUser.id,
-          action: 'activate',
-          plan_id: selectedPlanId || null,
-          plan_name: planName,
-        },
-        headers,
-      });
-
-      if (error) throw error;
+      await adminService.activateSubscription(selectedUser.id, selectedPlanId || null, planName);
 
       toast({
         title: "Subscription Activated",
@@ -215,6 +178,25 @@ export default function AdminUsers() {
     if (!planId) return "—";
     const plan = plans.find(p => p.id === planId);
     return plan?.name || "Unknown";
+  };
+
+  const getSubscriptionBadge = (profile: any) => {
+    const status = calculateSubscriptionStatus(profile);
+    
+    switch (status.status) {
+      case 'active':
+        return <Badge className="bg-green-600 text-[10px] uppercase tracking-wider font-bold">Active</Badge>;
+      case 'trial':
+        return <Badge className="bg-[hsl(42,90%,55%)] text-white text-[10px] uppercase tracking-wider font-bold">Trial</Badge>;
+      case 'expired':
+        return <Badge variant="destructive" className="text-[10px] uppercase tracking-wider font-bold">Expired</Badge>;
+      default:
+        return <Badge variant="secondary" className="text-[10px] uppercase tracking-wider font-bold">None</Badge>;
+    }
+  };
+
+  const handleViewShops = (userId: string) => {
+    navigate(`/admin/shops?ownerId=${userId}`);
   };
 
   const filterCounts = {
@@ -292,7 +274,94 @@ export default function AdminUsers() {
           </div>
         </div>
 
-        <div className="border rounded-lg overflow-x-auto">
+        {/* Mobile View: Cards */}
+        <div className="grid gap-4 md:hidden">
+          {filteredUsers.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-2xl bg-muted/30">
+              <Users className="w-12 h-12 opacity-20 mx-auto mb-3" />
+              <p className="font-medium">No users found</p>
+            </div>
+          ) : (
+            filteredUsers.map((user) => {
+              const subStatus = calculateSubscriptionStatus(user);
+              return (
+                <div key={user.id} className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm hover:shadow-md transition-all">
+                  <div className="p-4 space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center border shadow-sm shrink-0">
+                          <User className="w-6 h-6 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-foreground truncate">{user.full_name || 'No Name'}</p>
+                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        </div>
+                      </div>
+                      <div className="shrink-0">
+                        {getSubscriptionBadge(user)}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline" className="text-[10px] font-medium bg-muted/50 border-border/50 gap-1.5">
+                        <CalendarIcon className="w-3 h-3" />
+                        Joined {format(new Date(user.created_at), "MMM dd, yyyy")}
+                      </Badge>
+                      {user.phone && (
+                        <Badge variant="outline" className="text-[10px] font-medium bg-muted/50 border-border/50 gap-1.5">
+                          <Phone className="w-3 h-3" />
+                          {user.phone}
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="w-full rounded-xl font-semibold h-9 gap-1.5"
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setIsExtendDialogOpen(true);
+                        }}
+                      >
+                        <CalendarIcon className="w-4 h-4" />
+                        Extend
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" variant="outline" className="w-full rounded-xl font-semibold h-9 gap-1.5">
+                            <MoreHorizontal className="w-4 h-4" />
+                            Manage
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 rounded-xl p-1 shadow-xl border-primary/10">
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedUser(user);
+                            setIsExtendDialogOpen(true);
+                          }} className="rounded-lg py-2.5">
+                            <Clock className="w-4 h-4 mr-2" /> Extend Days
+                          </DropdownMenuItem>
+                          {user.role === "shop_owner" && (
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedUser(user);
+                              setIsActivateDialogOpen(true);
+                            }} className="rounded-lg py-2.5">
+                              <Shield className="w-4 h-4 mr-2" /> Change Plan
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop View: Table */}
+        <div className="hidden md:block border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>

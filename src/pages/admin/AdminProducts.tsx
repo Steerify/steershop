@@ -232,8 +232,82 @@ export default function AdminProducts() {
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
             ) : (
-              <div className="overflow-x-auto">
-              <Table className="min-w-[800px]">
+              {/* Mobile View: Cards */}
+              <div className="grid gap-4 p-4 md:hidden">
+                {filteredProducts.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-2xl bg-muted/30">
+                    <Package className="w-12 h-12 opacity-20 mx-auto mb-3" />
+                    <p className="font-medium">No products found</p>
+                  </div>
+                ) : (
+                  filteredProducts.map((product) => (
+                    <div key={product.id} className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm hover:shadow-md transition-all">
+                      <div className="p-4 space-y-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center border shadow-sm shrink-0">
+                              {product.type === "service" ? <Briefcase className="w-6 h-6 text-accent" /> : <Package className="w-6 h-6 text-primary" />}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-foreground truncate">{product.name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{product.shops?.shop_name || "N/A"}</p>
+                            </div>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="font-bold text-primary">₦{Number(product.price).toLocaleString()}</p>
+                            <p className="text-[10px] text-muted-foreground">{product.stock_quantity} in stock</p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="outline" className="text-[10px] font-medium bg-muted/50 border-border/50">
+                            {getCategoryLabel(product.category || 'other')}
+                          </Badge>
+                          <Badge variant={product.is_available ? "default" : "secondary"} className={product.is_available ? "bg-green-600 text-[10px] uppercase tracking-wider font-bold" : "text-[10px] uppercase tracking-wider font-bold"}>
+                            {product.is_available ? "Available" : "Unavailable"}
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 pt-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="w-full rounded-xl font-semibold h-9 gap-1.5"
+                            onClick={() => handleEdit(product)}
+                          >
+                            <Edit className="w-4 h-4" />
+                            Edit
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button size="sm" variant="outline" className="w-full rounded-xl font-semibold h-9 gap-1.5">
+                                <MoreHorizontal className="w-4 h-4" />
+                                Actions
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 rounded-xl p-1 shadow-xl border-primary/10">
+                              <DropdownMenuItem onClick={() => toggleAvailability(product)} className="rounded-lg py-2.5">
+                                {product.is_available ? (
+                                  <><EyeOff className="w-4 h-4 mr-2" /> Disable</>
+                                ) : (
+                                  <><Eye className="w-4 h-4 mr-2" /> Enable</>
+                                )}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDelete(product)} className="text-red-600 focus:text-red-600 rounded-lg py-2.5">
+                                <Trash2 className="w-4 h-4 mr-2" /> Delete Product
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Desktop View: Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table className="min-w-[800px]">
                 <TableHeader>
                   <TableRow className="hover:bg-muted/50">
                     <TableHead>Name</TableHead>

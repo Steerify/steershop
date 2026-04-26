@@ -752,7 +752,7 @@ const ShopStorefront = () => {
           )}
         </div>
 
-        <div className="mx-auto w-full max-w-[26rem] sm:max-w-none">
+        <div className="mx-auto w-full">
           {/* ── Empty State ── */}
           {filteredProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -773,7 +773,7 @@ const ShopStorefront = () => {
             </div>
           ) : (
             /* ── Product Grid ── */
-            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
               {filteredProducts.map((product, index) => (
                 <div
                   key={product.id}

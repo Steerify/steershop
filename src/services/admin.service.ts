@@ -192,12 +192,32 @@ const adminService = {
     return { success: true };
   },
 
-  // Extend user subscription
-  extendSubscription: async (userId: string, days: number, _adminId: string) => {
+  extendSubscription: async (userId: string, days: number) => {
     const response = await invokeAdminMutation<{ success: boolean; new_expiry_at: string }>('admin-set-subscription', {
       user_id: userId,
       action: 'extend_days',
       days,
+    });
+
+    return { success: response.success, newExpiry: new Date(response.new_expiry_at) };
+  },
+
+  setSubscriptionDate: async (userId: string, date: Date) => {
+    const response = await invokeAdminMutation<{ success: boolean; new_expiry_at: string }>('admin-set-subscription', {
+      user_id: userId,
+      action: 'set_date',
+      custom_date: date.toISOString(),
+    });
+
+    return { success: response.success, newExpiry: new Date(response.new_expiry_at) };
+  },
+
+  activateSubscription: async (userId: string, planId: string | null, planName: string) => {
+    const response = await invokeAdminMutation<{ success: boolean; new_expiry_at: string }>('admin-set-subscription', {
+      user_id: userId,
+      action: 'activate',
+      plan_id: planId,
+      plan_name: planName,
     });
 
     return { success: response.success, newExpiry: new Date(response.new_expiry_at) };
