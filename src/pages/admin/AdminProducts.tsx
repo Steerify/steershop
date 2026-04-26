@@ -15,9 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { autoCategorize, getCategoryLabel } from "@/utils/autoCategorize";
 
-const adminMutationHeaders = {
-  'x-admin-intent': 'dashboard-mutation',
-};
+import adminService from "@/services/admin.service";
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
@@ -77,13 +75,10 @@ export default function AdminProducts() {
   const confirmDelete = async () => {
     if (!selectedProduct) return;
     
-    const { error } = await supabase.functions.invoke('admin-delete-product', {
-      body: { product_id: selectedProduct.id },
-      headers: adminMutationHeaders,
-    });
-
-    if (error) {
-      toast({ title: "Error deleting product", variant: "destructive" });
+    try {
+      await adminService.deleteProduct(selectedProduct.id);
+    } catch (error: any) {
+      toast({ title: "Error deleting product", description: error.message, variant: "destructive" });
       return;
     }
 
@@ -119,22 +114,16 @@ export default function AdminProducts() {
       return;
     }
 
-    const { error } = await supabase.functions.invoke('admin-update-product', {
-      body: {
-        product_id: selectedProduct.id,
-        updates: {
-          name: formData.name,
-          description: formData.description,
-          price: parsedPrice,
-          stock_quantity: parsedStock,
-          is_available: formData.is_available,
-        },
-      },
-      headers: adminMutationHeaders,
-    });
-
-    if (error) {
-      toast({ title: "Error updating product", variant: "destructive" });
+    try {
+      await adminService.updateProduct(selectedProduct.id, {
+        name: formData.name,
+        description: formData.description,
+        price: parsedPrice,
+        stock_quantity: parsedStock,
+        is_available: formData.is_available,
+      });
+    } catch (error: any) {
+      toast({ title: "Error updating product", description: error.message, variant: "destructive" });
       setIsSaving(false);
       return;
     }
@@ -177,13 +166,10 @@ export default function AdminProducts() {
   };
 
   const toggleAvailability = async (product: any) => {
-    const { error } = await supabase.functions.invoke('admin-update-product', {
-      body: { product_id: product.id, updates: { is_available: !product.is_available } },
-      headers: adminMutationHeaders,
-    });
-
-    if (error) {
-      toast({ title: "Error updating availability", variant: "destructive" });
+    try {
+      await adminService.updateProduct(product.id, { is_available: !product.is_available });
+    } catch (error: any) {
+      toast({ title: "Error updating availability", description: error.message, variant: "destructive" });
       return;
     }
 

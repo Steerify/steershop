@@ -23,8 +23,12 @@ interface SubscriptionPlan {
 
 type FilterType = 'all' | 'shop_owners' | 'active' | 'trial' | 'expired';
 
-const adminMutationHeaders = {
-  'x-admin-intent': 'dashboard-mutation',
+const getAdminHeaders = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return {
+    'x-admin-intent': 'dashboard-mutation',
+    'Authorization': `Bearer ${session?.access_token}`
+  };
 };
 
 export default function AdminUsers() {
@@ -104,6 +108,7 @@ export default function AdminUsers() {
       const previousExpiry = selectedUser.subscription_expires_at;
       const newExpiry = addDays(currentExpiry > new Date() ? currentExpiry : new Date(), days);
 
+      const headers = await getAdminHeaders();
       const { error } = await supabase.functions.invoke('admin-set-subscription', {
         body: {
           user_id: selectedUser.id,
@@ -111,7 +116,7 @@ export default function AdminUsers() {
           days,
           plan_name: getPlanName(selectedUser.subscription_plan_id),
         },
-        headers: adminMutationHeaders,
+        headers,
       });
 
       if (error) throw error;
@@ -137,6 +142,7 @@ export default function AdminUsers() {
     if (!selectedUser || !customDate) return;
 
     try {
+      const headers = await getAdminHeaders();
       const { error } = await supabase.functions.invoke('admin-set-subscription', {
         body: {
           user_id: selectedUser.id,
@@ -144,7 +150,7 @@ export default function AdminUsers() {
           custom_date: customDate.toISOString(),
           plan_name: getPlanName(selectedUser.subscription_plan_id),
         },
-        headers: adminMutationHeaders,
+        headers,
       });
 
       if (error) throw error;
@@ -174,6 +180,7 @@ export default function AdminUsers() {
       const newExpiry = addDays(new Date(), 30);
       const planName = plans.find(p => p.id === selectedPlanId)?.name || 'Basic';
 
+      const headers = await getAdminHeaders();
       const { error } = await supabase.functions.invoke('admin-set-subscription', {
         body: {
           user_id: selectedUser.id,
@@ -181,7 +188,7 @@ export default function AdminUsers() {
           plan_id: selectedPlanId || null,
           plan_name: planName,
         },
-        headers: adminMutationHeaders,
+        headers,
       });
 
       if (error) throw error;

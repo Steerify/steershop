@@ -32,8 +32,12 @@ import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-const adminMutationHeaders = {
-  'x-admin-intent': 'dashboard-mutation',
+const getAdminHeaders = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return {
+    'x-admin-intent': 'dashboard-mutation',
+    'Authorization': `Bearer ${session?.access_token}`
+  };
 };
 
 export default function AdminShops() {
@@ -218,9 +222,10 @@ export default function AdminShops() {
     const shopId = shop.id;
     const currentStatus = shop.is_active;
 
+    const headers = await getAdminHeaders();
     const { error } = await supabase.functions.invoke('admin-update-shop', {
       body: { shop_id: shopId, updates: { is_active: !currentStatus } },
-      headers: adminMutationHeaders,
+      headers,
     });
 
     if (error) {
@@ -325,6 +330,7 @@ export default function AdminShops() {
       console.log("Updating profile ID:", selectedShop.profiles.id);
       console.log("Setting expiry to:", newExpiry.toISOString());
 
+      const headers = await getAdminHeaders();
       const { data, error } = await supabase.functions.invoke('admin-set-subscription', {
         body: {
           user_id: selectedShop.profiles.id,
@@ -332,7 +338,7 @@ export default function AdminShops() {
           days: parseInt(extensionDays),
           plan_name: selectedShop.profiles.subscription_plan_id || null,
         },
-        headers: adminMutationHeaders,
+        headers,
       });
 
       if (error) {
@@ -383,6 +389,7 @@ export default function AdminShops() {
       const newExpiry = new Date();
       newExpiry.setDate(newExpiry.getDate() + 30);
 
+      const headers = await getAdminHeaders();
       const { error } = await supabase.functions.invoke('admin-set-subscription', {
         body: {
           user_id: shop.profiles.id,
@@ -390,7 +397,7 @@ export default function AdminShops() {
           custom_date: newExpiry.toISOString(),
           plan_name: shop.profiles.subscription_plan_id || null,
         },
-        headers: adminMutationHeaders,
+        headers,
       });
 
       if (error) {
@@ -428,9 +435,10 @@ export default function AdminShops() {
     
     setIsDeleting(true);
     try {
+      const headers = await getAdminHeaders();
       const { error } = await supabase.functions.invoke('admin-delete-shop', {
         body: { shop_id: shopToDelete.id },
-        headers: adminMutationHeaders,
+        headers,
       });
 
       if (error) throw error;
@@ -457,6 +465,7 @@ export default function AdminShops() {
     if (!selectedShop) return;
     setIsSaving(true);
 
+    const headers = await getAdminHeaders();
     const { error } = await supabase.functions.invoke('admin-update-shop', {
       body: {
         shop_id: selectedShop.id,
@@ -466,7 +475,7 @@ export default function AdminShops() {
           whatsapp_number: formData.whatsapp_number,
         },
       },
-      headers: adminMutationHeaders,
+      headers,
     });
 
     if (error) {
@@ -829,7 +838,8 @@ export default function AdminShops() {
                         <TableCell>
                           {getSubscriptionBadge(shop.profiles)}
                         </TableCell>
-                                                  <div className="flex items-center gap-2">
+                        <TableCell>
+                          <div className="flex items-center gap-2">
                             {isPending(shop) ? (
                               <Badge style={{ background: 'hsl(42,90%,40%)', color: 'white' }}>
                                 <Clock className="w-3 h-3 mr-1" />
