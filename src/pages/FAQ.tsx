@@ -19,6 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AdirePattern, AdireDivider } from "@/components/patterns/AdirePattern";
 import { PageThemeShell, ThemeHeading, PageThemeSection, themeCardClass, themeCtaClass } from "@/components/PageThemeShell";
+import { Helmet } from "react-helmet-async";
 
 interface FAQItem {
   question: string;
@@ -239,6 +240,10 @@ const FAQ = () => {
 
   return (
     <PageThemeShell header={<Navbar />} footer={<Footer />}>
+      <Helmet>
+        <title>Frequently Asked Questions | SteerSolo Support</title>
+        <meta name="description" content="Find answers to common questions about setting up your SteerSolo store, accepting payments on WhatsApp, delivery, and more." />
+      </Helmet>
       
       {/* Hero Section */}
       <section className="relative pt-24 pb-16 overflow-hidden theme-surface-primary">

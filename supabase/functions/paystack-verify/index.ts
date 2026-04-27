@@ -137,6 +137,26 @@ serve(async (req) => {
       throw new Error("Failed to update profile");
     }
 
+    // Trigger subscription success email
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/send-notification-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseKey}`
+        },
+        body: JSON.stringify({
+          type: "subscription_success",
+          user_id: user.id,
+          data: {
+            dashboardUrl: "https://steersolo.com/dashboard"
+          }
+        })
+      });
+    } catch (emailError) {
+      console.error("Failed to send subscription email:", emailError);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

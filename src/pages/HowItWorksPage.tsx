@@ -5,6 +5,7 @@ import { UserPlus, Palette, Rocket, ShoppingCart, MessageCircle, CreditCard, Arr
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PageThemeShell, PageThemeSection, ThemeHeading, themeCardClass, themeCtaClass } from "@/components/PageThemeShell";
+import { Helmet } from "react-helmet-async";
 
 const HowItWorksPage = () => {
   const sellerSteps = [
@@ -67,6 +68,10 @@ const HowItWorksPage = () => {
 
   return (
     <PageThemeShell header={<Navbar />} footer={<Footer />}>
+      <Helmet>
+        <title>How SteerSolo Works | The Daily Selling System</title>
+        <meta name="description" content="Discover how SteerSolo turns WhatsApp selling into a simple, profitable system. Set up your store, share your link, and start receiving secure payments today." />
+      </Helmet>
       
       <main className="pt-24 pb-16">
         {/* Hero */}
