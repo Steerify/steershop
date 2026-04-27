@@ -58,8 +58,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         navigate("/auth/login");
         return;
       }
+
       const isPrimaryAdminEmail = user.email?.toLowerCase().trim() === "steerifygroup@gmail.com";
 
+      // Primary admin email — always grant access immediately.
+      // AuthContext already forces UserRole.ADMIN for this email, so this is secure.
+      if (isPrimaryAdminEmail) {
+        setIsAdmin(true);
+        return;
+      }
+
+      // For other potential admins: check user_roles table
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
@@ -67,23 +76,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         .eq("role", "admin")
         .single();
 
-      if (!roles && (user.role === UserRole.ADMIN || isPrimaryAdminEmail)) {
-        // Self-heal role drift: profile says admin, but user_roles is missing admin.
-        // Most RLS admin policies rely on has_role() => user_roles.
-        const { error: syncError } = await supabase
-          .from("user_roles")
-          .upsert({ user_id: user.id, role: "admin" }, { onConflict: "user_id,role" });
-
-        if (syncError) {
-          toast({
-            title: "Admin role sync required",
-            description: "Your admin role is not fully provisioned. Contact support to complete setup.",
-            variant: "destructive",
-          });
-          navigate("/");
-          return;
-        }
-
+      if (!roles && user.role === UserRole.ADMIN) {
+        // Role set in profile but missing from user_roles — grant access anyway
         setIsAdmin(true);
         return;
       }
@@ -93,6 +87,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         navigate("/");
         return;
       }
+
       setIsAdmin(true);
     } catch (error) {
       console.error("Error checking admin access:", error);

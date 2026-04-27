@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useTheme } from "next-themes";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +18,7 @@ import {
   Megaphone, Target, ArrowRight, Clock,
   CheckCircle, AlertCircle, DollarSign, CalendarCheck, Menu, X,
   HelpCircle, Search, Shield, BookOpen, Banknote, Wallet, Crown, MessageCircle, Truck, BadgeCheck, Sparkles,
-  BarChart2, Home, Bell, ChevronUp, ChevronDown, Zap, Star, TrendingDown, ExternalLink
+  BarChart2, Home, Bell, ChevronUp, ChevronDown, Zap, Star, TrendingDown, ExternalLink, Sun, Moon
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
@@ -148,6 +149,10 @@ const Dashboard = () => {
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   const handleTourCallback = (data: CallBackProps) => {
     const { status } = data;
@@ -437,7 +442,7 @@ const Dashboard = () => {
             <h3 className="text-white font-extrabold text-base leading-tight">Join 5,000+ vendors on WhatsApp</h3>
             <p className="text-white/70 text-xs mt-0.5">Tips, support, buyer traffic & giveaways — free!</p>
           </div>
-          <Button size="sm" className="shrink-0 bg-white text-[#075E54] hover:bg-white/90 font-bold shadow-lg gap-1.5"
+          <Button size="sm" className="shrink-0 !bg-white !text-[#075E54] hover:!bg-white/90 font-bold shadow-lg gap-1.5"
             onClick={() => window.open('https://chat.whatsapp.com/LX2AQqaSYD5FzEuCmhwWmz', '_blank')}>
             <MessageCircle className="w-3.5 h-3.5" />Join Now
           </Button>
@@ -465,7 +470,7 @@ const Dashboard = () => {
           </div>
           <Button
             size="sm"
-            className="shrink-0 bg-white text-[#075E54] hover:bg-white/90 font-bold shadow-lg gap-1.5"
+            className="shrink-0 !bg-white !text-[#075E54] hover:!bg-white/90 font-bold shadow-lg gap-1.5"
             onClick={() => window.open('https://chat.whatsapp.com/LX2AQqaSYD5FzEuCmhwWmz', '_blank')}
           >
             <MessageCircle className="w-3.5 h-3.5" />
@@ -761,6 +766,22 @@ const Dashboard = () => {
             <div className="hidden md:flex items-center gap-1.5">
               {shopData && <StrokeMyShop shopId={shopData.id} shopName={shopData.name} />}
               <NotificationBell audience="entrepreneurs" />
+              {/* Dark Mode Toggle */}
+              {mounted && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
+                  aria-label="Toggle theme"
+                >
+                  {theme === 'dark' ? (
+                    <Sun className="h-5 w-5 text-yellow-500" />
+                  ) : (
+                    <Moon className="h-5 w-5" />
+                  )}
+                </Button>
+              )}
               <Button variant="ghost" size="sm" onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive gap-1.5">
                 <LogOut className="h-4 w-4" />
                 <span className="hidden lg:inline">Logout</span>
@@ -796,6 +817,19 @@ const Dashboard = () => {
 
                     {/* Menu items */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-1">
+                      {/* Theme Toggle */}
+                      {mounted && (
+                        <button
+                          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-muted transition-colors text-left"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                            {theme === 'dark' ? <Sun className="w-4 h-4 text-yellow-500" /> : <Moon className="w-4 h-4 text-muted-foreground" />}
+                          </div>
+                          <span className="text-sm font-medium">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+                        </button>
+                      )}
+                      <Separator className="my-1" />
                       {QuickActions.map((action) => (
                         <button
                           key={action.path + action.label}
