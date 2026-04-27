@@ -9,6 +9,7 @@ import { HomepageReviews } from "@/components/HomepageReviews";
 import { SocialProofStats } from "@/components/SocialProofStats";
 import { DynamicPricing } from "@/components/DynamicPricing";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
+import { Helmet } from "react-helmet-async";
 import whatsappLogo from "@/assets/social/whatsapp-logo.svg";
 import instagramLogo from "@/assets/social/instagram-logo.svg";
 import tiktokLogo from "@/assets/social/tiktok-logo.svg";
@@ -148,6 +149,10 @@ const Index = () => (
       .f4{animation:fu .65s .36s ease both;}
     `}</style>
 
+    <Helmet>
+      <title>SteerSolo - Nigeria's Verified Beauty & Social Commerce Storefronts</title>
+      <meta name="description" content="Turn your WhatsApp, Instagram, and TikTok audience into a trusted storefront. The Daily Selling System for Nigerian social commerce vendors." />
+    </Helmet>
     <GoogleOneTap />
     <Navbar />
 

@@ -756,23 +756,7 @@ iframe[src*="accounts.google.com"] {
   background: hsl(var(--card) / 0.88);
 }
 
-/* ===== GRADIENT OVERRIDES FOR SOLID GREEN ===== */
-/* User requested that all things with the primary-to-accent gradient become solid green */
-.bg-gradient-to-r.from-primary.to-accent,
-.bg-gradient-to-br.from-primary.to-accent,
-.bg-gradient-to-r.from-primary.via-accent.to-primary,
-.bg-gradient-to-br.from-primary.via-accent.to-primary {
-  background: hsl(var(--accent)) !important;
-  color: hsl(var(--accent-foreground)) !important;
-}
 
-.text-transparent.bg-clip-text.from-primary.to-accent,
-.text-transparent.bg-clip-text.from-primary.via-accent.to-primary,
-.bg-clip-text.from-primary.to-accent {
-  background: none !important;
-  color: hsl(var(--accent)) !important;
-  -webkit-text-fill-color: hsl(var(--accent)) !important;
-}
 
 
 /* ===== TEXT WRAP BALANCE ===== */
