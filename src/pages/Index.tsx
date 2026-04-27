@@ -292,42 +292,7 @@ const Index = () => (
       </div>
     </section>
 
-    <section className="bg-background py-10 md:py-14 border-b border-border/50">
-      <div className="max-w-6xl mx-auto px-5">
-        <div className="text-center max-w-3xl mx-auto mb-8">
-          <p className="text-xs uppercase tracking-wider font-semibold text-primary mb-2">How SteerSolo works</p>
-          <h2 className="text-2xl md:text-4xl font-extrabold mb-3">Everything you need to sell from social media — explained simply</h2>
-          <p className="text-muted-foreground text-sm md:text-base">
-            Keep posting on WhatsApp, Instagram, and TikTok. SteerSolo handles your storefront, trust, and checkout in one link.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
-          {[
-            { title: "1) Set up your store", desc: "Add products, pricing, delivery info, and payment details in minutes.", icon: ShoppingBag },
-            { title: "2) Share one link", desc: "Put your SteerSolo link in your bio, status, and captions so buyers can order instantly.", icon: ArrowRight },
-            { title: "3) Track and grow", desc: "Manage orders, build trust with verification badges, and scale with marketing tools.", icon: Star },
-          ].map((item) => (
-            <div key={item.title} className="rounded-2xl border border-border/60 bg-card p-5 text-left">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3">
-                <item.icon className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold mb-1">{item.title}</h3>
-              <p className="text-sm text-muted-foreground">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
-          <Link to="/auth/signup" className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:opacity-90">
-            Start free
-          </Link>
-          <Link to="/demo" className="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-semibold hover:bg-muted">
-            See demo store
-          </Link>
-        </div>
-      </div>
-    </section>
+    
 
     {/* ══ social proof modules (moved above deep-dive sections) ════════════ */}
     <section className="bg-background pt-8 md:pt-12">
