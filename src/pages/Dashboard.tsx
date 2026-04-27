@@ -74,7 +74,7 @@ const StatCard = ({
           <Icon className="w-4 h-4 text-white" />
         </div>
       </div>
-      <p className="text-2xl font-bold text-white mb-1">{value}</p>
+      <p className="text-xl sm:text-2xl font-bold text-white mb-1">{value}</p>
       {trendValue && (
         <div className="flex items-center gap-1">
           {trend === "up" ? <TrendingUp className="w-3 h-3 text-white/80" /> : trend === "down" ? <TrendingDown className="w-3 h-3 text-white/80" /> : null}
@@ -574,6 +574,51 @@ const Dashboard = () => {
       );
     }
 
+    // ── Incomplete Setup (Approval + Payment) ──
+    const accountAge = profile?.created_at ? differenceInDays(new Date(), new Date(profile.created_at)) : 0;
+    
+    if (shopFullData && accountAge >= 1) {
+      // 1. Approval Pending
+      if (!shopFullData.is_active) {
+        slides.push(
+          <div key="approval-pending" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 p-5 min-h-[120px] flex items-center">
+            <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+            <div className="relative z-10 flex items-center justify-between gap-3 w-full">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Clock className="w-4 h-4 text-white/80" />
+                  <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Approval Required</span>
+                </div>
+                <h3 className="text-white font-extrabold text-base leading-tight">Your store is awaiting review</h3>
+                <p className="text-white/70 text-xs mt-0.5">Admin needs to approve your store before it appears in the marketplace.</p>
+              </div>
+              <Button size="sm" variant="outline" className="shrink-0 border-white/40 text-white hover:bg-white/20 font-bold shadow-lg" onClick={() => window.open('https://wa.me/2348162232975', '_blank')}>Contact Admin</Button>
+            </div>
+          </div>
+        );
+      }
+
+      // 2. Payment Setup Missing
+      if (!shopFullData.payment_method) {
+        slides.push(
+          <div key="payment-setup" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 p-5 min-h-[120px] flex items-center">
+            <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+            <div className="relative z-10 flex items-center justify-between gap-3 w-full">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <DollarSign className="w-4 h-4 text-white/80" />
+                  <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Setup Incomplete</span>
+                </div>
+                <h3 className="text-white font-extrabold text-base leading-tight">Complete your payment setup</h3>
+                <p className="text-white/70 text-xs mt-0.5">Set up your bank details or Paystack to start receiving payments.</p>
+              </div>
+              <Button size="sm" onClick={() => navigate('/my-store?tab=settings')} className="shrink-0 bg-white text-rose-600 hover:bg-white/90 font-bold shadow-lg">Set Up Now →</Button>
+            </div>
+          </div>
+        );
+      }
+    }
+
     // ── First sale nudge ──
     if (shopData && totalSales === 0) {
       slides.push(
@@ -627,6 +672,7 @@ const Dashboard = () => {
         </div>
       </div>
     );
+
 
     // ── Store Status slide ──
     if (shopData) {
@@ -922,21 +968,6 @@ const Dashboard = () => {
             {/* Contextual Banner */}
             {getContextualBanner()}
 
-            {/* Pending Approval Banner */}
-            {shopFullData && !shopFullData.is_active && (
-              <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center shrink-0">
-                    <Clock className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-sm text-orange-800 dark:text-orange-300">Your shop is pending approval</h3>
-                    <p className="text-xs text-orange-600 dark:text-orange-400">Our team will review and activate your store shortly. You can still set up your products and settings while you wait.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             {/* Stat Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
               <StatCard label="Total Revenue" value={`₦${totalRevenue.toLocaleString()}`} icon={DollarSign} gradient="bg-gradient-to-br from-primary to-primary/80" trend="up" trendValue="All time earnings" />
@@ -1006,7 +1037,7 @@ const Dashboard = () => {
                       </h3>
                     </div>
                     <div className="text-center mb-4 py-6 bg-gradient-to-br from-accent/5 to-primary/5 rounded-xl border border-border/50">
-                      <p className="text-4xl font-extrabold text-primary">₦{payoutBalance.availableBalance.toLocaleString()}</p>
+                      <p className="text-3xl sm:text-4xl font-extrabold text-primary">₦{payoutBalance.availableBalance.toLocaleString()}</p>
                       <p className="text-sm text-muted-foreground mt-1">Available for withdrawal</p>
                       {payoutBalance.totalPending > 0 && (
                         <p className="text-sm text-amber-600 mt-2 font-medium">₦{payoutBalance.totalPending.toLocaleString()} pending</p>

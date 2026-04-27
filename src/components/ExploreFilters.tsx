@@ -120,27 +120,29 @@ export const ExploreFilters = ({
 
           {/* Price Range */}
           {onMinPriceChange && onMaxPriceChange && (
-            <div className="flex items-center gap-1">
+            <div className="flex flex-row items-center gap-1">
               <span className="text-xs text-muted-foreground">₦</span>
-              <Input
-                type="number"
-                min="1"
-                step="1"
-                placeholder="Min"
-                value={minPrice}
-                onChange={(e) => onMinPriceChange(e.target.value)}
-                className="w-16 sm:w-20 h-7 text-xs px-1.5 bg-muted border-0"
-              />
-              <span className="text-xs text-muted-foreground">–</span>
-              <Input
-                type="number"
-                min="1"
-                step="1"
-                placeholder="Max"
-                value={maxPrice}
-                onChange={(e) => onMaxPriceChange(e.target.value)}
-                className="w-16 sm:w-20 h-7 text-xs px-1.5 bg-muted border-0"
-              />
+              <div className="flex items-center gap-1">
+                <Input
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="Min"
+                  value={minPrice}
+                  onChange={(e) => onMinPriceChange(e.target.value)}
+                  className="w-14 sm:w-20 h-7 text-[10px] sm:text-xs px-1 bg-muted border-0"
+                />
+                <span className="text-xs text-muted-foreground">–</span>
+                <Input
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="Max"
+                  value={maxPrice}
+                  onChange={(e) => onMaxPriceChange(e.target.value)}
+                  className="w-14 sm:w-20 h-7 text-[10px] sm:text-xs px-1 bg-muted border-0"
+                />
+              </div>
             </div>
           )}
 
