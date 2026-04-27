@@ -739,6 +739,13 @@ export default function AdminShops() {
                               <User className="w-4 h-4 mr-2" /> View Owner
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
+                            {shop.profiles && shop.profiles.subscription_plan_id && (
+                              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground capitalize flex items-center">
+                                <Shield className="w-3 h-3 mr-1.5 text-primary" />
+                                {shop.profiles.subscription_plan_id} Plan
+                              </div>
+                            )}
+                            <DropdownMenuSeparator />
                             {shop.profiles && (
                               <>
                                 <DropdownMenuItem onClick={() => handleExtendTrial(shop)} className="rounded-lg py-2.5">
@@ -873,6 +880,13 @@ export default function AdminShops() {
                                     <User className="w-4 h-4 mr-2" />
                                     View Owner
                                   </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  {shop.profiles.subscription_plan_id && (
+                                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground capitalize flex items-center">
+                                      <Shield className="w-3 h-3 mr-1.5 text-primary" />
+                                      {shop.profiles.subscription_plan_id} Plan
+                                    </div>
+                                  )}
                                   <DropdownMenuSeparator />
                                 </>
                               )}
@@ -1180,9 +1194,23 @@ export default function AdminShops() {
                     <p className="text-sm text-muted-foreground mb-1">Subscription Type</p>
                     <p className="font-medium">
                       {selectedShop.profiles.is_subscribed ? (
-                        <span className="text-green-600">Paid Subscription</span>
+                        <span className="text-green-600">
+                          Paid Subscription 
+                          {selectedShop.profiles.subscription_plan_id && (
+                            <span className="capitalize ml-1 text-xs px-2 py-0.5 bg-green-100 rounded-full">
+                              ({selectedShop.profiles.subscription_plan_id})
+                            </span>
+                          )}
+                        </span>
                       ) : (
-                        <span className="text-blue-600">Trial Period</span>
+                        <span className="text-blue-600">
+                          Trial Period
+                          {selectedShop.profiles.subscription_plan_id && (
+                            <span className="capitalize ml-1 text-xs px-2 py-0.5 bg-blue-100 rounded-full">
+                              ({selectedShop.profiles.subscription_plan_id})
+                            </span>
+                          )}
+                        </span>
                       )}
                     </p>
                   </div>
