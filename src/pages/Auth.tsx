@@ -481,26 +481,7 @@ const Auth = () => {
               <li className="flex items-center gap-2"><ShieldCheck className="h-3.5 w-3.5 text-primary" />Your login is secured with encrypted authentication.</li>
             </ul>
           </div>
-          {(persona === "vendor" || persona === "shopper") && (
-            <div className="mb-3 grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                variant={persona === "vendor" ? "default" : "outline"}
-                className="h-9"
-                onClick={() => navigate("/vendor")}
-              >
-                Vendor
-              </Button>
-              <Button
-                type="button"
-                variant={persona === "shopper" ? "default" : "outline"}
-                className="h-9"
-                onClick={() => navigate("/shopper")}
-              >
-                Shopper
-              </Button>
-            </div>
-          )}
+
           {/* Accent stripe */}
           <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-primary via-accent to-primary mb-0" />
 
@@ -714,38 +695,33 @@ const Auth = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>I want to:</FormLabel>
-                          {persona === "default" ? (
                             <FormControl>
                               <RadioGroup
                                 onValueChange={field.onChange}
                                 value={field.value}
                                 className="grid grid-cols-2 gap-3"
                               >
-                                <div className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === 'ENTREPRENEUR' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}>
+                                <Label 
+                                  htmlFor="entrepreneur" 
+                                  className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === 'ENTREPRENEUR' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-muted hover:border-primary/50 bg-card'}`}
+                                >
                                   <RadioGroupItem value="ENTREPRENEUR" id="entrepreneur" className="sr-only" />
-                                  <Label htmlFor="entrepreneur" className="cursor-pointer text-center">
-                                    <Store className={`w-8 h-8 mx-auto mb-2 ${field.value === 'ENTREPRENEUR' ? 'text-primary' : 'text-muted-foreground'}`} />
-                                    <span className="font-semibold block">Sell</span>
-                                    <span className="text-xs text-muted-foreground">Create my shop</span>
-                                  </Label>
-                                </div>
-                                <div className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === 'CUSTOMER' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}>
+                                  <Store className={`w-8 h-8 mx-auto mb-2 transition-colors ${field.value === 'ENTREPRENEUR' ? 'text-primary' : 'text-muted-foreground'}`} />
+                                  <span className="font-semibold block text-center">Sell</span>
+                                  <span className="text-xs text-muted-foreground text-center">Create my shop</span>
+                                </Label>
+
+                                <Label 
+                                  htmlFor="customer" 
+                                  className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === 'CUSTOMER' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-muted hover:border-primary/50 bg-card'}`}
+                                >
                                   <RadioGroupItem value="CUSTOMER" id="customer" className="sr-only" />
-                                  <Label htmlFor="customer" className="cursor-pointer text-center">
-                                    <ShoppingBag className={`w-8 h-8 mx-auto mb-2 ${field.value === 'CUSTOMER' ? 'text-primary' : 'text-muted-foreground'}`} />
-                                    <span className="font-semibold block">Shop</span>
-                                    <span className="text-xs text-muted-foreground">Browse stores</span>
-                                  </Label>
-                                </div>
+                                  <ShoppingBag className={`w-8 h-8 mx-auto mb-2 transition-colors ${field.value === 'CUSTOMER' ? 'text-primary' : 'text-muted-foreground'}`} />
+                                  <span className="font-semibold block text-center">Shop</span>
+                                  <span className="text-xs text-muted-foreground text-center">Browse stores</span>
+                                </Label>
                               </RadioGroup>
                             </FormControl>
-                          ) : (
-                            <div className="rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-sm">
-                              {persona === "vendor"
-                                ? "Vendor flow selected: your account will be created as an entrepreneur."
-                                : "Shopper flow selected: your account will be created as a customer."}
-                            </div>
-                          )}
                           <FormMessage />
                         </FormItem>
                       )}

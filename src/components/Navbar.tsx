@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   User, Menu, X, Gift, Moon, Sun, Star, 
-  Heart, Flag, Ghost, Egg, Sparkles, Store, MessageSquare, CalendarDays
+  Heart, Flag, Ghost, Egg, Sparkles, Store, MessageSquare, CalendarDays, Tag
 } from "lucide-react";
 import { AdireAccent } from "./patterns/AdirePattern";
 import logoLight from "@/assets/steersolo-logo.jpg";
@@ -196,6 +196,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
             <div className="hidden md:flex items-center gap-6 font-display">
               {[
                 { label: "Shops", href: "/shops" },
+                { label: "Pricing", href: "/pricing" },
                 { label: "About", href: "/about" },
                 { label: "Ambassador", href: "/ambassador-program" },
                 { label: "Feedback", href: "/feedback" },
@@ -282,6 +283,11 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
           <Link to="/shops" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
             <Store className="w-5 h-5" />
             Explore Shops
+          </Link>
+          <div className="section-divider my-1" />
+          <Link to="/pricing" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
+            <Tag className="w-5 h-5" />
+            Pricing
           </Link>
           <div className="section-divider my-1" />
           <Link to="/about" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">

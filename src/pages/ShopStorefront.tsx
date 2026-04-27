@@ -445,42 +445,29 @@ const ShopStorefront = () => {
       <Navbar shopBranding={isPremiumPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
 
       {/* ══════════════════ HERO SECTION ══════════════════ */}
-      <section className="relative pt-16" data-tour="shop-header">
+      <section className="relative pt-20 sm:pt-16" data-tour="shop-header">
 
-        {/* Full-bleed Banner */}
-        <div className="relative h-52 sm:h-64 md:h-80 overflow-hidden">
-          {(shop.logo_url || shop.banner_url) && (
-            <div className="absolute inset-0">
+        {/* Clean Banner */}
+        <div className="relative h-40 sm:h-52 md:h-64 overflow-hidden container mx-auto px-4 mt-2">
+          <div className="absolute inset-0 rounded-2xl overflow-hidden bg-muted">
+            {shop.banner_url ? (
               <img
-                src={shop.logo_url || shop.banner_url || ""}
-                alt=""
-                aria-hidden="true"
-                className="w-full h-full object-cover scale-125 blur-2xl opacity-75"
+                src={shop.banner_url}
+                alt={`${shop.shop_name} banner`}
+                className="w-full h-full object-cover opacity-90"
               />
-              <div className="absolute inset-0 bg-black/55" />
-            </div>
-          )}
-          {shop.banner_url ? (
-            <img
-              src={shop.banner_url}
-              alt={`${shop.shop_name} banner`}
-              className="relative z-[1] w-full h-full object-cover scale-105 transition-transform duration-700 opacity-80"
-            />
-          ) : (
-            <div className="relative z-[1] w-full h-full gradient-hero-spotify" />
-          )}
-          {/* Multi-layer overlay for depth */}
-          <div className="absolute inset-0 z-[2] bg-gradient-to-t from-background via-background/40 to-transparent" />
-          <div className="absolute inset-0 z-[2] bg-gradient-to-r from-background/30 to-transparent" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-r from-primary/10 to-accent/10" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+          </div>
         </div>
 
         {/* Shop Identity Card */}
         <div className="container mx-auto px-4">
           <div className="relative -mt-14 sm:-mt-16 md:-mt-24 pb-8">
-            <div className="relative -mt-4 pb-6 z-10">
-              <div className="bg-card/80 backdrop-blur-2xl border border-border/50 rounded-2xl md:rounded-3xl shadow-2xl shadow-black/10 p-5 md:p-8">
-
-                {/* Top row: Logo + Actions */}
+            <div className="relative z-10">
+              <div className="bg-card border border-border/50 rounded-2xl md:rounded-3xl shadow-sm p-5 md:p-8">
                 <div className="flex flex-col sm:flex-row sm:items-start gap-5 mb-5">
 
                   {/* Logo */}
@@ -773,7 +760,7 @@ const ShopStorefront = () => {
             </div>
           ) : (
             /* ── Product Grid ── */
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+            <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
               {filteredProducts.map((product, index) => (
                 <div
                   key={product.id}
@@ -848,9 +835,9 @@ const ShopStorefront = () => {
                   </Link>
 
                   {/* Product Info */}
-                  <div className="flex min-h-0 flex-col flex-1 p-3 sm:p-4">
+                  <div className="flex min-h-0 flex-col flex-1 p-2.5 sm:p-4">
                     <Link to={`/shop/${slug}/product/${product.id}`} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-                      <h3 className="min-h-0 font-semibold text-sm sm:text-base leading-snug line-clamp-2 hover:text-accent transition-colors mb-1">
+                      <h3 className="min-h-0 font-semibold text-xs min-[360px]:text-sm sm:text-base leading-snug line-clamp-2 hover:text-accent transition-colors mb-1">
                         {product.name}
                       </h3>
                     </Link>
@@ -864,52 +851,53 @@ const ShopStorefront = () => {
                     <ProductRating rating={product.average_rating || 0} totalReviews={product.total_reviews || 0} />
 
                     {/* Price Row */}
-                    <div className="flex items-center justify-between mt-2 mb-3">
-                      <div className="flex items-baseline gap-1.5 flex-wrap">
-                        <span className="text-base sm:text-lg font-bold text-primary dark:text-accent tabular-nums tracking-tight">
+                    <div className="flex items-center justify-between mt-2 mb-2 sm:mb-3 gap-1">
+                      <div className="flex items-baseline gap-1 flex-wrap min-w-0">
+                        <span className="text-sm sm:text-lg font-bold text-primary dark:text-accent tabular-nums tracking-tight">
                           ₦{product.price.toLocaleString()}
                         </span>
                         {product.compare_price && Number(product.compare_price) > product.price && (
-                          <span className="text-xs text-muted-foreground line-through tabular-nums">
+                          <span className="text-[10px] sm:text-xs text-muted-foreground line-through tabular-nums">
                             ₦{Number(product.compare_price).toLocaleString()}
                           </span>
                         )}
                       </div>
 
-                      {/* Stock / Duration */}
+                      {/* Stock / Duration — hidden on very small screens to save space */}
                       {product.type === 'service' && product.duration_minutes ? (
-                        <div className="flex items-center gap-1 text-xs text-purple-500 bg-purple-500/10 rounded-lg px-2 py-1">
+                        <div className="hidden min-[360px]:flex items-center gap-1 text-xs text-purple-500 bg-purple-500/10 rounded-lg px-1.5 py-0.5 flex-shrink-0">
                           <Clock className="w-3 h-3" />
                           <span>{product.duration_minutes}m</span>
                         </div>
                       ) : product.type === 'product' && (
                         <div className={`
-                          flex items-center gap-1 text-xs rounded-lg px-2 py-1
+                          hidden min-[360px]:flex items-center gap-1 text-xs rounded-lg px-1.5 py-0.5 flex-shrink-0
                           ${product.stock_quantity > 0
                             ? 'text-emerald-600 bg-emerald-500/10'
                             : 'text-red-500 bg-red-500/10'
                           }
                         `}>
-                          <div className={`w-1.5 h-1.5 rounded-full ${product.stock_quantity > 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                          <span>{product.stock_quantity > 0 ? `${product.stock_quantity} ${product.stock_unit || "units"} left` : 'Out of stock'}</span>
+                          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${product.stock_quantity > 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                          <span className="hidden sm:inline">{product.stock_quantity > 0 ? `${product.stock_quantity} ${product.stock_unit || "units"} left` : 'Out'}</span>
+                          <span className="sm:hidden">{product.stock_quantity > 0 ? 'In stock' : 'Out'}</span>
                         </div>
                       )}
                     </div>
 
                     {/* CTA Buttons */}
-                    <div className="mt-auto space-y-2">
+                    <div className="mt-auto flex flex-col gap-1.5">
                       {product.type === 'service' && product.booking_required ? (
                         <Button
-                          className="w-full h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm shadow-sm shadow-purple-500/20 gap-1.5 transition-all"
+                          className="w-full h-8 sm:h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs sm:text-sm shadow-sm shadow-purple-500/20 gap-1 sm:gap-1.5 transition-all"
                           onClick={(e) => { e.preventDefault(); handleBookService(product); }}
                           disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                         >
-                          <Calendar className="w-3.5 h-3.5" />
+                          <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                           Book Now
                         </Button>
                       ) : (
                         <Button
-                          className="w-full h-9 rounded-xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 font-semibold text-sm shadow-sm shadow-emerald-900/20 gap-1.5 transition-all border border-emerald-300/30"
+                          className="w-full h-8 sm:h-9 rounded-xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 font-semibold text-xs sm:text-sm shadow-sm shadow-emerald-900/20 gap-1 sm:gap-1.5 transition-all border border-emerald-300/30"
                           onClick={(e) => { e.preventDefault(); addToCart(product); }}
                           disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                         >
@@ -917,17 +905,17 @@ const ShopStorefront = () => {
                           Add to Cart
                         </Button>
                       )}
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <Link to={`/shop/${slug}/product/${product.id}`} className="w-full">
+                      <div className="flex gap-1.5">
+                        <Link to={`/shop/${slug}/product/${product.id}`} className="flex-1">
                           <Button
                             variant="outline"
-                            className="w-full h-9 rounded-xl border-border hover:border-accent/50 hover:bg-accent/5 transition-all"
+                            className="w-full h-8 sm:h-9 rounded-xl border-border hover:border-accent/50 hover:bg-accent/5 transition-all text-xs sm:text-sm"
                           >
                             View
-                            <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                            <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 ml-0.5" />
                           </Button>
                         </Link>
-                        <WishlistButton productId={product.id} size="sm" showLabel className="h-9 w-full rounded-xl" />
+                        <WishlistButton productId={product.id} size="sm" showLabel className="h-8 sm:h-9 flex-1 rounded-xl text-xs sm:text-sm" />
                       </div>
                     </div>
                   </div>

@@ -25,7 +25,7 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
   return (
     <Link to={`/shop/${shop.slug || shop.shop_slug}`}>
       <div
-        className="card-spotify h-full cursor-pointer group overflow-hidden animate-fade-up"
+        className="bg-card border border-border/50 rounded-2xl h-full cursor-pointer group overflow-hidden hover:border-primary/30 hover:shadow-md transition-all duration-300 animate-fade-up"
         style={{ animationDelay: `${index * 0.05}s` }}
       >
         {/* Header */}

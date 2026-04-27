@@ -41,6 +41,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PayoutRequestDialog } from "@/components/PayoutRequestDialog";
 import { CouponManager } from "@/components/CouponManager";
 import { DoneForYouPopup } from "@/components/DoneForYouPopup";
@@ -51,82 +52,7 @@ import { StructuredSellingChallenge } from "@/components/StructuredSellingChalle
 import { SubscriptionExpiryDialog } from "@/components/SubscriptionExpiryDialog";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-// ─── Verification Progress Card ───────────────────────────────────────────────
-const VerificationProgressCard = ({ profile, shopFullData, totalSales }: { profile: any; shopFullData: any; totalSales: number }) => {
-  const navigate = useNavigate();
-  const bankVerified = profile?.bank_verified === true;
-  const completedOrders = totalSales;
-  const avgRating = shopFullData?.average_rating || 0;
-  const shopAge = shopFullData?.created_at ? differenceInDays(new Date(), new Date(shopFullData.created_at)) : 0;
-  const isVerified = shopFullData?.is_verified === true;
-
-  const hasPaidSubscription = profile?.is_subscribed === true;
-
-  const criteria = [
-    { label: "Active paid subscription", met: hasPaidSubscription, detail: hasPaidSubscription ? "Subscribed" : "Free plan", link: "/subscription" },
-    { label: "Bank account verified", met: bankVerified, detail: bankVerified ? "Verified" : "Not verified", link: "/identity-verification" },
-    { label: "10+ completed orders", met: completedOrders >= 10, detail: `${completedOrders}/10 orders` },
-    { label: "3.5+ average rating", met: avgRating >= 3.5 || avgRating === 0, detail: avgRating > 0 ? `${avgRating.toFixed(1)} rating` : "No reviews yet" },
-    { label: "Shop active 7+ days", met: shopAge >= 7, detail: `${shopAge} days active` },
-  ];
-  const metCount = criteria.filter(c => c.met).length;
-
-  if (isVerified) {
-    return (
-      <Card className="mb-4 card-spotify border-l-4 border-l-green-500 overflow-hidden">
-        <CardContent className="p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-green-500/15 flex items-center justify-center">
-            <BadgeCheck className="w-5 h-5 text-green-600" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-sm text-green-700 dark:text-green-400">Verified Business ✓</h3>
-            <p className="text-xs text-muted-foreground">Your shop is verified and trusted by customers.</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="mb-4 card-spotify overflow-hidden">
-      <div className="h-1 w-full bg-gradient-to-r from-primary via-accent to-gold" />
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-sm flex items-center gap-2">
-            <Shield className="w-4 h-4 text-primary" />
-            Verification Progress
-          </h3>
-          <Badge variant="outline" className="text-xs font-bold">{metCount}/5</Badge>
-        </div>
-        <div className="h-2 w-full bg-muted rounded-full overflow-hidden mb-3">
-          <div className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-700 rounded-full" style={{ width: `${(metCount / 5) * 100}%` }} />
-        </div>
-        <div className="space-y-2">
-          {criteria.map((c, i) => (
-            <div key={i} className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                {c.met ? (
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                ) : (
-                  <AlertCircle className="w-4 h-4 text-muted-foreground" />
-                )}
-                <span className={c.met ? "text-foreground" : "text-muted-foreground"}>{c.label}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">{c.detail}</span>
-                {c.link && !c.met && (
-                  <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => navigate(c.link!)}>
-                    <ArrowRight className="w-3 h-3" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
+// VerificationProgressCard removed in favor of ProfileCompletionChecklist
 
 // ─── Stat Card Component ───────────────────────────────────────────────────────
 const StatCard = ({
@@ -210,15 +136,10 @@ const Dashboard = () => {
   const [payoutBalance, setPayoutBalance] = useState({ totalRevenue: 0, totalWithdrawn: 0, totalPending: 0, availableBalance: 0 });
   const [isPayoutDialogOpen, setIsPayoutDialogOpen] = useState(false);
   const [showDfyPopup, setShowDfyPopup] = useState(false);
-  const [quickActionsExpanded, setQuickActionsExpanded] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('quickActionsExpanded') || 'false'); } catch { return false; }
-  });
   const [hasNoShop, setHasNoShop] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "actions" | "wallet">("overview");
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(true);
-  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(true);
-  const [isSecondaryPanelsOpen, setIsSecondaryPanelsOpen] = useState(false);
 
   // Carousel state
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -800,75 +721,6 @@ const Dashboard = () => {
     { icon: Share2, label: "Invite Vendors", description: "Grow community", path: "/vendor-invite", color: "from-primary/20 to-primary/10", textColor: "text-primary" },
   ];
 
-  const renderSecondaryPanels = () => (
-    <>
-      {/* Profile Completion */}
-      <ProfileCompletionChecklist shop={shopFullData} productsCount={productsCount} />
-
-      {/* Payout Balance */}
-      {shopData && (
-        <Card className="overflow-hidden">
-          <div className="h-0.5 w-full bg-gradient-to-r from-accent to-primary" />
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-sm flex items-center gap-2">
-                <Wallet className="w-4 h-4 text-accent" />
-                Wallet Balance
-              </h3>
-            </div>
-            <div className="text-center mb-4 py-3 bg-gradient-to-br from-accent/5 to-primary/5 rounded-xl">
-              <p className="text-3xl font-extrabold text-primary">₦{payoutBalance.availableBalance.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Available for withdrawal</p>
-              {payoutBalance.totalPending > 0 && (
-                <p className="text-xs text-amber-600 mt-1 font-medium">₦{payoutBalance.totalPending.toLocaleString()} pending</p>
-              )}
-            </div>
-            <Button
-              size="sm"
-              className="w-full"
-              disabled={payoutBalance.availableBalance < 5000}
-              onClick={() => setIsPayoutDialogOpen(true)}
-            >
-              <Banknote className="w-4 h-4 mr-2" />
-              Request Payout
-            </Button>
-            {payoutBalance.availableBalance < 5000 && (
-              <p className="text-xs text-muted-foreground text-center mt-2">Minimum withdrawal: ₦5,000</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Coupon Manager */}
-      {shopData && <CouponManager shopId={shopData.id} />}
-
-      {/* Special Offer */}
-      {activeOffer && (
-        <Card className="overflow-hidden border-0 bg-gradient-to-br from-[hsl(215,65%,20%)] to-[hsl(145,55%,30%)] text-white shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold mb-1 text-sm">Special Offer 🎁</h3>
-                <p className="text-sm opacity-90 mb-3">{activeOffer.description}</p>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleSubscribe}
-                  className="bg-white text-primary hover:bg-white/90 font-semibold"
-                >
-                  {activeOffer.button_text || "Claim Offer"}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </>
-  );
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -1025,161 +877,53 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <Card className="border-primary/15 bg-primary/5">
-          <CardContent className="p-4 sm:p-5">
-            <p className="text-xs uppercase tracking-wider font-semibold text-primary mb-1">Daily workflow</p>
-            <h2 className="text-base font-bold mb-3">Choose your next task</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <Button variant="outline" className="justify-start" onClick={() => navigate("/my-store")}>
-                <Package className="w-4 h-4 mr-2" /> Update Products
-              </Button>
-              <Button variant="outline" className="justify-start" onClick={() => navigate("/orders")}>
-                <ShoppingCart className="w-4 h-4 mr-2" /> Process Orders
-              </Button>
-              <Button variant="outline" className="justify-start" onClick={() => navigate("/marketing")}>
-                <Megaphone className="w-4 h-4 mr-2" /> Launch Marketing
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="bg-card border border-border/50 h-auto p-1 grid grid-cols-3 sm:w-[400px]">
+            <TabsTrigger value="overview" className="py-2.5 text-xs sm:text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="actions" className="py-2.5 text-xs sm:text-sm">Actions</TabsTrigger>
+            <TabsTrigger value="wallet" className="py-2.5 text-xs sm:text-sm">Wallet & Offers</TabsTrigger>
+          </TabsList>
 
-        {/* Contextual Banner — single most-urgent message */}
-        <div className="mb-5">
-          {getContextualBanner()}
-        </div>
+          <TabsContent value="overview" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
+            {/* Contextual Banner */}
+            {getContextualBanner()}
 
-        {/* Pending Approval Banner */}
-        {shopFullData && !shopFullData.is_active && (
-          <Card className="mb-5 border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center shrink-0">
-                <Clock className="w-5 h-5 text-orange-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-orange-800 dark:text-orange-300">Your shop is pending approval</h3>
-                <p className="text-xs text-orange-600 dark:text-orange-400">Our team will review and activate your store shortly. You can still set up your products and settings while you wait.</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ─── Stat Cards ──────────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-8">
-          <StatCard
-            label="Total Revenue"
-            value={`₦${totalRevenue.toLocaleString()}`}
-            icon={DollarSign}
-            gradient="bg-gradient-to-br from-primary to-primary/80"
-            trend="up"
-            trendValue="All time earnings"
-          />
-          <StatCard
-            label="Total Sales"
-            value={String(totalSales)}
-            icon={TrendingUp}
-            gradient="bg-gradient-to-br from-accent to-accent/80"
-            trend="up"
-            trendValue="Completed orders"
-          />
-          <StatCard
-            label="Products"
-            value={String(productsCount)}
-            icon={Package}
-            gradient="bg-gradient-to-br from-[hsl(215,65%,30%)] to-[hsl(215,65%,42%)]"
-            trendValue="Items in catalog"
-          />
-          <StatCard
-            label="Pending Orders"
-            value={String(pendingOrders)}
-            icon={ShoppingCart}
-            gradient="bg-gradient-to-br from-[hsl(215,65%,18%)] to-primary"
-            trendValue={pendingOrders > 0 ? "Need attention" : "All clear!"}
-          />
-        </div>
-
-        {/* Verification Progress Card - collapsible */}
-        {shopData && shopFullData && (() => {
-          const bankVerified = profile?.bank_verified === true;
-          const completedOrders = totalSales;
-          const avgRating = shopFullData?.average_rating || 0;
-          const shopAge = shopFullData?.created_at ? differenceInDays(new Date(), new Date(shopFullData.created_at)) : 0;
-          const hasPaidSubscription = profile?.is_subscribed === true;
-          const metCount = [hasPaidSubscription, bankVerified, completedOrders >= 10, avgRating >= 3.5 || avgRating === 0, shopAge >= 7].filter(Boolean).length;
-          const defaultOpen = metCount < 3;
-          return (
-            <Collapsible defaultOpen={defaultOpen}>
-              <CollapsibleTrigger className="w-full">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border/50 mb-2 hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-primary" />
-                    <span className="font-semibold text-sm">Verification Progress</span>
-                    <Badge variant="outline" className="text-xs font-bold">{metCount}/5</Badge>
+            {/* Pending Approval Banner */}
+            {shopFullData && !shopFullData.is_active && (
+              <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center shrink-0">
+                    <Clock className="w-5 h-5 text-orange-600" />
                   </div>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <VerificationProgressCard profile={profile} shopFullData={shopFullData} totalSales={totalSales} />
-              </CollapsibleContent>
-            </Collapsible>
-          );
-        })()}
+                  <div>
+                    <h3 className="font-semibold text-sm text-orange-800 dark:text-orange-300">Your shop is pending approval</h3>
+                    <p className="text-xs text-orange-600 dark:text-orange-400">Our team will review and activate your store shortly. You can still set up your products and settings while you wait.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-        {/* ─── Main Grid ───────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left: Quick Actions + Chart */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Quick Actions — 5 primary tiles, rest in More Tools */}
-            <div className="rounded-xl border border-border/60 bg-card/50 p-4 sm:p-5 space-y-4">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="flex items-center gap-2 text-base font-bold">
-                  <Zap className="w-4 h-4 text-primary" />
-                  Quick Actions
-                </h2>
-                <button
-                  onClick={() => {
-                    const next = !quickActionsExpanded;
-                    setQuickActionsExpanded(next);
-                    try { localStorage.setItem('quickActionsExpanded', JSON.stringify(next)); } catch { /* ignore */ }
-                  }}
-                  className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors font-semibold"
-                >
-                  {quickActionsExpanded ? "Show less" : "More tools"}
-                  {quickActionsExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-              {/* Primary 5 tiles — always visible */}
-              <div className="sm:hidden -mx-4 px-4 overflow-x-auto snap-x snap-mandatory pb-2" data-tour="quick-actions">
-                <div className="flex gap-3 w-max">
-                  {(quickActionsExpanded ? QuickActions : PrimaryQuickActions).map((action) => (
-                    <div key={action.path + action.label} className="w-[200px] shrink-0 snap-start">
-                      <QuickActionTile icon={action.icon} label={action.label} description={action.description} onClick={() => action.label === 'Wallet' ? setIsPayoutDialogOpen(true) : navigate(action.path)} color={action.color} textColor={action.textColor} />
+            {/* Stat Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
+              <StatCard label="Total Revenue" value={`₦${totalRevenue.toLocaleString()}`} icon={DollarSign} gradient="bg-gradient-to-br from-primary to-primary/80" trend="up" trendValue="All time earnings" />
+              <StatCard label="Total Sales" value={String(totalSales)} icon={TrendingUp} gradient="bg-gradient-to-br from-accent to-accent/80" trend="up" trendValue="Completed orders" />
+              <StatCard label="Products" value={String(productsCount)} icon={Package} gradient="bg-gradient-to-br from-[hsl(215,65%,30%)] to-[hsl(215,65%,42%)]" trendValue="Items in catalog" />
+              <StatCard label="Pending Orders" value={String(pendingOrders)} icon={ShoppingCart} gradient="bg-gradient-to-br from-[hsl(215,65%,18%)] to-primary" trendValue={pendingOrders > 0 ? "Need attention" : "All clear!"} />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <Card className="overflow-hidden" data-tour="sales-analytics">
+                  <div className="h-1 w-full bg-gradient-to-r from-primary via-accent to-primary" />
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-bold flex items-center gap-2">
+                        <BarChart2 className="w-4 h-4 text-primary" />
+                        Revenue Trend
+                      </div>
+                      <Badge variant="outline" className="text-xs">Last 7 days</Badge>
                     </div>
-                  ))}
-                </div>
-              </div>
-              <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 gap-4" data-tour="quick-actions">
-                {(quickActionsExpanded ? QuickActions : PrimaryQuickActions).map((action) => (
-                  <QuickActionTile key={action.path + action.label} icon={action.icon} label={action.label} description={action.description} onClick={() => action.label === 'Wallet' ? setIsPayoutDialogOpen(true) : navigate(action.path)} color={action.color} textColor={action.textColor} />
-                ))}
-              </div>
-            </div>
-
-            {/* Revenue Chart */}
-            <Collapsible open={isAnalyticsOpen} onOpenChange={setIsAnalyticsOpen}>
-              <Card className="overflow-hidden" data-tour="sales-analytics">
-                <div className="h-1 w-full bg-gradient-to-r from-primary via-accent to-primary" />
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CollapsibleTrigger className="text-sm font-bold flex items-center gap-2">
-                      <BarChart2 className="w-4 h-4 text-primary" />
-                      Revenue Trend
-                      {isAnalyticsOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                    </CollapsibleTrigger>
-                    <Badge variant="outline" className="text-xs">Last 7 days</Badge>
-                  </div>
-                </CardHeader>
-                <CollapsibleContent>
+                  </CardHeader>
                   <CardContent className="pt-2">
                     <div className="h-[220px] sm:h-[240px]">
                       <ResponsiveContainer width="100%" height="100%">
@@ -1193,48 +937,83 @@ const Dashboard = () => {
                           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                           <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                           <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₦${v}`} width={55} />
-                          <Tooltip
-                            contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}
-                            formatter={(value) => [`₦${Number(value).toLocaleString()}`, 'Revenue']}
-                          />
+                          <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} formatter={(value) => [`₦${Number(value).toLocaleString()}`, 'Revenue']} />
                           <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#revenueGrad)" dot={{ r: 3, fill: 'hsl(var(--primary))' }} activeDot={{ r: 5 }} />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-          </div>
+                </Card>
+              </div>
+              <div className="space-y-6">
+                <ProfileCompletionChecklist shop={shopFullData} productsCount={productsCount} />
+              </div>
+            </div>
+          </TabsContent>
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            <div className="lg:hidden">
-              <Collapsible open={isSecondaryPanelsOpen} onOpenChange={setIsSecondaryPanelsOpen}>
-                <div className="rounded-xl border border-border/60 bg-card/50 p-4 space-y-4">
-                  <CollapsibleTrigger className="w-full flex items-center justify-between text-sm font-semibold">
-                    <span className="flex items-center gap-2">
-                      <Wallet className="w-4 h-4 text-accent" />
-                      Wallet & Tools
-                    </span>
-                    {isSecondaryPanelsOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="space-y-5 pt-1">
-                      {renderSecondaryPanels()}
+          <TabsContent value="actions" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" data-tour="quick-actions">
+              {QuickActions.map((action) => (
+                <QuickActionTile key={action.path + action.label} icon={action.icon} label={action.label} description={action.description} onClick={() => action.label === 'Wallet' ? setIsPayoutDialogOpen(true) : navigate(action.path)} color={action.color} textColor={action.textColor} />
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="wallet" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {shopData && (
+                <Card className="overflow-hidden">
+                  <div className="h-0.5 w-full bg-gradient-to-r from-accent to-primary" />
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-sm flex items-center gap-2">
+                        <Wallet className="w-4 h-4 text-accent" />
+                        Wallet Balance
+                      </h3>
                     </div>
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-            </div>
+                    <div className="text-center mb-4 py-6 bg-gradient-to-br from-accent/5 to-primary/5 rounded-xl border border-border/50">
+                      <p className="text-4xl font-extrabold text-primary">₦{payoutBalance.availableBalance.toLocaleString()}</p>
+                      <p className="text-sm text-muted-foreground mt-1">Available for withdrawal</p>
+                      {payoutBalance.totalPending > 0 && (
+                        <p className="text-sm text-amber-600 mt-2 font-medium">₦{payoutBalance.totalPending.toLocaleString()} pending</p>
+                      )}
+                    </div>
+                    <Button size="lg" className="w-full text-base font-semibold" disabled={payoutBalance.availableBalance < 5000} onClick={() => setIsPayoutDialogOpen(true)}>
+                      <Banknote className="w-5 h-5 mr-2" />
+                      Request Payout
+                    </Button>
+                    {payoutBalance.availableBalance < 5000 && (
+                      <p className="text-xs text-muted-foreground text-center mt-3">Minimum withdrawal: ₦5,000</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
-            <div className="hidden lg:block space-y-6">
-              {renderSecondaryPanels()}
+              <div className="space-y-6">
+                {shopData && <CouponManager shopId={shopData.id} />}
+                
+                {activeOffer && (
+                  <Card className="overflow-hidden border-0 bg-gradient-to-br from-[hsl(215,65%,20%)] to-[hsl(145,55%,30%)] text-white shadow-lg">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-bold mb-1 text-base">Special Offer 🎁</h3>
+                          <p className="text-sm opacity-90 mb-4">{activeOffer.description}</p>
+                          <Button variant="secondary" onClick={handleSubscribe} className="bg-white text-primary hover:bg-white/90 font-bold w-full sm:w-auto">
+                            {activeOffer.button_text || "Claim Offer"}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
-
-            {/* Store Status & Help moved into carousel */}
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* ─── Mobile Bottom Navigation ────────────────────── */}

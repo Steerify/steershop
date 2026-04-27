@@ -839,9 +839,12 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
         </DialogHeader>
 
         <div className="space-y-4 sm:space-y-6">
-          {/* Cart Items */}
-          <div>
-            <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Your Cart</h3>
+          {/* Step 1: Cart Items */}
+          <div className="bg-muted/20 border border-border/50 rounded-2xl p-4 sm:p-5">
+            <h3 className="font-bold mb-4 text-base sm:text-lg flex items-center gap-2">
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs shadow-sm">1</span>
+              Review Your Cart
+            </h3>
             <div className="space-y-2 sm:space-y-3">
               {cart.map((item) => (
                 <div key={item.product.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-muted rounded-lg">
@@ -954,7 +957,12 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 </div>
               )}
 
-              {/* Form fields */}
+              {/* Step 2: Delivery Details */}
+              <div className="bg-muted/20 border border-border/50 rounded-2xl p-4 sm:p-5 space-y-4">
+                <h3 className="font-bold mb-4 text-base sm:text-lg flex items-center gap-2">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs shadow-sm">2</span>
+                  Delivery Details
+                </h3>
               <div className="space-y-1.5 sm:space-y-2">
                 <Label htmlFor="customer_name" className="text-sm">Full Name *</Label>
                 <Input
@@ -1043,6 +1051,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                   <p className="text-xs sm:text-sm text-destructive">{errors.delivery_address}</p>
                 )}
               </div>
+              </div>
 
               {/* Shipping Rates Selection */}
               {(shippingRates.length > 0 || isFetchingRates) && (
@@ -1087,9 +1096,12 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 </div>
               )}
 
-              {/* Payment Choice */}
-              <div className="space-y-2 sm:space-y-3">
-                <Label className="text-sm">Payment Option *</Label>
+              {/* Step 3: Payment Choice */}
+              <div className="bg-muted/20 border border-border/50 rounded-2xl p-4 sm:p-5 space-y-4 mt-6">
+                <h3 className="font-bold mb-4 text-base sm:text-lg flex items-center gap-2">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs shadow-sm">3</span>
+                  Payment Method
+                </h3>
                 <RadioGroup
                   value={paymentChoice}
                   onValueChange={(value: "pay_before" | "delivery_before") => setPaymentChoice(value)}

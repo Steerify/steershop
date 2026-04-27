@@ -391,38 +391,32 @@ const Shops = () => {
       <VerifiedSellerNotice />
 
       {/* ══════════ HERO ══════════ */}
-      <section className="relative pt-20 overflow-hidden">
-        {/* Background layers */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(215,65%,16%)] via-[hsl(220,56%,12%)] to-[hsl(215,58%,10%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--accent)/0.16),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--primary)/0.22),transparent_62%)]" />
-
-        <div className="relative z-10 container mx-auto px-4 pt-10 pb-12 sm:pt-14 sm:pb-16">
+      <section className="relative pt-24 pb-8 sm:pt-28 sm:pb-12 bg-card border-b border-border/40">
+        <div className="relative z-10 container mx-auto px-4 text-center">
           
           {/* Eyebrow */}
           <div className="flex justify-center mb-5">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 border border-accent/20 rounded-full">
-              <Flame className="w-3.5 h-3.5 text-accent" />
-              <span className="text-accent font-semibold text-xs sm:text-sm tracking-wide">Nigeria's Online Shopping Mall</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent/10 text-accent rounded-full text-xs font-semibold uppercase tracking-wider">
+              <Flame className="w-3.5 h-3.5" />
+              Nigeria's Online Shopping Mall
             </div>
           </div>
 
           {/* Headline */}
-          <div className="text-center max-w-2xl mx-auto mb-4">
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-3 text-white">
-              One Mall,{" "}
-              <span className="gradient-text">Endless Shops</span>
+          <div className="max-w-2xl mx-auto mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground mb-4">
+              One Mall, <span className="text-primary">Endless Shops</span>
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-lg mx-auto">
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-lg mx-auto">
               Browse hundreds of verified Nigerian businesses — fashion, food, electronics, services and more.
             </p>
           </div>
 
           {/* Stats Row */}
-          <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap mb-7">
-            <StatChip icon={Store} value={stats.shops.toLocaleString()} label="Shops" color="bg-primary/8 border-primary/20 text-primary" />
-            <StatChip icon={Package} value={stats.products.toLocaleString()} label="Products" color="bg-accent/8 border-accent/20 text-accent" />
-            <StatChip icon={BadgeCheck} value="Verified" label="Sellers" color="bg-emerald-500/8 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap mb-8">
+            <StatChip icon={Store} value={stats.shops.toLocaleString()} label="Shops" color="bg-primary/5 border-primary/20 text-primary" />
+            <StatChip icon={Package} value={stats.products.toLocaleString()} label="Products" color="bg-accent/5 border-accent/20 text-accent" />
+            <StatChip icon={BadgeCheck} value="Verified" label="Sellers" color="bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" />
           </div>
 
           {/* ── Search Bar ── */}

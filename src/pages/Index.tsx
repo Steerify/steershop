@@ -7,7 +7,6 @@ import { FeaturedShopsBanner } from "@/components/FeaturedShopsBanner";
 import { ShopperDiscovery } from "@/components/ShopperDiscovery";
 import { HomepageReviews } from "@/components/HomepageReviews";
 import { SocialProofStats } from "@/components/SocialProofStats";
-import { DynamicPricing } from "@/components/DynamicPricing";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 import { Helmet } from "react-helmet-async";
 import whatsappLogo from "@/assets/social/whatsapp-logo.svg";
@@ -703,7 +702,6 @@ const Index = () => (
     </section>
 
     {/* ══ reused components (theme-aware via Tailwind) ════════════════════ */}
-    <DynamicPricing />
     <section className="py-8 md:py-10">
       <div className="container mx-auto px-4 text-center">
         <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">Discover trusted sellers faster</h2>

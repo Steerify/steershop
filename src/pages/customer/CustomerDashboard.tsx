@@ -133,11 +133,16 @@ const CustomerDashboard = () => {
                   {new Date(order.created_at).toLocaleDateString()}
                 </p>
               </div>
-              <div className="text-right">
+              <div className="text-right flex flex-col items-end gap-1">
                 <p className="font-heading font-bold text-primary">₦{parseFloat(order.total_amount).toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground capitalize">
+                <div className={`
+                  px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider
+                  ${['completed', 'delivered'].includes(order.status) ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' : 
+                    ['pending', 'awaiting_approval'].includes(order.status) ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' : 
+                    'bg-blue-500/10 text-blue-600 border border-blue-500/20'}
+                `}>
                   {order.status.replace(/_/g, ' ')}
-                </p>
+                </div>
               </div>
             </div>
           ))}
@@ -214,7 +219,7 @@ const CustomerDashboard = () => {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5" data-tour="stats-grid">
-              <Card className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all group">
+              <Card className="bg-card border border-border/50 shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all group">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 p-4 sm:p-5">
                   <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -226,7 +231,7 @@ const CustomerDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all group">
+              <Card className="bg-card border border-border/50 shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all group">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 p-4 sm:p-5">
                   <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Completed</CardTitle>
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -238,7 +243,7 @@ const CustomerDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/rewards")} data-tour="reward-points">
+              <Card className="bg-card border border-border/50 shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/rewards")} data-tour="reward-points">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 p-4 sm:p-5">
                   <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Reward Points</CardTitle>
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-gold/20 to-amber-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -250,7 +255,7 @@ const CustomerDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/courses")} data-tour="courses-card">
+              <Card className="bg-card border border-border/50 shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all group cursor-pointer" onClick={() => navigate("/customer/courses")} data-tour="courses-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 p-4 sm:p-5">
                   <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Courses</CardTitle>
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -265,7 +270,7 @@ const CustomerDashboard = () => {
 
             <div className="lg:hidden space-y-4">
               <Collapsible open={isRecentOrdersOpen} onOpenChange={setIsRecentOrdersOpen}>
-                <Card className="card-spotify" data-tour="recent-orders">
+                <Card className="bg-card border border-border/50 shadow-sm" data-tour="recent-orders">
                   <CardHeader className="border-b border-border/50 px-5 py-4">
                     <div className="flex items-center justify-between gap-2">
                       <div>
@@ -286,7 +291,7 @@ const CustomerDashboard = () => {
               </Collapsible>
 
               <Collapsible open={isReferralOpen} onOpenChange={setIsReferralOpen}>
-                <Card className="card-spotify">
+                <Card className="bg-card border border-border/50 shadow-sm">
                   <CardHeader className="border-b border-border/50 px-5 py-4">
                     <div className="flex items-center justify-between gap-2">
                       <CardTitle className="font-heading flex items-center gap-2 text-base">
@@ -310,7 +315,7 @@ const CustomerDashboard = () => {
             {/* Two Column Layout: Orders + Referral */}
             <div className="hidden lg:grid lg:grid-cols-3 gap-7">
               {/* Recent Orders - Takes 2 columns */}
-              <Card className="card-spotify lg:col-span-2" data-tour="recent-orders">
+              <Card className="bg-card border border-border/50 shadow-sm lg:col-span-2" data-tour="recent-orders">
                 <CardHeader className="border-b border-border/50 p-6">
                   <CardTitle className="font-heading">Recent Orders</CardTitle>
                   <CardDescription>Your latest order activity</CardDescription>
