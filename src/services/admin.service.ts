@@ -1,10 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
 
-// ─── Admin Mutation Helper ────────────────────────────────────────────────────
-// All admin write operations MUST go through this helper so that:
-//  1. The `x-admin-intent: dashboard-mutation` header is sent (required by edge functions)
-//  2. The user's JWT is forwarded so verifyAdminRequest() can authenticate the caller
-//  3. Edge-function errors are surfaced clearly instead of silently failing
 async function invokeAdminMutation<T>(
   functionName: string,
   payload: Record<string, unknown>,
@@ -66,57 +61,62 @@ export interface AdminAnalytics {
 
 const adminService = {
   getAnalytics: async (): Promise<AdminAnalytics> => {
-    const [
-      { count: totalUsers },
-      { count: totalShops },
-      { count: activeShops },
-      { count: totalProducts },
-      { count: totalOrders },
-      { count: pendingOrders },
-      { data: revenueData },
-      { data: recentOrders },
-      visitAnalyticsResponse
-    ] = await Promise.all([
-      supabase.from('profiles').select('*', { count: 'exact', head: true }),
-      supabase.from('shops').select('*', { count: 'exact', head: true }),
-      supabase.from('shops').select('*', { count: 'exact', head: true }).eq('is_active', true),
-      supabase.from('products').select('*', { count: 'exact', head: true }),
-      supabase.from('orders').select('*', { count: 'exact', head: true }),
-      supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('orders').select('total_amount').eq('payment_status', 'paid'),
-      supabase.from('orders').select('*, order_items(*, products(*))').order('created_at', { ascending: false }).limit(10),
-      supabase.rpc('get_website_visit_analytics')
-    ]);
+    // Phase 1: Core stats — try secure RPC first, fall back to direct queries
+    let totalUsers = 0, totalShops = 0, activeShops = 0;
+    let totalProducts = 0, totalOrders = 0, pendingOrders = 0, totalRevenue = 0;
 
-    const totalRevenue = revenueData?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0;
-
-    if (visitAnalyticsResponse.error) {
-      throw visitAnalyticsResponse.error;
+    const rpcResult = await supabase.rpc('get_admin_stats');
+    if (!rpcResult.error && rpcResult.data) {
+      const s = rpcResult.data;
+      totalUsers    = Number(s.total_users    ?? 0);
+      totalShops    = Number(s.total_shops    ?? 0);
+      activeShops   = Number(s.active_shops   ?? 0);
+      totalProducts = Number(s.total_products ?? 0);
+      totalOrders   = Number(s.total_orders   ?? 0);
+      pendingOrders = Number(s.pending_orders ?? 0);
+      totalRevenue  = Number(s.total_revenue  ?? 0);
+    } else {
+      // RPC not yet deployed — fall back to individual queries
+      if (rpcResult.error) console.warn('[AdminService] get_admin_stats RPC unavailable:', rpcResult.error.message);
+      const safeCount = async (q: any): Promise<number> => {
+        try { const { count, error } = await q; if (error) console.warn('[AdminService]', error.message); return count || 0; }
+        catch (e) { return 0; }
+      };
+      [totalUsers, totalShops, activeShops, totalProducts, totalOrders, pendingOrders] = await Promise.all([
+        safeCount(supabase.from('profiles').select('*', { count: 'exact', head: true })),
+        safeCount(supabase.from('shops').select('*', { count: 'exact', head: true })),
+        safeCount(supabase.from('shops').select('*', { count: 'exact', head: true }).eq('is_active', true)),
+        safeCount(supabase.from('products').select('*', { count: 'exact', head: true })),
+        safeCount(supabase.from('orders').select('*', { count: 'exact', head: true })),
+        safeCount(supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending')),
+      ]);
+      try {
+        const { data: rd } = await supabase.from('orders').select('total_amount').eq('payment_status', 'paid');
+        totalRevenue = rd?.reduce((s, o) => s + (Number(o.total_amount) || 0), 0) || 0;
+      } catch (_) {}
     }
 
-    const visitAnalytics = visitAnalyticsResponse.data as {
-      totals?: VisitTotals;
-      top_pages?: TopVisitPage[];
-      daily?: VisitTrendPoint[];
-    } | null;
+    // Phase 2: Recent orders (optional)
+    let recentOrders: any[] = [];
+    try {
+      const { data } = await supabase.from('orders').select('*, order_items(*, products(*))').order('created_at', { ascending: false }).limit(10);
+      recentOrders = data || [];
+    } catch (_) {}
 
-    return {
-      totalUsers: totalUsers || 0,
-      totalShops: totalShops || 0,
-      activeShops: activeShops || 0,
-      totalProducts: totalProducts || 0,
-      totalOrders: totalOrders || 0,
-      pendingOrders: pendingOrders || 0,
-      totalRevenue,
-      recentOrders: recentOrders || [],
-      visitTotals: {
-        today: visitAnalytics?.totals?.today || 0,
-        days7: visitAnalytics?.totals?.days7 || 0,
-        days30: visitAnalytics?.totals?.days30 || 0,
-      },
-      topVisitPages: visitAnalytics?.top_pages || [],
-      visitTrend: visitAnalytics?.daily || []
-    };
+    // Phase 3: Visit analytics (fully optional — never crashes anything)
+    let visitTotals: VisitTotals = { today: 0, days7: 0, days30: 0 };
+    let topVisitPages: TopVisitPage[] = [];
+    let visitTrend: VisitTrendPoint[] = [];
+    try {
+      const { data: va, error: vaErr } = await supabase.rpc('get_website_visit_analytics');
+      if (!vaErr && va) {
+        visitTotals = { today: va.totals?.today || 0, days7: va.totals?.days7 || 0, days30: va.totals?.days30 || 0 };
+        topVisitPages = va.top_pages || [];
+        visitTrend = va.daily || [];
+      }
+    } catch (_) {}
+
+    return { totalUsers, totalShops, activeShops, totalProducts, totalOrders, pendingOrders, totalRevenue, recentOrders, visitTotals, topVisitPages, visitTrend };
   },
 
   getUsers: async (page = 1, limit = 10) => {

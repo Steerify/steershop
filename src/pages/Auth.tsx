@@ -399,7 +399,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-background overflow-x-hidden">
       {/* ── Left brand panel (hidden on mobile) ──────────── */}
       <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative overflow-hidden flex-col justify-between bg-gradient-to-br from-[hsl(215,65%,18%)] via-primary to-[hsl(145,55%,26%)] p-12">
         {/* Background pattern */}

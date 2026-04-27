@@ -1,44 +1,18 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
-# AI Crawlers - Welcome
-User-agent: GPTBot
-Allow: /
-
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: Claude-Web
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: Anthropic
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
-
-User-agent: Applebot
-Allow: /
-
-User-agent: OAI-SearchBot
-Allow: /
-
 User-agent: *
 Allow: /
 
+# Block private/admin areas
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /auth/
+Disallow: /settings/
+Disallow: /orders/
+Disallow: /products/
+Disallow: /customers/
+
+# Allow public storefronts and marketing pages
+Allow: /shop/
+Allow: /blog/
+
+# Sitemaps
 Sitemap: https://steersolo.com/sitemap.xml
