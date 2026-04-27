@@ -67,32 +67,32 @@ export interface AdminAnalytics {
 const adminService = {
   getAnalytics: async (): Promise<AdminAnalytics> => {
     const [
-      { count: totalUsers },
-      { count: totalShops },
-      { count: activeShops },
-      { count: totalProducts },
-      { count: totalOrders },
-      { count: pendingOrders },
-      { data: revenueData },
+      { data: statsData, error: statsError },
       { data: recentOrders },
       visitAnalyticsResponse
     ] = await Promise.all([
-      supabase.from('profiles').select('*', { count: 'exact', head: true }),
-      supabase.from('shops').select('*', { count: 'exact', head: true }),
-      supabase.from('shops').select('*', { count: 'exact', head: true }).eq('is_active', true),
-      supabase.from('products').select('*', { count: 'exact', head: true }),
-      supabase.from('orders').select('*', { count: 'exact', head: true }),
-      supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('orders').select('total_amount').eq('payment_status', 'paid'),
+      supabase.rpc('get_admin_stats'),
       supabase.from('orders').select('*, order_items(*, products(*))').order('created_at', { ascending: false }).limit(10),
       supabase.rpc('get_website_visit_analytics')
     ]);
 
-    const totalRevenue = revenueData?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0;
+    if (statsError) {
+      console.error('Error fetching admin stats:', statsError);
+    }
 
     if (visitAnalyticsResponse.error) {
-      throw visitAnalyticsResponse.error;
+      console.error('Error fetching visit analytics:', visitAnalyticsResponse.error);
     }
+
+    const stats = statsData || {
+      total_users: 0,
+      total_shops: 0,
+      active_shops: 0,
+      total_products: 0,
+      total_orders: 0,
+      pending_orders: 0,
+      total_revenue: 0
+    };
 
     const visitAnalytics = visitAnalyticsResponse.data as {
       totals?: VisitTotals;
@@ -101,13 +101,13 @@ const adminService = {
     } | null;
 
     return {
-      totalUsers: totalUsers || 0,
-      totalShops: totalShops || 0,
-      activeShops: activeShops || 0,
-      totalProducts: totalProducts || 0,
-      totalOrders: totalOrders || 0,
-      pendingOrders: pendingOrders || 0,
-      totalRevenue,
+      totalUsers: stats.total_users || 0,
+      totalShops: stats.total_shops || 0,
+      activeShops: stats.active_shops || 0,
+      totalProducts: stats.total_products || 0,
+      totalOrders: stats.total_orders || 0,
+      pendingOrders: stats.pending_orders || 0,
+      totalRevenue: stats.total_revenue || 0,
       recentOrders: recentOrders || [],
       visitTotals: {
         today: visitAnalytics?.totals?.today || 0,
