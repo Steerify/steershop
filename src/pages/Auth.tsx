@@ -183,7 +183,7 @@ const Auth = () => {
     : persona === "shopper"
       ? {
         title: "Discover trusted shops in one place.",
-        subtitle: "Built for shoppers: explore verified sellers, compare products, and buy with confidence.",
+        subtitle: "Built for shoppers: view verified sellers, browse products, and buy with confidence.",
         chips: [
           { emoji: "🛍️", text: "Browse multiple categories" },
           { emoji: "✅", text: "Find verified sellers" },

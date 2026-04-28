@@ -95,7 +95,7 @@ export const SEOPageTemplate = ({
             </Link>
             <Link to="/shops">
               <Button size="lg" variant="outline" className="w-full sm:w-auto text-base px-8">
-                Explore Stores
+                View Stores
               </Button>
             </Link>
           </div>

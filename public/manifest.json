@@ -1,0 +1,30 @@
+{
+  "short_name": "SteerSolo",
+  "name": "SteerSolo - Nigeria's #1 Platform for Online Sellers",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/favicon.jpg",
+      "type": "image/jpeg",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/favicon.jpg",
+      "type": "image/jpeg",
+      "sizes": "512x512"
+    },
+    {
+      "src": "/apple-touch-icon.jpg",
+      "type": "image/jpeg",
+      "sizes": "180x180"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#16A349",
+  "background_color": "#ffffff"
+}

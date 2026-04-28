@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Store, ShoppingCart, Star, Package, Sparkles,
   Eye, Search, X, Briefcase, Clock, Calendar, BadgeCheck,
-  MessageCircle, MapPin, ChevronRight, ShoppingBag, Heart
+  MessageCircle, MapPin, ChevronRight, ShoppingBag, Heart, Tag
 } from "lucide-react";
 import { WishlistButton } from "@/components/WishlistButton";
 import { openWhatsAppContact } from "@/utils/whatsapp";
@@ -287,13 +287,13 @@ const ShopStorefront = () => {
 
       // Public visitors should only see storefronts that are complete for buying.
       if ((!user || user.id !== shopData.owner_id) && (!hasCompletePaymentSetup || !hasProductWithImage)) {
-        toast({ title: "Shop Not Ready Yet", description: "This storefront is still completing setup. Please check back soon." });
         setShop(null);
         return;
       }
 
       setProducts(productsList);
       setFilteredProducts(productsList);
+      
       const { count: ordersCount } = await supabase
         .from('orders').select('*', { count: 'exact', head: true })
         .eq('shop_id', shopData.id).eq('status', 'completed');
@@ -378,7 +378,7 @@ const ShopStorefront = () => {
   }
 
   /* ─── 404 State ─── */
-  if (!shop) {
+  if (!shop || (!isOwner && !shop.is_active)) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
@@ -407,6 +407,8 @@ const ShopStorefront = () => {
       </div>
     );
   }
+
+  const isSetupIncomplete = !shop.payment_method || (shop.payment_method === 'bank_transfer' && !shop.bank_account_number) || (shop.payment_method === 'paystack' && !shop.paystack_public_key) || (shop.payment_method === 'both' && (!shop.bank_account_number || !shop.paystack_public_key)) || products.every(p => !p.image_url);
 
   /* ─── Main Storefront ─── */
   const shopUrl = shop ? `https://steersolo.com/shop/${shop.shop_slug}` : '';
@@ -443,6 +445,22 @@ const ShopStorefront = () => {
         </Helmet>
       )}
       <Navbar shopBranding={isPremiumPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
+      
+      {isOwner && isSetupIncomplete && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 py-3 mt-16 sm:mt-14">
+          <div className="container mx-auto px-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400 text-sm font-medium">
+              <Sparkles className="w-4 h-4" />
+              <span>Your shop is live, but setup is incomplete. Complete your payment details to enable checkout.</span>
+            </div>
+            <Link to="/dashboard">
+              <Button size="sm" variant="outline" className="h-8 rounded-lg border-amber-500/50 text-amber-800 dark:text-amber-400 hover:bg-amber-500/10 transition-colors">
+                Complete Setup
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* ══════════════════ HERO SECTION ══════════════════ */}
       <section className="relative pt-20 sm:pt-16" data-tour="shop-header">
@@ -612,7 +630,7 @@ const ShopStorefront = () => {
             <h3 className="font-display text-lg md:text-xl font-bold">Discover more verified Nigerian stores in one place</h3>
             <p className="text-sm text-muted-foreground max-w-2xl">
               Beyond this storefront, SteerSolo connects buyers to trusted sellers across beauty, fashion, food, gadgets, and services.
-              Explore the marketplace to compare stores, find new vendors, and shop faster with confidence.
+              Visit the marketplace to compare stores, find new vendors, and shop faster with confidence.
             </p>
           </div>
           <Link to="/shops" className="md:shrink-0">
@@ -817,9 +835,10 @@ const ShopStorefront = () => {
 
                     {/* Discount Badge — top right */}
                     {product.compare_price && Number(product.compare_price) > product.price && (
-                      <div className="absolute top-2.5 right-2.5">
-                        <div className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-sm">
-                          -{Math.round(((Number(product.compare_price) - product.price) / Number(product.compare_price)) * 100)}%
+                      <div className="absolute top-2 right-2 z-10 scale-90 sm:scale-100 origin-top-right">
+                        <div className="bg-gradient-to-r from-red-600 to-rose-700 text-white text-[10px] font-black px-2.5 py-1.5 rounded-full shadow-lg border border-white/20 flex items-center gap-1.5 uppercase tracking-tighter">
+                          <Tag className="w-3 h-3" />
+                          <span>SAVE {Math.round(((Number(product.compare_price) - product.price) / Number(product.compare_price)) * 100)}%</span>
                         </div>
                       </div>
                     )}
@@ -851,71 +870,75 @@ const ShopStorefront = () => {
                     <ProductRating rating={product.average_rating || 0} totalReviews={product.total_reviews || 0} />
 
                     {/* Price Row */}
-                    <div className="flex items-center justify-between mt-2 mb-2 sm:mb-3 gap-1">
-                      <div className="flex items-baseline gap-1 flex-wrap min-w-0">
-                        <span className="text-sm sm:text-lg font-bold text-primary dark:text-accent tabular-nums tracking-tight">
+                    <div className="flex flex-col min-[360px]:flex-row items-start min-[360px]:items-center justify-between mt-auto mb-3 gap-2">
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                        <span className="text-lg sm:text-xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent tabular-nums">
                           ₦{product.price.toLocaleString()}
                         </span>
                         {product.compare_price && Number(product.compare_price) > product.price && (
-                          <span className="text-[10px] sm:text-xs text-muted-foreground line-through tabular-nums">
+                          <span className="text-[11px] sm:text-xs text-muted-foreground/60 line-through tabular-nums decoration-red-500/50">
                             ₦{Number(product.compare_price).toLocaleString()}
                           </span>
                         )}
                       </div>
 
-                      {/* Stock / Duration — hidden on very small screens to save space */}
                       {product.type === 'service' && product.duration_minutes ? (
-                        <div className="hidden min-[360px]:flex items-center gap-1 text-xs text-purple-500 bg-purple-500/10 rounded-lg px-1.5 py-0.5 flex-shrink-0">
+                        <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-purple-600 bg-purple-500/10 rounded-full px-2.5 py-1 flex-shrink-0 border border-purple-500/20">
                           <Clock className="w-3 h-3" />
                           <span>{product.duration_minutes}m</span>
                         </div>
                       ) : product.type === 'product' && (
                         <div className={`
-                          hidden min-[360px]:flex items-center gap-1 text-xs rounded-lg px-1.5 py-0.5 flex-shrink-0
+                          flex items-center gap-1.5 text-[10px] sm:text-xs font-bold rounded-full px-2.5 py-1 flex-shrink-0 border
                           ${product.stock_quantity > 0
-                            ? 'text-emerald-600 bg-emerald-500/10'
-                            : 'text-red-500 bg-red-500/10'
+                            ? 'text-emerald-700 bg-emerald-500/10 border-emerald-500/20'
+                            : 'text-rose-600 bg-rose-500/10 border-rose-500/20'
                           }
                         `}>
-                          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${product.stock_quantity > 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                          <span className="hidden sm:inline">{product.stock_quantity > 0 ? `${product.stock_quantity} ${product.stock_unit || "units"} left` : 'Out'}</span>
-                          <span className="sm:hidden">{product.stock_quantity > 0 ? 'In stock' : 'Out'}</span>
+                          <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${product.stock_quantity > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                          <span>{product.stock_quantity > 0 ? 'In stock' : 'Sold Out'}</span>
                         </div>
                       )}
                     </div>
 
                     {/* CTA Buttons */}
-                    <div className="mt-auto flex flex-col gap-1.5">
+                    <div className="mt-auto flex flex-col gap-2">
                       {product.type === 'service' && product.booking_required ? (
                         <Button
-                          className="w-full h-8 sm:h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs sm:text-sm shadow-sm shadow-purple-500/20 gap-1 sm:gap-1.5 transition-all"
+                          className="w-full h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-purple-500/20 gap-2 transition-all active:scale-95"
                           onClick={(e) => { e.preventDefault(); handleBookService(product); }}
                           disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                         >
-                          <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          <Calendar className="w-3.5 h-3.5" />
                           Book Now
                         </Button>
                       ) : (
                         <Button
-                          className="w-full h-8 sm:h-9 rounded-xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 font-semibold text-xs sm:text-sm shadow-sm shadow-emerald-900/20 gap-1 sm:gap-1.5 transition-all border border-emerald-300/30"
+                          className="w-full h-9 rounded-xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 font-bold text-xs sm:text-sm shadow-md shadow-emerald-900/20 gap-2 transition-all active:scale-95 border border-emerald-300/30"
                           onClick={(e) => { e.preventDefault(); addToCart(product); }}
                           disabled={product.stock_quantity === 0 || (!product.is_available && !isOwner)}
                         >
-                          <ShoppingCart className="w-3 h-3" />
+                          <ShoppingCart className="w-3.5 h-3.5" />
                           Add to Cart
                         </Button>
                       )}
-                      <div className="flex gap-1.5">
+                      
+                      <div className="flex gap-2">
                         <Link to={`/shop/${slug}/product/${product.id}`} className="flex-1">
                           <Button
                             variant="outline"
-                            className="w-full h-8 sm:h-9 rounded-xl border-border hover:border-accent/50 hover:bg-accent/5 transition-all text-xs sm:text-sm"
+                            className="w-full h-9 rounded-xl border-border hover:border-accent/50 hover:bg-accent/5 transition-all text-xs font-semibold gap-1"
                           >
-                            View
-                            <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 ml-0.5" />
+                            <span>Details</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
                           </Button>
                         </Link>
-                        <WishlistButton productId={product.id} size="sm" showLabel className="h-8 sm:h-9 flex-1 rounded-xl text-xs sm:text-sm" />
+                        <WishlistButton 
+                          productId={product.id} 
+                          size="sm" 
+                          showLabel={false} 
+                          className="h-9 w-9 sm:w-auto sm:px-3 sm:flex-1 rounded-xl text-xs font-semibold" 
+                        />
                       </div>
                     </div>
                   </div>

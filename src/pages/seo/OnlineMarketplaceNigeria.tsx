@@ -4,7 +4,7 @@ const OnlineMarketplaceNigeria = () => (
   <SEOPageTemplate
     metaTitle="Online Marketplace Nigeria for Trusted Vendors | SteerSolo Marketplace"
     metaDescription="Discover trusted Nigerian vendors across beauty, fashion, food, gadgets, and services on SteerSolo Marketplace. Browse stores and shop with confidence."
-    heroTitle="Explore the SteerSolo Marketplace in Nigeria"
+    heroTitle="The SteerSolo Marketplace in Nigeria"
     heroSubtitle="Find verified and growing Nigerian sellers in one marketplace. Compare stores, discover products, and shop from trusted storefronts."
     heroCTA="Start Selling on Marketplace"
     sections={[

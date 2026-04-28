@@ -131,6 +131,7 @@ const Dashboard = () => {
   const [shopData, setShopData] = useState<{ id: string; name: string } | null>(null);
   const [shopFullData, setShopFullData] = useState<any>(null);
   const [productsCount, setProductsCount] = useState(0);
+  const [hasProductWithImage, setHasProductWithImage] = useState(false);
   const [userBadges, setUserBadges] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [pendingOrders, setPendingOrders] = useState(0);
@@ -251,7 +252,9 @@ const Dashboard = () => {
         }
 
         const productsResponse = await productService.getProducts({ shopId: primaryShop.id });
-        setProductsCount(productsResponse.data?.length || 0);
+        const productsList = productsResponse.data || [];
+        setProductsCount(productsList.length);
+        setHasProductWithImage(productsList.some(p => !!p.image_url && p.is_available));
 
         const ordersResponse = await orderService.getOrders({ shopId: primaryShop.id });
         const allOrders = ordersResponse.data || [];
@@ -607,16 +610,36 @@ const Dashboard = () => {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <DollarSign className="w-4 h-4 text-white/80" />
-                  <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Setup Incomplete</span>
+                  <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Marketplace: Hidden</span>
                 </div>
                 <h3 className="text-white font-extrabold text-base leading-tight">Complete your payment setup</h3>
-                <p className="text-white/70 text-xs mt-0.5">Set up your bank details or Paystack to start receiving payments.</p>
+                <p className="text-white/70 text-xs mt-0.5">Your store is hidden from the marketplace until you set up your bank details or Paystack.</p>
               </div>
               <Button size="sm" onClick={() => navigate('/my-store?tab=settings')} className="shrink-0 bg-white text-rose-600 hover:bg-white/90 font-bold shadow-lg">Set Up Now →</Button>
             </div>
           </div>
         );
       }
+    }
+
+    // ── Missing Product Images nudge ──
+    if (shopData && productsCount > 0 && !hasProductWithImage) {
+      slides.push(
+        <div key="missing-images" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 p-5 min-h-[120px] flex items-center">
+          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="relative z-10 flex items-center justify-between gap-3 w-full">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="w-4 h-4 text-white/80" />
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Marketplace: Hidden</span>
+              </div>
+              <h3 className="text-white font-extrabold text-base leading-tight">Add product images</h3>
+              <p className="text-white/70 text-xs mt-0.5">Your store is hidden from the marketplace until you add images to your products.</p>
+            </div>
+            <Button size="sm" onClick={() => navigate('/products')} className="shrink-0 bg-white text-indigo-600 hover:bg-white/90 font-bold shadow-lg">Add Images →</Button>
+          </div>
+        </div>
+      );
     }
 
     // ── First sale nudge ──

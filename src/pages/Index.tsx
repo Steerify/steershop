@@ -675,7 +675,7 @@ const Index = () => (
         </p>
         <Link to="/shops" className="inline-flex">
           <button className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity">
-            Explore verified shops
+            View verified shops
           </button>
         </Link>
       </div>

@@ -332,7 +332,7 @@ const About = () => {
             </Link>
             <Link to="/shops">
               <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 border-primary-foreground text-primary-foreground min-h-[48px] w-full sm:w-auto">
-                Explore Shops
+                View Shops
               </Button>
             </Link>
           </div>

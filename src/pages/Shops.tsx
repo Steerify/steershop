@@ -16,7 +16,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
 import { Shop, Product } from "@/types/api";
-import { ExploreFilters } from "@/components/ExploreFilters";
+import { MarketplaceFilters } from "@/components/MarketplaceFilters";
 import { ShopCardEnhanced } from "@/components/ShopCardEnhanced";
 import { supabase } from "@/integrations/supabase/client";
 import { autoCategorize, getCategoryLabel, BEAUTY_SUBCATEGORIES } from "@/utils/autoCategorize";
@@ -470,7 +470,7 @@ const Shops = () => {
       </section>
 
       {/* ══════════ FILTERS ══════════ */}
-      <ExploreFilters
+      <MarketplaceFilters
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
         selectedSort={selectedSort}
@@ -725,7 +725,7 @@ const Shops = () => {
           {!hasMoreShops && !hasMoreProducts && (shops.length > 0 || productResults.length > 0) && (
             <div className="text-center py-12 mt-4 border-t border-border/50">
               <p className="text-muted-foreground text-sm">
-                You've explored all {debouncedSearchQuery ? 'results' : 'shops'} — that's everything! 🎉
+                You've seen all {debouncedSearchQuery ? 'results' : 'shops'} — that's everything! 🎉
               </p>
             </div>
           )}

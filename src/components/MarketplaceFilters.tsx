@@ -34,7 +34,7 @@ const SORT_OPTIONS = [
   { value: 'name', label: 'A-Z' },
 ];
 
-interface ExploreFiltersProps {
+interface MarketplaceFiltersProps {
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
   selectedSort: string;
@@ -50,7 +50,7 @@ interface ExploreFiltersProps {
   onMaxPriceChange?: (val: string) => void;
 }
 
-export const ExploreFilters = ({
+export const MarketplaceFilters = ({
   selectedCategory, onCategoryChange,
   selectedSort, onSortChange,
   selectedState, onStateChange,
@@ -58,7 +58,7 @@ export const ExploreFilters = ({
   categoryCounts,
   minPrice = '', maxPrice = '',
   onMinPriceChange, onMaxPriceChange,
-}: ExploreFiltersProps) => {
+}: MarketplaceFiltersProps) => {
   const isBeautyExpanded = selectedCategory === 'beauty' || 
     ['skincare', 'haircare', 'cosmetics', 'fragrances', 'natural-beauty'].includes(selectedCategory);
 
@@ -148,12 +148,12 @@ export const ExploreFilters = ({
 
           <div className="flex items-center gap-1.5 ml-auto">
             <Switch
-              id="verified-explore"
+              id="verified-marketplace"
               checked={showVerifiedOnly}
               onCheckedChange={onVerifiedChange}
               className="scale-90"
             />
-            <Label htmlFor="verified-explore" className="flex items-center gap-1 cursor-pointer text-xs sm:text-sm">
+            <Label htmlFor="verified-marketplace" className="flex items-center gap-1 cursor-pointer text-xs sm:text-sm">
               <BadgeCheck className="w-3.5 h-3.5 text-emerald-600" />
               <span className="hidden sm:inline">Verified</span>
             </Label>

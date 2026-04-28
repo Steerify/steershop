@@ -70,7 +70,7 @@ export const ShopperDiscovery = () => {
         <div className="text-center">
           <Link to="/shops">
             <Button size="lg" variant="outline" className="group">
-              Explore Shops
+              View Shops
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>

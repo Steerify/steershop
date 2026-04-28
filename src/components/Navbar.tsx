@@ -25,7 +25,7 @@ interface Celebration {
 const CELEBRATIONS: Celebration[] = [
   { name: "Christmas", startDate: "12-20", endDate: "12-27", type: 'christian', vibe: "Festive gifting season", ctaLabel: "Holiday-ready shops", ctaHref: "/shops" },
   { name: "New Year", startDate: "12-31", endDate: "01-02", type: 'general', vibe: "Fresh goals, fresh products", ctaLabel: "Start selling stronger", ctaHref: "/pricing" },
-  { name: "Eid al-Fitr", startDate: "04-09", endDate: "04-11", type: 'muslim', vibe: "Celebrate with trusted vendors", ctaLabel: "Explore Eid specials", ctaHref: "/shops" },
+  { name: "Eid al-Fitr", startDate: "04-09", endDate: "04-11", type: 'muslim', vibe: "Celebrate with trusted vendors", ctaLabel: "View Eid specials", ctaHref: "/shops" },
   { name: "Valentine's Day", startDate: "02-14", endDate: "02-14", type: 'general', vibe: "Love-inspired gifting", ctaLabel: "Discover gift shops", ctaHref: "/shops" },
   { name: "Independence Day", startDate: "10-01", endDate: "10-01", type: 'cultural', vibe: "Naija-made excellence", ctaLabel: "Support local brands", ctaHref: "/shops" },
   { name: "Halloween", startDate: "10-31", endDate: "10-31", type: 'general', vibe: "Bold looks, spooky vibes", ctaLabel: "See trending stores", ctaHref: "/shops" },
@@ -206,7 +206,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                   to={item.href}
                   className="text-sm lg:text-base text-foreground/80 hover:text-primary transition-colors font-medium relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full"
                 >
-                  Explore {item.label}
+                  {item.label}
                 </Link>
               ))}
             </div>
@@ -282,7 +282,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
           <div className="section-divider my-1" />
           <Link to="/shops" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
             <Store className="w-5 h-5" />
-            Explore Shops
+            Shops
           </Link>
           <div className="section-divider my-1" />
           <Link to="/pricing" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">

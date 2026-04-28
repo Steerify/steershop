@@ -43,7 +43,7 @@ const HowItWorksPage = () => {
       step: 1,
       icon: ShoppingCart,
       title: "Browse Products",
-      description: "Explore products from verified Nigerian sellers."
+      description: "Browse products from verified Nigerian sellers."
     },
     {
       step: 2,

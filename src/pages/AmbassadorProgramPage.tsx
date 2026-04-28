@@ -54,7 +54,7 @@ const AmbassadorProgramPage = () => {
         <title>SteerSolo Ambassador Program | Refer and earn commissions</title>
         <meta
           name="description"
-          content="Explore the SteerSolo Ambassador Program. Learn how to join, share your referral link, and earn commissions from successful referrals."
+          content="Learn about the SteerSolo Ambassador Program. Learn how to join, share your referral link, and earn commissions from successful referrals."
         />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://steersolo.com/ambassador-program" />
