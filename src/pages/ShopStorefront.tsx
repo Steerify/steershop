@@ -39,6 +39,7 @@ interface Shop {
   banner_url: string | null;
   average_rating: number;
   total_reviews: number;
+  is_active?: boolean;
   payment_method?: string;
   paystack_public_key?: string;
   whatsapp_number?: string;
@@ -285,11 +286,8 @@ const ShopStorefront = () => {
         (p) => p.type === 'product' && p.is_available && !!p.image_url
       );
 
-      // Public visitors should only see storefronts that are complete for buying.
-      if ((!user || user.id !== shopData.owner_id) && (!hasCompletePaymentSetup || !hasProductWithImage)) {
-        setShop(null);
-        return;
-      }
+      // Owners always see their shop; public visitors need at least one payment method set up.
+      // We no longer block the storefront silently — incomplete shops are visible but show a setup banner.
 
       setProducts(productsList);
       setFilteredProducts(productsList);
@@ -378,7 +376,7 @@ const ShopStorefront = () => {
   }
 
   /* ─── 404 State ─── */
-  if (!shop || (!isOwner && !shop.is_active)) {
+  if (!shop) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
@@ -386,18 +384,18 @@ const ShopStorefront = () => {
           <div className="w-24 h-24 mb-8 rounded-3xl bg-muted flex items-center justify-center shadow-inner">
             <Store className="w-11 h-11 text-muted-foreground" />
           </div>
-          <h1 className="font-display text-4xl font-bold mb-3 tracking-tight">Shop Unavailable</h1>
-          <p className="text-muted-foreground mb-8 max-w-sm leading-relaxed">
-            This store may be temporarily closed, still setting up, or the link might be incorrect.
+          <h1 className="font-display text-3xl sm:text-4xl font-bold mb-3 tracking-tight">Shop Not Found</h1>
+          <p className="text-muted-foreground mb-8 max-w-sm leading-relaxed text-sm sm:text-base">
+            This store doesn't exist or the link may be incorrect.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs sm:max-w-none">
             <Link to="/shops">
-              <Button size="lg" className="rounded-xl px-8 bg-gradient-to-r from-accent to-primary font-semibold shadow-lg shadow-accent/25">
+              <Button size="lg" className="w-full rounded-xl px-8 bg-gradient-to-r from-accent to-primary font-semibold shadow-lg shadow-accent/25">
                 <Store className="w-4 h-4 mr-2" /> Browse All Shops
               </Button>
             </Link>
             <Link to="/">
-              <Button size="lg" variant="outline" className="rounded-xl px-8">
+              <Button size="lg" variant="outline" className="w-full rounded-xl px-8">
                 <ArrowLeft className="w-4 h-4 mr-2" /> Go Home
               </Button>
             </Link>
@@ -562,10 +560,11 @@ const ShopStorefront = () => {
                         <Button
                           size="sm"
                           onClick={() => setIsCheckoutOpen(true)}
-                          className={`w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 text-white shadow-lg shadow-accent/30 font-semibold transition-all gap-2 hover:brightness-110 border border-white/15 ${
-                            cartGlow ? "bg-gradient-to-r from-lime-300 via-lime-400 to-green-400 text-zinc-950 shadow-[0_0_24px_rgba(132,204,22,0.65)] border-lime-200 animate-pulse" : ""
+                          className={`w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 font-semibold transition-all gap-2 hover:brightness-110 border ${
+                            cartGlow
+                              ? "bg-gradient-to-r from-lime-300 via-lime-400 to-green-400 text-zinc-950 shadow-[0_0_24px_rgba(132,204,22,0.65)] border-lime-200 animate-pulse"
+                              : "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/25 border-emerald-300/30"
                           }`}
-                          style={cartGlow ? undefined : { background: `linear-gradient(90deg, ${shop.secondary_color || "hsl(var(--accent))"}, ${shop.primary_color || "hsl(var(--primary))"})` }}
                           data-tour="cart-button"
                         >
                           <ShoppingCart className="w-4 h-4" />

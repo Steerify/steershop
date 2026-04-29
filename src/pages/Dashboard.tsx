@@ -445,7 +445,10 @@ const Dashboard = () => {
             <h3 className="text-white font-extrabold text-base leading-tight">Join 5,000+ vendors on WhatsApp</h3>
             <p className="text-white/70 text-xs mt-0.5">Tips, support, buyer traffic & giveaways — free!</p>
           </div>
-          <Button size="sm" className="shrink-0 !bg-white !text-[#075E54] hover:!bg-white/90 font-bold shadow-lg gap-1.5"
+          <Button
+            size="sm"
+            className="shrink-0 font-bold shadow-lg gap-1.5 hover:opacity-90"
+            style={{ backgroundColor: 'white', color: '#075E54' }}
             onClick={() => window.open('https://chat.whatsapp.com/LX2AQqaSYD5FzEuCmhwWmz', '_blank')}>
             <MessageCircle className="w-3.5 h-3.5" />Join Now
           </Button>
@@ -473,7 +476,8 @@ const Dashboard = () => {
           </div>
           <Button
             size="sm"
-            className="shrink-0 !bg-white !text-[#075E54] hover:!bg-white/90 font-bold shadow-lg gap-1.5"
+            className="shrink-0 font-bold shadow-lg gap-1.5 hover:opacity-90"
+            style={{ backgroundColor: 'white', color: '#075E54' }}
             onClick={() => window.open('https://chat.whatsapp.com/LX2AQqaSYD5FzEuCmhwWmz', '_blank')}
           >
             <MessageCircle className="w-3.5 h-3.5" />

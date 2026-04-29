@@ -846,49 +846,61 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
               Review Your Cart
             </h3>
             <div className="space-y-2 sm:space-y-3">
-              {cart.map((item) => (
-                <div key={item.product.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-muted rounded-lg">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm sm:text-base truncate">{item.product.name}</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">₦{item.product.price.toLocaleString()}</p>
+              {cart.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center gap-3">
+                  <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
+                    <ShoppingCart className="w-7 h-7 text-muted-foreground" />
                   </div>
-                  
-                  <div className="flex items-center justify-between sm:justify-end gap-2">
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
-                        className="h-8 w-8 sm:h-9 sm:w-9"
-                      >
-                        <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
-                      </Button>
-                      <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{item.quantity}</span>
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
-                        disabled={item.quantity >= item.product.stock_quantity}
-                        className="h-8 w-8 sm:h-9 sm:w-9"
-                      >
-                        <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="destructive"
-                        onClick={() => onUpdateQuantity(item.product.id, 0)}
-                        className="h-8 w-8 sm:h-9 sm:w-9"
-                      >
-                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                      </Button>
-                    </div>
-                    
-                    <div className="font-semibold text-sm sm:text-base min-w-[80px] sm:w-24 text-right">
-                      ₦{(item.product.price * item.quantity).toLocaleString()}
-                    </div>
+                  <div>
+                    <p className="font-semibold text-sm">Your cart is empty</p>
+                    <p className="text-xs text-muted-foreground mt-1">Add items from the store before checking out.</p>
                   </div>
                 </div>
-              ))}
+              ) : (
+                cart.map((item) => (
+                  <div key={item.product.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-muted rounded-lg">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm sm:text-base truncate">{item.product.name}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">₦{item.product.price.toLocaleString()}</p>
+                    </div>
+                    
+                    <div className="flex items-center justify-between sm:justify-end gap-2">
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
+                          className="h-8 w-8 sm:h-9 sm:w-9"
+                        >
+                          <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </Button>
+                        <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{item.quantity}</span>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
+                          disabled={item.quantity >= item.product.stock_quantity}
+                          className="h-8 w-8 sm:h-9 sm:w-9"
+                        >
+                          <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          onClick={() => onUpdateQuantity(item.product.id, 0)}
+                          className="h-8 w-8 sm:h-9 sm:w-9"
+                        >
+                          <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="font-semibold text-sm sm:text-base min-w-[80px] sm:w-24 text-right">
+                        ₦{(item.product.price * item.quantity).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
             
             <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t space-y-2">
@@ -1221,15 +1233,11 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                     className="flex-1 min-h-[48px] text-sm sm:text-base"
                   >
                     {isProcessing ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Processing...
-                      </>
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</>
                     ) : isInitializingPayment ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Initializing...
-                      </>
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Initializing...</>
+                    ) : cart.length === 0 ? (
+                      "Add items to cart first"
                     ) : paymentChoice === "delivery_before" ? (
                       <span className="truncate">Place Order - ₦{effectiveTotal.toLocaleString()}</span>
                     ) : (
