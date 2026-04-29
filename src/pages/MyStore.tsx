@@ -403,366 +403,381 @@ const MyStore = () => {
           className="mb-4"
         />
 
-        <Card className="border-primary/10">
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-xl sm:text-2xl">Store Information</CardTitle>
-            <CardDescription className="text-sm">Manage your store settings and payment methods</CardDescription>
-          </CardHeader>
+        <Tabs defaultValue="store-info" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 mb-6">
+            <TabsTrigger value="store-info">Store Info</TabsTrigger>
+            <TabsTrigger value="payment-setup">Payment Setup</TabsTrigger>
+            {shop && isPremiumPlan && (
+              <TabsTrigger value="appearance" className="hidden md:block">Appearance</TabsTrigger>
+            )}
+          </TabsList>
 
-          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
-            <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="shop_name">Store Name</Label>
-                <Input
-                  id="shop_name"
-                  value={formData.shop_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, shop_name: e.target.value })
-                  }
-                  placeholder="Enter store name"
-                  className={errors.shop_name ? "border-red-500" : ""}
-                />
-                {errors.shop_name && (
-                  <p className="text-red-500 text-sm">{errors.shop_name}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="shop_slug">Store Slug (URL)</Label>
-                <div className="relative">
-                  <Input
-                    id="shop_slug"
-                    value={formData.shop_slug}
-                    onChange={(e) => {
-                      const slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-                      setFormData({ ...formData, shop_slug: slug });
-                      setSlugAvailable(null); // Reset while typing
-                    }}
-                    placeholder="my-store"
-                    className={cn(
-                      "pr-10",
-                      errors.shop_slug && "border-destructive",
-                      slugAvailable === true && "border-green-500 focus-visible:ring-green-500",
-                      slugAvailable === false && "border-destructive focus-visible:ring-destructive"
+          <TabsContent value="store-info">
+            <Card className="border-primary/10">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-xl sm:text-2xl">Store Information</CardTitle>
+                <CardDescription className="text-sm">Manage your store details and branding</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+                <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+                  {/* Store Name */}
+                  <div className="space-y-2">
+                    <Label htmlFor="shop_name">Store Name</Label>
+                    <Input
+                      id="shop_name"
+                      value={formData.shop_name}
+                      onChange={(e) => {
+                        const name = e.target.value;
+                        const autoSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                        setFormData({ ...formData, shop_name: name, shop_slug: autoSlug });
+                        setSlugAvailable(null);
+                      }}
+                      placeholder="Enter store name"
+                      className={errors.shop_name ? "border-red-500" : ""}
+                    />
+                    {errors.shop_name && (
+                      <p className="text-red-500 text-sm">{errors.shop_name}</p>
                     )}
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    {checkingSlug && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
-                    {!checkingSlug && slugAvailable === true && <Check className="w-4 h-4 text-green-500" />}
-                    {!checkingSlug && slugAvailable === false && <X className="w-4 h-4 text-destructive" />}
                   </div>
-                </div>
-                {slugAvailable === false && (
-                  <p className="text-destructive text-sm">This slug is already taken. Try another one.</p>
-                )}
-                {slugAvailable === true && (
-                  <p className="text-green-600 text-sm">This slug is available!</p>
-                )}
-                {errors.shop_slug && (
-                  <p className="text-destructive text-sm">{errors.shop_slug}</p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Your store URL: steersolo.com/shop/{formData.shop_slug || 'your-store'}
-                </p>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  placeholder="Describe your store"
-                  className="min-h-[100px]"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="whatsapp_number">WhatsApp Number</Label>
-                <Input
-                  id="whatsapp_number"
-                  value={formData.whatsapp_number}
-                  onChange={(e) =>
-                    setFormData({ ...formData, whatsapp_number: e.target.value })
-                  }
-                  placeholder="+2348012345678"
-                  className={errors.whatsapp_number ? "border-red-500" : ""}
-                />
-                {errors.whatsapp_number && (
-                  <p className="text-red-500 text-sm">{errors.whatsapp_number}</p>
-                )}
-              </div>
-
-              {/* LOGO */}
-              <div className="space-y-2">
-                <Label>Store Logo</Label>
-                <ImageUpload
-                  label="Upload Logo"
-                  value={formData.logo_url}
-                  onChange={(url) =>
-                    setFormData({ ...formData, logo_url: url })
-                  }
-                  folder="shop-images"
-                />
-                {formData.logo_url && (
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500 mb-2">Current Logo:</p>
-                    <img
-                      src={formData.logo_url}
-                      alt="Store Logo"
-                      className="w-32 h-32 object-cover rounded-lg border"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* BANNER */}
-              <div className="space-y-2">
-                <Label>Store Banner</Label>
-                <ImageUpload
-                  label="Upload Banner"
-                  value={formData.banner_url}
-                  onChange={(url) =>
-                    setFormData({ ...formData, banner_url: url })
-                  }
-                  folder="shop-images"
-                />
-                {formData.banner_url && (
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500 mb-2">Current Banner:</p>
-                    <img
-                      src={formData.banner_url}
-                      alt="Store Banner"
-                      className="w-full h-48 object-cover rounded-lg border"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Payment Methods */}
-              <div className="space-y-4">
-                <Label className="text-sm sm:text-base">Payment Methods</Label>
-                <div className="flex items-center space-x-2 min-h-[44px]">
-                  <Checkbox
-                    id="enable_bank_transfer"
-                    checked={formData.enable_bank_transfer}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, enable_bank_transfer: checked as boolean })
-                    }
-                    className="h-5 w-5"
-                  />
-                  <Label htmlFor="enable_bank_transfer" className="text-sm sm:text-base cursor-pointer">Enable Bank Transfer</Label>
-                </div>
-
-                <div className="flex items-center space-x-2 min-h-[44px]">
-                  <Checkbox
-                    id="enable_paystack"
-                    checked={formData.enable_paystack}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, enable_paystack: checked as boolean })
-                    }
-                    className="h-5 w-5"
-                  />
-                  <Label htmlFor="enable_paystack" className="text-sm sm:text-base cursor-pointer">Enable Paystack</Label>
-                </div>
-
-                {errors.enable_paystack && errors.enable_bank_transfer && (
-                  <p className="text-red-500 text-xs sm:text-sm">{errors.enable_paystack}</p>
-                )}
-              </div>
-
-              {/* Bank Transfer Details */}
-              {formData.enable_bank_transfer && (
-                <div className="space-y-4 border border-border/50 p-3 sm:p-4 rounded-lg bg-muted/30">
-                  <Label className="text-base sm:text-lg font-semibold">Bank Transfer Details</Label>
+                  {/* Auto-generated Slug display */}
                   <div className="space-y-2">
-                    <Label htmlFor="bank_account_name" className="text-sm">Account Name</Label>
-                    <Input
-                      id="bank_account_name"
-                      value={formData.bank_account_name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, bank_account_name: e.target.value })
-                      }
-                      placeholder="John Doe"
-                      className="min-h-[44px]"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="bank_name" className="text-sm">Bank Name</Label>
-                    <Input
-                      id="bank_name"
-                      value={formData.bank_name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, bank_name: e.target.value })
-                      }
-                      placeholder="First Bank"
-                      className="min-h-[44px]"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="bank_account_number" className="text-sm">Account Number</Label>
-                    <Input
-                      id="bank_account_number"
-                      value={formData.bank_account_number}
-                      onChange={(e) =>
-                        setFormData({ ...formData, bank_account_number: e.target.value })
-                      }
-                      placeholder="1234567890"
-                      className="min-h-[44px]"
-                    />
-                  </div>
-                  
-                  <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <ShieldCheck className="w-5 h-5 text-primary flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium">Identity Verification</p>
-                        <p className="text-xs text-muted-foreground">Verify your bank account to enable payouts</p>
+                    <Label htmlFor="shop_slug">Store Link (Auto-generated)</Label>
+                    <div className="relative">
+                      <Input
+                        id="shop_slug"
+                        value={formData.shop_slug}
+                        readOnly
+                        className="bg-muted text-muted-foreground pr-10"
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        {checkingSlug && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                        {!checkingSlug && slugAvailable === true && <Check className="w-4 h-4 text-green-500" />}
+                        {!checkingSlug && slugAvailable === false && <X className="w-4 h-4 text-destructive" />}
                       </div>
                     </div>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => navigate('/identity-verification')}
-                      className="w-full sm:w-auto min-h-[40px]"
-                    >
-                      Verify Now
-                    </Button>
+                    {slugAvailable === false && (
+                      <p className="text-destructive text-sm">This store name is already taken. Try adding a unique word.</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Your store URL: steersolo.com/shop/{formData.shop_slug || 'your-store'}
+                    </p>
                   </div>
-                </div>
-              )}
 
-              {/* Paystack Details */}
-              {formData.enable_paystack && (
-                <div className="space-y-4 border border-border/50 p-3 sm:p-4 rounded-lg bg-muted/30">
-                  <Label className="text-base sm:text-lg font-semibold">Paystack Integration</Label>
-                  
-                  {/* Manual Input */}
+                  {/* Description */}
                   <div className="space-y-2">
-                    <Label htmlFor="paystack_public_key" className="text-sm">Paystack Public Key</Label>
-                    <Input
-                      id="paystack_public_key"
-                      value={formData.paystack_public_key}
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
                       onChange={(e) =>
-                        setFormData({ ...formData, paystack_public_key: e.target.value })
+                        setFormData({ ...formData, description: e.target.value })
                       }
-                      placeholder="pk_live_xxxxxxxx or pk_test_xxxxxxxx"
-                      className="min-h-[44px]"
+                      placeholder="Describe your store"
+                      className="min-h-[100px]"
                     />
                   </div>
 
-                  {/* Expandable Guide */}
-                  <div className="rounded-lg border border-primary/20 bg-primary/5">
-                    <button
-                      type="button"
-                      className="w-full p-3 flex items-center justify-between text-left"
-                      onClick={() => setShowPaystackGuide(!showPaystackGuide)}
-                    >
-                      <span className="text-sm font-medium flex items-center gap-2">
-                        <HelpCircle className="w-4 h-4 text-primary" />
-                        How to get your Paystack Public Key
-                      </span>
-                      <ChevronDown className={cn(
-                        "w-4 h-4 transition-transform duration-200",
-                        showPaystackGuide && "rotate-180"
-                      )} />
-                    </button>
-                    
-                    {showPaystackGuide && (
-                      <div className="px-3 pb-3 space-y-3 text-sm">
-                        <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-                          <li>Go to your <a href="https://dashboard.paystack.com/#/settings/developers" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline">Paystack Dashboard → Settings → API Keys & Webhooks</a></li>
-                          <li>Under "API Keys", find your <strong>Public Key</strong> (starts with pk_live_ or pk_test_)</li>
-                          <li>Click the copy icon next to it</li>
-                          <li>Paste it in the field above</li>
-                        </ol>
-                        <div className="flex items-start gap-2 p-2 bg-amber-500/10 rounded text-amber-700 dark:text-amber-400">
-                          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                          <p className="text-xs">Use your <strong>Test Key</strong> (pk_test_) for testing, and <strong>Live Key</strong> (pk_live_) when you're ready to accept real payments.</p>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => window.open('https://dashboard.paystack.com/#/settings/developers', '_blank')}
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Open Paystack Dashboard
-                        </Button>
+                  {/* WhatsApp */}
+                  <div className="space-y-2">
+                    <Label htmlFor="whatsapp_number">WhatsApp Number</Label>
+                    <Input
+                      id="whatsapp_number"
+                      value={formData.whatsapp_number}
+                      onChange={(e) =>
+                        setFormData({ ...formData, whatsapp_number: e.target.value })
+                      }
+                      placeholder="+2348012345678"
+                      className={errors.whatsapp_number ? "border-red-500" : ""}
+                    />
+                    {errors.whatsapp_number && (
+                      <p className="text-red-500 text-sm">{errors.whatsapp_number}</p>
+                    )}
+                  </div>
+
+                  {/* LOGO */}
+                  <div className="space-y-2">
+                    <Label>Store Logo</Label>
+                    <ImageUpload
+                      label="Upload Logo"
+                      value={formData.logo_url}
+                      onChange={(url) =>
+                        setFormData({ ...formData, logo_url: url })
+                      }
+                      folder="shop-images"
+                    />
+                    {formData.logo_url && (
+                      <div className="mt-2">
+                        <img
+                          src={formData.logo_url}
+                          alt="Store Logo"
+                          className="w-32 h-32 object-cover rounded-lg border"
+                        />
                       </div>
                     )}
                   </div>
-                </div>
-              )}
 
-              <Button type="submit" disabled={isSaving} className="w-full min-h-[48px] text-base">
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Changes"
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+                  {/* BANNER */}
+                  <div className="space-y-2">
+                    <Label>Store Banner</Label>
+                    <ImageUpload
+                      label="Upload Banner"
+                      value={formData.banner_url}
+                      onChange={(url) =>
+                        setFormData({ ...formData, banner_url: url })
+                      }
+                      folder="shop-images"
+                    />
+                    {formData.banner_url && (
+                      <div className="mt-2">
+                        <img
+                          src={formData.banner_url}
+                          alt="Store Banner"
+                          className="w-full h-48 object-cover rounded-lg border"
+                        />
+                      </div>
+                    )}
+                  </div>
 
-        {shop && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Your Store URL</CardTitle>
-              <CardDescription>
-                Share this link with your customers
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-2">
-                <Input
-                  value={`${window.location.origin}/shop/${formData.shop_slug}`}
-                  readOnly
-                  className="font-mono"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      `${window.location.origin}/shop/${formData.shop_slug}`
-                    );
-                    setIsCopied(true);
-                    setTimeout(() => setIsCopied(false), 2000);
-                    toast({
-                      title: "Copied!",
-                      description: "Store URL copied to clipboard",
-                    });
-                  }}
-                >
-                  {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  <Button type="submit" disabled={isSaving || slugAvailable === false} className="w-full min-h-[48px] text-base">
+                    {isSaving ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                    ) : (
+                      "Save Store Info"
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+            
+            {/* Store URL Card below form */}
+            {shop && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Your Store URL</CardTitle>
+                  <CardDescription>
+                    Share this link with your customers
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      value={`${window.location.origin}/shop/${formData.shop_slug}`}
+                      readOnly
+                      className="font-mono"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/shop/${formData.shop_slug}`);
+                        setIsCopied(true);
+                        setTimeout(() => setIsCopied(false), 2000);
+                        toast({ title: "Copied!", description: "Store URL copied" });
+                      }}
+                    >
+                      {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
-        {shop && isPremiumPlan && (
-          <StorefrontCustomizer 
-            shopId={shop.id}
-            logoUrl={shop.logo_url}
-            currentAccentColor={shop.accent_color}
-            currentPrimaryColor={shop.primary_color}
-            currentSecondaryColor={shop.secondary_color}
-            currentFontStyle={shop.font_style}
-            currentThemeMode={shop.theme_mode}
-          />
-        )}
+          <TabsContent value="payment-setup">
+            <Card className="border-primary/10">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-xl sm:text-2xl">Payment Setup</CardTitle>
+                <CardDescription className="text-sm">Configure how you receive payments</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+                <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+                  {/* Payment Methods */}
+                  <div className="space-y-4">
+                    <Label className="text-sm sm:text-base">Payment Methods</Label>
+                    <div className="flex items-center space-x-2 min-h-[44px]">
+                      <Checkbox
+                        id="enable_bank_transfer"
+                        checked={formData.enable_bank_transfer}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, enable_bank_transfer: checked as boolean })
+                        }
+                        className="h-5 w-5"
+                      />
+                      <Label htmlFor="enable_bank_transfer" className="text-sm sm:text-base cursor-pointer">Enable Bank Transfer</Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2 min-h-[44px]">
+                      <Checkbox
+                        id="enable_paystack"
+                        checked={formData.enable_paystack}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, enable_paystack: checked as boolean })
+                        }
+                        className="h-5 w-5"
+                      />
+                      <Label htmlFor="enable_paystack" className="text-sm sm:text-base cursor-pointer">Enable Paystack</Label>
+                    </div>
+
+                    {errors.enable_paystack && errors.enable_bank_transfer && (
+                      <p className="text-red-500 text-xs sm:text-sm">{errors.enable_paystack}</p>
+                    )}
+                  </div>
+
+                  {/* Bank Transfer Details */}
+                  {formData.enable_bank_transfer && (
+                    <div className="space-y-4 border border-border/50 p-3 sm:p-4 rounded-lg bg-muted/30">
+                      <Label className="text-base sm:text-lg font-semibold">Bank Transfer Details</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="bank_account_name" className="text-sm">Account Name</Label>
+                        <Input
+                          id="bank_account_name"
+                          value={formData.bank_account_name}
+                          onChange={(e) =>
+                            setFormData({ ...formData, bank_account_name: e.target.value })
+                          }
+                          placeholder="John Doe"
+                          className="min-h-[44px]"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="bank_name" className="text-sm">Bank Name</Label>
+                        <Input
+                          id="bank_name"
+                          value={formData.bank_name}
+                          onChange={(e) =>
+                            setFormData({ ...formData, bank_name: e.target.value })
+                          }
+                          placeholder="First Bank"
+                          className="min-h-[44px]"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="bank_account_number" className="text-sm">Account Number</Label>
+                        <Input
+                          id="bank_account_number"
+                          value={formData.bank_account_number}
+                          onChange={(e) =>
+                            setFormData({ ...formData, bank_account_number: e.target.value })
+                          }
+                          placeholder="1234567890"
+                          className="min-h-[44px]"
+                        />
+                      </div>
+                      
+                      <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <ShieldCheck className="w-5 h-5 text-primary flex-shrink-0" />
+                          <div>
+                            <p className="text-sm font-medium">Identity Verification</p>
+                            <p className="text-xs text-muted-foreground">Verify your bank account to enable payouts</p>
+                          </div>
+                        </div>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate('/identity-verification')}
+                          className="w-full sm:w-auto min-h-[40px]"
+                        >
+                          Verify Now
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Paystack Details */}
+                  {formData.enable_paystack && (
+                    <div className="space-y-4 border border-border/50 p-3 sm:p-4 rounded-lg bg-muted/30">
+                      <Label className="text-base sm:text-lg font-semibold">Paystack Integration</Label>
+                      
+                      {/* Manual Input */}
+                      <div className="space-y-2">
+                        <Label htmlFor="paystack_public_key" className="text-sm">Paystack Public Key</Label>
+                        <Input
+                          id="paystack_public_key"
+                          value={formData.paystack_public_key}
+                          onChange={(e) =>
+                            setFormData({ ...formData, paystack_public_key: e.target.value })
+                          }
+                          placeholder="pk_live_xxxxxxxx or pk_test_xxxxxxxx"
+                          className="min-h-[44px]"
+                        />
+                      </div>
+
+                      {/* Expandable Guide */}
+                      <div className="rounded-lg border border-primary/20 bg-primary/5">
+                        <button
+                          type="button"
+                          className="w-full p-3 flex items-center justify-between text-left"
+                          onClick={() => setShowPaystackGuide(!showPaystackGuide)}
+                        >
+                          <span className="text-sm font-medium flex items-center gap-2">
+                            <HelpCircle className="w-4 h-4 text-primary" />
+                            How to get your Paystack Public Key
+                          </span>
+                          <ChevronDown className={cn(
+                            "w-4 h-4 transition-transform duration-200",
+                            showPaystackGuide && "rotate-180"
+                          )} />
+                        </button>
+                        
+                        {showPaystackGuide && (
+                          <div className="px-3 pb-3 space-y-3 text-sm">
+                            <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+                              <li>Go to your <a href="https://dashboard.paystack.com/#/settings/developers" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline">Paystack Dashboard → Settings → API Keys & Webhooks</a></li>
+                              <li>Under "API Keys", find your <strong>Public Key</strong> (starts with pk_live_ or pk_test_)</li>
+                              <li>Click the copy icon next to it</li>
+                              <li>Paste it in the field above</li>
+                            </ol>
+                            <div className="flex items-start gap-2 p-2 bg-amber-500/10 rounded text-amber-700 dark:text-amber-400">
+                              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                              <p className="text-xs">Use your <strong>Test Key</strong> (pk_test_) for testing, and <strong>Live Key</strong> (pk_live_) when you're ready to accept real payments.</p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              onClick={() => window.open('https://dashboard.paystack.com/#/settings/developers', '_blank')}
+                            >
+                              <ExternalLink className="w-4 h-4 mr-2" />
+                              Open Paystack Dashboard
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <Button type="submit" disabled={isSaving} className="w-full min-h-[48px] text-base">
+                    {isSaving ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                    ) : (
+                      "Save Payment Settings"
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {shop && isPremiumPlan && (
+            <TabsContent value="appearance">
+              <StorefrontCustomizer 
+                shopId={shop.id}
+                logoUrl={shop.logo_url}
+                currentAccentColor={shop.accent_color}
+                currentPrimaryColor={shop.primary_color}
+                currentSecondaryColor={shop.secondary_color}
+                currentFontStyle={shop.font_style}
+                currentThemeMode={shop.theme_mode}
+              />
+            </TabsContent>
+          )}
+        </Tabs>
       </div>
 
       <Joyride
