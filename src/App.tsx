@@ -131,14 +131,14 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
           <BrowserRouter
         future={{
           v7_startTransition: true,
           v7_relativeSplatPath: true,
         }}
       >
+        <Toaster />
+        <Sonner />
         <RouteThemeClass />
         <VisitTracker />
         <SessionExpiryModal />

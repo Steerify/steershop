@@ -135,7 +135,7 @@ export const StorefrontCustomizer = ({
   const [layoutMode, setLayoutMode] = useState(currentThemeMode || "comfortable");
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [autoDesignEnabled, setAutoDesignEnabled] = useState(true);
+  const [autoDesignEnabled, setAutoDesignEnabled] = useState(false);
   const hasAutoDesignedRef = useRef(false);
 
   const selectedColor = useMemo(
@@ -210,11 +210,7 @@ export const StorefrontCustomizer = ({
     }
   };
 
-  useEffect(() => {
-    if (!autoDesignEnabled || !logoUrl || hasAutoDesignedRef.current) return;
-    // Default behavior: AI prepares the design automatically for shop owners.
-    void handleAutoFromLogo({ silent: true });
-  }, [autoDesignEnabled, logoUrl]);
+  // AI Autodesign logic is now strictly manual to avoid overriding user choices unexpectedly.
 
   const handleSave = async () => {
     setIsSaving(true);

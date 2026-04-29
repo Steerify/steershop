@@ -871,7 +871,7 @@ const ShopStorefront = () => {
                     {/* Price Row */}
                     <div className="flex flex-col min-[360px]:flex-row items-start min-[360px]:items-center justify-between mt-auto mb-3 gap-2">
                       <div className="flex items-baseline gap-1.5 flex-wrap">
-                        <span className="text-lg sm:text-xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent tabular-nums">
+                        <span className="text-lg sm:text-xl font-extrabold text-foreground tabular-nums">
                           ₦{product.price.toLocaleString()}
                         </span>
                         {product.compare_price && Number(product.compare_price) > product.price && (
@@ -890,8 +890,8 @@ const ShopStorefront = () => {
                         <div className={`
                           flex items-center gap-1.5 text-[10px] sm:text-xs font-bold rounded-full px-2.5 py-1 flex-shrink-0 border
                           ${product.stock_quantity > 0
-                            ? 'text-emerald-700 bg-emerald-500/10 border-emerald-500/20'
-                            : 'text-rose-600 bg-rose-500/10 border-rose-500/20'
+                            ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
+                            : 'text-rose-500 bg-rose-500/10 border-rose-500/20'
                           }
                         `}>
                           <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${product.stock_quantity > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`} />
