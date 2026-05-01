@@ -36,17 +36,17 @@
     --popover-foreground: 232 73% 9%;
 
     /* Primary = Navy */
-    --primary: 218 74% 15%;              /* #000c44 */
+    --primary: 218 74% 15%;              /* #0a1f44 deep navy */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 150 12% 95%;
+    --secondary: 215 25% 95%;
     --secondary-foreground: 218 74% 15%;
 
-    --muted: 150 10% 92%;
-    --muted-foreground: 226 8% 39%;       /* #595d6a slate */
+    --muted: 215 20% 92%;
+    --muted-foreground: 220 12% 40%;      /* slate */
 
-    /* Accent = Green */
-    --accent: 152 100% 26%;                /* #1eb45a */
+    /* Accent = Nigerian Green */
+    --accent: 152 100% 26%;               /* #008751 nigerian green */
     --accent-foreground: 0 0% 100%;
 
     /* Rating — used ONLY by star icons. NOT a brand color. */
