@@ -8,124 +8,139 @@
 
 @layer base {
   :root {
-    /* Adire-inspired brand palette — SteerSolo */
-    --background: 215 20% 98%;      /* calm cool-white, no green tint */
-    --foreground: 220 45% 12%;
-    --brand-blue: 215 65% 25%;
-    --brand-blue-deep: 215 65% 18%;
-    --brand-blue-soft: 215 58% 30%;
-    --brand-blue-strong: 215 65% 45%;
-    --accent-deep: 145 55% 30%;
-    --accent-bright: 145 60% 48%;
+    /* SteerSolo brand palette — Navy + Green
+       Approved hexes (locked):
+         #000c44 navy   #070928 ink     #1eb45a green
+         #2d9759 deep   #3d6a2d olive   #102917 forest
+         #8ddd4f bright #f8faf9 mist    #595d6a slate
+    */
+    --background: 150 20% 98%;            /* #f8faf9 mist */
+    --foreground: 232 73% 9%;             /* #070928 ink */
+
+    /* Brand navy family (kept names for compat with legacy components) */
+    --brand-blue: 230 100% 14%;           /* #000c44 navy */
+    --brand-blue-deep: 232 73% 9%;        /* #070928 ink */
+    --brand-blue-soft: 230 80% 22%;
+    --brand-blue-strong: 230 80% 32%;
+
+    /* Brand green family */
+    --accent-deep: 145 53% 38%;           /* #2d9759 */
+    --accent-muted: 99 41% 30%;           /* #3d6a2d olive */
+    --accent-forest: 145 47% 12%;         /* #102917 forest */
+    --accent-bright: 95 67% 59%;          /* #8ddd4f bright */
 
     --card: 0 0% 100%;
-    --card-foreground: 220 45% 12%;
+    --card-foreground: 232 73% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 45% 12%;
+    --popover-foreground: 232 73% 9%;
 
-    /* Navy Blue — primary brand (#0f295c) */
-    --primary: var(--brand-blue);
+    /* Primary = Navy */
+    --primary: 230 100% 14%;              /* #000c44 */
     --primary-foreground: 0 0% 100%;
 
-    /* Warm pearl — section alternates */
-    --secondary: 215 18% 94%;
-    --secondary-foreground: 215 65% 25%;
+    --secondary: 150 12% 95%;
+    --secondary-foreground: 230 100% 14%;
 
-    --muted: 215 15% 90%;
-    --muted-foreground: 220 15% 44%;
+    --muted: 150 10% 92%;
+    --muted-foreground: 226 8% 39%;       /* #595d6a slate */
 
-    /* Brand Green accent — tuned darker for contrast on buttons/badges */
-    --accent: 132 68% 31%;
+    /* Accent = Green */
+    --accent: 142 76% 41%;                /* #1eb45a */
     --accent-foreground: 0 0% 100%;
 
-    /* Gold/Amber highlight */
-    --gold: 42 90% 55%;
-    --gold-foreground: 220 45% 12%;
+    /* Rating — used ONLY by star icons. NOT a brand color. */
+    --rating: 42 90% 55%;
+    --rating-foreground: 232 73% 9%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 215 20% 86%;
-    --input: 215 20% 86%;
-    --ring: 220 72% 21%;            /* ring = primary (Adire Indigo) */
+    --border: 150 12% 88%;
+    --input: 150 12% 88%;
+    --ring: 230 100% 14%;                 /* ring = primary navy */
 
     --radius: 0.75rem;
 
-    /* Brand gradients */
-    --hero-gradient: linear-gradient(135deg, hsl(var(--primary)), hsl(220 78% 34%), hsl(var(--accent)));
-    --adire-gradient: linear-gradient(135deg, hsl(220 74% 24%), hsl(var(--primary)), hsl(var(--accent)));
-    /* gold-gradient kept for semantic star/badge use only */
-    --card-gradient: linear-gradient(180deg, hsl(0 0% 100%), hsl(215 18% 97%));
-    --pattern-overlay: linear-gradient(180deg, hsl(215 65% 25% / 0.03), transparent);
+    /* Brand gradients (navy → green only) */
+    --hero-gradient: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--brand-blue-soft)), hsl(var(--accent)));
+    --adire-gradient: linear-gradient(135deg, hsl(var(--brand-blue-deep)), hsl(var(--primary)), hsl(var(--accent)));
+    --card-gradient: linear-gradient(180deg, hsl(0 0% 100%), hsl(150 12% 96%));
+    --pattern-overlay: linear-gradient(180deg, hsl(var(--primary) / 0.03), transparent);
 
     /* Shadows */
-    --shadow-elegant: 0 10px 40px -10px hsl(220 72% 21% / 0.2);
-    --shadow-glow: 0 0 30px hsl(220 72% 21% / 0.24);
-    /* shadow-gold removed — not in brand palette */
+    --shadow-elegant: 0 10px 40px -10px hsl(var(--primary) / 0.2);
+    --shadow-glow: 0 0 30px hsl(var(--primary) / 0.24);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     /* Sidebar */
-    --sidebar-background: 215 20% 98%;
-    --sidebar-foreground: 215 65% 25%;
-    --sidebar-primary: 215 65% 25%;
+    --sidebar-background: 150 20% 98%;
+    --sidebar-foreground: 230 100% 14%;
+    --sidebar-primary: 230 100% 14%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 18% 94%;
-    --sidebar-accent-foreground: 215 65% 25%;
-    --sidebar-border: 215 20% 86%;
-    --sidebar-ring: 215 65% 25%;
+    --sidebar-accent: 150 12% 95%;
+    --sidebar-accent-foreground: 230 100% 14%;
+    --sidebar-border: 150 12% 88%;
+    --sidebar-ring: 230 100% 14%;
   }
 
   .dark {
-    --background: 220 38% 7%;       /* deep blue-black */
-    --foreground: 215 20% 94%;
+    --background: 232 73% 9%;             /* #070928 ink */
+    --foreground: 150 20% 96%;
 
-    --card: 220 33% 12%;
-    --card-foreground: 215 20% 94%;
+    --card: 230 50% 13%;
+    --card-foreground: 150 20% 96%;
 
-    --popover: 220 33% 10%;
-    --popover-foreground: 215 20% 94%;
+    --popover: 230 50% 11%;
+    --popover-foreground: 150 20% 96%;
 
-    /* Adire Indigo remains the primary brand family in dark mode */
-    --primary: 220 78% 62%;
-    --primary-foreground: 220 38% 7%;
+    /* Lift navy in dark mode for AA contrast on dark surfaces */
+    --primary: 142 76% 48%;               /* surface promoted to green */
+    --primary-foreground: 232 73% 9%;
 
-    --secondary: 220 28% 16%;
-    --secondary-foreground: 215 20% 94%;
+    --brand-blue: 230 70% 55%;
+    --brand-blue-deep: 232 73% 9%;
+    --brand-blue-soft: 230 60% 22%;
+    --brand-blue-strong: 230 70% 60%;
 
-    --muted: 220 28% 16%;
-    --muted-foreground: 215 15% 68%;
+    --secondary: 230 35% 18%;
+    --secondary-foreground: 150 20% 96%;
 
-    /* Green stays accent-only in dark mode */
-    --accent: 132 62% 45%;
-    --accent-foreground: 220 38% 7%;
+    --muted: 230 28% 18%;
+    --muted-foreground: 226 12% 70%;
 
-    --gold: 42 88% 58%;
-    --gold-foreground: 220 38% 7%;
+    --accent: 142 70% 50%;
+    --accent-foreground: 232 73% 9%;
+    --accent-deep: 145 53% 38%;
+    --accent-muted: 99 41% 30%;
+    --accent-forest: 145 47% 12%;
+    --accent-bright: 95 67% 59%;
+
+    --rating: 42 88% 58%;
+    --rating-foreground: 232 73% 9%;
 
     --destructive: 0 70% 54%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 28% 22%;
-    --input: 220 28% 22%;
-    --ring: 220 78% 62%;            /* ring = primary (Adire Indigo) */
+    --border: 230 30% 24%;
+    --input: 230 30% 24%;
+    --ring: 142 76% 48%;
 
-    /* Blue-first gradients with green accent support */
-    --hero-gradient: linear-gradient(135deg, hsl(220 78% 58%), hsl(var(--primary)), hsl(var(--accent)));
-    --adire-gradient: linear-gradient(135deg, hsl(220 72% 48%), hsl(var(--primary)), hsl(var(--accent)));
-    --card-gradient: linear-gradient(180deg, hsl(220 33% 12%), hsl(220 33% 10%));
-    --pattern-overlay: linear-gradient(180deg, hsl(215 60% 60% / 0.04), transparent);
-    --shadow-elegant: 0 10px 40px -10px hsl(220 60% 4% / 0.62);
-    --shadow-glow: 0 0 30px hsl(220 78% 62% / 0.28);
+    --hero-gradient: linear-gradient(135deg, hsl(230 70% 25%), hsl(230 50% 18%), hsl(var(--accent)));
+    --adire-gradient: linear-gradient(135deg, hsl(230 70% 18%), hsl(var(--brand-blue-deep)), hsl(var(--accent-deep)));
+    --card-gradient: linear-gradient(180deg, hsl(230 50% 13%), hsl(230 50% 11%));
+    --pattern-overlay: linear-gradient(180deg, hsl(var(--accent) / 0.04), transparent);
+    --shadow-elegant: 0 10px 40px -10px hsl(232 73% 4% / 0.62);
+    --shadow-glow: 0 0 30px hsl(var(--accent) / 0.28);
 
-    --sidebar-background: 220 33% 8%;
-    --sidebar-foreground: 215 20% 94%;
-    --sidebar-primary: 220 78% 62%;
-    --sidebar-primary-foreground: 220 38% 7%;
-    --sidebar-accent: 220 28% 16%;
-    --sidebar-accent-foreground: 215 20% 94%;
-    --sidebar-border: 220 28% 18%;
-    --sidebar-ring: 220 78% 62%;
+    --sidebar-background: 232 60% 8%;
+    --sidebar-foreground: 150 20% 96%;
+    --sidebar-primary: 142 76% 48%;
+    --sidebar-primary-foreground: 232 73% 9%;
+    --sidebar-accent: 230 35% 18%;
+    --sidebar-accent-foreground: 150 20% 96%;
+    --sidebar-border: 230 30% 22%;
+    --sidebar-ring: 142 76% 48%;
   }
 }
 
