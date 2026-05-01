@@ -809,7 +809,7 @@ iframe[src*="accounts.google.com"] {
 .card-spotify {
   border-radius: 1rem;
   border: none;
-  background: hsl(var(--card));
+  background-color: hsl(var(--card));
   box-shadow: 0 4px 14px -4px hsl(var(--foreground) / 0.06);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
 }

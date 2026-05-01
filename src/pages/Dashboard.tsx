@@ -70,7 +70,7 @@ const StatCard = ({
   <Card className={`relative overflow-hidden card-spotify border-0 shadow-md ${gradient}`}>
     <CardContent className="p-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-medium text-white/80 uppercase tracking-wider">{label}</p>
+        <p className="text-xs font-medium text-white/95 uppercase tracking-wider">{label}</p>
         <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
           <Icon className="w-4 h-4 text-white" />
         </div>
@@ -78,8 +78,8 @@ const StatCard = ({
       <p className="text-xl sm:text-2xl font-bold text-white mb-1">{value}</p>
       {trendValue && (
         <div className="flex items-center gap-1">
-          {trend === "up" ? <TrendingUp className="w-3 h-3 text-white/80" /> : trend === "down" ? <TrendingDown className="w-3 h-3 text-white/80" /> : null}
-          <span className="text-xs text-white/80">{trendValue}</span>
+          {trend === "up" ? <TrendingUp className="w-3 h-3 text-white/95" /> : trend === "down" ? <TrendingDown className="w-3 h-3 text-white/95" /> : null}
+          <span className="text-xs text-white/95">{trendValue}</span>
         </div>
       )}
     </CardContent>
@@ -356,9 +356,9 @@ const Dashboard = () => {
                 <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Subscription Expired</span>
               </div>
               <h3 className="text-white font-extrabold text-base">Your store is hidden from customers</h3>
-              <p className="text-white/70 text-xs mt-0.5">Reactivate now to start getting orders again.</p>
+              <p className="text-white/90 text-xs mt-0.5">Reactivate now to start getting orders again.</p>
             </div>
-            <Button size="sm" onClick={() => navigate('/pricing')} className="shrink-0 bg-white text-destructive hover:bg-white/90 font-bold shadow-lg">Reactivate →</Button>
+            <Button size="sm" variant="outline" onClick={() => navigate('/pricing')} className="shrink-0 bg-white text-destructive hover:bg-white/90 border-white font-bold shadow-lg">Reactivate →</Button>
           </div>
         </div>
       );
@@ -377,9 +377,9 @@ const Dashboard = () => {
                 <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Free Trial</span>
               </div>
               <h3 className="text-white font-extrabold text-base">{daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining</h3>
-              <p className="text-white/70 text-xs mt-0.5">Upgrade now to keep your store live and accept orders.</p>
+              <p className="text-white/90 text-xs mt-0.5">Upgrade now to keep your store live and accept orders.</p>
             </div>
-            <Button size="sm" onClick={() => navigate('/pricing')} className="shrink-0 bg-white text-primary hover:bg-white/90 font-bold shadow-lg">Upgrade Now</Button>
+            <Button size="sm" variant="outline" onClick={() => navigate('/pricing')} className="shrink-0 bg-white text-primary hover:bg-white/90 border-white font-bold shadow-lg">Upgrade Now</Button>
           </div>
         </div>
       );
@@ -397,9 +397,9 @@ const Dashboard = () => {
                 <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Next Step</span>
               </div>
               <h3 className="text-white font-extrabold text-base">Add your first product 🛍️</h3>
-              <p className="text-white/70 text-xs mt-0.5">Your store is live — add products so customers can buy.</p>
+              <p className="text-white/90 text-xs mt-0.5">Your store is live — add products so customers can buy.</p>
             </div>
-            <Button size="sm" onClick={() => navigate('/products')} className="shrink-0 bg-white text-primary hover:bg-white/90 font-bold shadow-lg">Add Product →</Button>
+            <Button size="sm" variant="outline" onClick={() => navigate('/products')} className="shrink-0 bg-white text-primary hover:bg-white/90 border-white font-bold shadow-lg">Add Product →</Button>
           </div>
         </div>
       );
@@ -444,12 +444,12 @@ const Dashboard = () => {
               <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Community</span>
             </div>
             <h3 className="text-white font-extrabold text-base leading-tight">Join 5,000+ vendors on WhatsApp</h3>
-            <p className="text-white/70 text-xs mt-0.5">Tips, support, buyer traffic & giveaways — free!</p>
+            <p className="text-white/90 text-xs mt-0.5">Tips, support, buyer traffic & giveaways — free!</p>
           </div>
           <Button
             size="sm"
-            className="shrink-0 font-bold shadow-lg gap-1.5 hover:opacity-90"
-            style={{ backgroundColor: 'white', color: '#075E54' }}
+            variant="outline"
+            className="shrink-0 font-bold shadow-lg gap-1.5 hover:opacity-90 bg-white text-[#075E54] border-white"
             onClick={() => window.open('https://chat.whatsapp.com/LX2AQqaSYD5FzEuCmhwWmz', '_blank')}>
             <MessageCircle className="w-3.5 h-3.5" />Join Now
           </Button>
@@ -473,12 +473,12 @@ const Dashboard = () => {
               <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Community</span>
             </div>
             <h3 className="text-white font-extrabold text-base leading-tight">Join 5,000+ vendors on WhatsApp</h3>
-            <p className="text-white/70 text-xs mt-0.5">Tips, support, buyer traffic &amp; giveaways — free!</p>
+            <p className="text-white/90 text-xs mt-0.5">Tips, support, buyer traffic &amp; giveaways — free!</p>
           </div>
           <Button
             size="sm"
-            className="shrink-0 font-bold shadow-lg gap-1.5 hover:opacity-90"
-            style={{ backgroundColor: 'white', color: '#075E54' }}
+            variant="outline"
+            className="shrink-0 font-bold shadow-lg gap-1.5 hover:opacity-90 bg-white text-[#075E54] border-white"
             onClick={() => window.open('https://chat.whatsapp.com/LX2AQqaSYD5FzEuCmhwWmz', '_blank')}
           >
             <MessageCircle className="w-3.5 h-3.5" />
@@ -502,7 +502,7 @@ const Dashboard = () => {
                 <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Free Trial</span>
               </div>
               <h3 className="text-white font-extrabold text-base sm:text-lg leading-tight">{daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining</h3>
-              <p className="text-white/70 text-xs mt-0.5">Upgrade now to keep your store live 🚀</p>
+              <p className="text-white/90 text-xs mt-0.5">Upgrade now to keep your store live 🚀</p>
             </div>
             <Button
               size="sm"
@@ -525,7 +525,7 @@ const Dashboard = () => {
                 <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Subscription Expired</span>
               </div>
               <h3 className="text-white font-extrabold text-base">Your store is hidden</h3>
-              <p className="text-white/70 text-xs mt-0.5">Customers can't see your products right now.</p>
+              <p className="text-white/90 text-xs mt-0.5">Customers can't see your products right now.</p>
             </div>
             <Button
               size="sm"
@@ -549,7 +549,7 @@ const Dashboard = () => {
                 <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Store Active</span>
               </div>
               <h3 className="text-white font-extrabold text-base">You're live &amp; selling! 🎉</h3>
-              <p className="text-white/70 text-xs mt-0.5">Customers can find and buy from your store.</p>
+              <p className="text-white/90 text-xs mt-0.5">Customers can find and buy from your store.</p>
             </div>
             <Badge className="shrink-0 bg-white/20 text-white border-0 font-bold">Live ✓</Badge>
           </div>
@@ -569,7 +569,7 @@ const Dashboard = () => {
                 <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Get Verified</span>
               </div>
               <h3 className="text-white font-extrabold text-base">Unlock payouts 🛡️</h3>
-              <p className="text-white/70 text-xs mt-0.5">Verify your identity to withdraw your earnings.</p>
+              <p className="text-white/90 text-xs mt-0.5">Verify your identity to withdraw your earnings.</p>
             </div>
             <div className="flex gap-1 shrink-0">
               <Button size="sm" onClick={() => navigate('/identity-verification')} className="bg-white text-amber-600 hover:bg-white/90 font-bold shadow-lg">Verify Now</Button>
@@ -598,7 +598,7 @@ const Dashboard = () => {
                   <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Approval Required</span>
                 </div>
                 <h3 className="text-white font-extrabold text-base leading-tight">Your store is awaiting review</h3>
-                <p className="text-white/70 text-xs mt-0.5">Admin needs to approve your store before it appears in the marketplace.</p>
+                <p className="text-white/90 text-xs mt-0.5">Admin needs to approve your store before it appears in the marketplace.</p>
               </div>
               <Button size="sm" variant="outline" className="shrink-0 border-white/40 text-white hover:bg-white/20 font-bold shadow-lg" onClick={() => window.open('https://wa.me/2348162232975', '_blank')}>Contact Admin</Button>
             </div>
@@ -618,9 +618,9 @@ const Dashboard = () => {
                   <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Marketplace: Hidden</span>
                 </div>
                 <h3 className="text-white font-extrabold text-base leading-tight">Complete your payment setup</h3>
-                <p className="text-white/70 text-xs mt-0.5">Your store is hidden from the marketplace until you set up your bank details or Paystack.</p>
+                <p className="text-white/90 text-xs mt-0.5">Your store is hidden from the marketplace until you set up your bank details or Paystack.</p>
               </div>
-              <Button size="sm" onClick={() => navigate('/my-store?tab=settings')} className="shrink-0 bg-white text-rose-600 hover:bg-white/90 font-bold shadow-lg">Set Up Now →</Button>
+              <Button size="sm" variant="outline" onClick={() => navigate('/my-store?tab=settings')} className="shrink-0 bg-white text-rose-600 hover:bg-white/90 border-white font-bold shadow-lg">Set Up Now →</Button>
             </div>
           </div>
         );
@@ -639,9 +639,9 @@ const Dashboard = () => {
                 <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Marketplace: Hidden</span>
               </div>
               <h3 className="text-white font-extrabold text-base leading-tight">Add product images</h3>
-              <p className="text-white/70 text-xs mt-0.5">Your store is hidden from the marketplace until you add images to your products.</p>
+              <p className="text-white/90 text-xs mt-0.5">Your store is hidden from the marketplace until you add images to your products.</p>
             </div>
-            <Button size="sm" onClick={() => navigate('/products')} className="shrink-0 bg-white text-indigo-600 hover:bg-white/90 font-bold shadow-lg">Add Images →</Button>
+            <Button size="sm" variant="outline" onClick={() => navigate('/products')} className="shrink-0 bg-white text-indigo-600 hover:bg-white/90 border-white font-bold shadow-lg">Add Images →</Button>
           </div>
         </div>
       );
@@ -659,7 +659,7 @@ const Dashboard = () => {
               <span className="text-xs font-bold text-white/80 uppercase tracking-wider">First Sale Tips</span>
             </div>
             <h3 className="text-white font-extrabold text-base mb-1">Your first sale is 48h away 🚀</h3>
-            <p className="text-white/70 text-xs mb-3">Share your store link on WhatsApp to get started.</p>
+            <p className="text-white/90 text-xs mb-3">Share your store link on WhatsApp to get started.</p>
             <div className="flex gap-2">
               <Button size="sm" variant="outline" className="border-white/40 text-white hover:bg-white/20 gap-1.5 text-xs h-8 font-semibold" onClick={() => {
                 const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
@@ -688,7 +688,7 @@ const Dashboard = () => {
               <span className="text-xs font-bold text-white/80 uppercase tracking-wider">30-Day Challenge</span>
             </div>
             <h3 className="text-white font-extrabold text-base leading-tight">Become a Structured Seller 🏆</h3>
-            <p className="text-white/70 text-xs mt-0.5">Daily tasks to transform your selling habits.</p>
+            <p className="text-white/90 text-xs mt-0.5">Daily tasks to transform your selling habits.</p>
           </div>
           <Button
             size="sm"
@@ -1033,8 +1033,8 @@ const Dashboard = () => {
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                          <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₦${v}`} width={55} />
+                          <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₦${v}`} width={55} />
                           <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} formatter={(value) => [`₦${Number(value).toLocaleString()}`, 'Revenue']} />
                           <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#revenueGrad)" dot={{ r: 3, fill: 'hsl(var(--primary))' }} activeDot={{ r: 5 }} />
                         </AreaChart>
