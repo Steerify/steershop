@@ -56,6 +56,7 @@ import { ShopStatusBadge, ShopStatus, getShopStatusFromProfile } from "@/compone
 import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { StorefrontCustomizer } from "@/components/StorefrontCustomizer";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ShopAvatar } from "@/components/ShopAvatar";
 
 const shopSchema = z
   .object({
@@ -506,15 +507,14 @@ const MyStore = () => {
                       }
                       folder="shop-images"
                     />
-                    {formData.logo_url && (
-                      <div className="mt-2">
-                        <img
-                          src={formData.logo_url}
-                          alt="Store Logo"
-                          className="w-32 h-32 object-cover rounded-lg border"
-                        />
-                      </div>
-                    )}
+                    <div className="mt-2">
+                      <ShopAvatar
+                        name={formData.shop_name || "Your Store"}
+                        logoUrl={formData.logo_url}
+                        className="w-32 h-32 rounded-lg border"
+                        initialsClassName="text-4xl"
+                      />
+                    </div>
                   </div>
 
                   {/* BANNER */}

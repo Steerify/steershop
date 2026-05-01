@@ -18,10 +18,10 @@
     --foreground: 222 67% 8%;             /* ink */
 
     /* Brand navy family — DEEP navy */
-    --brand-blue: 218 74% 15%;            /* #0a1f44 deep navy */
-    --brand-blue-deep: 222 67% 8%;        /* #050d24 ink */
-    --brand-blue-soft: 213 69% 33%;       /* #1a4d8c */
-    --brand-blue-strong: 218 74% 22%;
+    --brand-blue: 220 52% 14%;            /* Brand anchor */
+    --brand-blue-deep: 220 52% 8%;        /* Deepest navy */
+    --brand-blue-soft: 220 45% 25%;       /* Soft navy */
+    --brand-blue-strong: 220 52% 18%;
 
     /* Brand green family — Nigerian flag green */
     --accent-deep: 152 100% 21%;          /* #006b41 */
@@ -35,8 +35,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 232 73% 9%;
 
-    /* Primary = Navy */
-    --primary: 218 74% 15%;              /* #0a1f44 deep navy */
+    /* Primary = Deep Navy */
+    --primary: 220 52% 14%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 215 25% 95%;
@@ -85,7 +85,7 @@
   }
 
   .dark {
-    --background: 232 73% 9%;             /* #070928 ink */
+    --background: 220 50% 8%;              /* Premium Deep Navy */
     --foreground: 150 20% 96%;
 
     --card: 230 50% 13%;
@@ -98,10 +98,10 @@
     --primary: 152 100% 33%;               /* surface promoted to green */
     --primary-foreground: 232 73% 9%;
 
-    --brand-blue: 230 70% 55%;
-    --brand-blue-deep: 232 73% 9%;
-    --brand-blue-soft: 230 60% 22%;
-    --brand-blue-strong: 230 70% 60%;
+    --brand-blue: 220 60% 50%;
+    --brand-blue-deep: 220 52% 8%;
+    --brand-blue-soft: 220 40% 20%;
+    --brand-blue-strong: 220 60% 55%;
 
     --secondary: 230 35% 18%;
     --secondary-foreground: 150 20% 96%;
@@ -126,7 +126,7 @@
     --input: 230 30% 24%;
     --ring: 152 100% 33%;
 
-    --hero-gradient: linear-gradient(135deg, hsl(230 70% 25%), hsl(230 50% 18%), hsl(var(--accent)));
+    --hero-gradient: linear-gradient(135deg, hsl(220 52% 15%), hsl(220 50% 10%), hsl(var(--accent)));
     --adire-gradient: linear-gradient(135deg, hsl(230 70% 18%), hsl(var(--brand-blue-deep)), hsl(var(--accent-deep)));
     --card-gradient: linear-gradient(180deg, hsl(230 50% 13%), hsl(230 50% 11%));
     --pattern-overlay: linear-gradient(180deg, hsl(var(--accent) / 0.04), transparent);
@@ -163,7 +163,7 @@
 
   .dark body.homepage-theme {
     /* Homepage prefers a deep-blue canvas over light blue surfaces */
-    --background: 220 42% 10%;
+    --background: 220 45% 7%;
     --foreground: 215 24% 94%;
     --secondary: 220 32% 16%;
     --secondary-foreground: 215 24% 94%;

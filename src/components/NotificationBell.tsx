@@ -77,7 +77,7 @@ export const NotificationBell = ({ audience }: { audience: "entrepreneurs" | "cu
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
+      <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80 p-0" align="end">
         <div className="p-3 border-b border-border">
           <h3 className="font-semibold text-sm">Platform Updates</h3>
         </div>

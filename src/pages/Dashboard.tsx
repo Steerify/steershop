@@ -53,6 +53,7 @@ import { StructuredSellingChallenge } from "@/components/StructuredSellingChalle
 import { SubscriptionExpiryDialog } from "@/components/SubscriptionExpiryDialog";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ShopAvatar } from "@/components/ShopAvatar";
 // VerificationProgressCard removed in favor of ProfileCompletionChecklist
 
 // ─── Stat Card Component ───────────────────────────────────────────────────────
@@ -952,17 +953,22 @@ const Dashboard = () => {
           <div className="absolute top-1/2 right-12 w-16 h-16 rounded-full bg-white/8 -translate-y-1/2" />
 
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <p className="text-white/70 text-sm font-medium mb-0.5">{greeting},</p>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">{firstName}! 👋</h1>
-              <p className="text-white/80 text-sm">
-                {shopData ? `Managing ${shopData.name}` : "Here's what's happening today"}
-              </p>
-              {userBadges.length > 0 && (
-                <div className="mt-2 hidden sm:block">
-                  <BadgeDisplay badges={userBadges} size="sm" />
-                </div>
+            <div className="flex items-center gap-4">
+              {shopData && (
+                <ShopAvatar
+                  name={shopData.name}
+                  logoUrl={shopFullData?.logo_url}
+                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl shadow-lg ring-2 ring-white/20"
+                  initialsClassName="text-xl sm:text-2xl"
+                />
               )}
+              <div>
+                <p className="text-white/70 text-sm font-medium mb-0.5">{greeting},</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">{firstName}! 👋</h1>
+                <p className="text-white/80 text-sm">
+                  {shopData ? `Managing ${shopData.name}` : "Here's what's happening today"}
+                </p>
+              </div>
             </div>
             <div className="flex flex-col gap-2 sm:items-end">
               <ShopStatusBadge status={subscriptionStatus} daysRemaining={daysRemaining} />

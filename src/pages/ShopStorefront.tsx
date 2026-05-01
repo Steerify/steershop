@@ -29,6 +29,7 @@ import { TourButton } from "@/components/tours/TourButton";
 import { KnowThisShop } from "@/components/ai/KnowThisShop";
 import { TrustBadges } from "@/components/TrustBadges";
 import { ShareStorefront } from "@/components/ShareStorefront";
+import { ShopAvatar } from "@/components/ShopAvatar";
 
 interface Shop {
   id: string;
@@ -489,18 +490,13 @@ const ShopStorefront = () => {
                   {/* Logo */}
                   <div className="flex-shrink-0">
                     <div className="relative w-20 h-20 md:w-24 md:h-24">
-                      <div className="w-full h-full rounded-2xl md:rounded-3xl overflow-hidden ring-4 ring-background shadow-xl bg-muted flex items-center justify-center">
-                        {shop.logo_url ? (
-                          <img
-                            src={shop.logo_url}
-                            alt={shop.shop_name}
-                            className="w-full h-full object-cover select-none"
-                            draggable={false}
-                            onContextMenu={(e) => e.preventDefault()}
-                          />
-                        ) : (
-                          <Store className="w-10 h-10 text-muted-foreground" />
-                        )}
+                      <div className="w-full h-full ring-4 ring-background shadow-xl">
+                        <ShopAvatar 
+                          name={shop.shop_name} 
+                          logoUrl={shop.logo_url} 
+                          className="w-full h-full rounded-2xl md:rounded-3xl"
+                          initialsClassName="text-2xl md:text-3xl"
+                        />
                       </div>
                       {shop.is_verified && (
                         <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-green-500 border-2 border-background flex items-center justify-center shadow-md">

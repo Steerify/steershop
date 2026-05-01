@@ -9,6 +9,7 @@ import { AdireAccent } from "./patterns/AdirePattern";
 import logoLight from "@/assets/steersolo-logo.jpg";
 import logoDark from "@/assets/steersolo-logo-dark.jpg";
 import { useTheme } from "next-themes";
+import { ShopAvatar } from "./ShopAvatar";
 
 // --- Types ---
 interface Celebration {
@@ -167,13 +168,22 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                 onContextMenu={(e) => e.preventDefault()}
                 aria-label="Brand logo"
               >
-                <img
-                  src={shopBranding?.logoUrl || logo}
-                  alt={shopBranding?.name || "SteerSolo"}
-                  className="w-full h-full object-cover"
-                  draggable={false}
-                  onContextMenu={(e) => e.preventDefault()}
-                />
+                {shopBranding ? (
+                  <ShopAvatar
+                    name={shopBranding.name}
+                    logoUrl={shopBranding.logoUrl}
+                    className="w-full h-full"
+                    initialsClassName="text-xl"
+                  />
+                ) : (
+                  <img
+                    src={logo}
+                    alt="SteerSolo"
+                    className="w-full h-full object-cover"
+                    draggable={false}
+                    onContextMenu={(e) => e.preventDefault()}
+                  />
+                )}
                 
                 {/* Visual Effects (Non-animated) */}
                 {!shopBranding && isNewYear && <FireworkFlare />}

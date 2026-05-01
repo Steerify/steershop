@@ -5,9 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle, Sparkles, Check, Copy, Megaphone, TrendingUp, Video, AlertTriangle } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { VideoUpload } from "@/components/VideoUpload";
 import { z } from "zod";
@@ -128,6 +128,8 @@ const Products = () => {
   const [priceSuggestion, setPriceSuggestion] = useState<{ min: number; max: number } | null>(null);
   const [showDfyPopup, setShowDfyPopup] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [showFirstProductSuccess, setShowFirstProductSuccess] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('products');
@@ -397,12 +399,14 @@ const Products = () => {
         stockUnit: formData.type === "service" ? "slots" : normalizedStockUnit,
       };
 
-      let response;
       if (editingProduct) {
         const formattedProductId = formatUUIDWithHyphens(editingProduct.id);
         response = await productService.updateProduct(formattedProductId, productData);
       } else {
         response = await productService.createProduct(productData);
+        if (products.length === 0) {
+          setShowFirstProductSuccess(true);
+        }
       }
 
       toast({
@@ -482,6 +486,91 @@ const Products = () => {
         currentCount={productLimitInfo?.current_count}
         maxAllowed={productLimitInfo?.max_allowed}
       />
+
+      {/* First Product Success Dialog */}
+      <Dialog open={showFirstProductSuccess} onOpenChange={setShowFirstProductSuccess}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-heading">🎉 Your first item is live!</DialogTitle>
+            <DialogDescription>
+              Great job! You've successfully added your first {formData.type === 'service' ? 'service' : 'product'}. Your store is now ready to receive orders.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 my-2">
+            <div className="p-3 bg-muted/50 rounded-lg space-y-2">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">Your Store Link</Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  value={`${window.location.origin}/shop/${shop?.slug || shop?.shop_slug || ''}`}
+                  readOnly
+                  className="font-mono text-sm bg-background"
+                />
+                <Button
+                  variant="default"
+                  className="bg-primary hover:bg-primary/90 flex-shrink-0"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/shop/${shop?.slug || shop?.shop_slug || ''}`);
+                    setIsCopied(true);
+                    toast({ title: "Link Copied!", description: "Share this link on WhatsApp or Instagram." });
+                    setTimeout(() => setIsCopied(false), 2000);
+                  }}
+                >
+                  {isCopied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+                  {isCopied ? "Copied" : "Copy"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Payment Method Warning */}
+            {shop && (!shop.payment_method || shop.payment_method === "none") && (
+              <div className="flex gap-2 p-3 bg-destructive/10 text-destructive rounded-lg border border-destructive/20 items-start">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-semibold">Missing Payment Method</p>
+                  <p className="opacity-90">Please add your bank details or Paystack in My Store to receive money.</p>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Next Steps to Grow</Label>
+              <div className="grid gap-2">
+                <Button variant="outline" className="justify-start h-auto py-3 text-left w-full" onClick={() => { setShowFirstProductSuccess(false); navigate("/marketing"); }}>
+                  <Megaphone className="w-5 h-5 mr-3 text-primary" />
+                  <div>
+                    <div className="font-medium">1. Share & Market</div>
+                    <div className="text-xs text-muted-foreground font-normal">Use our marketing tools to create flyers and get customers.</div>
+                  </div>
+                </Button>
+                <Button variant="outline" className="justify-start h-auto py-3 text-left w-full" onClick={() => { setShowFirstProductSuccess(false); navigate("/orders"); }}>
+                  <TrendingUp className="w-5 h-5 mr-3 text-accent" />
+                  <div>
+                    <div className="font-medium">2. Track Orders</div>
+                    <div className="text-xs text-muted-foreground font-normal">When customers buy, their orders will appear here.</div>
+                  </div>
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-3 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg border border-primary/20 flex gap-3 items-center">
+              <div className="bg-primary/20 p-2 rounded-full">
+                <Video className="w-5 h-5 text-primary" />
+              </div>
+              <div className="text-sm">
+                <p className="font-semibold">Tutorial Platform Coming Soon!</p>
+                <p className="text-muted-foreground text-xs leading-tight">We're launching a space where creators can upload tutorial videos. Stay tuned!</p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-2">
+            <Button className="w-full" onClick={() => setShowFirstProductSuccess(false)}>
+              Continue to Dashboard
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <PageWrapper patternVariant="dots" patternOpacity={0.5}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
