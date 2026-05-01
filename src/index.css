@@ -8,26 +8,26 @@
 
 @layer base {
   :root {
-    /* SteerSolo brand palette — Navy + Green
+    /* SteerSolo brand palette — Deep Navy + Nigerian Green
        Approved hexes (locked):
-         #000c44 navy   #070928 ink     #1eb45a green
-         #2d9759 deep   #3d6a2d olive   #102917 forest
-         #8ddd4f bright #f8faf9 mist    #595d6a slate
+         #0a1f44 deep navy   #050d24 ink     #008751 nigerian green
+         #006b41 deep green  #1a4d8c navy soft  #00a862 green bright
+         #f7f9fc mist        #5a6275 slate
     */
-    --background: 150 20% 98%;            /* #f8faf9 mist */
-    --foreground: 232 73% 9%;             /* #070928 ink */
+    --background: 215 33% 98%;            /* mist */
+    --foreground: 222 67% 8%;             /* ink */
 
-    /* Brand navy family (kept names for compat with legacy components) */
-    --brand-blue: 230 100% 14%;           /* #000c44 navy */
-    --brand-blue-deep: 232 73% 9%;        /* #070928 ink */
-    --brand-blue-soft: 230 80% 22%;
-    --brand-blue-strong: 230 80% 32%;
+    /* Brand navy family — DEEP navy */
+    --brand-blue: 218 74% 15%;            /* #0a1f44 deep navy */
+    --brand-blue-deep: 222 67% 8%;        /* #050d24 ink */
+    --brand-blue-soft: 213 69% 33%;       /* #1a4d8c */
+    --brand-blue-strong: 218 74% 22%;
 
-    /* Brand green family */
-    --accent-deep: 145 53% 38%;           /* #2d9759 */
-    --accent-muted: 99 41% 30%;           /* #3d6a2d olive */
-    --accent-forest: 145 47% 12%;         /* #102917 forest */
-    --accent-bright: 95 67% 59%;          /* #8ddd4f bright */
+    /* Brand green family — Nigerian flag green */
+    --accent-deep: 152 100% 21%;          /* #006b41 */
+    --accent-muted: 152 70% 18%;
+    --accent-forest: 152 80% 10%;
+    --accent-bright: 152 100% 33%;        /* #00a862 */
 
     --card: 0 0% 100%;
     --card-foreground: 232 73% 9%;
