@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { UserRole } from "@/types/api";
 import { 
   User, Menu, X, Gift, Moon, Sun, Star, 
   Heart, Flag, Ghost, Egg, Sparkles, Store, MessageSquare, CalendarDays, Tag
@@ -93,7 +95,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
   const [daysRemaining, setDaysRemaining] = useState(0);
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
-  const { user, profile, signOut } = useAuth();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -254,12 +256,12 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-primary/10 transition-colors">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-bold ring-2 ring-primary/20">
-                        {(profile?.full_name || user.email || 'U')[0].toUpperCase()}
+                        {(user?.firstName || user?.email || 'U')[0].toUpperCase()}
                       </div>
                       <div className="hidden lg:block text-left">
-                        <p className="text-xs font-bold leading-none">{profile?.full_name?.split(' ')[0] || 'User'}</p>
+                        <p className="text-xs font-bold leading-none">{user?.firstName || 'User'}</p>
                         <Badge variant="outline" className="text-[9px] h-3.5 px-1 bg-primary/5 text-primary border-primary/20 mt-0.5">
-                          {profile?.role === 'shop_owner' ? 'Vendor Mode' : 'Shopper Mode'}
+                          {user?.role === UserRole.ENTREPRENEUR ? 'Vendor Mode' : 'Shopper Mode'}
                         </Badge>
                       </div>
                     </button>
@@ -271,12 +273,12 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to={profile?.role === 'shop_owner' ? "/dashboard" : "/shopper"} className="flex items-center gap-2 cursor-pointer rounded-lg">
+                      <Link to={user?.role === UserRole.ENTREPRENEUR ? "/dashboard" : "/shopper"} className="flex items-center gap-2 cursor-pointer rounded-lg">
                         <User className="w-4 h-4" />
-                        {profile?.role === 'shop_owner' ? "Vendor Dashboard" : "My Orders"}
+                        {user?.role === UserRole.ENTREPRENEUR ? "Vendor Dashboard" : "My Orders"}
                       </Link>
                     </DropdownMenuItem>
-                    {profile?.role === 'shop_owner' && (
+                    {user?.role === UserRole.ENTREPRENEUR && (
                       <DropdownMenuItem asChild>
                         <Link to="/my-store" className="flex items-center gap-2 cursor-pointer rounded-lg">
                           <Store className="w-4 h-4" />
