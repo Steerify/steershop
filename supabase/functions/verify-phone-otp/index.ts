@@ -9,7 +9,6 @@ const corsHeaders = {
 
 interface VerifyOTPRequest {
   otp: string;
-  userId: string;
 }
 
 // Hash OTP for comparison (must match send-phone-otp function)
@@ -22,29 +21,45 @@ const hashOTP = async (otp: string): Promise<string> => {
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("=== Verify phone OTP function called ===");
-  console.log("Request method:", req.method);
-  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Parse request body
+    // SECURITY: derive userId from JWT, never accept it from the request body.
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: authData, error: authError } = await supabaseAuth.auth.getUser(
+      authHeader.replace("Bearer ", "")
+    );
+    if (authError || !authData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    const userId = authData.user.id;
+
     let requestBody;
     try {
       requestBody = await req.json();
-      console.log("Request body received:", { otp: "***", userId: requestBody.userId?.slice(0, 8) + "..." });
     } catch (parseError) {
-      console.error("Failed to parse request body:", parseError);
-      throw new Error("Invalid request body. Please provide OTP and userId.");
+      throw new Error("Invalid request body. Please provide OTP.");
     }
 
-    const { otp, userId }: VerifyOTPRequest = requestBody;
-    
-    if (!otp || !userId) {
-      console.error("Missing required fields:", { hasOtp: !!otp, hasUserId: !!userId });
-      throw new Error("OTP and user ID are required");
+    const { otp }: VerifyOTPRequest = requestBody;
+
+    if (!otp) {
+      throw new Error("OTP is required");
     }
 
     // Validate OTP format (6 digits)

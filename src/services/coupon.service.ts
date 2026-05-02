@@ -100,7 +100,8 @@ export const couponService = {
 
     if (error) throw error;
     if (!data) return { valid: false, error: 'Invalid coupon code', discount: 0 };
-    const result = calculateCouponDiscount(data, orderTotal);
+    const normalized = { ...data, discount_type: data.discount_type as 'fixed' | 'percentage' };
+    const result = calculateCouponDiscount(normalized, orderTotal);
     return { ...result, coupon: result.valid ? data : undefined };
   },
 

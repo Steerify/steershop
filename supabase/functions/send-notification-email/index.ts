@@ -175,26 +175,34 @@ serve(async (req) => {
 
     const template = getEmailTemplate(type, { ...data, name: data.name || userName });
 
-    // Send email via Resend
-    const emailResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    // Route through the durable email queue so we get retries, rate-limit
+    // backoff, and DLQ handling instead of fire-and-forget Resend calls.
+    const message_id = crypto.randomUUID();
+    const { error: queueErr } = await (supabase as any).rpc('enqueue_email', {
+      queue_name: 'transactional_emails',
+      payload: {
+        message_id,
+        label: `notification:${type}`,
+        to: email,
         from: fromEmail,
-        to: [email],
         subject: template.subject,
         html: template.html,
-      }),
+        queued_at: new Date().toISOString(),
+      },
     });
-
-    const emailResult = await emailResponse.json();
-
-    if (!emailResponse.ok) {
-      console.error('Email send error:', emailResult);
-      throw new Error(emailResult.message || 'Failed to send email');
+    if (queueErr) {
+      console.error('Failed to enqueue notification email:', queueErr);
+      throw new Error(queueErr.message || 'Failed to enqueue email');
+    }
+    try {
+      await (supabase as any).from('email_send_log').insert({
+        message_id,
+        template_name: `notification:${type}`,
+        recipient_email: email,
+        status: 'pending',
+      });
+    } catch (e) {
+      console.warn('email_send_log pending insert failed (non-fatal):', e);
     }
 
     // Log notification sent
@@ -208,7 +216,7 @@ serve(async (req) => {
         });
     }
 
-    console.log('Notification sent successfully:', { type, email });
+    console.log('Notification queued successfully:', { type, email, message_id });
 
     return new Response(
       JSON.stringify({ success: true }),

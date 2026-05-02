@@ -401,9 +401,9 @@ const Products = () => {
 
       if (editingProduct) {
         const formattedProductId = formatUUIDWithHyphens(editingProduct.id);
-        response = await productService.updateProduct(formattedProductId, productData);
+        await productService.updateProduct(formattedProductId, productData);
       } else {
-        response = await productService.createProduct(productData);
+        await productService.createProduct(productData);
         if (products.length === 0) {
           setShowFirstProductSuccess(true);
         }

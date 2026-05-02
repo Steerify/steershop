@@ -84,7 +84,15 @@ const adminService = {
       console.error('Error fetching visit analytics:', visitAnalyticsResponse.error);
     }
 
-    const stats = statsData || {
+    const stats = (statsData as {
+      total_users?: number;
+      total_shops?: number;
+      active_shops?: number;
+      total_products?: number;
+      total_orders?: number;
+      pending_orders?: number;
+      total_revenue?: number;
+    } | null) || {
       total_users: 0,
       total_shops: 0,
       active_shops: 0,

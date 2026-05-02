@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,20 +7,53 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Length caps to prevent prompt-injection abuse and cost runaway.
+const MAX = { shopName: 200, shopDescription: 500, productName: 200, productDescription: 500, audience: 500, budget: 100, platform: 30 };
+
+function clip(s: unknown, max: number): string {
+  if (typeof s !== "string") return "";
+  return s.slice(0, max);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const {
-      shopName,
-      shopDescription,
-      productName,
-      productDescription,
-      productPrice,
-      platform,
-      targetAudience,
-      budgetRange,
-    } = await req.json();
+    // SECURITY: require authenticated caller before burning AI credits.
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: authData, error: authError } = await supabase.auth.getUser(
+      authHeader.replace("Bearer ", "")
+    );
+    if (authError || !authData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const raw = await req.json();
+    const shopName = clip(raw.shopName, MAX.shopName);
+    const shopDescription = clip(raw.shopDescription, MAX.shopDescription);
+    const productName = clip(raw.productName, MAX.productName);
+    const productDescription = clip(raw.productDescription, MAX.productDescription);
+    const productPrice = raw.productPrice;
+    const platform = clip(raw.platform, MAX.platform) || "facebook";
+    const targetAudience = clip(raw.targetAudience, MAX.audience);
+    const budgetRange = clip(raw.budgetRange, MAX.budget);
+
+    if (!shopName) {
+      return new Response(JSON.stringify({ error: "shopName is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");

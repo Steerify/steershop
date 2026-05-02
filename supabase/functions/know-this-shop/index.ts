@@ -23,11 +23,30 @@ serve(async (req) => {
       );
     }
 
+    // SECURITY: require an authenticated caller before invoking the AI gateway
+    // (prevents anonymous credit drain). Public shop data must be fetched via
+    // a separate unauthenticated path/page.
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const authClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data: authData, error: authErr } = await authClient.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+    if (authErr || !authData?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { shop_id } = await req.json();
 
-    if (!shop_id) {
+    if (!shop_id || typeof shop_id !== 'string' || shop_id.length > 64) {
       return new Response(
-        JSON.stringify({ error: 'Shop ID required' }),
+        JSON.stringify({ error: 'Valid shop_id required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

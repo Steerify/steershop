@@ -76,21 +76,38 @@ serve(async (req) => {
     const paymentReference = getPaymentReference(event);
     logInfo('Received webhook event', { event: event.event, paymentReference });
 
+    // SECURITY: idempotency — reject duplicate webhook deliveries so we never
+    // double-credit subscriptions, commissions, or revenue.
+    if (paymentReference) {
+      const { error: dupErr } = await supabase
+        .from('paystack_webhook_events')
+        .insert({ reference: paymentReference, event_type: event.event });
+      if (dupErr) {
+        // Unique-violation = already processed; ack with 200 so Paystack stops retrying.
+        logInfo('Duplicate webhook ignored', { paymentReference, event: event.event });
+        return new Response(JSON.stringify({ received: true, duplicate: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200,
+        });
+      }
+    }
+
     // Handle successful charge event
     if (event.event === 'charge.success') {
-      const { user_id, order_id, shop_id } = event.data.metadata || {};
+      const { user_id, order_id, shop_id, type: paymentType } = event.data.metadata || {};
       const paymentInstrumentFingerprint =
         event.data?.authorization?.signature ||
         event.data?.authorization?.bin ||
         null;
-      
-      logInfo('Processing charge.success', { user_id, order_id, shop_id, paymentReference });
 
-      // If this is a subscription payment (has user_id OR a plan code)
+      logInfo('Processing charge.success', { user_id, order_id, shop_id, paymentType, paymentReference });
+
+      // SECURITY: setup-service payments must NEVER be treated as subscription renewals.
+      // Without this guard, a low-value setup payment could silently extend a sub.
       const planCode = event.data.plan?.plan_code;
       const customerEmail = event.data.customer.email;
-      
-      if ((user_id && !order_id) || planCode) {
+      const isSetupService = paymentType === 'setup_service';
+
+      if (!isSetupService && ((user_id && !order_id) || planCode)) {
         let finalUserId = user_id;
 
         // If user_id is missing (recurring charge), find user by email

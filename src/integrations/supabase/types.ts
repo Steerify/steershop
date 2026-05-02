@@ -107,6 +107,69 @@ export type Database = {
         }
         Relationships: []
       }
+      ambassador_profiles: {
+        Row: {
+          approved: boolean
+          compliance_notes: string | null
+          created_at: string
+          enrolled_at: string
+          enrollment_status: string
+          id: string
+          legal_name: string
+          payout_account_name: string | null
+          payout_account_number: string | null
+          payout_bank_code: string | null
+          payout_bank_name: string | null
+          phone: string
+          tax_id: string | null
+          tier: string
+          total_earnings: number
+          total_referrals: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved?: boolean
+          compliance_notes?: string | null
+          created_at?: string
+          enrolled_at?: string
+          enrollment_status?: string
+          id?: string
+          legal_name: string
+          payout_account_name?: string | null
+          payout_account_number?: string | null
+          payout_bank_code?: string | null
+          payout_bank_name?: string | null
+          phone: string
+          tax_id?: string | null
+          tier?: string
+          total_earnings?: number
+          total_referrals?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved?: boolean
+          compliance_notes?: string | null
+          created_at?: string
+          enrolled_at?: string
+          enrollment_status?: string
+          id?: string
+          legal_name?: string
+          payout_account_name?: string | null
+          payout_account_number?: string | null
+          payout_bank_code?: string | null
+          payout_bank_name?: string | null
+          phone?: string
+          tax_id?: string | null
+          tier?: string
+          total_earnings?: number
+          total_referrals?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ambassador_tiers: {
         Row: {
           claimed_at: string | null
@@ -1179,6 +1242,24 @@ export type Database = {
           },
         ]
       }
+      paystack_webhook_events: {
+        Row: {
+          event_type: string
+          processed_at: string
+          reference: string
+        }
+        Insert: {
+          event_type: string
+          processed_at?: string
+          reference: string
+        }
+        Update: {
+          event_type?: string
+          processed_at?: string
+          reference?: string
+        }
+        Relationships: []
+      }
       platform_earnings: {
         Row: {
           created_at: string | null
@@ -1580,6 +1661,7 @@ export type Database = {
           bvn_verified_at: string | null
           created_at: string
           email: string
+          free_setup_eligible: boolean
           full_name: string | null
           id: string
           is_reseller: boolean | null
@@ -1604,6 +1686,7 @@ export type Database = {
           bvn_verified_at?: string | null
           created_at?: string
           email: string
+          free_setup_eligible?: boolean
           full_name?: string | null
           id: string
           is_reseller?: boolean | null
@@ -1628,6 +1711,7 @@ export type Database = {
           bvn_verified_at?: string | null
           created_at?: string
           email?: string
+          free_setup_eligible?: boolean
           full_name?: string | null
           id?: string
           is_reseller?: boolean | null
@@ -1742,6 +1826,8 @@ export type Database = {
       }
       referrals: {
         Row: {
+          commission_amount: number
+          commission_status: string
           created_at: string | null
           id: string
           points_earned: number | null
@@ -1753,6 +1839,8 @@ export type Database = {
           status: string | null
         }
         Insert: {
+          commission_amount?: number
+          commission_status?: string
           created_at?: string | null
           id?: string
           points_earned?: number | null
@@ -1764,6 +1852,8 @@ export type Database = {
           status?: string | null
         }
         Update: {
+          commission_amount?: number
+          commission_status?: string
           created_at?: string | null
           id?: string
           points_earned?: number | null
@@ -2938,6 +3028,7 @@ export type Database = {
         Returns: number
       }
       get_admin_stats: { Args: never; Returns: Json }
+      get_website_visit_analytics: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2977,6 +3068,7 @@ export type Database = {
       }
       shop_is_active: { Args: { shop_id_param: string }; Returns: boolean }
       update_all_shop_verifications: { Args: never; Returns: undefined }
+      validate_referral_code: { Args: { _code: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "shop_owner" | "customer"

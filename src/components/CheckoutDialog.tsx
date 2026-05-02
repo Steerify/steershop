@@ -461,12 +461,12 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     setIsApplyingCoupon(true);
     try {
       const result = await couponService.validateCoupon(couponCode, shop.id, totalAmount);
-      if (result.valid) {
+      if (result.valid && 'coupon' in result) {
         setCouponDiscount(result.discount);
         setAppliedCoupon(result.coupon);
         toast({ title: "Coupon Applied! 🎉", description: `You saved ₦${result.discount.toLocaleString()}` });
       } else {
-        toast({ title: "Invalid Coupon", description: result.error, variant: "destructive" });
+        toast({ title: "Invalid Coupon", description: 'error' in result ? result.error : 'Invalid coupon', variant: "destructive" });
       }
     } catch (error) {
       toast({ title: "Error", description: "Failed to validate coupon", variant: "destructive" });

@@ -55,7 +55,7 @@ serve(async (req) => {
       userEmail = profile?.email ?? null;
     }
 
-    const { reference, business_name, whatsapp_number, business_category, products, free_setup } = await req.json();
+    const { reference, business_name, whatsapp_number, business_category, products } = await req.json();
 
     if (!business_name || !whatsapp_number) {
       return new Response(
@@ -63,6 +63,16 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // SECURITY: free_setup eligibility is read from the database (admin-controlled),
+    // never from the client request. The previous implementation let any user pass
+    // free_setup: true to bypass payment.
+    const { data: eligibilityRow } = await supabaseAdmin
+      .from("profiles")
+      .select("free_setup_eligible")
+      .eq("id", userId)
+      .maybeSingle();
+    const free_setup = !!(eligibilityRow as { free_setup_eligible?: boolean } | null)?.free_setup_eligible;
 
     // 1. Verify Paystack payment (skip for free setup)
     if (!free_setup) {
