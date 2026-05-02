@@ -9,7 +9,6 @@ const corsHeaders = {
 
 interface SendOTPRequest {
   phone: string;
-  userId: string;
 }
 
 // Generate a 6-digit OTP
@@ -17,7 +16,7 @@ const generateOTP = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Hash OTP for storage (simple hash for demo, use bcrypt in production)
+// Hash OTP for storage
 const hashOTP = async (otp: string): Promise<string> => {
   const encoder = new TextEncoder();
   const data = encoder.encode(otp + Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
@@ -27,29 +26,45 @@ const hashOTP = async (otp: string): Promise<string> => {
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("=== Send phone OTP function called ===");
-  console.log("Request method:", req.method);
-  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Parse request body
+    // SECURITY: derive userId from JWT, never trust the client body.
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: authData, error: authError } = await supabaseAuth.auth.getUser(
+      authHeader.replace("Bearer ", "")
+    );
+    if (authError || !authData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = authData.user.id;
+
     let requestBody;
     try {
       requestBody = await req.json();
-      console.log("Request body received:", { phone: requestBody.phone, userId: requestBody.userId?.slice(0, 8) + "..." });
     } catch (parseError) {
-      console.error("Failed to parse request body:", parseError);
-      throw new Error("Invalid request body. Please provide phone and userId.");
+      throw new Error("Invalid request body. Please provide phone.");
     }
 
-    const { phone, userId }: SendOTPRequest = requestBody;
-    
-    if (!phone || !userId) {
-      console.error("Missing required fields:", { hasPhone: !!phone, hasUserId: !!userId });
-      throw new Error("Phone number and user ID are required");
+    const { phone }: SendOTPRequest = requestBody;
+
+    if (!phone || typeof phone !== "string" || phone.length > 20) {
+      throw new Error("Phone number is required and must be ≤ 20 characters");
     }
 
     // Validate Nigerian phone number format
@@ -220,16 +235,20 @@ const handler = async (req: Request): Promise<Response> => {
       console.log(`[FALLBACK MODE] =====================`);
     }
 
-    console.log("=== OTP sent successfully ===");
+    // SECURITY: never expose the OTP to the client. If SMS isn't configured,
+    // the code is only available in server logs (dev) — do not return it.
+    if (!isSmsConfigured) {
+      console.log(`[DEV ONLY] OTP for ${cleanPhone}: ${otp}`);
+    }
+
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: true,
         message: isSmsConfigured
           ? "Verification code sent to your phone"
-          : "SMS is not configured. Use the fallback code shown in-app.",
-        expiresIn: 300, // 5 minutes in seconds
+          : "SMS is not configured. Contact support.",
+        expiresIn: 300,
         delivery: isSmsConfigured ? "sms" : "fallback",
-        fallbackCode: isSmsConfigured ? undefined : otp,
       }),
       {
         status: 200,
