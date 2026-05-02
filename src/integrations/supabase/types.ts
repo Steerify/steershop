@@ -110,7 +110,10 @@ export type Database = {
       ambassador_profiles: {
         Row: {
           approved: boolean
+          compliance_notes: string | null
           created_at: string
+          enrolled_at: string
+          enrollment_status: string
           id: string
           legal_name: string
           payout_account_name: string | null
@@ -118,6 +121,7 @@ export type Database = {
           payout_bank_code: string | null
           payout_bank_name: string | null
           phone: string
+          tax_id: string | null
           tier: string
           total_earnings: number
           total_referrals: number
@@ -126,7 +130,10 @@ export type Database = {
         }
         Insert: {
           approved?: boolean
+          compliance_notes?: string | null
           created_at?: string
+          enrolled_at?: string
+          enrollment_status?: string
           id?: string
           legal_name: string
           payout_account_name?: string | null
@@ -134,6 +141,7 @@ export type Database = {
           payout_bank_code?: string | null
           payout_bank_name?: string | null
           phone: string
+          tax_id?: string | null
           tier?: string
           total_earnings?: number
           total_referrals?: number
@@ -142,7 +150,10 @@ export type Database = {
         }
         Update: {
           approved?: boolean
+          compliance_notes?: string | null
           created_at?: string
+          enrolled_at?: string
+          enrollment_status?: string
           id?: string
           legal_name?: string
           payout_account_name?: string | null
@@ -150,6 +161,7 @@ export type Database = {
           payout_bank_code?: string | null
           payout_bank_name?: string | null
           phone?: string
+          tax_id?: string | null
           tier?: string
           total_earnings?: number
           total_referrals?: number
@@ -3016,6 +3028,7 @@ export type Database = {
         Returns: number
       }
       get_admin_stats: { Args: never; Returns: Json }
+      get_website_visit_analytics: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
