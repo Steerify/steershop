@@ -10,6 +10,15 @@ import logoLight from "@/assets/steersolo-logo.jpg";
 import logoDark from "@/assets/steersolo-logo-dark.jpg";
 import { useTheme } from "next-themes";
 import { ShopAvatar } from "./ShopAvatar";
+import { useAuth } from "@/context/AuthContext";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // --- Types ---
 interface Celebration {
@@ -84,6 +93,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
   const [daysRemaining, setDaysRemaining] = useState(0);
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
+  const { user, profile, signOut } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -239,17 +249,63 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                   )}
                 </Button>
               )}
-              <Link to="/shopper">
-                <Button variant="ghost" size="sm" className="h-9 px-3 text-sm font-medium hover:bg-primary/10 hover:text-primary">
-                  <User className="w-4 h-4 mr-2" />
-                  Login
-                </Button>
-              </Link>
-              <Link to="/auth/login?tab=signup">
-                <Button size="sm" className="h-9 px-4 text-sm bg-gradient-to-r from-indigo-600 to-teal-500 hover:from-indigo-500 hover:to-teal-400 text-white transition-all font-semibold shadow-lg shadow-indigo-500/25 border border-white/10">
-                  Get Started
-                </Button>
-              </Link>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-primary/10 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-bold ring-2 ring-primary/20">
+                        {(profile?.full_name || user.email || 'U')[0].toUpperCase()}
+                      </div>
+                      <div className="hidden lg:block text-left">
+                        <p className="text-xs font-bold leading-none">{profile?.full_name?.split(' ')[0] || 'User'}</p>
+                        <Badge variant="outline" className="text-[9px] h-3.5 px-1 bg-primary/5 text-primary border-primary/20 mt-0.5">
+                          {profile?.role === 'shop_owner' ? 'Vendor Mode' : 'Shopper Mode'}
+                        </Badge>
+                      </div>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl p-1 shadow-xl">
+                    <DropdownMenuLabel className="px-3 py-2">
+                      <p className="text-xs font-medium text-muted-foreground">Signed in as</p>
+                      <p className="text-sm font-bold truncate">{user.email}</p>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to={profile?.role === 'shop_owner' ? "/dashboard" : "/shopper"} className="flex items-center gap-2 cursor-pointer rounded-lg">
+                        <User className="w-4 h-4" />
+                        {profile?.role === 'shop_owner' ? "Vendor Dashboard" : "My Orders"}
+                      </Link>
+                    </DropdownMenuItem>
+                    {profile?.role === 'shop_owner' && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/my-store" className="flex items-center gap-2 cursor-pointer rounded-lg">
+                          <Store className="w-4 h-4" />
+                          Manage My Store
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => signOut()} className="flex items-center gap-2 cursor-pointer rounded-lg text-destructive focus:text-destructive focus:bg-destructive/5">
+                      <X className="w-4 h-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <>
+                  <Link to="/shopper">
+                    <Button variant="ghost" size="sm" className="h-9 px-3 text-sm font-medium hover:bg-primary/10 hover:text-primary">
+                      <User className="w-4 h-4 mr-2" />
+                      Login
+                    </Button>
+                  </Link>
+                  <Link to="/auth/login?tab=signup">
+                    <Button size="sm" className="h-9 px-4 text-sm bg-gradient-to-r from-indigo-600 to-teal-500 hover:from-indigo-500 hover:to-teal-400 text-white transition-all font-semibold shadow-lg shadow-indigo-500/25 border border-white/10">
+                      Get Started
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile Button */}

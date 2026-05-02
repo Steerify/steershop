@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck, ChevronLeft, ChevronRight, Share2, Shield, Truck } from "lucide-react";
 import { WishlistButton } from "@/components/WishlistButton";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -245,6 +245,25 @@ const ProductDetails = () => {
     }
   };
 
+  const handleWhatsAppInquiry = () => {
+    if (!product || !shop || !shop.whatsapp_number) {
+      toast({
+        title: "Inquiry Unavailable",
+        description: "This seller hasn't provided a WhatsApp number yet.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const shopName = shop.shop_name || shop.name || 'Shop';
+    const productUrl = `${window.location.origin}/shop/${slug}/product/${product.id}`;
+    const message = `Hi ${shopName}, I'm interested in "${product.name}" I saw on SteerSolo. Is it available? \n\nLink: ${productUrl}`;
+    
+    // Clean phone number: remove +, space, dash
+    const cleanPhone = shop.whatsapp_number.replace(/[+\s-]/g, '');
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
@@ -444,6 +463,15 @@ const ProductDetails = () => {
                 Add to Cart - ₦{(product.price * quantity).toLocaleString()}
               </Button>
               <Button
+                size="lg"
+                variant="outline"
+                className="border-green-500 text-green-600 hover:bg-green-50"
+                onClick={handleWhatsAppInquiry}
+              >
+                <MessageSquare className="w-5 h-5 mr-2" />
+                Inquire
+              </Button>
+              <Button
                 type="button"
                 variant="outline"
                 size="icon"
@@ -454,6 +482,26 @@ const ProductDetails = () => {
                 <Share2 className="w-5 h-5" />
               </Button>
               <WishlistButton productId={product.id} size="sm" className="h-12 w-12" />
+            </div>
+
+            {/* Trust Banner */}
+            <div className="grid grid-cols-2 gap-4 py-4 border-y border-border/50">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-primary" />
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Secure Checkout</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <BadgeCheck className="w-4 h-4 text-accent" />
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Verified Seller</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Truck className="w-4 h-4 text-primary" />
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Fast Delivery</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 text-accent" />
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Top Rated</span>
+              </div>
             </div>
 
             {/* Review Form */}

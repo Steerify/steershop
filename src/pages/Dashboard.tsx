@@ -114,6 +114,46 @@ const QuickActionTile = ({
 // MobileBottomNav is now a shared component
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 
+// ─── Urgent Tasks Component ──────────────────────────────────────────────────
+const UrgentTasks = ({ tasks, onAction }: { 
+  tasks: { id: string; label: string; icon: any; color: string; action: () => void }[];
+  onAction: () => void;
+}) => {
+  if (tasks.length === 0) return null;
+
+  return (
+    <div className="mb-6 animate-fade-in">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center">
+          <AlertCircle className="w-3 h-3 text-destructive" />
+        </div>
+        <h3 className="text-sm font-bold text-foreground">Urgent Tasks</h3>
+        <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-bold">
+          {tasks.length}
+        </Badge>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {tasks.map((task) => (
+          <button
+            key={task.id}
+            onClick={task.action}
+            className="flex items-center gap-3 p-3 bg-card border border-destructive/20 rounded-2xl hover:border-destructive/40 hover:shadow-md transition-all text-left group"
+          >
+            <div className={`w-10 h-10 rounded-xl ${task.color} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
+              <task.icon className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground truncate">{task.label}</p>
+              <p className="text-xs text-muted-foreground">Action required</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 group-hover:translate-x-1 transition-transform" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ─── Main Dashboard Component ──────────────────────────────────────────────────
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -143,6 +183,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<"overview" | "actions" | "wallet">("overview");
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(true);
+  const [urgentTasks, setUrgentTasks] = useState<any[]>([]);
 
   // Carousel state
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -308,6 +349,54 @@ const Dashboard = () => {
         const entOffer = offerResponse.data.find(o => o.target_audience === 'entrepreneurs' && o.is_active);
         if (entOffer) setActiveOffer(entOffer);
       }
+
+      // ─── Determine Urgent Tasks ───
+      const tasks = [];
+      if (pendingOrders > 0) {
+        tasks.push({
+          id: 'orders',
+          label: `${pendingOrders} Pending Order${pendingOrders !== 1 ? 's' : ''}`,
+          icon: ShoppingCart,
+          color: 'bg-amber-500/10 text-amber-600',
+          action: () => navigate('/orders')
+        });
+      }
+      if (subscriptionStatus === 'expired') {
+        tasks.push({
+          id: 'subscription',
+          label: 'Subscription Expired',
+          icon: Shield,
+          color: 'bg-destructive/10 text-destructive',
+          action: () => navigate('/pricing')
+        });
+      } else if (daysRemaining < 3 && subscriptionStatus !== 'free') {
+        tasks.push({
+          id: 'subscription-near',
+          label: `Subscription expires in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}`,
+          icon: Clock,
+          color: 'bg-orange-500/10 text-orange-600',
+          action: () => navigate('/pricing')
+        });
+      }
+      if (productsCount === 0) {
+        tasks.push({
+          id: 'products',
+          label: 'Add your first product',
+          icon: Package,
+          color: 'bg-primary/10 text-primary',
+          action: () => navigate('/products')
+        });
+      }
+      if (primaryShop && !primaryShop.is_active) {
+        tasks.push({
+          id: 'approval',
+          label: 'Awaiting Shop Approval',
+          icon: Store,
+          color: 'bg-blue-500/10 text-blue-600',
+          action: () => navigate('/my-store')
+        });
+      }
+      setUrgentTasks(tasks);
 
     } catch (error) {
       console.error("Error loading dashboard data:", error);
@@ -1000,6 +1089,9 @@ const Dashboard = () => {
           <TabsContent value="overview" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
             {/* Contextual Banner */}
             {getContextualBanner()}
+
+            {/* Urgent Tasks */}
+            <UrgentTasks tasks={urgentTasks} onAction={() => {}} />
 
             {/* Stat Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">

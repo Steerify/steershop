@@ -39,6 +39,7 @@ import { ImageUpload } from "@/components/ImageUpload";
 import { QRCodeSVG } from "qrcode.react";
 import { StoreFlyerTemplate } from "@/components/StoreFlyerTemplate";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { PageWrapper } from "@/components/PageWrapper";
@@ -441,9 +442,20 @@ const MyStore = () => {
                     )}
                   </div>
 
-                  {/* Auto-generated Slug display */}
                   <div className="space-y-2">
-                    <Label htmlFor="shop_slug">Store Link (Auto-generated)</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="shop_slug">Store Link (Auto-generated)</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs text-xs">This is your unique store address on SteerSolo. It is automatically created from your store name.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <div className="relative">
                       <Input
                         id="shop_slug"
@@ -479,9 +491,20 @@ const MyStore = () => {
                     />
                   </div>
 
-                  {/* WhatsApp */}
                   <div className="space-y-2">
-                    <Label htmlFor="whatsapp_number">WhatsApp Number</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="whatsapp_number">WhatsApp Number</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs text-xs">Used for customer inquiries. Include your country code (e.g., +23480...)</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <Input
                       id="whatsapp_number"
                       value={formData.whatsapp_number}
@@ -592,9 +615,20 @@ const MyStore = () => {
               </CardHeader>
               <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
                 <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
-                  {/* Payment Methods */}
                   <div className="space-y-4">
-                    <Label className="text-sm sm:text-base">Payment Methods</Label>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm sm:text-base">Payment Methods</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs text-xs">Choose how you want to receive payments. Bank Transfer is manual, Paystack is automated.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <div className="flex items-center space-x-2 min-h-[44px]">
                       <Checkbox
                         id="enable_bank_transfer"
