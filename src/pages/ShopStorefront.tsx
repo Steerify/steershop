@@ -430,11 +430,16 @@ const ShopStorefront = () => {
           <meta property="og:url" content={shopUrl} />
           <meta property="og:type" content="website" />
           <meta property="og:site_name" content="SteerSolo" />
+          <meta property="og:locale" content="en_NG" />
           {shop.logo_url || shop.banner_url ? <meta property="og:image" content={shop.logo_url || shop.banner_url || ''} /> : null}
+          {shop.logo_url || shop.banner_url ? <meta property="og:image:width" content="1200" /> : null}
+          {shop.logo_url || shop.banner_url ? <meta property="og:image:height" content="630" /> : null}
+          {shop.logo_url || shop.banner_url ? <meta property="og:image:alt" content={`${shop.shop_name} store image`} /> : null}
           {shop.logo_url || shop.banner_url ? <meta name="twitter:image" content={shop.logo_url || shop.banner_url || ''} /> : null}
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:title" content={shop.shop_name} />
           <meta name="twitter:description" content={metaDescription} />
+          <meta name="twitter:site" content="@steersolo" />
           <link rel="canonical" href={shopUrl} />
           {schemaData && (
             <script type="application/ld+json">

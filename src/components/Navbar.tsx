@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserRole } from "@/types/api";
 import { 
-  User, Menu, X, Gift, Moon, Sun, Star, 
+  User, Menu, X, Gift, Moon, Sun, Star, Home,
   Heart, Flag, Ghost, Egg, Sparkles, Store, MessageSquare, CalendarDays, Tag
 } from "lucide-react";
 import { AdireAccent } from "./patterns/AdirePattern";
@@ -92,10 +92,23 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeCelebrations, setActiveCelebrations] = useState<Celebration[]>([]);
   const [showCelebrationHint, setShowCelebrationHint] = useState(false);
+  const [showRestoredBanner, setShowRestoredBanner] = useState(false);
   const [daysRemaining, setDaysRemaining] = useState(0);
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Show "Back to Dashboard" banner when user lands here via post-login session restore
+  useEffect(() => {
+    const state = location.state as { restoredFromLogin?: boolean } | null;
+    if (state?.restoredFromLogin) {
+      setShowRestoredBanner(true);
+    } else {
+      setShowRestoredBanner(false);
+    }
+  }, [location]);
 
   useEffect(() => {
     setMounted(true);
@@ -145,6 +158,39 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
+      {/* Restored-session "Back to Dashboard" Banner */}
+      {showRestoredBanner && user && (
+        <div className="bg-gradient-to-r from-[hsl(215,65%,22%)] to-[hsl(145,55%,26%)] text-white border-b border-white/10">
+          <div className="container mx-auto px-3 py-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm font-medium">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                  <Home className="w-3 h-3" />
+                </div>
+                <span>You've been returned to where you left off.</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-white hover:bg-white/15 text-xs px-3 rounded-full"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  ← Back to Dashboard
+                </Button>
+                <button
+                  onClick={() => setShowRestoredBanner(false)}
+                  className="rounded-full p-1 hover:bg-white/15 transition-colors"
+                  aria-label="Dismiss banner"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Celebration Hint Banner */}
       {showCelebrationHint && primary && (
         <div className="bg-gradient-to-r from-primary via-primary/90 to-accent text-white border-b border-primary/40">

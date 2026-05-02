@@ -19,10 +19,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY')!
     );
 
-    // Fetch all active shops with owner subscription info
+    // Fetch all active shops with owner subscription info and featured flag
     const { data: shops } = await supabase
       .from('shops')
-      .select('id, shop_slug, updated_at, logo_url, owner_id, payment_method, bank_name, bank_account_name, bank_account_number, paystack_public_key')
+      .select('id, shop_slug, updated_at, logo_url, owner_id, is_featured, payment_method, bank_name, bank_account_name, bank_account_number, paystack_public_key')
       .eq('is_active', true);
 
     const hasCompletePaymentSetup = (shop: any) => {
@@ -124,14 +124,16 @@ serve(async (req) => {
   </url>`;
     }
 
-    // Shop pages with priority based on subscription plan
+    // Shop pages with priority based on featured flag and subscription plan
     if (eligibleShops) {
       for (const shop of eligibleShops) {
         const planSlug = shop.owner_id ? (ownerPlanMap[shop.owner_id] || 'free') : 'free';
+        const isFeatured = shop.is_featured === true;
         const isPremium = planSlug === 'pro' || planSlug === 'business';
         const lastmod = shop.updated_at ? new Date(shop.updated_at).toISOString().split('T')[0] : now;
-        const priority = isPremium ? '0.9' : '0.6';
-        const changefreq = isPremium ? 'daily' : 'weekly';
+        // Featured shops (manually boosted) → 1.0; premium plan → 0.9; free → 0.6
+        const priority = isFeatured ? '1.0' : isPremium ? '0.9' : '0.6';
+        const changefreq = isFeatured || isPremium ? 'daily' : 'weekly';
         
         urls += `
   <url>
@@ -146,18 +148,34 @@ serve(async (req) => {
       }
     }
 
-    // Product pages with image tags
+    // Product pages — premium-shop products get priority 0.8, others 0.6
+    const premiumOwnerIds = new Set(
+      eligibleShops
+        .filter((s: any) => {
+          const slug = s.owner_id ? (ownerPlanMap[s.owner_id] || 'free') : 'free';
+          return s.is_featured === true || slug === 'pro' || slug === 'business';
+        })
+        .map((s: any) => s.owner_id)
+        .filter(Boolean)
+    );
+    // Build a map of shop_slug → owner_id for product priority lookup
+    const shopSlugOwnerMap: Record<string, string> = {};
+    for (const s of eligibleShops) {
+      if (s.shop_slug && s.owner_id) shopSlugOwnerMap[s.shop_slug] = s.owner_id;
+    }
     if (products) {
       for (const product of products) {
         const shopData = product.shops as any;
         if (!shopData?.is_active || !shopData?.shop_slug) continue;
         const lastmod = product.updated_at ? new Date(product.updated_at).toISOString().split('T')[0] : now;
+        const ownerId = shopSlugOwnerMap[shopData.shop_slug];
+        const productPriority = ownerId && premiumOwnerIds.has(ownerId) ? '0.8' : '0.6';
         urls += `
   <url>
     <loc>${SITE_URL}/shop/${shopData.shop_slug}/product/${product.id}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>${product.image_url ? `
+    <priority>${productPriority}</priority>${product.image_url ? `
     <image:image>
       <image:loc>${product.image_url}</image:loc>
     </image:image>` : ''}

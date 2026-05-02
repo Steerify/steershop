@@ -238,7 +238,14 @@ const Auth = () => {
         dispatch(setReturnUrl(null));
         dispatch(resetSession());
 
-        navigate(redirectPath, { replace: true });
+        if (redirectPath !== defaultPath) {
+          // Navigate to dashboard first (replacing the login page in history),
+          // then push the restored page on top — so pressing Back always goes to /dashboard.
+          navigate(defaultPath, { replace: true });
+          navigate(redirectPath, { state: { restoredFromLogin: true } });
+        } else {
+          navigate(defaultPath, { replace: true });
+        }
       };
 
       checkRoleSelection();
