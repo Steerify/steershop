@@ -8,6 +8,7 @@ import { lazy, Suspense } from "react";
 import { PageLoadingSkeleton } from "@/components/PageLoadingSkeleton";
 import { SessionExpiryModal } from "@/components/SessionExpiryModal";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { ScrollRestoration } from "@/components/ScrollRestoration";
 import { RouteThemeClass } from "@/components/RouteThemeClass";
 import { VisitTracker } from "@/components/VisitTracker";
 
@@ -144,6 +145,7 @@ const App = () => (
         <SessionExpiryModal />
         <PlatformReviewPopup />
         <ScrollToTop />
+        <ScrollRestoration />
         <Suspense fallback={<PageLoadingSkeleton />}>
           <Routes>
             {/* Public routes */}

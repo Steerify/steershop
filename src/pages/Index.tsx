@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { FeaturedShopsBanner } from "@/components/FeaturedShopsBanner";
 import { ShopperDiscovery } from "@/components/ShopperDiscovery";
+import { CollectionsSection } from "@/components/CollectionsSection";
 import { HomepageReviews } from "@/components/HomepageReviews";
 import { SocialProofStats } from "@/components/SocialProofStats";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
@@ -78,7 +79,7 @@ const PlatformLogo = ({ platform }: { platform: Platform }) => {
       <img
         src={platform.img}
         alt={`${platform.name} logo`}
-        style={{ width: "40%", height: "auto", objectFit: "contain" }}
+        style={{ width: "55%", height: "auto", objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.1))" }}
         onError={() => setHasImageError(true)}
       />
     );
@@ -680,6 +681,7 @@ const Index = () => (
         </Link>
       </div>
     </section>
+    <CollectionsSection />
     <ShopperDiscovery />
 
     {/* ══════════════════════════════════════════════════════

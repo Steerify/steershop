@@ -231,7 +231,7 @@ const Bookings = () => {
 
   return (
     <PageWrapper patternVariant="dots" patternOpacity={0.5}>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-28 md:pb-10">
         <div className="mb-4 sm:mb-6">
           <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10 min-h-[44px] px-2 sm:px-4">
             <ArrowLeft className="w-4 h-4 sm:mr-2" />

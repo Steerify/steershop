@@ -76,7 +76,7 @@ const Settings = () => {
 
   return (
     <PageWrapper patternVariant="dots" patternOpacity={0.4}>
-      <div className="container mx-auto py-8 px-4 sm:px-6 max-w-2xl relative z-10">
+      <div className="container mx-auto py-8 px-4 sm:px-6 pb-28 md:pb-10 max-w-2xl relative z-10">
         <div className="mb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <Button 

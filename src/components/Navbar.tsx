@@ -21,6 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 // --- Types ---
 interface Celebration {
@@ -215,7 +216,12 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
       
       <AdireAccent className="h-1" />
       
-      <div className="bg-card/90 backdrop-blur-xl border-b border-border/50">
+      <div className={cn(
+        "bg-card/90 backdrop-blur-xl border-b transition-all duration-500",
+        user?.role === UserRole.ENTREPRENEUR 
+          ? "border-indigo-600/30 shadow-[0_1px_10px_rgba(79,70,229,0.1)]" 
+          : "border-border/50"
+      )}>
         <div className="container mx-auto px-4 py-3 md:py-2.5">
           <div className="flex items-center justify-between">
             
@@ -306,7 +312,15 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                       </div>
                       <div className="hidden lg:block text-left">
                         <p className="text-xs font-bold leading-none">{user?.firstName || 'User'}</p>
-                        <Badge variant="outline" className="text-[9px] h-3.5 px-1 bg-primary/5 text-primary border-primary/20 mt-0.5">
+                        <Badge 
+                          variant="outline" 
+                          className={cn(
+                            "text-[9px] h-3.5 px-1 mt-0.5 border-none",
+                            user?.role === UserRole.ENTREPRENEUR 
+                              ? "bg-indigo-600/10 text-indigo-600" 
+                              : "bg-emerald-600/10 text-emerald-600"
+                          )}
+                        >
                           {user?.role === UserRole.ENTREPRENEUR ? 'Vendor Mode' : 'Shopper Mode'}
                         </Badge>
                       </div>

@@ -58,6 +58,9 @@ import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { StorefrontCustomizer } from "@/components/StorefrontCustomizer";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ShopAvatar } from "@/components/ShopAvatar";
+import { KYCLevel2Form } from "@/components/kyc/KYCLevel2Form";
+import { useFormDraft, readFormDraft } from "@/hooks/useFormDraft";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 
 const shopSchema = z
   .object({
@@ -129,6 +132,15 @@ const MyStore = () => {
 
   const [showDfyPopup, setShowDfyPopup] = useState(false);
   const [showPostCreatePrompt, setShowPostCreatePrompt] = useState(false);
+  const [showInlineVerify, setShowInlineVerify] = useState(false);
+  const [showDraftBanner, setShowDraftBanner] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Unsaved changes warning
+  useUnsavedChanges(isDirty);
+
+  // Draft key — only active for NEW store creation (no existing shop)
+  const draftKey = user?.id && !shop ? `mystore_draft_${user.id}` : '';
 
   const [formData, setFormData] = useState({
     shop_name: "",
@@ -144,6 +156,9 @@ const MyStore = () => {
     logo_url: "",
     banner_url: "",
   });
+
+  // Auto-save the form to sessionStorage while creating a new store
+  const { clearDraft } = useFormDraft(draftKey, formData, !!draftKey);
 
   // Slug availability state
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
@@ -198,6 +213,16 @@ const MyStore = () => {
       user ? loadShop() : navigate("/auth/login");
     }
   }, [authLoading, user]);
+
+  // Restore draft when visiting the page for new store creation
+  useEffect(() => {
+    if (!user?.id || shop) return;
+    const draft = readFormDraft<typeof formData>(`mystore_draft_${user.id}`);
+    if (draft && draft.shop_name) {
+      setFormData(f => ({ ...f, ...draft }));
+      setShowDraftBanner(true);
+    }
+  }, [user?.id]);
 
   const loadShop = async () => {
     try {
@@ -334,6 +359,9 @@ const MyStore = () => {
       }
 
       toast({ title: "Success", description: shop ? "Store updated" : "Store created" });
+      clearDraft(); // wipe draft on successful save
+      setShowDraftBanner(false);
+      setIsDirty(false);
       loadShop();
     } catch (error: any) {
       console.error("Error saving shop:", error);
@@ -365,36 +393,87 @@ const MyStore = () => {
           loadShop();
         }}
       />
-
       <Dialog open={showPostCreatePrompt} onOpenChange={setShowPostCreatePrompt}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Store created successfully 🎉</DialogTitle>
-            <DialogDescription>
-              Great job! Your next best step is to add products immediately so customers can discover your store.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setShowPostCreatePrompt(false)}>
-              I’ll do this later
+        <DialogContent className="sm:max-w-lg">
+          <div className="text-center pt-2 pb-1">
+            <div className="text-5xl mb-3 animate-bounce inline-block">🎉</div>
+            <DialogTitle className="text-2xl font-bold mb-1">Your Store is Live!</DialogTitle>
+            <p className="text-muted-foreground text-sm mb-4">
+              Congratulations! <strong>{formData.shop_name}</strong> is now on SteerSolo.
+            </p>
+            {/* Store URL */}
+            <div className="flex items-center gap-1 bg-muted rounded-xl p-3 mb-5 text-left">
+              <span className="text-xs text-muted-foreground truncate flex-1 font-mono">
+                steersolo.com/shop/<strong>{formData.shop_slug}</strong>
+              </span>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 shrink-0"
+                onClick={() => {
+                  navigator.clipboard.writeText(`https://steersolo.com/shop/${formData.shop_slug}`);
+                  setIsCopied(true);
+                  setTimeout(() => setIsCopied(false), 2000);
+                }}
+              >
+                {isCopied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 shrink-0"
+                onClick={() => window.open(`https://steersolo.com/shop/${formData.shop_slug}`, '_blank')}
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+            {/* Next steps */}
+            <div className="space-y-2 text-left mb-2">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Your next steps</p>
+              {[
+                { emoji: "📦", label: "Add your first product", desc: "Start with 3–5 items with clear photos & prices" },
+                { emoji: "💳", label: "Complete payment setup", desc: "Enable bank transfer or Paystack to get paid" },
+                { emoji: "📢", label: "Share your store link", desc: "Post it on WhatsApp, Instagram & Facebook" },
+              ].map((step, i) => (
+                <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/50">
+                  <span className="text-lg shrink-0">{step.emoji}</span>
+                  <div>
+                    <p className="text-sm font-semibold leading-tight">{step.label}</p>
+                    <p className="text-xs text-muted-foreground">{step.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter className="gap-2 flex-col sm:flex-row mt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setShowPostCreatePrompt(false)}>
+              Explore Later
             </Button>
             <Button
-              className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
-              onClick={() => {
-                setShowPostCreatePrompt(false);
-                navigate("/products");
-              }}
+              className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+              onClick={() => { setShowPostCreatePrompt(false); navigate("/products"); }}
             >
-              Add Products Now
+              Add Products Now →
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-3xl">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-28 md:pb-10 max-w-3xl">
         <Button variant="ghost" onClick={() => navigate("/dashboard")} className="min-h-[44px] px-2 sm:px-4 mb-4">
           <ArrowLeft className="w-4 h-4 sm:mr-2" />
           <span className="hidden sm:inline">Back to Dashboard</span>
         </Button>
+
+        {showDraftBanner && (
+          <Alert className="mb-4 border-amber-500/30 bg-amber-500/5 py-2">
+            <Clock className="h-4 w-4 text-amber-500" />
+            <AlertTitle className="text-amber-700 dark:text-amber-400 text-sm flex items-center justify-between w-full">
+              <span>Restored from your last session</span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 w-6 p-0 hover:bg-amber-500/10" 
+                onClick={() => setShowDraftBanner(false)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </AlertTitle>
+          </Alert>
+        )}
 
         {/* Shop Status Card */}
         <ShopStatusBadge 
@@ -433,6 +512,7 @@ const MyStore = () => {
                         const autoSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
                         setFormData({ ...formData, shop_name: name, shop_slug: autoSlug });
                         setSlugAvailable(null);
+                        setIsDirty(true);
                       }}
                       placeholder="Enter store name"
                       className={errors.shop_name ? "border-red-500" : ""}
@@ -483,9 +563,10 @@ const MyStore = () => {
                     <Textarea
                       id="description"
                       value={formData.description}
-                      onChange={(e) =>
-                        setFormData({ ...formData, description: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setFormData({ ...formData, description: e.target.value });
+                        setIsDirty(true);
+                      }}
                       placeholder="Describe your store"
                       className="min-h-[100px]"
                     />
@@ -508,9 +589,10 @@ const MyStore = () => {
                     <Input
                       id="whatsapp_number"
                       value={formData.whatsapp_number}
-                      onChange={(e) =>
-                        setFormData({ ...formData, whatsapp_number: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setFormData({ ...formData, whatsapp_number: e.target.value });
+                        setIsDirty(true);
+                      }}
                       placeholder="+2348012345678"
                       className={errors.whatsapp_number ? "border-red-500" : ""}
                     />
@@ -701,23 +783,30 @@ const MyStore = () => {
                         />
                       </div>
                       
-                      <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <ShieldCheck className="w-5 h-5 text-primary flex-shrink-0" />
-                          <div>
-                            <p className="text-sm font-medium">Identity Verification</p>
-                            <p className="text-xs text-muted-foreground">Verify your bank account to enable payouts</p>
-                          </div>
-                        </div>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => navigate('/identity-verification')}
-                          className="w-full sm:w-auto min-h-[40px]"
+                      <div className="mt-4 rounded-xl border border-primary/15 overflow-hidden">
+                        <button
+                          type="button"
+                          className="w-full p-3 flex items-center justify-between gap-3 bg-primary/5 hover:bg-primary/10 transition-colors text-left"
+                          onClick={() => setShowInlineVerify(v => !v)}
                         >
-                          Verify Now
-                        </Button>
+                          <div className="flex items-center gap-3">
+                            <ShieldCheck className="w-5 h-5 text-primary flex-shrink-0" />
+                            <div>
+                              <p className="text-sm font-semibold">Identity Verification</p>
+                              <p className="text-xs text-muted-foreground">Verify your bank account to enable payouts</p>
+                            </div>
+                          </div>
+                          <span className={`text-xs font-semibold px-2 py-1 rounded-full transition-colors ${
+                            showInlineVerify ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                          }`}>
+                            {showInlineVerify ? 'Close ✕' : 'Verify Now'}
+                          </span>
+                        </button>
+                        {showInlineVerify && (
+                          <div className="p-3 border-t border-primary/10 bg-background">
+                            <KYCLevel2Form onSuccess={() => setShowInlineVerify(false)} />
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

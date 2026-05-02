@@ -150,7 +150,7 @@ const RoleSelection = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4 relative overflow-hidden">
       <AdirePattern variant="geometric" className="absolute inset-0 opacity-5" />
 
-      <Card className="w-full max-md relative z-10 border-primary/10 shadow-2xl backdrop-blur-sm bg-card/95">
+      <Card className="w-full max-w-2xl relative z-10 border-primary/10 shadow-2xl backdrop-blur-sm bg-card/95">
         <CardHeader className="text-center border-b border-border/50 pb-6">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 rounded-xl overflow-hidden shadow-lg ring-4 ring-primary/20">
@@ -170,41 +170,39 @@ const RoleSelection = () => {
             <div
               onClick={() => setSelectedRole(UserRole.ENTREPRENEUR)}
               className={cn(
-                "relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-muted/50",
+                "relative flex items-start gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 group",
                 selectedRole === UserRole.ENTREPRENEUR
-                  ? "border-primary bg-primary/5 shadow-md"
-                  : "border-muted hover:border-primary/50"
+                  ? "border-indigo-600 bg-indigo-600/5 shadow-xl shadow-indigo-600/10 scale-[1.02]"
+                  : "border-muted hover:border-indigo-600/50 hover:bg-indigo-600/5"
               )}
             >
               <div className={cn(
-                "p-3 rounded-lg transition-colors",
-                selectedRole === UserRole.ENTREPRENEUR ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                "p-4 rounded-xl transition-all duration-300 shadow-sm",
+                selectedRole === UserRole.ENTREPRENEUR 
+                  ? "bg-indigo-600 text-white scale-110" 
+                  : "bg-muted text-muted-foreground group-hover:bg-indigo-100 group-hover:text-indigo-600"
               )}>
-                <Store className="w-6 h-6" />
+                <Store className="w-7 h-7" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-lg text-foreground">Entrepreneur</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Create and manage my own shop. Sell products and grow your business.
+                <h3 className={cn(
+                  "font-bold text-xl transition-colors",
+                  selectedRole === UserRole.ENTREPRENEUR ? "text-indigo-600" : "text-foreground"
+                )}>Entrepreneur</h3>
+                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                  Start your business journey. Create a store, list products, and reach thousands of Nigerian shoppers.
                 </p>
-                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3 h-3 text-primary" />
-                    <span>Create your own store</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3 h-3 text-primary" />
-                    <span>Sell products & services</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3 h-3 text-primary" />
-                    <span>Manage orders & customers</span>
-                  </li>
-                </ul>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {["Store Builder", "Order Tracking", "SafeBeauty Badge"].map(tag => (
+                    <span key={tag} className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-600/10 text-indigo-700">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
               {selectedRole === UserRole.ENTREPRENEUR && (
-                <div className="absolute top-4 right-4 text-primary animate-in zoom-in spin-in-180">
-                  <Check className="w-5 h-5" />
+                <div className="absolute top-4 right-4 text-indigo-600 animate-in zoom-in">
+                  <Check className="w-6 h-6" />
                 </div>
               )}
             </div>
@@ -212,41 +210,39 @@ const RoleSelection = () => {
             <div
               onClick={() => setSelectedRole(UserRole.CUSTOMER)}
               className={cn(
-                "relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-muted/50",
+                "relative flex items-start gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 group",
                 selectedRole === UserRole.CUSTOMER
-                  ? "border-primary bg-primary/5 shadow-md"
-                  : "border-muted hover:border-primary/50"
+                  ? "border-emerald-600 bg-emerald-600/5 shadow-xl shadow-emerald-600/10 scale-[1.02]"
+                  : "border-muted hover:border-emerald-600/50 hover:bg-emerald-600/5"
               )}
             >
               <div className={cn(
-                "p-3 rounded-lg transition-colors",
-                selectedRole === UserRole.CUSTOMER ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                "p-4 rounded-xl transition-all duration-300 shadow-sm",
+                selectedRole === UserRole.CUSTOMER 
+                  ? "bg-emerald-600 text-white scale-110" 
+                  : "bg-muted text-muted-foreground group-hover:bg-emerald-100 group-hover:text-emerald-600"
               )}>
-                <ShoppingBag className="w-6 h-6" />
+                <ShoppingBag className="w-7 h-7" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-lg text-foreground">Customer</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Browse and shop from a variety of unique stores.
+                <h3 className={cn(
+                  "font-bold text-xl transition-colors",
+                  selectedRole === UserRole.CUSTOMER ? "text-emerald-600" : "text-foreground"
+                )}>Customer</h3>
+                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                  Browse curated collections from verified Nigerian brands. Shop with confidence and zero friction.
                 </p>
-                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3 h-3 text-primary" />
-                    <span>Discover unique products</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3 h-3 text-primary" />
-                    <span>Secure checkout</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3 h-3 text-primary" />
-                    <span>Track your orders</span>
-                  </li>
-                </ul>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {["Secure Checkout", "Wishlist", "Order History"].map(tag => (
+                    <span key={tag} className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-700">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
               {selectedRole === UserRole.CUSTOMER && (
-                <div className="absolute top-4 right-4 text-primary animate-in zoom-in spin-in-180">
-                  <Check className="w-5 h-5" />
+                <div className="absolute top-4 right-4 text-emerald-600 animate-in zoom-in">
+                  <Check className="w-6 h-6" />
                 </div>
               )}
             </div>

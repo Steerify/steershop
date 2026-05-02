@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { couponService } from "@/services/coupon.service";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Minus, Plus, ShoppingCart, Trash2, CreditCard, MessageCircle, Copy, Check, Upload, Camera, User, Building2, Truck } from "lucide-react";
+import { Loader2, Minus, Plus, ShoppingCart, Trash2, CreditCard, MessageCircle, Copy, Check, Upload, Camera, User, Building2, Truck, Zap } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { z } from "zod";
 import deliveryService, { DeliveryRate } from "@/services/delivery.service";
@@ -1206,6 +1207,24 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 </div>
               )}
 
+              {!isUserLoggedIn && (
+              <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 mb-6 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold">Returning customer?</p>
+                    <p className="text-xs text-muted-foreground">Sign in with a Magic Link to skip the form.</p>
+                  </div>
+                </div>
+                <Link to="/auth/login?tab=login&method=magic-link">
+                  <Button variant="outline" size="sm" className="rounded-lg h-9 text-xs font-semibold">
+                    Send Link
+                  </Button>
+                </Link>
+              </div>
+            )}
               {/* Show bank details preview for "Pay Before" with bank transfer only */}
               {paymentChoice === "pay_before" && shop.payment_method === "bank_transfer" && !showPaymentMethodSelection && (
                 <div className="p-4 bg-muted rounded-lg space-y-2">

@@ -33,6 +33,8 @@ import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { BulkProductUpload } from "@/components/BulkProductUpload";
 import { ProductMediaCard } from "@/components/ProductMediaCard";
+import { useFormDraft, readFormDraft } from "@/hooks/useFormDraft";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 // Helper function to format UUID with hyphens
 const formatUUIDWithHyphens = (uuid: string): string => {
   if (!uuid) return uuid;
@@ -130,6 +132,15 @@ const Products = () => {
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showFirstProductSuccess, setShowFirstProductSuccess] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [showDraftBanner, setShowDraftBanner] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Unsaved changes warning (only when dialog is open)
+  useUnsavedChanges(isDirty && isDialogOpen);
+
+  // Draft key — only for NEW product creation
+  const draftKey = user?.id && !editingProduct && isDialogOpen ? `product_draft_${user.id}` : '';
+  const { clearDraft } = useFormDraft(draftKey, formData, !!draftKey);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('products');
@@ -208,6 +219,7 @@ const Products = () => {
     setVideoUrl("");
     setEditingProduct(null);
     setErrors({});
+    setIsDirty(false);
     setPriceSuggestion(null);
   };
 
@@ -288,6 +300,12 @@ const Products = () => {
         }
       }
       resetForm();
+      // Check for draft
+      const draft = readFormDraft<typeof formData>(`product_draft_${user.id}`);
+      if (draft && draft.name) {
+        setFormData(f => ({ ...f, ...draft }));
+        setShowDraftBanner(true);
+      }
       setIsDialogOpen(true);
     }
   };
@@ -416,6 +434,8 @@ const Products = () => {
 
       setIsDialogOpen(false);
       resetForm();
+      clearDraft();
+      setShowDraftBanner(false);
       loadShopAndProducts();
     } catch (error: any) {
       // Error handled by handleApiError
@@ -573,7 +593,7 @@ const Products = () => {
       </Dialog>
 
       <PageWrapper patternVariant="dots" patternOpacity={0.5}>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-28 md:pb-10">
           <div className="mb-4 sm:mb-6 flex items-center justify-between">
             <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10 min-h-[44px] px-2 sm:px-4">
               <ArrowLeft className="w-4 h-4 sm:mr-2" />
@@ -740,7 +760,13 @@ const Products = () => {
       </div>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        if (!open && isDirty) {
+          if (!window.confirm("You have unsaved changes. Are you sure you want to close?")) return;
+        }
+        setIsDialogOpen(open);
+        if (!open) setIsDirty(false);
+      }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-heading">
@@ -752,13 +778,32 @@ const Products = () => {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {showDraftBanner && (
+              <Alert className="mb-4 border-amber-500/30 bg-amber-500/5 py-2">
+                <Clock className="h-4 w-4 text-amber-500" />
+                <AlertTitle className="text-amber-700 dark:text-amber-400 text-xs flex items-center justify-between w-full">
+                  <span>Draft restored</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-5 w-5 p-0 hover:bg-amber-500/10" 
+                    onClick={() => setShowDraftBanner(false)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </AlertTitle>
+              </Alert>
+            )}
             {/* Category Selector */}
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <select
                 id="category"
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, category: e.target.value });
+                  setIsDirty(true);
+                }}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {PRODUCT_CATEGORIES.map(cat => (

@@ -190,7 +190,7 @@ const Marketing = () => {
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 pb-28 md:pb-10">
         {/* Hero Section */}
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-heading font-bold mb-2">
