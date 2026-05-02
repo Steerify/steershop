@@ -39,10 +39,38 @@ serve(async (req: Request) => {
   }
 
   try {
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // SECURITY: require an authenticated caller and verify shop ownership.
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const { data: authData, error: authErr } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+    if (authErr || !authData?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const body: BookDeliveryRequest = await req.json();
     const { order_id, shop_id, rate_id, provider, pickup_address, delivery_address, delivery_fee, weight_kg, dimensions } = body;
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    // Verify the caller owns the shop they're booking for.
+    const { data: shopRow, error: shopLookupErr } = await supabase
+      .from('shops')
+      .select('owner_id')
+      .eq('id', shop_id)
+      .maybeSingle();
+    if (shopLookupErr || !shopRow || shopRow.owner_id !== authData.user.id) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     let providerShipmentId = null;
     let providerTrackingCode = null;

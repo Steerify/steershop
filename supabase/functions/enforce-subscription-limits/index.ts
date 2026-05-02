@@ -13,11 +13,22 @@ serve(async (req) => {
   }
 
   try {
+    // SECURITY: only the cron job (or service-role caller) may trigger this.
+    // Set CRON_SECRET in Supabase function secrets and pg_cron must include
+    // the matching x-cron-secret header.
+    const cronSecret = Deno.env.get('CRON_SECRET');
+    const provided = req.headers.get('x-cron-secret');
+    if (!cronSecret || provided !== cronSecret) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
-    
+
     const resend = new Resend(Deno.env.get('RESEND_API_KEY')!);
     
     console.log("Starting subscription enforcement check...");

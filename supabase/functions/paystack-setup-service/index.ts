@@ -27,16 +27,33 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    // Parse request body
-    const {
-      business_name,
-      business_description,
-      instagram_handle,
-      products_info,
-      contact_phone,
-      package_type,
-      amount,
-    } = await req.json();
+    // SECURITY: amount is computed server-side from package_type. The client
+    // can no longer dictate how much they pay.
+    const PACKAGE_AMOUNTS: Record<string, number> = {
+      basic: 250000,    // ₦2,500 in kobo
+      standard: 500000, // ₦5,000 in kobo
+      premium: 1000000, // ₦10,000 in kobo
+    };
+
+    const raw = await req.json();
+    const business_name = typeof raw.business_name === 'string' ? raw.business_name.slice(0, 200) : '';
+    const business_description = typeof raw.business_description === 'string' ? raw.business_description.slice(0, 1000) : '';
+    const instagram_handle = typeof raw.instagram_handle === 'string' ? raw.instagram_handle.slice(0, 100) : '';
+    const products_info = typeof raw.products_info === 'string' ? raw.products_info.slice(0, 2000) : '';
+    const contact_phone = typeof raw.contact_phone === 'string' ? raw.contact_phone.slice(0, 20) : '';
+    const package_type = typeof raw.package_type === 'string' ? raw.package_type : '';
+
+    const amount = PACKAGE_AMOUNTS[package_type];
+    if (!amount) {
+      return new Response(JSON.stringify({ error: 'Invalid package_type' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (!business_name || business_name.length < 2) {
+      return new Response(JSON.stringify({ error: 'business_name is required (min 2 chars)' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     console.log('Setup service request:', {
       user_id: user.id,
