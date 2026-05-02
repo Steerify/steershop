@@ -18,7 +18,7 @@ import {
   Megaphone, Target, ArrowRight, Clock,
   CheckCircle, AlertCircle, DollarSign, CalendarCheck, Menu, X,
   HelpCircle, Search, Shield, BookOpen, Banknote, Wallet, Crown, MessageCircle, Truck, BadgeCheck, Sparkles,
-  BarChart2, Home, Bell, ChevronUp, ChevronDown, Zap, Star, TrendingDown, ExternalLink, Sun, Moon
+  BarChart2, Home, Bell, ChevronUp, ChevronDown, ChevronRight, Zap, Star, TrendingDown, ExternalLink, Sun, Moon
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
@@ -54,6 +54,7 @@ import { SubscriptionExpiryDialog } from "@/components/SubscriptionExpiryDialog"
 import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ShopAvatar } from "@/components/ShopAvatar";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 // VerificationProgressCard removed in favor of ProfileCompletionChecklist
 
 // ─── Stat Card Component ───────────────────────────────────────────────────────
@@ -111,8 +112,6 @@ const QuickActionTile = ({
   </button>
 );
 
-// MobileBottomNav is now a shared component
-import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 // ─── Urgent Tasks Component ──────────────────────────────────────────────────
 const UrgentTasks = ({ tasks, onAction }: { 
