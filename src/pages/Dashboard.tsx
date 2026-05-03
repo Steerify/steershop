@@ -203,33 +203,59 @@ const Dashboard = () => {
     }
   };
 
-  // Handle payment verification from Paystack redirect
+  // Handle payment verification from Paystack redirect — with polling fallback
+  // so race-conditions between redirect and webhook never leave a paid user
+  // stuck on "trial".
   useEffect(() => {
     const verifyPayment = async () => {
       const subscriptionParam = searchParams.get('subscription');
       const reference = searchParams.get('reference') || localStorage.getItem('paystack_reference');
-      
-      if (subscriptionParam === 'verify' && reference) {
-        setIsSubscribing(true);
-        try {
-          const result = await subscriptionService.verifyPayment(reference);
-          if (result.success) {
-            toast({ title: "Payment Successful! 🎉", description: "Your subscription has been activated. Welcome to SteerSolo!" });
+
+      if (subscriptionParam !== 'verify' || !reference || !user) return;
+
+      setIsSubscribing(true);
+      try {
+        // Step 1: try direct verify (fast path)
+        const result = await subscriptionService.verifyPayment(reference);
+        if (result.success) {
+          toast({ title: "Payment Successful! 🎉", description: "Your subscription has been activated. Welcome to SteerSolo!" });
+          setSubscriptionStatus('active');
+          localStorage.removeItem('paystack_reference');
+          loadData();
+          return;
+        }
+
+        // Step 2: fall back to polling the profile for up to 20s
+        // (Paystack webhook may still be in flight)
+        for (let i = 0; i < 10; i++) {
+          await new Promise(r => setTimeout(r, 2000));
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('is_subscribed, subscription_expires_at')
+            .eq('id', user.id)
+            .single();
+          if (prof?.is_subscribed) {
+            toast({ title: "Payment Confirmed! 🎉", description: "Your subscription is now active." });
             setSubscriptionStatus('active');
             localStorage.removeItem('paystack_reference');
             loadData();
-          } else {
-            toast({ title: "Payment Verification Failed", description: result.error || "Please try again or contact support.", variant: "destructive" });
+            return;
           }
-        } catch (error) {
-          console.error('Payment verification error:', error);
-        } finally {
-          setIsSubscribing(false);
-          navigate('/dashboard', { replace: true });
         }
+
+        toast({
+          title: "Still confirming your payment",
+          description: "Your payment is being processed. Refresh in a moment — if the issue persists, contact support with reference " + reference,
+          variant: "destructive",
+        });
+      } catch (error) {
+        console.error('Payment verification error:', error);
+      } finally {
+        setIsSubscribing(false);
+        navigate('/dashboard', { replace: true });
       }
     };
-    if (user) verifyPayment();
+    verifyPayment();
   }, [searchParams, user]);
 
   useEffect(() => {
