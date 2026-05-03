@@ -10,9 +10,11 @@ import { HomepageReviews } from "@/components/HomepageReviews";
 import { SocialProofStats } from "@/components/SocialProofStats";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 import { Helmet } from "react-helmet-async";
+import { FeaturedStoresHeroCarousel } from "@/components/FeaturedStoresHeroCarousel";
 import whatsappLogo from "@/assets/social/whatsapp-logo.svg";
 import instagramLogo from "@/assets/social/instagram-logo.svg";
 import tiktokLogo from "@/assets/social/tiktok-logo.svg";
+
 
 /* ─── Photos (real Nigerian vendor imagery) ─── */
 const P = {
@@ -261,20 +263,9 @@ const Index = () => (
             </div>
           </div>
 
-          {/* ── PHOTO MOSAIC ── */}
-          <div style={{ display:"flex",flexDirection:"column",gap:12,width:"clamp(280px,30vw,400px)",flexShrink:0 }} className="f2 hidden lg:flex">
-            <div className="img-zoom" style={{ overflow:"hidden",borderRadius:24,height:280,boxShadow:"0 24px 48px rgba(0,0,0,0.35)" }}>
-              <img src={P.heroVendor} alt="Nigerian beauty vendor" style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
-            </div>
-            <div style={{ display:"flex",gap:12 }}>
-              <div className="img-zoom" style={{ overflow:"hidden",borderRadius:18,flex:1,height:160,boxShadow:"0 12px 32px rgba(0,0,0,0.28)" }}>
-                <img src={P.heroProducts} alt="Beauty products" style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
-              </div>
-              <div className="img-zoom" style={{ overflow:"hidden",borderRadius:18,flex:1,height:160,boxShadow:"0 12px 32px rgba(0,0,0,0.28)" }}>
-                <img src={P.organic} alt="Natural beauty" style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
-              </div>
-            </div>
-          </div>
+          {/* ── FEATURED STORES CAROUSEL ── */}
+          <FeaturedStoresHeroCarousel />
+
         </div>
 
         {/* ── STAT STRIP ── */}

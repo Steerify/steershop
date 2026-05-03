@@ -11,6 +11,8 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { ScrollRestoration } from "@/components/ScrollRestoration";
 import { RouteThemeClass } from "@/components/RouteThemeClass";
 import { VisitTracker } from "@/components/VisitTracker";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PlatformReviewPopup } from "@/components/PlatformReviewPopup";
@@ -147,7 +149,8 @@ const App = () => (
         <ScrollToTop />
         <ScrollRestoration />
         <Suspense fallback={<PageLoadingSkeleton />}>
-          <Routes>
+          <ErrorBoundary>
+            <Routes>
             {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<AboutPage />} />
@@ -420,8 +423,9 @@ const App = () => (
             } />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ErrorBoundary>
         </Suspense>
       </BrowserRouter>
       </TooltipProvider>
