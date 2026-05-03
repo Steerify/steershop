@@ -21,8 +21,8 @@ export function useUnsavedChanges(isDirty: boolean) {
   }, [isDirty]);
 
   // Warn on internal React Router navigation
-  useBlocker(({ nextLocation, currentValue }) => {
-    if (isDirty && nextLocation.pathname !== currentValue.pathname) {
+  useBlocker(({ nextLocation, currentLocation }) => {
+    if (isDirty && nextLocation.pathname !== currentLocation.pathname) {
       return !window.confirm("You have unsaved changes. Are you sure you want to leave?");
     }
     return false;

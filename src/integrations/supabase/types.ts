@@ -1156,6 +1156,7 @@ export type Database = {
           notes: string | null
           out_for_delivery_at: string | null
           paid_at: string | null
+          payment_instrument_fingerprint: string | null
           payment_reference: string | null
           payment_status: string | null
           processing_at: string | null
@@ -1183,6 +1184,7 @@ export type Database = {
           notes?: string | null
           out_for_delivery_at?: string | null
           paid_at?: string | null
+          payment_instrument_fingerprint?: string | null
           payment_reference?: string | null
           payment_status?: string | null
           processing_at?: string | null
@@ -1210,6 +1212,7 @@ export type Database = {
           notes?: string | null
           out_for_delivery_at?: string | null
           paid_at?: string | null
+          payment_instrument_fingerprint?: string | null
           payment_reference?: string | null
           payment_status?: string | null
           processing_at?: string | null
@@ -1668,6 +1671,7 @@ export type Database = {
           is_subscribed: boolean
           kyc_level: number | null
           needs_role_selection: boolean | null
+          payment_reference: string | null
           phone: string | null
           phone_verification_code: string | null
           phone_verification_expires: string | null
@@ -1693,6 +1697,7 @@ export type Database = {
           is_subscribed?: boolean
           kyc_level?: number | null
           needs_role_selection?: boolean | null
+          payment_reference?: string | null
           phone?: string | null
           phone_verification_code?: string | null
           phone_verification_expires?: string | null
@@ -1718,6 +1723,7 @@ export type Database = {
           is_subscribed?: boolean
           kyc_level?: number | null
           needs_role_selection?: boolean | null
+          payment_reference?: string | null
           phone?: string | null
           phone_verification_code?: string | null
           phone_verification_expires?: string | null
@@ -2892,6 +2898,48 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      website_visits: {
+        Row: {
+          created_at: string
+          device_type: string | null
+          id: string
+          ip_hash: string | null
+          path: string
+          referrer: string | null
+          session_id: string
+          user_id: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          visited_at: string
+        }
+        Insert: {
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          ip_hash?: string | null
+          path: string
+          referrer?: string | null
+          session_id: string
+          user_id?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          visited_at?: string
+        }
+        Update: {
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          ip_hash?: string | null
+          path?: string
+          referrer?: string | null
+          session_id?: string
+          user_id?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          visited_at?: string
         }
         Relationships: []
       }

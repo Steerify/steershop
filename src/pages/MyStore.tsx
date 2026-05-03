@@ -34,7 +34,9 @@ import {
   HelpCircle,
   ChevronDown,
   AlertTriangle,
+  Clock,
 } from "lucide-react";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import { ImageUpload } from "@/components/ImageUpload";
 import { QRCodeSVG } from "qrcode.react";
 import { StoreFlyerTemplate } from "@/components/StoreFlyerTemplate";
