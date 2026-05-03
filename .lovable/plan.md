@@ -1,129 +1,77 @@
+# Fix Subscriptions, Blank Screens & Email Flow
 
-# Combined Sprint B + C + TS Build Fix
+## Root causes found
 
-Three independent tracks. None touch the homepage UI, so the visual refactor is unaffected.
+After a deep audit, **three concrete bugs** are silently breaking the app — and one of them is exactly why joyadaeze845@gmail.com's ₦5,000 payment never reflected.
 
----
+### 1. Subscription verify is broken (this is why Joy's payment didn't reflect)
+`supabase/functions/paystack-verify/index.ts` tries to update a column called `payment_reference` on the `profiles` table. **That column does not exist** (confirmed against the live schema). So when Paystack redirects the user back to `/dashboard?subscription=verify&reference=...`, the verify edge function throws an error, the toast shows failure, and `is_subscribed` is **never** set to true. The webhook backup also failed because no `paystack_webhook_events` row was ever inserted for her — meaning Paystack's webhook didn't reach us either (likely webhook URL not configured in Paystack dashboard, or signature mismatch from a previous deploy).
 
-## Track 1 — TypeScript Build Errors (unblock compile)
+Joy's profile right now:
+- `is_subscribed: false`
+- `subscription_plan_id: null`
+- `subscription_expires_at: 2026-01-15` (still the trial date)
+- Role is correct: `shop_owner`
 
-Concrete errors only. No behavior changes beyond making types correct.
+### 2. `website_visits` table is missing
+`track-visit` edge function logs are spamming `PGRST205: Could not find the table 'public.website_visits'`. Every page load fails this call → contributes to slow loads and console noise.
 
-1. **`src/components/CheckoutDialog.tsx:466`** — `validateCoupon` returns a discriminated union. Narrow with `'coupon' in result` before reading `result.coupon`.
-2. **`src/pages/Products.tsx:404-406`** — Undefined `response` variable. Rename to the actual fetch/invoke result variable in scope (likely `data` or rename the awaited call to `response`).
-3. **`src/pages/admin/AdminUsers.tsx:331-354`** — Missing imports. Add `import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"`.
-4. **`src/services/admin.service.ts:76`** — `get_website_visit_analytics` RPC isn't in generated types. Either (a) cast via `supabase.rpc as any` for that single call, or (b) replace with a direct query against the analytics table. Use (a) as the minimal fix.
-5. **`src/services/admin.service.ts:104-110`** — `get_admin_stats` returns `Json`. Cast result: `const stats = data as { total_users: number; total_shops: number; ... }`.
-6. **`src/services/coupon.service.ts:103`** — DB row's `discount_type: string` doesn't match `"fixed" | "percentage"`. Cast at the boundary: `discount_type: row.discount_type as 'fixed' | 'percentage'`.
-7. **`src/services/referral.service.ts`** — Two issues:
-   - `commission_status` / `commission_amount` columns don't exist on `referrals`. Either remove those reads, or add a migration to introduce the columns. Plan: **add migration** `ALTER TABLE referrals ADD COLUMN commission_status text DEFAULT 'pending', ADD COLUMN commission_amount numeric DEFAULT 0;` since admin payout UI depends on it.
-   - `ambassador_profiles` table not in generated types → it doesn't exist. Add a migration creating `ambassador_profiles` with RLS, OR (simpler if unused) remove the ambassador queries. Decision: **create the table** (referenced from Ambassador page).
-
----
-
-## Track 2 — Sprint B: Email Queue Migration
-
-All transactional email sends route through the existing `enqueue_email` RPC + `process-email-queue` dispatcher. This gives retries, rate-limit handling, and DLQ.
-
-Functions to refactor:
-- `send-notification-email` → enqueue to `transactional_emails` queue instead of direct Resend call.
-- `send-welcome-email` → same; also stop using anon-key client to fetch profile (use service-role).
-- `order-notifications` → enqueue order confirmation + shop alert emails to queue.
-- `send-password-reset` → audit; route through queue if currently direct.
-
-Each function will:
-1. Validate input with Zod.
-2. Render the HTML (existing templates kept inline for now).
-3. Call `supabase.rpc('enqueue_email', { queue_name: 'transactional_emails', payload: { to, subject, html, from } })`.
-4. Return 202 with the message id.
-
-No new email infra is created — the project already has `enqueue_email`, `process-email-queue`, `email_send_log`, queues. We only redirect direct sends into the queue.
+### 3. `orders.payment_instrument_fingerprint` column is missing
+The Paystack webhook tries to write this on real order payments. When an order is paid, the webhook update silently fails → orders stay marked `pending`.
 
 ---
 
-## Track 3 — Sprint C: Backend / Security Hardening
+## What I'll do (in order)
 
-Addresses every `error`-level finding plus the high-value `warn`s.
+### Step 1 — Reconcile Joy's payment manually & verify with Paystack
+- Use the Paystack Transactions API server-side to look up her latest successful transaction by email.
+- Set her profile: `is_subscribed=true`, `subscription_plan_id` = Pro plan (₦5,000 monthly = `c4d6853e-...`), `subscription_expires_at = now() + 30 days`, `subscription_type='monthly'`.
+- Insert a `revenue_transactions` + `paystack_webhook_events` record so it shows in admin records and prevents double-credit.
 
-### Edge function auth (require JWT in code; keep `verify_jwt = false` in config since we validate manually with service role)
+### Step 2 — Fix the subscription verify bug (the real root cause)
+Database migration:
+- Add `payment_reference text` column to `profiles` (used by verify + idempotency check).
+- Add `payment_instrument_fingerprint text` column to `orders`.
+- Create the missing `website_visits` table with proper schema + RLS (admin read, service-role insert) so analytics + track-visit stop erroring.
 
-- **`send-phone-otp`** — Require `Authorization` Bearer; derive `userId` from `getUser(token)`; ignore body `userId`. Remove `fallbackCode` from response (server-log only in dev).
-- **`verify-phone-otp`** — Same: derive `userId` from JWT, not body.
-- **`generate-ad-copy`** — Require JWT; add Zod input validation with length caps (shopName ≤200, descriptions ≤500).
-- **`logistics-book-delivery`** — Require JWT; verify `shop.owner_id === user.id` before booking.
-- **`know-this-shop`** — Require JWT before AI call (shop data read can stay public if needed; AI gated).
-- **`enforce-subscription-limits`** — Require `x-cron-secret` header matching new `CRON_SECRET` env var; reject otherwise.
-- **`paystack-setup-service`** — Replace client-supplied `amount` with server-side `PACKAGE_AMOUNTS` map. Add Zod validation.
-- **`paystack-webhook`** — Add `type` discriminator: setup-service payments (metadata.type === 'setup_service') must NOT trigger subscription renewal. Also add idempotency check using `paystack_webhook_events` table (insert reference; reject duplicates).
-- **`done-for-you-setup`** — Remove `free_setup` from request body. Read `profiles.free_setup_eligible` server-side (new column, default false; admin-set only).
+### Step 3 — Harden the payment success flow (so this never repeats)
+- Implement the **polling pattern** on the Dashboard success handler: after redirect, poll `is_subscribed` for ~20 s before showing failure. This handles the race between Paystack redirect and webhook.
+- Make `paystack-verify` idempotent and log structured errors so future failures are visible in Edge Function logs.
+- Add a one-shot admin tool path: an admin-only edge function `admin-reconcile-payment` that takes a Paystack reference, verifies it via Paystack API, and applies the subscription — for any future stuck payments.
 
-### Migrations
+### Step 4 — Confirm Paystack webhook URL is live
+- Document the exact webhook URL the user must paste in Paystack dashboard:
+  `https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/paystack-webhook`
+- The webhook code already does HMAC-SHA512 signature check + idempotency via `paystack_webhook_events`, so once the URL is set, future payments will self-heal even if the redirect step fails.
 
-```sql
--- Free setup eligibility (admin controlled)
-ALTER TABLE profiles ADD COLUMN free_setup_eligible boolean NOT NULL DEFAULT false;
+### Step 5 — Email flow audit (user signup → welcome → orders)
+- `send-welcome-email`: works but uses direct Resend send, no retry. Migrate to the `transactional_emails` queue (`enqueue_email` RPC) so failed sends retry automatically. Same for `order-notifications`.
+- Verify `RESEND_API_KEY` and `notify.steersolo.com` domain are still valid (read-only check via `email_send_log`).
+- Confirm Supabase Auth → `auth-email-hook` is wired so signup confirmation emails go through our branded template (already implemented; just verify config).
 
--- Webhook idempotency
-CREATE TABLE paystack_webhook_events (
-  reference text PRIMARY KEY,
-  event_type text NOT NULL,
-  processed_at timestamptz NOT NULL DEFAULT now()
-);
-ALTER TABLE paystack_webhook_events ENABLE ROW LEVEL SECURITY;
--- No policies = service role only.
+### Step 6 — Sweep other blank-screen causes
+- `Dashboard.tsx` calls `subscriptionService.initializePayment('basic', 'monthly')` — but there is **no plan with slug 'basic'** in the DB. Plans are `free`, `growth`, `pro`. This errors → blank state on the upgrade CTA. Fix to `'growth'` (default paid plan) or read from DB.
+- `useShopOwnerAuth` falls back to a synthetic profile silently when `profiles` fetch fails — replace with explicit error UI so users don't see a blank dashboard.
+- Add an error boundary around the Dashboard route so any thrown render error shows a recover button instead of a blank page.
 
--- Referral commission columns (Track 1 dependency)
-ALTER TABLE referrals
-  ADD COLUMN commission_status text NOT NULL DEFAULT 'pending',
-  ADD COLUMN commission_amount numeric NOT NULL DEFAULT 0;
+### Step 7 — Verification pass
+- Run the Supabase linter and re-check `paystack-webhook` & `paystack-verify` edge function logs.
+- Curl `paystack-verify` with Joy's reference end-to-end to confirm the column fix works.
+- Confirm her dashboard now shows the Pro plan as active.
 
--- Ambassador profiles (Track 1 dependency)
-CREATE TABLE ambassador_profiles (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
-  legal_name text NOT NULL,
-  phone text NOT NULL,
-  payout_bank_name text,
-  payout_bank_code text,
-  payout_account_number text,
-  payout_account_name text,
-  tier text NOT NULL DEFAULT 'starter',
-  total_referrals integer NOT NULL DEFAULT 0,
-  total_earnings numeric NOT NULL DEFAULT 0,
-  approved boolean NOT NULL DEFAULT false,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-ALTER TABLE ambassador_profiles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "own_profile_select" ON ambassador_profiles FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "own_profile_upsert" ON ambassador_profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "own_profile_update" ON ambassador_profiles FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "admin_all" ON ambassador_profiles FOR ALL USING (has_role(auth.uid(), 'admin'));
-```
+## Technical details
 
-### RLS / data-exposure fixes
+| Area | File / Change |
+|---|---|
+| Migration | `ALTER TABLE profiles ADD COLUMN payment_reference text;` |
+| Migration | `ALTER TABLE orders ADD COLUMN payment_instrument_fingerprint text;` |
+| Migration | `CREATE TABLE website_visits (...)` + RLS |
+| Edge fn fix | `paystack-verify/index.ts` — already references the column, just needs the column to exist |
+| Edge fn new | `admin-reconcile-payment/index.ts` (admin-gated, calls Paystack verify API) |
+| Edge fn refactor | `send-welcome-email`, `order-notifications` → use queue |
+| Frontend | `Dashboard.tsx` — fix `'basic'` slug, add 20 s subscription polling on `?subscription=verify`, add error boundary |
+| Data fix | One-time SQL to activate Joy's Pro plan after Paystack confirmation |
 
-- **`shops` bank fields exposed publicly** — Create a `shops_public` view (already partially referenced in code) that excludes `bank_account_number`, `bank_account_name`, `bank_name`, `settlement_account_number`, `settlement_bank_code`. Restrict the existing public SELECT policy on `shops` to exclude unauthenticated reads of full row; rewrite frontend public reads to use `shops_public`.
-- **`bookings` realtime PII leak** — Add RLS policy on `realtime.messages` scoping booking events to shop owner or booking customer only. (Use `realtime.topic()` extraction pattern.)
-- **`referral_codes.user_id` enumeration** — Replace public policy with a `validate_referral_code(code text)` SECURITY DEFINER function that returns only `{ valid: boolean }`; revoke direct SELECT from anon.
-- **Public bucket listing** — Restrict `storage.objects` SELECT policy on `shop-images`, `product-images`, `email-assets`, `product-videos` to specific path patterns (no broad listing).
-- **SECURITY DEFINER function execute grants** — Run `REVOKE EXECUTE ... FROM anon, authenticated` on internal helpers (`block_deleted_email`, triggers, etc.) keeping only `has_role`, `check_product_limit`, `check_feature_usage`, `claim_prize`, `enqueue_email` callable as needed.
-
-### Verification
-
-- Run `supabase--linter` after migrations.
-- Run `security--run_security_scan` and confirm error-level findings cleared.
-- Smoke-test: signup OTP flow, checkout, admin dashboard stats.
-
----
-
-## Order of operations
-
-1. Migrations first (unblocks Track 1 + Track 3).
-2. Track 1 TS fixes.
-3. Track 2 email function refactors + redeploy.
-4. Track 3 edge function auth + redeploy.
-5. Storage / RLS / realtime policies.
-6. Lint + security rescan.
-
-No homepage / Index.tsx work in this plan — the design refactor stays paused until you're ready to resume Sprint A.
+## Out of scope for this pass
+- Visual/UX redesign (was handled in earlier turns; colors are now Deep Navy + Nigerian Green per memory).
+- Removing the GSI FedCM console warning (Google's One-Tap policy on the iframe; harmless).
