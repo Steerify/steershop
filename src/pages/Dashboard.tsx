@@ -434,7 +434,7 @@ const Dashboard = () => {
   const handleSubscribe = async () => {
     setIsSubscribing(true);
     try {
-      const result = await subscriptionService.initializePayment('basic', 'monthly');
+      const result = await subscriptionService.initializePayment('growth', 'monthly');
       if (result.success && result.authorization_url) {
         localStorage.setItem('paystack_reference', result.reference || '');
         toast({ title: "Redirecting to Payment", description: "You'll be redirected to Paystack to complete your payment..." });
