@@ -3,11 +3,8 @@ import { ArrowRight, CheckCircle, Shield, Zap, Sparkles, ShoppingBag, Star, Inst
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { FeaturedShopsBanner } from "@/components/FeaturedShopsBanner";
 import { ShopperDiscovery } from "@/components/ShopperDiscovery";
 import { CollectionsSection } from "@/components/CollectionsSection";
-import { HomepageReviews } from "@/components/HomepageReviews";
-import { SocialProofStats } from "@/components/SocialProofStats";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 import { Helmet } from "react-helmet-async";
 import { FeaturedStoresHeroCarousel } from "@/components/FeaturedStoresHeroCarousel";
@@ -285,14 +282,6 @@ const Index = () => (
     </section>
 
     
-
-    {/* ══ social proof modules (moved above deep-dive sections) ════════════ */}
-    <section className="bg-background pt-8 md:pt-12">
-      <FeaturedShopsBanner />
-    </section>
-    <section className="bg-background mt-4 md:mt-6">
-      <HomepageReviews />
-    </section>
 
     {/* ══════════════════════════════════════════════════════
         §2  TICKER — Accent green strip

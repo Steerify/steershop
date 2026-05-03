@@ -83,13 +83,15 @@ export const FeaturedStoresHeroCarousel = () => {
         const cards: FeaturedShopCard[] = await Promise.all(
           (featured as any[]).map(async (f) => {
             const shop = f.shops;
-            const { data: prods } = await supabase
+            const { data: prods, error: prodErr } = await supabase
               .from("products")
               .select("id, name, price, image_url")
               .eq("shop_id", f.shop_id)
-              .eq("is_active", true)
+              .eq("is_available", true)
               .order("created_at", { ascending: false })
               .limit(2);
+
+            if (prodErr) console.warn("product fetch error for shop", f.shop_id, prodErr.message);
 
             return {
               id: f.id,
