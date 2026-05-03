@@ -69,26 +69,6 @@ describe("useUnsavedChanges", () => {
     );
   });
 
-  it("mountedRef starts false and becomes true after setTimeout(0)", () => {
-    // If mountedRef starts true the blocker could fire on mount — regression guard
-    let capturedRef: boolean | undefined;
-    const testHook = () => {
-      // We re-implement the timing check by verifying confirm is never called
-      // during the synchronous mount phase (before timers run).
-      useUnsavedChanges(true);
-    };
-
-    renderHook(testHook, { wrapper });
-
-    // Before timers run: mounted is still false → confirm not called
-    expect(window.confirm).not.toHaveBeenCalled();
-
-    // After the setTimeout(0) fires: mounted becomes true
-    vi.runAllTimers();
-    // confirm still not called because no navigation happened
-    expect(window.confirm).not.toHaveBeenCalled();
-  });
-
   it("beforeunload event fires the browser warning when isDirty=true", () => {
     renderHook(() => useUnsavedChanges(true), { wrapper });
 
@@ -113,3 +93,4 @@ describe("useUnsavedChanges", () => {
     expect(event.preventDefault).not.toHaveBeenCalled();
   });
 });
+

@@ -46,7 +46,7 @@ const SlideSkeletons = () => (
         style={{ scrollSnapAlign: "start" }}
         aria-hidden
       >
-        <div className="h-full animate-pulse" style={{ borderRadius: 24, background: "rgba(255,255,255,0.07)", minHeight: 320 }} />
+        <div className="h-full animate-pulse" style={{ borderRadius: 24, background: "rgba(255,255,255,0.07)", minHeight: 480 }} />
       </div>
     ))}
   </>
@@ -158,7 +158,7 @@ export const FeaturedStoresHeroCarousel = () => {
         position: "relative",
         width: "100%",
         flexShrink: 0,
-        maxWidth: 420,
+        maxWidth: 520,
       }}
       className="hidden lg:block"
     >
@@ -280,7 +280,7 @@ export const FeaturedStoresHeroCarousel = () => {
                       {/* Logo */}
                       <div
                         style={{
-                          width: 48, height: 48, borderRadius: 14, overflow: "hidden",
+                          width: 56, height: 56, borderRadius: 16, overflow: "hidden",
                           background: "rgba(255,255,255,0.1)", flexShrink: 0,
                           display: "flex", alignItems: "center", justifyContent: "center",
                           border: "1px solid rgba(255,255,255,0.15)",
@@ -303,7 +303,7 @@ export const FeaturedStoresHeroCarousel = () => {
                         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
                           <h3
                             style={{
-                              fontWeight: 700, fontSize: "0.95rem", color: "#fff",
+                              fontWeight: 800, fontSize: "1.1rem", color: "#fff",
                               margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                             }}
                           >
@@ -349,7 +349,7 @@ export const FeaturedStoresHeroCarousel = () => {
                               }}
                             >
                               {/* Product image */}
-                              <div style={{ height: 110, overflow: "hidden", flexShrink: 0 }}>
+                              <div style={{ height: 180, overflow: "hidden", flexShrink: 0 }}>
                                 {hasImg ? (
                                   <img
                                     src={imgUrl!}
@@ -401,7 +401,7 @@ export const FeaturedStoresHeroCarousel = () => {
                               border: "1px dashed rgba(255,255,255,0.08)",
                               display: "flex", flexDirection: "column",
                               alignItems: "center", justifyContent: "center",
-                              gap: 6, minHeight: 140,
+                              gap: 6, minHeight: 220,
                             }}
                           >
                             <ShoppingBag style={{ width: 22, height: 22, color: "rgba(255,255,255,0.2)" }} />
