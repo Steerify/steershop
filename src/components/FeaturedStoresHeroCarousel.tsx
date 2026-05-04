@@ -117,16 +117,27 @@ export const FeaturedStoresHeroCarousel = () => {
     })();
   }, []);
 
-  /* ── autoplay ── */
+  /* ── autoplay (runs ONCE through all slides on initial load, then stops
+        so the carousel doesn't keep stealing attention while users browse) ── */
+  const hasAutoPlayedRef = useRef(false);
   const startAuto = useCallback(() => {
     if (autoRef.current) clearInterval(autoRef.current);
+    if (hasAutoPlayedRef.current || slides.length <= 1) return;
     autoRef.current = setInterval(() => {
-      setActiveIdx((i) => (i + 1) % Math.max(slides.length, 1));
+      setActiveIdx((i) => {
+        const next = i + 1;
+        if (next >= slides.length) {
+          if (autoRef.current) clearInterval(autoRef.current);
+          hasAutoPlayedRef.current = true;
+          return slides.length - 1;
+        }
+        return next;
+      });
     }, 5000);
   }, [slides.length]);
 
   useEffect(() => {
-    if (slides.length > 1) startAuto();
+    if (slides.length > 1 && !hasAutoPlayedRef.current) startAuto();
     return () => { if (autoRef.current) clearInterval(autoRef.current); };
   }, [slides.length, startAuto]);
 
