@@ -138,11 +138,15 @@ const HeroTextSlider = () => {
       eyebrow: "For WhatsApp · Instagram · TikTok vendors",
       h1: "You already have<br />the audience.<br /><em style='font-style:normal;color:hsl(var(--accent-bright))'>Give them somewhere to buy.</em>",
       p: "500,000+ Nigerian beauty vendors sell on social media every day — and lose buyers because there's nowhere to send them after the DM. SteerSolo is that place.",
+      cta1: { label: "Claim your free store", link: "/auth/signup", icon: ArrowRight },
+      cta2: { label: "See a demo store", link: "/demo" }
     },
     {
       eyebrow: "For the Savvy Nigerian Shopper",
       h1: "Shop verified brands<br />with 100% confidence.<br /><em style='font-style:normal;color:hsl(var(--accent-bright))'>No more 'What I Ordered' drama.</em>",
       p: "Browse thousands of authentic products from verified Nigerian stores. Secure checkout, real reviews, and direct WhatsApp tracking for every order.",
+      cta1: { label: "Explore Marketplace", link: "/shops", icon: ShoppingBag },
+      cta2: { label: "Sign up for Free", link: "/shopper-signup" }
     },
   ];
 
@@ -185,6 +189,38 @@ const HeroTextSlider = () => {
           <p style={{ fontSize: "clamp(1rem,1.35vw,1.08rem)", lineHeight: 1.65, color: "rgba(255,255,255,.62)", fontWeight: 300, maxWidth: 500, marginBottom: 30 }}>
             {phrase.p}
           </p>
+
+          {/* CTAs moved inside slider */}
+          <div style={{ display:"flex",flexWrap:"wrap",gap:14,marginBottom:28 }}>
+            <Link to={phrase.cta1.link}>
+              <button style={{
+                display:"flex",alignItems:"center",gap:10,padding:"12px 26px",
+                borderRadius:9999,fontWeight:700,fontSize:"1rem",color:"hsl(var(--primary))",
+                background:"#fff",
+                boxShadow:`0 8px 32px rgba(0,0,0,0.25)`,
+                border:"none",cursor:"pointer",
+                transition:"all .25s ease",
+              }}
+                onMouseEnter={e=>(e.currentTarget.style.transform="translateY(-2px)")}
+                onMouseLeave={e=>(e.currentTarget.style.transform="translateY(0)")}>
+                {phrase.cta1.label}
+                {phrase.cta1.icon && <phrase.cta1.icon style={{ width:16,height:16 }} />}
+              </button>
+            </Link>
+            <Link to={phrase.cta2.link}>
+              <button style={{
+                display:"flex",alignItems:"center",gap:8,padding:"12px 24px",
+                borderRadius:9999,fontWeight:600,fontSize:"0.9rem",
+                background:"rgba(255,255,255,0.12)",border:"1.5px solid rgba(255,255,255,0.25)",
+                color:"#fff",cursor:"pointer",transition:"all .25s ease",
+                backdropFilter:"blur(10px)",
+              }}
+                onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.2)")}
+                onMouseLeave={e=>(e.currentTarget.style.background="rgba(255,255,255,0.12)")}>
+                {phrase.cta2.label}
+              </button>
+            </Link>
+          </div>
         </div>
       ))}
     </div>
@@ -252,51 +288,8 @@ const Index = () => (
           {/* ── TEXT ── */}
           <div style={{ flex:"1 1 420px",maxWidth:560 }} className="f1">
 
-            {/* eyebrow */}
-            <div style={{
-              display:"inline-flex",alignItems:"center",gap:8,marginBottom:28,
-              borderBottom:`1.5px solid rgba(255,255,255,0.3)`,paddingBottom:6,
-            }}>
-              <Sparkles style={{ width:14,height:14,color:"rgba(255,255,255,0.6)" }} />
-              <span style={{ fontSize:"0.72rem",fontWeight:600,textTransform:"uppercase",letterSpacing:"0.22em",color:"rgba(255,255,255,0.6)" }}>
-                For WhatsApp · Instagram · TikTok vendors
-              </span>
-            </div>
-
-            <div style={{ minHeight: 280 }}>
+            <div style={{ minHeight: 380 }}>
               <HeroTextSlider />
-            </div>
-
-            {/* CTAs */}
-            <div style={{ display:"flex",flexWrap:"wrap",gap:14,marginBottom:28 }} className="f2">
-              <Link to="/auth/signup">
-                <button style={{
-                  display:"flex",alignItems:"center",gap:10,padding:"12px 26px",
-                  borderRadius:9999,fontWeight:700,fontSize:"1rem",color:"hsl(var(--primary))",
-                  background:"#fff",
-                  boxShadow:`0 8px 32px rgba(0,0,0,0.25)`,
-                  border:"none",cursor:"pointer",
-                  transition:"all .25s ease",
-                }}
-                  onMouseEnter={e=>(e.currentTarget.style.transform="translateY(-2px)")}
-                  onMouseLeave={e=>(e.currentTarget.style.transform="translateY(0)")}>
-                  Claim your free store
-                  <ArrowRight style={{ width:16,height:16 }} />
-                </button>
-              </Link>
-              <Link to="/demo">
-                <button style={{
-                  display:"flex",alignItems:"center",gap:8,padding:"12px 24px",
-                  borderRadius:9999,fontWeight:600,fontSize:"0.9rem",
-                  background:"rgba(255,255,255,0.12)",border:"1.5px solid rgba(255,255,255,0.25)",
-                  color:"#fff",cursor:"pointer",transition:"all .25s ease",
-                  backdropFilter:"blur(10px)",
-                }}
-                  onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.2)")}
-                  onMouseLeave={e=>(e.currentTarget.style.background="rgba(255,255,255,0.12)")}>
-                  See a demo store
-                </button>
-              </Link>
             </div>
 
             {/* trust pills */}
