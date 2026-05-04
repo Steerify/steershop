@@ -146,17 +146,9 @@ const HeroTextSlider = () => {
     },
   ];
 
-  // Cycle through phrases once on initial page open, then stop so the
-  // hero doesn't keep pulling user attention while they explore the page.
   useEffect(() => {
-    let current = 0;
     const timer = setInterval(() => {
-      current += 1;
-      if (current >= phrases.length) {
-        clearInterval(timer);
-        return;
-      }
-      setIndex(current);
+      setIndex((prev) => (prev + 1) % phrases.length);
     }, 6000);
     return () => clearInterval(timer);
   }, []);
