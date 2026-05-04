@@ -37,7 +37,7 @@ interface Celebration {
 // --- Configuration ---
 const CELEBRATIONS: Celebration[] = [
   { name: "Christmas", startDate: "12-20", endDate: "12-27", type: 'christian', vibe: "Festive gifting season", ctaLabel: "Holiday-ready shops", ctaHref: "/shops" },
-  { name: "New Year", startDate: "12-31", endDate: "01-02", type: 'general', vibe: "Fresh goals, fresh products", ctaLabel: "Start selling stronger", ctaHref: "/pricing" },
+  { name: "New Year", startDate: "12-31", endDate: "01-02", type: 'general', vibe: "Fresh goals, fresh products", ctaLabel: "Start selling stronger", ctaHref: "/auth/signup" },
   { name: "Eid al-Fitr", startDate: "04-09", endDate: "04-11", type: 'muslim', vibe: "Celebrate with trusted vendors", ctaLabel: "View Eid specials", ctaHref: "/shops" },
   { name: "Valentine's Day", startDate: "02-14", endDate: "02-14", type: 'general', vibe: "Love-inspired gifting", ctaLabel: "Discover gift shops", ctaHref: "/shops" },
   { name: "Independence Day", startDate: "10-01", endDate: "10-01", type: 'cultural', vibe: "Naija-made excellence", ctaLabel: "Support local brands", ctaHref: "/shops" },
@@ -270,7 +270,6 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
             <div className="hidden md:flex items-center gap-6 font-display">
               {[
                 { label: "Shops", href: "/shops" },
-                { label: "Pricing", href: "/pricing" },
                 { label: "About", href: "/about" },
                 { label: "Ambassador", href: "/ambassador-program" },
                 { label: "Feedback", href: "/feedback" },
@@ -412,12 +411,6 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
             <Store className="w-5 h-5" />
             Shops
           </Link>
-          <div className="section-divider my-1" />
-          <Link to="/pricing" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
-            <Tag className="w-5 h-5" />
-            Pricing
-          </Link>
-          <div className="section-divider my-1" />
           <Link to="/about" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
             <Star className="w-5 h-5" />
             About

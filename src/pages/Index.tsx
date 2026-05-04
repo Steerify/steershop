@@ -111,16 +111,16 @@ const JOURNEY = [
 ];
 
 const BADGES = [
-  { num:"01", label:"SafeBeauty Listed",   desc:"Vendor verified, store live. Entry-level trust signal for new buyers.",                      top:false },
-  { num:"02", label:"SafeBeauty Checked",  desc:"At least one product batch confirmed genuine through our process.",                           top:false },
-  { num:"03", label:"SafeBeauty Trusted",  desc:"30+ days active, real buyer reviews, zero unresolved complaints.",                            top:false },
-  { num:"04", label:"SafeBeauty Verified", desc:"Full NAFDAC-aligned identity check — the highest trust signal on the platform.",               top:true  },
+  { num:"01", label:"SteerSolo Safe Listed",   desc:"Vendor verified, store live. Entry-level trust signal for new buyers.",                      top:false },
+  { num:"02", label:"SteerSolo Safe Checked",  desc:"At least one product batch confirmed genuine through our process.",                           top:false },
+  { num:"03", label:"SteerSolo Safe Trusted",  desc:"30+ days active, real buyer reviews, zero unresolved complaints.",                            top:false },
+  { num:"04", label:"SteerSolo Safe Verified", desc:"Full identity check — the highest trust signal on the platform.",               top:true  },
 ];
 
 const TESTIMONIALS = [
   { quote:"I used to spend 3 hours a day answering the same DMs. Now I paste my link and the store does the talking.", name:"Chidera O.", role:"Skincare vendor · Lagos", av:P.av1 },
   { quote:"My TikTok blew up and I had nowhere to send people. SteerSolo fixed that overnight.",                       name:"Amara S.",  role:"Makeup artist · Abuja",      av:P.av2 },
-  { quote:"The SafeBeauty badge made buyers stop questioning if my products are real. Sales doubled in 6 weeks.",      name:"Fatima B.", role:"Natural beauty vendor · Kano", av:P.av3 },
+  { quote:"The SteerSolo Safe badge made buyers stop questioning if my products are real. Sales doubled in 6 weeks.",      name:"Fatima B.", role:"Natural beauty vendor · Kano", av:P.av3 },
 ];
 
 const STATS = [
@@ -129,6 +129,66 @@ const STATS = [
   { v:"67%",     l:"Online beauty items likely counterfeit" },
   { v:"500K+",   l:"Beauty micro-vendors on social" },
 ];
+
+const HeroTextSlider = () => {
+  const [index, setIndex] = useState(0);
+  const phrases = [
+    {
+      eyebrow: "For WhatsApp · Instagram · TikTok vendors",
+      h1: "You already have<br />the audience.<br /><em style='font-style:normal;color:hsl(var(--accent-bright))'>Give them somewhere to buy.</em>",
+      p: "500,000+ Nigerian beauty vendors sell on social media every day — and lose buyers because there's nowhere to send them after the DM. SteerSolo is that place.",
+    },
+    {
+      eyebrow: "For the Savvy Nigerian Shopper",
+      h1: "Shop verified brands<br />with 100% confidence.<br /><em style='font-style:normal;color:hsl(var(--accent-bright))'>No more 'What I Ordered' drama.</em>",
+      p: "Browse thousands of authentic products from verified Nigerian stores. Secure checkout, real reviews, and direct WhatsApp tracking for every order.",
+    },
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % phrases.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div style={{ position: "relative", overflow: "hidden" }}>
+      <style>{`
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateX(30px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-slide-in {
+          animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
+      {phrases.map((phrase, i) => (
+        <div
+          key={i}
+          className={cn("transition-all duration-700", i === index ? "block animate-slide-in" : "hidden")}
+        >
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 28,
+            borderBottom: `1.5px solid rgba(255,255,255,0.3)`, paddingBottom: 6,
+          }}>
+            <Sparkles style={{ width: 14, height: 14, color: "rgba(255,255,255,0.6)" }} />
+            <span style={{ fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.22em", color: "rgba(255,255,255,0.6)" }}>
+              {phrase.eyebrow}
+            </span>
+          </div>
+          <h1 
+            style={{ fontWeight: 800, color: "#fff", lineHeight: 1.08, marginBottom: 20, fontSize: "clamp(2.15rem,4.25vw,3.8rem)" }}
+            dangerouslySetInnerHTML={{ __html: phrase.h1 }}
+          />
+          <p style={{ fontSize: "clamp(1rem,1.35vw,1.08rem)", lineHeight: 1.65, color: "rgba(255,255,255,.62)", fontWeight: 300, maxWidth: 500, marginBottom: 30 }}>
+            {phrase.p}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 /* ═══════════════════════════════════════════════════════ PAGE ═══ */
 const Index = () => (
@@ -202,16 +262,9 @@ const Index = () => (
               </span>
             </div>
 
-            <h1 style={{ fontWeight:800,color:"#fff",lineHeight:1.08,marginBottom:20,fontSize:"clamp(2.15rem,4.25vw,3.8rem)" }}>
-              You already have<br />
-              the audience.<br />
-              <em style={{ fontStyle:"normal",color:"hsl(var(--accent-bright))" }}>Give them somewhere to buy.</em>
-            </h1>
-
-            <p style={{ fontSize:"clamp(1rem,1.35vw,1.08rem)",lineHeight:1.65,color:"rgba(255,255,255,.62)",fontWeight:300,maxWidth:500,marginBottom:30 }}>
-              500,000+ Nigerian beauty vendors sell on social media every day — and lose buyers
-              because there's nowhere to send them after the DM. SteerSolo is that place.
-            </p>
+            <div style={{ minHeight: 280 }}>
+              <HeroTextSlider />
+            </div>
 
             {/* CTAs */}
             <div style={{ display:"flex",flexWrap:"wrap",gap:14,marginBottom:28 }} className="f2">
@@ -247,7 +300,7 @@ const Index = () => (
 
             {/* trust pills */}
             <div style={{ display:"flex",flexWrap:"wrap",gap:10 }} className="f3">
-              {[{I:CheckCircle,t:"Verification-first"},{I:Zap,t:"Free plan to start"},{I:Shield,t:"SafeBeauty certified"}]
+              {[{I:CheckCircle,t:"Verification-first"},{I:Zap,t:"Instant Stores"},{I:Shield,t:"SteerSolo Safe Marketplace"}]
                 .map(({I,t})=>(
                   <span key={t} style={{
                     display:"inline-flex",alignItems:"center",gap:6,fontSize:"0.75rem",
@@ -291,10 +344,9 @@ const Index = () => (
         {Array(2).fill([
           "Nigeria's Only Verified Beauty Marketplace",
           "Real Products · Real Sellers · Real Results",
-          "NAFDAC-Aligned Verification",
+          "Full Identity Verification",
           "Works on WhatsApp · Instagram · TikTok",
-          "Free to Start · Paid When You Grow",
-          "SafeBeauty — Your Michelin Star for Trust",
+          "SteerSolo Safe — Your Standard for Trust",
         ]).flat().map((t,i)=>(
           <span key={i} style={{
             display:"inline-flex",alignItems:"center",gap:20,padding:"0 28px",
@@ -413,7 +465,7 @@ const Index = () => (
           "Your content wins their attention.<br />SteerSolo wins the sale."
         </p>
         <p style={{ color:"rgba(255,255,255,.45)",fontSize:"0.68rem",letterSpacing:"0.22em",textTransform:"uppercase",marginTop:16 }}>
-          SteerSolo · SafeBeauty Standard · Nigeria
+          SteerSolo · SteerSolo Safe Standard · Nigeria
         </p>
       </div>
     </div>
@@ -463,7 +515,7 @@ const Index = () => (
             null,
             { e:"🔗",l:"Your SteerSolo link",     s:"One URL in every bio" },
             null,
-            { e:"🛍️",l:"Verified store page",     s:"Catalog + SafeBeauty badge" },
+            { e:"🛍️",l:"Verified store page",     s:"Catalog + SteerSolo Safe badge" },
             null,
             { e:"✅",l:"Real orders",              s:"Tracked, confirmed, paid" },
           ].map((item,i)=> !item
@@ -529,8 +581,8 @@ const Index = () => (
         <div style={{ textAlign:"center",marginBottom:56 }}>
           <p style={{ fontSize:"0.72rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.22em",color:"hsl(var(--accent-bright))",marginBottom:16 }}>The trust layer</p>
           <h2 style={{ fontWeight:800,color:"#fff",lineHeight:1.2,fontSize:"clamp(1.9rem,4vw,3rem)",margin:0 }}>
-            SafeBeauty — our Michelin Star<br />
-            <span style={{ color:"hsl(var(--accent-bright))" }}>for verified beauty vendors.</span>
+            SteerSolo Safe — our Trust Layer<br />
+            <span style={{ color:"hsl(var(--accent-bright))" }}>for verified Nigerian vendors.</span>
           </h2>
           <p style={{ marginTop:16,maxWidth:520,marginLeft:"auto",marginRight:"auto",color:"rgba(255,255,255,.45)",fontSize:"0.9rem" }}>
             Every badge is earned, not bought. Buyers instantly know how trusted your store is before they spend a kobo.
@@ -594,10 +646,10 @@ const Index = () => (
             </p>
             <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
               {[
-                "Fake beauty awareness — the content that goes viral and positions you as safe",
-                "Vendor spotlights — your SafeBeauty badge story, shared by real buyers",
+                "Verified authenticity — the content that goes viral and positions you as safe",
+                "Vendor spotlights — your SteerSolo Safe story, shared by real buyers",
                 "Restock alerts — WhatsApp broadcasts to your verified buyer list",
-                "'Pack my orders' content — TikTok's most trusted beauty vendor format",
+                "'Pack my orders' content — TikTok's most trusted vendor format",
               ].map(t=>(
                 <div key={t} style={{ display:"flex",alignItems:"flex-start",gap:12 }}>
                   <CheckCircle className="text-accent" style={{ width:16,height:16,flexShrink:0,marginTop:2 }}/>
@@ -661,6 +713,74 @@ const Index = () => (
         </Link>
       </div>
     </section>
+    {/* ══════════════════════════════════════════════════════
+        §11  BUYER MARKETPLACE — New excitement for shoppers
+    ══════════════════════════════════════════════════════ */}
+    <section className="py-24 bg-background relative overflow-hidden">
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.5rem" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 64 }}>
+          <div style={{ flex: "1 1 400px" }}>
+            <p className="text-xs font-bold uppercase tracking-widest text-accent mb-4">The SteerSolo Safe Marketplace</p>
+            <h2 className="text-foreground font-extrabold mb-6" style={{ lineHeight: 1.1, fontSize: "clamp(2.2rem,4.5vw,3.5rem)" }}>
+              Finally, a place to shop<br />
+              <span className="text-primary">without the heartbeat fast.</span>
+            </h2>
+            <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
+              We've curated Nigeria's most trusted social vendors into one secure marketplace. 
+              No more guessing if a vendor is real. No more chasing for tracking numbers.
+            </p>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+              {[
+                { i: "🛡️", t: "100% Verified", d: "Every store has a SteerSolo Safe badge earned through real identity checks." },
+                { i: "💬", t: "WhatsApp Power", d: "Order on the web, track and chat on WhatsApp. The convenience you love." },
+                { i: "📦", t: "Real-time Tracking", d: "Know exactly where your beauty products are from checkout to doorstep." },
+                { i: "✨", t: "Curated Excellence", d: "Only the best Nigerian beauty and lifestyle brands make the cut." },
+              ].map((f, idx) => (
+                <div key={idx}>
+                  <div style={{ fontSize: "1.5rem", marginBottom: 12 }}>{f.i}</div>
+                  <h4 className="font-bold text-foreground mb-2">{f.t}</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{f.d}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div style={{ flex: "1 1 400px", position: "relative" }}>
+             <div style={{ 
+               background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--brand-blue-strong)))",
+               borderRadius: 32, padding: 40, color: "#fff",
+               boxShadow: "0 40px 80px rgba(0,0,0,0.15)",
+               position: "relative", zIndex: 2
+             }}>
+               <h3 style={{ fontSize: "1.8rem", fontWeight: 800, marginBottom: 20 }}>Ready to discover?</h3>
+               <p style={{ opacity: 0.8, marginBottom: 32, fontSize: "1.1rem" }}>
+                 Thousands of authentic products are waiting for you in the marketplace.
+               </p>
+               <Link to="/shops">
+                 <button style={{
+                   width: "100%", padding: "16px", borderRadius: 16,
+                   background: "#fff", color: "hsl(var(--primary))",
+                   fontWeight: 800, fontSize: "1.1rem", border: "none",
+                   cursor: "pointer", transition: "transform .2s ease"
+                 }}
+                 onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
+                 onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                 >
+                   Explore the Marketplace
+                 </button>
+               </Link>
+             </div>
+             {/* decorative circle */}
+             <div style={{
+               position: "absolute", top: -20, right: -20, width: 120, height: 120,
+               borderRadius: "50%", background: "hsl(var(--accent) / 0.2)", zIndex: 1
+             }} />
+          </div>
+        </div>
+      </div>
+    </section>
+
     <CollectionsSection />
     <ShopperDiscovery />
 
@@ -721,7 +841,7 @@ const Index = () => (
           </Link>
         </div>
         <div style={{ display:"flex",flexWrap:"wrap",justifyContent:"center",gap:20,fontSize:"0.78rem",color:"rgba(255,255,255,.38)" }}>
-          {["Free forever plan","Works on WhatsApp, IG & TikTok","SafeBeauty badge included"].map(t=>(
+          {["Instant Setup","Works on WhatsApp, IG & TikTok","SteerSolo Safe badge included"].map(t=>(
             <span key={t} style={{ display:"flex",alignItems:"center",gap:6 }}>
               <CheckCircle style={{ width:13,height:13,color:"rgba(255,255,255,.48)" }}/>{t}
             </span>

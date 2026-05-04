@@ -159,8 +159,9 @@ export const FeaturedStoresHeroCarousel = () => {
         width: "100%",
         flexShrink: 0,
         maxWidth: 520,
+        margin: "0 auto",
       }}
-      className="hidden lg:block"
+      className="block"
     >
       {/* header */}
       <div
