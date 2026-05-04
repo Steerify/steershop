@@ -117,37 +117,29 @@ export const FeaturedStoresHeroCarousel = () => {
     })();
   }, []);
 
-  /* ── autoplay (runs ONCE through all slides on initial load, then stops
-        so the carousel doesn't keep stealing attention while users browse) ── */
-  const hasAutoPlayedRef = useRef(false);
+  /* ── autoplay (continuous loop) ── */
   const startAuto = useCallback(() => {
     if (autoRef.current) clearInterval(autoRef.current);
-    if (hasAutoPlayedRef.current || slides.length <= 1) return;
+    if (slides.length <= 1) return;
     autoRef.current = setInterval(() => {
-      setActiveIdx((i) => {
-        const next = i + 1;
-        if (next >= slides.length) {
-          if (autoRef.current) clearInterval(autoRef.current);
-          hasAutoPlayedRef.current = true;
-          return slides.length - 1;
-        }
-        return next;
-      });
+      setActiveIdx((i) => (i + 1) % slides.length);
     }, 5000);
   }, [slides.length]);
 
   useEffect(() => {
-    if (slides.length > 1 && !hasAutoPlayedRef.current) startAuto();
+    if (slides.length > 1) startAuto();
     return () => { if (autoRef.current) clearInterval(autoRef.current); };
   }, [slides.length, startAuto]);
 
-  /* ── scroll sync ── */
+  /* ── scroll sync ──
+     Scroll the track INTERNALLY only (no scrollIntoView) so the page
+     viewport never jumps back to the carousel on each auto-swipe. */
   useEffect(() => {
     const track = trackRef.current;
     if (!track || slides.length === 0) return;
     const slide = track.children[activeIdx] as HTMLElement | undefined;
     if (slide) {
-      slide.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+      track.scrollTo({ left: slide.offsetLeft, behavior: "smooth" });
     }
   }, [activeIdx, slides.length]);
 
