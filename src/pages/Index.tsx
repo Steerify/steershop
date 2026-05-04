@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { ArrowRight, CheckCircle, Shield, Zap, Sparkles, ShoppingBag, Star, Instagram, MessageCircle, Music2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
