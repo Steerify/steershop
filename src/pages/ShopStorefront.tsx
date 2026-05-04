@@ -467,11 +467,11 @@ const ShopStorefront = () => {
       )}
 
       {/* ══════════════════ HERO SECTION ══════════════════ */}
-      <section className="relative pt-20 sm:pt-16" data-tour="shop-header">
+      <section className="relative pt-16 sm:pt-16" data-tour="shop-header">
 
-        {/* Clean Banner */}
-        <div className="relative h-40 sm:h-52 md:h-64 overflow-hidden container mx-auto px-4 mt-2">
-          <div className="absolute inset-0 rounded-2xl overflow-hidden bg-muted">
+        {/* Banner — edge-to-edge on mobile per design system, contained on desktop */}
+        <div className="relative h-36 sm:h-52 md:h-64 overflow-hidden sm:container sm:mx-auto sm:px-4 sm:mt-2">
+          <div className="absolute inset-0 sm:rounded-2xl overflow-hidden bg-muted">
             {shop.banner_url ? (
               <img
                 src={shop.banner_url}
@@ -486,10 +486,10 @@ const ShopStorefront = () => {
         </div>
 
         {/* Shop Identity Card */}
-        <div className="container mx-auto px-4">
-          <div className="relative -mt-14 sm:-mt-16 md:-mt-24 pb-8">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="relative -mt-12 sm:-mt-16 md:-mt-24 pb-6 sm:pb-8">
             <div className="relative z-10">
-              <div className="bg-card border border-border/50 rounded-2xl md:rounded-3xl shadow-sm p-5 md:p-8">
+              <div className="bg-card border border-border/50 rounded-2xl md:rounded-3xl shadow-sm p-4 sm:p-5 md:p-8">
                 <div className="flex flex-col sm:flex-row sm:items-start gap-5 mb-5">
 
                   {/* Logo */}
