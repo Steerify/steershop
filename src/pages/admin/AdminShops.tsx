@@ -721,8 +721,22 @@ export default function AdminShops() {
 
                       <div className="flex flex-wrap gap-2">
                         {getSubscriptionBadge(shop.profiles)}
+                        <Badge variant="outline" className="text-[10px] font-medium bg-muted/50 border-border/50 gap-1">
+                          <Package className="w-3 h-3" />
+                          {shop.product_count} {shop.product_count === 1 ? "product" : "products"}
+                        </Badge>
                         <Badge variant="outline" className="text-[10px] font-medium bg-muted/50 border-border/50">
                           {getOwnerEmail(shop)}
+                        </Badge>
+                        {shop.whatsapp_number && (
+                          <Badge variant="outline" className="text-[10px] font-medium bg-muted/50 border-border/50 gap-1">
+                            <Phone className="w-3 h-3" />
+                            {shop.whatsapp_number}
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="text-[10px] font-medium bg-muted/50 border-border/50 gap-1">
+                          <Calendar className="w-3 h-3" />
+                          Joined {new Date(shop.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
                         </Badge>
                       </div>
 
@@ -746,44 +760,15 @@ export default function AdminShops() {
                             {shop.is_active ? "Deactivate" : "Activate"}
                           </Button>
                         )}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button size="sm" variant="outline" className="w-full rounded-xl font-semibold h-9 gap-1.5">
-                              <MoreHorizontal className="w-4 h-4" />
-                              More
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 rounded-xl p-1 shadow-xl border-primary/10">
-                            <DropdownMenuItem onClick={() => handleEditShop(shop)} className="rounded-lg py-2.5">
-                              <Edit className="w-4 h-4 mr-2" /> Edit Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleViewOwner(shop)} className="rounded-lg py-2.5">
-                              <User className="w-4 h-4 mr-2" /> View Owner
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {shop.profiles && shop.profiles.subscription_plan_id && (
-                              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground capitalize flex items-center">
-                                <Shield className="w-3 h-3 mr-1.5 text-primary" />
-                                {shop.profiles.subscription_plan_id} Plan
-                              </div>
-                            )}
-                            <DropdownMenuSeparator />
-                            {shop.profiles && (
-                              <>
-                                <DropdownMenuItem onClick={() => handleExtendTrial(shop)} className="rounded-lg py-2.5">
-                                  <Calendar className="w-4 h-4 mr-2" /> Extend Sub
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => resetTrial(shop)} className="rounded-lg py-2.5">
-                                  <RefreshCw className="w-4 h-4 mr-2" /> Reset Trial
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                              </>
-                            )}
-                            <DropdownMenuItem onClick={() => handleDeleteShop(shop)} className="text-red-600 focus:text-red-600 rounded-lg py-2.5">
-                              <Trash2 className="w-4 h-4 mr-2" /> Delete Shop
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full rounded-xl font-semibold h-9 gap-1.5"
+                          onClick={() => setMobileActionsShop(shop)}
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                          More
+                        </Button>
                       </div>
                     </div>
                   </div>
