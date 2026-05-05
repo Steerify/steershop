@@ -21,7 +21,9 @@ import {
   Shield,
   Trash2,
   Plus,
-  Clock
+  Clock,
+  Package,
+  Phone
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
