@@ -173,6 +173,7 @@ export const FeaturedStoresHeroCarousel = () => {
 
   return (
     <div
+      ref={containerRef}
       style={{
         position: "relative",
         width: "100%",
