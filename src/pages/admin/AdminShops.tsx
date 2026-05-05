@@ -28,6 +28,7 @@ import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
