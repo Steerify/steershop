@@ -841,6 +841,12 @@ export default function AdminShops() {
                             )}
                           </div>
                         </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="gap-1 font-medium">
+                            <Package className="w-3 h-3" />
+                            {shop.product_count}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {getOwnerEmail(shop)}
                         </TableCell>
