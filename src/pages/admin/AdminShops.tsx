@@ -136,12 +136,30 @@ export default function AdminShops() {
         }
       }
 
+      // Fetch product counts per shop
+      const shopIds = shopsData?.map(s => s.id) || [];
+      const productCountByShop = new Map<string, number>();
+      if (shopIds.length > 0) {
+        const { data: productRows, error: productCountErr } = await supabase
+          .from("products")
+          .select("shop_id")
+          .in("shop_id", shopIds);
+        if (productCountErr) {
+          console.error("Product count fetch error:", productCountErr);
+        } else {
+          (productRows || []).forEach((row: any) => {
+            productCountByShop.set(row.shop_id, (productCountByShop.get(row.shop_id) || 0) + 1);
+          });
+        }
+      }
+
       // Combine shops with their profiles
       const combinedShops = shopsData?.map(shop => {
         const profile = profilesData.find(p => p.id === shop.owner_id);
         return {
           ...shop,
-          profiles: profile || null
+          profiles: profile || null,
+          product_count: productCountByShop.get(shop.id) || 0,
         };
       }) || [];
 
