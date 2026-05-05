@@ -57,8 +57,10 @@ export const FeaturedStoresHeroCarousel = () => {
   const [slides, setSlides] = useState<FeaturedShopCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIdx, setActiveIdx] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const autoRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasScrolledIntoViewRef = useRef(false);
   const brokenLogos = useRef<Set<string>>(new Set());
   const brokenProductImgs = useRef<Set<string>>(new Set());
 
