@@ -21,13 +21,16 @@ import {
   Shield,
   Trash2,
   Plus,
-  Clock
+  Clock,
+  Package,
+  Phone
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,6 +47,7 @@ export default function AdminShops() {
   const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [mobileActionsShop, setMobileActionsShop] = useState<any>(null);
   const [selectedShop, setSelectedShop] = useState<any>(null);
   const [shopToDelete, setShopToDelete] = useState<any>(null);
   const [extensionDays, setExtensionDays] = useState("30");
@@ -132,12 +136,30 @@ export default function AdminShops() {
         }
       }
 
+      // Fetch product counts per shop
+      const shopIds = shopsData?.map(s => s.id) || [];
+      const productCountByShop = new Map<string, number>();
+      if (shopIds.length > 0) {
+        const { data: productRows, error: productCountErr } = await supabase
+          .from("products")
+          .select("shop_id")
+          .in("shop_id", shopIds);
+        if (productCountErr) {
+          console.error("Product count fetch error:", productCountErr);
+        } else {
+          (productRows || []).forEach((row: any) => {
+            productCountByShop.set(row.shop_id, (productCountByShop.get(row.shop_id) || 0) + 1);
+          });
+        }
+      }
+
       // Combine shops with their profiles
       const combinedShops = shopsData?.map(shop => {
         const profile = profilesData.find(p => p.id === shop.owner_id);
         return {
           ...shop,
-          profiles: profile || null
+          profiles: profile || null,
+          product_count: productCountByShop.get(shop.id) || 0,
         };
       }) || [];
 
@@ -699,8 +721,22 @@ export default function AdminShops() {
 
                       <div className="flex flex-wrap gap-2">
                         {getSubscriptionBadge(shop.profiles)}
+                        <Badge variant="outline" className="text-[10px] font-medium bg-muted/50 border-border/50 gap-1">
+                          <Package className="w-3 h-3" />
+                          {shop.product_count} {shop.product_count === 1 ? "product" : "products"}
+                        </Badge>
                         <Badge variant="outline" className="text-[10px] font-medium bg-muted/50 border-border/50">
                           {getOwnerEmail(shop)}
+                        </Badge>
+                        {shop.whatsapp_number && (
+                          <Badge variant="outline" className="text-[10px] font-medium bg-muted/50 border-border/50 gap-1">
+                            <Phone className="w-3 h-3" />
+                            {shop.whatsapp_number}
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="text-[10px] font-medium bg-muted/50 border-border/50 gap-1">
+                          <Calendar className="w-3 h-3" />
+                          Joined {new Date(shop.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
                         </Badge>
                       </div>
 
@@ -724,44 +760,15 @@ export default function AdminShops() {
                             {shop.is_active ? "Deactivate" : "Activate"}
                           </Button>
                         )}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button size="sm" variant="outline" className="w-full rounded-xl font-semibold h-9 gap-1.5">
-                              <MoreHorizontal className="w-4 h-4" />
-                              More
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 rounded-xl p-1 shadow-xl border-primary/10">
-                            <DropdownMenuItem onClick={() => handleEditShop(shop)} className="rounded-lg py-2.5">
-                              <Edit className="w-4 h-4 mr-2" /> Edit Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleViewOwner(shop)} className="rounded-lg py-2.5">
-                              <User className="w-4 h-4 mr-2" /> View Owner
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {shop.profiles && shop.profiles.subscription_plan_id && (
-                              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground capitalize flex items-center">
-                                <Shield className="w-3 h-3 mr-1.5 text-primary" />
-                                {shop.profiles.subscription_plan_id} Plan
-                              </div>
-                            )}
-                            <DropdownMenuSeparator />
-                            {shop.profiles && (
-                              <>
-                                <DropdownMenuItem onClick={() => handleExtendTrial(shop)} className="rounded-lg py-2.5">
-                                  <Calendar className="w-4 h-4 mr-2" /> Extend Sub
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => resetTrial(shop)} className="rounded-lg py-2.5">
-                                  <RefreshCw className="w-4 h-4 mr-2" /> Reset Trial
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                              </>
-                            )}
-                            <DropdownMenuItem onClick={() => handleDeleteShop(shop)} className="text-red-600 focus:text-red-600 rounded-lg py-2.5">
-                              <Trash2 className="w-4 h-4 mr-2" /> Delete Shop
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full rounded-xl font-semibold h-9 gap-1.5"
+                          onClick={() => setMobileActionsShop(shop)}
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                          More
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -774,6 +781,7 @@ export default function AdminShops() {
                   <TableRow className="hover:bg-muted/50 bg-muted/30">
                     <TableHead className="font-semibold">Shop Name</TableHead>
                     <TableHead className="font-semibold">Owner</TableHead>
+                    <TableHead className="font-semibold">Products</TableHead>
                     <TableHead className="font-semibold">Email</TableHead>
                     <TableHead className="font-semibold">Subscription</TableHead>
                     <TableHead className="font-semibold">Status</TableHead>
@@ -783,7 +791,7 @@ export default function AdminShops() {
                 <TableBody>
                   {filteredShops.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                         <div className="flex flex-col items-center gap-2">
                           <Store className="w-12 h-12 opacity-20" />
                           <p>No shops found</p>
@@ -832,6 +840,12 @@ export default function AdminShops() {
                               </Badge>
                             )}
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="gap-1 font-medium">
+                            <Package className="w-3 h-3" />
+                            {shop.product_count}
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {getOwnerEmail(shop)}
@@ -1263,6 +1277,92 @@ export default function AdminShops() {
         </Dialog>
 
         {/* Delete Shop Confirmation Dialog */}
+        {/* Mobile Actions Bottom Sheet */}
+        <Sheet open={!!mobileActionsShop} onOpenChange={(open) => { if (!open) setMobileActionsShop(null); }}>
+          <SheetContent side="bottom" className="rounded-t-2xl p-0 max-h-[85vh] overflow-y-auto">
+            {mobileActionsShop && (
+              <>
+                <SheetHeader className="p-5 pb-3 text-left border-b border-border/60">
+                  <div className="flex items-center gap-3">
+                    {mobileActionsShop.logo_url ? (
+                      <img src={mobileActionsShop.logo_url} alt="" className="w-11 h-11 rounded-xl object-cover border" />
+                    ) : (
+                      <div className="w-11 h-11 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl flex items-center justify-center border">
+                        <Store className="w-5 h-5 text-primary" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <SheetTitle className="text-base truncate">{mobileActionsShop.shop_name}</SheetTitle>
+                      <SheetDescription className="text-xs truncate">
+                        {getOwnerEmail(mobileActionsShop)}
+                      </SheetDescription>
+                    </div>
+                    {isPending(mobileActionsShop) ? (
+                      <Badge className="bg-orange-500 hover:bg-orange-600 border-0 text-[10px] uppercase font-bold">Pending</Badge>
+                    ) : (
+                      <Badge className={mobileActionsShop.is_active ? "bg-green-600 hover:bg-green-700 border-0 text-[10px] uppercase font-bold" : "text-[10px] uppercase font-bold"} variant={mobileActionsShop.is_active ? "default" : "secondary"}>
+                        {mobileActionsShop.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <Badge variant="outline" className="gap-1 text-[11px]"><Package className="w-3 h-3" />{mobileActionsShop.product_count} products</Badge>
+                    {mobileActionsShop.profiles?.subscription_plan_id && (
+                      <Badge variant="outline" className="gap-1 text-[11px] capitalize"><Shield className="w-3 h-3 text-primary" />Plan set</Badge>
+                    )}
+                    {mobileActionsShop.whatsapp_number && (
+                      <Badge variant="outline" className="gap-1 text-[11px]"><Phone className="w-3 h-3" />{mobileActionsShop.whatsapp_number}</Badge>
+                    )}
+                  </div>
+                </SheetHeader>
+                <div className="p-3 space-y-1">
+                  <button
+                    onClick={() => { const s = mobileActionsShop; setMobileActionsShop(null); handleEditShop(s); }}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-sm font-medium hover:bg-muted active:bg-muted min-h-[48px]"
+                  >
+                    <Edit className="w-4 h-4 text-muted-foreground" /> Edit Details
+                  </button>
+                  <button
+                    onClick={() => { const s = mobileActionsShop; setMobileActionsShop(null); handleViewOwner(s); }}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-sm font-medium hover:bg-muted active:bg-muted min-h-[48px]"
+                  >
+                    <User className="w-4 h-4 text-muted-foreground" /> View Owner
+                  </button>
+                  {mobileActionsShop.profiles && (
+                    <>
+                      <div className="my-1 border-t border-border/60" />
+                      <button
+                        onClick={() => { const s = mobileActionsShop; setMobileActionsShop(null); handleExtendTrial(s); }}
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-sm font-medium hover:bg-muted active:bg-muted min-h-[48px]"
+                      >
+                        <Calendar className="w-4 h-4 text-muted-foreground" /> Extend Subscription
+                      </button>
+                      <button
+                        onClick={() => { const s = mobileActionsShop; setMobileActionsShop(null); resetTrial(s); }}
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-sm font-medium hover:bg-muted active:bg-muted min-h-[48px]"
+                      >
+                        <RefreshCw className="w-4 h-4 text-muted-foreground" /> Reset Trial
+                      </button>
+                    </>
+                  )}
+                  <div className="my-1 border-t border-border/60" />
+                  <button
+                    onClick={() => { const s = mobileActionsShop; setMobileActionsShop(null); handleDeleteShop(s); }}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-sm font-semibold text-red-600 hover:bg-red-50 active:bg-red-50 min-h-[48px]"
+                  >
+                    <Trash2 className="w-4 h-4" /> Delete Shop
+                  </button>
+                </div>
+                <div className="p-3 pt-1 pb-5 border-t border-border/60">
+                  <Button variant="outline" className="w-full rounded-xl h-11" onClick={() => setMobileActionsShop(null)}>
+                    Cancel
+                  </Button>
+                </div>
+              </>
+            )}
+          </SheetContent>
+        </Sheet>
+
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>

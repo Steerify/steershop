@@ -57,8 +57,10 @@ export const FeaturedStoresHeroCarousel = () => {
   const [slides, setSlides] = useState<FeaturedShopCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIdx, setActiveIdx] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const autoRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasScrolledIntoViewRef = useRef(false);
   const brokenLogos = useRef<Set<string>>(new Set());
   const brokenProductImgs = useRef<Set<string>>(new Set());
 
@@ -143,6 +145,20 @@ export const FeaturedStoresHeroCarousel = () => {
     }
   }, [activeIdx, slides.length]);
 
+  /* ── one-shot: scroll the carousel into the page viewport once ──
+     Runs only on the first render after slides load. Subsequent
+     auto-swipes never tug the page back to the carousel. */
+  useEffect(() => {
+    if (loading || slides.length === 0) return;
+    if (hasScrolledIntoViewRef.current) return;
+    hasScrolledIntoViewRef.current = true;
+    // Defer to next frame so layout is settled before scrolling.
+    const id = requestAnimationFrame(() => {
+      containerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [loading, slides.length]);
+
   const prev = () => {
     setActiveIdx((i) => (i - 1 + slides.length) % slides.length);
     startAuto();
@@ -157,6 +173,7 @@ export const FeaturedStoresHeroCarousel = () => {
 
   return (
     <div
+      ref={containerRef}
       style={{
         position: "relative",
         width: "100%",

@@ -1,77 +1,58 @@
-# Fix Subscriptions, Blank Screens & Email Flow
+# Plan: One-Shot Page Auto-Scroll + Admin Shops Mobile Polish
 
-## Root causes found
+## 1. Featured Stores Carousel — auto-scroll page into view only once
 
-After a deep audit, **three concrete bugs** are silently breaking the app — and one of them is exactly why joyadaeze845@gmail.com's ₦5,000 payment never reflected.
+**File:** `src/components/FeaturedStoresHeroCarousel.tsx`
 
-### 1. Subscription verify is broken (this is why Joy's payment didn't reflect)
-`supabase/functions/paystack-verify/index.ts` tries to update a column called `payment_reference` on the `profiles` table. **That column does not exist** (confirmed against the live schema). So when Paystack redirects the user back to `/dashboard?subscription=verify&reference=...`, the verify edge function throws an error, the toast shows failure, and `is_subscribed` is **never** set to true. The webhook backup also failed because no `paystack_webhook_events` row was ever inserted for her — meaning Paystack's webhook didn't reach us either (likely webhook URL not configured in Paystack dashboard, or signature mismatch from a previous deploy).
+**Keep autoplay exactly as it is** (continuous 5s loop, infinite). The only thing to change is the page-viewport scroll behavior.
 
-Joy's profile right now:
-- `is_subscribed: false`
-- `subscription_plan_id: null`
-- `subscription_expires_at: 2026-01-15` (still the trial date)
-- Role is correct: `shop_owner`
+Currently the active-slide sync uses `track.scrollTo({ left, behavior: "smooth" })`, which scrolls the inner track only. That's fine. But on first mount/return, the user wants the page to scroll the carousel into view **once** so it's visible — and never again on subsequent auto-swipes.
 
-### 2. `website_visits` table is missing
-`track-visit` edge function logs are spamming `PGRST205: Could not find the table 'public.website_visits'`. Every page load fails this call → contributes to slow loads and console noise.
+Changes:
+- Add a `hasScrolledIntoViewRef = useRef(false)` flag.
+- Add a one-shot effect that runs after the carousel mounts and slides have loaded: if `!hasScrolledIntoViewRef.current`, call `containerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })` once, then set the ref to `true`.
+- The existing per-slide-change effect remains as a pure internal `track.scrollTo` (no `scrollIntoView`), so subsequent auto-swipes never pull the page back to the carousel.
+- Component remount on route return naturally resets the ref → behavior repeats on return visits.
 
-### 3. `orders.payment_instrument_fingerprint` column is missing
-The Paystack webhook tries to write this on real order payments. When an order is paid, the webhook update silently fails → orders stay marked `pending`.
+No autoplay logic, no slide rendering, no styling touched.
 
----
+## 2. Admin Shops — show product count per shop (mobile + desktop)
 
-## What I'll do (in order)
+**File:** `src/pages/admin/AdminShops.tsx`
 
-### Step 1 — Reconcile Joy's payment manually & verify with Paystack
-- Use the Paystack Transactions API server-side to look up her latest successful transaction by email.
-- Set her profile: `is_subscribed=true`, `subscription_plan_id` = Pro plan (₦5,000 monthly = `c4d6853e-...`), `subscription_expires_at = now() + 30 days`, `subscription_type='monthly'`.
-- Insert a `revenue_transactions` + `paystack_webhook_events` record so it shows in admin records and prevents double-credit.
+Currently `fetchShops` pulls shops + profiles but no product count.
 
-### Step 2 — Fix the subscription verify bug (the real root cause)
-Database migration:
-- Add `payment_reference text` column to `profiles` (used by verify + idempotency check).
-- Add `payment_instrument_fingerprint text` column to `orders`.
-- Create the missing `website_visits` table with proper schema + RLS (admin read, service-role insert) so analytics + track-visit stop erroring.
+Changes:
+- After fetching shops, query `products` filtering `shop_id IN (...)` selecting only `shop_id`, build a `Map<shop_id, count>` client-side, attach `product_count` to each combined shop object.
+- **Mobile card** (~line 682): under the shop name/owner row, add a small inline chip `📦 12 products` matching the existing chip styling.
+- **Desktop table**: add a "Products" column between "Owner" and "Email" with a small badge.
 
-### Step 3 — Harden the payment success flow (so this never repeats)
-- Implement the **polling pattern** on the Dashboard success handler: after redirect, poll `is_subscribed` for ~20 s before showing failure. This handles the race between Paystack redirect and webhook.
-- Make `paystack-verify` idempotent and log structured errors so future failures are visible in Edge Function logs.
-- Add a one-shot admin tool path: an admin-only edge function `admin-reconcile-payment` that takes a Paystack reference, verifies it via Paystack API, and applies the subscription — for any future stuck payments.
+## 3. Admin Shops — replace mobile "More" dropdown with bottom sheet
 
-### Step 4 — Confirm Paystack webhook URL is live
-- Document the exact webhook URL the user must paste in Paystack dashboard:
-  `https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/paystack-webhook`
-- The webhook code already does HMAC-SHA512 signature check + idempotency via `paystack_webhook_events`, so once the URL is set, future payments will self-heal even if the redirect step fails.
+The current `DropdownMenu` (lines 727–764) opens as a tiny floating menu — cramped on a 360px viewport and clipped near screen edges.
 
-### Step 5 — Email flow audit (user signup → welcome → orders)
-- `send-welcome-email`: works but uses direct Resend send, no retry. Migrate to the `transactional_emails` queue (`enqueue_email` RPC) so failed sends retry automatically. Same for `order-notifications`.
-- Verify `RESEND_API_KEY` and `notify.steersolo.com` domain are still valid (read-only check via `email_send_log`).
-- Confirm Supabase Auth → `auth-email-hook` is wired so signup confirmation emails go through our branded template (already implemented; just verify config).
+Changes:
+- On the mobile card only, swap `DropdownMenu` for shadcn `Sheet` with `side="bottom"`. Desktop table dropdown stays unchanged.
+- Sheet contents: same actions (Edit Details, View Owner, plan label, Extend Sub, Reset Trial, Delete Shop) as full-width rows with min 48px tap targets, separators between groups, destructive Delete in red at the bottom, and a Cancel button.
+- Sheet header shows the shop name + status badge so the admin knows which shop they're acting on.
 
-### Step 6 — Sweep other blank-screen causes
-- `Dashboard.tsx` calls `subscriptionService.initializePayment('basic', 'monthly')` — but there is **no plan with slug 'basic'** in the DB. Plans are `free`, `growth`, `pro`. This errors → blank state on the upgrade CTA. Fix to `'growth'` (default paid plan) or read from DB.
-- `useShopOwnerAuth` falls back to a synthetic profile silently when `profiles` fetch fails — replace with explicit error UI so users don't see a blank dashboard.
-- Add an error boundary around the Dashboard route so any thrown render error shows a recover button instead of a blank page.
+## 4. Other admin info worth surfacing on mobile cards
 
-### Step 7 — Verification pass
-- Run the Supabase linter and re-check `paystack-webhook` & `paystack-verify` edge function logs.
-- Curl `paystack-verify` with Joy's reference end-to-end to confirm the column fix works.
-- Confirm her dashboard now shows the Pro plan as active.
+Small additive text rows on the AdminShops mobile card (no layout risk):
+- Subscription plan name (Starter / Growth / Pro) — currently buried inside the dropdown.
+- Joined date ("Joined 12 Apr").
+- WhatsApp number (currently desktop-only).
 
-## Technical details
+## Out of scope
 
-| Area | File / Change |
-|---|---|
-| Migration | `ALTER TABLE profiles ADD COLUMN payment_reference text;` |
-| Migration | `ALTER TABLE orders ADD COLUMN payment_instrument_fingerprint text;` |
-| Migration | `CREATE TABLE website_visits (...)` + RLS |
-| Edge fn fix | `paystack-verify/index.ts` — already references the column, just needs the column to exist |
-| Edge fn new | `admin-reconcile-payment/index.ts` (admin-gated, calls Paystack verify API) |
-| Edge fn refactor | `send-welcome-email`, `order-notifications` → use queue |
-| Frontend | `Dashboard.tsx` — fix `'basic'` slug, add 20 s subscription polling on `?subscription=verify`, add error boundary |
-| Data fix | One-time SQL to activate Joy's Pro plan after Paystack confirmation |
+- Carousel autoplay logic (stays as-is, infinite loop).
+- No DB migrations.
+- No changes to `Index.tsx` hero text rotator.
+- No changes to `ShopStorefront.tsx` or other admin pages.
 
-## Out of scope for this pass
-- Visual/UX redesign (was handled in earlier turns; colors are now Deep Navy + Nigerian Green per memory).
-- Removing the GSI FedCM console warning (Google's One-Tap policy on the iframe; harmless).
+## Acceptance
+
+- Visiting `/` smoothly scrolls the Featured Stores carousel into view **once** after mount; subsequent auto-swipes never tug the page back.
+- Navigating away and returning replays the one-shot scroll-into-view.
+- `/admin/shops` mobile cards show product count, plan, joined date, and WhatsApp; tapping "More" opens a full-width bottom sheet with comfortable tap targets.
+- Desktop `/admin/shops` table gains a "Products" column; existing dropdown unchanged.
