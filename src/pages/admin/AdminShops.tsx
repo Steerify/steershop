@@ -1277,6 +1277,92 @@ export default function AdminShops() {
         </Dialog>
 
         {/* Delete Shop Confirmation Dialog */}
+        {/* Mobile Actions Bottom Sheet */}
+        <Sheet open={!!mobileActionsShop} onOpenChange={(open) => { if (!open) setMobileActionsShop(null); }}>
+          <SheetContent side="bottom" className="rounded-t-2xl p-0 max-h-[85vh] overflow-y-auto">
+            {mobileActionsShop && (
+              <>
+                <SheetHeader className="p-5 pb-3 text-left border-b border-border/60">
+                  <div className="flex items-center gap-3">
+                    {mobileActionsShop.logo_url ? (
+                      <img src={mobileActionsShop.logo_url} alt="" className="w-11 h-11 rounded-xl object-cover border" />
+                    ) : (
+                      <div className="w-11 h-11 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl flex items-center justify-center border">
+                        <Store className="w-5 h-5 text-primary" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <SheetTitle className="text-base truncate">{mobileActionsShop.shop_name}</SheetTitle>
+                      <SheetDescription className="text-xs truncate">
+                        {getOwnerEmail(mobileActionsShop)}
+                      </SheetDescription>
+                    </div>
+                    {isPending(mobileActionsShop) ? (
+                      <Badge className="bg-orange-500 hover:bg-orange-600 border-0 text-[10px] uppercase font-bold">Pending</Badge>
+                    ) : (
+                      <Badge className={mobileActionsShop.is_active ? "bg-green-600 hover:bg-green-700 border-0 text-[10px] uppercase font-bold" : "text-[10px] uppercase font-bold"} variant={mobileActionsShop.is_active ? "default" : "secondary"}>
+                        {mobileActionsShop.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <Badge variant="outline" className="gap-1 text-[11px]"><Package className="w-3 h-3" />{mobileActionsShop.product_count} products</Badge>
+                    {mobileActionsShop.profiles?.subscription_plan_id && (
+                      <Badge variant="outline" className="gap-1 text-[11px] capitalize"><Shield className="w-3 h-3 text-primary" />Plan set</Badge>
+                    )}
+                    {mobileActionsShop.whatsapp_number && (
+                      <Badge variant="outline" className="gap-1 text-[11px]"><Phone className="w-3 h-3" />{mobileActionsShop.whatsapp_number}</Badge>
+                    )}
+                  </div>
+                </SheetHeader>
+                <div className="p-3 space-y-1">
+                  <button
+                    onClick={() => { const s = mobileActionsShop; setMobileActionsShop(null); handleEditShop(s); }}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-sm font-medium hover:bg-muted active:bg-muted min-h-[48px]"
+                  >
+                    <Edit className="w-4 h-4 text-muted-foreground" /> Edit Details
+                  </button>
+                  <button
+                    onClick={() => { const s = mobileActionsShop; setMobileActionsShop(null); handleViewOwner(s); }}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-sm font-medium hover:bg-muted active:bg-muted min-h-[48px]"
+                  >
+                    <User className="w-4 h-4 text-muted-foreground" /> View Owner
+                  </button>
+                  {mobileActionsShop.profiles && (
+                    <>
+                      <div className="my-1 border-t border-border/60" />
+                      <button
+                        onClick={() => { const s = mobileActionsShop; setMobileActionsShop(null); handleExtendTrial(s); }}
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-sm font-medium hover:bg-muted active:bg-muted min-h-[48px]"
+                      >
+                        <Calendar className="w-4 h-4 text-muted-foreground" /> Extend Subscription
+                      </button>
+                      <button
+                        onClick={() => { const s = mobileActionsShop; setMobileActionsShop(null); resetTrial(s); }}
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-sm font-medium hover:bg-muted active:bg-muted min-h-[48px]"
+                      >
+                        <RefreshCw className="w-4 h-4 text-muted-foreground" /> Reset Trial
+                      </button>
+                    </>
+                  )}
+                  <div className="my-1 border-t border-border/60" />
+                  <button
+                    onClick={() => { const s = mobileActionsShop; setMobileActionsShop(null); handleDeleteShop(s); }}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-sm font-semibold text-red-600 hover:bg-red-50 active:bg-red-50 min-h-[48px]"
+                  >
+                    <Trash2 className="w-4 h-4" /> Delete Shop
+                  </button>
+                </div>
+                <div className="p-3 pt-1 pb-5 border-t border-border/60">
+                  <Button variant="outline" className="w-full rounded-xl h-11" onClick={() => setMobileActionsShop(null)}>
+                    Cancel
+                  </Button>
+                </div>
+              </>
+            )}
+          </SheetContent>
+        </Sheet>
+
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
