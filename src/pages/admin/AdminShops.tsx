@@ -47,6 +47,7 @@ export default function AdminShops() {
   const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [mobileActionsShop, setMobileActionsShop] = useState<any>(null);
   const [selectedShop, setSelectedShop] = useState<any>(null);
   const [shopToDelete, setShopToDelete] = useState<any>(null);
   const [extensionDays, setExtensionDays] = useState("30");
