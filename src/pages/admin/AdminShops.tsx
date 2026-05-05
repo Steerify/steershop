@@ -781,6 +781,7 @@ export default function AdminShops() {
                   <TableRow className="hover:bg-muted/50 bg-muted/30">
                     <TableHead className="font-semibold">Shop Name</TableHead>
                     <TableHead className="font-semibold">Owner</TableHead>
+                    <TableHead className="font-semibold">Products</TableHead>
                     <TableHead className="font-semibold">Email</TableHead>
                     <TableHead className="font-semibold">Subscription</TableHead>
                     <TableHead className="font-semibold">Status</TableHead>
@@ -790,7 +791,7 @@ export default function AdminShops() {
                 <TableBody>
                   {filteredShops.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                         <div className="flex flex-col items-center gap-2">
                           <Store className="w-12 h-12 opacity-20" />
                           <p>No shops found</p>
