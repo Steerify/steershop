@@ -80,6 +80,10 @@ export interface Shop {
   owner_id?: string;
   is_verified?: boolean;
   country?: string;
+  seo_keywords?: string[];
+  seo_description?: string;
+  seo_metadata?: Record<string, any>;
+  seo_dna_updated_at?: string;
   created_at?: string;
 }
 

@@ -157,9 +157,29 @@ export const FeaturedStoresHeroCarousel = () => {
   useEffect(() => {
     const track = trackRef.current;
     if (!track || slides.length === 0) return;
+    
+    // Only scroll programmatically if we are NOT currently swiping/scrolling
     const slide = track.children[activeIdx] as HTMLElement | undefined;
     if (slide) {
-      track.scrollTo({ left: slide.offsetLeft, behavior: "smooth" });
+      // Check if we already are at that position to avoid infinite feedback loops
+      const currentScroll = track.scrollLeft;
+      const targetScroll = slide.offsetLeft;
+      if (Math.abs(currentScroll - targetScroll) > 10) {
+        track.scrollTo({ left: targetScroll, behavior: "smooth" });
+      }
+    }
+  }, [activeIdx, slides.length]);
+
+  const handleScroll = useCallback(() => {
+    const track = trackRef.current;
+    if (!track || slides.length === 0) return;
+    
+    const scrollLeft = track.scrollLeft;
+    const slideWidth = track.clientWidth;
+    const newIdx = Math.round(scrollLeft / slideWidth);
+    
+    if (newIdx !== activeIdx && newIdx >= 0 && newIdx < slides.length) {
+      setActiveIdx(newIdx);
     }
   }, [activeIdx, slides.length]);
 
@@ -282,13 +302,18 @@ export const FeaturedStoresHeroCarousel = () => {
       {/* slides track */}
       <div
         ref={trackRef}
+        onScroll={handleScroll}
         style={{
           display: "flex",
           gap: 0,
-          overflowX: "hidden",
+          overflowX: "auto",
           scrollSnapType: "x mandatory",
           borderRadius: 20,
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          WebkitOverflowScrolling: "touch",
         }}
+        className="hide-scrollbar"
       >
         {loading ? (
           <SlideSkeletons />
@@ -504,17 +529,17 @@ export const FeaturedStoresHeroCarousel = () => {
 
       {/* Dot indicators */}
       {slides.length > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 12 }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 5, marginTop: 14 }}>
           {slides.map((_, i) => (
             <button
               key={i}
               onClick={() => { setActiveIdx(i); startAuto(); }}
               aria-label={`Go to store ${i + 1}`}
               style={{
-                width: i === activeIdx ? (isMobile ? 12 : 20) : (isMobile ? 4 : 6),
-                height: isMobile ? 4 : 6,
+                width: i === activeIdx ? (isMobile ? 14 : 20) : (isMobile ? 5 : 6),
+                height: isMobile ? 3 : 5,
                 borderRadius: 9999,
-                background: i === activeIdx ? "#00d97e" : "rgba(255,255,255,0.25)",
+                background: i === activeIdx ? "#00d97e" : "rgba(255,255,255,0.2)",
                 border: "none",
                 cursor: "pointer",
                 transition: "all .3s ease",

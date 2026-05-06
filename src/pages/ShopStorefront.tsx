@@ -56,6 +56,8 @@ interface Shop {
   theme_mode?: string | null;
   primary_color?: string | null;
   secondary_color?: string | null;
+  seo_description?: string | null;
+  seo_keywords?: string[] | null;
 }
 
 
@@ -194,7 +196,17 @@ const ShopStorefront = () => {
         }))
       };
     }
-    return data;
+
+    const breadcrumbs = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Marketplace", "item": "https://steersolo.com/shops" },
+        { "@type": "ListItem", "position": 2, "name": shop.shop_name, "item": shopUrl }
+      ]
+    };
+
+    return [data, breadcrumbs];
   }, [shop, products, isPremiumPlan]);
 
   useEffect(() => {
@@ -411,7 +423,7 @@ const ShopStorefront = () => {
 
   /* ─── Main Storefront ─── */
   const shopUrl = shop ? `https://steersolo.com/shop/${shop.shop_slug}` : '';
-  const metaDescription = shop?.description || (shop ? `Shop at ${shop.shop_name} on SteerSolo` : '');
+  const metaDescription = shop?.seo_description || shop?.description || (shop ? `Shop at ${shop.shop_name} on SteerSolo` : '');
 
   return (
     <div
@@ -425,7 +437,7 @@ const ShopStorefront = () => {
         <Helmet>
           <title>{isPremiumPlan ? `${shop.shop_name} — Shop Online` : `${shop.shop_name} | SteerSolo Shop`}</title>
           <meta name="description" content={metaDescription} />
-          <meta name="keywords" content={`${shop.shop_name}, ${shop.shop_name} nigeria, buy ${shop.shop_name} products, social commerce, steersolo, ${shop.state || 'nigeria'}`} />
+          <meta name="keywords" content={shop.seo_keywords?.length ? shop.seo_keywords.join(', ') : `${shop.shop_name}, ${shop.shop_name} nigeria, buy ${shop.shop_name} products, social commerce, steersolo, ${shop.state || 'nigeria'}`} />
           
           <meta property="og:title" content={shop.shop_name} />
           <meta property="og:description" content={metaDescription} />

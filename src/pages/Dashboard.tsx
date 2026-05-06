@@ -564,7 +564,7 @@ const Dashboard = () => {
             size="sm"
             variant="outline"
             className="shrink-0 font-bold shadow-lg gap-1.5 hover:opacity-90 bg-white text-[#075E54] border-white"
-            onClick={() => window.open('https://chat.whatsapp.com/LX2AQqaSYD5FzEuCmhwWmz', '_blank')}>
+            onClick={() => window.open('https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76', '_blank')}>
             <MessageCircle className="w-3.5 h-3.5" />Join Now
           </Button>
         </div>
@@ -593,7 +593,7 @@ const Dashboard = () => {
             size="sm"
             variant="outline"
             className="shrink-0 font-bold shadow-lg gap-1.5 hover:opacity-90 bg-white text-[#075E54] border-white"
-            onClick={() => window.open('https://chat.whatsapp.com/LX2AQqaSYD5FzEuCmhwWmz', '_blank')}
+            onClick={() => window.open('https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76', '_blank')}
           >
             <MessageCircle className="w-3.5 h-3.5" />
             Join Now
@@ -1103,6 +1103,13 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* WhatsApp Community Banner */}
+        <WhatsAppCommunityBanner 
+          link="https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76" 
+          title="Vendor Success Community 🚀"
+          description="Join 5,000+ vendors for tips, buyer traffic, and exclusive support!"
+        />
 
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="bg-card border border-border/50 h-auto p-1 grid grid-cols-3 sm:w-[400px]">

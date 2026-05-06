@@ -136,6 +136,7 @@ const MyStore = () => {
   const [showPostCreatePrompt, setShowPostCreatePrompt] = useState(false);
   const [showInlineVerify, setShowInlineVerify] = useState(false);
   const [showDraftBanner, setShowDraftBanner] = useState(false);
+  const [isGeneratingSEO, setIsGeneratingSEO] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
   // Unsaved changes warning
@@ -377,6 +378,23 @@ const MyStore = () => {
     }
   };
 
+  const handleGenerateSEO = async () => {
+    if (!shop?.id) return;
+    setIsGeneratingSEO(true);
+    try {
+      const { data: res, error } = await supabase.functions.invoke('generate-shop-seo-dna', {
+        body: { shop_id: shop.id }
+      });
+      if (error) throw error;
+      toast({ title: "SEO DNA Generated! 🚀", description: "Your store's visibility has been boosted." });
+      loadShop();
+    } catch (error: any) {
+      toast({ title: "SEO Generation Failed", description: error.message, variant: "destructive" });
+    } finally {
+      setIsGeneratingSEO(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -573,6 +591,49 @@ const MyStore = () => {
                       className="min-h-[100px]"
                     />
                   </div>
+
+                  {/* AI SEO DNA Section */}
+                  {shop && (
+                    <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-primary" />
+                          <Label className="font-bold text-primary">AI SEO DNA Generator</Label>
+                        </div>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 border-primary/30 text-primary hover:bg-primary/10"
+                          onClick={handleGenerateSEO}
+                          disabled={isGeneratingSEO}
+                        >
+                          {isGeneratingSEO ? <Loader2 className="w-3 h-3 animate-spin mr-1.5" /> : <Sparkles className="w-3 h-3 mr-1.5" />}
+                          {shop.seo_dna_updated_at ? "Refresh SEO" : "Generate SEO"}
+                        </Button>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Our AI analyzes your products to create a unique "SEO DNA" that helps your store rank higher on Google.
+                      </p>
+                      {shop.seo_dna_updated_at && (
+                        <div className="pt-2 space-y-2">
+                          <div className="flex flex-wrap gap-1.5">
+                            {shop.seo_keywords?.slice(0, 5).map((kw: string, i: number) => (
+                              <Badge key={kw} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 border-none text-[10px] py-0">
+                                {kw}
+                              </Badge>
+                            ))}
+                            {(shop.seo_keywords?.length || 0) > 5 && (
+                              <span className="text-[10px] text-muted-foreground">+{shop.seo_keywords.length - 5} more</span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground italic line-clamp-2">
+                            "{shop.seo_description}"
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">

@@ -189,7 +189,11 @@ const CustomerDashboard = () => {
 
           <main className="p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-7">
             {/* WhatsApp Community Banner */}
-            <WhatsAppCommunityBanner />
+            <WhatsAppCommunityBanner 
+              link="https://chat.whatsapp.com/C9owGcbmv03EWG65ehYQD5" 
+              title="SteerSolo Marketplace Group 🛍️"
+              description="Join our exclusive community of shoppers for the best deals and updates!"
+            />
 
             {/* Welcome Section */}
             <div className="mb-2">

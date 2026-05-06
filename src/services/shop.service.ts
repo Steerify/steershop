@@ -132,6 +132,10 @@ const shopService = {
       is_verified: s.is_verified,
       state: s.state,
       country: s.country,
+      seo_keywords: s.seo_keywords,
+      seo_description: s.seo_description,
+      seo_metadata: s.seo_metadata,
+      seo_dna_updated_at: s.seo_dna_updated_at,
       created_at: s.created_at,
     }));
 
@@ -181,6 +185,10 @@ const shopService = {
       is_verified: s.is_verified,
       state: s.state,
       country: s.country,
+      seo_keywords: s.seo_keywords,
+      seo_description: s.seo_description,
+      seo_metadata: s.seo_metadata,
+      seo_dna_updated_at: s.seo_dna_updated_at,
       created_at: s.created_at,
     }));
 
@@ -222,6 +230,10 @@ const shopService = {
       is_verified: shop.is_verified,
       state: shop.state,
       country: shop.country,
+      seo_keywords: shop.seo_keywords,
+      seo_description: shop.seo_description,
+      seo_metadata: shop.seo_metadata,
+      seo_dna_updated_at: shop.seo_dna_updated_at,
       created_at: shop.created_at,
     };
 
@@ -250,6 +262,10 @@ const shopService = {
     if (data.is_active !== undefined) updateData.is_active = data.is_active;
     if (data.state !== undefined) updateData.state = data.state;
     if (data.country !== undefined) updateData.country = data.country;
+    if (data.seo_keywords !== undefined) updateData.seo_keywords = data.seo_keywords;
+    if (data.seo_description !== undefined) updateData.seo_description = data.seo_description;
+    if (data.seo_metadata !== undefined) updateData.seo_metadata = data.seo_metadata;
+    if (data.seo_dna_updated_at !== undefined) updateData.seo_dna_updated_at = data.seo_dna_updated_at;
 
     const { data: shop, error } = await supabase
       .from('shops')

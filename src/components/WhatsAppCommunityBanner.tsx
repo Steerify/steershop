@@ -5,10 +5,19 @@ import { X, MessageCircle } from 'lucide-react';
 const STORAGE_KEY = 'steersolo_wa_community_dismissed';
 const JOINED_KEY = 'steersolo_wa_community_joined';
 const MAX_DISMISSALS = 3;
-const WHATSAPP_COMMUNITY_LINK = 'https://chat.whatsapp.com/FyWvIDxOlv74vvcDv7qS8j';
+const WHATSAPP_COMMUNITY_LINK_DEFAULT = 'https://chat.whatsapp.com/FyWvIDxOlv74vvcDv7qS8j';
 
-export const WhatsAppCommunityBanner = () => {
+export const WhatsAppCommunityBanner = ({ 
+  link, 
+  title = "Join our WhatsApp Community 🎉",
+  description = "Get updates, tips, and connect with other SteerSolo users"
+}: { 
+  link?: string;
+  title?: string;
+  description?: string;
+}) => {
   const [visible, setVisible] = useState(false);
+  const activeLink = link || WHATSAPP_COMMUNITY_LINK_DEFAULT;
 
   useEffect(() => {
     // If user already joined, never show again
@@ -28,7 +37,7 @@ export const WhatsAppCommunityBanner = () => {
 
   const handleJoinClick = () => {
     localStorage.setItem(JOINED_KEY, 'true');
-    window.open(WHATSAPP_COMMUNITY_LINK, '_blank', 'noopener,noreferrer');
+    window.open(activeLink, '_blank', 'noopener,noreferrer');
     setVisible(false);
   };
 
@@ -40,8 +49,8 @@ export const WhatsAppCommunityBanner = () => {
         <MessageCircle className="w-5 h-5" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm">Join our WhatsApp Community 🎉</p>
-        <p className="text-xs text-white/80 mt-0.5">Get updates, tips, and connect with other SteerSolo users</p>
+        <p className="font-semibold text-sm">{title}</p>
+        <p className="text-xs text-white/80 mt-0.5">{description}</p>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         <Button

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { ArrowRight, CheckCircle, Shield, Zap, Sparkles, ShoppingBag, Star, Instagram, MessageCircle, Music2 } from "lucide-react";
+import { ArrowRight, CheckCircle, Shield, Zap, Sparkles, ShoppingBag, Star, Instagram, MessageCircle, Music2, MapPin, Store, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -60,6 +60,60 @@ const PLATFORMS = [
     img: P.tiktokLogo,
   },
 ];
+
+const DiscoveryLinks = () => (
+  <section className="py-20 bg-background border-t border-border/50 overflow-hidden">
+    <div className="container mx-auto px-4" style={{ maxWidth: 1200 }}>
+      <div className="flex flex-col md:flex-row items-center justify-between gap-10 mb-12">
+        <div className="max-w-xl text-center md:text-left">
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
+            Discover the Best of <span className="text-primary">Nigerian Commerce</span>
+          </h2>
+          <p className="text-muted-foreground text-lg leading-relaxed">
+            Supporting local entrepreneurs across major cities. Find verified vendors near you, from Lagos to Abuja.
+          </p>
+        </div>
+        <Link to="/shops">
+          <button className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl border border-primary/20 hover:bg-primary/5 text-primary font-bold transition-all group">
+            Browse All Shops <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        {[
+          { name: "Fashion in Lagos", slug: "fashion-in-lagos" },
+          { name: "Food in Abuja", slug: "food-drinks-in-abuja" },
+          { name: "Tech in Port Harcourt", slug: "electronics-in-port-harcourt" },
+          { name: "Beauty in Lagos", slug: "beauty-health-in-lagos" },
+          { name: "Skincare in Abuja", slug: "skincare-in-abuja" },
+          { name: "Fashion in PH", slug: "fashion-in-port-harcourt" },
+          { name: "Haircare in Lagos", slug: "haircare-in-lagos" },
+          { name: "Services in Abuja", slug: "services-in-abuja" },
+        ].map((hub) => (
+          <Link
+            key={hub.slug}
+            to={`/discover/${hub.slug}`}
+            className="group p-6 bg-card border border-border/50 rounded-3xl hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                <Store className="w-6 h-6" />
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all -translate-x-4 group-hover:translate-x-0" />
+            </div>
+            <h4 className="font-extrabold text-foreground group-hover:text-primary transition-colors text-base">
+              {hub.name}
+            </h4>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+              <MapPin className="w-3 h-3" /> Explore Shops
+            </p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  </section>
+);
 
 type Platform = (typeof PLATFORMS)[number];
 
@@ -811,6 +865,7 @@ const Index = () => (
 
     <CollectionsSection />
     <ShopperDiscovery />
+    <DiscoveryLinks />
 
     {/* ══════════════════════════════════════════════════════
         §15  FINAL CTA — Always hero indigo

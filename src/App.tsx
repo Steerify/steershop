@@ -37,6 +37,7 @@ import Shops from "./pages/Shops";
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ShopStorefront = lazy(() => import("./pages/ShopStorefront"));
+const DiscoveryHub = lazy(() => import("./pages/DiscoveryHub"));
 const ProductDetails = lazy(() => import("./pages/ProductDetails"));
 const Bookings = lazy(() => import("./pages/Bookings"));
 const CustomerDashboard = lazy(() => import("./pages/customer/CustomerDashboard"));
@@ -168,6 +169,7 @@ const App = () => (
             <Route path="/marketplace-nigeria" element={<Shops />} />
             <Route path="/nigeria-marketplace" element={<Shops />} />
             <Route path="/shop/:slug" element={<ShopStorefront />} />
+            <Route path="/discover/:hubSlug" element={<DiscoveryHub />} />
             <Route path="/s/:slug" element={<ShopStorefront />} />
             <Route path="/shop/:slug/product/:productId" element={<ProductDetails />} />
             <Route path="/demo" element={<DemoStoreFront />} />
