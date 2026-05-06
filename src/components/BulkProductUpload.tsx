@@ -159,7 +159,7 @@ export const BulkProductUpload = ({ open, onClose, shopId, onSuccess }: BulkProd
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[92vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
@@ -194,13 +194,13 @@ export const BulkProductUpload = ({ open, onClose, shopId, onSuccess }: BulkProd
             </div>
 
             {previews.length > 0 && (
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                 {previews.map((src, i) => (
                   <div key={i} className="relative group">
                     <img
                       src={src}
                       alt={`Preview ${i + 1}`}
-                      className="w-full h-20 object-cover rounded-lg border border-border"
+                      className="w-full h-24 sm:h-20 object-cover rounded-lg border border-border"
                     />
                     <button
                       onClick={() => removeFile(i)}
@@ -234,11 +234,11 @@ export const BulkProductUpload = ({ open, onClose, shopId, onSuccess }: BulkProd
             {drafts.map((draft, i) => (
               <Card key={i} className="border-border">
                 <CardContent className="p-3">
-                  <div className="flex gap-3">
+                  <div className="flex gap-2.5 sm:gap-4">
                     <img
                       src={draft.image_url}
                       alt={draft.name}
-                      className="w-16 h-16 object-cover rounded-lg shrink-0"
+                      className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg shrink-0"
                     />
                     <div className="flex-1 min-w-0 space-y-1">
                       {editingIndex === i ? (
@@ -276,8 +276,8 @@ export const BulkProductUpload = ({ open, onClose, shopId, onSuccess }: BulkProd
                               className="h-8 text-sm"
                             />
                           </div>
-                          <Button size="sm" variant="outline" onClick={() => setEditingIndex(null)}>
-                            <Check className="w-3 h-3 mr-1" /> Done
+                          <Button size="sm" variant="outline" onClick={() => setEditingIndex(null)} className="h-8">
+                            <Check className="w-3.5 h-3.5 mr-1.5" /> Save
                           </Button>
                         </div>
                       ) : (
@@ -296,9 +296,21 @@ export const BulkProductUpload = ({ open, onClose, shopId, onSuccess }: BulkProd
                               </Button>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">₦{draft.price.toLocaleString()}</Badge>
-                            <Badge variant="secondary" className="text-xs">{draft.category}</Badge>
+                          <div className="flex items-center gap-2 pt-1">
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/5 border border-primary/10 focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/10 transition-all">
+                              <span className="text-[10px] font-bold text-primary/60">₦</span>
+                              <input
+                                type="number"
+                                value={draft.price || ""}
+                                onChange={(e) => {
+                                  const val = e.target.value === "" ? 0 : Number(e.target.value);
+                                  updateDraft(i, "price", Math.max(0, Math.floor(val)));
+                                }}
+                                className="w-20 bg-transparent border-none p-0 text-sm font-bold text-foreground focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                placeholder="0"
+                              />
+                            </div>
+                            <Badge variant="secondary" className="text-[10px] px-2 py-0 h-6 uppercase tracking-tight">{draft.category}</Badge>
                           </div>
                         </>
                       )}
