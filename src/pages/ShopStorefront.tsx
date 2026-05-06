@@ -931,7 +931,7 @@ const ShopStorefront = () => {
                       )}
                       
                       <div className="flex gap-2">
-                        <Link to={`/shop/${slug}/product/${product.id}`} className="flex-1">
+                        <Link to={`/shop/${slug}/product/${product.id}`} className="hidden sm:flex flex-1">
                           <Button
                             variant="outline"
                             className="w-full h-9 rounded-xl border-border hover:border-accent/50 hover:bg-accent/5 transition-all text-xs font-semibold gap-1"
@@ -940,11 +940,11 @@ const ShopStorefront = () => {
                             <ChevronRight className="w-3.5 h-3.5" />
                           </Button>
                         </Link>
-                        <WishlistButton 
-                          productId={product.id} 
-                          size="sm" 
-                          showLabel={false} 
-                          className="h-9 w-9 sm:w-auto sm:px-3 sm:flex-1 rounded-xl text-xs font-semibold" 
+                        <WishlistButton
+                          productId={product.id}
+                          size="sm"
+                          showLabel={false}
+                          className="h-9 w-full sm:w-auto sm:px-3 sm:flex-1 rounded-xl text-xs font-semibold"
                         />
                       </div>
                     </div>
