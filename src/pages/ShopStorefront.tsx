@@ -630,18 +630,18 @@ const ShopStorefront = () => {
       </section>
 
       {/* ══════════════════ MARKETPLACE EXPLAINER ══════════════════ */}
-      <section className="container mx-auto px-4 pt-2 md:pt-0 pb-8">
-        <div className="rounded-2xl border border-border/60 bg-gradient-to-r from-accent/5 via-background to-primary/5 p-5 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="space-y-1.5">
-            <p className="text-xs uppercase tracking-wider font-semibold text-accent">SteerSolo Marketplace</p>
-            <h3 className="font-display text-lg md:text-xl font-bold">Discover more verified Nigerian stores in one place</h3>
-            <p className="text-sm text-muted-foreground max-w-2xl">
+      <section className="container mx-auto px-3 sm:px-4 pt-2 md:pt-0 pb-6 sm:pb-8">
+        <div className="rounded-2xl border border-border/60 bg-gradient-to-r from-accent/5 via-background to-primary/5 p-4 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+          <div className="space-y-1.5 min-w-0">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-accent">SteerSolo Marketplace</p>
+            <h3 className="font-display text-base sm:text-lg md:text-xl font-bold leading-snug">Discover more verified Nigerian stores</h3>
+            <p className="hidden sm:block text-sm text-muted-foreground max-w-2xl">
               Beyond this storefront, SteerSolo connects buyers to trusted sellers across beauty, fashion, food, gadgets, and services.
               Visit the marketplace to compare stores, find new vendors, and shop faster with confidence.
             </p>
           </div>
           <Link to="/shops" className="md:shrink-0">
-            <Button className="rounded-xl gap-2 text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 border border-emerald-300/30 shadow-md shadow-emerald-900/20">
+            <Button size="sm" className="w-full md:w-auto rounded-xl gap-2 text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 border border-emerald-300/30 shadow-md shadow-emerald-900/20">
               Visit Marketplace
               <ChevronRight className="w-4 h-4" />
             </Button>
