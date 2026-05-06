@@ -585,7 +585,7 @@ const ShopStorefront = () => {
                 </div>
 
                 {/* Stats Row */}
-                <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border/50">
+                <div className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible scrollbar-none items-center gap-2 pt-4 border-t border-border/50 -mx-1 px-1">
                   {shop.total_reviews > 0 && (
                     <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 rounded-xl px-3 py-1.5">
                       <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
