@@ -318,9 +318,9 @@ const ProductDetails = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <div className="flex-1 container mx-auto px-4 pt-24 pb-16">
-        {/* Breadcrumb */}
-        <div className="mb-6 flex items-center gap-2 text-sm">
+      <div className="flex-1 container mx-auto px-3 sm:px-4 pt-20 sm:pt-24 pb-24 sm:pb-16">
+        {/* Breadcrumb — desktop only */}
+        <div className="mb-6 hidden sm:flex items-center gap-2 text-sm">
           <Link to="/shops" className="text-muted-foreground hover:text-foreground transition-colors">
             Shops
           </Link>
@@ -333,14 +333,14 @@ const ProductDetails = () => {
         </div>
 
         {/* Back button */}
-        <Link to={`/shop/${slug}`} className="inline-block mb-6">
-          <Button variant="ghost" size="sm" className="hover:bg-muted">
+        <Link to={`/shop/${slug}`} className="inline-block mb-4 sm:mb-6">
+          <Button variant="ghost" size="sm" className="hover:bg-muted -ml-2 sm:ml-0">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to {shop.name}
+            <span className="truncate max-w-[200px] sm:max-w-none">Back to {shop.name}</span>
           </Button>
         </Link>
 
-        <div className="grid lg:grid-cols-2 gap-8 mb-12">
+        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 mb-10 sm:mb-12">
           {/* Product Media */}
           <div className="relative">
             {product.video_url ? (
@@ -372,7 +372,7 @@ const ProductDetails = () => {
           </div>
 
           {/* Product Info */}
-          <div className="space-y-6">
+          <div className="space-y-5 sm:space-y-6">
             {/* Shop Info */}
             <Link to={`/shop/${slug}`} className="inline-flex items-center gap-3 p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
@@ -386,25 +386,25 @@ const ProductDetails = () => {
 
             {/* Product Name & Rating */}
             <div>
-              <h1 className="font-display text-3xl md:text-4xl font-bold mb-3">{product.name}</h1>
-              <ProductRating 
-                rating={product.averageRating || 0} 
+              <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 leading-tight break-words">{product.name}</h1>
+              <ProductRating
+                rating={product.averageRating || 0}
                 totalReviews={product.totalReviews || 0}
               />
             </div>
 
             {/* Price */}
-            <div className="flex items-baseline gap-3 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               {product.comparePrice && product.comparePrice > product.price && (
-                <span className="text-2xl text-muted-foreground line-through">₦{product.comparePrice.toLocaleString()}</span>
+                <span className="text-lg sm:text-2xl text-muted-foreground line-through">₦{product.comparePrice.toLocaleString()}</span>
               )}
-              <span className="text-4xl font-bold gradient-text">₦{product.price.toLocaleString()}</span>
+              <span className="text-2xl sm:text-3xl md:text-4xl font-bold gradient-text break-all">₦{product.price.toLocaleString()}</span>
               {product.comparePrice && product.comparePrice > product.price && (
                 <Badge variant="destructive">
                   -{Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}% OFF
                 </Badge>
               )}
-              <Badge 
+              <Badge
                 variant={product.inventory > 0 ? "default" : "destructive"}
                 className={product.inventory > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
               >
@@ -451,56 +451,59 @@ const ProductDetails = () => {
               </div>
             )}
 
-            {/* Add to Cart Button */}
-            <div className="flex gap-3">
+            {/* Add to Cart + secondary actions */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <Button
                 size="lg"
-                className="flex-1 bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg"
+                className="w-full sm:flex-1 bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg"
                 onClick={handleAddToCart}
                 disabled={product.inventory === 0}
               >
                 <ShoppingCart className="w-5 h-5 mr-2" />
-                Add to Cart - ₦{(product.price * quantity).toLocaleString()}
+                <span className="truncate">Add to Cart · ₦{(product.price * quantity).toLocaleString()}</span>
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-green-500 text-green-600 hover:bg-green-50"
-                onClick={handleWhatsAppInquiry}
-              >
-                <MessageSquare className="w-5 h-5 mr-2" />
-                Inquire
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-12 w-12"
-                onClick={handleShareProduct}
-                aria-label={`Share ${product.name}`}
-              >
-                <Share2 className="w-5 h-5" />
-              </Button>
-              <WishlistButton productId={product.id} size="sm" className="h-12 w-12" />
+              <div className="flex gap-2 sm:gap-3">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="flex-1 sm:flex-initial border-green-500 text-green-600 hover:bg-green-50"
+                  onClick={handleWhatsAppInquiry}
+                >
+                  <MessageSquare className="w-5 h-5 sm:mr-2" />
+                  <span className="hidden sm:inline">Inquire</span>
+                  <span className="sm:hidden ml-2">Inquire</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-12 w-12 flex-shrink-0"
+                  onClick={handleShareProduct}
+                  aria-label={`Share ${product.name}`}
+                >
+                  <Share2 className="w-5 h-5" />
+                </Button>
+                <WishlistButton productId={product.id} size="sm" className="h-12 w-12 flex-shrink-0" />
+              </div>
             </div>
 
             {/* Trust Banner */}
-            <div className="grid grid-cols-2 gap-4 py-4 border-y border-border/50">
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-primary" />
-                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Secure Checkout</span>
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 py-4 border-y border-border/50">
+              <div className="flex items-center gap-2 min-w-0">
+                <Shield className="w-4 h-4 text-primary flex-shrink-0" />
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Secure Checkout</span>
               </div>
-              <div className="flex items-center gap-2">
-                <BadgeCheck className="w-4 h-4 text-accent" />
-                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Verified Seller</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <BadgeCheck className="w-4 h-4 text-accent flex-shrink-0" />
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Verified Seller</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Truck className="w-4 h-4 text-primary" />
-                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Fast Delivery</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <Truck className="w-4 h-4 text-primary flex-shrink-0" />
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Fast Delivery</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-accent" />
-                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Top Rated</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <Star className="w-4 h-4 text-accent flex-shrink-0" />
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Top Rated</span>
               </div>
             </div>
 
@@ -618,7 +621,7 @@ const ProductDetails = () => {
                   key={relProduct.id}
                   to={`/shop/${slug}/product/${relProduct.id}`}
                   onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                  className="min-w-[78%] sm:min-w-[48%] lg:min-w-[30%] xl:min-w-[24%] snap-start"
+                  className="min-w-[70%] sm:min-w-[48%] lg:min-w-[30%] xl:min-w-[24%] snap-start"
                 >
                   <Card className="card-african h-full overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1">
                     {relProduct.images && relProduct.images.length > 0 ? (

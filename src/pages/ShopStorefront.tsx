@@ -489,7 +489,7 @@ const ShopStorefront = () => {
         <div className="container mx-auto px-3 sm:px-4">
           <div className="relative -mt-12 sm:-mt-16 md:-mt-24 pb-6 sm:pb-8">
             <div className="relative z-10">
-              <div className="bg-card border border-border/50 rounded-2xl md:rounded-3xl shadow-sm p-4 sm:p-5 md:p-8">
+              <div className="bg-card border border-border/50 rounded-2xl md:rounded-3xl shadow-sm p-3 sm:p-5 md:p-8">
                 <div className="flex flex-col sm:flex-row sm:items-start gap-5 mb-5">
 
                   {/* Logo */}
@@ -530,55 +530,62 @@ const ShopStorefront = () => {
                       {/* Action Buttons */}
                       <div
                         ref={headerCartRef}
-                        className="w-full sm:w-auto grid grid-cols-2 sm:flex sm:flex-wrap items-stretch sm:items-center gap-2 mt-2 sm:mt-0"
+                        className="w-full sm:w-auto flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 mt-2 sm:mt-0"
                       >
-                        {shop.whatsapp_number && (
+                        {/* Primary row: Contact + Cart (highest intent) */}
+                        <div className="flex gap-2 w-full sm:w-auto sm:contents">
+                          {shop.whatsapp_number && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
+                              className="flex-1 sm:flex-initial rounded-xl h-11 sm:h-10 px-3 sm:px-4 border-green-500/45 bg-green-500/10 text-green-700 dark:text-green-300 hover:bg-green-500/15 hover:border-green-500 transition-all font-semibold gap-2 shadow-sm hover:shadow-md"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              <span>Contact</span>
+                            </Button>
+                          )}
                           <Button
-                            variant="outline"
                             size="sm"
-                            onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
-                            className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 border-green-500/45 bg-green-500/10 text-green-700 dark:text-green-300 hover:bg-green-500/15 hover:border-green-500 transition-all font-semibold gap-2 shadow-sm hover:shadow-md"
+                            onClick={() => setIsCheckoutOpen(true)}
+                            className={`flex-1 sm:flex-initial rounded-xl h-11 sm:h-10 px-3 sm:px-4 font-semibold transition-all gap-2 hover:brightness-110 border ${
+                              cartGlow
+                                ? "bg-gradient-to-r from-lime-300 via-lime-400 to-green-400 text-zinc-950 shadow-[0_0_24px_rgba(132,204,22,0.65)] border-lime-200 animate-pulse"
+                                : "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/25 border-emerald-300/30"
+                            }`}
+                            data-tour="cart-button"
                           >
-                            <MessageCircle className="w-4 h-4" />
-                            <span>Contact</span>
+                            <ShoppingCart className="w-4 h-4" />
+                            <span>Cart</span>
+                            <span className="bg-white/25 rounded-lg px-1.5 py-0.5 text-xs font-bold tabular-nums">{getTotalItems()}</span>
                           </Button>
-                        )}
-                        <TourButton
-                          onStartTour={startTour}
-                          hasSeenTour={hasSeenTour}
-                          onResetTour={resetTour}
-                          className="w-full"
-                        />
-                        <ShareStorefront
-                          shopName={shop.shop_name}
-                          shopSlug={shop.shop_slug}
-                          shopDescription={shop.description}
-                          logoUrl={shop.logo_url}
-                          rating={shop.average_rating}
-                          totalReviews={shop.total_reviews}
-                          productCount={productCount}
-                        />
-                        <Button
-                          size="sm"
-                          onClick={() => setIsCheckoutOpen(true)}
-                          className={`w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 font-semibold transition-all gap-2 hover:brightness-110 border ${
-                            cartGlow
-                              ? "bg-gradient-to-r from-lime-300 via-lime-400 to-green-400 text-zinc-950 shadow-[0_0_24px_rgba(132,204,22,0.65)] border-lime-200 animate-pulse"
-                              : "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/25 border-emerald-300/30"
-                          }`}
-                          data-tour="cart-button"
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          <span>Cart</span>
-                          <span className="bg-white/25 rounded-lg px-1.5 py-0.5 text-xs font-bold tabular-nums">{getTotalItems()}</span>
-                        </Button>
+                        </div>
+
+                        {/* Secondary row: Tour + Share (icon-led, lower priority on mobile) */}
+                        <div className="flex gap-2 justify-end sm:contents">
+                          <TourButton
+                            onStartTour={startTour}
+                            hasSeenTour={hasSeenTour}
+                            onResetTour={resetTour}
+                            className="sm:w-auto"
+                          />
+                          <ShareStorefront
+                            shopName={shop.shop_name}
+                            shopSlug={shop.shop_slug}
+                            shopDescription={shop.description}
+                            logoUrl={shop.logo_url}
+                            rating={shop.average_rating}
+                            totalReviews={shop.total_reviews}
+                            productCount={productCount}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Stats Row */}
-                <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border/50">
+                <div className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible scrollbar-none items-center gap-2 pt-4 border-t border-border/50 -mx-1 px-1">
                   {shop.total_reviews > 0 && (
                     <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 rounded-xl px-3 py-1.5">
                       <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
@@ -623,18 +630,18 @@ const ShopStorefront = () => {
       </section>
 
       {/* ══════════════════ MARKETPLACE EXPLAINER ══════════════════ */}
-      <section className="container mx-auto px-4 pt-2 md:pt-0 pb-8">
-        <div className="rounded-2xl border border-border/60 bg-gradient-to-r from-accent/5 via-background to-primary/5 p-5 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="space-y-1.5">
-            <p className="text-xs uppercase tracking-wider font-semibold text-accent">SteerSolo Marketplace</p>
-            <h3 className="font-display text-lg md:text-xl font-bold">Discover more verified Nigerian stores in one place</h3>
-            <p className="text-sm text-muted-foreground max-w-2xl">
+      <section className="container mx-auto px-3 sm:px-4 pt-2 md:pt-0 pb-6 sm:pb-8">
+        <div className="rounded-2xl border border-border/60 bg-gradient-to-r from-accent/5 via-background to-primary/5 p-4 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+          <div className="space-y-1.5 min-w-0">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-accent">SteerSolo Marketplace</p>
+            <h3 className="font-display text-base sm:text-lg md:text-xl font-bold leading-snug">Discover more verified Nigerian stores</h3>
+            <p className="hidden sm:block text-sm text-muted-foreground max-w-2xl">
               Beyond this storefront, SteerSolo connects buyers to trusted sellers across beauty, fashion, food, gadgets, and services.
               Visit the marketplace to compare stores, find new vendors, and shop faster with confidence.
             </p>
           </div>
           <Link to="/shops" className="md:shrink-0">
-            <Button className="rounded-xl gap-2 text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 border border-emerald-300/30 shadow-md shadow-emerald-900/20">
+            <Button size="sm" className="w-full md:w-auto rounded-xl gap-2 text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 border border-emerald-300/30 shadow-md shadow-emerald-900/20">
               Visit Marketplace
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -670,7 +677,7 @@ const ShopStorefront = () => {
                 <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-accent" />
                 </div>
-                <h2 className="font-display text-xl md:text-2xl font-bold tracking-tight" style={{ color: shop.primary_color || undefined }}>Catalog</h2>
+                <h2 className="hidden sm:block font-display text-xl md:text-2xl font-bold tracking-tight" style={{ color: shop.primary_color || undefined }}>Catalog</h2>
               </div>
             </div>
 
@@ -924,7 +931,7 @@ const ShopStorefront = () => {
                       )}
                       
                       <div className="flex gap-2">
-                        <Link to={`/shop/${slug}/product/${product.id}`} className="flex-1">
+                        <Link to={`/shop/${slug}/product/${product.id}`} className="hidden sm:flex flex-1">
                           <Button
                             variant="outline"
                             className="w-full h-9 rounded-xl border-border hover:border-accent/50 hover:bg-accent/5 transition-all text-xs font-semibold gap-1"
@@ -933,11 +940,11 @@ const ShopStorefront = () => {
                             <ChevronRight className="w-3.5 h-3.5" />
                           </Button>
                         </Link>
-                        <WishlistButton 
-                          productId={product.id} 
-                          size="sm" 
-                          showLabel={false} 
-                          className="h-9 w-9 sm:w-auto sm:px-3 sm:flex-1 rounded-xl text-xs font-semibold" 
+                        <WishlistButton
+                          productId={product.id}
+                          size="sm"
+                          showLabel={false}
+                          className="h-9 w-full sm:w-auto sm:px-3 sm:flex-1 rounded-xl text-xs font-semibold"
                         />
                       </div>
                     </div>
@@ -954,7 +961,7 @@ const ShopStorefront = () => {
         <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none">
           {/* Subtle gradient fade above bar */}
           <div className="h-12 bg-gradient-to-t from-background/80 to-transparent" />
-          <div className="bg-card/95 backdrop-blur-2xl border-t border-border/50 px-4 py-3 safe-area-pb pointer-events-auto shadow-2xl">
+          <div className="bg-card/95 backdrop-blur-2xl border-t border-border/50 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pointer-events-auto shadow-2xl">
             <div className="container mx-auto flex items-center justify-center gap-3 max-w-md">
               {shop.whatsapp_number && (
                 <Button
