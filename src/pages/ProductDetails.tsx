@@ -340,7 +340,7 @@ const ProductDetails = () => {
           </Button>
         </Link>
 
-        <div className="grid lg:grid-cols-2 gap-8 mb-12">
+        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 mb-10 sm:mb-12">
           {/* Product Media */}
           <div className="relative">
             {product.video_url ? (
@@ -372,7 +372,7 @@ const ProductDetails = () => {
           </div>
 
           {/* Product Info */}
-          <div className="space-y-6">
+          <div className="space-y-5 sm:space-y-6">
             {/* Shop Info */}
             <Link to={`/shop/${slug}`} className="inline-flex items-center gap-3 p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
@@ -386,25 +386,25 @@ const ProductDetails = () => {
 
             {/* Product Name & Rating */}
             <div>
-              <h1 className="font-display text-3xl md:text-4xl font-bold mb-3">{product.name}</h1>
-              <ProductRating 
-                rating={product.averageRating || 0} 
+              <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 leading-tight break-words">{product.name}</h1>
+              <ProductRating
+                rating={product.averageRating || 0}
                 totalReviews={product.totalReviews || 0}
               />
             </div>
 
             {/* Price */}
-            <div className="flex items-baseline gap-3 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               {product.comparePrice && product.comparePrice > product.price && (
-                <span className="text-2xl text-muted-foreground line-through">₦{product.comparePrice.toLocaleString()}</span>
+                <span className="text-lg sm:text-2xl text-muted-foreground line-through">₦{product.comparePrice.toLocaleString()}</span>
               )}
-              <span className="text-4xl font-bold gradient-text">₦{product.price.toLocaleString()}</span>
+              <span className="text-2xl sm:text-3xl md:text-4xl font-bold gradient-text break-all">₦{product.price.toLocaleString()}</span>
               {product.comparePrice && product.comparePrice > product.price && (
                 <Badge variant="destructive">
                   -{Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}% OFF
                 </Badge>
               )}
-              <Badge 
+              <Badge
                 variant={product.inventory > 0 ? "default" : "destructive"}
                 className={product.inventory > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
               >
