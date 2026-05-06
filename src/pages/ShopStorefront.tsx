@@ -677,7 +677,7 @@ const ShopStorefront = () => {
                 <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-accent" />
                 </div>
-                <h2 className="font-display text-xl md:text-2xl font-bold tracking-tight" style={{ color: shop.primary_color || undefined }}>Catalog</h2>
+                <h2 className="hidden sm:block font-display text-xl md:text-2xl font-bold tracking-tight" style={{ color: shop.primary_color || undefined }}>Catalog</h2>
               </div>
             </div>
 
