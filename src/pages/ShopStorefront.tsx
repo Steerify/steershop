@@ -961,7 +961,7 @@ const ShopStorefront = () => {
         <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none">
           {/* Subtle gradient fade above bar */}
           <div className="h-12 bg-gradient-to-t from-background/80 to-transparent" />
-          <div className="bg-card/95 backdrop-blur-2xl border-t border-border/50 px-4 py-3 safe-area-pb pointer-events-auto shadow-2xl">
+          <div className="bg-card/95 backdrop-blur-2xl border-t border-border/50 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pointer-events-auto shadow-2xl">
             <div className="container mx-auto flex items-center justify-center gap-3 max-w-md">
               {shop.whatsapp_number && (
                 <Button
