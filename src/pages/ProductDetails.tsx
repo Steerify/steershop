@@ -621,7 +621,7 @@ const ProductDetails = () => {
                   key={relProduct.id}
                   to={`/shop/${slug}/product/${relProduct.id}`}
                   onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                  className="min-w-[78%] sm:min-w-[48%] lg:min-w-[30%] xl:min-w-[24%] snap-start"
+                  className="min-w-[70%] sm:min-w-[48%] lg:min-w-[30%] xl:min-w-[24%] snap-start"
                 >
                   <Card className="card-african h-full overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1">
                     {relProduct.images && relProduct.images.length > 0 ? (
