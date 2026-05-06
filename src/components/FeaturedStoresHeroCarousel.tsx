@@ -91,9 +91,18 @@ export const FeaturedStoresHeroCarousel = () => {
               .eq("shop_id", f.shop_id)
               .eq("is_available", true)
               .order("created_at", { ascending: false })
-              .limit(2);
+              .limit(8);
 
             if (prodErr) console.warn("product fetch error for shop", f.shop_id, prodErr.message);
+
+            // Pick up to 2 random products from the pool so visits feel fresh.
+            const pool = (prods ?? []) as ProductPreview[];
+            const shuffled = [...pool];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            const picked = shuffled.slice(0, 2);
 
             return {
               id: f.id,
@@ -105,7 +114,7 @@ export const FeaturedStoresHeroCarousel = () => {
               logo_url: shop.logo_url,
               description: shop.description,
               state: shop.state,
-              products: (prods ?? []) as ProductPreview[],
+              products: picked,
             };
           })
         );
