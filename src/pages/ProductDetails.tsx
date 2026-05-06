@@ -451,56 +451,59 @@ const ProductDetails = () => {
               </div>
             )}
 
-            {/* Add to Cart Button */}
-            <div className="flex gap-3">
+            {/* Add to Cart + secondary actions */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <Button
                 size="lg"
-                className="flex-1 bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg"
+                className="w-full sm:flex-1 bg-gradient-to-r from-accent to-primary hover:opacity-90 shadow-lg"
                 onClick={handleAddToCart}
                 disabled={product.inventory === 0}
               >
                 <ShoppingCart className="w-5 h-5 mr-2" />
-                Add to Cart - ₦{(product.price * quantity).toLocaleString()}
+                <span className="truncate">Add to Cart · ₦{(product.price * quantity).toLocaleString()}</span>
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-green-500 text-green-600 hover:bg-green-50"
-                onClick={handleWhatsAppInquiry}
-              >
-                <MessageSquare className="w-5 h-5 mr-2" />
-                Inquire
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-12 w-12"
-                onClick={handleShareProduct}
-                aria-label={`Share ${product.name}`}
-              >
-                <Share2 className="w-5 h-5" />
-              </Button>
-              <WishlistButton productId={product.id} size="sm" className="h-12 w-12" />
+              <div className="flex gap-2 sm:gap-3">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="flex-1 sm:flex-initial border-green-500 text-green-600 hover:bg-green-50"
+                  onClick={handleWhatsAppInquiry}
+                >
+                  <MessageSquare className="w-5 h-5 sm:mr-2" />
+                  <span className="hidden sm:inline">Inquire</span>
+                  <span className="sm:hidden ml-2">Inquire</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-12 w-12 flex-shrink-0"
+                  onClick={handleShareProduct}
+                  aria-label={`Share ${product.name}`}
+                >
+                  <Share2 className="w-5 h-5" />
+                </Button>
+                <WishlistButton productId={product.id} size="sm" className="h-12 w-12 flex-shrink-0" />
+              </div>
             </div>
 
             {/* Trust Banner */}
-            <div className="grid grid-cols-2 gap-4 py-4 border-y border-border/50">
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-primary" />
-                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Secure Checkout</span>
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 py-4 border-y border-border/50">
+              <div className="flex items-center gap-2 min-w-0">
+                <Shield className="w-4 h-4 text-primary flex-shrink-0" />
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Secure Checkout</span>
               </div>
-              <div className="flex items-center gap-2">
-                <BadgeCheck className="w-4 h-4 text-accent" />
-                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Verified Seller</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <BadgeCheck className="w-4 h-4 text-accent flex-shrink-0" />
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Verified Seller</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Truck className="w-4 h-4 text-primary" />
-                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Fast Delivery</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <Truck className="w-4 h-4 text-primary flex-shrink-0" />
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Fast Delivery</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-accent" />
-                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Top Rated</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <Star className="w-4 h-4 text-accent flex-shrink-0" />
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Top Rated</span>
               </div>
             </div>
 
