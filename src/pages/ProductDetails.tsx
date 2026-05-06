@@ -318,9 +318,9 @@ const ProductDetails = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <div className="flex-1 container mx-auto px-4 pt-24 pb-16">
-        {/* Breadcrumb */}
-        <div className="mb-6 flex items-center gap-2 text-sm">
+      <div className="flex-1 container mx-auto px-3 sm:px-4 pt-20 sm:pt-24 pb-24 sm:pb-16">
+        {/* Breadcrumb — desktop only */}
+        <div className="mb-6 hidden sm:flex items-center gap-2 text-sm">
           <Link to="/shops" className="text-muted-foreground hover:text-foreground transition-colors">
             Shops
           </Link>
@@ -333,10 +333,10 @@ const ProductDetails = () => {
         </div>
 
         {/* Back button */}
-        <Link to={`/shop/${slug}`} className="inline-block mb-6">
-          <Button variant="ghost" size="sm" className="hover:bg-muted">
+        <Link to={`/shop/${slug}`} className="inline-block mb-4 sm:mb-6">
+          <Button variant="ghost" size="sm" className="hover:bg-muted -ml-2 sm:ml-0">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to {shop.name}
+            <span className="truncate max-w-[200px] sm:max-w-none">Back to {shop.name}</span>
           </Button>
         </Link>
 
