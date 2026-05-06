@@ -489,7 +489,7 @@ const ShopStorefront = () => {
         <div className="container mx-auto px-3 sm:px-4">
           <div className="relative -mt-12 sm:-mt-16 md:-mt-24 pb-6 sm:pb-8">
             <div className="relative z-10">
-              <div className="bg-card border border-border/50 rounded-2xl md:rounded-3xl shadow-sm p-4 sm:p-5 md:p-8">
+              <div className="bg-card border border-border/50 rounded-2xl md:rounded-3xl shadow-sm p-3 sm:p-5 md:p-8">
                 <div className="flex flex-col sm:flex-row sm:items-start gap-5 mb-5">
 
                   {/* Logo */}
@@ -530,48 +530,55 @@ const ShopStorefront = () => {
                       {/* Action Buttons */}
                       <div
                         ref={headerCartRef}
-                        className="w-full sm:w-auto grid grid-cols-2 sm:flex sm:flex-wrap items-stretch sm:items-center gap-2 mt-2 sm:mt-0"
+                        className="w-full sm:w-auto flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 mt-2 sm:mt-0"
                       >
-                        {shop.whatsapp_number && (
+                        {/* Primary row: Contact + Cart (highest intent) */}
+                        <div className="flex gap-2 w-full sm:w-auto sm:contents">
+                          {shop.whatsapp_number && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
+                              className="flex-1 sm:flex-initial rounded-xl h-11 sm:h-10 px-3 sm:px-4 border-green-500/45 bg-green-500/10 text-green-700 dark:text-green-300 hover:bg-green-500/15 hover:border-green-500 transition-all font-semibold gap-2 shadow-sm hover:shadow-md"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              <span>Contact</span>
+                            </Button>
+                          )}
                           <Button
-                            variant="outline"
                             size="sm"
-                            onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
-                            className="w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 border-green-500/45 bg-green-500/10 text-green-700 dark:text-green-300 hover:bg-green-500/15 hover:border-green-500 transition-all font-semibold gap-2 shadow-sm hover:shadow-md"
+                            onClick={() => setIsCheckoutOpen(true)}
+                            className={`flex-1 sm:flex-initial rounded-xl h-11 sm:h-10 px-3 sm:px-4 font-semibold transition-all gap-2 hover:brightness-110 border ${
+                              cartGlow
+                                ? "bg-gradient-to-r from-lime-300 via-lime-400 to-green-400 text-zinc-950 shadow-[0_0_24px_rgba(132,204,22,0.65)] border-lime-200 animate-pulse"
+                                : "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/25 border-emerald-300/30"
+                            }`}
+                            data-tour="cart-button"
                           >
-                            <MessageCircle className="w-4 h-4" />
-                            <span>Contact</span>
+                            <ShoppingCart className="w-4 h-4" />
+                            <span>Cart</span>
+                            <span className="bg-white/25 rounded-lg px-1.5 py-0.5 text-xs font-bold tabular-nums">{getTotalItems()}</span>
                           </Button>
-                        )}
-                        <TourButton
-                          onStartTour={startTour}
-                          hasSeenTour={hasSeenTour}
-                          onResetTour={resetTour}
-                          className="w-full"
-                        />
-                        <ShareStorefront
-                          shopName={shop.shop_name}
-                          shopSlug={shop.shop_slug}
-                          shopDescription={shop.description}
-                          logoUrl={shop.logo_url}
-                          rating={shop.average_rating}
-                          totalReviews={shop.total_reviews}
-                          productCount={productCount}
-                        />
-                        <Button
-                          size="sm"
-                          onClick={() => setIsCheckoutOpen(true)}
-                          className={`w-full rounded-xl h-11 sm:h-10 px-3 sm:px-4 font-semibold transition-all gap-2 hover:brightness-110 border ${
-                            cartGlow
-                              ? "bg-gradient-to-r from-lime-300 via-lime-400 to-green-400 text-zinc-950 shadow-[0_0_24px_rgba(132,204,22,0.65)] border-lime-200 animate-pulse"
-                              : "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/25 border-emerald-300/30"
-                          }`}
-                          data-tour="cart-button"
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          <span>Cart</span>
-                          <span className="bg-white/25 rounded-lg px-1.5 py-0.5 text-xs font-bold tabular-nums">{getTotalItems()}</span>
-                        </Button>
+                        </div>
+
+                        {/* Secondary row: Tour + Share (icon-led, lower priority on mobile) */}
+                        <div className="flex gap-2 justify-end sm:contents">
+                          <TourButton
+                            onStartTour={startTour}
+                            hasSeenTour={hasSeenTour}
+                            onResetTour={resetTour}
+                            className="sm:w-auto"
+                          />
+                          <ShareStorefront
+                            shopName={shop.shop_name}
+                            shopSlug={shop.shop_slug}
+                            shopDescription={shop.description}
+                            logoUrl={shop.logo_url}
+                            rating={shop.average_rating}
+                            totalReviews={shop.total_reviews}
+                            productCount={productCount}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
