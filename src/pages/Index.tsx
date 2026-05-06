@@ -247,7 +247,41 @@ const Index = () => (
 
     <Helmet>
       <title>SteerSolo - Nigeria's Verified Beauty & Social Commerce Storefronts</title>
-      <meta name="description" content="Turn your WhatsApp, Instagram, and TikTok audience into a trusted storefront. The Daily Selling System for Nigerian social commerce vendors." />
+      <meta name="description" content="Turn your WhatsApp, Instagram, and TikTok audience into a trusted storefront. The Daily Selling System for Nigerian social commerce vendors. Shop verified Nigerian brands with confidence." />
+      <meta name="keywords" content="social commerce nigeria, sell on whatsapp nigeria, instagram store nigeria, verified beauty brands nigeria, steersolo, ecommerce nigeria" />
+      <link rel="canonical" href="https://steersolo.com" />
+      
+      {/* Open Graph / Facebook */}
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content="https://steersolo.com" />
+      <meta property="og:title" content="SteerSolo - Nigeria's Verified Beauty & Social Commerce" />
+      <meta property="og:description" content="Turn your social audience into a trusted storefront. The standard for verified Nigerian vendors." />
+      <meta property="og:image" content="https://steersolo.com/og-image.png" />
+      <meta property="og:site_name" content="SteerSolo" />
+      <meta property="og:locale" content="en_NG" />
+
+      {/* Twitter */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:url" content="https://steersolo.com" />
+      <meta name="twitter:title" content="SteerSolo - Nigeria's Verified Beauty & Social Commerce" />
+      <meta name="twitter:description" content="Turn your social audience into a trusted storefront. The standard for verified Nigerian vendors." />
+      <meta name="twitter:image" content="https://steersolo.com/og-image.png" />
+      <meta name="twitter:site" content="@steersolo" />
+
+      {/* AI & Search Engine Richness */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "SteerSolo",
+          "url": "https://steersolo.com",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://steersolo.com/shops?search={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        })}
+      </script>
     </Helmet>
     <GoogleOneTap />
     <Navbar />

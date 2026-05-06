@@ -46,7 +46,7 @@ const SlideSkeletons = () => (
         style={{ scrollSnapAlign: "start" }}
         aria-hidden
       >
-        <div className="h-full animate-pulse" style={{ borderRadius: 24, background: "rgba(255,255,255,0.07)", minHeight: 480 }} />
+        <div className="h-full animate-pulse" style={{ borderRadius: 24, background: "rgba(255,255,255,0.07)", minHeight: 380 }} />
       </div>
     ))}
   </>
@@ -61,8 +61,17 @@ export const FeaturedStoresHeroCarousel = () => {
   const trackRef = useRef<HTMLDivElement>(null);
   const autoRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasScrolledIntoViewRef = useRef(false);
+  const [isMobile, setIsMobile] = useState(false);
   const brokenLogos = useRef<Set<string>>(new Set());
   const brokenProductImgs = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 767px)");
+    const handler = (e: MediaQueryListEvent | MediaQueryList) => setIsMobile(e.matches);
+    handler(mql);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
 
   /* ── fetch ── */
   useEffect(() => {
@@ -154,18 +163,37 @@ export const FeaturedStoresHeroCarousel = () => {
     }
   }, [activeIdx, slides.length]);
 
-  /* ── one-shot: scroll the carousel into the page viewport once ──
-     Runs only on the first render after slides load. Subsequent
-     auto-swipes never tug the page back to the carousel. */
+  /* ── professional mobile-only: scroll once if user is at the top ──
+     Guides mobile users to featured content without hijacking their scroll. */
   useEffect(() => {
     if (loading || slides.length === 0) return;
     if (hasScrolledIntoViewRef.current) return;
+
+    // Only attempt on mobile devices
+    if (!isMobile) return;
+
+    // CRITICAL SAFEGUARD: Only auto-scroll if the user is still at the top.
+    // If they've already started exploring (scrollY > 100), we don't interrupt.
+    if (window.scrollY > 100) {
+      hasScrolledIntoViewRef.current = true;
+      return;
+    }
+
+    // Mark as attempted to ensure it NEVER runs again even if conditions change.
     hasScrolledIntoViewRef.current = true;
-    // Defer to next frame so layout is settled before scrolling.
-    const id = requestAnimationFrame(() => {
-      containerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-    return () => cancelAnimationFrame(id);
+
+    // Use a polite delay to allow initial rendering to settle.
+    const timeoutId = setTimeout(() => {
+      if (containerRef.current) {
+        // Use 'nearest' to avoid aggressive centering that can feel like a "lock"
+        containerRef.current.scrollIntoView({ 
+          behavior: "smooth", 
+          block: "nearest" 
+        });
+      }
+    }, 1200);
+
+    return () => clearTimeout(timeoutId);
   }, [loading, slides.length]);
 
   const prev = () => {
@@ -306,11 +334,11 @@ export const FeaturedStoresHeroCarousel = () => {
                     }}
                   >
                     {/* Store header */}
-                    <div style={{ padding: "16px 18px 12px", display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ padding: isMobile ? "12px 14px 10px" : "16px 18px 12px", display: "flex", alignItems: "center", gap: isMobile ? 10 : 12 }}>
                       {/* Logo */}
                       <div
                         style={{
-                          width: 56, height: 56, borderRadius: 16, overflow: "hidden",
+                          width: isMobile ? 44 : 56, height: isMobile ? 44 : 56, borderRadius: isMobile ? 12 : 16, overflow: "hidden",
                           background: "rgba(255,255,255,0.1)", flexShrink: 0,
                           display: "flex", alignItems: "center", justifyContent: "center",
                           border: "1px solid rgba(255,255,255,0.15)",
@@ -333,7 +361,7 @@ export const FeaturedStoresHeroCarousel = () => {
                         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
                           <h3
                             style={{
-                              fontWeight: 800, fontSize: "1.1rem", color: "#fff",
+                              fontWeight: 800, fontSize: isMobile ? "0.95rem" : "1.1rem", color: "#fff",
                               margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                             }}
                           >
@@ -379,7 +407,7 @@ export const FeaturedStoresHeroCarousel = () => {
                               }}
                             >
                               {/* Product image */}
-                              <div style={{ height: 180, overflow: "hidden", flexShrink: 0 }}>
+                              <div style={{ height: isMobile ? 130 : 180, overflow: "hidden", flexShrink: 0 }}>
                                 {hasImg ? (
                                   <img
                                     src={imgUrl!}
@@ -483,8 +511,8 @@ export const FeaturedStoresHeroCarousel = () => {
               onClick={() => { setActiveIdx(i); startAuto(); }}
               aria-label={`Go to store ${i + 1}`}
               style={{
-                width: i === activeIdx ? 20 : 6,
-                height: 6,
+                width: i === activeIdx ? (isMobile ? 12 : 20) : (isMobile ? 4 : 6),
+                height: isMobile ? 4 : 6,
                 borderRadius: 9999,
                 background: i === activeIdx ? "#00d97e" : "rgba(255,255,255,0.25)",
                 border: "none",

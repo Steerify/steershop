@@ -50,80 +50,56 @@ const ProductDetails = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [productId]);
 
-  // SEO: Inject meta tags and Product JSON-LD
-  useEffect(() => {
-    if (!product || !shop) return;
-    const shopUrl = `https://steersolo.com/shop/${slug}`;
-    const productUrl = `${shopUrl}/product/${product.id}`;
-    const imageUrl = product.image_url || (product.images?.[0]?.url) || '';
-    const shopName = shop.shop_name || shop.name || 'Shop';
-    const fullDescription = product.description || `${product.name} available at ${shopName} on SteerSolo.`;
-    const desc = fullDescription.length > 180 ? `${fullDescription.slice(0, 177)}...` : fullDescription;
+      {product && shop && (
+        <Helmet>
+          <title>{`${product.name} | ${shop.shop_name || shop.name || 'Shop'} | SteerSolo`}</title>
+          <meta name="description" content={product.description || `${product.name} available at ${shop.shop_name || shop.name || 'Shop'} on SteerSolo.`} />
+          <meta name="keywords" content={`${product.name}, ${shop.shop_name || shop.name}, buy ${product.name} online, nigeria beauty, steersolo`} />
+          
+          <meta property="og:title" content={`${product.name} - ${shop.shop_name || shop.name}`} />
+          <meta property="og:description" content={product.description || `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`} />
+          <meta property="og:url" content={`https://steersolo.com/shop/${slug}/product/${product.id}`} />
+          <meta property="og:type" content="product" />
+          <meta property="og:site_name" content="SteerSolo" />
+          <meta property="og:locale" content="en_NG" />
+          
+          {(product.image_url || product.images?.[0]?.url) && (
+            <meta property="og:image" content={product.image_url || product.images?.[0]?.url} />
+          )}
 
-    document.title = `${product.name} | ${shopName} | SteerSolo`;
-
-    const setMeta = (attr: string, key: string, content: string) => {
-      let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement;
-      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, key); document.head.appendChild(el); }
-      el.setAttribute('content', content);
-    };
-
-    setMeta('name', 'description', desc);
-    setMeta('name', 'robots', 'index, follow');
-    setMeta('property', 'og:title', `${product.name} - ${shopName}`);
-    setMeta('property', 'og:description', desc);
-    setMeta('property', 'og:locale', 'en_NG');
-    setMeta('property', 'og:url', productUrl);
-    setMeta('property', 'og:type', 'product');
-    setMeta('property', 'og:site_name', 'SteerSolo');
-    if (imageUrl) {
-      setMeta('property', 'og:image', imageUrl);
-      setMeta('property', 'og:image:alt', `${product.name} by ${shopName}`);
-      setMeta('name', 'twitter:image', imageUrl);
-    }
-    setMeta('name', 'twitter:card', 'summary_large_image');
-    setMeta('name', 'twitter:title', `${product.name} - ${shopName}`);
-    setMeta('name', 'twitter:description', desc);
-
-    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
-    if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
-    canonical.href = productUrl;
-
-    const schema = {
-      "@context": "https://schema.org",
-      "@type": "Product",
-      "name": product.name,
-      "description": fullDescription,
-      "image": imageUrl || undefined,
-      "url": productUrl,
-      "brand": { "@type": "Brand", "name": shopName },
-      "offers": {
-        "@type": "Offer",
-        "price": product.price,
-        "priceCurrency": "NGN",
-        "availability": (product.inventory || product.is_available) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-        "seller": { "@type": "Organization", "name": shopName, "url": shopUrl }
-      },
-      ...((product.averageRating || product.totalReviews) && {
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": product.averageRating,
-          "reviewCount": product.totalReviews
-        }
-      })
-    };
-
-    const script = document.createElement("script");
-    script.type = "application/ld+json";
-    script.text = JSON.stringify(schema);
-    script.id = "product-jsonld";
-    document.head.appendChild(script);
-
-    return () => {
-      const el = document.getElementById("product-jsonld");
-      if (el) el.remove();
-    };
-  }, [product, shop, slug]);
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={`${product.name} - ${shop.shop_name || shop.name}`} />
+          <meta name="twitter:description" content={product.description || `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`} />
+          
+          <link rel="canonical" href={`https://steersolo.com/shop/${slug}/product/${product.id}`} />
+          
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Product",
+              "name": product.name,
+              "description": product.description || `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`,
+              "image": product.image_url || (product.images?.[0]?.url) || undefined,
+              "url": `https://steersolo.com/shop/${slug}/product/${product.id}`,
+              "brand": { "@type": "Brand", "name": shop.shop_name || shop.name },
+              "offers": {
+                "@type": "Offer",
+                "price": product.price,
+                "priceCurrency": "NGN",
+                "availability": (product.inventory || product.is_available) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+                "seller": { "@type": "Organization", "name": shop.shop_name || shop.name, "url": `https://steersolo.com/shop/${slug}` }
+              },
+              ...((product.averageRating || product.totalReviews) && {
+                "aggregateRating": {
+                  "@type": "AggregateRating",
+                  "ratingValue": product.averageRating,
+                  "reviewCount": product.totalReviews
+                }
+              })
+            })}
+          </script>
+        </Helmet>
+      )}
 
   const loadProductData = async () => {
     try {

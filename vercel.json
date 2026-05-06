@@ -6,12 +6,12 @@
     },
     {
       "source": "/shop/:slug/product/:productId",
-      "has": [{ "type": "header", "key": "user-agent", "value": ".*(Googlebot|bingbot|facebookexternalhit|Twitterbot|WhatsApp|Slackbot|LinkedInBot|Discordbot|TelegramBot|GPTBot|ChatGPT-User|PerplexityBot|ClaudeBot|Claude-Web|Anthropic|Google-Extended|Applebot|Bytespider|CCBot|cohere-ai|Diffbot|YouBot|PetalBot|Amazonbot|meta-externalagent|OAI-SearchBot|AI2Bot|DuckDuckBot|YandexBot|SemrushBot|AhrefsBot|MJ12bot|DotBot).*" }],
+      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(Googlebot|bingbot|facebookexternalhit|Twitterbot|WhatsApp|Slackbot|LinkedInBot|Discordbot|TelegramBot|GPTBot|ChatGPT-User|OAI-SearchBot|PerplexityBot|Perplexity-User|ClaudeBot|Claude-Web|Anthropic|Google-Extended|Applebot|Bytespider|CCBot|cohere-ai|Diffbot|YouBot|PetalBot|Amazonbot|meta-externalagent|AI2Bot|DuckDuckBot|YandexBot|SemrushBot|AhrefsBot|MJ12bot|DotBot|claudebot|claude-web|perplexitybot|perplexity-user|google-extended|anthropic-ai|ccbot|bytespider|amazonbot|mistralai|cohere-ai|youbot|diffbot|semrushbot|ahrefsbot).*" }],
       "destination": "https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/shop-og-meta?slug=:slug&product=:productId"
     },
     {
       "source": "/shop/:slug",
-      "has": [{ "type": "header", "key": "user-agent", "value": ".*(Googlebot|bingbot|facebookexternalhit|Twitterbot|WhatsApp|Slackbot|LinkedInBot|Discordbot|TelegramBot|GPTBot|ChatGPT-User|PerplexityBot|ClaudeBot|Claude-Web|Anthropic|Google-Extended|Applebot|Bytespider|CCBot|cohere-ai|Diffbot|YouBot|PetalBot|Amazonbot|meta-externalagent|OAI-SearchBot|AI2Bot|DuckDuckBot|YandexBot|SemrushBot|AhrefsBot|MJ12bot|DotBot).*" }],
+      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(Googlebot|bingbot|facebookexternalhit|Twitterbot|WhatsApp|Slackbot|LinkedInBot|Discordbot|TelegramBot|GPTBot|ChatGPT-User|OAI-SearchBot|PerplexityBot|Perplexity-User|ClaudeBot|Claude-Web|Anthropic|Google-Extended|Applebot|Bytespider|CCBot|cohere-ai|Diffbot|YouBot|PetalBot|Amazonbot|meta-externalagent|AI2Bot|DuckDuckBot|YandexBot|SemrushBot|AhrefsBot|MJ12bot|DotBot|claudebot|claude-web|perplexitybot|perplexity-user|google-extended|anthropic-ai|ccbot|bytespider|amazonbot|mistralai|cohere-ai|youbot|diffbot|semrushbot|ahrefsbot).*" }],
       "destination": "https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/shop-og-meta?slug=:slug"
     },
     {
