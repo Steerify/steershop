@@ -9,34 +9,34 @@ const TIER_CONFIG: Record<string, {
   description: string;
 }> = {
   listed: {
-    label: 'Listed',
+    label: 'SteerSolo Safe Listed',
     icon: Shield,
-    className: 'bg-muted text-muted-foreground border-border',
-    description: 'This shop is listed on SteerSolo',
+    className: 'bg-white/5 text-white/70 border-white/10',
+    description: 'Vendor verified, store live. Entry-level trust signal for new buyers.',
   },
   checked: {
-    label: 'Checked',
+    label: 'SteerSolo Safe Checked',
     icon: ShieldAlert,
-    className: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-    description: '3+ orders completed, 7+ days active',
+    className: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    description: 'At least one product batch confirmed genuine through our process.',
   },
   trusted: {
-    label: 'Trusted',
+    label: 'SteerSolo Safe Trusted',
     icon: ShieldCheck,
-    className: 'bg-accent/10 text-accent-foreground border-accent/20',
-    description: '10+ orders, 3.5+ rating, 30+ days active',
+    className: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+    description: '30+ days active, real buyer reviews, zero unresolved complaints.',
   },
   verified: {
-    label: 'Verified',
+    label: 'SteerSolo Safe Verified',
     icon: Award,
-    className: 'bg-primary/10 text-primary border-primary/20',
-    description: 'Bank-verified, 25+ orders, 4.0+ rating',
+    className: 'bg-[#22c55e]/20 text-[#22c55e] border-[#22c55e]/30 font-bold',
+    description: 'Full identity check — the highest trust signal on the platform.',
   },
   approved: {
-    label: 'SafeBeauty Approved',
+    label: 'SteerSolo Safe Premium',
     icon: Crown,
-    className: 'bg-accent/15 text-accent-foreground border-accent/30 font-semibold',
-    description: 'Top-tier vendor: verified, 50+ orders, 4.5+ rating, NAFDAC compliant products',
+    className: 'bg-amber-500/20 text-amber-500 border-amber-500/30 font-bold',
+    description: 'Top-tier vendor: fully verified with exceptional track record and compliance.',
   },
 };
 

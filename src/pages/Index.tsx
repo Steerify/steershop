@@ -658,33 +658,59 @@ const Index = () => (
     {/* ══════════════════════════════════════════════════════
         §8  SAFEBEAUTY BADGES — Always brand indigo
     ══════════════════════════════════════════════════════ */}
-    <section className="bg-brand-section" style={{ padding:"96px 0" }}>
-      <div style={{ maxWidth:1000,margin:"0 auto",padding:"0 1.5rem" }}>
-        <div style={{ textAlign:"center",marginBottom:56 }}>
-          <p style={{ fontSize:"0.72rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.22em",color:"hsl(var(--accent-bright))",marginBottom:16 }}>The trust layer</p>
-          <h2 style={{ fontWeight:800,color:"#fff",lineHeight:1.2,fontSize:"clamp(1.9rem,4vw,3rem)",margin:0 }}>
+    <section className="bg-[#0A1128] py-24 md:py-32 relative overflow-hidden">
+      {/* Background decorations */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-10">
+        <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[50%] bg-primary blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-5%] w-[50%] h-[60%] bg-accent blur-[120px] rounded-full" />
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="text-center mb-16 md:mb-20">
+          <p className="text-[#00d97e] font-bold text-xs uppercase tracking-[0.3em] mb-4">The Trust Layer</p>
+          <h2 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight">
             SteerSolo Safe — our Trust Layer<br />
-            <span style={{ color:"hsl(var(--accent-bright))" }}>for verified Nigerian vendors.</span>
+            <span className="text-[#00d97e]">for verified Nigerian vendors.</span>
           </h2>
-          <p style={{ marginTop:16,maxWidth:520,marginLeft:"auto",marginRight:"auto",color:"rgba(255,255,255,.45)",fontSize:"0.9rem" }}>
-            Every badge is earned, not bought. Buyers instantly know how trusted your store is before they spend a kobo.
+          <p className="text-white/50 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
+            Every badge is earned, not bought. Buyers instantly know how trusted<br className="hidden md:block" /> your store is before they spend a kobo.
           </p>
         </div>
 
-        <style>{`@media(min-width:640px){.badge-grid{grid-template-columns:repeat(2,1fr)!important;}}@media(min-width:1024px){.badge-grid{grid-template-columns:repeat(4,1fr)!important;}}`}</style>
-        <div className="badge-grid" style={{ display:"grid",gap:16 }}>
-          {BADGES.map(b=>(
-            <div key={b.label} className="lift" style={{
-              borderRadius:20,padding:24,display:"flex",flexDirection:"column",gap:12,
-              background: b.top
-                ? "linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent-deep)))"
-                : "rgba(255,255,255,.07)",
-              border: b.top ? "none" : "1px solid rgba(255,255,255,.1)",
-              boxShadow: b.top ? "0 8px 32px hsl(var(--accent) / 0.4)" : "none",
-            }}>
-              <span style={{ fontWeight:800,fontSize:"2rem",opacity:.18,lineHeight:1,color:"#fff" }}>{b.num}</span>
-              <p style={{ fontWeight:600,fontSize:"0.875rem",color:"#fff",margin:0 }}>{b.label}</p>
-              <p style={{ fontSize:"0.8rem",lineHeight:1.6,color: b.top ? "rgba(255,255,255,.7)" : "rgba(255,255,255,.45)",margin:0 }}>{b.desc}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {BADGES.map((badge, i) => (
+            <div 
+              key={badge.label} 
+              className={cn(
+                "group relative p-8 rounded-[32px] border transition-all duration-500 hover:-translate-y-2",
+                badge.top 
+                  ? "bg-[#22c55e] border-[#22c55e] shadow-[0_20px_50px_rgba(34,197,94,0.3)]" 
+                  : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+              )}
+            >
+              <div className={cn(
+                "text-6xl font-black mb-6 transition-colors duration-500",
+                badge.top ? "text-white/30" : "text-white/10 group-hover:text-white/20"
+              )}>
+                {badge.num}
+              </div>
+              <h3 className={cn(
+                "text-xl font-bold mb-3",
+                badge.top ? "text-white" : "text-white"
+              )}>
+                {badge.label}
+              </h3>
+              <p className={cn(
+                "text-sm leading-relaxed",
+                badge.top ? "text-white/80" : "text-white/50"
+              )}>
+                {badge.desc}
+              </p>
+              
+              {/* Decorative accent for non-highlighted cards */}
+              {!badge.top && (
+                <div className="absolute bottom-6 right-8 w-8 h-1 bg-white/10 rounded-full group-hover:bg-primary/40 transition-colors" />
+              )}
             </div>
           ))}
         </div>

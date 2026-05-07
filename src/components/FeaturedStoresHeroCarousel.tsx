@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Sparkles, Store, ChevronLeft, ChevronRight, ShoppingBag, Star, ArrowRight } from "lucide-react";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
+import { SafeBeautyBadge } from "./SafeBeautyBadge";
 import { cn } from "@/lib/utils";
 
 /* ─── Types ─── */
@@ -23,6 +26,7 @@ interface FeaturedShopCard {
   description: string | null;
   state: string | null;
   products: ProductPreview[];
+  tier: string;
 }
 
 /* ─── Helpers ─── */
@@ -65,6 +69,37 @@ export const FeaturedStoresHeroCarousel = () => {
   const brokenLogos = useRef<Set<string>>(new Set());
   const brokenProductImgs = useRef<Set<string>>(new Set());
 
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { 
+      loop: true, 
+      duration: 30,
+      skipSnaps: false,
+    },
+    [
+      Autoplay({ 
+        delay: 5000, 
+        stopOnInteraction: false,
+        stopOnMouseEnter: true,
+      })
+    ]
+  );
+
+  // Sync embla state with our dots
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setActiveIdx(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+    return () => {
+      emblaApi.off("select", onSelect);
+      emblaApi.off("reInit", onSelect);
+    };
+  }, [emblaApi, onSelect]);
+
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 767px)");
     const handler = (e: MediaQueryListEvent | MediaQueryList) => setIsMobile(e.matches);
@@ -77,41 +112,112 @@ export const FeaturedStoresHeroCarousel = () => {
   useEffect(() => {
     (async () => {
       try {
-        const { data: featured, error } = await supabase
+        setLoading(true);
+        
+        // 1. Fetch manually featured shops
+        const { data: featuredRaw, error: featErr } = await supabase
           .from("featured_shops")
           .select(`
             id, shop_id, label, tagline,
-            shops!inner(shop_name, shop_slug, logo_url, description, state)
+            shops!inner(
+              id, shop_name, shop_slug, logo_url, description, state, created_at, is_active, 
+              payment_method, bank_name, bank_account_name, bank_account_number, paystack_public_key,
+              safebeauty_tiers(tier)
+            )
           `)
           .eq("is_active", true)
           .or("expires_at.is.null,expires_at.gt.now()")
-          .order("display_order", { ascending: true })
-          .limit(8);
+          .order("display_order", { ascending: true });
 
-        if (error || !featured?.length) { setLoading(false); return; }
+        if (featErr) console.warn("featured shops fetch error:", featErr.message);
 
-        /* fetch products for each shop (up to 2) */
-        const cards: FeaturedShopCard[] = await Promise.all(
-          (featured as any[]).map(async (f) => {
-            const shop = f.shops;
-            const { data: prods, error: prodErr } = await supabase
-              .from("products")
-              .select("id, name, price, image_url")
-              .eq("shop_id", f.shop_id)
-              .eq("is_available", true)
-              .order("created_at", { ascending: false })
-              .limit(8);
+        // 2. Fetch new shops (last 30 days) to "Auto-Feature"
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const { data: newShopsRaw, error: newErr } = await supabase
+          .from("shops")
+          .select(`
+            id, shop_name, shop_slug, logo_url, description, state, created_at, is_active, 
+            payment_method, bank_name, bank_account_name, bank_account_number, paystack_public_key,
+            safebeauty_tiers(tier)
+          `)
+          .eq("is_active", true)
+          .gt("created_at", thirtyDaysAgo.toISOString())
+          .order("created_at", { ascending: false })
+          .limit(20);
 
-            if (prodErr) console.warn("product fetch error for shop", f.shop_id, prodErr.message);
+        if (newErr) console.warn("new shops fetch error:", newErr.message);
 
-            // Pick up to 2 random products from the pool so visits feel fresh.
-            const pool = (prods ?? []) as ProductPreview[];
-            const shuffled = [...pool];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-              const j = Math.floor(Math.random() * (i + 1));
-              [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            const picked = shuffled.slice(0, 2);
+        // Helper to check payment readiness (matches public.is_shop_ready logic)
+        const hasPayment = (s: any) => {
+          if (!s.payment_method) return false;
+          const hasBank = !!(s.bank_name && s.bank_account_number);
+          const hasPaystack = !!s.paystack_public_key;
+          
+          if (s.payment_method === 'bank_transfer') return hasBank;
+          if (s.payment_method === 'paystack') return hasPaystack;
+          if (s.payment_method === 'both') return hasBank && hasPaystack;
+          return false;
+        };
+
+        // Process Manual slides
+        const manualSlides = (featuredRaw || []).map(f => ({
+          ...f,
+          shop: f.shops as any,
+          isManual: true
+        }));
+
+        // Process Auto slides (New Shops)
+        const autoSlides = (newShopsRaw || [])
+          .filter(s => hasPayment(s))
+          .map(s => ({
+            id: `auto-${s.id}`,
+            shop_id: s.id,
+            label: "NEW STORE",
+            tagline: "Just joined SteerSolo",
+            shop: s,
+            isManual: false
+          }));
+
+        // Combine and deduplicate by shop_id (manual takes precedence)
+        const combined = [...manualSlides];
+        const seenIds = new Set(combined.map(s => s.shop_id));
+        
+        for (const s of autoSlides) {
+          if (!seenIds.has(s.shop_id)) {
+            combined.push(s);
+            seenIds.add(s.shop_id);
+          }
+        }
+
+        // Limit to 15 total candidates to avoid heavy batching
+        const pool = combined.slice(0, 15);
+        const shopIds = pool.map(f => f.shop_id);
+
+        // 3. Batch fetch products for all candidate shops
+        const { data: allProds, error: prodErr } = await supabase
+          .from("products")
+          .select("id, name, price, image_url, shop_id")
+          .in("shop_id", shopIds)
+          .eq("is_available", true)
+          .not("image_url", "is", null)
+          .order("created_at", { ascending: false });
+
+        if (prodErr) console.warn("batch products fetch error:", prodErr.message);
+
+        const prodsByShop = (allProds || []).reduce((acc: any, p) => {
+          if (!acc[p.shop_id]) acc[p.shop_id] = [];
+          if (acc[p.shop_id].length < 2) acc[p.shop_id].push(p);
+          return acc;
+        }, {});
+
+        const cards: FeaturedShopCard[] = pool
+          .map((f) => {
+            const shop = f.shop;
+            const prods = prodsByShop[f.shop_id] || [];
+            const tierData = shop.safebeauty_tiers as any;
+            const tier = Array.isArray(tierData) ? tierData[0]?.tier : tierData?.tier || 'listed';
 
             return {
               id: f.id,
@@ -123,10 +229,11 @@ export const FeaturedStoresHeroCarousel = () => {
               logo_url: shop.logo_url,
               description: shop.description,
               state: shop.state,
-              products: picked,
+              products: prods,
+              tier: tier,
             };
           })
-        );
+          .filter(c => c.products.length > 0); // Must have at least one product with image
 
         setSlides(cards);
       } catch (err) {
@@ -137,93 +244,9 @@ export const FeaturedStoresHeroCarousel = () => {
     })();
   }, []);
 
-  /* ── autoplay (continuous loop) ── */
-  const startAuto = useCallback(() => {
-    if (autoRef.current) clearInterval(autoRef.current);
-    if (slides.length <= 1) return;
-    autoRef.current = setInterval(() => {
-      setActiveIdx((i) => (i + 1) % slides.length);
-    }, 5000);
-  }, [slides.length]);
-
-  useEffect(() => {
-    if (slides.length > 1) startAuto();
-    return () => { if (autoRef.current) clearInterval(autoRef.current); };
-  }, [slides.length, startAuto]);
-
-  /* ── scroll sync ──
-     Scroll the track INTERNALLY only (no scrollIntoView) so the page
-     viewport never jumps back to the carousel on each auto-swipe. */
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track || slides.length === 0) return;
-    
-    // Only scroll programmatically if we are NOT currently swiping/scrolling
-    const slide = track.children[activeIdx] as HTMLElement | undefined;
-    if (slide) {
-      // Check if we already are at that position to avoid infinite feedback loops
-      const currentScroll = track.scrollLeft;
-      const targetScroll = slide.offsetLeft;
-      if (Math.abs(currentScroll - targetScroll) > 10) {
-        track.scrollTo({ left: targetScroll, behavior: "smooth" });
-      }
-    }
-  }, [activeIdx, slides.length]);
-
-  const handleScroll = useCallback(() => {
-    const track = trackRef.current;
-    if (!track || slides.length === 0) return;
-    
-    const scrollLeft = track.scrollLeft;
-    const slideWidth = track.clientWidth;
-    const newIdx = Math.round(scrollLeft / slideWidth);
-    
-    if (newIdx !== activeIdx && newIdx >= 0 && newIdx < slides.length) {
-      setActiveIdx(newIdx);
-    }
-  }, [activeIdx, slides.length]);
-
-  /* ── professional mobile-only: scroll once if user is at the top ──
-     Guides mobile users to featured content without hijacking their scroll. */
-  useEffect(() => {
-    if (loading || slides.length === 0) return;
-    if (hasScrolledIntoViewRef.current) return;
-
-    // Only attempt on mobile devices
-    if (!isMobile) return;
-
-    // CRITICAL SAFEGUARD: Only auto-scroll if the user is still at the top.
-    // If they've already started exploring (scrollY > 100), we don't interrupt.
-    if (window.scrollY > 100) {
-      hasScrolledIntoViewRef.current = true;
-      return;
-    }
-
-    // Mark as attempted to ensure it NEVER runs again even if conditions change.
-    hasScrolledIntoViewRef.current = true;
-
-    // Use a polite delay to allow initial rendering to settle.
-    const timeoutId = setTimeout(() => {
-      if (containerRef.current) {
-        // Use 'nearest' to avoid aggressive centering that can feel like a "lock"
-        containerRef.current.scrollIntoView({ 
-          behavior: "smooth", 
-          block: "nearest" 
-        });
-      }
-    }, 1200);
-
-    return () => clearTimeout(timeoutId);
-  }, [loading, slides.length]);
-
-  const prev = () => {
-    setActiveIdx((i) => (i - 1 + slides.length) % slides.length);
-    startAuto();
-  };
-  const next = () => {
-    setActiveIdx((i) => (i + 1) % slides.length);
-    startAuto();
-  };
+  const prev = () => emblaApi?.scrollPrev();
+  const next = () => emblaApi?.scrollNext();
+  const scrollTo = (idx: number) => emblaApi?.scrollTo(idx);
 
   /* ── empty / loading ── */
   if (!loading && slides.length === 0) return null;
@@ -238,7 +261,7 @@ export const FeaturedStoresHeroCarousel = () => {
         maxWidth: 520,
         margin: "0 auto",
       }}
-      className="block"
+      className="group"
     >
       {/* header */}
       <div
@@ -299,41 +322,38 @@ export const FeaturedStoresHeroCarousel = () => {
         )}
       </div>
 
-      {/* slides track */}
+      {/* embla viewport */}
       <div
-        ref={trackRef}
-        onScroll={handleScroll}
+        ref={emblaRef}
         style={{
-          display: "flex",
-          gap: 0,
-          overflowX: "auto",
-          scrollSnapType: "x mandatory",
+          overflow: "hidden",
           borderRadius: 20,
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-          WebkitOverflowScrolling: "touch",
         }}
-        className="hide-scrollbar"
       >
-        {loading ? (
-          <SlideSkeletons />
-        ) : (
-          slides.map((shop, idx) => {
-            const logoUrl = resolveUrl(shop.logo_url);
-            const hasLogo = !!logoUrl && !brokenLogos.current.has(shop.id);
+        <div
+          style={{
+            display: "flex",
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          {loading ? (
+            <SlideSkeletons />
+          ) : (
+            slides.map((shop, idx) => {
+              const logoUrl = resolveUrl(shop.logo_url);
+              const hasLogo = !!logoUrl && !brokenLogos.current.has(shop.id);
 
-            return (
-              <div
-                key={shop.id}
-                style={{
-                  flexShrink: 0,
-                  width: "100%",
-                  scrollSnapAlign: "start",
-                  transition: "opacity .4s ease",
-                  opacity: idx === activeIdx ? 1 : 0.25,
-                  pointerEvents: idx === activeIdx ? "auto" : "none",
-                }}
-              >
+              return (
+                <div
+                  key={shop.id}
+                  style={{
+                    flex: "0 0 100%",
+                    minWidth: 0,
+                    transition: "opacity .4s ease",
+                    opacity: idx === activeIdx ? 1 : 0.25,
+                    padding: "4px", // slight padding to avoid clipping shadows
+                  }}
+                >
                 <Link
                   to={`/shop/${shop.shop_slug}`}
                   style={{ textDecoration: "none", display: "block" }}
@@ -399,24 +419,32 @@ export const FeaturedStoresHeroCarousel = () => {
                       </div>
 
                       {/* Badge */}
-                      <div
-                        style={{
-                          padding: "3px 10px",
-                          borderRadius: 9999,
-                          background: "hsl(152 100% 26% / 0.25)",
-                          border: "1px solid hsl(152 100% 26% / 0.4)",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "#00d97e", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                          {shop.label}
-                        </span>
+                      <div style={{ flexShrink: 0 }}>
+                        <SafeBeautyBadge tier={shop.products.length === 1 ? 'listed' : shop.tier} showTooltip={false} />
+                        {shop.products.length === 1 && (
+                          <div style={{ 
+                            marginTop: 4, 
+                            fontSize: '0.55rem', 
+                            fontWeight: 800, 
+                            color: '#a855f7', 
+                            textAlign: 'right',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em'
+                          }}>
+                            Single Product
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Products */}
                     {shop.products.length > 0 && (
-                      <div style={{ padding: "0 14px 14px", display: "flex", gap: 10 }}>
+                      <div style={{ 
+                        padding: "0 14px 14px", 
+                        display: "flex", 
+                        gap: 10,
+                        justifyContent: shop.products.length === 1 ? "center" : "flex-start" 
+                      }}>
                         {shop.products.map((p) => {
                           const imgUrl = resolveUrl(p.image_url);
                           const hasImg = !!imgUrl && !brokenProductImgs.current.has(p.id);
@@ -424,7 +452,9 @@ export const FeaturedStoresHeroCarousel = () => {
                             <div
                               key={p.id}
                               style={{
-                                flex: 1, borderRadius: 14, overflow: "hidden",
+                                flex: shop.products.length === 1 ? "0 1 280px" : 1, 
+                                borderRadius: 14, 
+                                overflow: "hidden",
                                 background: "rgba(0,0,0,0.25)",
                                 border: "1px solid rgba(255,255,255,0.08)",
                                 display: "flex", flexDirection: "column",
@@ -475,24 +505,6 @@ export const FeaturedStoresHeroCarousel = () => {
                           );
                         })}
 
-                        {/* Placeholder if only 1 product */}
-                        {shop.products.length === 1 && (
-                          <div
-                            style={{
-                              flex: 1, borderRadius: 14,
-                              background: "rgba(255,255,255,0.03)",
-                              border: "1px dashed rgba(255,255,255,0.08)",
-                              display: "flex", flexDirection: "column",
-                              alignItems: "center", justifyContent: "center",
-                              gap: 6, minHeight: 220,
-                            }}
-                          >
-                            <ShoppingBag style={{ width: 22, height: 22, color: "rgba(255,255,255,0.2)" }} />
-                            <p style={{ fontSize: "0.62rem", color: "rgba(255,255,255,0.25)", margin: 0, textAlign: "center", padding: "0 8px" }}>
-                              More products in store
-                            </p>
-                          </div>
-                        )}
                       </div>
                     )}
 
@@ -525,6 +537,7 @@ export const FeaturedStoresHeroCarousel = () => {
             );
           })
         )}
+        </div>
       </div>
 
       {/* Dot indicators */}
@@ -533,7 +546,7 @@ export const FeaturedStoresHeroCarousel = () => {
           {slides.map((_, i) => (
             <button
               key={i}
-              onClick={() => { setActiveIdx(i); startAuto(); }}
+              onClick={() => scrollTo(i)}
               aria-label={`Go to store ${i + 1}`}
               style={{
                 width: i === activeIdx ? (isMobile ? 14 : 20) : (isMobile ? 5 : 6),
