@@ -390,41 +390,44 @@ const Shops = () => {
       <VerifiedSellerNotice />
 
       {/* ══════════ HERO ══════════ */}
-      <section className="relative pt-24 pb-8 sm:pt-28 sm:pb-12 bg-card border-b border-border/40">
+      <section className="relative pt-24 pb-12 sm:pt-32 sm:pb-20 overflow-hidden">
+        {/* Subtle background glow */}
+        <div className="absolute inset-x-0 top-0 h-[500px] bg-gradient-to-b from-accent/5 via-primary/5 to-background pointer-events-none" />
+        
         <div className="relative z-10 container mx-auto px-4 text-center">
           
           {/* Eyebrow */}
-          <div className="flex justify-center mb-5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent/10 text-accent rounded-full text-xs font-semibold uppercase tracking-wider">
-              <Flame className="w-3.5 h-3.5" />
-              Nigeria's Online Shopping Mall
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-background border border-border/50 shadow-sm rounded-full text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Sparkles className="w-3.5 h-3.5 text-accent" />
+              <span>Nigeria's Online Shopping Mall</span>
             </div>
           </div>
 
           {/* Headline */}
-          <div className="max-w-2xl mx-auto mb-6">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground mb-4">
-              One Mall, <span className="text-primary">Endless Shops</span>
+          <div className="max-w-3xl mx-auto mb-8">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-foreground mb-6 leading-[1.1]">
+              One Mall, <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">Endless Shops</span>
             </h1>
-            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-lg mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto font-medium">
               Browse hundreds of verified Nigerian businesses — fashion, food, electronics, services and more.
             </p>
           </div>
 
           {/* Stats Row */}
-          <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap mb-8">
-            <StatChip icon={Store} value={stats.shops.toLocaleString()} label="Shops" color="bg-primary/5 border-primary/20 text-primary" />
-            <StatChip icon={Package} value={stats.products.toLocaleString()} label="Products" color="bg-accent/5 border-accent/20 text-accent" />
-            <StatChip icon={BadgeCheck} value="Verified" label="Sellers" color="bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex items-center justify-center gap-3 sm:gap-5 flex-wrap mb-10">
+            <StatChip icon={Store} value={stats.shops.toLocaleString()} label="Shops" color="text-foreground border-border/50 bg-card/50 backdrop-blur-sm" />
+            <StatChip icon={Package} value={stats.products.toLocaleString()} label="Products" color="text-foreground border-border/50 bg-card/50 backdrop-blur-sm" />
+            <StatChip icon={BadgeCheck} value="Verified" label="Sellers" color="text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm" />
           </div>
 
           {/* ── Search Bar ── */}
-          <div className="relative max-w-xl mx-auto">
+          <div className="relative max-w-2xl mx-auto group">
             <div className={`
-              relative flex items-center bg-card border rounded-2xl shadow-xl shadow-black/5 transition-all duration-200
-              ${searchFocused ? 'border-accent/60 shadow-accent/10 shadow-xl ring-4 ring-accent/10' : 'border-border/60'}
+              relative flex items-center bg-card/80 backdrop-blur-xl border rounded-[2rem] shadow-xl transition-all duration-300
+              ${searchFocused ? 'border-accent/40 shadow-accent/10 shadow-2xl ring-4 ring-accent/5 scale-[1.02]' : 'border-border/60 hover:border-border'}
             `}>
-              <Search className={`absolute left-4 w-4 h-4 transition-colors ${searchFocused ? 'text-accent' : 'text-muted-foreground'}`} />
+              <Search className={`absolute left-5 w-5 h-5 transition-colors ${searchFocused ? 'text-accent' : 'text-muted-foreground'}`} />
               <input
                 ref={searchInputRef}
                 type="text"
@@ -433,18 +436,18 @@ const Shops = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
-                className="w-full bg-transparent pl-10 pr-12 h-14 text-sm sm:text-base focus:outline-none placeholder:text-muted-foreground/60"
+                className="w-full bg-transparent pl-12 pr-12 h-16 text-base sm:text-lg focus:outline-none placeholder:text-muted-foreground/50 font-medium rounded-[2rem]"
               />
               {(isSearching || isLoading) ? (
-                <div className="absolute right-4">
+                <div className="absolute right-5">
                   <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : searchQuery ? (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-4 w-6 h-6 flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/20 transition-colors"
+                  className="absolute right-4 w-8 h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/20 transition-colors"
                 >
-                  <X className="w-3.5 h-3.5 text-muted-foreground" />
+                  <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               ) : null}
             </div>
