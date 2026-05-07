@@ -84,37 +84,8 @@ const shopService = {
       throw new Error(error.message);
     }
 
-    // Fetch product counts/images for these shops to verify readiness
-    const shopIds = (shops || []).map(s => s.id);
-    const { data: productsData } = await supabase
-      .from('products')
-      .select('shop_id, image_url')
-      .in('shop_id', shopIds)
-      .eq('is_available', true)
-      .not('image_url', 'is', null);
-
-    const shopsWithImages = new Set(productsData?.map(p => p.shop_id) || []);
-
-    const hasCompletePaymentSetup = (s: any) => {
-      const method = s.payment_method;
-      if (!method) return false;
-      const hasBank = !!(s.bank_name && s.bank_account_name && s.bank_account_number);
-      const hasPaystack = !!s.paystack_public_key;
-      if (method === 'bank_transfer') return hasBank;
-      if (method === 'paystack') return hasPaystack;
-      if (method === 'both') return hasBank && hasPaystack;
-      return true; // Fallback to true if we don't recognize the method but one is set
-    };
-
-    // Filter shops that have both complete payment setup and at least one product with an image
-    const completeShops = (shops || []).filter((s: any) => {
-      const hasPayment = hasCompletePaymentSetup(s);
-      const hasProduct = shopsWithImages.has(s.id);
-      return hasPayment && hasProduct;
-    });
-
     // Map database fields to API types
-    const mappedShops: Shop[] = completeShops.map((s: any) => ({
+    const mappedShops: Shop[] = (shops || []).map((s: any) => ({
       id: s.id,
       name: s.shop_name,
       slug: s.shop_slug,

@@ -26,8 +26,8 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
   return (
     <Link to={`/shop/${shop.slug || shop.shop_slug}`}>
       <div
-        className="bg-card border border-border/50 rounded-2xl h-full cursor-pointer group overflow-hidden hover:border-primary/30 hover:shadow-md transition-all duration-300 animate-fade-up"
-        style={{ animationDelay: `${index * 0.05}s` }}
+        className="group relative flex flex-col h-full bg-card hover:bg-card/80 border border-border/40 hover:border-border/80 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 animate-fade-up"
+        style={{ animationDelay: `${index * 0.05}s`, contentVisibility: 'auto' }}
       >
         {/* Header */}
         <div className="p-5 pb-3">
@@ -121,12 +121,12 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
             
             <div className="flex items-center gap-1.5">
               {productCount > 0 && (
-                <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
-                  <Package className="w-3 h-3" />
-                  {productCount}
+                <span className="text-[11px] text-muted-foreground flex items-center gap-0.5 font-medium">
+                  <Package className="w-3.5 h-3.5 text-accent/70" />
+                  {productCount} items
                 </span>
               )}
-              <span className="pill-button pill-button-inactive text-xs !px-3 !py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="inline-flex items-center justify-center rounded-full bg-foreground text-background px-3 py-1 text-xs font-semibold sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shadow-sm">
                 Visit →
               </span>
             </div>

@@ -573,7 +573,10 @@ const Shops = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                 {productResults.map((product, index) => (
                   <Link key={`${product.id}-${index}`} to={`/shop/${product.shop_slug || 'shop'}`}>
-                    <div className="group bg-card border border-border/60 rounded-2xl overflow-hidden hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300 flex flex-col">
+                    <div 
+                      className="group bg-card border border-border/40 hover:border-border/80 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col"
+                      style={{ contentVisibility: 'auto' }}
+                    >
                       {/* Image */}
                       <div className="relative aspect-square overflow-hidden bg-muted">
                         {product.image_url || product.images?.[0]?.url ? (
@@ -653,7 +656,7 @@ const Shops = () => {
 
               {/* Grid */}
               {(isLoading || isSearching) && !shops.length ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                   {Array.from({ length: 6 }).map((_, i) => <ShopCardSkeleton key={i} />)}
                 </div>
               ) : sortedShops.length === 0 ? (
@@ -679,7 +682,7 @@ const Shops = () => {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                  <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                     {sortedShops.map((shop, index) => (
                       <ShopCardEnhanced
                         key={`${shop.id}-${index}`}
