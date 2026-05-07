@@ -131,6 +131,7 @@ const shopService = {
       owner_id: s.owner_id,
       is_verified: s.is_verified,
       state: s.state,
+      city: s.city,
       country: s.country,
       seo_keywords: s.seo_keywords,
       seo_description: s.seo_description,
@@ -185,6 +186,7 @@ const shopService = {
       owner_id: s.owner_id,
       is_verified: s.is_verified,
       state: s.state,
+      city: s.city,
       country: s.country,
       seo_keywords: s.seo_keywords,
       seo_description: s.seo_description,
@@ -231,6 +233,7 @@ const shopService = {
       owner_id: shop.owner_id,
       is_verified: shop.is_verified,
       state: shop.state,
+      city: shop.city,
       country: shop.country,
       seo_keywords: shop.seo_keywords,
       seo_description: shop.seo_description,
@@ -263,6 +266,7 @@ const shopService = {
     if (data.bank_account_number) updateData.bank_account_number = data.bank_account_number;
     if (data.paystack_public_key) updateData.paystack_public_key = data.paystack_public_key;
     if (data.is_active !== undefined) updateData.is_active = data.is_active;
+    if (data.city !== undefined) updateData.city = data.city;
     if (data.state !== undefined) updateData.state = data.state;
     if (data.country !== undefined) updateData.country = data.country;
     if (data.seo_keywords !== undefined) updateData.seo_keywords = data.seo_keywords;

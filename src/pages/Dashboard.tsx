@@ -14,7 +14,7 @@ import { payoutService } from "@/services/payout.service";
 import { useToast } from "@/hooks/use-toast";
 import {
   Store, Package, ShoppingCart, TrendingUp, Users,
-  Settings, LogOut, Share2,
+  Settings, LogOut, Share2, MapPin,
   Megaphone, Target, ArrowRight, Clock,
   CheckCircle, AlertCircle, DollarSign, CalendarCheck, Menu, X,
   HelpCircle, Search, Shield, BookOpen, Banknote, Wallet, Crown, MessageCircle, Truck, BadgeCheck, Sparkles,
@@ -598,6 +598,24 @@ const Dashboard = () => {
             <MessageCircle className="w-3.5 h-3.5" />
             Join Now
           </Button>
+        </div>
+      </div>
+    );
+
+    // ── Location Transparency slide ──
+    slides.push(
+      <div key="location-update" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-5 shadow-lg min-h-[120px] flex items-center">
+        <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+        <div className="relative z-10 flex items-center justify-between gap-3 w-full">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <MapPin className="w-4 h-4 text-white/80" />
+              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">New Feature</span>
+            </div>
+            <h3 className="text-white font-extrabold text-base leading-tight">Increase Buyer Trust 📍</h3>
+            <p className="text-white/90 text-xs mt-0.5">Show customers exactly where you render services from (Place, State, Nigeria).</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => navigate('/my-store')} className="shrink-0 bg-white text-blue-600 hover:bg-white/90 border-white font-bold shadow-lg">Set Location →</Button>
         </div>
       </div>
     );

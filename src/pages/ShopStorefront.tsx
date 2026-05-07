@@ -50,6 +50,7 @@ interface Shop {
   is_verified?: boolean;
   owner_id?: string;
   state?: string | null;
+  city?: string | null;
   country?: string | null;
   accent_color?: string | null;
   font_style?: string | null;
@@ -536,12 +537,12 @@ const ShopStorefront = () => {
                         {shop.description && (
                           <p className="text-muted-foreground mt-1 text-sm md:text-base line-clamp-2 leading-relaxed max-w-lg">{shop.description}</p>
                         )}
-                        {(shop.state || shop.country) && (
                           <div className="flex items-center gap-1.5 mt-1.5">
                             <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                            <span className="text-sm text-muted-foreground">{[shop.state, shop.country].filter(Boolean).join(", ")}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {[shop.city, shop.state, shop.country].filter(Boolean).join(", ")}
+                            </span>
                           </div>
-                        )}
                       </div>
 
                       {/* Action Buttons */}

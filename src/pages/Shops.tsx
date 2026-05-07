@@ -518,7 +518,9 @@ const Shops = () => {
                 <p className="text-sm font-semibold truncate group-hover:text-accent transition-colors">
                   {shop.shop_name || shop.name}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">{shop.state || 'Nigeria'}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {[shop.city, shop.state, shop.country].filter(Boolean).join(", ") || 'Nigeria'}
+                </p>
               </Link>
             ))}
           </div>

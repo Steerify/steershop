@@ -158,6 +158,8 @@ const MyStore = () => {
     paystack_public_key: "",
     logo_url: "",
     banner_url: "",
+    city: "",
+    state: "",
   });
 
   // Auto-save the form to sessionStorage while creating a new store
@@ -285,6 +287,8 @@ const MyStore = () => {
         paystack_public_key: data.paystack_public_key || "",
         logo_url: data.logo_url || "",
         banner_url: data.banner_url || "",
+        city: data.city || "",
+        state: data.state || "",
       });
 
       // Also format the shop ID when fetching products
@@ -341,6 +345,8 @@ const MyStore = () => {
         bank_name: formData.bank_name,
         bank_account_number: formData.bank_account_number,
         paystack_public_key: formData.paystack_public_key,
+        city: formData.city,
+        state: formData.state,
       };
 
       let currentShopId: string;
@@ -662,6 +668,45 @@ const MyStore = () => {
                     {errors.whatsapp_number && (
                       <p className="text-red-500 text-sm">{errors.whatsapp_number}</p>
                     )}
+                  </div>
+
+                  {/* Location Details */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State</Label>
+                      <select
+                        id="state"
+                        value={formData.state}
+                        onChange={(e) => {
+                          setFormData({ ...formData, state: e.target.value });
+                          setIsDirty(true);
+                        }}
+                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      >
+                        <option value="">Select State</option>
+                        {[
+                          "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", 
+                          "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT - Abuja", "Gombe", 
+                          "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", 
+                          "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", 
+                          "Taraba", "Yobe", "Zamfara"
+                        ].map(state => (
+                          <option key={state} value={state}>{state}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City / Area</Label>
+                      <Input
+                        id="city"
+                        value={formData.city}
+                        onChange={(e) => {
+                          setFormData({ ...formData, city: e.target.value });
+                          setIsDirty(true);
+                        }}
+                        placeholder="e.g. Lekki, Ikeja, etc."
+                      />
+                    </div>
                   </div>
 
                   {/* LOGO */}

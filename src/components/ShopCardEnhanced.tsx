@@ -76,11 +76,11 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
                 </Badge>
               )}
 
-              {(shop.state || shop.country) && (
+              {(shop.state || shop.country || shop.city) && (
                 <div className="flex items-center gap-1 mt-1.5">
                   <MapPin className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                   <span className="text-[11px] text-muted-foreground truncate">
-                    {[shop.state, shop.country].filter(Boolean).join(", ")}
+                    {[shop.city, shop.state, shop.country].filter(Boolean).join(", ")}
                   </span>
                 </div>
               )}
