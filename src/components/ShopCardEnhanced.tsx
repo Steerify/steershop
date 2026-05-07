@@ -1,7 +1,6 @@
-import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
 import { Store, BadgeCheck, MapPin, Star, Package } from "lucide-react";
 import { Shop } from "@/types/api";
+import { SafeBeautyBadge } from "./SafeBeautyBadge";
 
 interface ShopCardEnhancedProps {
   shop: Shop;
@@ -57,7 +56,10 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
                     Premium
                   </Badge>
                 )}
-                {shop.is_verified && (
+                {shop.tier && (
+                  <SafeBeautyBadge tier={shop.tier} showTooltip={false} size="sm" />
+                )}
+                {!shop.tier && shop.is_verified && (
                   <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800 text-[10px] px-1.5 py-0">
                     Verified
                   </Badge>

@@ -54,8 +54,7 @@ const VerifiedSellerNotice = () => {
           <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
           <span className="text-foreground/80 text-xs sm:text-sm">
             For your safety, look for the{" "}
-            <BadgeCheck className="w-3.5 h-3.5 inline text-emerald-500" />{" "}
-            <strong>Verified</strong> badge when choosing a seller.
+            <strong>SteerSolo Safe</strong> badge when choosing a seller.
           </span>
         </div>
         <button

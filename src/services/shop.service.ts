@@ -63,7 +63,7 @@ const shopService = {
 
     let query = supabase
       .from('shops')
-      .select('*', { count: 'exact' });
+      .select('*, safebeauty_tiers(tier)', { count: 'exact' });
 
     // Only show active shops unless explicitly told otherwise
     if (filters?.activeOnly !== false) {
@@ -137,6 +137,7 @@ const shopService = {
       seo_metadata: s.seo_metadata,
       seo_dna_updated_at: s.seo_dna_updated_at,
       created_at: s.created_at,
+      tier: (s.safebeauty_tiers as any)?.[0]?.tier || (s.safebeauty_tiers as any)?.tier || 'listed',
     }));
 
     return {
@@ -154,7 +155,7 @@ const shopService = {
   getShopByOwner: async (ownerId: string) => {
     const { data: shops, error } = await supabase
       .from('shops')
-      .select('*')
+      .select('*, safebeauty_tiers(tier)')
       .eq('owner_id', ownerId);
 
     if (error) {
@@ -190,6 +191,7 @@ const shopService = {
       seo_metadata: s.seo_metadata,
       seo_dna_updated_at: s.seo_dna_updated_at,
       created_at: s.created_at,
+      tier: (s.safebeauty_tiers as any)?.[0]?.tier || (s.safebeauty_tiers as any)?.tier || 'listed',
     }));
 
     return {
@@ -202,7 +204,7 @@ const shopService = {
   getShopBySlug: async (slug: string) => {
     const { data: shop, error } = await supabase
       .from('shops')
-      .select('*')
+      .select('*, safebeauty_tiers(tier)')
       .eq('shop_slug', slug)
       .single();
 
@@ -235,6 +237,7 @@ const shopService = {
       seo_metadata: shop.seo_metadata,
       seo_dna_updated_at: shop.seo_dna_updated_at,
       created_at: shop.created_at,
+      tier: (shop.safebeauty_tiers as any)?.[0]?.tier || (shop.safebeauty_tiers as any)?.tier || 'listed',
     };
 
     return {

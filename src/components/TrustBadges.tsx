@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Shield, MessageCircle, Star, Zap, Award } from "lucide-react";
+import { SafeBeautyBadge } from "./SafeBeautyBadge";
 
 interface TrustBadgesProps {
   isVerified?: boolean;
@@ -8,6 +9,7 @@ interface TrustBadgesProps {
   averageRating?: number;
   responseTime?: string;
   completedOrders?: number;
+  tier?: string;
 }
 
 export const TrustBadges = ({
@@ -17,10 +19,11 @@ export const TrustBadges = ({
   averageRating = 0,
   responseTime,
   completedOrders = 0,
+  tier,
 }: TrustBadgesProps) => {
   const badges = [];
 
-  if (isVerified) {
+  if (isVerified && !tier) {
     badges.push({
       icon: <Shield className="w-3 h-3" />,
       label: "Verified Seller",
@@ -75,7 +78,8 @@ export const TrustBadges = ({
   if (badges.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap items-center gap-2">
+      {tier && <SafeBeautyBadge tier={tier} size="sm" />}
       {badges.map((badge, index) => (
         <Badge
           key={index}

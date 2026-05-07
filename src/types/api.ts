@@ -85,6 +85,7 @@ export interface Shop {
   seo_metadata?: Record<string, any>;
   seo_dna_updated_at?: string;
   created_at?: string;
+  tier?: string;
 }
 
 export interface ProductImage {

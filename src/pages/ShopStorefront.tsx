@@ -58,6 +58,7 @@ interface Shop {
   secondary_color?: string | null;
   seo_description?: string | null;
   seo_keywords?: string[] | null;
+  tier?: string;
 }
 
 
@@ -250,13 +251,18 @@ const ShopStorefront = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       const { data: shopData, error: shopError } = await supabase
-        .from("shops").select("*").eq("shop_slug", slug).single();
+        .from("shops")
+        .select("*, safebeauty_tiers(tier)")
+        .eq("shop_slug", slug)
+        .single();
       if (shopError) throw shopError;
-      if (!shopData) {
-        toast({ title: "Shop Not Found", description: "This shop doesn't exist or is not active", variant: "destructive" });
-        return;
-      }
-      setShop(shopData);
+      
+      const transformedShop = {
+        ...shopData,
+        tier: (shopData.safebeauty_tiers as any)?.[0]?.tier || (shopData.safebeauty_tiers as any)?.tier || 'listed'
+      };
+
+      setShop(transformedShop);
       setIsOwner(user?.id === shopData.owner_id);
       if (shopData.owner_id) {
         const { data: profileData } = await supabase
@@ -632,6 +638,8 @@ const ShopStorefront = () => {
                     hasWhatsApp={!!shop.whatsapp_number}
                     totalReviews={shop.total_reviews}
                     averageRating={shop.average_rating}
+                    completedOrders={completedOrders}
+                    tier={shop.tier}
                   />
                 </div>
               </div>
