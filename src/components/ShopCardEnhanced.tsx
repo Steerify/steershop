@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 import { Store, BadgeCheck, MapPin, Star, Package } from "lucide-react";
 import { Shop } from "@/types/api";
 import { SafeBeautyBadge } from "./SafeBeautyBadge";
