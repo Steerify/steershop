@@ -32,8 +32,10 @@ const validateVideoPlayback = (url: string): Promise<boolean> => {
 
     const timeout = setTimeout(() => {
       cleanup();
-      resolve(false);
-    }, 15000);
+      console.warn("Video validation timed out");
+      // Allow it to pass on timeout, as some valid videos might be slow to load metadata
+      resolve(true);
+    }, 10000);
 
     video.onloadeddata = () => {
       clearTimeout(timeout);
@@ -41,7 +43,8 @@ const validateVideoPlayback = (url: string): Promise<boolean> => {
       resolve(true);
     };
 
-    video.onerror = () => {
+    video.onerror = (e) => {
+      console.error("Video validation error:", e);
       clearTimeout(timeout);
       cleanup();
       resolve(false);

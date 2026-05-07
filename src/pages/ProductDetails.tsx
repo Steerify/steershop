@@ -352,7 +352,25 @@ const ProductDetails = () => {
                   muted
                   loop
                   playsInline
+                  poster={product.images?.[0]?.url || undefined}
+                  onError={(e) => {
+                    console.error("Video failed to load:", product.video_url);
+                    const target = e.target as HTMLVideoElement;
+                    // If video fails completely and we have an image, we could fallback,
+                    // but for now let's just ensure it doesn't show a black box if poster is available.
+                    target.style.display = 'none'; // hide broken video
+                    if (target.parentElement) {
+                      target.parentElement.classList.add('fallback-to-poster');
+                    }
+                  }}
                 />
+                <style>{`
+                  .fallback-to-poster {
+                    background-image: url('${product.images?.[0]?.url || ''}');
+                    background-size: cover;
+                    background-position: center;
+                  }
+                `}</style>
               </div>
             ) : product.images && product.images.length > 0 ? (
               <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-xl">
