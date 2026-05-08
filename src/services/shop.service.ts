@@ -57,7 +57,7 @@ const shopService = {
     };
   },
 
-  getShops: async (page = 1, limit = 10, filters?: { verified?: boolean; includeAll?: boolean; activeOnly?: boolean }) => {
+  getShops: async (page = 1, limit = 10, filters?: { verified?: boolean; includeAll?: boolean; activeOnly?: boolean; searchTerm?: string }) => {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
@@ -75,6 +75,11 @@ const shopService = {
       query = query.eq('is_verified', filters.verified);
     }
 
+    if (filters?.searchTerm) {
+      const q = `%${filters.searchTerm}%`;
+      query = query.or(`shop_name.ilike.${q},description.ilike.${q},shop_slug.ilike.${q},state.ilike.${q},city.ilike.${q}`);
+    }
+
     const { data: shops, error, count } = await query
       .order('created_at', { ascending: false })
       .range(from, to);
@@ -84,8 +89,41 @@ const shopService = {
       throw new Error(error.message);
     }
 
+    // Fetch product counts/images for these shops to verify readiness
+    const shopIds = (shops || []).map((s: any) => s.id);
+    let completeShops = shops || [];
+
+    if (shopIds.length > 0) {
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('shop_id, image_url')
+        .in('shop_id', shopIds)
+        .eq('is_available', true)
+        .not('image_url', 'is', null);
+
+      const shopsWithImages = new Set(productsData?.map((p: any) => p.shop_id) || []);
+
+      const hasCompletePaymentSetup = (s: any) => {
+        const method = s.payment_method;
+        if (!method) return false;
+        const hasBank = !!(s.bank_name && s.bank_account_name && s.bank_account_number);
+        const hasPaystack = !!s.paystack_public_key;
+        if (method === 'bank_transfer') return hasBank;
+        if (method === 'paystack') return hasPaystack;
+        if (method === 'both') return hasBank && hasPaystack;
+        return true; // Fallback to true if we don't recognize the method but one is set
+      };
+
+      // Filter shops that have both complete payment setup and at least one product with an image
+      completeShops = completeShops.filter((s: any) => {
+        const hasPayment = hasCompletePaymentSetup(s);
+        const hasProduct = shopsWithImages.has(s.id);
+        return hasPayment && hasProduct;
+      });
+    }
+
     // Map database fields to API types
-    const mappedShops: Shop[] = (shops || []).map((s: any) => ({
+    const mappedShops: Shop[] = completeShops.map((s: any) => ({
       id: s.id,
       name: s.shop_name,
       slug: s.shop_slug,
@@ -265,6 +303,20 @@ const shopService = {
       resource_name: shop.shop_name,
       details: { updated_fields: Object.keys(updateData) }
     });
+
+    // Proactively push to Search Engines (IndexNow API for Bing/Yandex)
+    if (updateData.is_active || updateData.shop_slug || updateData.description) {
+      try {
+        const slugToUse = updateData.shop_slug || shop.shop_slug;
+        if (slugToUse) {
+          const urls = [`https://steersolo.com/shop/${slugToUse}`];
+          // Fire and forget
+          supabase.functions.invoke('index-now', { body: { urls } }).catch(console.error);
+        }
+      } catch (e) {
+        console.error('Failed to trigger indexing:', e);
+      }
+    }
 
     const mappedShop: Shop = {
       id: shop.id,

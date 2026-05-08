@@ -520,7 +520,7 @@ const MyStore = () => {
           </TabsList>
 
           <TabsContent value="store-info">
-            <Card className="border-primary/10">
+            <Card className="bg-card/50 backdrop-blur border border-primary/10 shadow-sm rounded-2xl">
               <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="text-xl sm:text-2xl">Store Information</CardTitle>
                 <CardDescription className="text-sm">Manage your store details and branding</CardDescription>
@@ -541,7 +541,7 @@ const MyStore = () => {
                         setIsDirty(true);
                       }}
                       placeholder="Enter store name"
-                      className={errors.shop_name ? "border-red-500" : ""}
+                      className={`min-h-[44px] ${errors.shop_name ? "border-red-500" : ""}`}
                     />
                     {errors.shop_name && (
                       <p className="text-red-500 text-sm">{errors.shop_name}</p>
@@ -567,7 +567,7 @@ const MyStore = () => {
                         id="shop_slug"
                         value={formData.shop_slug}
                         readOnly
-                        className="bg-muted text-muted-foreground pr-10"
+                        className="bg-muted text-muted-foreground pr-10 min-h-[44px]"
                       />
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
                         {checkingSlug && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
@@ -663,7 +663,7 @@ const MyStore = () => {
                         setIsDirty(true);
                       }}
                       placeholder="+2348012345678"
-                      className={errors.whatsapp_number ? "border-red-500" : ""}
+                      className={`min-h-[44px] ${errors.whatsapp_number ? "border-red-500" : ""}`}
                     />
                     {errors.whatsapp_number && (
                       <p className="text-red-500 text-sm">{errors.whatsapp_number}</p>
@@ -681,7 +681,7 @@ const MyStore = () => {
                           setFormData({ ...formData, state: e.target.value });
                           setIsDirty(true);
                         }}
-                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                        className="w-full h-[44px] min-h-[44px] px-3 rounded-md border border-input bg-background text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                       >
                         <option value="">Select State</option>
                         {[
@@ -705,6 +705,7 @@ const MyStore = () => {
                           setIsDirty(true);
                         }}
                         placeholder="e.g. Lekki, Ikeja, etc."
+                        className="min-h-[44px]"
                       />
                     </div>
                   </div>
@@ -798,7 +799,7 @@ const MyStore = () => {
           </TabsContent>
 
           <TabsContent value="payment-setup">
-            <Card className="border-primary/10">
+            <Card className="bg-card/50 backdrop-blur border border-primary/10 shadow-sm rounded-2xl">
               <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="text-xl sm:text-2xl">Payment Setup</CardTitle>
                 <CardDescription className="text-sm">Configure how you receive payments</CardDescription>
@@ -850,8 +851,8 @@ const MyStore = () => {
 
                   {/* Bank Transfer Details */}
                   {formData.enable_bank_transfer && (
-                    <div className="space-y-4 border border-border/50 p-3 sm:p-4 rounded-lg bg-muted/30">
-                      <Label className="text-base sm:text-lg font-semibold">Bank Transfer Details</Label>
+                    <div className="space-y-4 border border-border/50 p-4 sm:p-5 rounded-xl bg-card/50 backdrop-blur">
+                      <Label className="text-base sm:text-lg font-semibold text-primary">Bank Transfer Details</Label>
                       <div className="space-y-2">
                         <Label htmlFor="bank_account_name" className="text-sm">Account Name</Label>
                         <Input
@@ -921,8 +922,8 @@ const MyStore = () => {
 
                   {/* Paystack Details */}
                   {formData.enable_paystack && (
-                    <div className="space-y-4 border border-border/50 p-3 sm:p-4 rounded-lg bg-muted/30">
-                      <Label className="text-base sm:text-lg font-semibold">Paystack Integration</Label>
+                    <div className="space-y-4 border border-border/50 p-4 sm:p-5 rounded-xl bg-card/50 backdrop-blur">
+                      <Label className="text-base sm:text-lg font-semibold text-primary">Paystack Integration</Label>
                       
                       {/* Manual Input */}
                       <div className="space-y-2">

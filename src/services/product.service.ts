@@ -54,6 +54,17 @@ const productService = {
       throw new Error(error.message);
     }
 
+    // Trigger proactive indexing
+    supabase.from('shops').select('shop_slug').eq('id', data.shopId).single().then(({ data: shop }) => {
+      if (shop?.shop_slug) {
+        const urls = [
+          `https://steersolo.com/shop/${shop.shop_slug}/product/${product.id}`,
+          `https://steersolo.com/shop/${shop.shop_slug}` // ping the shop too
+        ];
+        supabase.functions.invoke('index-now', { body: { urls } }).catch(console.error);
+      }
+    });
+
     return {
       success: true,
       data: { id: product.id },
@@ -191,6 +202,17 @@ const productService = {
       console.error('Update product error:', error);
       throw new Error(error.message);
     }
+
+    // Trigger proactive indexing
+    supabase.from('shops').select('shop_slug').eq('id', product.shop_id).single().then(({ data: shop }) => {
+      if (shop?.shop_slug) {
+        const urls = [
+          `https://steersolo.com/shop/${shop.shop_slug}/product/${product.id}`,
+          `https://steersolo.com/shop/${shop.shop_slug}`
+        ];
+        supabase.functions.invoke('index-now', { body: { urls } }).catch(console.error);
+      }
+    });
 
     return {
       success: true,

@@ -8,6 +8,20 @@ const corsHeaders = {
 
 const SITE_URL = "https://steersolo.com";
 
+function escapeXml(unsafe: string) {
+  if (!unsafe) return '';
+  return unsafe.replace(/[<>&'"]/g, function (c) {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+      default: return c;
+    }
+  });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -137,12 +151,12 @@ serve(async (req) => {
         
         urls += `
   <url>
-    <loc>${SITE_URL}/shop/${shop.shop_slug}</loc>
+    <loc>${SITE_URL}/shop/${escapeXml(shop.shop_slug)}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>${shop.logo_url ? `
     <image:image>
-      <image:loc>${shop.logo_url}</image:loc>
+      <image:loc>${escapeXml(shop.logo_url)}</image:loc>
     </image:image>` : ''}
   </url>`;
       }
@@ -172,12 +186,12 @@ serve(async (req) => {
         const productPriority = ownerId && premiumOwnerIds.has(ownerId) ? '0.8' : '0.6';
         urls += `
   <url>
-    <loc>${SITE_URL}/shop/${shopData.shop_slug}/product/${product.id}</loc>
+    <loc>${SITE_URL}/shop/${escapeXml(shopData.shop_slug)}/product/${product.id}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>${productPriority}</priority>${product.image_url ? `
     <image:image>
-      <image:loc>${product.image_url}</image:loc>
+      <image:loc>${escapeXml(product.image_url)}</image:loc>
     </image:image>` : ''}
   </url>`;
       }

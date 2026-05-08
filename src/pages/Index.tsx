@@ -9,6 +9,7 @@ import { CollectionsSection } from "@/components/CollectionsSection";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 import { Helmet } from "react-helmet-async";
 import { FeaturedStoresHeroCarousel } from "@/components/FeaturedStoresHeroCarousel";
+import { VendorCommandCenter } from "@/components/VendorCommandCenter";
 import whatsappLogo from "@/assets/social/whatsapp-logo.svg";
 import instagramLogo from "@/assets/social/instagram-logo.svg";
 import tiktokLogo from "@/assets/social/tiktok-logo.svg";
@@ -339,6 +340,7 @@ const Index = () => (
     </Helmet>
     <GoogleOneTap />
     <Navbar />
+    <VendorCommandCenter />
 
     {/* ══════════════════════════════════════════════════════
         §1  HERO — Always dark Adire Indigo

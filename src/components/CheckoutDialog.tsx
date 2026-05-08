@@ -822,13 +822,13 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader className="pb-2">
-          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-0 border-0 bg-background/95 backdrop-blur-xl shadow-2xl overflow-hidden rounded-2xl">
+        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b px-6 py-4">
+          <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+            <ShoppingCart className="w-5 h-5 text-primary" />
             <span className="truncate">Checkout - {shop.shop_name}</span>
           </DialogTitle>
-          <DialogDescription className="text-xs sm:text-sm">
+          <DialogDescription className="text-sm mt-1">
             {showPaymentMethodSelection && !orderCreated
               ? "Choose how you'd like to pay"
               : orderCreated && paymentChoice === "pay_before" && (shop.payment_method === "bank_transfer" || selectedPaymentMethod === "bank_transfer")
@@ -837,14 +837,14 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
               ? "Initializing payment gateway..."
               : "Complete your order"}
           </DialogDescription>
-        </DialogHeader>
+        </div>
 
-        <div className="space-y-4 sm:space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
           {/* Step 1: Cart Items */}
-          <div className="bg-muted/20 border border-border/50 rounded-2xl p-4 sm:p-5">
-            <h3 className="font-bold mb-4 text-base sm:text-lg flex items-center gap-2">
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs shadow-sm">1</span>
-              Review Your Cart
+          <div className="bg-card/50 backdrop-blur border border-primary/10 rounded-2xl p-5 shadow-sm">
+            <h3 className="font-bold mb-4 text-lg flex items-center gap-2 text-primary">
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">1</span>
+              Order Summary
             </h3>
             <div className="space-y-2 sm:space-y-3">
               {cart.length === 0 ? (
@@ -971,9 +971,9 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
               )}
 
               {/* Step 2: Delivery Details */}
-              <div className="bg-muted/20 border border-border/50 rounded-2xl p-4 sm:p-5 space-y-4">
-                <h3 className="font-bold mb-4 text-base sm:text-lg flex items-center gap-2">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs shadow-sm">2</span>
+              <div className="bg-card/50 backdrop-blur border border-primary/10 rounded-2xl p-5 shadow-sm space-y-4">
+                <h3 className="font-bold mb-4 text-lg flex items-center gap-2 text-primary">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">2</span>
                   Delivery Details
                 </h3>
               <div className="space-y-1.5 sm:space-y-2">
@@ -1110,9 +1110,9 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
               )}
 
               {/* Step 3: Payment Choice */}
-              <div className="bg-muted/20 border border-border/50 rounded-2xl p-4 sm:p-5 space-y-4 mt-6">
-                <h3 className="font-bold mb-4 text-base sm:text-lg flex items-center gap-2">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs shadow-sm">3</span>
+              <div className="bg-card/50 backdrop-blur border border-primary/10 rounded-2xl p-5 shadow-sm space-y-4 mt-6">
+                <h3 className="font-bold mb-4 text-lg flex items-center gap-2 text-primary">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">3</span>
                   Payment Method
                 </h3>
                 <RadioGroup

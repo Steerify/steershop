@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { BadgeCheck, SlidersHorizontal } from "lucide-react";
 
-const CATEGORIES = [
+export const CATEGORIES = [
   { value: 'all', label: 'All', group: 'main' },
   { value: 'beauty', label: '✨ Beauty', group: 'main' },
   { value: 'skincare', label: 'Skincare', group: 'beauty' },
@@ -71,27 +71,7 @@ export const MarketplaceFilters = ({
   return (
     <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-lg border-b py-3">
       <div className="container mx-auto px-4">
-        {/* Category chips */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mb-3">
-          {visibleCategories.map((cat) => (
-            <button
-              key={cat.value}
-              onClick={() => onCategoryChange(cat.value)}
-              className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
-                selectedCategory === cat.value
-                  ? 'bg-primary text-primary-foreground'
-                  : cat.group === 'beauty'
-                  ? 'bg-accent/10 hover:bg-accent/20 text-accent-foreground border border-accent/20'
-                  : 'bg-muted hover:bg-muted/80 text-muted-foreground'
-              }`}
-            >
-              {cat.label}
-              {categoryCounts && cat.value !== 'all' && cat.value !== 'beauty' && categoryCounts[cat.value] !== undefined && (
-                <span className="ml-1 opacity-60">({categoryCounts[cat.value]})</span>
-              )}
-            </button>
-          ))}
-        </div>
+
 
         {/* Sort, Location, Price, Verified row */}
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">

@@ -16,7 +16,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
 import { Shop, Product } from "@/types/api";
-import { MarketplaceFilters } from "@/components/MarketplaceFilters";
+import { MarketplaceFilters, CATEGORIES } from "@/components/MarketplaceFilters";
 import { ShopCardEnhanced } from "@/components/ShopCardEnhanced";
 import { supabase } from "@/integrations/supabase/client";
 import { autoCategorize, getCategoryLabel, BEAUTY_SUBCATEGORIES } from "@/utils/autoCategorize";
@@ -215,11 +215,14 @@ const Shops = () => {
     fetchTrending();
   }, []);
 
+  const fetchedShopIdsRef = useRef<Set<string>>(new Set());
+
   /* ─── Shop Product Previews ─── */
   const fetchShopPreviews = useCallback(async (shopIds: string[]) => {
     if (!shopIds.length) return;
-    const newIds = shopIds.filter(id => !shopProducts[id]);
+    const newIds = shopIds.filter(id => !fetchedShopIdsRef.current.has(id));
     if (!newIds.length) return;
+    newIds.forEach(id => fetchedShopIdsRef.current.add(id));
     const { data } = await supabase
       .from('products').select('shop_id, image_url, name')
       .in('shop_id', newIds).eq('is_available', true).not('image_url', 'is', null).limit(100);
@@ -235,33 +238,32 @@ const Shops = () => {
       setShopProducts(prev => ({ ...prev, ...grouped }));
       setShopProductCounts(prev => ({ ...prev, ...counts }));
     }
-  }, [shopProducts]);
+  }, []);
 
   /* ─── Fetch Shops ─── */
   const fetchShops = useCallback(async (page = 1, reset = false, searchTerm = '') => {
     try {
       if (reset) { setIsLoading(true); setHasMoreShops(true); } else setLoadingMoreShops(true);
-      const response = await shopService.getShops(page, ITEMS_PER_PAGE, { verified: showVerifiedOnly || undefined, activeOnly: true });
-      if (!response.success) { setHasMoreShops(false); if (reset) setShops([]); return; }
-      let filtered = response.data || [];
-      if (searchTerm.trim()) {
-        const q = searchTerm.toLowerCase().trim();
-        filtered = filtered.filter(s => {
-          const inferredCategory = getCategoryLabel(autoCategorize(s.name || s.shop_name || '', s.description || '')).toLowerCase();
-          return (
-            s.name?.toLowerCase().includes(q) ||
-            s.shop_name?.toLowerCase().includes(q) ||
-            s.description?.toLowerCase().includes(q) ||
-            s.shop_slug?.toLowerCase().includes(q) ||
-            s.state?.toLowerCase().includes(q) ||
-            s.country?.toLowerCase().includes(q) ||
-            inferredCategory.includes(q)
-          );
-        });
+      const response = await shopService.getShops(page, ITEMS_PER_PAGE, { 
+        verified: showVerifiedOnly || undefined, 
+        activeOnly: true, 
+        searchTerm: searchTerm.trim() || undefined 
+      });
+      
+      if (!response.success) { 
+        setHasMoreShops(false); 
+        if (reset) setShops([]); 
+        return; 
       }
-      if (selectedState !== 'All Locations') filtered = filtered.filter(s => s.state === selectedState);
-      const total = response.meta?.total || 0;
-      setHasMoreShops(filtered.length === ITEMS_PER_PAGE && page < Math.ceil(total / ITEMS_PER_PAGE));
+      
+      let filtered = response.data || [];
+      if (selectedState !== 'All Locations') {
+        filtered = filtered.filter(s => s.state === selectedState);
+      }
+      
+      const totalPages = response.meta?.totalPages || 1;
+      const hasMore = page < totalPages;
+      setHasMoreShops(hasMore);
       setShops(prev => {
         if (reset) return filtered;
         const ids = new Set(prev.map(s => s.id));
@@ -269,6 +271,17 @@ const Shops = () => {
       });
       fetchShopPreviews(filtered.map(s => s.id));
       setShopsPage(page);
+
+      // Auto-fetch if we aggressively filtered out shops and didn't fill the page
+      if (filtered.length < 4 && hasMore) {
+        setTimeout(() => {
+          const sentinel = document.getElementById('shops-sentinel');
+          if (sentinel && sentinel.getBoundingClientRect().top < window.innerHeight + 500) {
+            // Sentinel is visible, fetch next page
+            fetchShops(page + 1, false, searchTerm);
+          }
+        }, 500);
+      }
     } catch (e) {
       console.error(e); setHasMoreShops(false); if (reset) setShops([]);
     } finally { setIsLoading(false); setLoadingMoreShops(false); }
@@ -312,7 +325,8 @@ const Shops = () => {
       const response = await productService.searchProducts({ query: debouncedSearchQuery, page, limit: ITEMS_PER_PAGE });
       if (!response.success || !response.data) { setHasMoreProducts(false); if (reset) setProductResults([]); return; }
       const results = response.data;
-      setHasMoreProducts(results.length === ITEMS_PER_PAGE && page < (response.meta?.totalPages || 1));
+      const totalPages = response.meta?.totalPages || 1;
+      setHasMoreProducts(page < totalPages && results.length > 0);
       setProductResults(prev => {
         if (reset) return results;
         const ids = new Set(prev.map(p => p.id));
@@ -452,17 +466,24 @@ const Shops = () => {
               ) : null}
             </div>
 
-            {/* Quick suggestions — visible when empty */}
+            {/* Dynamic Categories under search bar */}
             {!searchQuery && (
-              <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
-                <span className="text-xs text-muted-foreground">Popular:</span>
-                {["Fashion", "Food", "Electronics", "Beauty", "Services"].map(tag => (
+              <div className="flex items-center gap-2 mt-4 flex-nowrap sm:flex-wrap overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] justify-start sm:justify-center px-4 sm:px-0">
+                <span className="text-xs text-muted-foreground mr-1 flex-shrink-0">Popular:</span>
+                {CATEGORIES.filter(c => c.group === 'main').map(cat => (
                   <button
-                    key={tag}
-                    onClick={() => setSearchQuery(tag)}
-                    className="text-xs px-3 py-1.5 rounded-full bg-card border border-border/60 text-muted-foreground hover:border-accent/40 hover:text-accent hover:bg-accent/5 transition-all"
+                    key={cat.value}
+                    onClick={() => { setSelectedCategory(cat.value); setShopsPage(1); }}
+                    className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                      selectedCategory === cat.value
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-card border border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground'
+                    }`}
                   >
-                    {tag}
+                    {cat.label}
+                    {categoryCounts && cat.value !== 'all' && cat.value !== 'beauty' && categoryCounts[cat.value] !== undefined && (
+                      <span className="ml-1 opacity-60">({categoryCounts[cat.value]})</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -502,7 +523,7 @@ const Shops = () => {
             </div>
             <h2 className="font-display text-base sm:text-lg font-bold">Trending Stores</h2>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {trendingShops.slice(0, 5).map((shop: any) => (
               <Link
                 key={shop.id}
@@ -536,7 +557,7 @@ const Shops = () => {
 
           {/* ── Search Type Tabs ── */}
           {hasSearchQuery && (
-            <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none">
+            <div className="flex gap-2 mb-6 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {(['all', 'shops', 'products'] as const).map(type => (
                 <button
                   key={type}
@@ -718,7 +739,7 @@ const Shops = () => {
 
           {/* ── Infinite Scroll Sentinel ── */}
           {(hasMoreShops || hasMoreProducts) && !isSearching && (
-            <div ref={sentinelRef} className="h-16 flex items-center justify-center mt-4">
+            <div id="shops-sentinel" ref={sentinelRef} className="h-10 mt-8 flex items-center justify-center">
               {(loadingMoreShops || loadingMoreProducts) && (
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
