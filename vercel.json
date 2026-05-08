@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/sitemap.xml",
-      "destination": "https://hwkcqgmtinbgyjjgcgmp.supabase.co/functions/v1/generate-sitemap"
+      "destination": "/api/sitemap"
     },
     {
       "source": "/shop/:slug/product/:productId",
