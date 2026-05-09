@@ -190,18 +190,18 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[40] bg-background flex flex-col overflow-hidden animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[40] bg-background flex flex-col min-h-screen overflow-y-auto overflow-x-hidden animate-in fade-in duration-300">
       <AdirePattern variant="dots" className="absolute inset-0 opacity-5 pointer-events-none" />
       
       {/* Top Progress Bar */}
-      <div className="w-full h-2 bg-muted relative z-10">
+      <div className="w-full h-2 bg-muted sticky top-0 z-20">
         <div 
           className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 ease-out" 
           style={{ width: `${(step / 3) * 100}%` }}
         />
       </div>
 
-      <div className="flex-1 flex flex-col lg:flex-row items-stretch max-w-6xl w-full mx-auto p-4 sm:p-8 lg:p-12 relative z-10 gap-8 lg:gap-16">
+      <div className="flex-1 flex flex-col lg:flex-row items-stretch max-w-6xl w-full mx-auto p-4 sm:p-8 lg:p-12 pb-24 relative z-10 gap-8 lg:gap-16">
         
         {/* Left Side: Context & Visuals */}
         <div className="lg:w-1/2 flex flex-col justify-center animate-in slide-in-from-left-8 duration-500">
