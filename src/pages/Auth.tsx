@@ -81,17 +81,14 @@ const InputWithIcon = ({
 
 // Simplified signup - only email, password, role
 const signupSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  identifier: z.string().min(1, "Email or Phone is required"),
   password: z.string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[a-z]/, "Must contain lowercase letter")
-    .regex(/[A-Z]/, "Must contain uppercase letter")
-    .regex(/[0-9]/, "Must contain a number"),
+    .min(6, "Password must be at least 6 characters"),
   role: z.enum(["ENTREPRENEUR", "CUSTOMER"]),
 });
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  identifier: z.string().min(1, "Email or Phone is required"),
   password: z.string().min(1, "Password is required")
 });
 
@@ -154,7 +151,7 @@ const Auth = () => {
   const signupForm = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      email: "",
+      identifier: "",
       password: "",
       role: "ENTREPRENEUR",
     },
@@ -208,7 +205,7 @@ const Auth = () => {
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      identifier: "",
       password: "",
     },
   });
@@ -227,11 +224,7 @@ const Auth = () => {
           return;
         }
 
-        // Entrepreneurs who haven't completed onboarding go to /onboarding
         let defaultPath = getDashboardPath(user.role);
-        if (user.role === UserRole.ENTREPRENEUR && user.onboardingCompleted === false) {
-          defaultPath = '/onboarding';
-        }
         const redirectPath = returnUrl || locationState?.from?.pathname || lastRoute || defaultPath;
 
         dispatch(clearSessionExpired());
@@ -270,14 +263,16 @@ const Auth = () => {
     setAuthError(null);
 
     try {
-      const normalizedEmail = data.email.trim().toLowerCase();
-      if (isDisposableEmail(normalizedEmail)) {
+      const normalizedIdentifier = data.identifier.trim().toLowerCase();
+      const isEmail = normalizedIdentifier.includes("@");
+      
+      if (isEmail && isDisposableEmail(normalizedIdentifier)) {
         setAuthError("Please use a real email provider (e.g. Gmail/Outlook). Disposable inboxes often block verification emails.");
         return;
       }
 
       const signUpData: SignUpData = {
-        email: normalizedEmail,
+        identifier: normalizedIdentifier,
         password: data.password,
         firstName: "", // Will be collected in onboarding
         lastName: "",
@@ -301,12 +296,12 @@ const Auth = () => {
           // The useEffect at the top of Auth.tsx will catch the session and navigate automatically.
         } else {
           // Fallback UI if "Confirm Email" is left enabled in Supabase
-          setRegisteredEmail(normalizedEmail);
+          setRegisteredEmail(normalizedIdentifier);
           setShowEmailVerification(true);
           
           toast({
             title: "Account created!",
-            description: "Please check your email to verify your account.",
+            description: isEmail ? "Please check your email to verify your account." : "Please check your phone for a verification code.",
           });
         }
       }
@@ -322,13 +317,13 @@ const Auth = () => {
     setAuthError(null);
 
     try {
-      const normalizedEmail = data.email.trim().toLowerCase();
-      const result = await signIn(normalizedEmail, data.password);
+      const normalizedIdentifier = data.identifier.trim().toLowerCase();
+      const result = await signIn(normalizedIdentifier, data.password);
 
       if (result.error) {
         const normalizedError = result.error.toLowerCase();
         if (normalizedError.includes("invalid login credentials")) {
-          setAuthError("Invalid email or password. If you just signed up, verify your email first, then try again.");
+          setAuthError("Invalid credentials. If you just signed up, verify your account first, then try again.");
         } else {
           setAuthError(result.error);
         }
@@ -346,7 +341,7 @@ const Auth = () => {
   };
 
   const handleMagicLinkLogin = async () => {
-    const email = (magicLinkEmail || loginForm.getValues("email") || "").trim();
+    const email = (magicLinkEmail || loginForm.getValues("identifier") || "").trim();
     if (!email) {
       toast({ title: "Enter your email", description: "We need your email to send a secure login link.", variant: "destructive" });
       return;
@@ -575,14 +570,14 @@ const Auth = () => {
                   <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                     <FormField
                       control={loginForm.control}
-                      name="email"
+                      name="identifier"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel>Email or Phone</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Mail className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                              <Input placeholder="you@example.com" {...field} className="pl-10 min-h-11" />
+                              <Input placeholder="you@example.com or 080..." {...field} className="pl-10 min-h-11" />
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -667,14 +662,14 @@ const Auth = () => {
                   <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
                     <FormField
                       control={signupForm.control}
-                      name="email"
+                      name="identifier"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel>Email or Phone</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Mail className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                              <Input placeholder="you@example.com" {...field} className="pl-10 min-h-11" />
+                              <Input placeholder="you@example.com or 080..." {...field} className="pl-10 min-h-11" />
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -688,7 +683,7 @@ const Auth = () => {
                         <FormItem>
                           <FormLabel className="flex items-center gap-1.5"><Lock className="h-3.5 w-3.5 text-muted-foreground" />Password</FormLabel>
                           <FormControl>
-                            <PasswordInput field={field} placeholder="Min 8 chars, 1 upper, 1 number" />
+                            <PasswordInput field={field} placeholder="Min 6 characters" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

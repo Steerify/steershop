@@ -119,9 +119,9 @@ const RoleSelection = () => {
         description: `Welcome as ${selectedRole === UserRole.ENTREPRENEUR ? "an Entrepreneur" : "a Customer"}`,
       });
 
-      // Entrepreneurs go through onboarding survey, customers go to customer dashboard.
+      // Entrepreneurs go to the dashboard where the Setup Wizard modal will be triggered.
       if (selectedRole === UserRole.ENTREPRENEUR) {
-        navigate("/onboarding");
+        navigate("/dashboard");
       } else {
         navigate("/customer_dashboard");
       }

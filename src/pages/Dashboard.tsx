@@ -55,7 +55,7 @@ import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ShopAvatar } from "@/components/ShopAvatar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
-// VerificationProgressCard removed in favor of ProfileCompletionChecklist
+import { VendorSetupWizard } from "@/components/VendorSetupWizard";
 
 // ─── Stat Card Component ───────────────────────────────────────────────────────
 const StatCard = ({
@@ -913,7 +913,9 @@ const Dashboard = () => {
 
   // ─── Primary Quick Actions (always visible) ────────────────────────────────
   const PrimaryQuickActions = [
-    { icon: Store, label: "My Store", description: "Setup & customize", path: "/my-store", color: "from-primary/20 to-primary/10", textColor: "text-primary" },
+    shopData 
+      ? { icon: Store, label: "My Store", description: "Setup & customize", path: "/my-store", color: "from-primary/20 to-primary/10", textColor: "text-primary" }
+      : { icon: Store, label: "Create Online Shop", description: "Launch your store", path: "/dashboard", color: "from-green-500/20 to-green-500/10", textColor: "text-green-600" },
     { icon: Package, label: "Products", description: "Manage catalog", path: "/products", color: "from-accent/20 to-accent/10", textColor: "text-accent" },
     { icon: ShoppingCart, label: "Orders", description: "View & manage", path: "/orders", color: "from-primary/15 to-primary/8", textColor: "text-primary" },
     { icon: Megaphone, label: "Marketing", description: "Create with AI", path: "/marketing", color: "from-accent/15 to-accent/8", textColor: "text-accent" },
@@ -1306,6 +1308,11 @@ const Dashboard = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      <VendorSetupWizard 
+        open={!isLoading && !shopData && user?.role === 'shop_owner'} 
+        onComplete={() => loadData()} 
+      />
     </div>
   );
 };

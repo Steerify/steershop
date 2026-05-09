@@ -67,7 +67,6 @@ const AdminFeaturePhases = lazy(() => import("./pages/admin/AdminFeaturePhases")
 const GrowthPage = lazy(() => import("./pages/GrowthPage"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const DemoStoreFront = lazy(() => import("./pages/DemoStoreFront"));
-const Onboarding = lazy(() => import("./pages/entrepreneur/Onboarding"));
 const IdentityVerification = lazy(() => import("./pages/IdentityVerification"));
 const Settings = lazy(() => import("./pages/Settings"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
@@ -214,11 +213,6 @@ const App = () => (
             } />
             
             {/* Shop owner routes */}
-            <Route path="/onboarding" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
-                <Onboarding />
-              </ProtectedRoute>
-            } />
             <Route path="/dashboard" element={
               <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
                 <Dashboard />

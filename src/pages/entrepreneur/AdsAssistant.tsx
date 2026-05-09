@@ -278,7 +278,7 @@ const AdsAssistant = () => {
           </div>
           <h1 className="text-2xl font-bold mb-2">Create Your Store First</h1>
           <p className="text-muted-foreground mb-6 text-sm">You need a store before you can create ads. It only takes 2 minutes!</p>
-          <Button onClick={() => navigate("/onboarding")} size="lg" className="rounded-2xl">
+          <Button onClick={() => navigate("/dashboard")} size="lg" className="rounded-2xl">
             Create My Store →
           </Button>
         </div>

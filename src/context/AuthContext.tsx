@@ -17,7 +17,7 @@ interface AuthContextType {
   user: AppUser | null;
   session: Session | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (identifier: string, password: string) => Promise<{ error: string | null }>;
   signUp: (data: SignUpData) => Promise<{ error: string | null; user?: AppUser }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -26,7 +26,7 @@ interface AuthContextType {
 }
 
 export interface SignUpData {
-  email: string;
+  identifier: string;
   password: string;
   firstName: string;
   lastName: string;
@@ -149,9 +149,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, [fetchUserProfile]);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (identifier: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const isEmail = identifier.includes('@');
+      const credentials = isEmail ? { email: identifier, password } : { phone: identifier, password };
+      const { error } = await supabase.auth.signInWithPassword(credentials);
       if (error) return { error: error.message };
       return { error: null };
     } catch (err: any) {
@@ -163,14 +165,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const dbRole = data.role === UserRole.ENTREPRENEUR ? 'shop_owner' : 'customer';
 
+      const isEmail = data.identifier.includes('@');
+      const credentials = isEmail ? { email: data.identifier, password: data.password } : { phone: data.identifier, password: data.password };
+
       const { data: authData, error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
+        ...credentials,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             full_name: `${data.firstName} ${data.lastName}`,
-            phone: data.phone,
+            phone: isEmail ? data.phone : data.identifier,
             role: dbRole,
           }
         }

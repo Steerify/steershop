@@ -83,9 +83,9 @@ const Callback = () => {
               .limit(1);
 
             if (needsOnboarding) {
-              redirectPath = '/onboarding';
+              redirectPath = '/dashboard';
             } else {
-              redirectPath = (shops && shops.length > 0) ? '/dashboard' : '/onboarding';
+              redirectPath = '/dashboard';
             }
           } else if (profile.role === 'customer') {
             redirectPath = '/customer_dashboard';
