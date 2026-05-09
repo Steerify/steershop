@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Upload, Sparkles, X, Check, ImagePlus, Edit } from "lucide-react";
+import { Loader2, Upload, Sparkles, X, Check, ImagePlus, Edit, ShieldCheck } from "lucide-react";
 import { uploadService } from "@/services/upload.service";
 import productService from "@/services/product.service";
 
@@ -34,9 +34,24 @@ export const BulkProductUpload = ({ open, onClose, shopId, onSuccess }: BulkProd
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
   const [drafts, setDrafts] = useState<DraftProduct[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [step, setStep] = useState<"upload" | "review">("upload");
+
+  useEffect(() => {
+    if (!open) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("bulk_upload") === "verify") {
+      const reference = params.get("reference");
+      const savedDrafts = localStorage.getItem("bulk_upload_drafts");
+      if (reference && savedDrafts) {
+        setDrafts(JSON.parse(savedDrafts));
+        handleVerifyAndSave(reference);
+        window.history.replaceState({}, "", "/dashboard");
+      }
+    }
+  }, [open]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []).slice(0, 10 - files.length);
@@ -112,11 +127,19 @@ export const BulkProductUpload = ({ open, onClose, shopId, onSuccess }: BulkProd
   const removeDraft = (index: number) => {
     setDrafts((prev) => prev.filter((_, i) => i !== index));
   };
-
   const handleConfirmAll = async () => {
     if (drafts.length === 0) return;
-    setIsSaving(true);
 
+    if (drafts.length > 5) {
+      handlePayAndConfirm();
+      return;
+    }
+
+    await saveProducts();
+  };
+
+  const saveProducts = async () => {
+    setIsSaving(true);
     try {
       for (const draft of drafts) {
         await productService.createProduct({
@@ -143,6 +166,71 @@ export const BulkProductUpload = ({ open, onClose, shopId, onSuccess }: BulkProd
         description: error.message || "Some products could not be created.",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handlePayAndConfirm = async () => {
+    setIsPaying(true);
+    try {
+      // Save drafts to localStorage before redirect
+      localStorage.setItem("bulk_upload_drafts", JSON.stringify(drafts));
+      localStorage.setItem("bulk_upload_shop_id", shopId);
+
+      const { data, error } = await supabase.functions.invoke("done-for-you-initialize", {
+        body: {
+          callback_url: `${window.location.origin}/dashboard?bulk_upload=verify`,
+        },
+      });
+
+      if (error || !data?.authorization_url) {
+        throw new Error(data?.error || error?.message || "Failed to initialize payment");
+      }
+
+      localStorage.setItem("paystack_bulk_reference", data.reference);
+      window.location.href = data.authorization_url;
+    } catch (error: any) {
+      console.error("Payment error:", error);
+      toast({
+        title: "Payment Error",
+        description: "Could not start payment. Please try again.",
+        variant: "destructive",
+      });
+      setIsPaying(false);
+    }
+  };
+
+  const handleVerifyAndSave = async (reference: string) => {
+    setIsSaving(true);
+    setStep("review");
+    
+    try {
+      // Verify payment via the setup function (it can verify any reference)
+      const { data, error } = await supabase.functions.invoke("done-for-you-setup", {
+        body: { reference, business_name: "Verification", whatsapp_number: "000", verify_only: true },
+      });
+
+      if (error || !data?.success) {
+        throw new Error(data?.error || "Payment verification failed");
+      }
+
+      // Record in history
+      await supabase.from("subscription_history").insert({
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+        event_type: "bulk_upload_fee",
+        amount: 500000,
+        payment_reference: reference,
+        notes: `Bulk upload fee for ${drafts.length} products`,
+      });
+
+      await saveProducts();
+      localStorage.removeItem("bulk_upload_drafts");
+      localStorage.removeItem("bulk_upload_shop_id");
+      localStorage.removeItem("paystack_bulk_reference");
+    } catch (error: any) {
+      toast({ title: "Setup Error", description: error.message, variant: "destructive" });
+      setStep("upload");
     } finally {
       setIsSaving(false);
     }
@@ -320,13 +408,37 @@ export const BulkProductUpload = ({ open, onClose, shopId, onSuccess }: BulkProd
               </Card>
             ))}
 
+            {/* Pricing Warning */}
+            <div className="space-y-2 pt-2">
+              {drafts.length > 5 ? (
+                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 flex items-start gap-3">
+                  <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-primary">Bulk Upload Fee Required</p>
+                    <p className="text-xs text-muted-foreground">
+                      AI bulk setup for 6-10 products is ₦5,000 + ₦175 processing fee.
+                    </p>
+                    <p className="text-xs font-bold text-foreground">Total: ₦5,175</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-center text-green-600 font-medium">
+                  ✨ Free setup for {drafts.length} product{drafts.length > 1 ? 's' : ''}!
+                </p>
+              )}
+            </div>
+
             <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => { setStep("upload"); setDrafts([]); }}>
+              <Button variant="outline" onClick={() => { setStep("upload"); setDrafts([]); }} disabled={isSaving || isPaying}>
                 Back
               </Button>
-              <Button onClick={handleConfirmAll} disabled={isSaving || drafts.length === 0}>
+              <Button onClick={handleConfirmAll} disabled={isSaving || isPaying || drafts.length === 0} className={drafts.length > 5 ? "bg-gradient-to-r from-primary to-accent" : ""}>
                 {isSaving ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating...</>
+                ) : isPaying ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Redirecting...</>
+                ) : drafts.length > 5 ? (
+                  <><Sparkles className="w-4 h-4 mr-2" /> Pay ₦5,175 & Create</>
                 ) : (
                   <><Check className="w-4 h-4 mr-2" />Create {drafts.length} Products</>
                 )}

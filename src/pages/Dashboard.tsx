@@ -45,7 +45,6 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PayoutRequestDialog } from "@/components/PayoutRequestDialog";
 import { CouponManager } from "@/components/CouponManager";
-import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { NotificationBell } from "@/components/NotificationBell";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { SalesMilestonePopup } from "@/components/SalesMilestonePopup";
@@ -178,7 +177,6 @@ const Dashboard = () => {
   const [pendingOrders, setPendingOrders] = useState(0);
   const [payoutBalance, setPayoutBalance] = useState({ totalRevenue: 0, totalWithdrawn: 0, totalPending: 0, availableBalance: 0 });
   const [isPayoutDialogOpen, setIsPayoutDialogOpen] = useState(false);
-  const [showDfyPopup, setShowDfyPopup] = useState(false);
   const [hasNoShop, setHasNoShop] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "actions" | "wallet">("overview");
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
@@ -259,11 +257,6 @@ const Dashboard = () => {
     verifyPayment();
   }, [searchParams, user]);
 
-  useEffect(() => {
-    if (searchParams.get('dfy') === 'verify' && searchParams.get('reference')) {
-      setShowDfyPopup(true);
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     if (!isAuthLoading) {
@@ -353,9 +346,7 @@ const Dashboard = () => {
           setPayoutBalance(balance);
         } catch (e) { console.error('Payout balance error:', e); }
       } else {
-        // No shop — show the DFY popup only if not already open (prevents remount/data loss)
         setHasNoShop(true);
-        setShowDfyPopup(prev => prev || true);
         if (searchParams.get('show_dfy') === 'true') {
           const newParams = new URLSearchParams(searchParams);
           newParams.delete('show_dfy');
@@ -1289,11 +1280,6 @@ const Dashboard = () => {
           onSuccess={() => loadData()}
         />
       )}
-      <DoneForYouPopup
-        open={showDfyPopup}
-        onClose={() => setShowDfyPopup(false)}
-        onShopCreated={() => loadData()}
-      />
       <FeedbackPrompt />
       <SalesMilestonePopup totalSales={totalSales} />
       <SubscriptionExpiryDialog

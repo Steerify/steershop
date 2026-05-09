@@ -55,18 +55,9 @@ serve(async (req) => {
       userEmail = profile?.email ?? null;
     }
 
-    const { reference, business_name, whatsapp_number, business_category, products } = await req.json();
+    const { reference, business_name, whatsapp_number, business_category, products, verify_only } = await req.json();
 
-    if (!business_name || !whatsapp_number) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields: business_name, whatsapp_number" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // SECURITY: free_setup eligibility is read from the database (admin-controlled),
-    // never from the client request. The previous implementation let any user pass
-    // free_setup: true to bypass payment.
+    // SECURITY: free_setup eligibility is read from the database
     const { data: eligibilityRow } = await supabaseAdmin
       .from("profiles")
       .select("free_setup_eligible")
@@ -74,8 +65,8 @@ serve(async (req) => {
       .maybeSingle();
     const free_setup = !!(eligibilityRow as { free_setup_eligible?: boolean } | null)?.free_setup_eligible;
 
-    // 1. Verify Paystack payment (skip for free setup)
-    if (!free_setup) {
+    // 1. Verify Paystack payment (skip for free setup unless verify_only is true)
+    if (verify_only || !free_setup) {
       if (!reference) {
         return new Response(
           JSON.stringify({ error: "Missing payment reference" }),
@@ -102,6 +93,12 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+
+      if (verify_only) {
+        return new Response(JSON.stringify({ success: true, message: "Payment verified" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     } else {
       // Free setup: enforce max 5 products
       const productList = Array.isArray(products) ? products : [];
@@ -111,6 +108,13 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+    }
+
+    if (!business_name || !whatsapp_number) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields: business_name, whatsapp_number" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // 2. AI generates shop description + slug

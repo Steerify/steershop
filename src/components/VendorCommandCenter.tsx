@@ -3,50 +3,70 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/types/api";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Store, PackagePlus, Share2, ArrowRight, CheckCircle2, ChevronRight, Copy, ExternalLink, Activity } from "lucide-react";
+import { Loader2, Store, PackagePlus, Share2, ArrowRight, CheckCircle2, ChevronRight, Copy, ExternalLink, Activity, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
+import { BulkProductUpload } from "@/components/BulkProductUpload";
 
 export const VendorCommandCenter = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [shop, setShop] = useState<any>(null);
+  const [productsCount, setProductsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isCopied, setIsCopied] = useState(false);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+
+  const fetchShopData = async () => {
+    if (!user) return;
+    try {
+      const { data: shopData, error: shopError } = await supabase
+        .from("shops")
+        .select("*")
+        .eq("owner_id", user.id)
+        .maybeSingle();
+
+      if (shopError && shopError.code !== 'PGRST116') throw shopError;
+      setShop(shopData);
+
+      if (shopData) {
+        const { count, error: countError } = await supabase
+          .from("products")
+          .select("*", { count: 'exact', head: true })
+          .eq("shop_id", shopData.id);
+        
+        if (!countError) setProductsCount(count || 0);
+      }
+    } catch (err) {
+      console.error("Error fetching shop data for command center:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!user || user.role !== 'ENTREPRENEUR') {
       setLoading(false);
       return;
     }
-
-    const fetchShop = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("shops")
-          .select("*")
-          .eq("owner_id", user.id)
-          .maybeSingle();
-
-        if (error && error.code !== 'PGRST116') throw error;
-        setShop(data);
-      } catch (err) {
-        console.error("Error fetching shop for command center:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchShop();
+    fetchShopData();
   }, [user]);
 
-  if (loading) return null; // Don't show loading state to avoid jank on homepage
+  if (loading) return null;
   if (!user || user.role !== 'ENTREPRENEUR') return null;
 
-  const isSetupComplete = !!shop?.is_active;
+  const steps = [
+    { id: 1, title: "Create Store", completed: !!shop },
+    { id: 2, title: "Add Products", completed: productsCount > 0 },
+    { id: 3, title: "Connect WhatsApp", completed: !!shop?.whatsapp_number },
+  ];
+
+  const completedSteps = steps.filter(s => s.completed).length;
+  const progress = Math.round((completedSteps / steps.length) * 100);
+  const isSetupComplete = !!shop?.is_active && progress === 100;
 
   // Render minimal dashboard stats if they are already set up
   if (isSetupComplete) {
@@ -111,9 +131,23 @@ export const VendorCommandCenter = () => {
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-2">
             Welcome, {user.firstName || 'Entrepreneur'}! Let's build your store.
           </h2>
-          <p className="text-indigo-200 text-lg">
+          <p className="text-indigo-200 text-lg mb-8">
             Complete these 3 quick steps to start accepting orders today.
           </p>
+
+          {/* Setup Progress Bar */}
+          <div className="max-w-md mx-auto mb-10 space-y-3">
+            <div className="flex justify-between items-end text-sm">
+              <span className="text-indigo-200 font-medium">Store Setup Progress</span>
+              <span className="text-white font-bold">{progress}%</span>
+            </div>
+            <Progress value={progress} className="h-3 bg-white/10 border border-white/5" indicatorClassName="bg-gradient-to-r from-primary to-accent" />
+            <div className="flex justify-between text-[10px] uppercase tracking-tighter text-indigo-300/60 font-bold px-1">
+              <span>Identity</span>
+              <span>Products</span>
+              <span>Launch</span>
+            </div>
+          </div>
         </div>
 
         <div className="grid sm:grid-cols-3 gap-4">
@@ -133,51 +167,73 @@ export const VendorCommandCenter = () => {
             </CardContent>
           </Card>
 
-          <Card className={`bg-white/10 backdrop-blur-md border-white/20 transition-all ${shop && !shop.is_active ? 'ring-2 ring-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]' : (!shop ? 'opacity-50 grayscale pointer-events-none' : 'opacity-80')}`}>
+          <Card className={`bg-white/10 backdrop-blur-md border-white/20 transition-all ${shop && productsCount === 0 ? 'ring-2 ring-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]' : (!shop ? 'opacity-50 grayscale pointer-events-none' : 'opacity-80')}`}>
             <CardContent className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <div className="w-10 h-10 rounded-full bg-accent/20 text-accent flex items-center justify-center">
-                  <PackagePlus className="w-5 h-5 text-white" />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${productsCount > 0 ? 'bg-green-500/20 text-green-400' : 'bg-accent/20 text-accent'}`}>
+                  {productsCount > 0 ? <CheckCircle2 className="w-5 h-5" /> : <PackagePlus className="w-5 h-5 text-white" />}
                 </div>
                 <span className="text-white/40 text-sm font-bold">02</span>
               </div>
               <h3 className="text-lg font-bold text-white mb-1">Add Products</h3>
               <p className="text-indigo-200 text-sm mb-4">Upload your first 3-5 products with clear pictures and prices.</p>
-              <Button asChild variant="default" className="w-full bg-white text-indigo-950 hover:bg-white/90">
-                <Link to="/products">Add Products</Link>
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button asChild variant="secondary" className="w-full">
+                  <Link to="/products">Manual Add</Link>
+                </Button>
+                <Button 
+                  onClick={() => setIsBulkUploadOpen(true)} 
+                  className="w-full bg-gradient-to-r from-primary to-accent text-white border-0 shadow-lg"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" /> AI Bulk Upload
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className={`bg-white/10 backdrop-blur-md border-white/20 transition-all ${!shop ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
+          <Card className={`bg-white/10 backdrop-blur-md border-white/20 transition-all ${shop && !shop.whatsapp_number ? 'ring-2 ring-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]' : (productsCount === 0 ? 'opacity-50 grayscale pointer-events-none' : 'opacity-80')}`}>
             <CardContent className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <div className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center">
-                  <Share2 className="w-5 h-5" />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${shop?.whatsapp_number ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white'}`}>
+                  {shop?.whatsapp_number ? <CheckCircle2 className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
                 </div>
                 <span className="text-white/40 text-sm font-bold">03</span>
               </div>
-              <h3 className="text-lg font-bold text-white mb-1">Share Link</h3>
-              <p className="text-indigo-200 text-sm mb-4">Paste your SteerSolo link in your IG bio and WhatsApp.</p>
+              <h3 className="text-lg font-bold text-white mb-1">Launch Store</h3>
+              <p className="text-indigo-200 text-sm mb-4">Connect your WhatsApp and share your link to start selling.</p>
               <Button 
-                variant="outline" 
-                className="w-full border-white/20 text-white hover:bg-white/10"
+                variant={shop?.whatsapp_number ? "outline" : "default"}
+                className={`w-full ${shop?.whatsapp_number ? 'border-white/20 text-white' : ''}`}
                 onClick={() => {
                   if (shop) {
                     navigator.clipboard.writeText(`https://steersolo.com/shop/${shop.shop_slug}`);
                     setIsCopied(true);
                     setTimeout(() => setIsCopied(false), 2000);
                     toast({ title: "Copied!", description: "Store link copied to clipboard" });
+                  } else {
+                    navigate('/my-store');
                   }
                 }}
               >
                 {isCopied ? <CheckCircle2 className="w-4 h-4 mr-2 text-green-400" /> : <Copy className="w-4 h-4 mr-2" />}
-                Copy Link
+                {shop?.whatsapp_number ? 'Copy Store Link' : 'Launch Setup'}
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {shop && (
+        <BulkProductUpload 
+          open={isBulkUploadOpen} 
+          onClose={() => setIsBulkUploadOpen(false)} 
+          shopId={shop.id}
+          onSuccess={() => {
+            fetchShopData();
+            setIsBulkUploadOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };
