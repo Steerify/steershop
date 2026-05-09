@@ -30,7 +30,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { supabase } from "@/integrations/supabase/client";
-import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { BulkProductUpload } from "@/components/BulkProductUpload";
 import { ProductMediaCard } from "@/components/ProductMediaCard";
@@ -129,7 +128,6 @@ const Products = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [priceSuggestion, setPriceSuggestion] = useState<{ min: number; max: number } | null>(null);
-  const [showDfyPopup, setShowDfyPopup] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showFirstProductSuccess, setShowFirstProductSuccess] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -170,17 +168,11 @@ const Products = () => {
       const userShop = shopsResponse.data[0];
 
       if (!userShop) {
-        // No shop — show DFY popup if not dismissed
-        if (!localStorage.getItem('dfy_popup_dismissed')) {
-          setShowDfyPopup(true);
-          setIsLoading(false);
-          return;
-        }
         toast({
-          title: "No Store Found",
-          description: "Please create your store first",
+          title: "Setup Required",
+          description: "Please complete your store setup in the dashboard",
         });
-        navigate("/my-store");
+        navigate("/dashboard");
         return;
       }
 
@@ -487,17 +479,6 @@ const Products = () => {
 
   return (
     <>
-      <DoneForYouPopup
-        open={showDfyPopup}
-        onClose={() => {
-          setShowDfyPopup(false);
-          navigate("/my-store");
-        }}
-        onShopCreated={() => {
-          setShowDfyPopup(false);
-          loadShopAndProducts();
-        }}
-      />
       {/* Upgrade Prompt for Product Limit */}
       <UpgradePrompt
         isOpen={showUpgradePrompt}

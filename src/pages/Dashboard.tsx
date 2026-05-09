@@ -57,58 +57,57 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { VendorSetupWizard } from "@/components/VendorSetupWizard";
 import { VendorCommandCenter } from "@/components/VendorCommandCenter";
 
-// ─── Stat Card Component ───────────────────────────────────────────────────────
+// ─── Stat Card Component (Minimalist) ──────────────────────────────────────────
 const StatCard = ({
-  label, value, icon: Icon, gradient, trend, trendValue
+  label, value, icon: Icon, trend, trendValue
 }: {
   label: string;
   value: string;
   icon: React.ElementType;
-  gradient: string;
   trend?: "up" | "down" | "neutral";
   trendValue?: string;
 }) => (
-  <Card className={`relative overflow-hidden card-spotify border-0 shadow-md ${gradient}`}>
-    <CardContent className="p-4">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-medium text-white/95 uppercase tracking-wider">{label}</p>
-        <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-          <Icon className="w-4 h-4 text-white" />
+  <Card className="border border-border/50 shadow-sm bg-card overflow-hidden transition-all hover:shadow-md">
+    <CardContent className="p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center">
+          <Icon className="w-5 h-5 text-primary" />
         </div>
+        {trendValue && (
+          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${trend === "up" ? "bg-green-500/10 text-green-600" : trend === "down" ? "bg-red-500/10 text-red-600" : "bg-muted text-muted-foreground"}`}>
+            {trend === "up" ? <TrendingUp className="w-2.5 h-2.5" /> : trend === "down" ? <TrendingDown className="w-2.5 h-2.5" /> : null}
+            {trendValue}
+          </div>
+        )}
       </div>
-      <p className="text-xl sm:text-2xl font-bold text-white mb-1">{value}</p>
-      {trendValue && (
-        <div className="flex items-center gap-1">
-          {trend === "up" ? <TrendingUp className="w-3 h-3 text-white/95" /> : trend === "down" ? <TrendingDown className="w-3 h-3 text-white/95" /> : null}
-          <span className="text-xs text-white/95">{trendValue}</span>
-        </div>
-      )}
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
+        <p className="text-2xl font-black tracking-tight">{value}</p>
+      </div>
     </CardContent>
-    <div className="absolute -bottom-3 -right-3 w-20 h-20 rounded-full bg-white/10" />
-    <div className="absolute -top-3 -left-3 w-14 h-14 rounded-full bg-white/5" />
   </Card>
 );
 
-// ─── Quick Action Tile ─────────────────────────────────────────────────────────
-const QuickActionTile = ({
-  icon: Icon, label, description, onClick, color, textColor
+// ─── Quick Action Item (App-like) ─────────────────────────────────────────────
+const QuickActionButton = ({
+  icon: Icon, label, onClick, color, textColor
 }: {
   icon: React.ElementType;
   label: string;
-  description: string;
   onClick: () => void;
   color: string;
   textColor: string;
 }) => (
-  <button
+  <button 
     onClick={onClick}
-    className="group flex flex-col items-start p-4 bg-card card-spotify hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 text-left w-full"
+    className="flex flex-col items-center gap-2 group transition-all"
   >
-    <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200`}>
-      <Icon className={`w-5 h-5 ${textColor}`} />
+    <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:-translate-y-1 transition-all`}>
+      <Icon className={`w-6 h-6 sm:w-7 sm:h-7 ${textColor}`} />
     </div>
-    <p className="font-semibold text-sm text-foreground leading-tight">{label}</p>
-    <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{description}</p>
+    <span className="text-[11px] sm:text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors uppercase tracking-tight text-center leading-tight px-1">
+      {label}
+    </span>
   </button>
 );
 
@@ -182,11 +181,6 @@ const Dashboard = () => {
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(true);
   const [urgentTasks, setUrgentTasks] = useState<any[]>([]);
-
-  // Carousel state
-  const [carouselIndex, setCarouselIndex] = useState(0);
-  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
@@ -564,344 +558,7 @@ const Dashboard = () => {
     );
   };
 
-  const getCarouselSlides = () => {
-    const slides = [];
 
-    // ── WhatsApp Community slide ──
-    slides.push(
-      <div key="whatsapp" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#075E54] to-[#25D366] p-5 shadow-lg min-h-[120px] flex items-center">
-        <div className="absolute -top-5 -right-5 w-28 h-28 rounded-full bg-white/10" />
-        <div className="absolute -bottom-4 left-10 w-16 h-16 rounded-full bg-white/5" />
-        <div className="relative z-10 flex items-center justify-between gap-3 w-full">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <MessageCircle className="w-4 h-4 text-white" />
-              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Community</span>
-            </div>
-            <h3 className="text-white font-extrabold text-base leading-tight">Join 5,000+ vendors on WhatsApp</h3>
-            <p className="text-white/90 text-xs mt-0.5">Tips, support, buyer traffic &amp; giveaways — free!</p>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            className="shrink-0 font-bold shadow-lg gap-1.5 hover:opacity-90 bg-white text-[#075E54] border-white"
-            onClick={() => window.open('https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76', '_blank')}
-          >
-            <MessageCircle className="w-3.5 h-3.5" />
-            Join Now
-          </Button>
-        </div>
-      </div>
-    );
-
-    // ── Location Transparency slide ──
-    slides.push(
-      <div key="location-update" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-5 shadow-lg min-h-[120px] flex items-center">
-        <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
-        <div className="relative z-10 flex items-center justify-between gap-3 w-full">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <MapPin className="w-4 h-4 text-white/80" />
-              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">New Feature</span>
-            </div>
-            <h3 className="text-white font-extrabold text-base leading-tight">Increase Buyer Trust 📍</h3>
-            <p className="text-white/90 text-xs mt-0.5">Show customers exactly where you render services from (Place, State, Nigeria).</p>
-          </div>
-          <Button size="sm" variant="outline" onClick={() => navigate('/my-store')} className="shrink-0 bg-white text-blue-600 hover:bg-white/90 border-white font-bold shadow-lg">Set Location →</Button>
-        </div>
-      </div>
-    );
-
-    // ── Trial / Expired subscription ──
-    if (subscriptionStatus === 'trial') {
-      slides.push(
-        <div key="trial" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(215,65%,18%)] via-primary to-[hsl(145,58%,30%)] p-5 min-h-[120px] flex items-center">
-          {/* decorative blobs */}
-          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
-          <div className="absolute -bottom-6 -left-2 w-16 h-16 rounded-full bg-white/5" />
-          <div className="relative z-10 flex items-center justify-between gap-3 w-full">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Clock className="w-4 h-4 text-white/80" />
-                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Free Trial</span>
-              </div>
-              <h3 className="text-white font-extrabold text-base sm:text-lg leading-tight">{daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining</h3>
-              <p className="text-white/90 text-xs mt-0.5">Upgrade now to keep your store live 🚀</p>
-            </div>
-            <Button
-              size="sm"
-              onClick={() => navigate('/pricing')}
-              className="shrink-0 bg-white text-primary hover:bg-white/90 font-bold shadow-lg"
-            >
-              Upgrade Now
-            </Button>
-          </div>
-        </div>
-      );
-    } else if (subscriptionStatus === 'expired') {
-      slides.push(
-        <div key="expired" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 to-red-700 p-5 min-h-[120px] flex items-center">
-          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
-          <div className="relative z-10 flex items-center justify-between gap-3 w-full">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <AlertCircle className="w-4 h-4 text-white/80" />
-                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Subscription Expired</span>
-              </div>
-              <h3 className="text-white font-extrabold text-base">Your store is hidden</h3>
-              <p className="text-white/90 text-xs mt-0.5">Customers can't see your products right now.</p>
-            </div>
-            <Button
-              size="sm"
-              onClick={() => navigate('/pricing')}
-              className="shrink-0 bg-white text-red-600 hover:bg-white/90 font-bold shadow-lg"
-            >
-              Reactivate
-            </Button>
-          </div>
-        </div>
-      );
-    } else {
-      // Active — store visibility banner
-      slides.push(
-        <div key="visibility" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 p-5 min-h-[120px] flex items-center">
-          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
-          <div className="relative z-10 flex items-center justify-between gap-3 w-full">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <CheckCircle className="w-4 h-4 text-white" />
-                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Store Active</span>
-              </div>
-              <h3 className="text-white font-extrabold text-base">You're live &amp; selling! 🎉</h3>
-              <p className="text-white/90 text-xs mt-0.5">Customers can find and buy from your store.</p>
-            </div>
-            <Badge className="shrink-0 bg-white/20 text-white border-0 font-bold">Live ✓</Badge>
-          </div>
-        </div>
-      );
-    }
-
-    // ── Verification nudge ──
-    if (shopData && profile && !profile.bank_verified && !localStorage.getItem('verification_nudge_dismissed')) {
-      slides.push(
-        <div key="verification" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 p-5 min-h-[120px] flex items-center">
-          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
-          <div className="relative z-10 flex items-center justify-between gap-3 w-full">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Shield className="w-4 h-4 text-white/80" />
-                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Get Verified</span>
-              </div>
-              <h3 className="text-white font-extrabold text-base">Unlock payouts 🛡️</h3>
-              <p className="text-white/90 text-xs mt-0.5">Verify your identity to withdraw your earnings.</p>
-            </div>
-            <div className="flex gap-1 shrink-0">
-              <Button size="sm" onClick={() => navigate('/identity-verification')} className="bg-white text-amber-600 hover:bg-white/90 font-bold shadow-lg">Verify Now</Button>
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/20" onClick={() => { localStorage.setItem('verification_nudge_dismissed', 'true'); loadData(); }}>
-                <X className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // ── Incomplete Setup (Approval + Payment) ──
-    const accountAge = profile?.created_at ? differenceInDays(new Date(), new Date(profile.created_at)) : 0;
-    
-    if (shopFullData && accountAge >= 1) {
-      // 1. Approval Pending
-      if (!shopFullData.is_active) {
-        slides.push(
-          <div key="approval-pending" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 p-5 min-h-[120px] flex items-center">
-            <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
-            <div className="relative z-10 flex items-center justify-between gap-3 w-full">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Clock className="w-4 h-4 text-white/80" />
-                  <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Approval Required</span>
-                </div>
-                <h3 className="text-white font-extrabold text-base leading-tight">Your store is awaiting review</h3>
-                <p className="text-white/90 text-xs mt-0.5">Admin needs to approve your store before it appears in the marketplace.</p>
-              </div>
-              <Button size="sm" variant="outline" className="shrink-0 border-white/40 text-white hover:bg-white/20 font-bold shadow-lg" onClick={() => window.open('https://wa.me/2348162232975', '_blank')}>Contact Admin</Button>
-            </div>
-          </div>
-        );
-      }
-
-      // 2. Payment Setup Missing
-      if (!shopFullData.payment_method) {
-        slides.push(
-          <div key="payment-setup" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 p-5 min-h-[120px] flex items-center">
-            <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
-            <div className="relative z-10 flex items-center justify-between gap-3 w-full">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <DollarSign className="w-4 h-4 text-white/80" />
-                  <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Marketplace: Hidden</span>
-                </div>
-                <h3 className="text-white font-extrabold text-base leading-tight">Complete your payment setup</h3>
-                <p className="text-white/90 text-xs mt-0.5">Your store is hidden from the marketplace until you set up your bank details or Paystack.</p>
-              </div>
-              <Button size="sm" variant="outline" onClick={() => navigate('/my-store?tab=settings')} className="shrink-0 bg-white text-rose-600 hover:bg-white/90 border-white font-bold shadow-lg">Set Up Now →</Button>
-            </div>
-          </div>
-        );
-      }
-    }
-
-    // ── Missing Product Images nudge ──
-    if (shopData && productsCount > 0 && !hasProductWithImage) {
-      slides.push(
-        <div key="missing-images" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 p-5 min-h-[120px] flex items-center">
-          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
-          <div className="relative z-10 flex items-center justify-between gap-3 w-full">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-4 h-4 text-white/80" />
-                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Marketplace: Hidden</span>
-              </div>
-              <h3 className="text-white font-extrabold text-base leading-tight">Add product images</h3>
-              <p className="text-white/90 text-xs mt-0.5">Your store is hidden from the marketplace until you add images to your products.</p>
-            </div>
-            <Button size="sm" variant="outline" onClick={() => navigate('/products')} className="shrink-0 bg-white text-indigo-600 hover:bg-white/90 border-white font-bold shadow-lg">Add Images →</Button>
-          </div>
-        </div>
-      );
-    }
-
-    // ── First sale nudge ──
-    if (shopData && totalSales === 0) {
-      slides.push(
-        <div key="first-sale" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 p-5 min-h-[120px] flex items-center">
-          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
-          <div className="absolute -bottom-4 -left-2 w-16 h-16 rounded-full bg-white/5" />
-          <div className="relative z-10 w-full">
-            <div className="flex items-center gap-2 mb-1">
-              <Share2 className="w-4 h-4 text-white/80" />
-              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">First Sale Tips</span>
-            </div>
-            <h3 className="text-white font-extrabold text-base mb-1">Your first sale is 48h away 🚀</h3>
-            <p className="text-white/90 text-xs mb-3">Share your store link on WhatsApp to get started.</p>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="border-white/40 text-white hover:bg-white/20 gap-1.5 text-xs h-8 font-semibold" onClick={() => {
-                const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
-                navigator.clipboard.writeText(url);
-                toast({ title: "Store link copied!" });
-              }}><ExternalLink className="w-3 h-3" />Copy Link</Button>
-              <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white gap-1.5 text-xs h-8 font-semibold" onClick={() => {
-                const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
-                window.open(`https://wa.me/?text=${encodeURIComponent('Check out my store: ' + url)}`, '_blank');
-              }}><MessageCircle className="w-3 h-3" />Share on WhatsApp</Button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // ── 30-Day Challenge CTA ──
-    slides.push(
-      <div key="challenge" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500 p-5 min-h-[120px] flex items-center">
-        <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
-        <div className="absolute -bottom-4 left-8 w-16 h-16 rounded-full bg-white/5" />
-        <div className="relative z-10 flex items-center justify-between gap-3 w-full">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Star className="w-4 h-4 text-white" />
-              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">30-Day Challenge</span>
-            </div>
-            <h3 className="text-white font-extrabold text-base leading-tight">Become a Structured Seller 🏆</h3>
-            <p className="text-white/90 text-xs mt-0.5">Daily tasks to transform your selling habits.</p>
-          </div>
-          <Button
-            size="sm"
-            className="shrink-0 bg-white text-amber-600 hover:bg-white/90 font-bold shadow-lg"
-            onClick={() => setIsChallengeOpen(true)}
-          >
-            Start →
-          </Button>
-        </div>
-      </div>
-    );
-
-
-    // ── Store Status slide ──
-    if (shopData) {
-      slides.push(
-        <div key="store-status" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 p-5 min-h-[120px] flex items-center">
-          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/5" />
-          <div className="relative z-10 w-full">
-            <div className="flex items-center gap-2 mb-3">
-              <Store className="w-4 h-4 text-white/80" />
-              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Store Status</span>
-            </div>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-white/60 text-xs">Visibility</span>
-                <span className={`text-xs font-bold ${subscriptionStatus === 'expired' ? 'text-red-400' : 'text-green-400'}`}>
-                  {subscriptionStatus === 'expired' ? 'Hidden' : 'Live'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-white/60 text-xs">Plan</span>
-                <span className="text-xs font-bold text-white capitalize">{subscriptionStatus}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-white/60 text-xs">Products</span>
-                <span className="text-xs font-bold text-white">{productsCount}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-white/60 text-xs">Rating</span>
-                <span className="text-xs font-bold text-white">
-                  {shopFullData?.average_rating ? `${shopFullData.average_rating.toFixed(1)} ⭐` : 'N/A'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // ── Help & Resources slide ──
-    slides.push(
-      <div key="help" className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 p-5 min-h-[120px] flex items-center">
-        <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
-        <div className="relative z-10 flex items-center justify-between gap-3 w-full">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <HelpCircle className="w-4 h-4 text-white" />
-              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Help & Resources</span>
-            </div>
-            <h3 className="text-white font-extrabold text-base leading-tight">Need help? We've got you 💡</h3>
-          </div>
-          <div className="flex gap-2 shrink-0">
-            <Button size="sm" variant="outline" className="border-white/30 text-white hover:bg-white/20 text-xs h-8 font-semibold" onClick={() => navigate('/faq')}>
-              <HelpCircle className="w-3 h-3 mr-1" /> FAQ
-            </Button>
-            <Button size="sm" className="bg-white text-indigo-600 hover:bg-white/90 text-xs h-8 font-semibold" onClick={startTour}>
-              <Sparkles className="w-3 h-3 mr-1" /> Tour
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-
-    return slides;
-  };
-
-  const slides = getCarouselSlides();
-  const totalSlides = slides.length;
-  const nextSlide = () => setCarouselIndex((prev) => (prev + 1) % totalSlides);
-  const prevSlide = () => setCarouselIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
-
-  useEffect(() => {
-    if (totalSlides <= 1 || isCarouselPaused) return;
-    const timer = setInterval(nextSlide, 5000);
-    return () => clearInterval(timer);
-  }, [totalSlides, isCarouselPaused]);
-
-  const goToSlide = (index: number) => setCarouselIndex(index);
 
   // ─── Primary Quick Actions (always visible) ────────────────────────────────
   const PrimaryQuickActions = [
@@ -1071,48 +728,122 @@ const Dashboard = () => {
         
         {/* ProductNudges moved into carousel */}
 
-        {/* Welcome Hero */}
-        <div className="relative rounded-3xl overflow-hidden mb-6 bg-gradient-to-br from-[hsl(215,65%,18%)] via-primary to-[hsl(145,58%,30%)] p-6 shadow-xl">
-          {/* decorative circles */}
-          <div className="absolute -top-6 -right-6 w-36 h-36 rounded-full bg-white/5" />
-          <div className="absolute -bottom-8 -left-4 w-28 h-28 rounded-full bg-white/5" />
-          <div className="absolute top-1/2 right-12 w-16 h-16 rounded-full bg-white/8 -translate-y-1/2" />
-
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              {shopData && (
-                <ShopAvatar
-                  name={shopData.name}
-                  logoUrl={shopFullData?.logo_url}
-                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl shadow-lg ring-2 ring-white/20"
-                  initialsClassName="text-xl sm:text-2xl"
-                />
-              )}
+        {/* Welcome Hero - Minimalist & Premium */}
+        <div className="relative rounded-3xl overflow-hidden mb-2 bg-card border border-border/50 p-6 shadow-sm">
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <div className="relative">
+                {shopData ? (
+                  <ShopAvatar
+                    name={shopData.name}
+                    logoUrl={shopFullData?.logo_url}
+                    className="w-16 h-16 rounded-2xl shadow-sm ring-1 ring-border"
+                    initialsClassName="text-2xl"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl">
+                    {firstName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-green-500 border-4 border-card flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                </div>
+              </div>
               <div>
-                <p className="text-white/70 text-sm font-medium mb-0.5">{greeting},</p>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">{firstName}! 👋</h1>
-                <p className="text-white/80 text-sm">
-                  {shopData ? `Managing ${shopData.name}` : "Here's what's happening today"}
-                </p>
+                <p className="text-muted-foreground text-sm font-medium mb-0.5">{greeting},</p>
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-1">{firstName}! 👋</h1>
+                <div className="flex items-center gap-2">
+                  {shopData && <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] uppercase tracking-wider">{shopData.name}</Badge>}
+                  <ShopStatusBadge status={subscriptionStatus} daysRemaining={daysRemaining} />
+                </div>
               </div>
             </div>
-            <div className="flex flex-col gap-2 sm:items-end">
-              <ShopStatusBadge status={subscriptionStatus} daysRemaining={daysRemaining} />
+            
+            <div className="flex items-center gap-3">
               {shopData && (
                 <Button
-                  size="sm"
+                  variant="outline"
                   onClick={() => navigate(`/shop/${shopFullData?.shop_slug || shopData.id}`)}
-                  className="bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur-sm"
+                  className="rounded-xl font-bold border-border shadow-sm hover:bg-muted"
                 >
-                  View My Store →
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Visit Store
                 </Button>
               )}
-              {shopData && (
-                <div className="hidden md:block">
-                  <StrokeMyShop shopId={shopData.id} shopName={shopData.name} />
-                </div>
-              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/settings')}
+                className="rounded-full h-11 w-11 bg-muted/50"
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
             </div>
+          </div>
+        </div>
+
+        {/* Jiji-inspired Quick Actions Grid */}
+        <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
+          <div className="grid grid-cols-4 sm:flex sm:items-center sm:justify-center gap-6 sm:gap-12">
+            <QuickActionButton 
+              icon={Package} 
+              label="Products" 
+              onClick={() => navigate('/products')} 
+              color="from-blue-500 to-indigo-600" 
+              textColor="text-white" 
+            />
+            <QuickActionButton 
+              icon={ShoppingCart} 
+              label="Orders" 
+              onClick={() => navigate('/orders')} 
+              color="from-orange-400 to-pink-500" 
+              textColor="text-white" 
+            />
+            <QuickActionButton 
+              icon={Megaphone} 
+              label="Marketing" 
+              onClick={() => navigate('/marketing')} 
+              color="from-purple-500 to-indigo-500" 
+              textColor="text-white" 
+            />
+            <QuickActionButton 
+              icon={Wallet} 
+              label="Wallet" 
+              onClick={() => setIsPayoutDialogOpen(true)} 
+              color="from-emerald-500 to-teal-600" 
+              textColor="text-white" 
+            />
+            <div className="col-span-4 block sm:hidden">
+              <Separator className="opacity-50" />
+            </div>
+            <QuickActionButton 
+              icon={Target} 
+              label="Growth" 
+              onClick={() => navigate('/growth')} 
+              color="from-amber-400 to-orange-500" 
+              textColor="text-white" 
+            />
+            <QuickActionButton 
+              icon={Users} 
+              label="Customers" 
+              onClick={() => navigate('/customers')} 
+              color="from-blue-400 to-cyan-500" 
+              textColor="text-white" 
+            />
+            <QuickActionButton 
+              icon={MessageCircle} 
+              label="Help" 
+              onClick={() => window.open('https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76', '_blank')} 
+              color="from-green-500 to-emerald-600" 
+              textColor="text-white" 
+            />
+            <QuickActionButton 
+              icon={Settings} 
+              label="Settings" 
+              onClick={() => navigate('/settings')} 
+              color="from-slate-500 to-slate-700" 
+              textColor="text-white" 
+            />
           </div>
         </div>
 
@@ -1125,26 +856,43 @@ const Dashboard = () => {
 
         <VendorCommandCenter />
         
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="bg-card border border-border/50 h-auto p-1 grid grid-cols-3 sm:w-[400px]">
-            <TabsTrigger value="overview" className="py-2.5 text-xs sm:text-sm">Overview</TabsTrigger>
-            <TabsTrigger value="actions" className="py-2.5 text-xs sm:text-sm">Actions</TabsTrigger>
-            <TabsTrigger value="wallet" className="py-2.5 text-xs sm:text-sm">Wallet & Offers</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
+        <div className="space-y-6">
             {/* Contextual Banner */}
             {getContextualBanner()}
 
             {/* Urgent Tasks */}
             <UrgentTasks tasks={urgentTasks} onAction={() => {}} />
 
-            {/* Stat Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-              <StatCard label="Total Revenue" value={`₦${totalRevenue.toLocaleString()}`} icon={DollarSign} gradient="bg-gradient-to-br from-primary to-primary/80" trend="up" trendValue="All time earnings" />
-              <StatCard label="Total Sales" value={String(totalSales)} icon={TrendingUp} gradient="bg-gradient-to-br from-accent to-accent/80" trend="up" trendValue="Completed orders" />
-              <StatCard label="Products" value={String(productsCount)} icon={Package} gradient="bg-gradient-to-br from-[hsl(215,65%,30%)] to-[hsl(215,65%,42%)]" trendValue="Items in catalog" />
-              <StatCard label="Pending Orders" value={String(pendingOrders)} icon={ShoppingCart} gradient="bg-gradient-to-br from-[hsl(215,65%,18%)] to-primary" trendValue={pendingOrders > 0 ? "Need attention" : "All clear!"} />
+            {/* Stat Cards Row */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              <StatCard 
+                label="Total Revenue" 
+                value={`₦${totalRevenue.toLocaleString()}`} 
+                icon={DollarSign} 
+                trend="up" 
+                trendValue="+12%" 
+              />
+              <StatCard 
+                label="Total Sales" 
+                value={String(totalSales)} 
+                icon={TrendingUp} 
+                trend="up" 
+                trendValue="New" 
+              />
+              <StatCard 
+                label="Products" 
+                value={String(productsCount)} 
+                icon={Package} 
+                trend="neutral" 
+                trendValue="Live" 
+              />
+              <StatCard 
+                label="Pending Orders" 
+                value={String(pendingOrders)} 
+                icon={ShoppingCart} 
+                trend={pendingOrders > 0 ? "down" : "up"} 
+                trendValue={pendingOrders > 0 ? "Action" : "Clear"} 
+              />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1185,71 +933,42 @@ const Dashboard = () => {
                 <ProfileCompletionChecklist shop={shopFullData} productsCount={productsCount} />
               </div>
             </div>
-          </TabsContent>
-
-          <TabsContent value="actions" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" data-tour="quick-actions">
-              {QuickActions.map((action) => (
-                <QuickActionTile key={action.path + action.label} icon={action.icon} label={action.label} description={action.description} onClick={() => action.label === 'Wallet' ? setIsPayoutDialogOpen(true) : navigate(action.path)} color={action.color} textColor={action.textColor} />
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="wallet" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {shopData && (
-                <Card className="overflow-hidden">
-                  <div className="h-0.5 w-full bg-gradient-to-r from-accent to-primary" />
+            {/* Wallet Quick View */}
+            {shopData && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="overflow-hidden border border-border/50 shadow-sm">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-bold text-sm flex items-center gap-2">
-                        <Wallet className="w-4 h-4 text-accent" />
+                        <Wallet className="w-4 h-4 text-primary" />
                         Wallet Balance
                       </h3>
+                      <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setIsPayoutDialogOpen(true)}>Withdraw</Button>
                     </div>
-                    <div className="text-center mb-4 py-6 bg-gradient-to-br from-accent/5 to-primary/5 rounded-xl border border-border/50">
-                      <p className="text-3xl sm:text-4xl font-extrabold text-primary">₦{payoutBalance.availableBalance.toLocaleString()}</p>
-                      <p className="text-sm text-muted-foreground mt-1">Available for withdrawal</p>
-                      {payoutBalance.totalPending > 0 && (
-                        <p className="text-sm text-amber-600 mt-2 font-medium">₦{payoutBalance.totalPending.toLocaleString()} pending</p>
-                      )}
+                    <div className="flex items-end gap-3">
+                      <p className="text-3xl font-black text-primary tracking-tight">₦{payoutBalance.availableBalance.toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground mb-1">Available</p>
                     </div>
-                    <Button size="lg" className="w-full text-base font-semibold" disabled={payoutBalance.availableBalance < 5000} onClick={() => setIsPayoutDialogOpen(true)}>
-                      <Banknote className="w-5 h-5 mr-2" />
-                      Request Payout
-                    </Button>
-                    {payoutBalance.availableBalance < 5000 && (
-                      <p className="text-xs text-muted-foreground text-center mt-3">Minimum withdrawal: ₦5,000</p>
-                    )}
                   </CardContent>
                 </Card>
-              )}
 
-              <div className="space-y-6">
-                {shopData && <CouponManager shopId={shopData.id} />}
-                
                 {activeOffer && (
-                  <Card className="overflow-hidden border-0 bg-gradient-to-br from-[hsl(215,65%,20%)] to-[hsl(145,55%,30%)] text-white shadow-lg">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
-                          <Sparkles className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-bold mb-1 text-base">Special Offer 🎁</h3>
-                          <p className="text-sm opacity-90 mb-4">{activeOffer.description}</p>
-                          <Button variant="secondary" onClick={handleSubscribe} className="bg-white text-primary hover:bg-white/90 font-bold w-full sm:w-auto">
-                            {activeOffer.button_text || "Claim Offer"}
-                          </Button>
-                        </div>
+                  <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary to-accent text-white shadow-lg">
+                    <CardContent className="p-5 flex items-center justify-between">
+                      <div>
+                        <h3 className="font-bold text-sm mb-0.5">Special Offer 🎁</h3>
+                        <p className="text-xs opacity-90">{activeOffer.description}</p>
                       </div>
+                      <Button variant="secondary" size="sm" onClick={handleSubscribe} className="bg-white text-primary hover:bg-white/90 font-bold whitespace-nowrap">
+                        Claim
+                      </Button>
                     </CardContent>
                   </Card>
                 )}
               </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* ─── Mobile Bottom Navigation ────────────────────── */}

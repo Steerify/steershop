@@ -124,14 +124,14 @@ export const VendorCommandCenter = () => {
       </div>
 
       <div className="container mx-auto max-w-4xl relative">
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 px-2">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-200 text-xs font-semibold uppercase tracking-wider mb-3">
             <Store className="w-3.5 h-3.5" /> Vendor Command Center
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-2">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-white mb-2 leading-tight">
             Welcome, {user.firstName || 'Entrepreneur'}! Let's build your store.
           </h2>
-          <p className="text-indigo-200 text-lg mb-8">
+          <p className="text-indigo-200 text-base sm:text-lg mb-8 opacity-90">
             Complete these 3 quick steps to start accepting orders today.
           </p>
 

@@ -11,8 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Store, Package, MessageCircle, ArrowRight, Sparkles, CheckCircle2, MapPin } from "lucide-react";
+import { Loader2, Store, Package, MessageCircle, ArrowRight, Sparkles, CheckCircle2, MapPin, ImagePlus, Upload, X } from "lucide-react";
 import shopService from "@/services/shop.service";
+import { uploadService } from "@/services/upload.service";
 import { supabase } from "@/integrations/supabase/client";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 
@@ -35,11 +36,34 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   const [shopState, setShopState] = useState("");
   const [shopCity, setShopCity] = useState("");
   
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
+  const [productImageFile, setProductImageFile] = useState<File | null>(null);
+  const [productImagePreview, setProductImagePreview] = useState<string | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState("");
 
   const [createdShopId, setCreatedShopId] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (type === 'logo') {
+      setLogoFile(file);
+      setLogoPreview(URL.createObjectURL(file));
+    } else if (type === 'banner') {
+      setBannerFile(file);
+      setBannerPreview(URL.createObjectURL(file));
+    } else if (type === 'product') {
+      setProductImageFile(file);
+      setProductImagePreview(URL.createObjectURL(file));
+    }
+  };
 
   // Auto-generate URL slug
   const shopSlug = shopName.toLowerCase().replace(/'/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -51,6 +75,19 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
     }
     setIsLoading(true);
     try {
+      let logoUrl = "";
+      let bannerUrl = "";
+
+      if (logoFile) {
+        const logoRes = await uploadService.uploadImage(logoFile, "shop-logos");
+        logoUrl = logoRes.url;
+      }
+
+      if (bannerFile) {
+        const bannerRes = await uploadService.uploadImage(bannerFile, "shop-banners");
+        bannerUrl = bannerRes.url;
+      }
+
       const res = await shopService.createShop({
         name: shopName,
         slug: shopSlug,
@@ -58,6 +95,8 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         whatsapp: "", // Will be updated in Step 3
         state: shopState,
         city: shopCity,
+        logo_url: logoUrl,
+        banner_url: bannerUrl,
       });
       setCreatedShopId(res.data.id);
       setStep(2);
@@ -78,12 +117,20 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
     setIsLoading(true);
     try {
       const priceNum = parseFloat(productPrice);
+      
+      let imageUrl = "";
+      if (productImageFile) {
+        const uploadRes = await uploadService.uploadImage(productImageFile, "product-images");
+        imageUrl = uploadRes.url;
+      }
+
       const { error } = await supabase.from('products').insert({
         shop_id: createdShopId,
         name: productName,
         description: "",
         price: priceNum,
         is_available: true,
+        images: imageUrl ? [{ url: imageUrl, alt: productName, position: 1 }] : [],
       });
 
       if (error) throw error;
@@ -131,7 +178,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-background flex flex-col overflow-hidden animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[40] bg-background flex flex-col overflow-hidden animate-in fade-in duration-300">
       <AdirePattern variant="dots" className="absolute inset-0 opacity-5 pointer-events-none" />
       
       {/* Top Progress Bar */}
@@ -211,6 +258,76 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-3">
+                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Store Logo</Label>
+                    <div className="relative group">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => handleFileChange(e, 'logo')} 
+                        className="hidden" 
+                        id="logo-upload"
+                      />
+                      <label 
+                        htmlFor="logo-upload" 
+                        className={`flex flex-col items-center justify-center w-full aspect-square rounded-xl border-2 border-dashed transition-all cursor-pointer ${logoPreview ? 'border-primary' : 'border-primary/20 hover:border-primary/40'}`}
+                      >
+                        {logoPreview ? (
+                          <div className="relative w-full h-full p-2">
+                            <img src={logoPreview} alt="Logo" className="w-full h-full object-cover rounded-lg" />
+                            <button 
+                              onClick={(e) => { e.preventDefault(); setLogoFile(null); setLogoPreview(null); }}
+                              className="absolute -top-1 -right-1 bg-destructive text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <ImagePlus className="w-6 h-6 text-primary/40 mb-1" />
+                            <span className="text-[10px] font-bold text-primary/60">Upload</span>
+                          </>
+                        )}
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Store Banner</Label>
+                    <div className="relative group">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => handleFileChange(e, 'banner')} 
+                        className="hidden" 
+                        id="banner-upload"
+                      />
+                      <label 
+                        htmlFor="banner-upload" 
+                        className={`flex flex-col items-center justify-center w-full aspect-square rounded-xl border-2 border-dashed transition-all cursor-pointer ${bannerPreview ? 'border-primary' : 'border-primary/20 hover:border-primary/40'}`}
+                      >
+                        {bannerPreview ? (
+                          <div className="relative w-full h-full p-2">
+                            <img src={bannerPreview} alt="Banner" className="w-full h-full object-cover rounded-lg" />
+                            <button 
+                              onClick={(e) => { e.preventDefault(); setBannerFile(null); setBannerPreview(null); }}
+                              className="absolute -top-1 -right-1 bg-destructive text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <ImagePlus className="w-6 h-6 text-primary/40 mb-1" />
+                            <span className="text-[10px] font-bold text-primary/60">Upload</span>
+                          </>
+                        )}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-3">
                     <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">State</Label>
                     <Select value={shopState} onValueChange={setShopState}>
                       <SelectTrigger className="bg-background/50 border-primary/20">
@@ -276,6 +393,40 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                       className="h-14 text-lg bg-background/50 border-primary/20"
                     />
                   </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Product Image</Label>
+                    <div className="relative group w-full sm:w-40">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => handleFileChange(e, 'product')} 
+                        className="hidden" 
+                        id="product-image-upload"
+                      />
+                      <label 
+                        htmlFor="product-image-upload" 
+                        className={`flex flex-col items-center justify-center w-full aspect-square rounded-xl border-2 border-dashed transition-all cursor-pointer ${productImagePreview ? 'border-primary' : 'border-primary/20 hover:border-primary/40'}`}
+                      >
+                        {productImagePreview ? (
+                          <div className="relative w-full h-full p-2">
+                            <img src={productImagePreview} alt="Product" className="w-full h-full object-cover rounded-lg" />
+                            <button 
+                              onClick={(e) => { e.preventDefault(); setProductImageFile(null); setProductImagePreview(null); }}
+                              className="absolute -top-1 -right-1 bg-destructive text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <ImagePlus className="w-6 h-6 text-primary/40 mb-1" />
+                            <span className="text-[10px] font-bold text-primary/60">Upload</span>
+                          </>
+                        )}
+                      </label>
+                    </div>
+                  </div>
                 </div>
                 <div className="flex flex-col gap-3">
                   <Button className="w-full h-14 text-lg font-bold shadow-lg bg-gradient-to-r from-primary to-accent" onClick={handleCreateProduct} disabled={isLoading || !productName.trim() || !productPrice.trim()}>
@@ -332,13 +483,20 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
             )}
 
             {step === 4 && (
-              <div className="flex flex-col items-center justify-center py-8 text-center relative z-10">
-                <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mb-6 animate-bounce">
-                  <CheckCircle2 className="w-10 h-10 text-green-500" />
+              <div className="flex flex-col items-center justify-center py-12 text-center relative z-10">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mb-8 shadow-xl shadow-green-500/20 animate-in zoom-in duration-500">
+                  <CheckCircle2 className="w-12 h-12 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-2">Setup Complete!</h3>
-                <p className="text-muted-foreground">Preparing your dashboard...</p>
-                <Loader2 className="w-6 h-6 animate-spin text-primary mt-6" />
+                <h3 className="text-3xl font-extrabold mb-3 bg-gradient-to-r from-green-600 to-green-400 bg-clip-text text-transparent">
+                  You're all set! 🚀
+                </h3>
+                <p className="text-muted-foreground text-lg mb-8 max-w-[280px] mx-auto">
+                  Your store is live and ready for customers. Let's head to your command center.
+                </p>
+                <div className="flex items-center gap-2 text-primary font-bold">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Loading Dashboard...</span>
+                </div>
               </div>
             )}
           </div>

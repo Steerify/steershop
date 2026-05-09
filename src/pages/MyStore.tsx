@@ -56,7 +56,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 import { ShopStatusBadge, ShopStatus, getShopStatusFromProfile } from "@/components/ShopStatusBadge";
-import { DoneForYouPopup } from "@/components/DoneForYouPopup";
 import { StorefrontCustomizer } from "@/components/StorefrontCustomizer";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ShopAvatar } from "@/components/ShopAvatar";
@@ -132,7 +131,6 @@ const MyStore = () => {
   const [shopStatus, setShopStatus] = useState<{ status: ShopStatus; daysRemaining: number }>({ status: 'trial', daysRemaining: 15 });
   const [isPremiumPlan, setIsPremiumPlan] = useState(false);
 
-  const [showDfyPopup, setShowDfyPopup] = useState(false);
   const [showPostCreatePrompt, setShowPostCreatePrompt] = useState(false);
   const [showInlineVerify, setShowInlineVerify] = useState(false);
   const [showDraftBanner, setShowDraftBanner] = useState(false);
@@ -253,15 +251,11 @@ const MyStore = () => {
       const data = Array.isArray(res.data) ? res.data[0] : res.data;
 
       if (!data) {
-        // No shop — show DFY popup if not dismissed
-        if (!localStorage.getItem('dfy_popup_dismissed')) {
-          setShowDfyPopup(true);
-        }
         toast({
-          title: "No Store Found",
-          description: "You haven't created a store yet",
+          title: "Setup Required",
+          description: "Please complete your store setup in the dashboard",
         });
-        setIsLoading(false);
+        navigate("/dashboard");
         return;
       }
 

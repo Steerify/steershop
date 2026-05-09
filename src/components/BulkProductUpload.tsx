@@ -344,28 +344,31 @@ export const BulkProductUpload = ({ open, onClose, shopId, onSuccess }: BulkProd
                             rows={2}
                             className="text-sm"
                           />
-                          <div className="flex gap-2">
-                            <Input
-                              type="number"
-                              min="1"
-                              step="1"
-                              value={draft.price}
-                              onChange={(e) => {
-                                const parsedPrice = Number(e.target.value);
-                                updateDraft(i, "price", Number.isFinite(parsedPrice) && Number.isInteger(parsedPrice) && parsedPrice > 0 ? parsedPrice : 0);
-                              }}
-                              placeholder="Price"
-                              className="h-8 text-sm w-28"
-                            />
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="relative flex-1">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-primary/40">₦</span>
+                              <Input
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={draft.price}
+                                onChange={(e) => {
+                                  const parsedPrice = Number(e.target.value);
+                                  updateDraft(i, "price", Number.isFinite(parsedPrice) && Number.isInteger(parsedPrice) && parsedPrice > 0 ? parsedPrice : 0);
+                                }}
+                                placeholder="Price"
+                                className="h-9 pl-7 text-sm w-full font-bold"
+                              />
+                            </div>
                             <Input
                               value={draft.category}
                               onChange={(e) => updateDraft(i, "category", e.target.value)}
                               placeholder="Category"
-                              className="h-8 text-sm"
+                              className="h-9 text-sm flex-1"
                             />
                           </div>
-                          <Button size="sm" variant="outline" onClick={() => setEditingIndex(null)} className="h-8">
-                            <Check className="w-3.5 h-3.5 mr-1.5" /> Save
+                          <Button size="sm" variant="outline" onClick={() => setEditingIndex(null)} className="h-9 w-full sm:w-auto">
+                            <Check className="w-3.5 h-3.5 mr-1.5" /> Save Changes
                           </Button>
                         </div>
                       ) : (
