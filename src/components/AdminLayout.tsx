@@ -62,7 +62,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       const isPrimaryAdminEmail = user.email?.toLowerCase().trim() === "steerifygroup@gmail.com";
 
       // Primary admin email — always grant access immediately.
-      // AuthContext already forces UserRole.ADMIN for this email, so this is secure.
+      // AuthContext already forces 'ADMIN' for this email, so this is secure.
       if (isPrimaryAdminEmail) {
         setIsAdmin(true);
         return;
@@ -76,7 +76,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         .eq("role", "admin")
         .single();
 
-      if (!roles && user.role === UserRole.ADMIN) {
+      if (!roles && user.role === 'ADMIN') {
         // Role set in profile but missing from user_roles — grant access anyway
         setIsAdmin(true);
         return;

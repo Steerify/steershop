@@ -54,15 +54,15 @@ const RoleSelection = () => {
       let appRole: "admin" | "customer" | "shop_owner";
 
       switch (selectedRole) {
-        case UserRole.ENTREPRENEUR:
+        case 'ENTREPRENEUR':
           dbRole = 'shop_owner';
           appRole = 'shop_owner';
           break;
-        case UserRole.CUSTOMER:
+        case 'CUSTOMER':
           dbRole = 'customer';
           appRole = 'customer';
           break;
-        case UserRole.ADMIN:
+        case 'ADMIN':
           dbRole = 'admin';
           appRole = 'admin';
           break;
@@ -116,11 +116,11 @@ const RoleSelection = () => {
 
       toast({
         title: "Role selected!",
-        description: `Welcome as ${selectedRole === UserRole.ENTREPRENEUR ? "an Entrepreneur" : "a Customer"}`,
+        description: `Welcome as ${selectedRole === 'ENTREPRENEUR' ? "an Entrepreneur" : "a Customer"}`,
       });
 
       // Entrepreneurs go to the dashboard where the Setup Wizard modal will be triggered.
-      if (selectedRole === UserRole.ENTREPRENEUR) {
+      if (selectedRole === 'ENTREPRENEUR') {
         navigate("/dashboard");
       } else {
         navigate("/customer_dashboard");
@@ -168,17 +168,17 @@ const RoleSelection = () => {
         <CardContent className="p-6">
           <div className="space-y-4">
             <div
-              onClick={() => setSelectedRole(UserRole.ENTREPRENEUR)}
+              onClick={() => setSelectedRole('ENTREPRENEUR')}
               className={cn(
                 "relative flex items-start gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 group",
-                selectedRole === UserRole.ENTREPRENEUR
+                selectedRole === 'ENTREPRENEUR'
                   ? "border-indigo-600 bg-indigo-600/5 shadow-xl shadow-indigo-600/10 scale-[1.02]"
                   : "border-muted hover:border-indigo-600/50 hover:bg-indigo-600/5"
               )}
             >
               <div className={cn(
                 "p-4 rounded-xl transition-all duration-300 shadow-sm",
-                selectedRole === UserRole.ENTREPRENEUR 
+                selectedRole === 'ENTREPRENEUR' 
                   ? "bg-indigo-600 text-white scale-110" 
                   : "bg-muted text-muted-foreground group-hover:bg-indigo-100 group-hover:text-indigo-600"
               )}>
@@ -187,7 +187,7 @@ const RoleSelection = () => {
               <div className="flex-1">
                 <h3 className={cn(
                   "font-bold text-xl transition-colors",
-                  selectedRole === UserRole.ENTREPRENEUR ? "text-indigo-600" : "text-foreground"
+                  selectedRole === 'ENTREPRENEUR' ? "text-indigo-600" : "text-foreground"
                 )}>Entrepreneur</h3>
                 <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                   Start your business journey. Create a store, list products, and reach thousands of Nigerian shoppers.
@@ -200,7 +200,7 @@ const RoleSelection = () => {
                   ))}
                 </div>
               </div>
-              {selectedRole === UserRole.ENTREPRENEUR && (
+              {selectedRole === 'ENTREPRENEUR' && (
                 <div className="absolute top-4 right-4 text-indigo-600 animate-in zoom-in">
                   <Check className="w-6 h-6" />
                 </div>
@@ -208,17 +208,17 @@ const RoleSelection = () => {
             </div>
 
             <div
-              onClick={() => setSelectedRole(UserRole.CUSTOMER)}
+              onClick={() => setSelectedRole('CUSTOMER')}
               className={cn(
                 "relative flex items-start gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 group",
-                selectedRole === UserRole.CUSTOMER
+                selectedRole === 'CUSTOMER'
                   ? "border-emerald-600 bg-emerald-600/5 shadow-xl shadow-emerald-600/10 scale-[1.02]"
                   : "border-muted hover:border-emerald-600/50 hover:bg-emerald-600/5"
               )}
             >
               <div className={cn(
                 "p-4 rounded-xl transition-all duration-300 shadow-sm",
-                selectedRole === UserRole.CUSTOMER 
+                selectedRole === 'CUSTOMER' 
                   ? "bg-emerald-600 text-white scale-110" 
                   : "bg-muted text-muted-foreground group-hover:bg-emerald-100 group-hover:text-emerald-600"
               )}>
@@ -227,7 +227,7 @@ const RoleSelection = () => {
               <div className="flex-1">
                 <h3 className={cn(
                   "font-bold text-xl transition-colors",
-                  selectedRole === UserRole.CUSTOMER ? "text-emerald-600" : "text-foreground"
+                  selectedRole === 'CUSTOMER' ? "text-emerald-600" : "text-foreground"
                 )}>Customer</h3>
                 <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                   Browse curated collections from verified Nigerian brands. Shop with confidence and zero friction.
@@ -240,7 +240,7 @@ const RoleSelection = () => {
                   ))}
                 </div>
               </div>
-              {selectedRole === UserRole.CUSTOMER && (
+              {selectedRole === 'CUSTOMER' && (
                 <div className="absolute top-4 right-4 text-emerald-600 animate-in zoom-in">
                   <Check className="w-6 h-6" />
                 </div>

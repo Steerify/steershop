@@ -56,6 +56,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ShopAvatar } from "@/components/ShopAvatar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { VendorSetupWizard } from "@/components/VendorSetupWizard";
+import { VendorCommandCenter } from "@/components/VendorCommandCenter";
 
 // ─── Stat Card Component ───────────────────────────────────────────────────────
 const StatCard = ({
@@ -1131,6 +1132,8 @@ const Dashboard = () => {
           description="Join 5,000+ vendors for tips, buyer traffic, and exclusive support!"
         />
 
+        <VendorCommandCenter />
+        
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="bg-card border border-border/50 h-auto p-1 grid grid-cols-3 sm:w-[400px]">
             <TabsTrigger value="overview" className="py-2.5 text-xs sm:text-sm">Overview</TabsTrigger>
@@ -1310,7 +1313,7 @@ const Dashboard = () => {
       </Sheet>
 
       <VendorSetupWizard 
-        open={!isLoading && !shopData && user?.role === UserRole.ENTREPRENEUR} 
+        open={!isLoading && !shopData && user?.role === 'ENTREPRENEUR'} 
         onComplete={() => loadData()} 
       />
     </div>

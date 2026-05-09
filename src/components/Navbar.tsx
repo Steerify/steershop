@@ -218,7 +218,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
       
       <div className={cn(
         "bg-card/90 backdrop-blur-xl border-b transition-all duration-500",
-        user?.role === UserRole.ENTREPRENEUR 
+        user?.role === 'ENTREPRENEUR' 
           ? "border-indigo-600/30 shadow-[0_1px_10px_rgba(79,70,229,0.1)]" 
           : "border-border/50"
       )}>
@@ -316,12 +316,12 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                           variant="outline" 
                           className={cn(
                             "text-[9px] h-3.5 px-1 mt-0.5 border-none",
-                            user?.role === UserRole.ENTREPRENEUR 
+                            user?.role === 'ENTREPRENEUR' 
                               ? "bg-indigo-600/10 text-indigo-600" 
                               : "bg-emerald-600/10 text-emerald-600"
                           )}
                         >
-                          {user?.role === UserRole.ENTREPRENEUR ? 'Vendor Mode' : 'Shopper Mode'}
+                          {user?.role === 'ENTREPRENEUR' ? 'Vendor Mode' : 'Shopper Mode'}
                         </Badge>
                       </div>
                     </button>
@@ -333,12 +333,12 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to={user?.role === UserRole.ENTREPRENEUR ? "/dashboard" : "/shopper"} className="flex items-center gap-2 cursor-pointer rounded-lg">
+                      <Link to={user?.role === 'ENTREPRENEUR' ? "/dashboard" : "/shopper"} className="flex items-center gap-2 cursor-pointer rounded-lg">
                         <User className="w-4 h-4" />
-                        {user?.role === UserRole.ENTREPRENEUR ? "Vendor Dashboard" : "My Orders"}
+                        {user?.role === 'ENTREPRENEUR' ? "Vendor Dashboard" : "My Orders"}
                       </Link>
                     </DropdownMenuItem>
-                    {user?.role === UserRole.ENTREPRENEUR && (
+                    {user?.role === 'ENTREPRENEUR' && (
                       <DropdownMenuItem asChild>
                         <Link to="/my-store" className="flex items-center gap-2 cursor-pointer rounded-lg">
                           <Store className="w-4 h-4" />

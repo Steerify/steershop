@@ -32,17 +32,17 @@ export function RoleSelectionDialog({ open, onConfirm, isLoading }: RoleSelectio
 
         <div className="grid gap-4 py-4">
           <div
-            onClick={() => setSelectedRole(UserRole.ENTREPRENEUR)}
+            onClick={() => setSelectedRole('ENTREPRENEUR')}
             className={cn(
               "relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-muted/50",
-              selectedRole === UserRole.ENTREPRENEUR
+              selectedRole === 'ENTREPRENEUR'
                 ? "border-primary bg-primary/5 shadow-md"
                 : "border-muted hover:border-primary/50"
             )}
           >
             <div className={cn(
               "p-3 rounded-lg transition-colors",
-              selectedRole === UserRole.ENTREPRENEUR ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+              selectedRole === 'ENTREPRENEUR' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
             )}>
               <Store className="w-6 h-6" />
             </div>
@@ -52,7 +52,7 @@ export function RoleSelectionDialog({ open, onConfirm, isLoading }: RoleSelectio
                 Create and manage my own shop. Sell products and grow your business.
               </p>
             </div>
-            {selectedRole === UserRole.ENTREPRENEUR && (
+            {selectedRole === 'ENTREPRENEUR' && (
               <div className="absolute top-4 right-4 text-primary animate-in zoom-in spin-in-180">
                 <Check className="w-5 h-5" />
               </div>
@@ -60,17 +60,17 @@ export function RoleSelectionDialog({ open, onConfirm, isLoading }: RoleSelectio
           </div>
 
           <div
-            onClick={() => setSelectedRole(UserRole.CUSTOMER)}
+            onClick={() => setSelectedRole('CUSTOMER')}
             className={cn(
               "relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-muted/50",
-              selectedRole === UserRole.CUSTOMER
+              selectedRole === 'CUSTOMER'
                 ? "border-primary bg-primary/5 shadow-md"
                 : "border-muted hover:border-primary/50"
             )}
           >
             <div className={cn(
               "p-3 rounded-lg transition-colors",
-              selectedRole === UserRole.CUSTOMER ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+              selectedRole === 'CUSTOMER' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
             )}>
               <ShoppingBag className="w-6 h-6" />
             </div>
@@ -80,7 +80,7 @@ export function RoleSelectionDialog({ open, onConfirm, isLoading }: RoleSelectio
                 Browse and shop from a variety of unique stores.
               </p>
             </div>
-            {selectedRole === UserRole.CUSTOMER && (
+            {selectedRole === 'CUSTOMER' && (
               <div className="absolute top-4 right-4 text-primary animate-in zoom-in spin-in-180">
                 <Check className="w-5 h-5" />
               </div>

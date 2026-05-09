@@ -247,11 +247,11 @@ const Auth = () => {
 
   const getDashboardPath = (role: UserRole) => {
     switch (role) {
-      case UserRole.ADMIN:
+      case 'ADMIN':
         return "/admin";
-      case UserRole.ENTREPRENEUR:
+      case 'ENTREPRENEUR':
         return "/dashboard";
-      case UserRole.CUSTOMER:
+      case 'CUSTOMER':
         return "/customer_dashboard";
       default:
         return "/";
@@ -277,7 +277,7 @@ const Auth = () => {
         firstName: "", // Will be collected in onboarding
         lastName: "",
         phone: "",
-        role: data.role === "ENTREPRENEUR" ? UserRole.ENTREPRENEUR : UserRole.CUSTOMER,
+        role: data.role === "ENTREPRENEUR" ? 'ENTREPRENEUR' : 'CUSTOMER',
       };
 
       const result = await signUp(signUpData);

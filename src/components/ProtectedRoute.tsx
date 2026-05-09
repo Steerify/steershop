@@ -46,7 +46,7 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   // Entrepreneurs who haven't completed onboarding will be handled by a blocking modal in Dashboard
-  // if (userRole === UserRole.ENTREPRENEUR && user.onboardingCompleted === false && location.pathname !== '/onboarding') {
+  // if (userRole === 'ENTREPRENEUR' && user.onboardingCompleted === false && location.pathname !== '/onboarding') {
   //   return <Navigate to="/onboarding" replace />;
   // }
 
@@ -54,11 +54,11 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
   if (allowedRoles && allowedRoles.length > 0) {
     if (!allowedRoles.includes(userRole)) {
       switch (userRole) {
-        case UserRole.ADMIN:
+        case 'ADMIN':
           return <Navigate to="/admin" replace />;
-        case UserRole.ENTREPRENEUR:
+        case 'ENTREPRENEUR':
           return <Navigate to="/dashboard" replace />;
-        case UserRole.CUSTOMER:
+        case 'CUSTOMER':
           return <Navigate to="/customer_dashboard" replace />;
         default:
           return <Navigate to="/select-role" replace />;

@@ -207,213 +207,213 @@ const App = () => (
             <Route path="/insights/trusted-storefront-nigeria" element={<TrustedStorefrontNigeriaArticle />} />
             <Route path="/ambassador-program" element={<AmbassadorProgramPage />} />
             <Route path="/ambassador" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR, UserRole.CUSTOMER]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR', 'CUSTOMER']}>
                 <Ambassador />
               </ProtectedRoute>
             } />
             
             {/* Shop owner routes */}
             <Route path="/dashboard" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <Dashboard />
               </ProtectedRoute>
             } />
             <Route path="/my-store" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <MyStore />
               </ProtectedRoute>
             } />
             <Route path="/products" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <Products />
               </ProtectedRoute>
             } />
             <Route path="/orders" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <Orders />
               </ProtectedRoute>
             } />
             <Route path="/identity-verification" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <IdentityVerification />
               </ProtectedRoute>
             } />
             <Route path="/bookings" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <Bookings />
               </ProtectedRoute>
             } />
             <Route path="/settings" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR, UserRole.CUSTOMER]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR', 'CUSTOMER']}>
                 <Settings />
               </ProtectedRoute>
             } />
             <Route path="/subscription" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <Subscription />
               </ProtectedRoute>
             } />
             <Route path="/marketing" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <Marketing />
               </ProtectedRoute>
             } />
             <Route path="/marketing/editor/:id?" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <PosterEditor />
               </ProtectedRoute>
             } />
             <Route path="/marketing-services" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <MarketingServices />
               </ProtectedRoute>
             } />
             <Route path="/ads-assistant" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <AdsAssistant />
               </ProtectedRoute>
             } />
             <Route path="/google-business-profile" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <GoogleBusinessProfile />
               </ProtectedRoute>
             } />
             <Route path="/courses" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <EntrepreneurCourses />
               </ProtectedRoute>
             } />
             <Route path="/customers" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <Customers />
               </ProtectedRoute>
             } />
             <Route path="/vendor-invite" element={
-              <ProtectedRoute allowedRoles={[UserRole.ENTREPRENEUR]}>
+              <ProtectedRoute allowedRoles={['ENTREPRENEUR']}>
                 <VendorInvite />
               </ProtectedRoute>
             } />
             
             {/* Customer routes */}
             <Route path="/customer_dashboard" element={
-              <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
+              <ProtectedRoute allowedRoles={['CUSTOMER']}>
                 <CustomerDashboard />
               </ProtectedRoute>
             } />
             <Route path="/customer/orders" element={
-              <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
+              <ProtectedRoute allowedRoles={['CUSTOMER']}>
                 <CustomerOrders />
               </ProtectedRoute>
             } />
             <Route path="/customer/courses" element={
-              <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
+              <ProtectedRoute allowedRoles={['CUSTOMER']}>
                 <CustomerCourses />
               </ProtectedRoute>
             } />
             <Route path="/customer/rewards" element={
-              <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
+              <ProtectedRoute allowedRoles={['CUSTOMER']}>
                 <CustomerRewards />
               </ProtectedRoute>
             } />
             <Route path="/customer/wishlist" element={
-              <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
+              <ProtectedRoute allowedRoles={['CUSTOMER']}>
                 <CustomerWishlist />
               </ProtectedRoute>
             } />
             
             {/* Admin routes */}
             <Route path="/admin" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminDashboard />
               </ProtectedRoute>
             } />
             <Route path="/admin/shops" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminShops />
               </ProtectedRoute>
             } />
             <Route path="/admin/products" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminProducts />
               </ProtectedRoute>
             } />
             <Route path="/admin/orders" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminOrders />
               </ProtectedRoute>
             } />
             <Route path="/admin/users" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminUsers />
               </ProtectedRoute>
             } />
             <Route path="/admin/courses" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminCourses />
               </ProtectedRoute>
             } />
             <Route path="/admin/prizes" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminPrizes />
               </ProtectedRoute>
             } />
             <Route path="/admin/offers" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminOffers />
               </ProtectedRoute>
             } />
             <Route path="/admin/referrals" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminReferrals />
               </ProtectedRoute>
             } />
             <Route path="/admin/top-sellers" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminTopSeller />
               </ProtectedRoute>
             } />
             <Route path="/admin/featured-shops" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminFeaturedShops />
               </ProtectedRoute>
             } />
             <Route path="/admin/feedback" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminFeedback />
               </ProtectedRoute>
             } />
             <Route path="/admin/activity-logs" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminActivityLogs />
               </ProtectedRoute>
             } />
             <Route path="/admin/marketing" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminMarketingConsultations />
               </ProtectedRoute>
             } />
             <Route path="/admin/earnings" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminPlatformEarnings />
               </ProtectedRoute>
             } />
             <Route path="/admin/updates" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminPlatformUpdates />
               </ProtectedRoute>
             } />
             <Route path="/admin/ads" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminAds />
               </ProtectedRoute>
             } />
             <Route path="/admin/ux-audit" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminUXAudit />
               </ProtectedRoute>
             } />
             <Route path="/admin/feature-phases" element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminFeaturePhases />
               </ProtectedRoute>
             } />

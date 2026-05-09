@@ -32,7 +32,7 @@ const Settings = () => {
   const [subscription, setSubscription] = useState<ProfileSubscription | null>(null);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
-  const isEntrepreneur = user?.role === UserRole.ENTREPRENEUR;
+  const isEntrepreneur = user?.role === 'ENTREPRENEUR';
 
   useEffect(() => {
     if (!user || !isEntrepreneur) return;

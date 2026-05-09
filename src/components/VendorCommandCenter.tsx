@@ -18,7 +18,7 @@ export const VendorCommandCenter = () => {
   const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
-    if (!user || user.role !== UserRole.ENTREPRENEUR) {
+    if (!user || user.role !== 'ENTREPRENEUR') {
       setLoading(false);
       return;
     }
@@ -44,14 +44,14 @@ export const VendorCommandCenter = () => {
   }, [user]);
 
   if (loading) return null; // Don't show loading state to avoid jank on homepage
-  if (!user || user.role !== UserRole.ENTREPRENEUR) return null;
+  if (!user || user.role !== 'ENTREPRENEUR') return null;
 
   const isSetupComplete = !!shop?.is_active;
 
   // Render minimal dashboard stats if they are already set up
   if (isSetupComplete) {
     return (
-      <div className="bg-gradient-to-b from-indigo-950 to-background border-b border-white/5 pt-28 pb-8 px-4 relative z-20">
+      <div className="bg-gradient-to-b from-indigo-950 to-background border-b border-white/5 py-8 px-4 relative z-20 rounded-3xl mb-8">
         <div className="container mx-auto max-w-5xl">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
             <div className="flex items-center gap-4 text-white">
@@ -97,7 +97,7 @@ export const VendorCommandCenter = () => {
 
   // Render Onboarding Guide if they haven't set up
   return (
-    <div className="bg-gradient-to-b from-indigo-950 via-indigo-900 to-background border-b border-indigo-500/20 pt-24 pb-12 px-4 relative z-20">
+    <div className="bg-gradient-to-b from-indigo-950 via-indigo-900 to-background border-b border-indigo-500/20 py-8 px-4 relative z-20 rounded-3xl mb-8">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/20 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/3" />

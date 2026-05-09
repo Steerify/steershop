@@ -42,14 +42,14 @@ const normalizeEmail = (email: string | null | undefined): string => (email || '
 
 // Helper to map DB role to UserRole enum
 const mapDbRole = (dbRole: string | null | undefined): UserRole => {
-  if (!dbRole) return UserRole.CUSTOMER;
+  if (!dbRole) return 'CUSTOMER';
   switch (dbRole.toLowerCase()) {
-    case 'shop_owner': return UserRole.ENTREPRENEUR;
-    case 'admin': return UserRole.ADMIN;
-    case 'customer': return UserRole.CUSTOMER;
+    case 'shop_owner': return 'ENTREPRENEUR';
+    case 'admin': return 'ADMIN';
+    case 'customer': return 'CUSTOMER';
     default:
       console.warn('Unknown role in database, defaulting to CUSTOMER:', dbRole);
-      return UserRole.CUSTOMER;
+      return 'CUSTOMER';
   }
 };
 
@@ -79,11 +79,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const role = mapDbRole(profile.role);
       const normalizedEmail = normalizeEmail(profile.email || supabaseUser.email);
-      const resolvedRole = ADMIN_EMAILS.has(normalizedEmail) ? UserRole.ADMIN : role;
+      const resolvedRole = ADMIN_EMAILS.has(normalizedEmail) ? 'ADMIN' : role;
 
       // Check onboarding completion for entrepreneurs
       let onboardingCompleted = false;
-      if (resolvedRole === UserRole.ENTREPRENEUR) {
+      if (resolvedRole === 'ENTREPRENEUR') {
         const { data: onboardingData } = await supabase
           .from('onboarding_responses')
           .select('id')
@@ -163,7 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (data: SignUpData) => {
     try {
-      const dbRole = data.role === UserRole.ENTREPRENEUR ? 'shop_owner' : 'customer';
+      const dbRole = data.role === 'ENTREPRENEUR' ? 'shop_owner' : 'customer';
 
       const isEmail = data.identifier.includes('@');
       const credentials = isEmail ? { email: data.identifier, password: data.password } : { phone: data.identifier, password: data.password };

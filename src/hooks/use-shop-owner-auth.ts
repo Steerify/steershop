@@ -27,7 +27,7 @@ export const useShopOwnerAuth = () => {
     }
 
     // Check role
-    if (user.role !== UserRole.ENTREPRENEUR) {
+    if (user.role !== 'ENTREPRENEUR') {
       navigate("/customer_dashboard");
       return;
     }
