@@ -602,6 +602,18 @@ const Dashboard = () => {
   const firstName = (profile?.full_name && profile.full_name.trim()) ? profile.full_name.trim().split(' ')[0] : (user?.email?.split('@')[0] || 'there');
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const isWizardOpen = !isLoading && !shopData && user?.role === 'ENTREPRENEUR';
+
+  if (isWizardOpen) {
+    return (
+      <div className="min-h-screen bg-background">
+        <VendorSetupWizard 
+          open={true} 
+          onComplete={() => loadData()} 
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/3">
@@ -1018,7 +1030,7 @@ const Dashboard = () => {
       </Sheet>
 
       <VendorSetupWizard 
-        open={!isLoading && !shopData && user?.role === 'ENTREPRENEUR'} 
+        open={false} 
         onComplete={() => loadData()} 
       />
     </div>

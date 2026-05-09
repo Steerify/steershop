@@ -58,6 +58,14 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   const [whatsappNumber, setWhatsappNumber] = useState("");
 
   const [createdShopId, setCreatedShopId] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => setIsReady(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner') => {
     const file = e.target.files?.[0];
@@ -190,8 +198,8 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[40] bg-background flex flex-col min-h-screen overflow-y-auto overflow-x-hidden animate-in fade-in duration-300">
-      <AdirePattern variant="dots" className="absolute inset-0 opacity-5 pointer-events-none" />
+    <div className="fixed inset-0 z-[40] bg-background overflow-y-auto overflow-x-hidden animate-in fade-in duration-300">
+      <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
       
       {/* Top Progress Bar */}
       <div className="w-full h-2 bg-muted sticky top-0 z-20">
@@ -201,7 +209,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         />
       </div>
 
-      <div className="flex-1 flex flex-col lg:flex-row items-stretch max-w-6xl w-full mx-auto p-4 sm:p-8 lg:p-12 pb-24 relative z-10 gap-8 lg:gap-16">
+      <div className="flex flex-col lg:flex-row items-center lg:items-stretch justify-center min-h-[calc(100vh-8px)] max-w-6xl w-full mx-auto p-4 sm:p-8 lg:p-12 pb-24 relative z-10 gap-8 lg:gap-16">
         
         {/* Left Side: Context & Visuals */}
         <div className="lg:w-1/2 flex flex-col justify-center animate-in slide-in-from-left-8 duration-500">
@@ -255,7 +263,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                       value={shopName} 
                       onChange={e => setShopName(e.target.value)}
                       className="h-11 bg-background/50 border-primary/20 focus:border-primary/50 transition-colors"
-                      autoFocus
+                      disabled={!isReady}
                     />
                   </div>
                   <div className="space-y-2">
