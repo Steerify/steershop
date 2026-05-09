@@ -76,6 +76,7 @@ export interface Shop {
   paystack_public_key?: string;
   logo_url?: string;
   banner_url?: string;
+  category?: string;
   is_active?: boolean;
   average_rating?: number;
   total_reviews?: number;

@@ -11,6 +11,9 @@ export interface CreateShopRequest {
   address?: string;
   city?: string;
   state?: string;
+  category?: string;
+  logo_url?: string;
+  banner_url?: string;
 }
 
 const shopService = {
@@ -29,7 +32,12 @@ const shopService = {
         shop_slug: data.slug,
         description: data.description,
         whatsapp_number: data.whatsapp,
+        city: data.city || null,
         state: data.state || null,
+        address: data.address || null,
+        category: data.category || null,
+        logo_url: data.logo_url || null,
+        banner_url: data.banner_url || null,
         country: "Nigeria",
         is_active: false,
       })

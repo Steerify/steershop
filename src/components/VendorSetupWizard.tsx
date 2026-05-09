@@ -18,7 +18,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 
 const NIGERIAN_STATES = [
-  "Lagos", "Abuja (FCT)", "Rivers", "Oyo", "Anambra", "Kano", "Kaduna", "Edo", "Delta", "Ogun"
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River", 
+  "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", 
+  "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", 
+  "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara", "FCT Abuja"
+];
+
+const SHOP_CATEGORIES = [
+  "Fashion & Apparel", "Beauty & Personal Care", "Electronics", "Home & Kitchen", "Food & Groceries", 
+  "Services & Consultation", "Health & Wellness", "Arts & Crafts", "Automotive", "Other"
 ];
 
 interface VendorSetupWizardProps {
@@ -35,6 +43,8 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   const [shopDescription, setShopDescription] = useState("");
   const [shopState, setShopState] = useState("");
   const [shopCity, setShopCity] = useState("");
+  const [shopCategory, setShopCategory] = useState("");
+  const [shopAddress, setShopAddress] = useState("");
   
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -95,6 +105,8 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         whatsapp: "", // Will be updated in Step 3
         state: shopState,
         city: shopCity,
+        address: shopAddress,
+        category: shopCategory,
         logo_url: logoUrl,
         banner_url: bannerUrl,
       });
@@ -234,92 +246,72 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
             
             {step === 1 && (
-              <div className="space-y-6 relative z-10">
-                <div className="space-y-3">
-                  <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Store Name</Label>
-                  <Input 
-                    placeholder="e.g. Sarah's Bakery" 
-                    value={shopName} 
-                    onChange={e => setShopName(e.target.value)}
-                    className="h-12 bg-background/50 border-primary/20"
-                    autoFocus
-                  />
+              <div className="space-y-5 relative z-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Store Name</Label>
+                    <Input 
+                      placeholder="e.g. Sarah's Bakery" 
+                      value={shopName} 
+                      onChange={e => setShopName(e.target.value)}
+                      className="h-11 bg-background/50 border-primary/20 focus:border-primary/50 transition-colors"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Store Category</Label>
+                    <Select value={shopCategory} onValueChange={setShopCategory}>
+                      <SelectTrigger className="h-11 bg-background/50 border-primary/20">
+                        <SelectValue placeholder="Select Category" />
+                      </SelectTrigger>
+                      <SelectContent className="z-[1001]">
+                        {SHOP_CATEGORIES.map(cat => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <div className="space-y-3">
-                  <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Short Description</Label>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Short Description</Label>
                   <Textarea 
-                    placeholder="e.g. We sell the best cakes in Lagos..." 
+                    placeholder="Tell customers what you sell in one sentence..." 
                     value={shopDescription} 
                     onChange={e => setShopDescription(e.target.value)}
-                    className="bg-background/50 border-primary/20 min-h-[80px]"
+                    className="bg-background/50 border-primary/20 min-h-[60px] resize-none"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Store Logo</Label>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Store Logo</Label>
                     <div className="relative group">
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={(e) => handleFileChange(e, 'logo')} 
-                        className="hidden" 
-                        id="logo-upload"
-                      />
-                      <label 
-                        htmlFor="logo-upload" 
-                        className={`flex flex-col items-center justify-center w-full aspect-square rounded-xl border-2 border-dashed transition-all cursor-pointer ${logoPreview ? 'border-primary' : 'border-primary/20 hover:border-primary/40'}`}
-                      >
+                      <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'logo')} className="hidden" id="logo-upload" />
+                      <label htmlFor="logo-upload" className={`flex flex-col items-center justify-center w-full aspect-video rounded-xl border-2 border-dashed transition-all cursor-pointer ${logoPreview ? 'border-primary bg-primary/5' : 'border-primary/20 hover:border-primary/40'}`}>
                         {logoPreview ? (
-                          <div className="relative w-full h-full p-2">
-                            <img src={logoPreview} alt="Logo" className="w-full h-full object-cover rounded-lg" />
-                            <button 
-                              onClick={(e) => { e.preventDefault(); setLogoFile(null); setLogoPreview(null); }}
-                              className="absolute -top-1 -right-1 bg-destructive text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
+                          <img src={logoPreview} alt="Logo" className="w-full h-full object-contain p-1" />
                         ) : (
-                          <>
-                            <ImagePlus className="w-6 h-6 text-primary/40 mb-1" />
-                            <span className="text-[10px] font-bold text-primary/60">Upload</span>
-                          </>
+                          <div className="text-center">
+                            <Upload className="w-5 h-5 text-primary/40 mx-auto mb-1" />
+                            <span className="text-[10px] font-bold text-primary/60">Logo</span>
+                          </div>
                         )}
                       </label>
                     </div>
                   </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Store Banner</Label>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Store Banner</Label>
                     <div className="relative group">
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={(e) => handleFileChange(e, 'banner')} 
-                        className="hidden" 
-                        id="banner-upload"
-                      />
-                      <label 
-                        htmlFor="banner-upload" 
-                        className={`flex flex-col items-center justify-center w-full aspect-square rounded-xl border-2 border-dashed transition-all cursor-pointer ${bannerPreview ? 'border-primary' : 'border-primary/20 hover:border-primary/40'}`}
-                      >
+                      <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'banner')} className="hidden" id="banner-upload" />
+                      <label htmlFor="banner-upload" className={`flex flex-col items-center justify-center w-full aspect-video rounded-xl border-2 border-dashed transition-all cursor-pointer ${bannerPreview ? 'border-primary bg-primary/5' : 'border-primary/20 hover:border-primary/40'}`}>
                         {bannerPreview ? (
-                          <div className="relative w-full h-full p-2">
-                            <img src={bannerPreview} alt="Banner" className="w-full h-full object-cover rounded-lg" />
-                            <button 
-                              onClick={(e) => { e.preventDefault(); setBannerFile(null); setBannerPreview(null); }}
-                              className="absolute -top-1 -right-1 bg-destructive text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
+                          <img src={bannerPreview} alt="Banner" className="w-full h-full object-cover rounded-lg" />
                         ) : (
-                          <>
-                            <ImagePlus className="w-6 h-6 text-primary/40 mb-1" />
-                            <span className="text-[10px] font-bold text-primary/60">Upload</span>
-                          </>
+                          <div className="text-center">
+                            <Upload className="w-5 h-5 text-primary/40 mx-auto mb-1" />
+                            <span className="text-[10px] font-bold text-primary/60">Banner</span>
+                          </div>
                         )}
                       </label>
                     </div>
@@ -327,44 +319,54 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">State</Label>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">State</Label>
                     <Select value={shopState} onValueChange={setShopState}>
-                      <SelectTrigger className="bg-background/50 border-primary/20">
-                        <SelectValue placeholder="Select State" />
+                      <SelectTrigger className="h-11 bg-background/50 border-primary/20">
+                        <SelectValue placeholder="State" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-[1001] max-h-[300px]">
                         {NIGERIAN_STATES.map(state => (
                           <SelectItem key={state} value={state}>{state}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-3">
-                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">City</Label>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">City</Label>
                     <Input 
                       placeholder="e.g. Ikeja" 
                       value={shopCity} 
                       onChange={e => setShopCity(e.target.value)}
-                      className="bg-background/50 border-primary/20"
+                      className="h-11 bg-background/50 border-primary/20"
                     />
                   </div>
                 </div>
 
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Street Address (Optional)</Label>
+                  <Input 
+                    placeholder="e.g. 123 Herbert Macaulay Way" 
+                    value={shopAddress} 
+                    onChange={e => setShopAddress(e.target.value)}
+                    className="h-11 bg-background/50 border-primary/20"
+                  />
+                </div>
+
                 {/* Dynamic URL Preview */}
-                <div className="p-4 rounded-xl bg-muted/50 border border-muted flex items-center gap-3">
-                  <Sparkles className="w-5 h-5 text-primary shrink-0" />
+                <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 flex items-center gap-3">
+                  <Sparkles className="w-4 h-4 text-primary shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-xs text-muted-foreground mb-0.5">Your store link will be:</p>
-                    <p className="font-mono text-sm text-foreground truncate">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Your store link:</p>
+                    <p className="font-mono text-xs text-foreground truncate">
                       steersolo.com/shop/<span className="font-bold text-primary">{shopSlug || "your-shop"}</span>
                     </p>
                   </div>
                 </div>
 
-                <Button className="w-full h-14 text-lg font-bold shadow-lg bg-gradient-to-r from-primary to-accent" onClick={handleCreateShop} disabled={isLoading || !shopName.trim() || !shopState || !shopCity}>
+                <Button className="w-full h-12 text-base font-bold shadow-lg bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" onClick={handleCreateShop} disabled={isLoading || !shopName.trim() || !shopState || !shopCity || !shopCategory}>
                   {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (
-                    <>Create Store <ArrowRight className="ml-2 w-5 h-5" /></>
+                    <>Create Store <ArrowRight className="ml-2 w-4 h-4" /></>
                   )}
                 </Button>
               </div>
