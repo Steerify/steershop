@@ -691,52 +691,61 @@ const Auth = () => {
                     />
                     
                     {/* Role Selection - Visual Cards */}
-                    <FormField
-                      control={signupForm.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>I want to:</FormLabel>
-                            <FormControl>
-                              <RadioGroup
-                                onValueChange={field.onChange}
-                                value={field.value}
-                                className="grid grid-cols-2 gap-3"
-                              >
-                                <Label 
-                                  htmlFor="entrepreneur" 
-                                  className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === 'ENTREPRENEUR' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-muted hover:border-primary/50 bg-card'}`}
+                    {persona === "default" && (
+                      <FormField
+                        control={signupForm.control}
+                        name="role"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>I want to:</FormLabel>
+                              <FormControl>
+                                <RadioGroup
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                  className="grid grid-cols-2 gap-3"
                                 >
-                                  <RadioGroupItem value="ENTREPRENEUR" id="entrepreneur" className="sr-only" />
-                                  <Store className={`w-8 h-8 mx-auto mb-2 transition-colors ${field.value === 'ENTREPRENEUR' ? 'text-primary' : 'text-muted-foreground'}`} />
-                                  <span className="font-semibold block text-center">Sell</span>
-                                  <span className="text-xs text-muted-foreground text-center">Create my shop</span>
-                                </Label>
+                                  <Label 
+                                    htmlFor="entrepreneur" 
+                                    className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === 'ENTREPRENEUR' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-muted hover:border-primary/50 bg-card'}`}
+                                  >
+                                    <RadioGroupItem value="ENTREPRENEUR" id="entrepreneur" className="sr-only" />
+                                    <Store className={`w-8 h-8 mx-auto mb-2 transition-colors ${field.value === 'ENTREPRENEUR' ? 'text-primary' : 'text-muted-foreground'}`} />
+                                    <span className="font-semibold block text-center">Sell</span>
+                                    <span className="text-xs text-muted-foreground text-center">Create my shop</span>
+                                  </Label>
 
-                                <Label 
-                                  htmlFor="customer" 
-                                  className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === 'CUSTOMER' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-muted hover:border-primary/50 bg-card'}`}
-                                >
-                                  <RadioGroupItem value="CUSTOMER" id="customer" className="sr-only" />
-                                  <ShoppingBag className={`w-8 h-8 mx-auto mb-2 transition-colors ${field.value === 'CUSTOMER' ? 'text-primary' : 'text-muted-foreground'}`} />
-                                  <span className="font-semibold block text-center">Shop</span>
-                                  <span className="text-xs text-muted-foreground text-center">Browse stores</span>
-                                </Label>
-                              </RadioGroup>
-                            </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                                  <Label 
+                                    htmlFor="customer" 
+                                    className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === 'CUSTOMER' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-muted hover:border-primary/50 bg-card'}`}
+                                  >
+                                    <RadioGroupItem value="CUSTOMER" id="customer" className="sr-only" />
+                                    <ShoppingBag className={`w-8 h-8 mx-auto mb-2 transition-colors ${field.value === 'CUSTOMER' ? 'text-primary' : 'text-muted-foreground'}`} />
+                                    <span className="font-semibold block text-center">Shop</span>
+                                    <span className="text-xs text-muted-foreground text-center">Browse stores</span>
+                                  </Label>
+                                </RadioGroup>
+                              </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                     
                     <Button type="submit" className="w-full min-h-11 bg-gradient-to-r from-primary to-accent" disabled={isLoading}>
                       {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Create Account
+                      {persona === "vendor" ? "Start Selling for Free" : "Create Account"}
                     </Button>
                     
-                    <p className="text-xs text-center text-muted-foreground">
-                      By signing up, you agree to our Terms of Service
-                    </p>
+                    <div className="flex flex-col items-center gap-2">
+                      <p className="text-xs text-center text-muted-foreground">
+                        By signing up, you agree to our Terms of Service
+                      </p>
+                      {persona === "vendor" && (
+                        <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full">
+                          No credit card required
+                        </p>
+                      )}
+                    </div>
                     </form>
                 </Form>
               </TabsContent>

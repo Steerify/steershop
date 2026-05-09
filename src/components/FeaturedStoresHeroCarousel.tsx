@@ -378,8 +378,28 @@ export const FeaturedStoresHeroCarousel = () => {
                       e.currentTarget.style.boxShadow = "0 24px 48px rgba(0,0,0,0.35)";
                     }}
                   >
+                    {/* Badge moved to top */}
+                    <div style={{ padding: isMobile ? "12px 14px 0" : "16px 18px 0", display: "flex", justifyContent: "flex-end" }}>
+                      <div style={{ flexShrink: 0 }}>
+                        <SafeBeautyBadge tier={shop.products.length === 1 ? 'listed' : shop.tier} showTooltip={false} />
+                        {shop.products.length === 1 && (
+                          <div style={{ 
+                            marginTop: 4, 
+                            fontSize: '0.55rem', 
+                            fontWeight: 800, 
+                            color: '#a855f7', 
+                            textAlign: 'right',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em'
+                          }}>
+                            Single Product
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                     {/* Store header */}
-                    <div style={{ padding: isMobile ? "12px 14px 10px" : "16px 18px 12px", display: "flex", alignItems: "center", gap: isMobile ? 10 : 12 }}>
+                    <div style={{ padding: isMobile ? "8px 14px 10px" : "10px 18px 12px", display: "flex", alignItems: "flex-start", gap: isMobile ? 10 : 12 }}>
                       {/* Logo */}
                       <div
                         style={{
@@ -416,24 +436,6 @@ export const FeaturedStoresHeroCarousel = () => {
                         <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.4 }}>
                           {shop.tagline || shop.description?.slice(0, 60) || "Verified SteerSolo store"}
                         </p>
-                      </div>
-
-                      {/* Badge */}
-                      <div style={{ flexShrink: 0 }}>
-                        <SafeBeautyBadge tier={shop.products.length === 1 ? 'listed' : shop.tier} showTooltip={false} />
-                        {shop.products.length === 1 && (
-                          <div style={{ 
-                            marginTop: 4, 
-                            fontSize: '0.55rem', 
-                            fontWeight: 800, 
-                            color: '#a855f7', 
-                            textAlign: 'right',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em'
-                          }}>
-                            Single Product
-                          </div>
-                        )}
                       </div>
                     </div>
 

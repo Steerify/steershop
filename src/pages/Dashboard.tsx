@@ -1310,7 +1310,7 @@ const Dashboard = () => {
       </Sheet>
 
       <VendorSetupWizard 
-        open={!isLoading && !shopData && user?.role === 'shop_owner'} 
+        open={!isLoading && !shopData && user?.role === UserRole.ENTREPRENEUR} 
         onComplete={() => loadData()} 
       />
     </div>

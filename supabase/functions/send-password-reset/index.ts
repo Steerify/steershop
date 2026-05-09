@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import nodemailer from "npm:nodemailer";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -136,8 +134,27 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log(`Sending password reset email to: ${email}`);
 
-    const emailResponse = await resend.emails.send({
-      from: "SteerSolo <noreply@steersolo.com>",
+    const smtpHost = Deno.env.get('SMTP_HOST')
+    const smtpPort = Deno.env.get('SMTP_PORT') || '465'
+    const smtpUser = Deno.env.get('SMTP_USER')
+    const smtpPass = Deno.env.get('SMTP_PASS')
+
+    if (!smtpHost || !smtpUser || !smtpPass) {
+      throw new Error('Missing SMTP environment variables (SMTP_HOST, SMTP_USER, SMTP_PASS)');
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: parseInt(smtpPort),
+      secure: parseInt(smtpPort) === 465,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    });
+
+    const emailResponse = await transporter.sendMail({
+      from: "SteerSolo <mail@steersolo.com>",
       to: [email],
       subject: "Reset Your Password - SteerSolo",
       html: generateEmailHtml(name || "", resetLink),

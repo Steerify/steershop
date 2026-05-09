@@ -9,6 +9,7 @@ import { MagicLinkEmail } from '../_shared/email-templates/magic-link.tsx'
 import { RecoveryEmail } from '../_shared/email-templates/recovery.tsx'
 import { EmailChangeEmail } from '../_shared/email-templates/email-change.tsx'
 import { ReauthenticationEmail } from '../_shared/email-templates/reauthentication.tsx'
+import nodemailer from 'npm:nodemailer'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -235,55 +236,46 @@ async function handleWebhook(req: Request): Promise<Response> {
     plainText: true,
   })
 
-  // Enqueue email for async processing by the dispatcher (process-email-queue).
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  )
+  // Send email IMMEDIATELY via Spacemail SMTP
+  const smtpHost = Deno.env.get('SMTP_HOST')
+  const smtpPort = Deno.env.get('SMTP_PORT') || '465'
+  const smtpUser = Deno.env.get('SMTP_USER')
+  const smtpPass = Deno.env.get('SMTP_PASS')
 
-  const messageId = crypto.randomUUID()
-
-  // Log pending BEFORE enqueue so we have a record even if enqueue crashes
-  await supabase.from('email_send_log').insert({
-    message_id: messageId,
-    template_name: emailType,
-    recipient_email: payload.data.email,
-    status: 'pending',
-  })
-
-  const { error: enqueueError } = await supabase.rpc('enqueue_email', {
-    queue_name: 'auth_emails',
-    payload: {
-      run_id,
-      message_id: messageId,
-      to: payload.data.email,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
-      subject: EMAIL_SUBJECTS[emailType] || 'Notification',
-      html,
-      text,
-      purpose: 'transactional',
-      label: emailType,
-      queued_at: new Date().toISOString(),
-    },
-  })
-
-  if (enqueueError) {
-    console.error('Failed to enqueue auth email', { error: enqueueError, run_id, emailType })
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: emailType,
-      recipient_email: payload.data.email,
-      status: 'failed',
-      error_message: 'Failed to enqueue email',
-    })
-    return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
+  if (!smtpHost || !smtpUser || !smtpPass) {
+    console.error('Missing SMTP credentials for immediate sending', { run_id })
+    return new Response(JSON.stringify({ error: 'Missing SMTP credentials' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
-  console.log('Auth email enqueued', { emailType, email: payload.data.email, run_id })
+  try {
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: parseInt(smtpPort),
+      secure: parseInt(smtpPort) === 465,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    })
+
+    const info = await transporter.sendMail({
+      from: `${SITE_NAME} <${SENDER_EMAIL}>`,
+      to: payload.data.email,
+      subject: EMAIL_SUBJECTS[emailType] || 'Notification',
+      html,
+      text,
+    })
+    console.log('Auth email sent IMMEDIATELY', { emailType, email: payload.data.email, messageId: info.messageId, run_id })
+  } catch (sendError) {
+    console.error('Failed to send auth email immediately', { error: sendError, run_id, emailType })
+    return new Response(JSON.stringify({ error: 'Failed to send email' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
 
   // Also notify SteerSolo admin inbox on successful signup (best-effort, non-blocking).
   if (emailType === 'signup') {
@@ -297,6 +289,11 @@ async function handleWebhook(req: Request): Promise<Response> {
       let profileName = ''
       let profileRole = ''
       let onboardingCompleted = false
+
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      )
 
       if (userId) {
         const { data: profile } = await supabase
@@ -355,52 +352,31 @@ async function handleWebhook(req: Request): Promise<Response> {
         `Registered At (UTC): ${signedUpAt}`,
       ].join('\n')
 
-      const adminMessageId = crypto.randomUUID()
-
-      await supabase.from('email_send_log').insert({
-        message_id: adminMessageId,
-        template_name: 'admin_signup_alert',
-        recipient_email: ADMIN_SIGNUP_EMAIL,
-        status: 'pending',
-      })
-
-      const { error: adminEnqueueError } = await supabase.rpc('enqueue_email', {
-        queue_name: 'transactional_emails',
-        payload: {
-          run_id,
-          message_id: adminMessageId,
+      // Send Admin Alert immediately
+      try {
+        const transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: parseInt(smtpPort),
+          secure: parseInt(smtpPort) === 465,
+          auth: { user: smtpUser, pass: smtpPass },
+        })
+        await transporter.sendMail({
+          from: `${SITE_NAME} <${SENDER_EMAIL}>`,
           to: ADMIN_SIGNUP_EMAIL,
-          from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-          sender_domain: SENDER_DOMAIN,
           subject: adminSubject,
           html: adminHtml,
           text: adminText,
-          purpose: 'transactional',
-          label: 'admin_signup_alert',
-          queued_at: new Date().toISOString(),
-        },
-      })
-
-      if (adminEnqueueError) {
-        console.error('Failed to enqueue admin signup alert', { error: adminEnqueueError, run_id })
-        await supabase.from('email_send_log').insert({
-          message_id: adminMessageId,
-          template_name: 'admin_signup_alert',
-          recipient_email: ADMIN_SIGNUP_EMAIL,
-          status: 'failed',
-          error_message: 'Failed to enqueue admin signup alert',
         })
-      } else {
-        console.log('Admin signup alert queued', { run_id, adminEmail: ADMIN_SIGNUP_EMAIL })
+        console.log('Admin signup alert sent immediately', { run_id, adminEmail: ADMIN_SIGNUP_EMAIL })
+      } catch (adminEnqueueError) {
+        console.error('Failed to send admin signup alert', { error: adminEnqueueError, run_id })
       }
 
       // Onboarding / welcome email check:
-      // Explicitly queue a simple onboarding email after signup so users receive next-step guidance.
       const onboardingSubject =
         resolvedRole === 'shop_owner'
           ? 'Welcome to SteerSolo — Complete your onboarding'
           : 'Welcome to SteerSolo — Start exploring stores'
-      const onboardingMessageId = crypto.randomUUID()
       const onboardingCtaUrl =
         resolvedRole === 'shop_owner'
           ? `https://${ROOT_DOMAIN}/onboarding`
@@ -428,41 +404,24 @@ async function handleWebhook(req: Request): Promise<Response> {
         `Next step: ${onboardingCtaUrl}`,
       ].join('\n')
 
-      await supabase.from('email_send_log').insert({
-        message_id: onboardingMessageId,
-        template_name: 'onboarding_welcome',
-        recipient_email: payload.data.email,
-        status: 'pending',
-      })
-
-      const { error: onboardingEnqueueError } = await supabase.rpc('enqueue_email', {
-        queue_name: 'transactional_emails',
-        payload: {
-          run_id,
-          message_id: onboardingMessageId,
+      // Send Onboarding Welcome immediately
+      try {
+        const transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: parseInt(smtpPort),
+          secure: parseInt(smtpPort) === 465,
+          auth: { user: smtpUser, pass: smtpPass },
+        })
+        await transporter.sendMail({
+          from: `${SITE_NAME} <${SENDER_EMAIL}>`,
           to: payload.data.email,
-          from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-          sender_domain: SENDER_DOMAIN,
           subject: onboardingSubject,
           html: onboardingHtml,
           text: onboardingText,
-          purpose: 'transactional',
-          label: 'onboarding_welcome',
-          queued_at: new Date().toISOString(),
-        },
-      })
-
-      if (onboardingEnqueueError) {
-        console.error('Failed to enqueue onboarding welcome email', { error: onboardingEnqueueError, run_id })
-        await supabase.from('email_send_log').insert({
-          message_id: onboardingMessageId,
-          template_name: 'onboarding_welcome',
-          recipient_email: payload.data.email,
-          status: 'failed',
-          error_message: 'Failed to enqueue onboarding welcome email',
         })
-      } else {
-        console.log('Onboarding welcome email queued', { run_id, email: payload.data.email })
+        console.log('Onboarding welcome email sent immediately', { run_id, email: payload.data.email })
+      } catch (onboardingEnqueueError) {
+        console.error('Failed to send onboarding welcome email', { error: onboardingEnqueueError, run_id })
       }
     } catch (adminError) {
       console.error('Admin signup alert error (ignored)', { adminError, run_id })
