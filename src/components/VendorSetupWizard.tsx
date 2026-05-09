@@ -2,11 +2,23 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Store, Package, MessageCircle, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import { Loader2, Store, Package, MessageCircle, ArrowRight, Sparkles, CheckCircle2, MapPin } from "lucide-react";
 import shopService from "@/services/shop.service";
 import { supabase } from "@/integrations/supabase/client";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
+
+const NIGERIAN_STATES = [
+  "Lagos", "Abuja (FCT)", "Rivers", "Oyo", "Anambra", "Kano", "Kaduna", "Edo", "Delta", "Ogun"
+];
 
 interface VendorSetupWizardProps {
   open: boolean;
@@ -19,6 +31,10 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   const { toast } = useToast();
 
   const [shopName, setShopName] = useState("");
+  const [shopDescription, setShopDescription] = useState("");
+  const [shopState, setShopState] = useState("");
+  const [shopCity, setShopCity] = useState("");
+  
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
@@ -38,8 +54,10 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       const res = await shopService.createShop({
         name: shopName,
         slug: shopSlug,
-        description: "My new SteerShop store",
-        whatsapp: "",
+        description: shopDescription || `Welcome to ${shopName}`,
+        whatsapp: "", // Will be updated in Step 3
+        state: shopState,
+        city: shopCity,
       });
       setCreatedShopId(res.data.id);
       setStep(2);
@@ -86,7 +104,10 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
 
     setIsLoading(true);
     try {
-      await shopService.updateShop(createdShopId, { whatsapp_number: whatsappNumber });
+      await shopService.updateShop(createdShopId, { 
+        whatsapp_number: whatsappNumber,
+        is_active: true 
+      });
       
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -98,6 +119,8 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       setTimeout(() => {
         onComplete();
       }, 2000);
+
+
     } catch (error: any) {
       toast({ title: "Error saving WhatsApp", description: error.message, variant: "destructive" });
     } finally {
@@ -171,9 +194,44 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                     placeholder="e.g. Sarah's Bakery" 
                     value={shopName} 
                     onChange={e => setShopName(e.target.value)}
-                    className="h-14 text-lg bg-background/50 border-primary/20 focus-visible:ring-primary/30"
+                    className="h-12 bg-background/50 border-primary/20"
                     autoFocus
                   />
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Short Description</Label>
+                  <Textarea 
+                    placeholder="e.g. We sell the best cakes in Lagos..." 
+                    value={shopDescription} 
+                    onChange={e => setShopDescription(e.target.value)}
+                    className="bg-background/50 border-primary/20 min-h-[80px]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">State</Label>
+                    <Select value={shopState} onValueChange={setShopState}>
+                      <SelectTrigger className="bg-background/50 border-primary/20">
+                        <SelectValue placeholder="Select State" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {NIGERIAN_STATES.map(state => (
+                          <SelectItem key={state} value={state}>{state}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">City</Label>
+                    <Input 
+                      placeholder="e.g. Ikeja" 
+                      value={shopCity} 
+                      onChange={e => setShopCity(e.target.value)}
+                      className="bg-background/50 border-primary/20"
+                    />
+                  </div>
                 </div>
 
                 {/* Dynamic URL Preview */}
@@ -187,7 +245,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                   </div>
                 </div>
 
-                <Button className="w-full h-14 text-lg font-bold shadow-lg bg-gradient-to-r from-primary to-accent" onClick={handleCreateShop} disabled={isLoading || !shopName.trim()}>
+                <Button className="w-full h-14 text-lg font-bold shadow-lg bg-gradient-to-r from-primary to-accent" onClick={handleCreateShop} disabled={isLoading || !shopName.trim() || !shopState || !shopCity}>
                   {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (
                     <>Create Store <ArrowRight className="ml-2 w-5 h-5" /></>
                   )}
@@ -252,6 +310,9 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                   <Button variant="ghost" className="w-full h-12 text-muted-foreground hover:text-foreground" onClick={async () => {
                     setIsLoading(true);
                     try {
+                      if (createdShopId) {
+                        await shopService.updateShop(createdShopId, { is_active: true });
+                      }
                       const { data: { user } } = await supabase.auth.getUser();
                       if (user) {
                         await supabase.from('profiles').update({ needs_role_selection: false }).eq('id', user.id);
