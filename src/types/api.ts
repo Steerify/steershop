@@ -27,11 +27,13 @@ export interface PaginatedResponse<T> {
   };
 }
 
-export enum UserRole {
-  CUSTOMER = "CUSTOMER",
-  ENTREPRENEUR = "ENTREPRENEUR",
-  ADMIN = "ADMIN",
-}
+export const UserRole = {
+  CUSTOMER: "CUSTOMER",
+  ENTREPRENEUR: "ENTREPRENEUR",
+  ADMIN: "ADMIN",
+} as const;
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export interface User {
   id: string;
