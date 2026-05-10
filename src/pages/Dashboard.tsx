@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { rbac } from "@/utils/rbac";
 import shopService from "@/services/shop.service";
 import orderService from "@/services/order.service";
 import offerService from "@/services/offer.service";
@@ -602,7 +603,7 @@ const Dashboard = () => {
   const firstName = (profile?.full_name && profile.full_name.trim()) ? profile.full_name.trim().split(' ')[0] : (user?.email?.split('@')[0] || 'there');
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-  const isWizardOpen = !isLoading && !shopData && user?.role === 'ENTREPRENEUR';
+  const isWizardOpen = !isLoading && !shopData && rbac.isEntrepreneur(user);
 
   if (isWizardOpen) {
     return (

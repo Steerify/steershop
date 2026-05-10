@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/types/api";
+import { rbac } from "@/utils/rbac";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Store, PackagePlus, Share2, ArrowRight, CheckCircle2, ChevronRight, Copy, ExternalLink, Activity, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,7 @@ export const VendorCommandCenter = () => {
   };
 
   useEffect(() => {
-    if (!user || user.role !== 'ENTREPRENEUR') {
+    if (!user || !rbac.isEntrepreneur(user)) {
       setLoading(false);
       return;
     }
@@ -56,7 +57,7 @@ export const VendorCommandCenter = () => {
   }, [user]);
 
   if (loading) return null;
-  if (!user || user.role !== 'ENTREPRENEUR') return null;
+  if (!user || !rbac.isEntrepreneur(user)) return null;
 
   const steps = [
     { id: 1, title: "Create Store", completed: !!shop },
