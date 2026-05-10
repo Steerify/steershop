@@ -34,6 +34,7 @@ describe("shopService Logic", () => {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
+            ilike: vi.fn().mockReturnThis(),
             order: vi.fn().mockReturnThis(),
             range: vi.fn().mockResolvedValue({ data: mockShops, error: null, count: 3 }),
           };

@@ -104,7 +104,7 @@ const shopService = {
     };
   },
 
-  getShops: async (page = 1, limit = 10, filters?: { verified?: boolean; includeAll?: boolean; activeOnly?: boolean; searchTerm?: string }) => {
+  getShops: async (page = 1, limit = 10, filters?: { verified?: boolean; includeAll?: boolean; activeOnly?: boolean; searchTerm?: string; category?: string; city?: string; state?: string }) => {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
@@ -189,6 +189,9 @@ const shopService = {
       category: s.category,
       state: s.state,
       city: s.city,
+      address: s.address,
+      category: s.category,
+      show_public_address: s.show_public_address,
       country: s.country,
       seo_keywords: s.seo_keywords,
       seo_description: s.seo_description,
@@ -245,6 +248,9 @@ const shopService = {
       category: s.category,
       state: s.state,
       city: s.city,
+      address: s.address,
+      category: s.category,
+      show_public_address: s.show_public_address,
       country: s.country,
       seo_keywords: s.seo_keywords,
       seo_description: s.seo_description,
@@ -293,6 +299,9 @@ const shopService = {
       category: shop.category,
       state: shop.state,
       city: shop.city,
+      address: shop.address,
+      category: shop.category,
+      show_public_address: shop.show_public_address,
       country: shop.country,
       seo_keywords: shop.seo_keywords,
       seo_description: shop.seo_description,
@@ -329,6 +338,9 @@ const shopService = {
     if (data.city !== undefined) updateData.city = data.city;
     if (data.state !== undefined) updateData.state = data.state;
     if (data.country !== undefined) updateData.country = data.country;
+    if (data.address !== undefined) updateData.address = data.address;
+    if (data.category !== undefined) updateData.category = data.category;
+    if (data.show_public_address !== undefined) updateData.show_public_address = data.show_public_address;
     if (data.seo_keywords !== undefined) updateData.seo_keywords = data.seo_keywords;
     if (data.seo_description !== undefined) updateData.seo_description = data.seo_description;
     if (data.seo_metadata !== undefined) updateData.seo_metadata = data.seo_metadata;

@@ -83,6 +83,7 @@ export interface Shop {
   banner_url?: string;
   /** Public shop category used for marketplace discovery. */
   category?: string;
+  show_public_address?: boolean;
   is_active?: boolean;
   average_rating?: number;
   total_reviews?: number;

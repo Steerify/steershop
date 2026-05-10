@@ -19,6 +19,10 @@ describe("ProfileCompletionChecklist", () => {
     whatsapp_number: "08012345678",
     payment_method: "both",
     paystack_subaccount_code: null,
+    category: null,
+    city: null,
+    state: null,
+    hasDefaultAddress: false,
   };
 
   const renderComponent = (shop: any = mockShop, productsCount: number = 0) => {
@@ -37,15 +41,15 @@ describe("ProfileCompletionChecklist", () => {
   it("renders the progress correctly", () => {
     renderComponent();
     
-    // Total items: 8
+    // Total items: 11
     // Complete in mockShop: 
     // 1. Claim store (shop is truthy)
     // 2. Logo (logo_url is truthy)
     // 3. WhatsApp (whatsapp_number is truthy)
     // 4. Payment (payment_method is truthy)
-    // Total complete: 4/8 (50%)
+    // Total complete: 4/11 (36%)
     
-    expect(screen.getByText("4/8 Completed")).toBeInTheDocument();
+    expect(screen.getByText("4/11 Completed")).toBeInTheDocument();
   });
 
   it("shows celebration mode when 100% complete", () => {
@@ -54,6 +58,10 @@ describe("ProfileCompletionChecklist", () => {
       banner_url: "banner.jpg",
       description: "This is a very long description that is over 20 characters long.",
       paystack_subaccount_code: "sub_123",
+      category: "fashion",
+      city: "Lagos",
+      state: "Lagos",
+      hasDefaultAddress: true,
     };
     
     renderComponent(completeShop, 1); // productsCount 1

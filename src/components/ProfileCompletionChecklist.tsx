@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { 
   Store, Image, FileText, MessageCircle, CreditCard, Package, 
-  CheckCircle, Circle, ChevronRight, Sparkles, X, ShieldCheck
+  CheckCircle, ChevronRight, Sparkles, X, ShieldCheck, Tag, MapPin, Truck
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -16,6 +16,10 @@ interface ShopData {
   whatsapp_number?: string | null;
   payment_method?: string | null;
   paystack_subaccount_code?: string | null;
+  category?: string | null;
+  city?: string | null;
+  state?: string | null;
+  hasDefaultAddress?: boolean;
 }
 
 interface ProfileCompletionChecklistProps {
@@ -83,6 +87,30 @@ export const ProfileCompletionChecklist = ({ shop, productsCount }: ProfileCompl
       isComplete: !!shop?.description && shop.description.length > 20,
       link: "/my-store",
       icon: <FileText className="w-4 h-4" />,
+    },
+    {
+      id: "category",
+      label: "Choose your category",
+      description: "Help customers find the right shop",
+      isComplete: !!shop?.category,
+      link: "/my-store",
+      icon: <Tag className="w-4 h-4" />,
+    },
+    {
+      id: "city",
+      label: "Add your city",
+      description: "Show customers your service area",
+      isComplete: !!shop?.city && !!shop?.state,
+      link: "/my-store",
+      icon: <MapPin className="w-4 h-4" />,
+    },
+    {
+      id: "pickup-address",
+      label: "Set pickup address",
+      description: "Needed for delivery quotes and dispatch",
+      isComplete: !!shop?.hasDefaultAddress,
+      link: "/my-store",
+      icon: <Truck className="w-4 h-4" />,
     },
     {
       id: "whatsapp",
