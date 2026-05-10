@@ -30,6 +30,9 @@ const Settings = () => {
   const { toast } = useToast();
   const [shop, setShop] = useState<ShopData | null>(null);
   const [subscription, setSubscription] = useState<ProfileSubscription | null>(null);
+  const [newsletterSub, setNewsletterSub] = useState(true);
+  const [interests, setInterests] = useState<string[]>([]);
+  const [isUpdatingPrefs, setIsUpdatingPrefs] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const isEntrepreneur = user?.role === 'ENTREPRENEUR';
@@ -46,13 +49,17 @@ const Settings = () => {
           .maybeSingle(),
         supabase
           .from("profiles")
-          .select("is_subscribed, subscription_expires_at")
+          .select("is_subscribed, subscription_expires_at, newsletter_subscription, shopping_interests")
           .eq("id", user.id)
           .single(),
       ]);
 
       if (shopRes.data) setShop(shopRes.data);
-      if (profileRes.data) setSubscription(profileRes.data);
+      if (profileRes.data) {
+        setSubscription(profileRes.data);
+        setNewsletterSub(profileRes.data.newsletter_subscription ?? true);
+        setInterests(profileRes.data.shopping_interests ?? []);
+      }
     };
 
     fetchShopData();
@@ -67,6 +74,35 @@ const Settings = () => {
       toast({ title: "Error", description: error, variant: "destructive" });
     } else {
       toast({ title: "Password reset email sent", description: "Check your inbox for the reset link." });
+    }
+  };
+
+  const handleToggleInterest = (interest: string) => {
+    setInterests(prev => 
+      prev.includes(interest) 
+        ? prev.filter(i => i !== interest) 
+        : [...prev, interest]
+    );
+  };
+
+  const savePreferences = async () => {
+    if (!user) return;
+    setIsUpdatingPrefs(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          newsletter_subscription: newsletterSub,
+          shopping_interests: interests
+        })
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      toast({ title: "Preferences saved!", description: "Your style profile has been updated." });
+    } catch (err: any) {
+      toast({ title: "Error saving preferences", description: err.message, variant: "destructive" });
+    } finally {
+      setIsUpdatingPrefs(false);
     }
   };
 
@@ -193,6 +229,58 @@ const Settings = () => {
               </CardContent>
             </Card>
           )}
+          {/* Style & Social Preferences */}
+          <Card className="card-spotify shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                <CardTitle className="text-lg">Style & Social</CardTitle>
+              </div>
+              <CardDescription>Tailor your SteerSolo experience</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold">The SteerSolo Edit</p>
+                  <p className="text-xs text-muted-foreground">Receive fashion drops and social trends via email</p>
+                </div>
+                <Button 
+                  variant={newsletterSub ? "default" : "outline"} 
+                  size="sm" 
+                  onClick={() => setNewsletterSub(!newsletterSub)}
+                >
+                  {newsletterSub ? "Subscribed" : "Subscribe"}
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Your Shopping Interests</p>
+                <div className="flex flex-wrap gap-2">
+                  {["Fashion", "Beauty", "Electronics", "Home", "Food", "Services", "Art", "Health"].map((interest) => (
+                    <button
+                      key={interest}
+                      onClick={() => handleToggleInterest(interest)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                        interests.includes(interest)
+                          ? "bg-primary/10 border-primary text-primary"
+                          : "bg-muted border-transparent text-muted-foreground hover:bg-muted/80"
+                      }`}
+                    >
+                      {interest}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Button 
+                className="w-full bg-gradient-to-r from-primary to-accent text-white" 
+                onClick={savePreferences}
+                disabled={isUpdatingPrefs}
+              >
+                {isUpdatingPrefs ? "Saving..." : "Save Preferences"}
+              </Button>
+            </CardContent>
+          </Card>
 
           {/* Security & Privacy */}
           <Card className="card-spotify shadow-sm">

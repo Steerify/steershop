@@ -265,100 +265,97 @@ const Dashboard = () => {
       setIsLoading(true);
       if (!user) return;
 
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      // CORE FETCH: Run profile and shop check in parallel for speed
+      const [profileRes, shopRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        shopService.getShopByOwner(user.id)
+      ]);
 
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
+      // 1. Process Profile
+      if (profileRes.error) {
+        console.error('Error fetching profile:', profileRes.error);
         setProfile({ full_name: user.email?.split('@')[0] || 'User' });
       } else {
-        setProfile(profileData);
-        if (profileData.subscription_expires_at) {
-          const expiresAt = new Date(profileData.subscription_expires_at);
+        const p = profileRes.data;
+        setProfile(p);
+        if (p.subscription_expires_at) {
+          const expiresAt = new Date(p.subscription_expires_at);
           const now = new Date();
           const daysLeft = differenceInDays(expiresAt, now);
           setDaysRemaining(Math.max(0, daysLeft));
-          if (profileData.is_subscribed && expiresAt > now) setSubscriptionStatus('active');
-          else if (!profileData.is_subscribed && expiresAt > now) setSubscriptionStatus('trial');
-          else {
-            // Expired — check product count to determine free vs expired
-            const subStatus = calculateSubscriptionStatus(profileData, productsCount);
-            setSubscriptionStatus(subStatus.status === 'free' ? 'free' : 'expired');
-          }
+          if (p.is_subscribed && expiresAt > now) setSubscriptionStatus('active');
+          else if (!p.is_subscribed && expiresAt > now) setSubscriptionStatus('trial');
         } else {
           setSubscriptionStatus('trial');
           setDaysRemaining(15);
         }
       }
 
-      const shopResponse = await shopService.getShopByOwner(user.id);
-      const shops = shopResponse.data;
+      // 2. Check for Shop - EARLY EXIT if no shop found
+      const shops = shopRes.data;
       const primaryShop = Array.isArray(shops) ? shops[0] : (shops as any);
 
-      if (primaryShop) {
-        setShopData({ id: primaryShop.id, name: primaryShop.shop_name || primaryShop.name });
-        setShopFullData(primaryShop);
-
-        // Check if shop is pending approval (inactive)
-        if (!primaryShop.is_active) {
-          setSubscriptionStatus('trial'); // Keep trial status but show pending banner
-        }
-
-        const productsResponse = await productService.getProducts({ shopId: primaryShop.id });
-        const productsList = productsResponse.data || [];
-        setProductsCount(productsList.length);
-        setHasProductWithImage(productsList.some(p => !!p.image_url && p.is_available));
-
-        const ordersResponse = await orderService.getOrders({ shopId: primaryShop.id });
-        const allOrders = ordersResponse.data || [];
-        const pending = allOrders.filter(o => (o as any).payment_status !== 'paid' && (o as any).order_status !== 'completed').length;
-        setPendingOrders(pending);
-
-        const last7Days = eachDayOfInterval({
-          start: subMonths(new Date(), 0).setDate(new Date().getDate() - 6),
-          end: new Date()
-        });
-        const paidOrders = allOrders.filter(o => (o as any).payment_status === 'paid');
-        const dailyData = last7Days.map(day => {
-          const dateStr = format(day, 'yyyy-MM-dd');
-          const dayPaidOrders = paidOrders.filter(o => o.created_at && format(new Date(o.created_at), 'yyyy-MM-dd') === dateStr);
-          return {
-            date: format(day, 'EEE'),
-            revenue: dayPaidOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0),
-            sales: dayPaidOrders.length
-          };
-        });
-
-        setChartData(dailyData);
-        setTotalRevenue(paidOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0));
-        setTotalSales(paidOrders.length);
-
-        try {
-          const balance = await payoutService.getBalance(primaryShop.id);
-          setPayoutBalance(balance);
-        } catch (e) { console.error('Payout balance error:', e); }
-      } else {
+      if (!primaryShop) {
         setHasNoShop(true);
-        if (searchParams.get('show_dfy') === 'true') {
-          const newParams = new URLSearchParams(searchParams);
-          newParams.delete('show_dfy');
-          navigate({ search: newParams.toString() }, { replace: true });
-        }
+        setShopData(null);
+        // Instant exit for new users to trigger Setup Wizard
+        setIsLoading(false);
+        return; 
       }
 
-      if (user) {
-        const badgesResult = await subscriptionService.getUserBadges(user.id);
-        if (badgesResult.success && badgesResult.data) {
-          setUserBadges(badgesResult.data.map(ub => ub.badges).filter(Boolean));
-        }
+      // 3. Populate Dashboard Data (only if shop exists)
+      setShopData({ id: primaryShop.id, name: primaryShop.shop_name || primaryShop.name });
+      setShopFullData(primaryShop);
+
+      if (!primaryShop.is_active) {
+        setSubscriptionStatus('trial');
       }
 
-      const offerResponse = await offerService.getOffers();
-      if (offerResponse.success && offerResponse.data) {
-        const entOffer = offerResponse.data.find(o => o.target_audience === 'entrepreneurs' && o.is_active);
+      // Parallel fetch for dashboard secondary data
+      const [productsRes, ordersRes, badgesRes, offersRes, balance] = await Promise.all([
+        productService.getProducts({ shopId: primaryShop.id }),
+        orderService.getOrders({ shopId: primaryShop.id }),
+        subscriptionService.getUserBadges(user.id),
+        offerService.getOffers(),
+        payoutService.getBalance(primaryShop.id).catch(() => null)
+      ]);
+
+      // 4. Process Secondary Data
+      const productsList = productsRes.data || [];
+      setProductsCount(productsList.length);
+      setHasProductWithImage(productsList.some(p => !!p.image_url && p.is_available));
+
+      const allOrders = ordersRes.data || [];
+      const pending = allOrders.filter(o => (o as any).payment_status !== 'paid' && (o as any).order_status !== 'completed').length;
+      setPendingOrders(pending);
+
+      // Process Chart Data
+      const last7Days = eachDayOfInterval({
+        start: subMonths(new Date(), 0).setDate(new Date().getDate() - 6),
+        end: new Date()
+      });
+      const paidOrders = allOrders.filter(o => (o as any).payment_status === 'paid');
+      const dailyData = last7Days.map(day => {
+        const dateStr = format(day, 'yyyy-MM-dd');
+        const dayPaidOrders = paidOrders.filter(o => o.created_at && format(new Date(o.created_at), 'yyyy-MM-dd') === dateStr);
+        return {
+          date: format(day, 'EEE'),
+          revenue: dayPaidOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0),
+          sales: dayPaidOrders.length
+        };
+      });
+
+      setChartData(dailyData);
+      setTotalRevenue(paidOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0));
+      setTotalSales(paidOrders.length);
+      if (balance) setPayoutBalance(balance);
+
+      if (badgesRes.success && badgesRes.data) {
+        setUserBadges(badgesRes.data.map(ub => ub.badges).filter(Boolean));
+      }
+
+      if (offersRes.success && offersRes.data) {
+        const entOffer = offersRes.data.find(o => o.target_audience === 'entrepreneurs' && o.is_active);
         if (entOffer) setActiveOffer(entOffer);
       }
 
@@ -944,6 +941,45 @@ const Dashboard = () => {
               </div>
               <div className="space-y-6">
                 <ProfileCompletionChecklist shop={shopFullData} productsCount={productsCount} />
+                
+                {/* Social Influence Card */}
+                <Card className="overflow-hidden bg-gradient-to-br from-primary/5 to-accent/5 border-primary/10 shadow-sm">
+                  <CardHeader className="pb-2">
+                    <div className="text-sm font-bold flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      Social Influence
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-3 rounded-2xl bg-card border border-border/50">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight mb-0.5">Reach</p>
+                        <p className="text-xl font-bold text-foreground">{(shopFullData?.total_views || 0).toLocaleString()}</p>
+                      </div>
+                      <div className="text-center p-3 rounded-2xl bg-card border border-border/50">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight mb-0.5">Shares</p>
+                        <p className="text-xl font-bold text-foreground">{(shopFullData?.total_shares || 0).toLocaleString()}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="p-3.5 rounded-2xl bg-primary/10 border border-primary/20">
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-6 h-6 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                          <Target className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-0.5">Marketing Tip</p>
+                          <p className="text-[11px] leading-relaxed text-foreground/80 font-medium">
+                            {shopFullData?.category?.includes('Fashion') ? "Post your new items on Instagram & tag #SteerSolo to get featured in our next fashion edit!" :
+                             shopFullData?.category?.includes('Beauty') ? "Share your beauty routines on social media & link your SteerSolo shop for instant booking!" :
+                             shopFullData?.category?.includes('Electronics') ? "Unbox your latest tech on TikTok & use your shop link in bio to drive sales!" :
+                             "Share your shop link on your social profiles to increase your reach and grow your community!"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
             {/* Wallet Quick View */}

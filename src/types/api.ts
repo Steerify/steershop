@@ -43,6 +43,8 @@ export interface User {
   lastName?: string;
   phone?: string;
   onboardingCompleted?: boolean;
+  newsletter_subscription?: boolean;
+  shopping_interests?: string[];
   profile?: any;
 }
 
@@ -89,6 +91,9 @@ export interface Shop {
   seo_dna_updated_at?: string;
   created_at?: string;
   tier?: string;
+  social_engagement_score?: number;
+  total_shares?: number;
+  total_views?: number;
 }
 
 export interface ProductImage {
