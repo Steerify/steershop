@@ -2,6 +2,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { Shop } from '@/types/api';
 import activityLogService from './activity-log.service';
 
+
+export interface CreateDefaultShopAddressRequest {
+  label?: string;
+  contactName: string;
+  contactPhone: string;
+  addressLine1: string;
+  city: string;
+  state: string;
+}
+
 export interface CreateShopRequest {
   name: string;
   slug: string;
@@ -17,6 +27,36 @@ export interface CreateShopRequest {
 }
 
 const shopService = {
+
+  createDefaultShopAddress: async (shopId: string, data: CreateDefaultShopAddressRequest) => {
+    const { data: address, error } = await supabase
+      .from('shop_addresses')
+      .insert({
+        shop_id: shopId,
+        label: data.label || 'Main location',
+        contact_name: data.contactName,
+        contact_phone: data.contactPhone,
+        address_line_1: data.addressLine1,
+        city: data.city,
+        state: data.state,
+        country: 'NG',
+        is_default: true,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Create shop address error:', error);
+      throw new Error(error.message);
+    }
+
+    return {
+      success: true,
+      data: address,
+      message: 'Shop address created successfully'
+    };
+  },
+
   createShop: async (data: CreateShopRequest) => {
     const { data: { user } } = await supabase.auth.getUser();
     
