@@ -2397,6 +2397,10 @@ export type Database = {
           bank_account_number: string | null
           bank_name: string | null
           banner_url: string | null
+          category: string | null
+          city: string | null
+          address: string | null
+          show_public_address: boolean
           country: string | null
           created_at: string
           description: string | null
@@ -2428,6 +2432,10 @@ export type Database = {
           bank_account_number?: string | null
           bank_name?: string | null
           banner_url?: string | null
+          category?: string | null
+          city?: string | null
+          address?: string | null
+          show_public_address?: boolean
           country?: string | null
           created_at?: string
           description?: string | null
@@ -2459,6 +2467,10 @@ export type Database = {
           bank_account_number?: string | null
           bank_name?: string | null
           banner_url?: string | null
+          category?: string | null
+          city?: string | null
+          address?: string | null
+          show_public_address?: boolean
           country?: string | null
           created_at?: string
           description?: string | null

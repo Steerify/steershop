@@ -65,7 +65,7 @@ const shopService = {
     };
   },
 
-  getShops: async (page = 1, limit = 10, filters?: { verified?: boolean; includeAll?: boolean; activeOnly?: boolean; searchTerm?: string }) => {
+  getShops: async (page = 1, limit = 10, filters?: { verified?: boolean; includeAll?: boolean; activeOnly?: boolean; searchTerm?: string; category?: string; city?: string; state?: string }) => {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
@@ -85,7 +85,32 @@ const shopService = {
 
     if (filters?.searchTerm) {
       const q = `%${filters.searchTerm}%`;
-      query = query.or(`shop_name.ilike.${q},description.ilike.${q},shop_slug.ilike.${q},state.ilike.${q},city.ilike.${q}`);
+      query = query.or(`shop_name.ilike.${q},description.ilike.${q},shop_slug.ilike.${q},category.ilike.${q},state.ilike.${q},city.ilike.${q}`);
+    }
+
+    if (filters?.category && filters.category !== 'all') {
+      const categorySearchTerm: Record<string, string> = {
+        fashion: 'fashion',
+        electronics: 'electronics',
+        'food-drinks': 'food',
+        'home-living': 'home',
+        'art-craft': 'art',
+        services: 'services',
+        skincare: 'beauty',
+        haircare: 'beauty',
+        cosmetics: 'beauty',
+        fragrances: 'beauty',
+        'natural-beauty': 'beauty',
+      };
+      query = query.ilike('category', `%${categorySearchTerm[filters.category] || filters.category}%`);
+    }
+
+    if (filters?.city?.trim()) {
+      query = query.ilike('city', `%${filters.city.trim()}%`);
+    }
+
+    if (filters?.state && filters.state !== 'All Locations') {
+      query = query.eq('state', filters.state);
     }
 
     const { data: shops, error, count } = await query
@@ -149,6 +174,9 @@ const shopService = {
       is_verified: s.is_verified,
       state: s.state,
       city: s.city,
+      address: s.address,
+      category: s.category,
+      show_public_address: s.show_public_address,
       country: s.country,
       seo_keywords: s.seo_keywords,
       seo_description: s.seo_description,
@@ -204,6 +232,9 @@ const shopService = {
       is_verified: s.is_verified,
       state: s.state,
       city: s.city,
+      address: s.address,
+      category: s.category,
+      show_public_address: s.show_public_address,
       country: s.country,
       seo_keywords: s.seo_keywords,
       seo_description: s.seo_description,
@@ -251,6 +282,9 @@ const shopService = {
       is_verified: shop.is_verified,
       state: shop.state,
       city: shop.city,
+      address: shop.address,
+      category: shop.category,
+      show_public_address: shop.show_public_address,
       country: shop.country,
       seo_keywords: shop.seo_keywords,
       seo_description: shop.seo_description,
@@ -286,6 +320,9 @@ const shopService = {
     if (data.city !== undefined) updateData.city = data.city;
     if (data.state !== undefined) updateData.state = data.state;
     if (data.country !== undefined) updateData.country = data.country;
+    if (data.address !== undefined) updateData.address = data.address;
+    if (data.category !== undefined) updateData.category = data.category;
+    if (data.show_public_address !== undefined) updateData.show_public_address = data.show_public_address;
     if (data.seo_keywords !== undefined) updateData.seo_keywords = data.seo_keywords;
     if (data.seo_description !== undefined) updateData.seo_description = data.seo_description;
     if (data.seo_metadata !== undefined) updateData.seo_metadata = data.seo_metadata;

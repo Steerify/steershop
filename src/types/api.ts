@@ -79,6 +79,7 @@ export interface Shop {
   logo_url?: string;
   banner_url?: string;
   category?: string;
+  show_public_address?: boolean;
   is_active?: boolean;
   average_rating?: number;
   total_reviews?: number;

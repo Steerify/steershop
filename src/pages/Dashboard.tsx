@@ -73,6 +73,9 @@ type DashboardShop = {
   shop_slug?: string | null;
   logo_url?: string | null;
   category?: string | null;
+  city?: string | null;
+  state?: string | null;
+  hasDefaultAddress?: boolean;
   is_active?: boolean | null;
   total_views?: number | null;
   total_shares?: number | null;
@@ -337,9 +340,21 @@ const Dashboard = () => {
         return; 
       }
 
+      const { data: defaultAddress } = await supabase
+        .from('shop_addresses')
+        .select('id')
+        .eq('shop_id', primaryShop.id)
+        .eq('is_default', true)
+        .maybeSingle();
+
+      const shopWithCompletion = {
+        ...primaryShop,
+        hasDefaultAddress: !!defaultAddress,
+      };
+
       // 3. Populate Dashboard Data (only if shop exists)
       setShopData({ id: primaryShop.id, name: primaryShop.shop_name || primaryShop.name });
-      setShopFullData(primaryShop);
+      setShopFullData(shopWithCompletion);
 
       if (!primaryShop.is_active) {
         setSubscriptionStatus('trial');

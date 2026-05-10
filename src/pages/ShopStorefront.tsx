@@ -15,6 +15,7 @@ import {
 import { WishlistButton } from "@/components/WishlistButton";
 import { openWhatsAppContact } from "@/utils/whatsapp";
 import { ProductMediaCard } from "@/components/ProductMediaCard";
+import { getCategoryLabel } from "@/utils/autoCategorize";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern, AdireAccent } from "@/components/patterns/AdirePattern";
@@ -52,6 +53,9 @@ interface Shop {
   state?: string | null;
   city?: string | null;
   country?: string | null;
+  address?: string | null;
+  category?: string | null;
+  show_public_address?: boolean | null;
   accent_color?: string | null;
   font_style?: string | null;
   theme_mode?: string | null;
@@ -137,6 +141,10 @@ const ShopStorefront = () => {
     return () => observer.disconnect();
   }, [shop]);
 
+  const publicLocationParts = useMemo(() => [shop?.city, shop?.state, shop?.country].filter(Boolean).join(", "), [shop]);
+  const fullPublicAddress = shop?.show_public_address ? [shop.address, shop.city, shop.state, shop.country].filter(Boolean).join(", ") : "";
+  const shopCategoryLabel = shop?.category ? (getCategoryLabel(shop.category) === 'Other' && shop.category !== 'other' ? shop.category : getCategoryLabel(shop.category)) : "";
+
   const schemaData = useMemo(() => {
     if (!shop) return null;
     const shopUrl = `https://steersolo.com/shop/${shop.shop_slug}`;
@@ -145,12 +153,15 @@ const ShopStorefront = () => {
       "@context": "https://schema.org",
       "@type": isPremiumPlan ? "Store" : "LocalBusiness",
       "name": shop.shop_name,
-      "description": shop.description || `Shop at ${shop.shop_name}${isPremiumPlan ? '' : ' on SteerSolo'}`,
+      "description": shop.description || `Shop ${shop.category ? `${getCategoryLabel(shop.category)} ` : ''}at ${shop.shop_name}${shop.city ? ` in ${shop.city}` : ''}${isPremiumPlan ? '' : ' on SteerSolo'}`,
       "url": shopUrl,
       "image": imageUrl || undefined,
+      "category": shopCategoryLabel || undefined,
       "numberOfEmployees": "1-10",
       "address": {
         "@type": "PostalAddress",
+        ...(shop.show_public_address && shop.address && { "streetAddress": shop.address }),
+        ...(shop.city && { "addressLocality": shop.city }),
         ...(shop.state && { "addressRegion": shop.state }),
         "addressCountry": shop.country || "NG",
       },
@@ -209,7 +220,7 @@ const ShopStorefront = () => {
     };
 
     return [data, breadcrumbs];
-  }, [shop, products, isPremiumPlan]);
+  }, [shop, products, isPremiumPlan, shopCategoryLabel]);
 
   useEffect(() => {
     let filtered = products;
@@ -430,7 +441,7 @@ const ShopStorefront = () => {
 
   /* ─── Main Storefront ─── */
   const shopUrl = shop ? `https://steersolo.com/shop/${shop.shop_slug}` : '';
-  const metaDescription = shop?.seo_description || shop?.description || (shop ? `Shop at ${shop.shop_name} on SteerSolo` : '');
+  const metaDescription = shop?.seo_description || shop?.description || (shop ? `Shop ${shopCategoryLabel ? `${shopCategoryLabel} ` : ''}at ${shop.shop_name}${shop.city ? ` in ${shop.city}` : ''}${shop.state ? `, ${shop.state}` : ''} on SteerSolo` : '');
 
   return (
     <div
@@ -442,9 +453,9 @@ const ShopStorefront = () => {
     >
       {shop && (
         <Helmet>
-          <title>{isPremiumPlan ? `${shop.shop_name} — Shop Online` : `${shop.shop_name} | SteerSolo Shop`}</title>
+          <title>{isPremiumPlan ? `${shop.shop_name}${shop.city ? ` in ${shop.city}` : ''} — Shop Online` : `${shop.shop_name}${shopCategoryLabel ? ` ${shopCategoryLabel}` : ''} | SteerSolo Shop`}</title>
           <meta name="description" content={metaDescription} />
-          <meta name="keywords" content={shop.seo_keywords?.length ? shop.seo_keywords.join(', ') : `${shop.shop_name}, ${shop.shop_name} nigeria, buy ${shop.shop_name} products, social commerce, steersolo, ${shop.state || 'nigeria'}`} />
+          <meta name="keywords" content={shop.seo_keywords?.length ? shop.seo_keywords.join(', ') : `${shop.shop_name}, ${shopCategoryLabel || 'shop'}, ${shop.city || ''}, ${shop.state || 'Nigeria'}, buy ${shop.shop_name} products, social commerce, steersolo`} />
           
           <meta property="og:title" content={shop.shop_name} />
           <meta property="og:description" content={metaDescription} />
@@ -534,11 +545,21 @@ const ShopStorefront = () => {
                     <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5">
                       <div className="min-w-0 max-w-2xl">
                         <h1 className="font-display text-3xl md:text-4xl font-extrabold tracking-tight truncate mb-2" style={{ color: shop.primary_color || undefined }}>{shop.shop_name}</h1>
-                        <div className="flex items-center gap-2 mb-3">
-                            <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                            <span className="text-sm font-medium text-muted-foreground">
-                              {[shop.city, shop.state, shop.country].filter(Boolean).join(", ")}
-                            </span>
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                          {shopCategoryLabel && (
+                            <Badge variant="secondary" className="rounded-full text-xs font-semibold">
+                              <Tag className="w-3 h-3 mr-1" />
+                              {shopCategoryLabel}
+                            </Badge>
+                          )}
+                          {(publicLocationParts || fullPublicAddress) && (
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                              <span className="text-sm font-medium text-muted-foreground">
+                                {fullPublicAddress || publicLocationParts}
+                              </span>
+                            </div>
+                          )}
                         </div>
                         {shop.description && (
                           <p className="text-muted-foreground text-sm md:text-base line-clamp-3 leading-relaxed">{shop.description}</p>

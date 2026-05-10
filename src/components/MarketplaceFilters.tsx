@@ -1,7 +1,7 @@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { BadgeCheck, SlidersHorizontal } from "lucide-react";
+import { BadgeCheck, MapPin, SlidersHorizontal } from "lucide-react";
 
 export const CATEGORIES = [
   { value: 'all', label: 'All', group: 'main' },
@@ -41,6 +41,8 @@ interface MarketplaceFiltersProps {
   onSortChange: (sort: string) => void;
   selectedState: string;
   onStateChange: (state: string) => void;
+  selectedCity: string;
+  onCityChange: (city: string) => void;
   showVerifiedOnly: boolean;
   onVerifiedChange: (verified: boolean) => void;
   categoryCounts?: Record<string, number>;
@@ -54,6 +56,7 @@ export const MarketplaceFilters = ({
   selectedCategory, onCategoryChange,
   selectedSort, onSortChange,
   selectedState, onStateChange,
+  selectedCity, onCityChange,
   showVerifiedOnly, onVerifiedChange,
   categoryCounts,
   minPrice = '', maxPrice = '',
@@ -92,9 +95,35 @@ export const MarketplaceFilters = ({
             value={selectedState}
             onChange={(e) => onStateChange(e.target.value)}
             className="text-xs sm:text-sm bg-muted border-0 rounded-md px-2 py-1.5 focus:ring-1 focus:ring-primary"
+            aria-label="Filter by state"
           >
             {NIGERIAN_STATES.map((state) => (
               <option key={state} value={state}>{state}</option>
+            ))}
+          </select>
+
+          <div className="relative">
+            <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="City"
+              value={selectedCity}
+              onChange={(e) => onCityChange(e.target.value)}
+              className="w-24 sm:w-32 h-7 pl-6 text-xs bg-muted border-0"
+              aria-label="Filter by city"
+            />
+          </div>
+
+          <select
+            value={selectedCategory}
+            onChange={(e) => onCategoryChange(e.target.value)}
+            className="text-xs sm:text-sm bg-muted border-0 rounded-md px-2 py-1.5 focus:ring-1 focus:ring-primary"
+            aria-label="Filter by category"
+          >
+            {visibleCategories.map((cat) => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label}{categoryCounts?.[cat.value] ? ` (${categoryCounts[cat.value]})` : ''}
+              </option>
             ))}
           </select>
 

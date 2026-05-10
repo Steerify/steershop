@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,16 @@ interface CartItem {
   quantity: number;
 }
 
+interface ShopPickupAddress {
+  address_line_1: string;
+  address_line_2?: string | null;
+  city: string;
+  state: string;
+  country?: string | null;
+  contact_name?: string | null;
+  contact_phone?: string | null;
+}
+
 interface CheckoutDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -42,6 +52,9 @@ interface CheckoutDialogProps {
     bank_account_number?: string;
     paystack_public_key?: string;
     whatsapp_number?: string;
+    city?: string | null;
+    state?: string | null;
+    country?: string | null;
   };
   onUpdateQuantity: (productId: string, quantity: number) => void;
   totalAmount: number;
@@ -294,6 +307,16 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   const [shippingRates, setShippingRates] = useState<DeliveryRate[]>([]);
   const [isFetchingRates, setIsFetchingRates] = useState(false);
   const [selectedRate, setSelectedRate] = useState<DeliveryRate | null>(null);
+  const [defaultPickupAddress, setDefaultPickupAddress] = useState<ShopPickupAddress | null>(null);
+
+  const formatPickupAddress = useCallback((address: ShopPickupAddress) => ({
+    name: address.contact_name || shop.shop_name,
+    phone: address.contact_phone || shop.whatsapp_number || '0000000000',
+    address: [address.address_line_1, address.address_line_2].filter(Boolean).join(', '),
+    city: address.city,
+    state: address.state,
+    country: address.country || 'NG',
+  }), [shop.shop_name, shop.whatsapp_number]);
 
   const effectiveTotal = Math.max(0, totalAmount + (selectedRate?.price || 0) - couponDiscount);
   const paystackFee = calculatePaystackFee(effectiveTotal);
@@ -345,6 +368,22 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     loadUserProfile();
   }, [isOpen, user, isAuthLoading]);
 
+  useEffect(() => {
+    const loadDefaultPickupAddress = async () => {
+      if (!isOpen || !shop.id) return;
+
+      try {
+        const addresses = await deliveryService.getShopAddresses(shop.id);
+        setDefaultPickupAddress((addresses?.[0] as ShopPickupAddress | undefined) || null);
+      } catch (error) {
+        console.error('Failed to load shop pickup address', error);
+        setDefaultPickupAddress(null);
+      }
+    };
+
+    loadDefaultPickupAddress();
+  }, [isOpen, shop.id]);
+
   // Fetch shipping rates when address is reasonably complete
   useEffect(() => {
     const fetchRates = async () => {
@@ -355,17 +394,15 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
         formData.delivery_city.length > 2 &&
         formData.delivery_state.length > 2
       ) {
+        if (!defaultPickupAddress) {
+          setShippingRates([]);
+          setSelectedRate(null);
+          return;
+        }
+
         setIsFetchingRates(true);
         try {
-          // Shop's pickup address (mocked for now, in a real scenario you'd fetch the shop's default address)
-          const pickupAddress = {
-             name: shop.shop_name,
-             phone: shop.whatsapp_number || '0000000000',
-             address: 'Lagos, Nigeria', // Fallback
-             city: 'Lagos',
-             state: 'Lagos',
-             country: 'NG'
-          };
+          const pickupAddress = formatPickupAddress(defaultPickupAddress);
           
           const rates = await deliveryService.getRates({
             order_id: 'temp_' + Date.now(),
@@ -395,7 +432,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
 
     const debounceTimeout = setTimeout(fetchRates, 1000); // 1s debounce
     return () => clearTimeout(debounceTimeout);
-  }, [formData.delivery_address, formData.delivery_city, formData.delivery_state]);
+  }, [formData.customer_name, formData.customer_phone, formData.delivery_address, formData.delivery_city, formData.delivery_state, defaultPickupAddress, selectedRate, formatPickupAddress, cart.length]);
 
   // Reset states when dialog closes
   useEffect(() => {
@@ -411,6 +448,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       setAppliedCoupon(null);
       setShippingRates([]);
       setSelectedRate(null);
+      setDefaultPickupAddress(null);
     }
   }, [isOpen]);
 
@@ -698,22 +736,15 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
         console.error("Stock decrement failed (non-blocking):", stockError);
       }
 
-      // Book shipping if a rate was selected
-      if (selectedRate) {
+      // Book shipping if a rate was selected and the shop has a default pickup address.
+      if (selectedRate && defaultPickupAddress) {
         try {
            await deliveryService.bookDelivery({
              order_id: orderId,
              shop_id: shop.id,
              rate_id: selectedRate.rate_id,
              provider: 'sendbox',
-             pickup_address: {
-               name: shop.shop_name,
-               phone: shop.whatsapp_number || '0000000000',
-               address: 'Shop Location', // Should use actual shop address
-               city: 'Lagos',
-               state: 'Lagos',
-               country: 'NG'
-             },
+             pickup_address: formatPickupAddress(defaultPickupAddress),
              delivery_address: {
                name: formData.customer_name,
                phone: formData.customer_phone,

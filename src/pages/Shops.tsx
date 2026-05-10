@@ -24,6 +24,19 @@ import { Button } from "@/components/ui/button";
 import { PageThemeShell } from "@/components/PageThemeShell";
 
 const VERIFIED_NOTICE_KEY = "steersolo_verified_notice_dismissed";
+
+const normalizeCategoryValue = (category?: string | null) => {
+  if (!category) return '';
+  const normalized = category.trim().toLowerCase();
+  if (normalized.includes('fashion')) return 'fashion';
+  if (normalized.includes('beauty') || normalized.includes('health')) return 'beauty-health';
+  if (normalized.includes('electronic')) return 'electronics';
+  if (normalized.includes('food')) return 'food-drinks';
+  if (normalized.includes('home')) return 'home-living';
+  if (normalized.includes('art') || normalized.includes('craft')) return 'art-craft';
+  if (normalized.includes('service') || normalized.includes('consult')) return 'services';
+  return normalized.replace(/&/g, '').replace(/\s+/g, '-');
+};
 const StatChip = ({
   icon: Icon,
   value,
@@ -125,6 +138,7 @@ const Shops = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSort, setSelectedSort] = useState('newest');
   const [selectedState, setSelectedState] = useState('All Locations');
+  const [selectedCity, setSelectedCity] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [shopProducts, setShopProducts] = useState<Record<string, { image_url: string; name: string }[]>>({});
@@ -247,7 +261,10 @@ const Shops = () => {
       const response = await shopService.getShops(page, ITEMS_PER_PAGE, { 
         verified: showVerifiedOnly || undefined, 
         activeOnly: true, 
-        searchTerm: searchTerm.trim() || undefined 
+        searchTerm: searchTerm.trim() || undefined,
+        category: selectedCategory !== 'all' && selectedCategory !== 'beauty' ? selectedCategory : undefined,
+        city: selectedCity.trim() || undefined,
+        state: selectedState !== 'All Locations' ? selectedState : undefined,
       });
       
       if (!response.success) { 
@@ -257,9 +274,6 @@ const Shops = () => {
       }
       
       let filtered = response.data || [];
-      if (selectedState !== 'All Locations') {
-        filtered = filtered.filter(s => s.state === selectedState);
-      }
       
       const totalPages = response.meta?.totalPages || 1;
       const hasMore = page < totalPages;
@@ -285,12 +299,12 @@ const Shops = () => {
     } catch (e) {
       console.error(e); setHasMoreShops(false); if (reset) setShops([]);
     } finally { setIsLoading(false); setLoadingMoreShops(false); }
-  }, [showVerifiedOnly, selectedState, fetchShopPreviews]);
+  }, [showVerifiedOnly, selectedCategory, selectedCity, selectedState, fetchShopPreviews]);
 
   /* ─── Category + Sort ─── */
   const shopCategories = useMemo(() => {
     const cats: Record<string, string> = {};
-    shops.forEach(shop => { cats[shop.id] = autoCategorize(shop.name || shop.shop_name || '', shop.description || ''); });
+    shops.forEach(shop => { cats[shop.id] = normalizeCategoryValue(shop.category) || autoCategorize(shop.name || shop.shop_name || '', shop.description || ''); });
     return cats;
   }, [shops]);
 
@@ -347,7 +361,7 @@ const Shops = () => {
       setProductResults([]); setSearchType('all'); setShopsPage(1); setProductsPage(1);
       fetchShops(1, true, '');
     }
-  }, [debouncedSearchQuery, fetchShops, searchProducts, showVerifiedOnly, selectedState]);
+  }, [debouncedSearchQuery, fetchShops, searchProducts, showVerifiedOnly, selectedCategory, selectedCity, selectedState]);
 
   const handleSearchTypeChange = (type: 'all' | 'shops' | 'products') => {
     setSearchType(type);
@@ -495,11 +509,13 @@ const Shops = () => {
       {/* ══════════ FILTERS ══════════ */}
       <MarketplaceFilters
         selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
+        onCategoryChange={(c) => { setSelectedCategory(c); setShopsPage(1); }}
         selectedSort={selectedSort}
         onSortChange={setSelectedSort}
         selectedState={selectedState}
         onStateChange={(s) => { setSelectedState(s); setShopsPage(1); }}
+        selectedCity={selectedCity}
+        onCityChange={(city) => { setSelectedCity(city); setShopsPage(1); }}
         showVerifiedOnly={showVerifiedOnly}
         onVerifiedChange={(v) => { setShowVerifiedOnly(v); setShopsPage(1); }}
         categoryCounts={categoryCounts}
