@@ -24,12 +24,24 @@ vi.mock("@/services/upload.service", () => ({
   },
 }));
 
+const supabaseMocks = vi.hoisted(() => ({
+  shopAddressInsert: vi.fn().mockResolvedValue({ error: null }),
+}));
+
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
-    from: vi.fn(() => ({
-      update: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockResolvedValue({ error: null }),
-    })),
+    from: vi.fn((table: string) => {
+      if (table === "shop_addresses") {
+        return {
+          insert: supabaseMocks.shopAddressInsert,
+        };
+      }
+
+      return {
+        update: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      };
+    }),
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: { id: "test-user-id" } } }),
     },
@@ -58,6 +70,13 @@ const fillRequiredShopFields = async () => {
   fireEvent.change(screen.getByPlaceholderText("e.g. Ikeja"), { target: { value: "Ikeja" } });
 };
 
+const advanceToContactStep = async () => {
+  fireEvent.click(screen.getByText("Create Store"));
+  await screen.findByText("What are you selling?");
+  fireEvent.click(screen.getByText("Skip for now"));
+  await screen.findByText("How will they reach you?");
+};
+
 describe("VendorSetupWizard", () => {
   const onComplete = vi.fn();
 
@@ -70,6 +89,7 @@ describe("VendorSetupWizard", () => {
     vi.clearAllMocks();
     vi.mocked(shopService.createShop).mockResolvedValue({ success: true, data: { id: "shop-123", slug: "my-test-shop" }, message: "Shop created successfully" });
     vi.mocked(productService.createProduct).mockResolvedValue({ success: true, data: { id: "product-123" }, message: "Product created successfully" });
+    supabaseMocks.shopAddressInsert.mockResolvedValue({ error: null });
   });
 
   it("renders Step 1 correctly when open", () => {
@@ -130,14 +150,63 @@ describe("VendorSetupWizard", () => {
     });
   });
 
+
+  it("does not allow Step 3 to be skipped when a shop address is present", async () => {
+    render(<VendorSetupWizard open={true} onComplete={onComplete} />);
+
+    await fillRequiredShopFields();
+    fireEvent.change(screen.getByPlaceholderText("e.g. 123 Herbert Macaulay Way"), { target: { value: "123 Herbert Macaulay Way" } });
+    await advanceToContactStep();
+
+    const skipButton = screen.getByRole("button", { name: "Add contact to save address" });
+    expect(skipButton).toBeDisabled();
+    expect(screen.getByText("Your address will not be saved to pickup addresses until a contact phone is added.")).toBeInTheDocument();
+  });
+
+  it("allows Step 3 to be skipped when no shop address is present", async () => {
+    render(<VendorSetupWizard open={true} onComplete={onComplete} />);
+
+    await fillRequiredShopFields();
+    await advanceToContactStep();
+
+    fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
+
+    await waitFor(() => {
+      expect(shopService.updateShop).toHaveBeenCalledWith("shop-123", { is_active: true });
+      expect(screen.getByText("You're all set! 🚀")).toBeInTheDocument();
+    });
+    expect(supabaseMocks.shopAddressInsert).not.toHaveBeenCalled();
+  });
+
+  it("saves the shop address only when address and contact fields are available", async () => {
+    render(<VendorSetupWizard open={true} onComplete={onComplete} />);
+
+    await fillRequiredShopFields();
+    fireEvent.change(screen.getByPlaceholderText("e.g. 123 Herbert Macaulay Way"), { target: { value: "123 Herbert Macaulay Way" } });
+    await advanceToContactStep();
+
+    fireEvent.change(screen.getByPlaceholderText("e.g. 08012345678"), { target: { value: "08012345678" } });
+    fireEvent.click(screen.getByText("Finish Setup"));
+
+    await waitFor(() => {
+      expect(supabaseMocks.shopAddressInsert).toHaveBeenCalledWith(expect.objectContaining({
+        shop_id: "shop-123",
+        label: "Primary pickup address",
+        contact_name: "My Test Shop",
+        contact_phone: "+2348012345678",
+        address_line_1: "123 Herbert Macaulay Way",
+        city: "Ikeja",
+        state: "Lagos",
+        is_default: true,
+      }));
+    });
+  });
+
   it("saves a normalized WhatsApp number and completes setup", async () => {
     render(<VendorSetupWizard open={true} onComplete={onComplete} />);
 
     await fillRequiredShopFields();
-    fireEvent.click(screen.getByText("Create Store"));
-    await screen.findByText("What are you selling?");
-    fireEvent.click(screen.getByText("Skip for now"));
-    await screen.findByText("How will they reach you?");
+    await advanceToContactStep();
 
     fireEvent.change(screen.getByPlaceholderText("e.g. 08012345678"), { target: { value: "08012345678" } });
     fireEvent.click(screen.getByText("Finish Setup"));
