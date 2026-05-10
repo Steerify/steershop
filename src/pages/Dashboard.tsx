@@ -604,12 +604,10 @@ const Dashboard = () => {
 
   if (isWizardOpen) {
     return (
-      <div className="min-h-screen bg-background">
-        <VendorSetupWizard 
-          open={true} 
-          onComplete={() => loadData()} 
-        />
-      </div>
+      <VendorSetupWizard 
+        open={true} 
+        onComplete={() => loadData()} 
+      />
     );
   }
 
