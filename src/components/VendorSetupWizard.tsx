@@ -30,6 +30,11 @@ const SHOP_CATEGORIES = [
   "Services & Consultation", "Health & Wellness", "Arts & Crafts", "Automotive", "Other"
 ];
 
+const STEP_REQUIREMENTS = {
+  shop: "Required: store name, category, state, and city. Optional: logo, banner, description, and street address.",
+  product: "Required: product name, valid price, and stock quantity. Optional: image and description.",
+  contact: "Required: WhatsApp/contact phone before completion, especially when you added a pickup address.",
+};
 
 const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Please try again.";
 
@@ -75,6 +80,11 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
 
   const [createdShopId, setCreatedShopId] = useState<string | null>(null);
 
+  const trimmedShopAddress = shopAddress.trim();
+  const hasProvidedShopAddress = trimmedShopAddress.length > 0;
+  const productStockNumber = Number(productStock);
+  const isProductReady = productName.trim().length > 0 && Number(productPrice) > 0 && Number.isInteger(productStockNumber) && productStockNumber >= 1;
+
   useEffect(() => {
     if (!open) return;
 
@@ -106,8 +116,8 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   const shopSlug = shopName.toLowerCase().replace(/'/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
   const handleCreateShop = async () => {
-    if (!shopName.trim()) {
-      toast({ title: "Shop name required", variant: "destructive" });
+    if (!shopName.trim() || !shopCategory || !shopState || !shopCity.trim()) {
+      toast({ title: "Store details required", description: "Add your store name, category, state, and city to continue.", variant: "destructive" });
       return;
     }
     setIsLoading(true);
@@ -131,8 +141,8 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         description: shopDescription.trim() || `Welcome to ${shopName.trim()}`,
         whatsapp: "", // Will be updated in Step 3
         state: shopState,
-        city: shopCity,
-        address: shopAddress,
+        city: shopCity.trim(),
+        address: trimmedShopAddress,
         category: shopCategory,
         logo_url: logoUrl,
         banner_url: bannerUrl,
@@ -158,7 +168,11 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       return;
     }
 
-    const stockNum = Math.max(1, Number.parseInt(productStock, 10) || 1);
+    const stockNum = Number(productStock);
+    if (!Number.isInteger(stockNum) || stockNum < 1) {
+      toast({ title: "Enter a valid stock quantity", description: "Stock quantity must be at least 1.", variant: "destructive" });
+      return;
+    }
 
     if (!createdShopId) {
       toast({ title: "Store not ready", description: "Please create your store before adding a product.", variant: "destructive" });
@@ -193,6 +207,28 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const saveShopAddressIfComplete = async (normalizedContactPhone: string) => {
+    if (!createdShopId || !hasProvidedShopAddress || !normalizedContactPhone || !shopCity.trim() || !shopState) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from("shop_addresses")
+      .insert({
+        shop_id: createdShopId,
+        label: "Primary pickup address",
+        contact_name: shopName.trim(),
+        contact_phone: normalizedContactPhone,
+        address_line_1: trimmedShopAddress,
+        city: shopCity.trim(),
+        state: shopState,
+        country: "Nigeria",
+        is_default: true,
+      });
+
+    if (error) throw error;
   };
 
   const handleConnectWhatsapp = async () => {
@@ -270,12 +306,20 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
             {step === 4 && "You're all set! 🎉"}
           </h1>
 
-          <p className="text-lg text-muted-foreground mb-8">
+          <p className="text-lg text-muted-foreground mb-4">
             {step === 1 && "Give your shop a name to claim your custom SteerSolo URL."}
             {step === 2 && "Add your first product or service so customers have something to buy."}
             {step === 3 && "We'll add a 'Chat on WhatsApp' button so you never miss a sale."}
             {step === 4 && "Your store is live. Let's head to your dashboard."}
           </p>
+
+          {step < 4 && (
+            <div className="mb-8 rounded-2xl border border-primary/10 bg-primary/5 p-4 text-sm text-muted-foreground">
+              {step === 1 && STEP_REQUIREMENTS.shop}
+              {step === 2 && STEP_REQUIREMENTS.product}
+              {step === 3 && STEP_REQUIREMENTS.contact}
+            </div>
+          )}
 
           {/* Stepper Indicator */}
           <div className="space-y-4">
@@ -513,7 +557,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                   </div>
                 </div>
                 <div className="flex flex-col gap-3">
-                  <Button className="w-full h-14 text-lg font-bold shadow-lg bg-gradient-to-r from-primary to-accent" onClick={handleCreateProduct} disabled={isLoading || !productName.trim() || !productPrice.trim()}>
+                  <Button className="w-full h-14 text-lg font-bold shadow-lg bg-gradient-to-r from-primary to-accent" onClick={handleCreateProduct} disabled={isLoading || !isProductReady}>
                     {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (
                       <>Add Product <ArrowRight className="ml-2 w-5 h-5" /></>
                     )}
@@ -539,7 +583,10 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                     className="h-14 text-lg bg-background/50 border-green-500/30 focus-visible:ring-green-500/30"
                     autoFocus
                   />
-                  <p className="text-xs text-muted-foreground">Customers will be redirected here when they click "Chat to Buy".</p>
+                  <p className="text-xs text-muted-foreground">Customers use this number to chat before buying, confirm pickup details, and reach you if they need help finding your address.</p>
+                  {hasProvidedShopAddress && (
+                    <p className="text-xs font-medium text-amber-600">Because you added a street address, add a WhatsApp/contact phone so we can save it as a pickup address.</p>
+                  )}
                 </div>
                 <div className="flex flex-col gap-3">
                   <Button className="w-full h-14 text-lg font-bold shadow-lg bg-green-600 hover:bg-green-700 text-white" onClick={handleConnectWhatsapp} disabled={isLoading || !whatsappNumber.trim()}>
@@ -570,9 +617,12 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                     } finally {
                       setIsLoading(false);
                     }
-                  }} disabled={isLoading}>
-                    Skip for now
+                  }} disabled={isLoading || hasProvidedShopAddress}>
+                    {hasProvidedShopAddress ? "Add contact to save address" : "Skip for now"}
                   </Button>
+                  {hasProvidedShopAddress && (
+                    <p className="text-center text-xs text-muted-foreground">Your address will not be saved to pickup addresses until a contact phone is added.</p>
+                  )}
                 </div>
               </div>
             )}
