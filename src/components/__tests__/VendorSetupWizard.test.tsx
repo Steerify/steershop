@@ -1,10 +1,10 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, beforeAll } from "vitest";
 import { VendorSetupWizard } from "../VendorSetupWizard";
 import shopService from "@/services/shop.service";
+import productService from "@/services/product.service";
 import { supabase } from "@/integrations/supabase/client";
 
-// Mock the dependencies
 vi.mock("@/services/shop.service", () => ({
   default: {
     createShop: vi.fn(),
@@ -12,10 +12,21 @@ vi.mock("@/services/shop.service", () => ({
   },
 }));
 
+vi.mock("@/services/product.service", () => ({
+  default: {
+    createProduct: vi.fn(),
+  },
+}));
+
+vi.mock("@/services/upload.service", () => ({
+  uploadService: {
+    uploadImage: vi.fn().mockResolvedValue({ url: "https://example.com/image.jpg" }),
+  },
+}));
+
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => ({
-      insert: vi.fn().mockResolvedValue({ error: null }),
       update: vi.fn().mockReturnThis(),
       eq: vi.fn().mockResolvedValue({ error: null }),
     })),
@@ -31,67 +42,113 @@ vi.mock("@/hooks/use-toast", () => ({
   }),
 }));
 
-// Mock the AdirePattern to simplify rendering
 vi.mock("@/components/patterns/AdirePattern", () => ({
   AdirePattern: () => <div data-testid="adire-pattern" />,
 }));
 
+const selectOption = async (triggerIndex: number, optionText: string) => {
+  fireEvent.click(screen.getAllByRole("combobox")[triggerIndex]);
+  fireEvent.click(await screen.findByText(optionText));
+};
+
+const fillRequiredShopFields = async () => {
+  fireEvent.change(screen.getByPlaceholderText("e.g. Sarah's Bakery"), { target: { value: "My Test Shop" } });
+  await selectOption(0, "Fashion & Apparel");
+  await selectOption(1, "Lagos");
+  fireEvent.change(screen.getByPlaceholderText("e.g. Ikeja"), { target: { value: "Ikeja" } });
+};
+
 describe("VendorSetupWizard", () => {
   const onComplete = vi.fn();
 
+  beforeAll(() => {
+    window.scrollTo = vi.fn();
+    Element.prototype.scrollIntoView = vi.fn();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(shopService.createShop).mockResolvedValue({ success: true, data: { id: "shop-123", slug: "my-test-shop" }, message: "Shop created successfully" });
+    vi.mocked(productService.createProduct).mockResolvedValue({ success: true, data: { id: "product-123" }, message: "Product created successfully" });
   });
 
   it("renders Step 1 correctly when open", () => {
     render(<VendorSetupWizard open={true} onComplete={onComplete} />);
-    
+
     expect(screen.getByText("Let's build your store.")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("e.g. Sarah's Bakery")).toBeInTheDocument();
   });
 
-  it("advances to Step 2 after creating a shop", async () => {
-    (shopService.createShop as any).mockResolvedValue({ data: { id: "shop-123" } });
-    
+  it("advances to Step 2 after creating a shop with required details", async () => {
     render(<VendorSetupWizard open={true} onComplete={onComplete} />);
-    
-    const input = screen.getByPlaceholderText("e.g. Sarah's Bakery");
-    fireEvent.change(input, { target: { value: "My Test Shop" } });
-    
-    const button = screen.getByText("Create Store");
-    fireEvent.click(button);
-    
+
+    await fillRequiredShopFields();
+    fireEvent.click(screen.getByText("Create Store"));
+
     await waitFor(() => {
+      expect(shopService.createShop).toHaveBeenCalledWith(expect.objectContaining({
+        name: "My Test Shop",
+        category: "Fashion & Apparel",
+        state: "Lagos",
+        city: "Ikeja",
+      }));
       expect(screen.getByText("What are you selling?")).toBeInTheDocument();
     });
   });
 
   it("shows URL preview based on shop name", () => {
     render(<VendorSetupWizard open={true} onComplete={onComplete} />);
-    
-    const input = screen.getByPlaceholderText("e.g. Sarah's Bakery");
-    fireEvent.change(input, { target: { value: "Sarah's Bakery" } });
-    
+
+    fireEvent.change(screen.getByPlaceholderText("e.g. Sarah's Bakery"), { target: { value: "Sarah's Bakery" } });
+
     expect(screen.getByText("sarahs-bakery")).toBeInTheDocument();
   });
 
-  it("allows skipping the product step", async () => {
-    (shopService.createShop as any).mockResolvedValue({ data: { id: "shop-123" } });
-    
+  it("creates a product with data required by the product service", async () => {
     render(<VendorSetupWizard open={true} onComplete={onComplete} />);
-    
-    // Move to step 2
-    fireEvent.change(screen.getByPlaceholderText("e.g. Sarah's Bakery"), { target: { value: "Shop" } });
+
+    await fillRequiredShopFields();
     fireEvent.click(screen.getByText("Create Store"));
-    
+
+    await screen.findByText("What are you selling?");
+    fireEvent.change(screen.getByPlaceholderText("e.g. Chocolate Cake or Consultation"), { target: { value: "Chocolate Cake" } });
+    fireEvent.change(screen.getByPlaceholderText("A short detail that helps customers decide..."), { target: { value: "Rich chocolate cake" } });
+    fireEvent.change(screen.getByPlaceholderText("e.g. 5000"), { target: { value: "5000" } });
+    fireEvent.change(screen.getByPlaceholderText("e.g. 10"), { target: { value: "5" } });
+    fireEvent.click(screen.getByText("Add Product"));
+
     await waitFor(() => {
-      expect(screen.getByText("Skip for now")).toBeInTheDocument();
-    });
-    
-    fireEvent.click(screen.getByText("Skip for now"));
-    
-    await waitFor(() => {
+      expect(productService.createProduct).toHaveBeenCalledWith(expect.objectContaining({
+        shopId: "shop-123",
+        name: "Chocolate Cake",
+        description: "Rich chocolate cake",
+        price: 5000,
+        inventory: 5,
+        stockUnit: "units",
+      }));
       expect(screen.getByText("How will they reach you?")).toBeInTheDocument();
     });
+  });
+
+  it("saves a normalized WhatsApp number and completes setup", async () => {
+    render(<VendorSetupWizard open={true} onComplete={onComplete} />);
+
+    await fillRequiredShopFields();
+    fireEvent.click(screen.getByText("Create Store"));
+    await screen.findByText("What are you selling?");
+    fireEvent.click(screen.getByText("Skip for now"));
+    await screen.findByText("How will they reach you?");
+
+    fireEvent.change(screen.getByPlaceholderText("e.g. 08012345678"), { target: { value: "08012345678" } });
+    fireEvent.click(screen.getByText("Finish Setup"));
+
+    await waitFor(() => {
+      expect(shopService.updateShop).toHaveBeenCalledWith("shop-123", {
+        whatsapp_number: "+2348012345678",
+        is_active: true,
+      });
+      expect(supabase.from).toHaveBeenCalledWith("profiles");
+    });
+    expect(screen.getByText("You're all set! 🚀")).toBeInTheDocument();
   });
 });

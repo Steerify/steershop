@@ -13,21 +13,35 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Store, Package, MessageCircle, ArrowRight, Sparkles, CheckCircle2, MapPin, ImagePlus, Upload, X } from "lucide-react";
 import shopService from "@/services/shop.service";
+import productService from "@/services/product.service";
 import { uploadService } from "@/services/upload.service";
 import { supabase } from "@/integrations/supabase/client";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 
 const NIGERIAN_STATES = [
-  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River", 
-  "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", 
-  "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", 
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River",
+  "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina",
+  "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau",
   "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara", "FCT Abuja"
 ];
 
 const SHOP_CATEGORIES = [
-  "Fashion & Apparel", "Beauty & Personal Care", "Electronics", "Home & Kitchen", "Food & Groceries", 
+  "Fashion & Apparel", "Beauty & Personal Care", "Electronics", "Home & Kitchen", "Food & Groceries",
   "Services & Consultation", "Health & Wellness", "Arts & Crafts", "Automotive", "Other"
 ];
+
+
+const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Please try again.";
+
+const normalizeWhatsappNumber = (value: string) => {
+  const cleaned = value.trim().replace(/[^\d+]/g, "");
+
+  if (cleaned.startsWith("+")) return cleaned;
+  if (cleaned.startsWith("0")) return `+234${cleaned.slice(1)}`;
+  if (cleaned.startsWith("234")) return `+${cleaned}`;
+
+  return cleaned;
+};
 
 interface VendorSetupWizardProps {
   open: boolean;
@@ -45,28 +59,34 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   const [shopCity, setShopCity] = useState("");
   const [shopCategory, setShopCategory] = useState("");
   const [shopAddress, setShopAddress] = useState("");
-  
+
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
   const [productName, setProductName] = useState("");
+  const [productDescription, setProductDescription] = useState("");
   const [productPrice, setProductPrice] = useState("");
+  const [productStock, setProductStock] = useState("1");
   const [productImageFile, setProductImageFile] = useState<File | null>(null);
   const [productImagePreview, setProductImagePreview] = useState<string | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState("");
 
   const [createdShopId, setCreatedShopId] = useState<string | null>(null);
-  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      setIsReady(true);
-    }
+    if (!open) return;
+
+    document.body.classList.add("vendor-wizard-open");
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+
+    return () => {
+      document.body.classList.remove("vendor-wizard-open");
+    };
   }, [open]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner') => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner' | 'product') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -96,19 +116,19 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       let bannerUrl = "";
 
       if (logoFile) {
-        const logoRes = await uploadService.uploadImage(logoFile, "shop-logos");
+        const logoRes = await uploadService.uploadImage(logoFile, "shop-images");
         logoUrl = logoRes.url;
       }
 
       if (bannerFile) {
-        const bannerRes = await uploadService.uploadImage(bannerFile, "shop-banners");
+        const bannerRes = await uploadService.uploadImage(bannerFile, "shop-images");
         bannerUrl = bannerRes.url;
       }
 
       const res = await shopService.createShop({
-        name: shopName,
-        slug: shopSlug,
-        description: shopDescription || `Welcome to ${shopName}`,
+        name: shopName.trim(),
+        slug: shopSlug || shopName.trim().toLowerCase().replace(/\s+/g, "-"),
+        description: shopDescription.trim() || `Welcome to ${shopName.trim()}`,
         whatsapp: "", // Will be updated in Step 3
         state: shopState,
         city: shopCity,
@@ -119,8 +139,8 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       });
       setCreatedShopId(res.data.id);
       setStep(2);
-    } catch (error: any) {
-      toast({ title: "Error creating shop", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Error creating shop", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -131,31 +151,45 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       toast({ title: "Product name and price required", variant: "destructive" });
       return;
     }
-    if (!createdShopId) return;
+
+    const priceNum = Number(productPrice);
+    if (!Number.isFinite(priceNum) || priceNum <= 0) {
+      toast({ title: "Enter a valid price", description: "Price must be greater than zero.", variant: "destructive" });
+      return;
+    }
+
+    const stockNum = Math.max(1, Number.parseInt(productStock, 10) || 1);
+
+    if (!createdShopId) {
+      toast({ title: "Store not ready", description: "Please create your store before adding a product.", variant: "destructive" });
+      return;
+    }
 
     setIsLoading(true);
     try {
-      const priceNum = parseFloat(productPrice);
-      
       let imageUrl = "";
       if (productImageFile) {
         const uploadRes = await uploadService.uploadImage(productImageFile, "product-images");
         imageUrl = uploadRes.url;
       }
 
-      const { error } = await supabase.from('products').insert({
-        shop_id: createdShopId,
-        name: productName,
-        description: "",
+      await productService.createProduct({
+        shopId: createdShopId,
+        name: productName.trim(),
+        slug: productName.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+        description: productDescription.trim() || productName.trim(),
         price: priceNum,
+        inventory: stockNum,
+        images: imageUrl ? [{ url: imageUrl, alt: productName.trim(), position: 1 }] : [],
+        type: "product",
         is_available: true,
-        images: imageUrl ? [{ url: imageUrl, alt: productName, position: 1 }] : [],
+        stockUnit: "units",
+        category: shopCategory || "general",
       });
 
-      if (error) throw error;
       setStep(3);
-    } catch (error: any) {
-      toast({ title: "Error adding product", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Error adding product", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -170,16 +204,16 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
 
     setIsLoading(true);
     try {
-      await shopService.updateShop(createdShopId, { 
-        whatsapp_number: whatsappNumber,
-        is_active: true 
+      await shopService.updateShop(createdShopId, {
+        whatsapp_number: normalizeWhatsappNumber(whatsappNumber),
+        is_active: true
       });
-      
+
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase.from('profiles').update({ needs_role_selection: false }).eq('id', user.id);
       }
-      
+
       toast({ title: "Setup Complete!", description: "Welcome to your new dashboard." });
       setStep(4);
       setTimeout(() => {
@@ -187,8 +221,8 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       }, 2000);
 
 
-    } catch (error: any) {
-      toast({ title: "Error saving WhatsApp", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Error saving WhatsApp", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -197,32 +231,32 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   if (!open) return null;
 
   return (
-    <div className="vendor-wizard-page">
+    <div className="vendor-wizard-page min-h-dvh overflow-x-hidden overflow-y-auto bg-gradient-to-br from-background via-background to-primary/5" role="dialog" aria-modal="true" aria-label="Vendor setup wizard">
       <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
 
       {/* Sticky Progress Bar */}
       <div className="w-full h-2 bg-muted sticky top-0 z-20">
         <div
           className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 ease-out"
-          style={{ width: `${(step / 3) * 100}%` }}
+          style={{ width: `${(Math.min(step, 3) / 3) * 100}%` }}
         />
       </div>
 
-      <div className="flex flex-col lg:flex-row w-full max-w-6xl mx-auto p-4 sm:p-8 lg:p-12 pb-40 relative z-10 gap-8 lg:gap-16">
-        
+      <div className="flex min-h-[calc(100dvh-0.5rem)] w-full max-w-6xl flex-col gap-6 overflow-visible p-4 pb-[max(2rem,env(safe-area-inset-bottom))] sm:p-8 lg:mx-auto lg:flex-row lg:gap-16 lg:p-12">
+
         {/* Left Side: Context & Visuals */}
-        <div className="lg:w-1/2 flex flex-col justify-start pt-4 lg:pt-12">
+        <div className="lg:w-1/2 flex flex-col justify-start pt-4 lg:sticky lg:top-10 lg:h-fit lg:pt-12">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-8 shadow-lg">
             <Store className="w-8 h-8 text-white" />
           </div>
-          
+
           <h1 className="text-4xl lg:text-5xl font-extrabold text-foreground mb-4 leading-tight">
             {step === 1 && "Let's build your store."}
             {step === 2 && "What are you selling?"}
             {step === 3 && "How will they reach you?"}
             {step === 4 && "You're all set! 🎉"}
           </h1>
-          
+
           <p className="text-lg text-muted-foreground mb-8">
             {step === 1 && "Give your shop a name to claim your custom SteerSolo URL."}
             {step === 2 && "Add your first product or service so customers have something to buy."}
@@ -249,17 +283,18 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
 
         {/* Right Side: Form / Inputs */}
         <div className="lg:w-1/2 flex flex-col justify-start">
-          <div className="bg-card/80 backdrop-blur-xl border border-border/50 shadow-2xl rounded-3xl p-6 sm:p-8 relative overflow-visible">
+          <div className="relative overflow-visible rounded-3xl border border-border/50 bg-card/90 p-5 shadow-2xl backdrop-blur-xl sm:p-8">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-            
+
             {step === 1 && (
               <div className="space-y-5 relative z-10">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Store Name</Label>
-                    <Input 
-                      placeholder="e.g. Sarah's Bakery" 
-                      value={shopName} 
+                    <Input
+                      autoComplete="organization"
+                      placeholder="e.g. Sarah's Bakery"
+                      value={shopName}
                       onChange={e => setShopName(e.target.value)}
                       className="h-11 bg-background/50 border-primary/20 focus:border-primary/50 text-foreground transition-colors"
                     />
@@ -281,15 +316,15 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
 
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Short Description</Label>
-                  <Textarea 
-                    placeholder="Tell customers what you sell in one sentence..." 
-                    value={shopDescription} 
+                  <Textarea
+                    placeholder="Tell customers what you sell in one sentence..."
+                    value={shopDescription}
                     onChange={e => setShopDescription(e.target.value)}
                     className="bg-background/50 border-primary/20 text-foreground min-h-[60px] resize-none"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Store Logo</Label>
                     <div className="relative group">
@@ -324,7 +359,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">State</Label>
                     <Select value={shopState} onValueChange={setShopState}>
@@ -340,9 +375,10 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">City</Label>
-                    <Input 
-                      placeholder="e.g. Ikeja" 
-                      value={shopCity} 
+                    <Input
+                      autoComplete="address-level2"
+                      placeholder="e.g. Ikeja"
+                      value={shopCity}
                       onChange={e => setShopCity(e.target.value)}
                       className="h-11 bg-background/50 border-primary/20 text-foreground"
                     />
@@ -351,9 +387,10 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
 
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Street Address (Optional)</Label>
-                  <Input 
-                    placeholder="e.g. 123 Herbert Macaulay Way" 
-                    value={shopAddress} 
+                  <Input
+                    autoComplete="street-address"
+                    placeholder="e.g. 123 Herbert Macaulay Way"
+                    value={shopAddress}
                     onChange={e => setShopAddress(e.target.value)}
                     className="h-11 bg-background/50 border-primary/20 text-foreground"
                   />
@@ -383,43 +420,69 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                 <div className="space-y-4">
                   <div className="space-y-3">
                     <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Product / Service Name</Label>
-                    <Input 
-                      placeholder="e.g. Chocolate Cake or Consultation" 
-                      value={productName} 
+                    <Input
+                      placeholder="e.g. Chocolate Cake or Consultation"
+                      value={productName}
                       onChange={e => setProductName(e.target.value)}
                       className="h-14 text-lg bg-background/50 border-primary/20"
                       autoFocus
                     />
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Price (₦)</Label>
-                    <Input 
-                      type="number"
-                      placeholder="e.g. 5000" 
-                      value={productPrice} 
-                      onChange={e => setProductPrice(e.target.value)}
-                      className="h-14 text-lg bg-background/50 border-primary/20"
+                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Description</Label>
+                    <Textarea
+                      placeholder="A short detail that helps customers decide..."
+                      value={productDescription}
+                      onChange={e => setProductDescription(e.target.value)}
+                      className="min-h-[84px] bg-background/50 border-primary/20"
                     />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-3">
+                      <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Price (₦)</Label>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        min="1"
+                        placeholder="e.g. 5000"
+                        value={productPrice}
+                        onChange={e => setProductPrice(e.target.value)}
+                        className="h-14 text-lg bg-background/50 border-primary/20"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Stock quantity</Label>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min="1"
+                        placeholder="e.g. 10"
+                        value={productStock}
+                        onChange={e => setProductStock(e.target.value)}
+                        className="h-14 text-lg bg-background/50 border-primary/20"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-3">
                     <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Product Image</Label>
                     <div className="relative group w-full sm:w-40">
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={(e) => handleFileChange(e, 'product')} 
-                        className="hidden" 
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileChange(e, 'product')}
+                        className="hidden"
                         id="product-image-upload"
                       />
-                      <label 
-                        htmlFor="product-image-upload" 
+                      <label
+                        htmlFor="product-image-upload"
                         className={`flex flex-col items-center justify-center w-full aspect-square rounded-xl border-2 border-dashed transition-all cursor-pointer ${productImagePreview ? 'border-primary' : 'border-primary/20 hover:border-primary/40'}`}
                       >
                         {productImagePreview ? (
                           <div className="relative w-full h-full p-2">
                             <img src={productImagePreview} alt="Product" className="w-full h-full object-cover rounded-lg" />
-                            <button 
+                            <button
                               onClick={(e) => { e.preventDefault(); setProductImageFile(null); setProductImagePreview(null); }}
                               className="absolute -top-1 -right-1 bg-destructive text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
                             >
@@ -453,9 +516,12 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
               <div className="space-y-6 relative z-10">
                 <div className="space-y-3">
                   <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">WhatsApp Number</Label>
-                  <Input 
-                    placeholder="e.g. 08012345678" 
-                    value={whatsappNumber} 
+                  <Input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="e.g. 08012345678"
+                    value={whatsappNumber}
                     onChange={e => setWhatsappNumber(e.target.value)}
                     className="h-14 text-lg bg-background/50 border-green-500/30 focus-visible:ring-green-500/30"
                     autoFocus

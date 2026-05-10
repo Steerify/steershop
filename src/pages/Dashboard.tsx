@@ -19,7 +19,7 @@ import {
   Megaphone, Target, ArrowRight, Clock,
   CheckCircle, AlertCircle, DollarSign, CalendarCheck, Menu, X,
   HelpCircle, Search, Shield, BookOpen, Banknote, Wallet, Crown, MessageCircle, Truck, BadgeCheck, Sparkles,
-  BarChart2, Home, Bell, ChevronUp, ChevronDown, ChevronRight, Zap, Star, TrendingDown, ExternalLink, Sun, Moon
+  BarChart2, Home, Bell, ChevronUp, ChevronDown, ChevronRight, Zap, Star, TrendingDown, ExternalLink, Sun, Moon, type LucideIcon
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
@@ -59,6 +59,40 @@ import { VendorSetupWizard } from "@/components/VendorSetupWizard";
 import { VendorCommandCenter } from "@/components/VendorCommandCenter";
 
 // ─── Stat Card Component (Minimalist) ──────────────────────────────────────────
+
+type DashboardProfile = {
+  full_name?: string | null;
+  is_subscribed?: boolean | null;
+  subscription_expires_at?: string | null;
+};
+
+type DashboardShop = {
+  id: string;
+  name?: string;
+  shop_name?: string;
+  shop_slug?: string | null;
+  logo_url?: string | null;
+  category?: string | null;
+  is_active?: boolean | null;
+  total_views?: number | null;
+  total_shares?: number | null;
+  bank_name?: string | null;
+  bank_account_number?: string | null;
+  bank_account_name?: string | null;
+};
+
+type DashboardOffer = { description: string };
+type DashboardBadge = Record<string, unknown>;
+type DashboardChartPoint = { date: string; revenue: number };
+type DashboardOrderSummary = {
+  payment_status?: string | null;
+  order_status?: string | null;
+  created_at?: string | null;
+  total_amount?: number | string | null;
+};
+
+type UrgentTask = { id: string; label: string; icon: LucideIcon; color: string; action: () => void };
+
 const StatCard = ({
   label, value, icon: Icon, trend, trendValue
 }: {
@@ -115,7 +149,7 @@ const QuickActionButton = ({
 
 // ─── Urgent Tasks Component ──────────────────────────────────────────────────
 const UrgentTasks = ({ tasks, onAction }: { 
-  tasks: { id: string; label: string; icon: any; color: string; action: () => void }[];
+  tasks: UrgentTask[];
   onAction: () => void;
 }) => {
   if (tasks.length === 0) return null;
@@ -159,20 +193,20 @@ const Dashboard = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, signOut, isLoading: isAuthLoading } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<DashboardProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [daysRemaining, setDaysRemaining] = useState<number>(0);
   const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'trial' | 'expired' | 'free'>('trial');
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalSales, setTotalSales] = useState(0);
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [activeOffer, setActiveOffer] = useState<any>(null);
+  const [chartData, setChartData] = useState<DashboardChartPoint[]>([]);
+  const [activeOffer, setActiveOffer] = useState<DashboardOffer | null>(null);
   const [shopData, setShopData] = useState<{ id: string; name: string } | null>(null);
-  const [shopFullData, setShopFullData] = useState<any>(null);
+  const [shopFullData, setShopFullData] = useState<DashboardShop | null>(null);
   const [productsCount, setProductsCount] = useState(0);
   const [hasProductWithImage, setHasProductWithImage] = useState(false);
-  const [userBadges, setUserBadges] = useState<any[]>([]);
+  const [userBadges, setUserBadges] = useState<DashboardBadge[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [pendingOrders, setPendingOrders] = useState(0);
   const [payoutBalance, setPayoutBalance] = useState({ totalRevenue: 0, totalWithdrawn: 0, totalPending: 0, availableBalance: 0 });
@@ -181,7 +215,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<"overview" | "actions" | "wallet">("overview");
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(true);
-  const [urgentTasks, setUrgentTasks] = useState<any[]>([]);
+  const [urgentTasks, setUrgentTasks] = useState<UrgentTask[]>([]);
 
   // Tour state
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
@@ -192,7 +226,7 @@ const Dashboard = () => {
 
   const handleTourCallback = (data: CallBackProps) => {
     const { status } = data;
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
+    if ([STATUS.FINISHED, STATUS.SKIPPED].some((completeStatus) => completeStatus === status)) {
       endTour(status === STATUS.FINISHED);
     }
   };
@@ -293,7 +327,7 @@ const Dashboard = () => {
 
       // 2. Check for Shop - EARLY EXIT if no shop found
       const shops = shopRes.data;
-      const primaryShop = Array.isArray(shops) ? shops[0] : (shops as any);
+      const primaryShop = (Array.isArray(shops) ? shops[0] : shops) as DashboardShop | null;
 
       if (!primaryShop) {
         setHasNoShop(true);
@@ -326,7 +360,7 @@ const Dashboard = () => {
       setHasProductWithImage(productsList.some(p => !!p.image_url && p.is_available));
 
       const allOrders = ordersRes.data || [];
-      const pending = allOrders.filter(o => (o as any).payment_status !== 'paid' && (o as any).order_status !== 'completed').length;
+      const pending = (allOrders as DashboardOrderSummary[]).filter(o => o.payment_status !== 'paid' && o.order_status !== 'completed').length;
       setPendingOrders(pending);
 
       // Process Chart Data
@@ -334,7 +368,7 @@ const Dashboard = () => {
         start: subMonths(new Date(), 0).setDate(new Date().getDate() - 6),
         end: new Date()
       });
-      const paidOrders = allOrders.filter(o => (o as any).payment_status === 'paid');
+      const paidOrders = (allOrders as DashboardOrderSummary[]).filter(o => o.payment_status === 'paid');
       const dailyData = last7Days.map(day => {
         const dateStr = format(day, 'yyyy-MM-dd');
         const dayPaidOrders = paidOrders.filter(o => o.created_at && format(new Date(o.created_at), 'yyyy-MM-dd') === dateStr);
@@ -1016,7 +1050,6 @@ const Dashboard = () => {
             )}
           </div>
         </div>
-      </div>
 
       {/* ─── Mobile Bottom Navigation ────────────────────── */}
       <MobileBottomNav />
