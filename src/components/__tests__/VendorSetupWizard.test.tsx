@@ -9,6 +9,7 @@ vi.mock("@/services/shop.service", () => ({
   default: {
     createShop: vi.fn(),
     updateShop: vi.fn(),
+    createDefaultShopAddress: vi.fn(),
   },
 }));
 
@@ -88,6 +89,7 @@ describe("VendorSetupWizard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(shopService.createShop).mockResolvedValue({ success: true, data: { id: "shop-123", slug: "my-test-shop" }, message: "Shop created successfully" });
+    vi.mocked(shopService.createDefaultShopAddress).mockResolvedValue({ success: true, data: { id: "address-123" }, message: "Shop address created successfully" });
     vi.mocked(productService.createProduct).mockResolvedValue({ success: true, data: { id: "product-123" }, message: "Product created successfully" });
     supabaseMocks.shopAddressInsert.mockResolvedValue({ error: null });
   });
@@ -220,4 +222,30 @@ describe("VendorSetupWizard", () => {
     });
     expect(screen.getByText("You're all set! 🚀")).toBeInTheDocument();
   });
+
+  it("saves a default address when address and WhatsApp are provided", async () => {
+    render(<VendorSetupWizard open={true} onComplete={onComplete} />);
+
+    await fillRequiredShopFields();
+    fireEvent.change(screen.getByPlaceholderText("e.g. 123 Herbert Macaulay Way"), { target: { value: "123 Herbert Macaulay Way" } });
+    fireEvent.click(screen.getByText("Create Store"));
+    await screen.findByText("What are you selling?");
+    fireEvent.click(screen.getByText("Skip for now"));
+    await screen.findByText("How will they reach you?");
+
+    fireEvent.change(screen.getByPlaceholderText("e.g. 08012345678"), { target: { value: "08012345678" } });
+    fireEvent.click(screen.getByText("Finish Setup"));
+
+    await waitFor(() => {
+      expect(shopService.createDefaultShopAddress).toHaveBeenCalledWith("shop-123", {
+        label: "Main location",
+        contactName: "My Test Shop",
+        contactPhone: "+2348012345678",
+        addressLine1: "123 Herbert Macaulay Way",
+        city: "Ikeja",
+        state: "Lagos",
+      });
+    });
+  });
+
 });

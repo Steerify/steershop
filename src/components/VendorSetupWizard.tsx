@@ -240,14 +240,23 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
 
     setIsLoading(true);
     try {
-      const normalizedWhatsappNumber = normalizeWhatsappNumber(whatsappNumber);
+      const normalizedWhatsapp = normalizeWhatsappNumber(whatsappNumber);
 
       await shopService.updateShop(createdShopId, {
-        whatsapp_number: normalizedWhatsappNumber,
+        whatsapp_number: normalizedWhatsapp,
         is_active: true
       });
 
-      await saveShopAddressIfComplete(normalizedWhatsappNumber);
+      if (shopAddress.trim()) {
+        await shopService.createDefaultShopAddress(createdShopId, {
+          label: "Main location",
+          contactName: shopName.trim(),
+          contactPhone: normalizedWhatsapp,
+          addressLine1: shopAddress.trim(),
+          city: shopCity,
+          state: shopState,
+        });
+      }
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -583,11 +592,19 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                   <Button className="w-full h-14 text-lg font-bold shadow-lg bg-green-600 hover:bg-green-700 text-white" onClick={handleConnectWhatsapp} disabled={isLoading || !whatsappNumber.trim()}>
                     {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Finish Setup"}
                   </Button>
+                  {shopAddress.trim() && (
+                    <p className="text-center text-xs text-muted-foreground">
+                      If you skip WhatsApp now, your address can be added later.
+                    </p>
+                  )}
                   <Button variant="ghost" className="w-full h-12 text-muted-foreground hover:text-foreground" onClick={async () => {
                     setIsLoading(true);
                     try {
                       if (createdShopId) {
                         await shopService.updateShop(createdShopId, { is_active: true });
+                      }
+                      if (shopAddress.trim()) {
+                        toast({ title: "Address can be added later", description: "Connect WhatsApp whenever you're ready to save a default pickup address." });
                       }
                       const { data: { user } } = await supabase.auth.getUser();
                       if (user) {

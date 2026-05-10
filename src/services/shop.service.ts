@@ -2,6 +2,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { Shop } from '@/types/api';
 import activityLogService from './activity-log.service';
 
+
+export interface CreateDefaultShopAddressRequest {
+  label?: string;
+  contactName: string;
+  contactPhone: string;
+  addressLine1: string;
+  city: string;
+  state: string;
+}
+
 export interface CreateShopRequest {
   name: string;
   slug: string;
@@ -17,6 +27,36 @@ export interface CreateShopRequest {
 }
 
 const shopService = {
+
+  createDefaultShopAddress: async (shopId: string, data: CreateDefaultShopAddressRequest) => {
+    const { data: address, error } = await supabase
+      .from('shop_addresses')
+      .insert({
+        shop_id: shopId,
+        label: data.label || 'Main location',
+        contact_name: data.contactName,
+        contact_phone: data.contactPhone,
+        address_line_1: data.addressLine1,
+        city: data.city,
+        state: data.state,
+        country: 'NG',
+        is_default: true,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Create shop address error:', error);
+      throw new Error(error.message);
+    }
+
+    return {
+      success: true,
+      data: address,
+      message: 'Shop address created successfully'
+    };
+  },
+
   createShop: async (data: CreateShopRequest) => {
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -32,10 +72,9 @@ const shopService = {
         shop_slug: data.slug,
         description: data.description,
         whatsapp_number: data.whatsapp,
+        category: data.category || null,
         city: data.city || null,
         state: data.state || null,
-        address: data.address || null,
-        category: data.category || null,
         logo_url: data.logo_url || null,
         banner_url: data.banner_url || null,
         country: "Nigeria",
@@ -85,7 +124,7 @@ const shopService = {
 
     if (filters?.searchTerm) {
       const q = `%${filters.searchTerm}%`;
-      query = query.or(`shop_name.ilike.${q},description.ilike.${q},shop_slug.ilike.${q},state.ilike.${q},city.ilike.${q}`);
+      query = query.or(`shop_name.ilike.${q},description.ilike.${q},shop_slug.ilike.${q},category.ilike.${q},state.ilike.${q},city.ilike.${q}`);
     }
 
     const { data: shops, error, count } = await query
@@ -147,6 +186,7 @@ const shopService = {
       total_reviews: s.total_reviews,
       owner_id: s.owner_id,
       is_verified: s.is_verified,
+      category: s.category,
       state: s.state,
       city: s.city,
       country: s.country,
@@ -202,6 +242,7 @@ const shopService = {
       total_reviews: s.total_reviews,
       owner_id: s.owner_id,
       is_verified: s.is_verified,
+      category: s.category,
       state: s.state,
       city: s.city,
       country: s.country,
@@ -249,6 +290,7 @@ const shopService = {
       total_reviews: shop.total_reviews,
       owner_id: shop.owner_id,
       is_verified: shop.is_verified,
+      category: shop.category,
       state: shop.state,
       city: shop.city,
       country: shop.country,
@@ -283,6 +325,7 @@ const shopService = {
     if (data.bank_account_number) updateData.bank_account_number = data.bank_account_number;
     if (data.paystack_public_key) updateData.paystack_public_key = data.paystack_public_key;
     if (data.is_active !== undefined) updateData.is_active = data.is_active;
+    if (data.category !== undefined) updateData.category = data.category;
     if (data.city !== undefined) updateData.city = data.city;
     if (data.state !== undefined) updateData.state = data.state;
     if (data.country !== undefined) updateData.country = data.country;
