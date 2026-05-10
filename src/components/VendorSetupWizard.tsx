@@ -197,21 +197,21 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   if (!open) return null;
 
   return (
-    <div className="relative w-full bg-background animate-in fade-in duration-500" style={{ touchAction: 'pan-y' }}>
+    <div className="vendor-wizard-page">
       <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
-      
-      {/* Top Progress Bar */}
+
+      {/* Sticky Progress Bar */}
       <div className="w-full h-2 bg-muted sticky top-0 z-20">
-        <div 
-          className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 ease-out" 
+        <div
+          className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 ease-out"
           style={{ width: `${(step / 3) * 100}%` }}
         />
       </div>
 
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-start justify-start lg:justify-center max-w-6xl w-full mx-auto p-4 sm:p-8 lg:p-12 pb-32 relative z-10 gap-8 lg:gap-16">
+      <div className="flex flex-col lg:flex-row w-full max-w-6xl mx-auto p-4 sm:p-8 lg:p-12 pb-40 relative z-10 gap-8 lg:gap-16">
         
         {/* Left Side: Context & Visuals */}
-        <div className="lg:w-1/2 flex flex-col justify-center animate-in slide-in-from-left-8 duration-500">
+        <div className="lg:w-1/2 flex flex-col justify-start pt-4 lg:pt-12">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-8 shadow-lg">
             <Store className="w-8 h-8 text-white" />
           </div>
@@ -248,8 +248,8 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         </div>
 
         {/* Right Side: Form / Inputs */}
-        <div className="lg:w-1/2 flex flex-col justify-center animate-in slide-in-from-right-8 duration-700">
-          <div className="bg-card/80 backdrop-blur-xl border border-border/50 shadow-2xl rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+        <div className="lg:w-1/2 flex flex-col justify-start">
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 shadow-2xl rounded-3xl p-6 sm:p-8 relative overflow-visible">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
             
             {step === 1 && (

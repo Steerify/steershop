@@ -193,7 +193,17 @@
   #root {
     width: 100%;
     min-height: 100vh;
-    overflow-x: clip;
+    overflow-x: hidden;
+  }
+
+  /* Wizard page: ensure native document scroll, no clipping */
+  .vendor-wizard-page {
+    position: relative;
+    width: 100%;
+    overflow-y: visible !important;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 
   img,
