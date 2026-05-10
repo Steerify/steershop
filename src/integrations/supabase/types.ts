@@ -2399,8 +2399,6 @@ export type Database = {
           banner_url: string | null
           category: string | null
           city: string | null
-          address: string | null
-          show_public_address: boolean
           country: string | null
           created_at: string
           description: string | null
@@ -2434,8 +2432,6 @@ export type Database = {
           banner_url?: string | null
           category?: string | null
           city?: string | null
-          address?: string | null
-          show_public_address?: boolean
           country?: string | null
           created_at?: string
           description?: string | null
@@ -2469,8 +2465,6 @@ export type Database = {
           banner_url?: string | null
           category?: string | null
           city?: string | null
-          address?: string | null
-          show_public_address?: boolean
           country?: string | null
           created_at?: string
           description?: string | null
@@ -2983,6 +2977,8 @@ export type Database = {
           accent_color: string | null
           average_rating: number | null
           banner_url: string | null
+          category: string | null
+          city: string | null
           country: string | null
           created_at: string | null
           description: string | null
@@ -3007,6 +3003,8 @@ export type Database = {
           accent_color?: string | null
           average_rating?: number | null
           banner_url?: string | null
+          category?: string | null
+          city?: string | null
           country?: string | null
           created_at?: string | null
           description?: string | null
@@ -3031,6 +3029,8 @@ export type Database = {
           accent_color?: string | null
           average_rating?: number | null
           banner_url?: string | null
+          category?: string | null
+          city?: string | null
           country?: string | null
           created_at?: string | null
           description?: string | null

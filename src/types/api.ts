@@ -68,8 +68,11 @@ export interface Shop {
   phone?: string;
   whatsapp?: string;
   whatsapp_number?: string;
+  /** Full street address, if collected for private fulfilment/admin workflows; do not expose publicly by default. */
   address?: string;
+  /** Public storefront city used for marketplace discovery. */
   city?: string;
+  /** Public storefront state/region used for marketplace discovery. */
   state?: string;
   payment_method?: string;
   bank_name?: string;
@@ -78,6 +81,7 @@ export interface Shop {
   paystack_public_key?: string;
   logo_url?: string;
   banner_url?: string;
+  /** Public shop category used for marketplace discovery. */
   category?: string;
   show_public_address?: boolean;
   is_active?: boolean;
