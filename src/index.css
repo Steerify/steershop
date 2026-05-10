@@ -200,9 +200,16 @@
   .vendor-wizard-page {
     position: relative;
     width: 100%;
-    overflow-y: visible !important;
+    min-height: 100dvh;
+    overflow-y: auto !important;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+  }
+
+  body.vendor-wizard-open {
+    overflow-y: auto !important;
     touch-action: pan-y;
   }
 

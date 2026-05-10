@@ -1,6 +1,43 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductImage } from '@/types/api';
 
+type ProductUpdateData = {
+  name?: string;
+  description?: string;
+  price?: number;
+  compare_price?: number | null;
+  stock_quantity?: number;
+  image_url?: string;
+  type?: 'product' | 'service';
+  duration_minutes?: number;
+  booking_required?: boolean;
+  is_available?: boolean;
+  video_url?: string | null;
+  category?: string;
+  nafdac_number?: string | null;
+  stock_unit?: string;
+};
+
+type ProductSearchRow = {
+  id: string;
+  shop_id: string;
+  name: string;
+  description: string | null;
+  price: number | string;
+  compare_price?: number | string | null;
+  stock_quantity: number;
+  image_url: string | null;
+  average_rating?: number | string | null;
+  total_reviews?: number | null;
+  type?: string | null;
+  is_available?: boolean;
+  duration_minutes?: number | null;
+  booking_required?: boolean | null;
+  video_url?: string | null;
+  stock_unit?: string | null;
+  shops?: { shop_slug?: string | null } | null;
+};
+
 export interface CreateProductRequest {
   shopId: string;
   categoryId?: string;
@@ -17,6 +54,8 @@ export interface CreateProductRequest {
   is_available?: boolean;
   video_url?: string;
   stockUnit?: string;
+  category?: string;
+  nafdac_number?: string;
 }
 
 const productService = {
@@ -42,8 +81,8 @@ const productService = {
         duration_minutes: data.duration_minutes || null,
         booking_required: data.booking_required || false,
         video_url: data.video_url || null,
-        category: (data as any).category || 'general',
-        nafdac_number: (data as any).nafdac_number || null,
+        category: data.category || 'general',
+        nafdac_number: data.nafdac_number || null,
         stock_unit: data.stockUnit || 'units',
       })
       .select()
@@ -174,7 +213,7 @@ const productService = {
   },
 
   updateProduct: async (id: string, data: Partial<CreateProductRequest>) => {
-    const updateData: any = {};
+    const updateData: ProductUpdateData = {};
     
     if (data.name) updateData.name = data.name;
     if (data.description !== undefined) updateData.description = data.description;
@@ -187,8 +226,8 @@ const productService = {
     if (data.booking_required !== undefined) updateData.booking_required = data.booking_required;
     if (data.is_available !== undefined) updateData.is_available = data.is_available;
     if (data.video_url !== undefined) updateData.video_url = data.video_url || null;
-    if ((data as any).category) updateData.category = (data as any).category;
-    if ((data as any).nafdac_number !== undefined) updateData.nafdac_number = (data as any).nafdac_number || null;
+    if (data.category) updateData.category = data.category;
+    if (data.nafdac_number !== undefined) updateData.nafdac_number = data.nafdac_number || null;
     if (data.stockUnit !== undefined) updateData.stock_unit = data.stockUnit || "units";
 
     const { data: product, error } = await supabase
@@ -262,7 +301,7 @@ const productService = {
     }
 
     // Map to Product type with shop_slug and image_url for display
-    const mappedProducts = (products || []).map((p: any) => ({
+    const mappedProducts = ((products || []) as ProductSearchRow[]).map((p) => ({
       id: p.id,
       shopId: p.shop_id,
       categoryId: '',
