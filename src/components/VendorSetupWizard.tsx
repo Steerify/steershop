@@ -62,8 +62,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
 
   useEffect(() => {
     if (open) {
-      const timer = setTimeout(() => setIsReady(true), 100);
-      return () => clearTimeout(timer);
+      setIsReady(true);
     }
   }, [open]);
 
@@ -209,7 +208,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         />
       </div>
 
-      <div className="flex flex-col lg:flex-row items-center lg:items-stretch justify-center min-h-[calc(100vh-8px)] max-w-6xl w-full mx-auto p-4 sm:p-8 lg:p-12 pb-24 relative z-10 gap-8 lg:gap-16">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-start lg:justify-center min-h-[calc(100vh-8px)] max-w-6xl w-full mx-auto p-4 sm:p-8 lg:p-12 pb-24 relative z-10 gap-8 lg:gap-16">
         
         {/* Left Side: Context & Visuals */}
         <div className="lg:w-1/2 flex flex-col justify-center animate-in slide-in-from-left-8 duration-500">
@@ -262,8 +261,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                       placeholder="e.g. Sarah's Bakery" 
                       value={shopName} 
                       onChange={e => setShopName(e.target.value)}
-                      className="h-11 bg-background/50 border-primary/20 focus:border-primary/50 transition-colors"
-                      disabled={!isReady}
+                      className="h-11 bg-background/50 border-primary/20 focus:border-primary/50 text-foreground transition-colors"
                     />
                   </div>
                   <div className="space-y-2">
@@ -287,7 +285,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                     placeholder="Tell customers what you sell in one sentence..." 
                     value={shopDescription} 
                     onChange={e => setShopDescription(e.target.value)}
-                    className="bg-background/50 border-primary/20 min-h-[60px] resize-none"
+                    className="bg-background/50 border-primary/20 text-foreground min-h-[60px] resize-none"
                   />
                 </div>
 
@@ -346,7 +344,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                       placeholder="e.g. Ikeja" 
                       value={shopCity} 
                       onChange={e => setShopCity(e.target.value)}
-                      className="h-11 bg-background/50 border-primary/20"
+                      className="h-11 bg-background/50 border-primary/20 text-foreground"
                     />
                   </div>
                 </div>
@@ -357,7 +355,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                     placeholder="e.g. 123 Herbert Macaulay Way" 
                     value={shopAddress} 
                     onChange={e => setShopAddress(e.target.value)}
-                    className="h-11 bg-background/50 border-primary/20"
+                    className="h-11 bg-background/50 border-primary/20 text-foreground"
                   />
                 </div>
 
