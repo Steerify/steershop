@@ -51,78 +51,78 @@ const ProductDetails = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [productId]);
 
-      {product && shop && (
-        <Helmet>
-          <title>{`${product.name} | ${shop.shop_name || shop.name || 'Shop'} | SteerSolo`}</title>
-          <meta name="description" content={product.description || `${product.name} available at ${shop.shop_name || shop.name || 'Shop'} on SteerSolo.`} />
-          <meta name="keywords" content={`${product.name}, ${shop.shop_name || shop.name}, buy ${product.name} online, nigeria beauty, steersolo`} />
-          
-          <meta property="og:title" content={`${product.name} - ${shop.shop_name || shop.name}`} />
-          <meta property="og:description" content={product.description || `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`} />
-          <meta property="og:url" content={`https://steersolo.com/shop/${slug}/product/${product.id}`} />
-          <meta property="og:type" content="product" />
-          <meta property="og:site_name" content="SteerSolo" />
-          <meta property="og:locale" content="en_NG" />
-          
-          {(product.image_url || product.images?.[0]?.url) && (
-            <meta property="og:image" content={product.image_url || product.images?.[0]?.url} />
-          )}
-
-          <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content={`${product.name} - ${shop.shop_name || shop.name}`} />
-          <meta name="twitter:description" content={product.description || `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`} />
-          
-          <link rel="canonical" href={`https://steersolo.com/shop/${slug}/product/${product.id}`} />
-          
-          <script type="application/ld+json">
-            {JSON.stringify([
-              {
-                "@context": "https://schema.org",
-                "@type": "Product",
-                "name": product.name,
-                "description": product.description || `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`,
-                "image": product.image_url || (product.images?.[0]?.url) || undefined,
-                "url": `https://steersolo.com/shop/${slug}/product/${product.id}`,
-                "sku": product.id,
-                "brand": { "@type": "Brand", "name": shop.shop_name || shop.name },
-                "offers": {
-                  "@type": "Offer",
-                  "url": `https://steersolo.com/shop/${slug}/product/${product.id}`,
-                  "price": product.price,
-                  "priceCurrency": "NGN",
-                  "availability": (product.inventory || product.is_available) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-                  "seller": { "@type": "Organization", "name": shop.shop_name || shop.name, "url": `https://steersolo.com/shop/${slug}` }
-                },
-                ...((product.averageRating || product.totalReviews) && {
-                  "aggregateRating": {
-                    "@type": "AggregateRating",
-                    "ratingValue": product.averageRating,
-                    "reviewCount": product.totalReviews
-                  }
-                }),
-                ...(reviews.length > 0 && {
-                  "review": reviews.map(r => ({
-                    "@type": "Review",
-                    "reviewRating": { "@type": "Rating", "ratingValue": r.rating },
-                    "author": { "@type": "Person", "name": r.customer_name || "Verified Customer" },
-                    "reviewBody": r.comment || "",
-                    "datePublished": r.created_at
-                  }))
-                })
-              },
-              {
-                "@context": "https://schema.org",
-                "@type": "BreadcrumbList",
-                "itemListElement": [
-                  { "@type": "ListItem", "position": 1, "name": "Marketplace", "item": "https://steersolo.com/shops" },
-                  { "@type": "ListItem", "position": 2, "name": shop.shop_name || shop.name, "item": `https://steersolo.com/shop/${slug}` },
-                  { "@type": "ListItem", "position": 3, "name": product.name, "item": `https://steersolo.com/shop/${slug}/product/${product.id}` }
-                ]
-              }
-            ])}
-          </script>
-        </Helmet>
+  const productSeo = product && shop ? (
+    <Helmet>
+      <title>{`${product.name} | ${shop.shop_name || shop.name || 'Shop'} | SteerSolo`}</title>
+      <meta name="description" content={product.description || `${product.name} available at ${shop.shop_name || shop.name || 'Shop'} on SteerSolo.`} />
+      <meta name="keywords" content={`${product.name}, ${shop.shop_name || shop.name}, buy ${product.name} online, nigeria beauty, steersolo`} />
+      
+      <meta property="og:title" content={`${product.name} - ${shop.shop_name || shop.name}`} />
+      <meta property="og:description" content={product.description || `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`} />
+      <meta property="og:url" content={`https://steersolo.com/shop/${slug}/product/${product.id}`} />
+      <meta property="og:type" content="product" />
+      <meta property="og:site_name" content="SteerSolo" />
+      <meta property="og:locale" content="en_NG" />
+      
+      {(product.image_url || product.images?.[0]?.url) && (
+        <meta property="og:image" content={product.image_url || product.images?.[0]?.url} />
       )}
+    
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={`${product.name} - ${shop.shop_name || shop.name}`} />
+      <meta name="twitter:description" content={product.description || `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`} />
+      
+      <link rel="canonical" href={`https://steersolo.com/shop/${slug}/product/${product.id}`} />
+      
+      <script type="application/ld+json">
+        {JSON.stringify([
+          {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": product.name,
+            "description": product.description || `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`,
+            "image": product.image_url || (product.images?.[0]?.url) || undefined,
+            "url": `https://steersolo.com/shop/${slug}/product/${product.id}`,
+            "sku": product.id,
+            "brand": { "@type": "Brand", "name": shop.shop_name || shop.name },
+            "offers": {
+              "@type": "Offer",
+              "url": `https://steersolo.com/shop/${slug}/product/${product.id}`,
+              "price": product.price,
+              "priceCurrency": "NGN",
+              "availability": (product.inventory || product.is_available) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+              "seller": { "@type": "Organization", "name": shop.shop_name || shop.name, "url": `https://steersolo.com/shop/${slug}` }
+            },
+            ...((product.averageRating || product.totalReviews) && {
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": product.averageRating,
+                "reviewCount": product.totalReviews
+              }
+            }),
+            ...(reviews.length > 0 && {
+              "review": reviews.map(r => ({
+                "@type": "Review",
+                "reviewRating": { "@type": "Rating", "ratingValue": r.rating },
+                "author": { "@type": "Person", "name": r.customer_name || "Verified Customer" },
+                "reviewBody": r.comment || "",
+                "datePublished": r.created_at
+              }))
+            })
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Marketplace", "item": "https://steersolo.com/shops" },
+              { "@type": "ListItem", "position": 2, "name": shop.shop_name || shop.name, "item": `https://steersolo.com/shop/${slug}` },
+              { "@type": "ListItem", "position": 3, "name": product.name, "item": `https://steersolo.com/shop/${slug}/product/${product.id}` }
+            ]
+          }
+        ])}
+      </script>
+    </Helmet>
+  ) : null;
 
   const loadProductData = async () => {
     try {
@@ -315,6 +315,7 @@ const ProductDetails = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {productSeo}
       <Navbar />
 
       <div className="flex-1 container mx-auto px-3 sm:px-4 pt-20 sm:pt-24 pb-24 sm:pb-16">

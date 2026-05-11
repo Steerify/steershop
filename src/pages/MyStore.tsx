@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
 import { useAuth } from "@/context/AuthContext";
@@ -35,6 +36,7 @@ import {
   ChevronDown,
   AlertTriangle,
   Clock,
+  Sparkles,
 } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { ImageUpload } from "@/components/ImageUpload";
@@ -405,14 +407,6 @@ const MyStore = () => {
 
   return (
     <PageWrapper patternVariant="dots" patternOpacity={0.5}>
-      <DoneForYouPopup
-        open={showDfyPopup}
-        onClose={() => setShowDfyPopup(false)}
-        onShopCreated={() => {
-          setShowDfyPopup(false);
-          loadShop();
-        }}
-      />
       <Dialog open={showPostCreatePrompt} onOpenChange={setShowPostCreatePrompt}>
         <DialogContent className="sm:max-w-lg">
           <div className="text-center pt-2 pb-1">
