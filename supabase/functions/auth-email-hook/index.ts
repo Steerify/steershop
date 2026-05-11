@@ -38,7 +38,6 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = "steersolo"
-const SENDER_DOMAIN = "notify.steersolo.com"
 const ROOT_DOMAIN = "steersolo.com"
 const FROM_DOMAIN = "steersolo.com" // Domain shown in From address (may be root or sender subdomain)
 const SENDER_EMAIL = Deno.env.get('SMTP_FROM_EMAIL') || 'mail@steersolo.com'

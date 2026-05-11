@@ -87,7 +87,8 @@ serve(async (req) => {
       }
       try {
         await resend.emails.send({
-          from: "SteerSolo <noreply@steersolo.com>",
+          from: "SteerSolo <mail@steersolo.com>",
+          replyTo: "mail@steersolo.com",
           to: [to],
           subject,
           html,

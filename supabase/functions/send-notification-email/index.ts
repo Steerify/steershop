@@ -141,8 +141,8 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const resendApiKey = Deno.env.get('RESEND_API_KEY')!;
-    const fromEmail = Deno.env.get('RESEND_FROM_EMAIL') || 'SteerSolo <onboarding@resend.dev>';
+    const fromEmail = 'SteerSolo <mail@steersolo.com>';
+    const replyTo = 'mail@steersolo.com';
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { type, user_id, data = {} }: NotificationRequest = await req.json();
@@ -185,6 +185,7 @@ serve(async (req) => {
         label: `notification:${type}`,
         to: email,
         from: fromEmail,
+        replyTo,
         subject: template.subject,
         html: template.html,
         queued_at: new Date().toISOString(),
