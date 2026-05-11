@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import nodemailer from 'npm:nodemailer'
 
 const MAX_RETRIES = 5
 const DEFAULT_BATCH_SIZE = 10
@@ -6,18 +7,23 @@ const DEFAULT_SEND_DELAY_MS = 200
 const DEFAULT_AUTH_TTL_MINUTES = 15
 const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
 
-function isRateLimited(error: unknown): boolean {
-  if (error && typeof error === 'object' && 'status' in error) {
-    return (error as { status: number }).status === 429
+function getErrorStatus(error: unknown): number | null {
+  if (!error || typeof error !== 'object') return null
+  if ('status' in error && typeof (error as { status: unknown }).status === 'number') {
+    return (error as { status: number }).status
   }
-  return error instanceof Error && error.message.includes('429')
+  if ('responseCode' in error && typeof (error as { responseCode: unknown }).responseCode === 'number') {
+    return (error as { responseCode: number }).responseCode
+  }
+  return null
+}
+
+function isRateLimited(error: unknown): boolean {
+  return getErrorStatus(error) === 429 || (error instanceof Error && error.message.includes('429'))
 }
 
 function isForbidden(error: unknown): boolean {
-  if (error && typeof error === 'object' && 'status' in error) {
-    return (error as { status: number }).status === 403
-  }
-  return error instanceof Error && error.message.includes('403')
+  return getErrorStatus(error) === 403 || (error instanceof Error && error.message.includes('403'))
 }
 
 function getRetryAfterSeconds(error: unknown): number {
@@ -67,7 +73,11 @@ async function moveToDlq(
 }
 
 Deno.serve(async (req) => {
-  const resendApiKey = Deno.env.get('RESEND_API_KEY')
+  const smtpHost = Deno.env.get('SMTP_HOST')
+  const smtpPort = Number(Deno.env.get('SMTP_PORT'))
+  const smtpUser = Deno.env.get('SMTP_USER')
+  const smtpPass = Deno.env.get('SMTP_PASS')
+  const smtpFromEmail = Deno.env.get('SMTP_FROM_EMAIL') || 'mail@steersolo.com'
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
@@ -97,6 +107,15 @@ Deno.serve(async (req) => {
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  const transporter = nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpPort === 465,
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+  })
 
   const { data: state } = await (supabase as any)
     .from('email_send_state')
@@ -192,14 +211,20 @@ Deno.serve(async (req) => {
       }
 
       if (payload.message_id) {
-        const { data: alreadySent } = await (supabase as any)
+        const { data: alreadySentByMessageId } = await (supabase as any)
           .from('email_send_log')
           .select('id')
           .eq('message_id', payload.message_id)
           .eq('status', 'sent')
           .maybeSingle()
+        const { data: alreadySentByQueueMessageId } = await (supabase as any)
+          .from('email_send_log')
+          .select('id')
+          .contains('metadata', { queue_message_id: payload.message_id })
+          .eq('status', 'sent')
+          .maybeSingle()
 
-        if (alreadySent) {
+        if (alreadySentByMessageId || alreadySentByQueueMessageId) {
           console.warn('Skipping duplicate send (already sent)', {
             queue, msg_id: msg.msg_id, message_id: payload.message_id,
           })
@@ -215,38 +240,25 @@ Deno.serve(async (req) => {
       }
 
       try {
-        if (!resendApiKey) {
-          throw new Error('Missing RESEND_API_KEY environment variable. Emails cannot be sent.');
+        if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
+          throw new Error('Missing SMTP environment variables. Emails cannot be sent.')
         }
 
-        // Direct Resend API usage
-        const resendRes = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${resendApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: payload.sender_domain 
-              ? `${payload.from.split('<')[0].trim()} <noreply@${payload.sender_domain}>` 
-              : payload.from,
-            to: typeof payload.to === 'string' ? [payload.to] : payload.to,
-            subject: payload.subject,
-            html: payload.html,
-            text: payload.text,
-          }),
-        });
-
-        if (!resendRes.ok) {
-          const resError = await resendRes.text();
-          throw new Error(`Resend API error: ${resendRes.status} ${resError}`);
-        }
+        const sendResult = await transporter.sendMail({
+          from: payload.from || `SteerSolo <${smtpFromEmail}>`,
+          to: payload.to,
+          subject: payload.subject,
+          html: payload.html,
+          text: payload.text,
+          replyTo: 'mail@steersolo.com',
+        })
 
         await (supabase as any).from('email_send_log').insert({
-          message_id: payload.message_id,
+          message_id: sendResult?.messageId || payload.message_id,
           template_name: payload.label || queue,
           recipient_email: payload.to,
           status: 'sent',
+          metadata: sendResult?.messageId ? { queue_message_id: payload.message_id } : null,
         })
 
         const { error: delError } = await (supabase as any).rpc('delete_email', {
@@ -288,7 +300,7 @@ Deno.serve(async (req) => {
         }
 
         if (isForbidden(error)) {
-          await moveToDlq(supabase, queue, msg, 'Emails disabled for this project')
+          await moveToDlq(supabase, queue, msg, 'Email service disabled for this project')
           return new Response(
             JSON.stringify({ processed: totalProcessed, stopped: 'emails_disabled' }),
             { headers: { 'Content-Type': 'application/json' } }
