@@ -2392,6 +2392,7 @@ export type Database = {
       shops: {
         Row: {
           accent_color: string | null
+          address: string | null
           average_rating: number | null
           bank_account_name: string | null
           bank_account_number: string | null
@@ -2417,6 +2418,7 @@ export type Database = {
           settlement_bank_code: string | null
           shop_name: string
           shop_slug: string
+          show_public_address: boolean
           state: string | null
           theme_mode: string | null
           total_reviews: number | null
@@ -2425,6 +2427,7 @@ export type Database = {
         }
         Insert: {
           accent_color?: string | null
+          address?: string | null
           average_rating?: number | null
           bank_account_name?: string | null
           bank_account_number?: string | null
@@ -2450,6 +2453,7 @@ export type Database = {
           settlement_bank_code?: string | null
           shop_name: string
           shop_slug: string
+          show_public_address?: boolean
           state?: string | null
           theme_mode?: string | null
           total_reviews?: number | null
@@ -2458,6 +2462,7 @@ export type Database = {
         }
         Update: {
           accent_color?: string | null
+          address?: string | null
           average_rating?: number | null
           bank_account_name?: string | null
           bank_account_number?: string | null
@@ -2483,6 +2488,7 @@ export type Database = {
           settlement_bank_code?: string | null
           shop_name?: string
           shop_slug?: string
+          show_public_address?: boolean
           state?: string | null
           theme_mode?: string | null
           total_reviews?: number | null
@@ -2975,6 +2981,7 @@ export type Database = {
       shops_public: {
         Row: {
           accent_color: string | null
+          address: string | null
           average_rating: number | null
           banner_url: string | null
           category: string | null
@@ -3001,6 +3008,7 @@ export type Database = {
         }
         Insert: {
           accent_color?: string | null
+          address?: string | null
           average_rating?: number | null
           banner_url?: string | null
           category?: string | null
@@ -3027,6 +3035,7 @@ export type Database = {
         }
         Update: {
           accent_color?: string | null
+          address?: string | null
           average_rating?: number | null
           banner_url?: string | null
           category?: string | null

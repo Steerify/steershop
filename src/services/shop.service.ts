@@ -26,6 +26,11 @@ export interface CreateShopRequest {
   banner_url?: string;
 }
 
+const isMissingShopAddressColumnError = (error: { message?: string; code?: string } | null | undefined) => {
+  const message = error?.message?.toLowerCase() || '';
+  return error?.code === 'PGRST204' && (message.includes("'address'") || message.includes('address column') || message.includes('show_public_address'));
+};
+
 const shopService = {
 
   createDefaultShopAddress: async (shopId: string, data: CreateDefaultShopAddressRequest) => {
@@ -64,24 +69,39 @@ const shopService = {
       throw new Error('User not authenticated');
     }
 
-    const { data: shop, error } = await supabase
+    const shopPayload = {
+      owner_id: user.id,
+      shop_name: data.name,
+      shop_slug: data.slug,
+      description: data.description,
+      whatsapp_number: data.whatsapp,
+      category: data.category || null,
+      city: data.city || null,
+      state: data.state || null,
+      address: data.address?.trim() || null,
+      show_public_address: false,
+      logo_url: data.logo_url || null,
+      banner_url: data.banner_url || null,
+      country: "Nigeria",
+      is_active: false,
+    };
+
+    let { data: shop, error } = await supabase
       .from('shops')
-      .insert({
-        owner_id: user.id,
-        shop_name: data.name,
-        shop_slug: data.slug,
-        description: data.description,
-        whatsapp_number: data.whatsapp,
-        category: data.category || null,
-        city: data.city || null,
-        state: data.state || null,
-        logo_url: data.logo_url || null,
-        banner_url: data.banner_url || null,
-        country: "Nigeria",
-        is_active: false,
-      })
+      .insert(shopPayload)
       .select()
       .single();
+
+    // Older deployments may not have refreshed the optional public-address columns yet.
+    // Retry without those columns so store creation is never blocked.
+    if (isMissingShopAddressColumnError(error)) {
+      const { address, show_public_address, ...safePayload } = shopPayload;
+      ({ data: shop, error } = await supabase
+        .from('shops')
+        .insert(safePayload)
+        .select()
+        .single());
+    }
 
     if (error) {
       console.error('Create shop error:', error);
@@ -190,7 +210,6 @@ const shopService = {
       state: s.state,
       city: s.city,
       address: s.address,
-      category: s.category,
       show_public_address: s.show_public_address,
       country: s.country,
       seo_keywords: s.seo_keywords,
@@ -249,7 +268,6 @@ const shopService = {
       state: s.state,
       city: s.city,
       address: s.address,
-      category: s.category,
       show_public_address: s.show_public_address,
       country: s.country,
       seo_keywords: s.seo_keywords,
@@ -300,7 +318,6 @@ const shopService = {
       state: shop.state,
       city: shop.city,
       address: shop.address,
-      category: shop.category,
       show_public_address: shop.show_public_address,
       country: shop.country,
       seo_keywords: shop.seo_keywords,
@@ -339,19 +356,28 @@ const shopService = {
     if (data.state !== undefined) updateData.state = data.state;
     if (data.country !== undefined) updateData.country = data.country;
     if (data.address !== undefined) updateData.address = data.address;
-    if (data.category !== undefined) updateData.category = data.category;
     if (data.show_public_address !== undefined) updateData.show_public_address = data.show_public_address;
     if (data.seo_keywords !== undefined) updateData.seo_keywords = data.seo_keywords;
     if (data.seo_description !== undefined) updateData.seo_description = data.seo_description;
     if (data.seo_metadata !== undefined) updateData.seo_metadata = data.seo_metadata;
     if (data.seo_dna_updated_at !== undefined) updateData.seo_dna_updated_at = data.seo_dna_updated_at;
 
-    const { data: shop, error } = await supabase
+    let { data: shop, error } = await supabase
       .from('shops')
       .update(updateData)
       .eq('id', id)
       .select()
       .single();
+
+    if (isMissingShopAddressColumnError(error)) {
+      const { address, show_public_address, ...safeUpdateData } = updateData;
+      ({ data: shop, error } = await supabase
+        .from('shops')
+        .update(safeUpdateData)
+        .eq('id', id)
+        .select()
+        .single());
+    }
 
     if (error) {
       console.error('Update shop error:', error);

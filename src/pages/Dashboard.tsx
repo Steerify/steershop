@@ -36,7 +36,6 @@ import { StrokeMyShop } from "@/components/ai/StrokeMyShop";
 import { ProfileCompletionChecklist } from "@/components/ProfileCompletionChecklist";
 import { ShopStatusBadge } from "@/components/ShopStatusBadge";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
-import { WhatsAppCommunityBanner } from "@/components/WhatsAppCommunityBanner";
 import {
   Sheet,
   SheetContent,
@@ -56,7 +55,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ShopAvatar } from "@/components/ShopAvatar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { VendorSetupWizard } from "@/components/VendorSetupWizard";
-import { VendorCommandCenter } from "@/components/VendorCommandCenter";
 
 // ─── Stat Card Component (Minimalist) ──────────────────────────────────────────
 
@@ -410,10 +408,10 @@ const Dashboard = () => {
 
       // ─── Determine Urgent Tasks ───
       const tasks = [];
-      if (pendingOrders > 0) {
+      if (pending > 0) {
         tasks.push({
           id: 'orders',
-          label: `${pendingOrders} Pending Order${pendingOrders !== 1 ? 's' : ''}`,
+          label: `${pending} Pending Order${pending !== 1 ? 's' : ''}`,
           icon: ShoppingCart,
           color: 'bg-amber-500/10 text-amber-600',
           action: () => navigate('/orders')
@@ -436,7 +434,7 @@ const Dashboard = () => {
           action: () => navigate('/pricing')
         });
       }
-      if (productsCount === 0) {
+      if (productsList.length === 0) {
         tasks.push({
           id: 'products',
           label: 'Add your first product',
@@ -839,231 +837,164 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Jiji-inspired Quick Actions Grid */}
-        <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
-          <div className="grid grid-cols-4 sm:flex sm:items-center sm:justify-center gap-6 sm:gap-12">
-            <QuickActionButton 
-              icon={Package} 
-              label="Products" 
-              onClick={() => navigate('/products')} 
-              color="from-blue-500 to-indigo-600" 
-              textColor="text-white" 
-            />
-            <QuickActionButton 
-              icon={ShoppingCart} 
-              label="Orders" 
-              onClick={() => navigate('/orders')} 
-              color="from-orange-400 to-pink-500" 
-              textColor="text-white" 
-            />
-            <QuickActionButton 
-              icon={Megaphone} 
-              label="Marketing" 
-              onClick={() => navigate('/marketing')} 
-              color="from-purple-500 to-indigo-500" 
-              textColor="text-white" 
-            />
-            <QuickActionButton 
-              icon={Wallet} 
-              label="Wallet" 
-              onClick={() => setIsPayoutDialogOpen(true)} 
-              color="from-emerald-500 to-teal-600" 
-              textColor="text-white" 
-            />
-            <div className="col-span-4 block sm:hidden">
-              <Separator className="opacity-50" />
-            </div>
-            <QuickActionButton 
-              icon={Target} 
-              label="Growth" 
-              onClick={() => navigate('/growth')} 
-              color="from-amber-400 to-orange-500" 
-              textColor="text-white" 
-            />
-            <QuickActionButton 
-              icon={Users} 
-              label="Customers" 
-              onClick={() => navigate('/customers')} 
-              color="from-blue-400 to-cyan-500" 
-              textColor="text-white" 
-            />
-            <QuickActionButton 
-              icon={MessageCircle} 
-              label="Help" 
-              onClick={() => window.open('https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76', '_blank')} 
-              color="from-green-500 to-emerald-600" 
-              textColor="text-white" 
-            />
-            <QuickActionButton 
-              icon={Settings} 
-              label="Settings" 
-              onClick={() => navigate('/settings')} 
-              color="from-slate-500 to-slate-700" 
-              textColor="text-white" 
-            />
-          </div>
+        {/* Simple seller path: inspired by Shopify setup-first home and Jiji's sell/manage focus */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-4">
+          <Card className="border border-border/60 shadow-sm overflow-hidden">
+            <CardContent className="p-5 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5">
+                <div>
+                  <p className="text-xs font-bold text-primary uppercase tracking-widest mb-2">Do this next</p>
+                  <h2 className="text-2xl font-black tracking-tight">
+                    {pendingOrders > 0 ? 'Handle your new orders' : productsCount === 0 ? 'Add your first product' : 'Share your shop link'}
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1 max-w-xl">
+                    {pendingOrders > 0
+                      ? 'Customers are waiting. Open orders, confirm payment, and update delivery status.'
+                      : productsCount === 0
+                        ? 'A shop needs at least one clear product photo and price before buyers can order.'
+                        : 'Send your store link on WhatsApp, Instagram, or Facebook to start getting buyers.'}
+                  </p>
+                </div>
+                <ShopStatusBadge status={subscriptionStatus} daysRemaining={daysRemaining} />
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-3">
+                <button
+                  onClick={() => navigate('/products')}
+                  className={`text-left rounded-2xl border p-4 transition-all hover:shadow-md ${productsCount === 0 ? 'border-primary bg-primary/10 ring-1 ring-primary/20' : 'border-border bg-muted/30'}`}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
+                      <Package className="w-5 h-5" />
+                    </div>
+                    {productsCount > 0 ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Badge variant="outline">Step 1</Badge>}
+                  </div>
+                  <h3 className="font-extrabold">Add products</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Photos, price, stock.</p>
+                </button>
+
+                <button
+                  onClick={() => navigate('/orders')}
+                  className={`text-left rounded-2xl border p-4 transition-all hover:shadow-md ${pendingOrders > 0 ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/20' : 'border-border bg-muted/30'}`}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center">
+                      <ShoppingCart className="w-5 h-5" />
+                    </div>
+                    {pendingOrders > 0 ? <Badge className="bg-amber-500 text-white">{pendingOrders} new</Badge> : <Badge variant="outline">Step 2</Badge>}
+                  </div>
+                  <h3 className="font-extrabold">Manage orders</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Accept, deliver, complete.</p>
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (!shopData) return navigate('/my-store');
+                    const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
+                    navigator.clipboard.writeText(url);
+                    toast({ title: "Store link copied", description: "Share it with buyers on WhatsApp or social media." });
+                  }}
+                  className="text-left rounded-2xl border border-border bg-muted/30 p-4 transition-all hover:shadow-md"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-green-500/10 text-green-600 flex items-center justify-center">
+                      <Share2 className="w-5 h-5" />
+                    </div>
+                    <Badge variant="outline">Step 3</Badge>
+                  </div>
+                  <h3 className="font-extrabold">Share shop</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Copy your buyer link.</p>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-border/60 shadow-sm">
+            <CardContent className="p-5 sm:p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Your shop</p>
+                  <h2 className="text-xl font-black truncate">{shopData?.name || 'No shop yet'}</h2>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => navigate('/my-store')}>
+                  Edit
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl bg-muted/40 p-4">
+                  <p className="text-xs text-muted-foreground font-bold uppercase">Revenue</p>
+                  <p className="text-2xl font-black mt-1">₦{totalRevenue.toLocaleString()}</p>
+                </div>
+                <div className="rounded-2xl bg-muted/40 p-4">
+                  <p className="text-xs text-muted-foreground font-bold uppercase">Sales</p>
+                  <p className="text-2xl font-black mt-1">{totalSales}</p>
+                </div>
+                <div className="rounded-2xl bg-muted/40 p-4">
+                  <p className="text-xs text-muted-foreground font-bold uppercase">Products</p>
+                  <p className="text-2xl font-black mt-1">{productsCount}</p>
+                </div>
+                <div className="rounded-2xl bg-muted/40 p-4">
+                  <p className="text-xs text-muted-foreground font-bold uppercase">Wallet</p>
+                  <p className="text-2xl font-black mt-1">₦{payoutBalance.availableBalance.toLocaleString()}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <Button className="h-11" onClick={() => navigate('/products')}>
+                  <Package className="w-4 h-4 mr-2" /> Products
+                </Button>
+                <Button variant="outline" className="h-11" onClick={() => navigate('/orders')}>
+                  <ShoppingCart className="w-4 h-4 mr-2" /> Orders
+                </Button>
+                <Button variant="outline" className="h-11" onClick={() => setIsPayoutDialogOpen(true)}>
+                  <Wallet className="w-4 h-4 mr-2" /> Wallet
+                </Button>
+                <Button variant="outline" className="h-11" onClick={() => window.open('https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76', '_blank')}>
+                  <HelpCircle className="w-4 h-4 mr-2" /> Help
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* WhatsApp Community Banner */}
-        <WhatsAppCommunityBanner 
-          link="https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76" 
-          title="Vendor Success Community 🚀"
-          description="Join 5,000+ vendors for tips, buyer traffic, and exclusive support!"
-        />
-
-        <VendorCommandCenter />
-        
-        <div className="space-y-6">
-            {/* Contextual Banner */}
-            {getContextualBanner()}
-
-            {/* Urgent Tasks */}
-            <UrgentTasks tasks={urgentTasks} onAction={() => {}} />
-
-            {/* Stat Cards Row */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              <StatCard 
-                label="Total Revenue" 
-                value={`₦${totalRevenue.toLocaleString()}`} 
-                icon={DollarSign} 
-                trend="up" 
-                trendValue="+12%" 
-              />
-              <StatCard 
-                label="Total Sales" 
-                value={String(totalSales)} 
-                icon={TrendingUp} 
-                trend="up" 
-                trendValue="New" 
-              />
-              <StatCard 
-                label="Products" 
-                value={String(productsCount)} 
-                icon={Package} 
-                trend="neutral" 
-                trendValue="Live" 
-              />
-              <StatCard 
-                label="Pending Orders" 
-                value={String(pendingOrders)} 
-                icon={ShoppingCart} 
-                trend={pendingOrders > 0 ? "down" : "up"} 
-                trendValue={pendingOrders > 0 ? "Action" : "Clear"} 
-              />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <Card className="overflow-hidden" data-tour="sales-analytics">
-                  <div className="h-1 w-full bg-gradient-to-r from-primary via-accent to-primary" />
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm font-bold flex items-center gap-2">
-                        <BarChart2 className="w-4 h-4 text-primary" />
-                        Revenue Trend
-                      </div>
-                      <Badge variant="outline" className="text-xs">Last 7 days</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-2">
-                    <div className="h-[220px] sm:h-[240px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
-                          <defs>
-                            <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                          <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₦${v}`} width={55} />
-                          <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} formatter={(value) => [`₦${Number(value).toLocaleString()}`, 'Revenue']} />
-                          <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#revenueGrad)" dot={{ r: 3, fill: 'hsl(var(--primary))' }} activeDot={{ r: 5 }} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
+        {urgentTasks.length > 0 && (
+          <Card className="border border-amber-500/30 bg-amber-500/5 shadow-sm">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+                    <AlertCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold">Needs attention</h3>
+                    <p className="text-sm text-muted-foreground">{urgentTasks[0].label}</p>
+                  </div>
+                </div>
+                <Button onClick={urgentTasks[0].action} className="shrink-0">
+                  Fix now <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
               </div>
-              <div className="space-y-6">
-                <ProfileCompletionChecklist shop={shopFullData} productsCount={productsCount} />
-                
-                {/* Social Influence Card */}
-                <Card className="overflow-hidden bg-gradient-to-br from-primary/5 to-accent/5 border-primary/10 shadow-sm">
-                  <CardHeader className="pb-2">
-                    <div className="text-sm font-bold flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-primary" />
-                      Social Influence
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-3 rounded-2xl bg-card border border-border/50">
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight mb-0.5">Reach</p>
-                        <p className="text-xl font-bold text-foreground">{(shopFullData?.total_views || 0).toLocaleString()}</p>
-                      </div>
-                      <div className="text-center p-3 rounded-2xl bg-card border border-border/50">
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight mb-0.5">Shares</p>
-                        <p className="text-xl font-bold text-foreground">{(shopFullData?.total_shares || 0).toLocaleString()}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="p-3.5 rounded-2xl bg-primary/10 border border-primary/20">
-                      <div className="flex items-start gap-2.5">
-                        <div className="w-6 h-6 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
-                          <Target className="w-3.5 h-3.5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-0.5">Marketing Tip</p>
-                          <p className="text-[11px] leading-relaxed text-foreground/80 font-medium">
-                            {shopFullData?.category?.includes('Fashion') ? "Post your new items on Instagram & tag #SteerSolo to get featured in our next fashion edit!" :
-                             shopFullData?.category?.includes('Beauty') ? "Share your beauty routines on social media & link your SteerSolo shop for instant booking!" :
-                             shopFullData?.category?.includes('Electronics') ? "Unbox your latest tech on TikTok & use your shop link in bio to drive sales!" :
-                             "Share your shop link on your social profiles to increase your reach and grow your community!"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className="border border-border/60 shadow-sm">
+          <CardContent className="p-5 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="font-extrabold text-lg">Quick tools</h3>
+                <p className="text-sm text-muted-foreground">Only the most-used actions are shown here.</p>
+              </div>
+              <div className="grid grid-cols-2 sm:flex gap-2">
+                <Button variant="outline" onClick={() => navigate('/my-store')}>Store settings</Button>
+                <Button variant="outline" onClick={() => navigate('/customers')}>Customers</Button>
+                <Button variant="outline" onClick={() => navigate('/marketing')}>Marketing</Button>
+                <Button variant="outline" onClick={() => navigate(`/shop/${shopFullData?.shop_slug || shopData?.id}`)}>Visit store</Button>
               </div>
             </div>
-            {/* Wallet Quick View */}
-            {shopData && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="overflow-hidden border border-border/50 shadow-sm">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-bold text-sm flex items-center gap-2">
-                        <Wallet className="w-4 h-4 text-primary" />
-                        Wallet Balance
-                      </h3>
-                      <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setIsPayoutDialogOpen(true)}>Withdraw</Button>
-                    </div>
-                    <div className="flex items-end gap-3">
-                      <p className="text-3xl font-black text-primary tracking-tight">₦{payoutBalance.availableBalance.toLocaleString()}</p>
-                      <p className="text-xs text-muted-foreground mb-1">Available</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {activeOffer && (
-                  <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary to-accent text-white shadow-lg">
-                    <CardContent className="p-5 flex items-center justify-between">
-                      <div>
-                        <h3 className="font-bold text-sm mb-0.5">Special Offer 🎁</h3>
-                        <p className="text-xs opacity-90">{activeOffer.description}</p>
-                      </div>
-                      <Button variant="secondary" size="sm" onClick={handleSubscribe} className="bg-white text-primary hover:bg-white/90 font-bold whitespace-nowrap">
-                        Claim
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-          </div>
+          </CardContent>
+        </Card>
         </div>
 
       {/* ─── Mobile Bottom Navigation ────────────────────── */}
