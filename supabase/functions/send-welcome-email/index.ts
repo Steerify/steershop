@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
+import nodemailer from "npm:nodemailer@6.9.16";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,9 +57,40 @@ serve(async (req) => {
     const storeLink = `https://steersolo.com/shop/${shopSlug}`;
     const name = profile.full_name || 'there';
 
-    // Send welcome email using Resend if available, otherwise log
-    const resendKey = Deno.env.get('RESEND_API_KEY');
-    
+    const smtpHost = Deno.env.get('SMTP_HOST')?.trim();
+    const smtpPort = Deno.env.get('SMTP_PORT')?.trim();
+    const smtpUser = Deno.env.get('SMTP_USER')?.trim();
+    const smtpPass = Deno.env.get('SMTP_PASS');
+    const smtpFromEmail = Deno.env.get('SMTP_FROM_EMAIL')?.trim() || 'mail@steersolo.com';
+
+    const smtpSecrets: Array<[string, string | undefined]> = [
+      ['SMTP_HOST', smtpHost],
+      ['SMTP_PORT', smtpPort],
+      ['SMTP_USER', smtpUser],
+      ['SMTP_PASS', smtpPass],
+    ];
+
+    const missingSmtpSecrets = smtpSecrets
+      .filter(([, value]) => !value)
+      .map(([name]) => name);
+
+    if (missingSmtpSecrets.length > 0) {
+      return new Response(JSON.stringify({
+        error: `Missing SMTP configuration: ${missingSmtpSecrets.join(', ')}`,
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const smtpPortNumber = Number(smtpPort);
+    if (!Number.isInteger(smtpPortNumber) || smtpPortNumber <= 0) {
+      return new Response(JSON.stringify({ error: 'Invalid SMTP_PORT configuration' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const emailHtml = `
 <!DOCTYPE html>
 <html>
@@ -131,18 +163,23 @@ serve(async (req) => {
 </body>
 </html>`;
 
-    if (resendKey) {
-      const { Resend } = await import("npm:resend@2.0.0");
-      const resend = new Resend(resendKey);
-      await resend.emails.send({
-        from: 'SteerSolo <noreply@steersolo.com>',
-        to: [profile.email],
-        subject: `Welcome to SteerSolo! Here's how to start selling 🚀`,
-        html: emailHtml,
-      });
-    } else {
-      console.log(`[DRY RUN] Welcome email to ${profile.email} for shop ${shopName}`);
-    }
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPortNumber,
+      secure: smtpPortNumber === 465,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `SteerSolo <${smtpFromEmail}>`,
+      to: profile.email,
+      replyTo: 'mail@steersolo.com',
+      subject: `Welcome to SteerSolo! Here's how to start selling 🚀`,
+      html: emailHtml,
+    });
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
