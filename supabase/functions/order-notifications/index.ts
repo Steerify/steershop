@@ -1,11 +1,53 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend@2.0.0";
+import nodemailer from "npm:nodemailer";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const defaultFromEmail = "mail@steersolo.com";
+
+type OrderItem = {
+  name: string;
+  quantity: number;
+  price: number;
+};
+
+let emailTransporter: ReturnType<typeof nodemailer.createTransport> | null =
+  null;
+
+function getEmailConfig() {
+  const smtpHost = Deno.env.get("SMTP_HOST");
+  const smtpPort = Number(Deno.env.get("SMTP_PORT") || 465);
+  const smtpUser = Deno.env.get("SMTP_USER");
+  const smtpPass = Deno.env.get("SMTP_PASS");
+  const smtpFromEmail = Deno.env.get("SMTP_FROM_EMAIL") || defaultFromEmail;
+
+  if (!smtpHost || !smtpUser || !smtpPass) {
+    return null;
+  }
+
+  if (!emailTransporter) {
+    emailTransporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    });
+  }
+
+  return {
+    from: `SteerSolo <${smtpFromEmail}>`,
+    replyTo: defaultFromEmail,
+    transporter: emailTransporter,
+  };
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -13,31 +55,50 @@ serve(async (req) => {
   }
 
   try {
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      return new Response(JSON.stringify({ error: "Email service not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const emailConfig = getEmailConfig();
+    if (!emailConfig) {
+      return new Response(
+        JSON.stringify({ error: "Email service not configured" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
-    const resend = new Resend(resendApiKey);
-    const { orderId, eventType, shopName, customerEmail, customerName, totalAmount, items, statusUpdate, shopOwnerEmail, shopOwnerPhone } = await req.json();
+    const {
+      orderId,
+      eventType,
+      shopName,
+      customerEmail,
+      customerName,
+      totalAmount,
+      items,
+      statusUpdate,
+      shopOwnerEmail,
+      shopOwnerPhone,
+    } = await req.json();
 
     if (!orderId || !eventType) {
-      return new Response(JSON.stringify({ error: "Missing orderId or eventType" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Missing orderId or eventType" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const shortId = orderId.slice(0, 8).toUpperCase();
     const formattedAmount = `₦${Number(totalAmount || 0).toLocaleString()}`;
 
     // Build item list HTML
-    const itemsHtml = (items || []).map((item: any) =>
-      `<tr><td style="padding:8px;border-bottom:1px solid #eee">${item.name}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:center">${item.quantity}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right">₦${Number(item.price * item.quantity).toLocaleString()}</td></tr>`
-    ).join("");
+    const itemsHtml = (items || [])
+      .map(
+        (item: OrderItem) =>
+          `<tr><td style="padding:8px;border-bottom:1px solid #eee">${item.name}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:center">${item.quantity}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right">₦${Number(item.price * item.quantity).toLocaleString()}</td></tr>`,
+      )
+      .join("");
 
     let customerSubject = "";
     let customerBodyHtml = "";
@@ -89,16 +150,18 @@ serve(async (req) => {
           </div>`;
         break;
 
-      case "status_update":
+      case "status_update": {
         const statusLabel = (statusUpdate || "").replace(/_/g, " ");
         customerSubject = `Order #${shortId} - ${statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}`;
         const statusMessages: Record<string, string> = {
-          confirmed: "Your order has been confirmed by the seller and will be processed soon.",
+          confirmed:
+            "Your order has been confirmed by the seller and will be processed soon.",
           processing: "Your order is now being prepared.",
           out_for_delivery: "Great news! Your order is on its way to you.",
           delivered: "Your order has been delivered. Enjoy!",
           completed: "Your order is complete. Thank you for shopping with us!",
-          cancelled: "Your order has been cancelled. If you have questions, please contact the seller.",
+          cancelled:
+            "Your order has been cancelled. If you have questions, please contact the seller.",
         };
         customerBodyHtml = `
           <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
@@ -117,6 +180,7 @@ serve(async (req) => {
             </div>
           </div>`;
         break;
+      }
 
       default:
         return new Response(JSON.stringify({ error: "Unknown event type" }), {
@@ -127,9 +191,10 @@ serve(async (req) => {
 
     // Send email to customer
     if (customerEmail && customerSubject) {
-      await resend.emails.send({
-        from: "SteerSolo <noreply@steersolo.com>",
-        to: [customerEmail],
+      await emailConfig.transporter.sendMail({
+        from: emailConfig.from,
+        replyTo: emailConfig.replyTo,
+        to: customerEmail,
         subject: customerSubject,
         html: customerBodyHtml,
       });
@@ -137,9 +202,10 @@ serve(async (req) => {
 
     // Send email to shop owner (for order_placed)
     if (shopOwnerEmail && ownerSubject) {
-      await resend.emails.send({
-        from: "SteerSolo <noreply@steersolo.com>",
-        to: [shopOwnerEmail],
+      await emailConfig.transporter.sendMail({
+        from: emailConfig.from,
+        replyTo: emailConfig.replyTo,
+        to: shopOwnerEmail,
         subject: ownerSubject,
         html: ownerBodyHtml,
       });
@@ -150,13 +216,16 @@ serve(async (req) => {
       const termiiApiKey = Deno.env.get("TERMII_API_KEY");
       if (termiiApiKey) {
         try {
-          const itemNames = (items || []).slice(0, 3).map((i: any) => i.name).join(", ");
-          const smsMessage = `SteerSolo: New order #${shortId} (${formattedAmount}) from ${customerName || "a customer"}. Items: ${itemNames}${(items || []).length > 3 ? '...' : ''}. Log in to process.`;
-          
+          const itemNames = (items || [])
+            .slice(0, 3)
+            .map((i: OrderItem) => i.name)
+            .join(", ");
+          const smsMessage = `SteerSolo: New order #${shortId} (${formattedAmount}) from ${customerName || "a customer"}. Items: ${itemNames}${(items || []).length > 3 ? "..." : ""}. Log in to process.`;
+
           // Clean phone: ensure it starts with country code
-          let phone = shopOwnerPhone.replace(/\s+/g, '').replace(/^0/, '234');
-          if (!phone.startsWith('+') && !phone.startsWith('234')) {
-            phone = '234' + phone;
+          let phone = shopOwnerPhone.replace(/\s+/g, "").replace(/^0/, "234");
+          if (!phone.startsWith("+") && !phone.startsWith("234")) {
+            phone = "234" + phone;
           }
 
           await fetch("https://api.ng.termii.com/api/sms/send", {
@@ -181,9 +250,10 @@ serve(async (req) => {
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Order notification error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
