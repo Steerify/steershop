@@ -38,9 +38,9 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = "steersolo"
-const SENDER_DOMAIN = "notify.steersolo.com"
 const ROOT_DOMAIN = "steersolo.com"
-const FROM_DOMAIN = "steersolo.com" // Domain shown in From address (may be root or sender subdomain)
+const TRANSACTIONAL_FROM = "SteerSolo <mail@steersolo.com>"
+const TRANSACTIONAL_REPLY_TO = "mail@steersolo.com"
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
@@ -262,7 +262,8 @@ async function handleWebhook(req: Request): Promise<Response> {
     })
 
     const info = await transporter.sendMail({
-      from: `${SITE_NAME} <${SENDER_EMAIL}>`,
+      from: TRANSACTIONAL_FROM,
+      replyTo: TRANSACTIONAL_REPLY_TO,
       to: payload.data.email,
       subject: EMAIL_SUBJECTS[emailType] || 'Notification',
       html,
@@ -361,7 +362,8 @@ async function handleWebhook(req: Request): Promise<Response> {
           auth: { user: smtpUser, pass: smtpPass },
         })
         await transporter.sendMail({
-          from: `${SITE_NAME} <${SENDER_EMAIL}>`,
+          from: TRANSACTIONAL_FROM,
+          replyTo: TRANSACTIONAL_REPLY_TO,
           to: ADMIN_SIGNUP_EMAIL,
           subject: adminSubject,
           html: adminHtml,
@@ -413,7 +415,8 @@ async function handleWebhook(req: Request): Promise<Response> {
           auth: { user: smtpUser, pass: smtpPass },
         })
         await transporter.sendMail({
-          from: `${SITE_NAME} <${SENDER_EMAIL}>`,
+          from: TRANSACTIONAL_FROM,
+          replyTo: TRANSACTIONAL_REPLY_TO,
           to: payload.data.email,
           subject: onboardingSubject,
           html: onboardingHtml,

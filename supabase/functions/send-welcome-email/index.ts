@@ -135,7 +135,8 @@ serve(async (req) => {
       const { Resend } = await import("npm:resend@2.0.0");
       const resend = new Resend(resendKey);
       await resend.emails.send({
-        from: 'SteerSolo <noreply@steersolo.com>',
+        from: 'SteerSolo <mail@steersolo.com>',
+        replyTo: 'mail@steersolo.com',
         to: [profile.email],
         subject: `Welcome to SteerSolo! Here's how to start selling 🚀`,
         html: emailHtml,

@@ -227,13 +227,12 @@ Deno.serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: payload.sender_domain 
-              ? `${payload.from.split('<')[0].trim()} <noreply@${payload.sender_domain}>` 
-              : payload.from,
+            from: "SteerSolo <mail@steersolo.com>",
             to: typeof payload.to === 'string' ? [payload.to] : payload.to,
             subject: payload.subject,
             html: payload.html,
             text: payload.text,
+            reply_to: "mail@steersolo.com",
           }),
         });
 

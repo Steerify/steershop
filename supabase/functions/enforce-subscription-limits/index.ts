@@ -62,7 +62,8 @@ serve(async (req) => {
         
         try {
           await resend.emails.send({
-            from: "SteerSolo <noreply@steersolo.com>",
+            from: "SteerSolo <mail@steersolo.com>",
+            replyTo: "mail@steersolo.com",
             to: [profile.email],
             subject: `⚠️ Action Required: Your shop "${shop.shop_name}" has been hidden`,
             html: `

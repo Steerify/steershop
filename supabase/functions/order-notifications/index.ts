@@ -128,7 +128,8 @@ serve(async (req) => {
     // Send email to customer
     if (customerEmail && customerSubject) {
       await resend.emails.send({
-        from: "SteerSolo <noreply@steersolo.com>",
+        from: "SteerSolo <mail@steersolo.com>",
+        replyTo: "mail@steersolo.com",
         to: [customerEmail],
         subject: customerSubject,
         html: customerBodyHtml,
@@ -138,7 +139,8 @@ serve(async (req) => {
     // Send email to shop owner (for order_placed)
     if (shopOwnerEmail && ownerSubject) {
       await resend.emails.send({
-        from: "SteerSolo <noreply@steersolo.com>",
+        from: "SteerSolo <mail@steersolo.com>",
+        replyTo: "mail@steersolo.com",
         to: [shopOwnerEmail],
         subject: ownerSubject,
         html: ownerBodyHtml,

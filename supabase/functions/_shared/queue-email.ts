@@ -8,11 +8,11 @@ export interface QueueEmailInput {
   subject: string;
   html: string;
   text?: string;
-  from?: string;
   label?: string; // logical template name for email_send_log
 }
 
-const DEFAULT_FROM = "SteerSolo <noreply@steersolo.com>";
+const DEFAULT_FROM = "SteerSolo <mail@steersolo.com>";
+const DEFAULT_REPLY_TO = "mail@steersolo.com";
 const QUEUE_NAME = "transactional_emails";
 
 export async function enqueueTransactionalEmail(
@@ -24,7 +24,8 @@ export async function enqueueTransactionalEmail(
     message_id,
     label: input.label || "transactional",
     to: input.to,
-    from: input.from || DEFAULT_FROM,
+    from: DEFAULT_FROM,
+    replyTo: DEFAULT_REPLY_TO,
     subject: input.subject,
     html: input.html,
     text: input.text,
