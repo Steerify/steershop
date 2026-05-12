@@ -34,31 +34,35 @@ const isMissingShopAddressColumnError = (error: { message?: string; code?: strin
 const shopService = {
 
   createDefaultShopAddress: async (shopId: string, data: CreateDefaultShopAddressRequest) => {
+    // Use upsert to gracefully handle re-runs (UNIQUE constraint on shop_id + label).
     const { data: address, error } = await supabase
       .from('shop_addresses')
-      .insert({
-        shop_id: shopId,
-        label: data.label || 'Main location',
-        contact_name: data.contactName,
-        contact_phone: data.contactPhone,
-        address_line_1: data.addressLine1,
-        city: data.city,
-        state: data.state,
-        country: 'NG',
-        is_default: true,
-      })
+      .upsert(
+        {
+          shop_id: shopId,
+          label: data.label || 'Main location',
+          contact_name: data.contactName,
+          contact_phone: data.contactPhone,
+          address_line_1: data.addressLine1,
+          city: data.city,
+          state: data.state,
+          country: 'NG',
+          is_default: true,
+        },
+        { onConflict: 'shop_id,label', ignoreDuplicates: false }
+      )
       .select()
       .single();
 
     if (error) {
-      console.error('Create shop address error:', error);
+      console.error('Upsert shop address error:', error);
       throw new Error(error.message);
     }
 
     return {
       success: true,
       data: address,
-      message: 'Shop address created successfully'
+      message: 'Shop address saved successfully'
     };
   },
 

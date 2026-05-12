@@ -196,21 +196,39 @@
     overflow-x: hidden;
   }
 
-  /* Wizard page: ensure native document scroll, no clipping */
+  /* Wizard page: fullscreen fixed scroll container.
+     On mobile, position:fixed gives us our own scroll context so
+     overflow-x:hidden on #root can never clip our Y-axis scroll.
+     overflow-y:scroll (not auto) ensures iOS momentum scrolling fires
+     even when content is shorter than the viewport.
+  */
   .vendor-wizard-page {
-    position: relative;
+    position: fixed;
+    inset: 0;
     width: 100%;
-    min-height: 100dvh;
-    overflow-y: auto !important;
+    height: 100%;
     overflow-x: hidden;
+    overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
     touch-action: pan-y;
+    z-index: 50;
   }
 
-  body.vendor-wizard-open {
-    overflow-y: auto !important;
-    touch-action: pan-y;
+  /* Lock everything behind the wizard so it can't steal scroll events */
+  body.vendor-wizard-open,
+  body.vendor-wizard-open #root {
+    overflow: hidden !important;
+    height: 100% !important;
+    touch-action: none;
+  }
+
+  /* On mobile the virtual keyboard shrinks the viewport; give extra
+     breathing room at the bottom so the CTA button stays reachable. */
+  @media (max-width: 1023px) {
+    .vendor-wizard-page {
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
   }
 
   img,

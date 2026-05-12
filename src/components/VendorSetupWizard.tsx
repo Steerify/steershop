@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +52,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const wizardRef = useRef<HTMLDivElement>(null);
 
   const [shopName, setShopName] = useState("");
   const [shopDescription, setShopDescription] = useState("");
@@ -75,16 +76,20 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
 
   const [createdShopId, setCreatedShopId] = useState<string | null>(null);
 
+  // Lock body scroll and scroll wizard to top when it opens
   useEffect(() => {
     if (!open) return;
-
     document.body.classList.add("vendor-wizard-open");
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-
+    wizardRef.current?.scrollTo({ top: 0, behavior: "instant" });
     return () => {
       document.body.classList.remove("vendor-wizard-open");
     };
   }, [open]);
+
+  // Always scroll to top of wizard when step changes
+  useEffect(() => {
+    wizardRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner' | 'product') => {
     const file = e.target.files?.[0];
@@ -129,13 +134,13 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         name: shopName.trim(),
         slug: shopSlug || shopName.trim().toLowerCase().replace(/\s+/g, "-"),
         description: shopDescription.trim() || `Welcome to ${shopName.trim()}`,
-        whatsapp: "", // Will be updated in Step 3
+        whatsapp: "", // placeholder — updated in Step 3
         state: shopState,
         city: shopCity,
-        address: shopAddress,
+        address: shopAddress.trim() || undefined,
         category: shopCategory,
-        logo_url: logoUrl,
-        banner_url: bannerUrl,
+        logo_url: logoUrl || undefined,
+        banner_url: bannerUrl || undefined,
       });
       setCreatedShopId(res.data.id);
       setStep(2);
@@ -206,22 +211,32 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
     try {
       const normalizedWhatsapp = normalizeWhatsappNumber(whatsappNumber);
 
+      // 1. Save WhatsApp + activate shop — this is the critical step
       await shopService.updateShop(createdShopId, {
         whatsapp_number: normalizedWhatsapp,
-        is_active: true
+        is_active: true,
       });
 
-      if (shopAddress.trim()) {
-        await shopService.createDefaultShopAddress(createdShopId, {
-          label: "Main location",
-          contactName: shopName.trim(),
-          contactPhone: normalizedWhatsapp,
-          addressLine1: shopAddress.trim(),
-          city: shopCity,
-          state: shopState,
-        });
+      // 2. Save street address to shop_addresses if collected — non-critical
+      //    Wrapped in its own try/catch so an address DB error never breaks setup.
+      if (shopAddress.trim() && shopCity && shopState) {
+        try {
+          await shopService.createDefaultShopAddress(createdShopId, {
+            label: "Main location",
+            contactName: shopName.trim(),
+            contactPhone: normalizedWhatsapp,
+            addressLine1: shopAddress.trim(),
+            city: shopCity,
+            state: shopState,
+          });
+        } catch (addrErr: unknown) {
+          // Address save failure is non-critical — the street address is already
+          // stored on the shops.address column from Step 1.
+          console.warn("[VendorSetupWizard] shop_addresses upsert failed (non-critical):", addrErr);
+        }
       }
 
+      // 3. Clear the onboarding flag on the user profile
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase.from('profiles').update({ needs_role_selection: false }).eq('id', user.id);
@@ -233,7 +248,6 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         onComplete();
       }, 2000);
 
-
     } catch (error: unknown) {
       toast({ title: "Error saving WhatsApp", description: getErrorMessage(error), variant: "destructive" });
     } finally {
@@ -244,7 +258,13 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   if (!open) return null;
 
   return (
-    <div className="vendor-wizard-page min-h-dvh overflow-x-hidden overflow-y-auto bg-gradient-to-br from-background via-background to-primary/5" role="dialog" aria-modal="true" aria-label="Vendor setup wizard">
+    <div
+      ref={wizardRef}
+      className="vendor-wizard-page bg-gradient-to-br from-background via-background to-primary/5"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Vendor setup wizard"
+    >
       <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
 
       {/* Sticky Progress Bar */}
@@ -255,7 +275,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         />
       </div>
 
-      <div className="flex min-h-[calc(100dvh-0.5rem)] w-full max-w-6xl flex-col gap-6 overflow-visible p-4 pb-[max(2rem,env(safe-area-inset-bottom))] sm:p-8 lg:mx-auto lg:flex-row lg:gap-16 lg:p-12">
+      <div className="flex w-full max-w-6xl flex-col gap-6 overflow-visible p-4 pb-20 sm:p-8 sm:pb-16 lg:mx-auto lg:flex-row lg:gap-16 lg:p-12 lg:pb-12">
 
         {/* Left Side: Context & Visuals */}
         <div className="lg:w-1/2 flex flex-col justify-start pt-4 lg:sticky lg:top-10 lg:h-fit lg:pt-12">
