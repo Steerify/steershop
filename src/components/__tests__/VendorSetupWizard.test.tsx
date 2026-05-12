@@ -64,6 +64,7 @@ describe("VendorSetupWizard", () => {
 
   beforeAll(() => {
     window.scrollTo = vi.fn();
+    Element.prototype.scrollTo = vi.fn();
     Element.prototype.scrollIntoView = vi.fn();
   });
 
@@ -93,6 +94,7 @@ describe("VendorSetupWizard", () => {
         category: "Fashion & Apparel",
         state: "Lagos",
         city: "Ikeja",
+        description: "Welcome to My Test Shop",
       }));
       expect(screen.getByText("What are you selling?")).toBeInTheDocument();
     });
@@ -177,6 +179,32 @@ describe("VendorSetupWizard", () => {
         state: "Lagos",
       });
     });
+  });
+
+  it("completes onboarding even if address creation fails (non-critical)", async () => {
+    vi.mocked(shopService.createDefaultShopAddress).mockRejectedValue(new Error("Database error"));
+    
+    render(<VendorSetupWizard open={true} onComplete={onComplete} />);
+
+    await fillRequiredShopFields();
+    fireEvent.change(screen.getByPlaceholderText("e.g. 123 Herbert Macaulay Way"), { target: { value: "123 Herbert Macaulay Way" } });
+    fireEvent.click(screen.getByText("Create Store"));
+    await screen.findByText("What are you selling?");
+    fireEvent.click(screen.getByText("Skip for now"));
+    await screen.findByText("How will they reach you?");
+
+    fireEvent.change(screen.getByPlaceholderText("e.g. 08012345678"), { target: { value: "08012345678" } });
+    fireEvent.click(screen.getByText("Finish Setup"));
+
+    await waitFor(() => {
+      // Should still reach the final step despite the address error
+      expect(screen.getByText("You're all set! 🚀")).toBeInTheDocument();
+    });
+    
+    // After 2 seconds, onComplete should be called
+    await waitFor(() => {
+      expect(onComplete).toHaveBeenCalled();
+    }, { timeout: 3000 });
   });
 
 });
