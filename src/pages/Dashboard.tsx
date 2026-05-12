@@ -55,6 +55,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ShopAvatar } from "@/components/ShopAvatar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { VendorSetupWizard } from "@/components/VendorSetupWizard";
+import { VendorCommandCenter } from "@/components/VendorCommandCenter";
 
 // ─── Stat Card Component (Minimalist) ──────────────────────────────────────────
 
@@ -781,6 +782,9 @@ const Dashboard = () => {
       {/* ─── Main Content ─────────────────────────────────── */}
       <div className="container mx-auto px-4 py-3 pb-24 md:pb-8 max-w-7xl space-y-4">
         
+        {/* Vendor Command Center for Entrepreneurs */}
+        {rbac.isEntrepreneur(user) && <VendorCommandCenter />}
+
         {/* ProductNudges moved into carousel */}
 
         {/* Welcome Hero - Minimalist & Premium */}
@@ -837,78 +841,9 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Simple seller path: inspired by Shopify setup-first home and Jiji's sell/manage focus */}
+        {/* Simple seller path has been replaced by VendorCommandCenter at the top */}
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-4">
-          <Card className="border border-border/60 shadow-sm overflow-hidden">
-            <CardContent className="p-5 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5">
-                <div>
-                  <p className="text-xs font-bold text-primary uppercase tracking-widest mb-2">Do this next</p>
-                  <h2 className="text-2xl font-black tracking-tight">
-                    {pendingOrders > 0 ? 'Handle your new orders' : productsCount === 0 ? 'Add your first product' : 'Share your shop link'}
-                  </h2>
-                  <p className="text-sm text-muted-foreground mt-1 max-w-xl">
-                    {pendingOrders > 0
-                      ? 'Customers are waiting. Open orders, confirm payment, and update delivery status.'
-                      : productsCount === 0
-                        ? 'A shop needs at least one clear product photo and price before buyers can order.'
-                        : 'Send your store link on WhatsApp, Instagram, or Facebook to start getting buyers.'}
-                  </p>
-                </div>
-                <ShopStatusBadge status={subscriptionStatus} daysRemaining={daysRemaining} />
-              </div>
-
-              <div className="grid sm:grid-cols-3 gap-3">
-                <button
-                  onClick={() => navigate('/products')}
-                  className={`text-left rounded-2xl border p-4 transition-all hover:shadow-md ${productsCount === 0 ? 'border-primary bg-primary/10 ring-1 ring-primary/20' : 'border-border bg-muted/30'}`}
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
-                      <Package className="w-5 h-5" />
-                    </div>
-                    {productsCount > 0 ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Badge variant="outline">Step 1</Badge>}
-                  </div>
-                  <h3 className="font-extrabold">Add products</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Photos, price, stock.</p>
-                </button>
-
-                <button
-                  onClick={() => navigate('/orders')}
-                  className={`text-left rounded-2xl border p-4 transition-all hover:shadow-md ${pendingOrders > 0 ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/20' : 'border-border bg-muted/30'}`}
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center">
-                      <ShoppingCart className="w-5 h-5" />
-                    </div>
-                    {pendingOrders > 0 ? <Badge className="bg-amber-500 text-white">{pendingOrders} new</Badge> : <Badge variant="outline">Step 2</Badge>}
-                  </div>
-                  <h3 className="font-extrabold">Manage orders</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Accept, deliver, complete.</p>
-                </button>
-
-                <button
-                  onClick={() => {
-                    if (!shopData) return navigate('/my-store');
-                    const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
-                    navigator.clipboard.writeText(url);
-                    toast({ title: "Store link copied", description: "Share it with buyers on WhatsApp or social media." });
-                  }}
-                  className="text-left rounded-2xl border border-border bg-muted/30 p-4 transition-all hover:shadow-md"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-green-500/10 text-green-600 flex items-center justify-center">
-                      <Share2 className="w-5 h-5" />
-                    </div>
-                    <Badge variant="outline">Step 3</Badge>
-                  </div>
-                  <h3 className="font-extrabold">Share shop</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Copy your buyer link.</p>
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-
+          {/* Main Dashboard Stats Card */}
           <Card className="border border-border/60 shadow-sm">
             <CardContent className="p-5 sm:p-6 space-y-4">
               <div className="flex items-center justify-between">

@@ -10,6 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { BulkProductUpload } from "@/components/BulkProductUpload";
+import shopService from "@/services/shop.service";
+import productService from "@/services/product.service";
 
 export const VendorCommandCenter = () => {
   const { user } = useAuth();
@@ -24,22 +26,14 @@ export const VendorCommandCenter = () => {
   const fetchShopData = async () => {
     if (!user) return;
     try {
-      const { data: shopData, error: shopError } = await supabase
-        .from("shops")
-        .select("*")
-        .eq("owner_id", user.id)
-        .maybeSingle();
-
-      if (shopError && shopError.code !== 'PGRST116') throw shopError;
+      const shopRes = await shopService.getShopByOwner(user.id);
+      const shops = shopRes.data;
+      const shopData = Array.isArray(shops) ? shops[0] : shops;
       setShop(shopData);
 
       if (shopData) {
-        const { count, error: countError } = await supabase
-          .from("products")
-          .select("*", { count: 'exact', head: true })
-          .eq("shop_id", shopData.id);
-        
-        if (!countError) setProductsCount(count || 0);
+        const productsRes = await productService.getProducts({ shopId: shopData.id });
+        setProductsCount(productsRes.data?.length || 0);
       }
     } catch (err) {
       console.error("Error fetching shop data for command center:", err);
@@ -86,7 +80,7 @@ export const VendorCommandCenter = () => {
                     <Activity className="w-3.5 h-3.5 text-green-400" /> Active
                   </span>
                   <span>•</span>
-                  <span>steersolo.com/shop/{shop.shop_slug}</span>
+                  <span>{window.location.origin.replace(/^https?:\/\//, '')}/shop/{shop.shop_slug || shop.id}</span>
                 </div>
               </div>
             </div>
@@ -95,7 +89,8 @@ export const VendorCommandCenter = () => {
                 variant="outline" 
                 className="flex-1 sm:flex-none border-white/20 text-white hover:bg-white/10"
                 onClick={() => {
-                  navigator.clipboard.writeText(`https://steersolo.com/shop/${shop.shop_slug}`);
+                  const url = `${window.location.origin}/shop/${shop.shop_slug || shop.id}`;
+                  navigator.clipboard.writeText(url);
                   setIsCopied(true);
                   setTimeout(() => setIsCopied(false), 2000);
                   toast({ title: "Copied!", description: "Store link copied to clipboard" });
@@ -104,11 +99,12 @@ export const VendorCommandCenter = () => {
                 {isCopied ? <CheckCircle2 className="w-4 h-4 mr-2 text-green-400" /> : <Copy className="w-4 h-4 mr-2" />}
                 Copy Link
               </Button>
-              <Link to="/dashboard" className="flex-1 sm:flex-none">
-                <Button className="w-full bg-white text-indigo-950 hover:bg-white/90">
-                  Go to Dashboard <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </Link>
+              <Button 
+                onClick={() => window.open(`${window.location.origin}/shop/${shop.shop_slug || shop.id}`, '_blank')}
+                className="flex-1 sm:flex-none bg-white text-indigo-950 hover:bg-white/90"
+              >
+                View Store <ExternalLink className="w-4 h-4 ml-1.5" />
+              </Button>
             </div>
           </div>
         </div>
@@ -207,7 +203,8 @@ export const VendorCommandCenter = () => {
                 className={`w-full ${shop?.whatsapp_number ? 'border-white/20 text-white' : ''}`}
                 onClick={() => {
                   if (shop) {
-                    navigator.clipboard.writeText(`https://steersolo.com/shop/${shop.shop_slug}`);
+                    const url = `${window.location.origin}/shop/${shop.shop_slug || shop.id}`;
+                    navigator.clipboard.writeText(url);
                     setIsCopied(true);
                     setTimeout(() => setIsCopied(false), 2000);
                     toast({ title: "Copied!", description: "Store link copied to clipboard" });

@@ -231,7 +231,8 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         imageUrl = uploadRes.url;
       }
 
-      await productService.createProduct({
+      // Create product using the professional productService
+      const productRes = await productService.createProduct({
         shopId: createdShopId,
         name: productName.trim(),
         slug: productName.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
@@ -244,6 +245,8 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         stockUnit: "units",
         category: shopCategory || "general",
       });
+
+      if (!productRes.success) throw new Error("Failed to create product");
 
       setStep(3);
     } catch (error: unknown) {
@@ -265,9 +268,15 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       const normalizedWhatsapp = normalizeWhatsappNumber(whatsappNumber);
 
       // 1. Save WhatsApp + activate shop — this is the critical step
+      // Update shop using the professional shopService.updateShop
+      // This ensures we follow the same pattern as MyStore.tsx and get the RLS bypass for admins
       await shopService.updateShop(createdShopId, {
         whatsapp_number: normalizedWhatsapp,
         is_active: true,
+        category: shopCategory,
+        city: shopCity,
+        state: shopState,
+        address: shopAddress.trim(),
       });
 
       // 2. Save street address to shop_addresses if collected — non-critical
@@ -296,6 +305,10 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       }
 
       toast({ title: "Setup Complete!", description: "Welcome to your new dashboard." });
+      
+      // Wipe the wizard draft now that setup is successfully finished
+      clearDraft();
+      
       setStep(4);
       setTimeout(() => {
         onComplete();
