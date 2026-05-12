@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Store, Package, MessageCircle, ArrowRight, Sparkles, CheckCircle2, MapPin, ImagePlus, Upload, X } from "lucide-react";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
+import onboardingService, { type OnboardingData } from "@/services/onboarding.service";
 import { uploadService } from "@/services/upload.service";
 import { supabase } from "@/integrations/supabase/client";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
@@ -34,6 +35,13 @@ const SHOP_CATEGORIES = [
 
 
 const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Please try again.";
+
+const VENDOR_SETUP_ONBOARDING_DEFAULTS = {
+  customerSource: "streamlined_vendor_setup_wizard",
+  biggestStruggle: "getting_store_online_quickly",
+  paymentMethod: "not_collected_in_vendor_setup",
+  setupPreference: "streamlined_vendor_setup_wizard",
+};
 
 const normalizeWhatsappNumber = (value: string) => {
   const cleaned = value.trim().replace(/[^\d+]/g, "");
@@ -154,6 +162,36 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   // Auto-generate URL slug
   const shopSlug = shopName.toLowerCase().replace(/'/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
+  const buildVendorOnboardingData = (): OnboardingData => {
+    const hasStreetAddress = Boolean(shopAddress.trim());
+    const hasLocation = Boolean(shopCity && shopState);
+
+    return {
+      businessType: shopCategory || "General retail",
+      customerSource: VENDOR_SETUP_ONBOARDING_DEFAULTS.customerSource,
+      biggestStruggle: VENDOR_SETUP_ONBOARDING_DEFAULTS.biggestStruggle,
+      paymentMethod: VENDOR_SETUP_ONBOARDING_DEFAULTS.paymentMethod,
+      deliveryMethod: hasStreetAddress
+        ? "pickup_or_delivery_address_collected"
+        : hasLocation
+          ? "city_state_location_collected"
+          : "not_collected_in_vendor_setup",
+      setupPreference: VENDOR_SETUP_ONBOARDING_DEFAULTS.setupPreference,
+    };
+  };
+
+  const completeSetupForCurrentUser = async () => {
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id || user?.id;
+
+    if (userId) {
+      await onboardingService.storeOnboardingResponse(userId, buildVendorOnboardingData());
+      await supabase.from('profiles').update({ needs_role_selection: false }).eq('id', userId);
+    }
+
+    clearDraft();
+  };
+
   const handleCreateShop = async () => {
     if (!shopName.trim()) {
       toast({ title: "Shop name required", variant: "destructive" });
@@ -197,7 +235,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       });
 
       setStep(2);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({ title: "Error creating shop", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -289,11 +327,8 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         }
       }
 
-      // 3. Clear the onboarding flag on the user profile
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from('profiles').update({ needs_role_selection: false }).eq('id', user.id);
-      }
+      // 3. Record onboarding analytics, clear the role-selection flag, and remove draft setup state.
+      await completeSetupForCurrentUser();
 
       toast({ title: "Setup Complete!", description: "Welcome to your new dashboard." });
       setStep(4);
@@ -628,13 +663,10 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                     try {
                       if (createdShopId) {
                         await shopService.updateShop(createdShopId, { is_active: true });
+                        await completeSetupForCurrentUser();
                       }
                       if (shopAddress.trim()) {
                         toast({ title: "Address can be added later", description: "Connect WhatsApp whenever you're ready to save a default pickup address." });
-                      }
-                      const { data: { user } } = await supabase.auth.getUser();
-                      if (user) {
-                        await supabase.from('profiles').update({ needs_role_selection: false }).eq('id', user.id);
                       }
                       setStep(4);
                       setTimeout(() => onComplete(), 2000);

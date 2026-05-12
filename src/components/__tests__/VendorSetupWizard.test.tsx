@@ -3,7 +3,14 @@ import { describe, expect, it, vi, beforeEach, beforeAll } from "vitest";
 import { VendorSetupWizard } from "../VendorSetupWizard";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
+import onboardingService from "@/services/onboarding.service";
 import { supabase } from "@/integrations/supabase/client";
+
+const { profileEqMock, profileUpdateMock } = vi.hoisted(() => {
+  const profileEqMock = vi.fn().mockResolvedValue({ error: null });
+  const profileUpdateMock = vi.fn(() => ({ eq: profileEqMock }));
+  return { profileEqMock, profileUpdateMock };
+});
 
 vi.mock("@/services/shop.service", () => ({
   default: {
@@ -19,6 +26,12 @@ vi.mock("@/services/product.service", () => ({
   },
 }));
 
+vi.mock("@/services/onboarding.service", () => ({
+  default: {
+    storeOnboardingResponse: vi.fn(),
+  },
+}));
+
 vi.mock("@/services/upload.service", () => ({
   uploadService: {
     uploadImage: vi.fn().mockResolvedValue({ url: "https://example.com/image.jpg" }),
@@ -28,8 +41,7 @@ vi.mock("@/services/upload.service", () => ({
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => ({
-      update: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockResolvedValue({ error: null }),
+      update: profileUpdateMock,
     })),
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: { id: "test-user-id" } } }),
@@ -40,6 +52,12 @@ vi.mock("@/integrations/supabase/client", () => ({
 vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({
     toast: vi.fn(),
+  }),
+}));
+
+vi.mock("@/context/AuthContext", () => ({
+  useAuth: () => ({
+    user: { id: "test-user-id", email: "vendor@example.com", role: "ENTREPRENEUR" },
   }),
 }));
 
@@ -70,9 +88,15 @@ describe("VendorSetupWizard", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
+    onComplete.mockClear();
+    profileEqMock.mockResolvedValue({ error: null });
+    profileUpdateMock.mockReturnValue({ eq: profileEqMock });
+    vi.mocked(supabase.from).mockReturnValue({ update: profileUpdateMock } as never);
     vi.mocked(shopService.createShop).mockResolvedValue({ success: true, data: { id: "shop-123", slug: "my-test-shop" }, message: "Shop created successfully" });
     vi.mocked(shopService.createDefaultShopAddress).mockResolvedValue({ success: true, data: { id: "address-123" }, message: "Shop address created successfully" });
     vi.mocked(productService.createProduct).mockResolvedValue({ success: true, data: { id: "product-123" }, message: "Product created successfully" });
+    vi.mocked(onboardingService.storeOnboardingResponse).mockResolvedValue(undefined);
   });
 
   it("renders Step 1 correctly when open", () => {
@@ -91,10 +115,13 @@ describe("VendorSetupWizard", () => {
     await waitFor(() => {
       expect(shopService.createShop).toHaveBeenCalledWith(expect.objectContaining({
         name: "My Test Shop",
+        description: "Welcome to My Test Shop",
+        whatsapp: "",
+      }));
+      expect(shopService.updateShop).toHaveBeenCalledWith("shop-123", expect.objectContaining({
         category: "Fashion & Apparel",
         state: "Lagos",
         city: "Ikeja",
-        description: "Welcome to My Test Shop",
       }));
       expect(screen.getByText("What are you selling?")).toBeInTheDocument();
     });
@@ -134,8 +161,9 @@ describe("VendorSetupWizard", () => {
     });
   });
 
-  it("saves a normalized WhatsApp number and completes setup", async () => {
+  it("records onboarding data before clearing the role-selection flag on WhatsApp completion", async () => {
     render(<VendorSetupWizard open={true} onComplete={onComplete} />);
+    sessionStorage.setItem("vendor_wizard_draft_test-user-id", JSON.stringify({ step: 1 }));
 
     await fillRequiredShopFields();
     fireEvent.click(screen.getByText("Create Store"));
@@ -151,8 +179,20 @@ describe("VendorSetupWizard", () => {
         whatsapp_number: "+2348012345678",
         is_active: true,
       });
+      expect(onboardingService.storeOnboardingResponse).toHaveBeenCalledWith("test-user-id", {
+        businessType: "Fashion & Apparel",
+        customerSource: "streamlined_vendor_setup_wizard",
+        biggestStruggle: "getting_store_online_quickly",
+        paymentMethod: "not_collected_in_vendor_setup",
+        deliveryMethod: "city_state_location_collected",
+        setupPreference: "streamlined_vendor_setup_wizard",
+      });
       expect(supabase.from).toHaveBeenCalledWith("profiles");
+      expect(profileUpdateMock).toHaveBeenCalledWith({ needs_role_selection: false });
+      expect(profileEqMock).toHaveBeenCalledWith("id", "test-user-id");
     });
+    expect(vi.mocked(onboardingService.storeOnboardingResponse).mock.invocationCallOrder[0]).toBeLessThan(profileUpdateMock.mock.invocationCallOrder[0]);
+    expect(sessionStorage.getItem("vendor_wizard_draft_test-user-id")).toBeNull();
     expect(screen.getByText("You're all set! 🚀")).toBeInTheDocument();
   });
 
@@ -205,6 +245,34 @@ describe("VendorSetupWizard", () => {
     await waitFor(() => {
       expect(onComplete).toHaveBeenCalled();
     }, { timeout: 3000 });
+  });
+
+  it("records onboarding data before clearing the role-selection flag on skip completion", async () => {
+    render(<VendorSetupWizard open={true} onComplete={onComplete} />);
+
+    await fillRequiredShopFields();
+    fireEvent.change(screen.getByPlaceholderText("e.g. 123 Herbert Macaulay Way"), { target: { value: "123 Herbert Macaulay Way" } });
+    fireEvent.click(screen.getByText("Create Store"));
+    await screen.findByText("What are you selling?");
+    fireEvent.click(screen.getByText("Skip for now"));
+    await screen.findByText("How will they reach you?");
+
+    fireEvent.click(screen.getByText("Skip for now"));
+
+    await waitFor(() => {
+      expect(shopService.updateShop).toHaveBeenCalledWith("shop-123", { is_active: true });
+      expect(onboardingService.storeOnboardingResponse).toHaveBeenCalledWith("test-user-id", expect.objectContaining({
+        businessType: "Fashion & Apparel",
+        customerSource: "streamlined_vendor_setup_wizard",
+        biggestStruggle: "getting_store_online_quickly",
+        paymentMethod: "not_collected_in_vendor_setup",
+        deliveryMethod: "pickup_or_delivery_address_collected",
+        setupPreference: "streamlined_vendor_setup_wizard",
+      }));
+      expect(profileUpdateMock).toHaveBeenCalledWith({ needs_role_selection: false });
+    });
+    expect(vi.mocked(onboardingService.storeOnboardingResponse).mock.invocationCallOrder[0]).toBeLessThan(profileUpdateMock.mock.invocationCallOrder[0]);
+    expect(screen.getByText("You're all set! 🚀")).toBeInTheDocument();
   });
 
 });
