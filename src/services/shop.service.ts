@@ -26,9 +26,18 @@ export interface CreateShopRequest {
   banner_url?: string;
 }
 
-const isMissingShopAddressColumnError = (error: { message?: string; code?: string } | null | undefined) => {
+const isMissingColumnError = (error: { message?: string; code?: string } | null | undefined) => {
   const message = error?.message?.toLowerCase() || '';
-  return error?.code === 'PGRST204' && (message.includes("'address'") || message.includes('address column') || message.includes('show_public_address'));
+  // PGRST204: Column not found in schema cache.
+  // We check for several columns that might be missing in older DB snapshots.
+  return error?.code === 'PGRST204' && (
+    message.includes("'address'") || 
+    message.includes("'category'") || 
+    message.includes("'city'") || 
+    message.includes("'state'") || 
+    message.includes('address column') || 
+    message.includes('show_public_address')
+  );
 };
 
 const shopService = {
@@ -98,8 +107,10 @@ const shopService = {
 
     // Older deployments may not have refreshed the optional public-address columns yet.
     // Retry without those columns so store creation is never blocked.
-    if (isMissingShopAddressColumnError(error)) {
-      const { address, show_public_address, ...safePayload } = shopPayload;
+    // Older deployments may not have refreshed the optional marketplace columns yet.
+    // Retry without those columns so store creation is never blocked.
+    if (isMissingColumnError(error)) {
+      const { address, category, city, state, show_public_address, ...safePayload } = shopPayload;
       ({ data: shop, error } = await supabase
         .from('shops')
         .insert(safePayload)
@@ -373,8 +384,8 @@ const shopService = {
       .select()
       .single();
 
-    if (isMissingShopAddressColumnError(error)) {
-      const { address, show_public_address, ...safeUpdateData } = updateData;
+    if (isMissingColumnError(error)) {
+      const { address, category, city, state, show_public_address, ...safeUpdateData } = updateData;
       ({ data: shop, error } = await supabase
         .from('shops')
         .update(safeUpdateData)

@@ -130,19 +130,28 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         bannerUrl = bannerRes.url;
       }
 
+      // 1. Create shop with core fields first — this matches the Dashboard (MyStore.tsx) pattern
       const res = await shopService.createShop({
         name: shopName.trim(),
         slug: shopSlug || shopName.trim().toLowerCase().replace(/\s+/g, "-"),
         description: shopDescription.trim() || `Welcome to ${shopName.trim()}`,
-        whatsapp: "", // placeholder — updated in Step 3
+        whatsapp: "", // updated in Step 3
+      });
+
+      const newShopId = res.data.id;
+      setCreatedShopId(newShopId);
+
+      // 2. Immediately update with the remaining info (category, location, images)
+      // This is safer because updateShop handles missing columns gracefully.
+      await shopService.updateShop(newShopId, {
+        category: shopCategory,
         state: shopState,
         city: shopCity,
         address: shopAddress.trim() || undefined,
-        category: shopCategory,
         logo_url: logoUrl || undefined,
         banner_url: bannerUrl || undefined,
       });
-      setCreatedShopId(res.data.id);
+
       setStep(2);
     } catch (error: unknown) {
       toast({ title: "Error creating shop", description: getErrorMessage(error), variant: "destructive" });
