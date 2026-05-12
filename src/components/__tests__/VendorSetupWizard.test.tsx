@@ -43,6 +43,12 @@ vi.mock("@/hooks/use-toast", () => ({
   }),
 }));
 
+vi.mock("@/context/AuthContext", () => ({
+  useAuth: () => ({
+    user: { id: "test-user-id" },
+  }),
+}));
+
 vi.mock("@/components/patterns/AdirePattern", () => ({
   AdirePattern: () => <div data-testid="adire-pattern" />,
 }));
@@ -91,10 +97,14 @@ describe("VendorSetupWizard", () => {
     await waitFor(() => {
       expect(shopService.createShop).toHaveBeenCalledWith(expect.objectContaining({
         name: "My Test Shop",
+        slug: "my-test-shop",
+        description: "Welcome to My Test Shop",
+        whatsapp: "",
+      }));
+      expect(shopService.updateShop).toHaveBeenCalledWith("shop-123", expect.objectContaining({
         category: "Fashion & Apparel",
         state: "Lagos",
         city: "Ikeja",
-        description: "Welcome to My Test Shop",
       }));
       expect(screen.getByText("What are you selling?")).toBeInTheDocument();
     });

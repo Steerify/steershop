@@ -11,6 +11,14 @@ import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
 import { UserRole } from "@/types/api";
 
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  return "Failed to set role. Please try again.";
+};
+
 const RoleSelection = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -43,72 +51,17 @@ const RoleSelection = () => {
 
     setIsLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const role = selectedRole === 'ENTREPRENEUR' ? 'shop_owner' : 'customer';
 
-      if (!session?.user) {
-        throw new Error("No user session found");
-      }
+      console.log('Selecting trusted user role:', role);
 
-      // Map UserRole enum to database role string
-      let dbRole: "admin" | "customer" | "shop_owner";
-      let appRole: "admin" | "customer" | "shop_owner";
+      const { error: roleSelectionError } = await supabase.rpc('select_user_role', {
+        p_role: role,
+      });
 
-      switch (selectedRole) {
-        case 'ENTREPRENEUR':
-          dbRole = 'shop_owner';
-          appRole = 'shop_owner';
-          break;
-        case 'CUSTOMER':
-          dbRole = 'customer';
-          appRole = 'customer';
-          break;
-        case 'ADMIN':
-          dbRole = 'admin';
-          appRole = 'admin';
-          break;
-        default:
-          dbRole = 'customer';
-          appRole = 'customer';
-      }
-
-      console.log('Updating profile and role for user:', session.user.id, 'to:', dbRole);
-
-      // Update the user's profile with the selected role and clear the flag
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          role: dbRole,
-          needs_role_selection: false,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', session.user.id);
-
-      if (profileError) {
-        console.error("Error updating profile:", profileError);
-        throw profileError;
-      }
-
-      // Also update user_roles table to keep it in sync
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .update({
-          role: appRole
-        })
-        .eq('user_id', session.user.id);
-
-      if (roleError) {
-        console.error("Error updating user_roles:", roleError);
-        // Try to upsert if update fails (though update should work with RLS)
-        const { error: insertError } = await supabase
-          .from('user_roles')
-          .upsert({
-            user_id: session.user.id,
-            role: appRole
-          });
-
-        if (insertError) {
-          console.error("Error upserting user_roles:", insertError);
-        }
+      if (roleSelectionError) {
+        console.error("Error selecting role:", roleSelectionError);
+        throw roleSelectionError;
       }
       // Refresh AuthContext so ProtectedRoute sees the updated role
       await refreshUser();
@@ -126,11 +79,11 @@ const RoleSelection = () => {
         navigate("/customer_dashboard");
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error setting role:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to set role. Please try again.",
+        description: getErrorMessage(error),
         variant: "destructive",
       });
     } finally {

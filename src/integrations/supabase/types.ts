@@ -3136,6 +3136,10 @@ export type Database = {
         Returns: boolean
       }
       shop_is_active: { Args: { shop_id_param: string }; Returns: boolean }
+      select_user_role: {
+        Args: { p_role: Database["public"]["Enums"]["app_role"] }
+        Returns: Json
+      }
       update_all_shop_verifications: { Args: never; Returns: undefined }
       validate_referral_code: { Args: { _code: string }; Returns: Json }
     }
