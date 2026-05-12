@@ -57,7 +57,7 @@ vi.mock("@/hooks/use-toast", () => ({
 
 vi.mock("@/context/AuthContext", () => ({
   useAuth: () => ({
-    user: { id: "test-user-id", email: "vendor@example.com", role: "ENTREPRENEUR" },
+    user: { id: "test-user-id" },
   }),
 }));
 
@@ -115,6 +115,7 @@ describe("VendorSetupWizard", () => {
     await waitFor(() => {
       expect(shopService.createShop).toHaveBeenCalledWith(expect.objectContaining({
         name: "My Test Shop",
+        slug: "my-test-shop",
         description: "Welcome to My Test Shop",
         whatsapp: "",
       }));
