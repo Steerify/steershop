@@ -26,8 +26,38 @@ const EMAIL_SUBJECTS: Record<string, string> = {
   reauthentication: 'Your verification code',
 }
 
+interface EmailTemplateProps {
+  siteName: string
+  siteUrl: string
+  recipient: string
+  confirmationUrl: string
+  token: string
+  email: string
+  newEmail: string
+}
+
+interface EmailWebhookPayload {
+  version: string
+  run_id: string
+  type?: string
+  data: {
+    action_type: string
+    email: string
+    url: string
+    token: string
+    new_email?: string
+    user_metadata?: {
+      role?: string
+      full_name?: string
+      phone?: string
+    }
+    user_id?: string
+    id?: string
+  }
+}
+
 // Template mapping
-const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
+const EMAIL_TEMPLATES: Record<string, React.ComponentType<EmailTemplateProps>> = {
   signup: SignupEmail,
   invite: InviteEmail,
   magiclink: MagicLinkEmail,
@@ -38,9 +68,9 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = "steersolo"
-const SENDER_DOMAIN = "notify.steersolo.com"
 const ROOT_DOMAIN = "steersolo.com"
 const FROM_DOMAIN = "steersolo.com" // Domain shown in From address (may be root or sender subdomain)
+const SENDER_EMAIL = Deno.env.get('SMTP_FROM_EMAIL') || 'mail@steersolo.com'
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
@@ -144,7 +174,7 @@ async function handleWebhook(req: Request): Promise<Response> {
   }
 
   // Verify signature + timestamp, then parse payload.
-  let payload: any
+  let payload: EmailWebhookPayload
   let run_id = ''
   try {
     const verified = await verifyWebhookRequest({
@@ -152,7 +182,7 @@ async function handleWebhook(req: Request): Promise<Response> {
       secret: apiKey,
       parser: parseEmailWebhookPayload,
     })
-    payload = verified.payload
+    payload = verified.payload as EmailWebhookPayload
     run_id = payload.run_id
   } catch (error) {
     if (error instanceof WebhookError) {
@@ -227,7 +257,7 @@ async function handleWebhook(req: Request): Promise<Response> {
     confirmationUrl: payload.data.url,
     token: payload.data.token,
     email: payload.data.email,
-    newEmail: payload.data.new_email,
+    newEmail: payload.data.new_email || '',
   }
 
   // Render React Email to HTML and plain text
@@ -262,8 +292,9 @@ async function handleWebhook(req: Request): Promise<Response> {
     })
 
     const info = await transporter.sendMail({
-      from: `${SITE_NAME} <${SENDER_EMAIL}>`,
+      from: `SteerSolo <${SENDER_EMAIL}>`,
       to: payload.data.email,
+      replyTo: SENDER_EMAIL,
       subject: EMAIL_SUBJECTS[emailType] || 'Notification',
       html,
       text,
@@ -361,8 +392,9 @@ async function handleWebhook(req: Request): Promise<Response> {
           auth: { user: smtpUser, pass: smtpPass },
         })
         await transporter.sendMail({
-          from: `${SITE_NAME} <${SENDER_EMAIL}>`,
+          from: `SteerSolo <${SENDER_EMAIL}>`,
           to: ADMIN_SIGNUP_EMAIL,
+          replyTo: SENDER_EMAIL,
           subject: adminSubject,
           html: adminHtml,
           text: adminText,
@@ -413,8 +445,9 @@ async function handleWebhook(req: Request): Promise<Response> {
           auth: { user: smtpUser, pass: smtpPass },
         })
         await transporter.sendMail({
-          from: `${SITE_NAME} <${SENDER_EMAIL}>`,
+          from: `SteerSolo <${SENDER_EMAIL}>`,
           to: payload.data.email,
+          replyTo: SENDER_EMAIL,
           subject: onboardingSubject,
           html: onboardingHtml,
           text: onboardingText,
