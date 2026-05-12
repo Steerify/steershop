@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { formatQueuedSender, sendSmtpEmail } from '../_shared/smtp.ts'
 
 const MAX_RETRIES = 5
 const DEFAULT_BATCH_SIZE = 10
@@ -10,7 +11,10 @@ function isRateLimited(error: unknown): boolean {
   if (error && typeof error === 'object' && 'status' in error) {
     return (error as { status: number }).status === 429
   }
-  return error instanceof Error && error.message.includes('429')
+  if (error && typeof error === 'object' && 'responseCode' in error) {
+    return [421, 450, 451, 452].includes(Number((error as { responseCode: number }).responseCode))
+  }
+  return error instanceof Error && (error.message.includes('429') || error.message.includes('rate limit'))
 }
 
 function isForbidden(error: unknown): boolean {
@@ -67,7 +71,6 @@ async function moveToDlq(
 }
 
 Deno.serve(async (req) => {
-  const resendApiKey = Deno.env.get('RESEND_API_KEY')
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
@@ -215,32 +218,16 @@ Deno.serve(async (req) => {
       }
 
       try {
-        if (!resendApiKey) {
-          throw new Error('Missing RESEND_API_KEY environment variable. Emails cannot be sent.');
-        }
-
-        // Direct Resend API usage
-        const resendRes = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${resendApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: payload.sender_domain 
-              ? `${payload.from.split('<')[0].trim()} <noreply@${payload.sender_domain}>` 
-              : payload.from,
-            to: typeof payload.to === 'string' ? [payload.to] : payload.to,
-            subject: payload.subject,
-            html: payload.html,
-            text: payload.text,
-          }),
-        });
-
-        if (!resendRes.ok) {
-          const resError = await resendRes.text();
-          throw new Error(`Resend API error: ${resendRes.status} ${resError}`);
-        }
+        const smtpInfo = await sendSmtpEmail({
+          from: formatQueuedSender(payload),
+          to: payload.to as string | string[],
+          subject: String(payload.subject || ''),
+          html: typeof payload.html === 'string' ? payload.html : undefined,
+          text: typeof payload.text === 'string' ? payload.text : undefined,
+        })
+        console.log('Email sent via SMTP', {
+          queue, msg_id: msg.msg_id, message_id: payload.message_id, recipient: payload.to, smtp_message_id: smtpInfo.messageId,
+        })
 
         await (supabase as any).from('email_send_log').insert({
           message_id: payload.message_id,

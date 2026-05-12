@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
+import { getDefaultFromEmail, sendSmtpEmail } from "../_shared/smtp.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,9 +57,6 @@ serve(async (req) => {
     const storeLink = `https://steersolo.com/shop/${shopSlug}`;
     const name = profile.full_name || 'there';
 
-    // Send welcome email using Resend if available, otherwise log
-    const resendKey = Deno.env.get('RESEND_API_KEY');
-    
     const emailHtml = `
 <!DOCTYPE html>
 <html>
@@ -131,18 +129,13 @@ serve(async (req) => {
 </body>
 </html>`;
 
-    if (resendKey) {
-      const { Resend } = await import("npm:resend@2.0.0");
-      const resend = new Resend(resendKey);
-      await resend.emails.send({
-        from: 'SteerSolo <noreply@steersolo.com>',
-        to: [profile.email],
-        subject: `Welcome to SteerSolo! Here's how to start selling 🚀`,
-        html: emailHtml,
-      });
-    } else {
-      console.log(`[DRY RUN] Welcome email to ${profile.email} for shop ${shopName}`);
-    }
+    const info = await sendSmtpEmail({
+      from: getDefaultFromEmail(),
+      to: profile.email,
+      subject: `Welcome to SteerSolo! Here's how to start selling 🚀`,
+      html: emailHtml,
+    });
+    console.log('Welcome email sent via SMTP', { email: profile.email, shopName, messageId: info.messageId });
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

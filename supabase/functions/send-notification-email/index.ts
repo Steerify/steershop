@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
+import { getDefaultFromEmail } from "../_shared/smtp.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -141,8 +142,7 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const resendApiKey = Deno.env.get('RESEND_API_KEY')!;
-    const fromEmail = Deno.env.get('RESEND_FROM_EMAIL') || 'SteerSolo <onboarding@resend.dev>';
+    const fromEmail = getDefaultFromEmail();
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { type, user_id, data = {} }: NotificationRequest = await req.json();

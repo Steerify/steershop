@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend@2.0.0";
+import { getDefaultFromEmail, sendSmtpEmail } from "../_shared/smtp.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,15 +12,6 @@ serve(async (req) => {
   }
 
   try {
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      return new Response(JSON.stringify({ error: "Email service not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const resend = new Resend(resendApiKey);
     const { orderId, eventType, shopName, customerEmail, customerName, totalAmount, items, statusUpdate, shopOwnerEmail, shopOwnerPhone } = await req.json();
 
     if (!orderId || !eventType) {
@@ -127,22 +117,24 @@ serve(async (req) => {
 
     // Send email to customer
     if (customerEmail && customerSubject) {
-      await resend.emails.send({
-        from: "SteerSolo <noreply@steersolo.com>",
-        to: [customerEmail],
+      const info = await sendSmtpEmail({
+        from: getDefaultFromEmail(),
+        to: customerEmail,
         subject: customerSubject,
         html: customerBodyHtml,
       });
+      console.log("Customer order email sent", { eventType, orderId, customerEmail, messageId: info.messageId });
     }
 
     // Send email to shop owner (for order_placed)
     if (shopOwnerEmail && ownerSubject) {
-      await resend.emails.send({
-        from: "SteerSolo <noreply@steersolo.com>",
-        to: [shopOwnerEmail],
+      const info = await sendSmtpEmail({
+        from: getDefaultFromEmail(),
+        to: shopOwnerEmail,
         subject: ownerSubject,
         html: ownerBodyHtml,
       });
+      console.log("Shop owner order email sent", { eventType, orderId, shopOwnerEmail, messageId: info.messageId });
     }
 
     // Send SMS to shop owner via Termii (automatic - no WhatsApp button needed)
