@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useFormDraft, readFormDraft } from "@/hooks/useFormDraft";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,27 @@ export const BookingDialog = ({
     notes: ""
   });
 
+  const draftKey = user?.id ? `booking_draft_${service.id}_${user.id}` : "";
+  const { clearDraft } = useFormDraft(draftKey, { selectedDate, selectedTime, formData, step }, !!draftKey && isOpen);
+
+  // Restore draft on mount or when dialog opens
+  useEffect(() => {
+    if (!isOpen || !user?.id) return;
+    const draft = readFormDraft<{ 
+      selectedDate: string; 
+      selectedTime: string; 
+      formData: typeof formData;
+      step: typeof step;
+    }>(draftKey);
+
+    if (draft) {
+      if (draft.selectedDate) setSelectedDate(new Date(draft.selectedDate));
+      if (draft.selectedTime) setSelectedTime(draft.selectedTime);
+      if (draft.formData) setFormData(draft.formData);
+      if (draft.step) setStep(draft.step);
+    }
+  }, [isOpen, user?.id, draftKey]);
+
   const handleNext = () => {
     if (step === "datetime") {
       if (!selectedDate || !selectedTime) {
@@ -115,6 +137,7 @@ export const BookingDialog = ({
       if (error) throw error;
 
       setStep("success");
+      clearDraft();
       
       toast({
         title: "Booking Confirmed! 🎉",

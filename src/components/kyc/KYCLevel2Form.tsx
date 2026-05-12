@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useFormDraft, readFormDraft } from '@/hooks/useFormDraft';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,18 @@ export const KYCLevel2Form = ({ onSuccess }: KYCLevel2FormProps) => {
     accountNumber: '',
     bankCode: '',
   });
+
+  const draftKey = user?.id ? `kyc_l2_draft_${user.id}` : "";
+  const { clearDraft } = useFormDraft(draftKey, formData, !!draftKey);
+
+  // Restore draft on mount
+  useEffect(() => {
+    if (!user?.id) return;
+    const draft = readFormDraft<typeof formData>(draftKey);
+    if (draft && (draft.accountNumber || draft.bankCode)) {
+      setFormData(f => ({ ...f, ...draft }));
+    }
+  }, [user?.id, draftKey]);
 
   // Check existing verification status on mount
   useEffect(() => {
@@ -111,6 +124,7 @@ export const KYCLevel2Form = ({ onSuccess }: KYCLevel2FormProps) => {
           description: `Account verified: ${result.account_name}`,
         });
         if (onSuccess) onSuccess(result.account_name);
+        clearDraft();
       }
     } catch (error: any) {
       toast({

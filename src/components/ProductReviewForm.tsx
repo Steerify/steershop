@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import reviewService from "@/services/review.service";
 import { LoginToastAction } from "@/components/LoginToastAction";
+import { useFormDraft, readFormDraft } from "@/hooks/useFormDraft";
+import { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +32,19 @@ export const ProductReviewForm = ({ productId, productName, onReviewSubmitted }:
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  const draftKey = user?.id ? `review_draft_${productId}_${user.id}` : "";
+  const { clearDraft } = useFormDraft(draftKey, { rating, comment }, !!draftKey && isOpen);
+
+  // Restore draft on mount or when dialog opens
+  useEffect(() => {
+    if (!isOpen || !user?.id) return;
+    const draft = readFormDraft<{ rating: number; comment: string }>(draftKey);
+    if (draft) {
+      if (draft.rating) setRating(draft.rating);
+      if (draft.comment) setComment(draft.comment);
+    }
+  }, [isOpen, user?.id, draftKey]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +85,7 @@ export const ProductReviewForm = ({ productId, productName, onReviewSubmitted }:
 
       setRating(0);
       setComment("");
+      clearDraft();
       setIsOpen(false);
       onReviewSubmitted?.();
     } catch (error: any) {

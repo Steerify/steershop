@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useFormDraft, readFormDraft } from "@/hooks/useFormDraft";
 import { ArrowLeft, Send, MessageSquare, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,23 @@ const Feedback = () => {
   const [hoveredRating, setHoveredRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  const feedbackData = { name, email, feedbackType, subject, message, rating };
+  const draftKey = user?.id ? `feedback_draft_${user.id}` : "feedback_draft_guest";
+  const { clearDraft } = useFormDraft(draftKey, feedbackData, true);
+
+  // Restore draft on mount
+  useEffect(() => {
+    const draft = readFormDraft<typeof feedbackData>(draftKey);
+    if (draft) {
+      if (draft.name) setName(draft.name);
+      if (draft.email) setEmail(draft.email);
+      if (draft.feedbackType) setFeedbackType(draft.feedbackType);
+      if (draft.subject) setSubject(draft.subject);
+      if (draft.message) setMessage(draft.message);
+      if (draft.rating) setRating(draft.rating);
+    }
+  }, [draftKey]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +86,7 @@ const Feedback = () => {
       setSubject("");
       setMessage("");
       setRating(0);
+      clearDraft();
     } catch (error: any) {
       // Error is already handled by handleApiError in most cases, 
       // but toast can be kept if we want specialized messages.

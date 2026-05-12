@@ -17,6 +17,8 @@ import productService from "@/services/product.service";
 import { uploadService } from "@/services/upload.service";
 import { supabase } from "@/integrations/supabase/client";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
+import { useAuth } from "@/context/AuthContext";
+import { useFormDraft, readFormDraft } from "@/hooks/useFormDraft";
 
 const NIGERIAN_STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River",
@@ -75,6 +77,48 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   const [whatsappNumber, setWhatsappNumber] = useState("");
 
   const [createdShopId, setCreatedShopId] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  // Collect all serializable state for persistence
+  const wizardFormData = {
+    step,
+    shopName,
+    shopDescription,
+    shopState,
+    shopCity,
+    shopCategory,
+    shopAddress,
+    productName,
+    productDescription,
+    productPrice,
+    productStock,
+    whatsappNumber,
+    createdShopId
+  };
+
+  const draftKey = user?.id ? `vendor_wizard_draft_${user.id}` : "";
+  const { clearDraft } = useFormDraft(draftKey, wizardFormData, !!draftKey);
+
+  // Restore draft on mount or when user becomes available
+  useEffect(() => {
+    if (!user?.id) return;
+    const draft = readFormDraft<typeof wizardFormData>(`vendor_wizard_draft_${user.id}`);
+    if (draft) {
+      if (draft.step) setStep(draft.step);
+      if (draft.shopName) setShopName(draft.shopName);
+      if (draft.shopDescription) setShopDescription(draft.shopDescription);
+      if (draft.shopState) setShopState(draft.shopState);
+      if (draft.shopCity) setShopCity(draft.shopCity);
+      if (draft.shopCategory) setShopCategory(draft.shopCategory);
+      if (draft.shopAddress) setShopAddress(draft.shopAddress);
+      if (draft.productName) setProductName(draft.productName);
+      if (draft.productDescription) setProductDescription(draft.productDescription);
+      if (draft.productPrice) setProductPrice(draft.productPrice);
+      if (draft.productStock) setProductStock(draft.productStock);
+      if (draft.whatsappNumber) setWhatsappNumber(draft.whatsappNumber);
+      if (draft.createdShopId) setCreatedShopId(draft.createdShopId);
+    }
+  }, [user?.id]);
 
   // Lock body scroll and scroll wizard to top when it opens
   useEffect(() => {
@@ -153,7 +197,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       });
 
       setStep(2);
-    } catch (error: unknown) {
+    } catch (error: any) {
       toast({ title: "Error creating shop", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setIsLoading(false);
