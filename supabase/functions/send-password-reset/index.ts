@@ -155,6 +155,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await transporter.sendMail({
       from: "SteerSolo <mail@steersolo.com>",
+      replyTo: "mail@steersolo.com",
       to: [email],
       subject: "Reset Your Password - SteerSolo",
       html: generateEmailHtml(name || "", resetLink),

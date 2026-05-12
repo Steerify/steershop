@@ -85,7 +85,8 @@ serve(async (req) => {
         
         // Send email
         const emailResponse = await resend.emails.send({
-          from: "SteerSolo <noreply@steersolo.com>",
+          from: "SteerSolo <mail@steersolo.com>",
+          replyTo: "mail@steersolo.com",
           to: [user.email],
           subject: `⏰ Your ${subscriptionType} expires in 3 days - ${shopName}`,
           html: `
