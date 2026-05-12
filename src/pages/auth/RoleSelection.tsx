@@ -11,6 +11,8 @@ import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.jpg";
 import { UserRole } from "@/types/api";
 
+const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Failed to set role. Please try again.";
+
 const RoleSelection = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -88,27 +90,23 @@ const RoleSelection = () => {
         throw profileError;
       }
 
-      // Also update user_roles table to keep it in sync
-      const { error: roleError } = await supabase
+      // The profiles update is the only client-side write. A database trigger
+      // syncs public.user_roles from profiles so RLS-protected shop checks see
+      // the selected role before the setup wizard can create a shop.
+      const { data: syncedRole, error: roleCheckError } = await supabase
         .from('user_roles')
-        .update({
-          role: appRole
-        })
-        .eq('user_id', session.user.id);
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', appRole)
+        .maybeSingle();
 
-      if (roleError) {
-        console.error("Error updating user_roles:", roleError);
-        // Try to upsert if update fails (though update should work with RLS)
-        const { error: insertError } = await supabase
-          .from('user_roles')
-          .upsert({
-            user_id: session.user.id,
-            role: appRole
-          });
+      if (roleCheckError) {
+        console.error("Error confirming synced user role:", roleCheckError);
+        throw roleCheckError;
+      }
 
-        if (insertError) {
-          console.error("Error upserting user_roles:", insertError);
-        }
+      if (!syncedRole) {
+        throw new Error("We couldn't finish syncing your account role. Please try selecting your role again before creating a shop.");
       }
       // Refresh AuthContext so ProtectedRoute sees the updated role
       await refreshUser();
@@ -126,11 +124,11 @@ const RoleSelection = () => {
         navigate("/customer_dashboard");
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error setting role:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to set role. Please try again.",
+        description: getErrorMessage(error),
         variant: "destructive",
       });
     } finally {

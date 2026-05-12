@@ -35,6 +35,40 @@ const SHOP_CATEGORIES = [
 
 const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Please try again.";
 
+const ensureShopOwnerRole = async (userId: string) => {
+  const { data: roleRow, error: roleError } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('role', 'shop_owner')
+    .maybeSingle();
+
+  if (roleError) {
+    console.error('[VendorSetupWizard] Failed to confirm shop_owner role:', roleError);
+    throw new Error('We could not confirm your shop owner access. Please try again.');
+  }
+
+  if (!roleRow) {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role, needs_role_selection')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error('[VendorSetupWizard] Failed to inspect profile role:', profileError);
+    }
+
+    if (profile?.role === 'shop_owner') {
+      throw new Error('Your shop owner role is still syncing. Please refresh and try again before creating a shop.');
+    }
+
+    throw new Error(profile?.needs_role_selection
+      ? 'Please select Entrepreneur as your account type before creating a shop.'
+      : 'Your account is not marked as a shop owner yet. Please select Entrepreneur before creating a shop.');
+  }
+};
+
 const normalizeWhatsappNumber = (value: string) => {
   const cleaned = value.trim().replace(/[^\d+]/g, "");
 
@@ -159,8 +193,15 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       toast({ title: "Shop name required", variant: "destructive" });
       return;
     }
+    if (!user?.id) {
+      toast({ title: "Sign in required", description: "Please sign in before creating a shop.", variant: "destructive" });
+      return;
+    }
+
     setIsLoading(true);
     try {
+      await ensureShopOwnerRole(user.id);
+
       let logoUrl = "";
       let bannerUrl = "";
 
@@ -197,7 +238,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       });
 
       setStep(2);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({ title: "Error creating shop", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setIsLoading(false);

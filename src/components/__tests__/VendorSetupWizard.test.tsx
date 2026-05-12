@@ -25,16 +25,36 @@ vi.mock("@/services/upload.service", () => ({
   },
 }));
 
+const createSupabaseQuery = (table: string) => {
+  const query: Record<string, unknown> = {
+    select: vi.fn(() => query),
+    update: vi.fn(() => query),
+    eq: vi.fn(() => query),
+    maybeSingle: vi.fn().mockResolvedValue(
+      table === "user_roles"
+        ? { data: { role: "shop_owner" }, error: null }
+        : { data: { role: "shop_owner", needs_role_selection: false }, error: null }
+    ),
+    then: (resolve: (value: { error: null }) => void) => Promise.resolve(resolve({ error: null })),
+  };
+
+  return query;
+};
+
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
-    from: vi.fn(() => ({
-      update: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockResolvedValue({ error: null }),
-    })),
+    from: vi.fn((table: string) => createSupabaseQuery(table)),
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: { id: "test-user-id" } } }),
     },
   },
+}));
+
+
+vi.mock("@/context/AuthContext", () => ({
+  useAuth: () => ({
+    user: { id: "test-user-id" },
+  }),
 }));
 
 vi.mock("@/hooks/use-toast", () => ({
@@ -91,10 +111,12 @@ describe("VendorSetupWizard", () => {
     await waitFor(() => {
       expect(shopService.createShop).toHaveBeenCalledWith(expect.objectContaining({
         name: "My Test Shop",
+        description: "Welcome to My Test Shop",
+      }));
+      expect(shopService.updateShop).toHaveBeenCalledWith("shop-123", expect.objectContaining({
         category: "Fashion & Apparel",
         state: "Lagos",
         city: "Ikeja",
-        description: "Welcome to My Test Shop",
       }));
       expect(screen.getByText("What are you selling?")).toBeInTheDocument();
     });
