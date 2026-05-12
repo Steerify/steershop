@@ -198,6 +198,7 @@ serve(async (req) => {
         subject: customerSubject,
         html: customerBodyHtml,
       });
+      console.log("Customer order email sent", { eventType, orderId, customerEmail, messageId: info.messageId });
     }
 
     // Send email to shop owner (for order_placed)
@@ -209,6 +210,7 @@ serve(async (req) => {
         subject: ownerSubject,
         html: ownerBodyHtml,
       });
+      console.log("Shop owner order email sent", { eventType, orderId, shopOwnerEmail, messageId: info.messageId });
     }
 
     // Send SMS to shop owner via Termii (automatic - no WhatsApp button needed)
