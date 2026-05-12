@@ -82,24 +82,26 @@ const shopService = {
       throw new Error('User not authenticated');
     }
 
-    const shopPayload = {
+    const shopPayload: any = {
       owner_id: user.id,
       shop_name: data.name,
       shop_slug: data.slug,
       description: data.description,
       whatsapp_number: data.whatsapp,
-      category: data.category || null,
-      city: data.city || null,
-      state: data.state || null,
-      address: data.address?.trim() || null,
-      show_public_address: false,
       logo_url: data.logo_url || null,
       banner_url: data.banner_url || null,
       country: "Nigeria",
       is_active: false,
     };
 
-    let { data: shop, error } = await supabase
+    // Only add these if they are provided to avoid "column not found" errors
+    // if the schema hasn't been updated yet.
+    if (data.category) shopPayload.category = data.category;
+    if (data.city) shopPayload.city = data.city;
+    if (data.state) shopPayload.state = data.state;
+    if (data.address) shopPayload.address = data.address.trim();
+
+    const { data: shop, error } = await supabase
       .from('shops')
       .insert(shopPayload)
       .select()
