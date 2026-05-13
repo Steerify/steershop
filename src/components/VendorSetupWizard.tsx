@@ -62,6 +62,9 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   const [shopCity, setShopCity] = useState("");
   const [shopCategory, setShopCategory] = useState("");
   const [shopAddress, setShopAddress] = useState("");
+  const handleBack = () => {
+    if (step > 1) setStep(prev => prev - 1);
+  };
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -363,27 +366,36 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
             {step === 4 && "Your store is live. Let's head to your dashboard."}
           </p>
 
-          {/* Stepper Indicator */}
-          <div className="space-y-4">
+          {/* Stepper Indicator - Professional Sidebar */}
+          <div className="space-y-6 mt-12 hidden lg:block">
             {[
-              { num: 1, title: "Name your shop" },
-              { num: 2, title: "Add a product" },
-              { num: 3, title: "Connect contact info" }
+              { num: 1, title: "Store Identity", desc: "Name, category, and branding" },
+              { num: 2, title: "Inventory", desc: "Add your first product" },
+              { num: 3, title: "Connectivity", desc: "WhatsApp & location info" }
             ].map((s) => (
-              <div key={s.num} className={`flex items-center gap-4 transition-opacity duration-300 ${step >= s.num ? 'opacity-100' : 'opacity-40'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step > s.num ? 'bg-green-500 text-white' : step === s.num ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                  {step > s.num ? <CheckCircle2 className="w-5 h-5" /> : s.num}
+              <div key={s.num} className="relative">
+                {s.num < 3 && (
+                  <div className={`absolute left-4 top-10 w-0.5 h-10 transition-colors duration-500 ${step > s.num ? 'bg-green-500' : 'bg-border/30'}`} />
+                )}
+                <div className={`flex items-start gap-5 transition-all duration-500 ${step >= s.num ? 'opacity-100 scale-100' : 'opacity-30 scale-95'}`}>
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-500 ${step > s.num ? 'bg-green-500 text-white rotate-[360deg]' : step === s.num ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 scale-110' : 'bg-muted text-muted-foreground'}`}>
+                    {step > s.num ? <CheckCircle2 className="w-5 h-5" /> : s.num}
+                  </div>
+                  <div>
+                    <h3 className={`font-black text-sm uppercase tracking-wider ${step >= s.num ? 'text-foreground' : 'text-muted-foreground'}`}>{s.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{s.desc}</p>
+                  </div>
                 </div>
-                <span className={`font-medium ${step >= s.num ? 'text-foreground' : 'text-muted-foreground'}`}>{s.title}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right Side: Form / Inputs */}
+        {/* Right Side: Form / Inputs - Glassmorphism Card */}
         <div className="lg:w-1/2 flex flex-col justify-start">
-          <div className="relative overflow-visible rounded-3xl border border-border/50 bg-card/90 p-5 shadow-2xl backdrop-blur-xl sm:p-8">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative overflow-visible rounded-[2.5rem] border border-white/20 bg-white/70 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] backdrop-blur-2xl p-6 sm:p-10 dark:bg-black/40">
+            <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
 
             {step === 1 && (
               <div className="space-y-5 relative z-10">
@@ -506,11 +518,17 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                   </div>
                 </div>
 
-                <Button className="w-full h-12 text-base font-bold shadow-lg bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity" onClick={handleCreateShop} disabled={isLoading || !shopName.trim() || !shopState || !shopCity || !shopCategory}>
-                  {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (
-                    <>Create Store <ArrowRight className="ml-2 w-4 h-4" /></>
-                  )}
-                </Button>
+                <div className="flex gap-3 pt-2">
+                  <Button 
+                    className="flex-1 h-12 text-base font-bold shadow-xl bg-primary hover:bg-primary/90 text-white rounded-2xl transition-all active:scale-[0.98]" 
+                    onClick={handleCreateShop} 
+                    disabled={isLoading || !shopName.trim() || !shopState || !shopCity || !shopCategory}
+                  >
+                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (
+                      <>Continue Setup <ArrowRight className="ml-2 w-4 h-4" /></>
+                    )}
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -598,66 +616,76 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col gap-3">
-                  <Button className="w-full h-14 text-lg font-bold shadow-lg bg-gradient-to-r from-primary to-accent" onClick={handleCreateProduct} disabled={isLoading || !productName.trim() || !productPrice.trim()}>
-                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (
-                      <>Add Product <ArrowRight className="ml-2 w-5 h-5" /></>
-                    )}
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    variant="outline"
+                    className="flex-1 h-12 border-border/50 rounded-2xl font-bold hover:bg-muted/50"
+                    onClick={handleBack}
+                    disabled={isLoading}
+                  >
+                    Back
                   </Button>
-                  <Button variant="ghost" className="w-full h-12 text-muted-foreground hover:text-foreground" onClick={() => setStep(3)} disabled={isLoading}>
-                    Skip for now
+                  <Button 
+                    className="flex-[2] h-12 text-base font-bold shadow-xl bg-primary hover:bg-primary/90 text-white rounded-2xl transition-all active:scale-[0.98]" 
+                    onClick={handleCreateProduct} 
+                    disabled={isLoading || !productName.trim() || !productPrice}
+                  >
+                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (
+                      <>Add Product <ArrowRight className="ml-2 w-4 h-4" /></>
+                    )}
                   </Button>
                 </div>
               </div>
             )}
 
             {step === 3 && (
-              <div className="space-y-6 relative z-10">
-                <div className="space-y-3">
-                  <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">WhatsApp Number</Label>
-                  <Input
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    placeholder="e.g. 08012345678"
-                    value={whatsappNumber}
-                    onChange={e => setWhatsappNumber(e.target.value)}
-                    className="h-14 text-lg bg-background/50 border-green-500/30 focus-visible:ring-green-500/30"
-                    autoFocus
-                  />
-                  <p className="text-xs text-muted-foreground">Customers will be redirected here when they click "Chat to Buy".</p>
+              <div className="space-y-6 relative z-10 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-4 mb-2">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <MessageCircle className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-primary uppercase tracking-widest">Final Step</p>
+                    <p className="text-sm text-muted-foreground leading-tight">Link your WhatsApp to receive orders instantly from customers.</p>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-3">
-                  <Button className="w-full h-14 text-lg font-bold shadow-lg bg-green-600 hover:bg-green-700 text-white" onClick={handleConnectWhatsapp} disabled={isLoading || !whatsappNumber.trim()}>
-                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Finish Setup"}
+
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">WhatsApp Phone Number</Label>
+                    <div className="relative group">
+                      <Input
+                        placeholder="e.g. 08012345678"
+                        value={whatsappNumber}
+                        onChange={e => setWhatsappNumber(e.target.value)}
+                        className="h-14 pl-12 text-lg bg-background/50 border-primary/20 focus:border-primary/50 transition-all rounded-2xl"
+                        autoFocus
+                      />
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold border-r pr-2 border-border/50">
+                        🇳🇬
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground font-medium px-1">We'll use this to create your "Order on WhatsApp" buttons.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-6">
+                  <Button 
+                    variant="outline"
+                    className="flex-1 h-12 border-border/50 rounded-2xl font-bold hover:bg-muted/50"
+                    onClick={handleBack}
+                    disabled={isLoading}
+                  >
+                    Back
                   </Button>
-                  {shopAddress.trim() && (
-                    <p className="text-center text-xs text-muted-foreground">
-                      If you skip WhatsApp now, your address can be added later.
-                    </p>
-                  )}
-                  <Button variant="ghost" className="w-full h-12 text-muted-foreground hover:text-foreground" onClick={async () => {
-                    setIsLoading(true);
-                    try {
-                      if (createdShopId) {
-                        await shopService.updateShop(createdShopId, { is_active: true });
-                      }
-                      if (shopAddress.trim()) {
-                        toast({ title: "Address can be added later", description: "Connect WhatsApp whenever you're ready to save a default pickup address." });
-                      }
-                      const { data: { user } } = await supabase.auth.getUser();
-                      if (user) {
-                        await supabase.from('profiles').update({ needs_role_selection: false }).eq('id', user.id);
-                      }
-                      setStep(4);
-                      setTimeout(() => onComplete(), 2000);
-                    } catch (error) {
-                      toast({ title: "Error finishing setup", variant: "destructive" });
-                    } finally {
-                      setIsLoading(false);
-                    }
-                  }} disabled={isLoading}>
-                    Skip for now
+                  <Button 
+                    className="flex-[2] h-12 text-base font-bold shadow-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white rounded-2xl transition-all active:scale-[0.98]" 
+                    onClick={handleConnectWhatsapp} 
+                    disabled={isLoading || !whatsappNumber.trim()}
+                  >
+                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (
+                      <>Launch My Store <Sparkles className="ml-2 w-4 h-4" /></>
+                    )}
                   </Button>
                 </div>
               </div>
