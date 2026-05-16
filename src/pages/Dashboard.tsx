@@ -55,7 +55,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ShopAvatar } from "@/components/ShopAvatar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { VendorSetupWizard } from "@/components/VendorSetupWizard";
-import { VendorCommandCenter } from "@/components/VendorCommandCenter";
+import { BulkProductUpload } from "@/components/BulkProductUpload";
 
 // ─── Stat Card Component (Minimalist) ──────────────────────────────────────────
 
@@ -196,8 +196,12 @@ const Dashboard = () => {
   const { toast } = useToast();
   const { user, signOut, isLoading: isAuthLoading } = useAuth();
   const [profile, setProfile] = useState<DashboardProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [shopFullData, setShopFullData] = useState<any>(null);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const [setupProgress, setSetupProgress] = useState(0);
+  const [setupSteps, setSetupSteps] = useState<any[]>([]);
   const [daysRemaining, setDaysRemaining] = useState<number>(0);
   const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'trial' | 'expired' | 'free'>('trial');
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -367,6 +371,16 @@ const Dashboard = () => {
         offerService.getOffers(),
         payoutService.getBalance(primaryShop.id).catch(() => null)
       ]);
+
+      // Calculate setup progress
+      const steps = [
+        { id: 1, title: "Create Store", completed: !!primaryShop },
+        { id: 2, title: "Add Products", completed: (productsRes.data?.length || 0) > 0 },
+        { id: 3, title: "Connect WhatsApp", completed: !!primaryShop.whatsapp_number },
+      ];
+      setSetupSteps(steps);
+      const completedCount = steps.filter(s => s.completed).length;
+      setSetupProgress(Math.round((completedCount / steps.length) * 100));
 
       // 4. Process Secondary Data
       const productsList = productsRes.data || [];
@@ -780,156 +794,285 @@ const Dashboard = () => {
       </nav>
 
       {/* ─── Main Content ─────────────────────────────────── */}
-      <div className="container mx-auto px-4 py-3 pb-24 md:pb-8 max-w-7xl space-y-4">
+      <div className="container mx-auto px-4 py-3 pb-24 md:pb-8 max-w-7xl space-y-6">
         
-        {/* Vendor Command Center for Entrepreneurs */}
-        {rbac.isEntrepreneur(user) && <VendorCommandCenter />}
+        {/* Consolidated Vendor Command Center Section */}
+        {rbac.isEntrepreneur(user) && (
+          <>
+            {setupProgress < 100 || !shopFullData?.is_active ? (
+              /* Onboarding Guide for Incomplete Setup */
+              <div className="bg-gradient-to-b from-indigo-950 via-indigo-900 to-background border border-indigo-500/20 py-8 px-6 relative z-10 rounded-[2rem] overflow-hidden shadow-2xl">
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-primary/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3" />
+                </div>
 
-        {/* ProductNudges moved into carousel */}
+                <div className="relative text-center mb-8">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-200 text-[10px] font-black uppercase tracking-widest mb-4">
+                    <Activity className="w-3.5 h-3.5" /> Setup Progress
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl font-black text-white mb-2 leading-tight">
+                    Let's launch your store, {firstName}!
+                  </h2>
+                  <p className="text-indigo-200/70 text-sm max-w-md mx-auto mb-8">
+                    Complete these quick steps to start accepting orders and growing your brand.
+                  </p>
 
-        {/* Welcome Hero - Minimalist & Premium */}
-        <div className="relative rounded-3xl overflow-hidden mb-2 bg-card border border-border/50 p-6 shadow-sm">
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-            <div className="flex items-center gap-5">
-              <div className="relative">
-                {shopData ? (
-                  <ShopAvatar
-                    name={shopData.name}
-                    logoUrl={shopFullData?.logo_url}
-                    className="w-16 h-16 rounded-2xl shadow-sm ring-1 ring-border"
-                    initialsClassName="text-2xl"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl">
-                    {firstName.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-green-500 border-4 border-card flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                </div>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm font-medium mb-0.5">{greeting},</p>
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-1">{firstName}! 👋</h1>
-                <div className="flex items-center gap-2">
-                  {shopData && <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] uppercase tracking-wider">{shopData.name}</Badge>}
-                  <ShopStatusBadge status={subscriptionStatus} daysRemaining={daysRemaining} />
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              {shopData && (
-                <Button
-                  variant="outline"
-                  onClick={() => navigate(`/shop/${shopFullData?.shop_slug || shopData.id}`)}
-                  className="rounded-xl font-bold border-border shadow-sm hover:bg-muted"
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Visit Store
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate('/settings')}
-                className="rounded-full h-11 w-11 bg-muted/50"
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Simple seller path has been replaced by VendorCommandCenter at the top */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-4">
-          {/* Main Dashboard Stats Card */}
-          <Card className="border border-border/60 shadow-sm">
-            <CardContent className="p-5 sm:p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Your shop</p>
-                  <h2 className="text-xl font-black truncate">{shopData?.name || 'No shop yet'}</h2>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => navigate('/my-store')}>
-                  Edit
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-2xl bg-muted/40 p-4">
-                  <p className="text-xs text-muted-foreground font-bold uppercase">Revenue</p>
-                  <p className="text-2xl font-black mt-1">₦{totalRevenue.toLocaleString()}</p>
-                </div>
-                <div className="rounded-2xl bg-muted/40 p-4">
-                  <p className="text-xs text-muted-foreground font-bold uppercase">Sales</p>
-                  <p className="text-2xl font-black mt-1">{totalSales}</p>
-                </div>
-                <div className="rounded-2xl bg-muted/40 p-4">
-                  <p className="text-xs text-muted-foreground font-bold uppercase">Products</p>
-                  <p className="text-2xl font-black mt-1">{productsCount}</p>
-                </div>
-                <div className="rounded-2xl bg-muted/40 p-4">
-                  <p className="text-xs text-muted-foreground font-bold uppercase">Wallet</p>
-                  <p className="text-2xl font-black mt-1">₦{payoutBalance.availableBalance.toLocaleString()}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <Button className="h-11" onClick={() => navigate('/products')}>
-                  <Package className="w-4 h-4 mr-2" /> Products
-                </Button>
-                <Button variant="outline" className="h-11" onClick={() => navigate('/orders')}>
-                  <ShoppingCart className="w-4 h-4 mr-2" /> Orders
-                </Button>
-                <Button variant="outline" className="h-11" onClick={() => setIsPayoutDialogOpen(true)}>
-                  <Wallet className="w-4 h-4 mr-2" /> Wallet
-                </Button>
-                <Button variant="outline" className="h-11" onClick={() => window.open('https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76', '_blank')}>
-                  <HelpCircle className="w-4 h-4 mr-2" /> Help
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {urgentTasks.length > 0 && (
-          <Card className="border border-amber-500/30 bg-amber-500/5 shadow-sm">
-            <CardContent className="p-4 sm:p-5">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
-                    <AlertCircle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold">Needs attention</h3>
-                    <p className="text-sm text-muted-foreground">{urgentTasks[0].label}</p>
+                  <div className="max-w-xs mx-auto space-y-2">
+                    <div className="flex justify-between items-end text-xs">
+                      <span className="text-indigo-200/60 font-bold uppercase tracking-tighter">Completion</span>
+                      <span className="text-white font-black">{setupProgress}%</span>
+                    </div>
+                    <Progress value={setupProgress} className="h-2 bg-white/10" indicatorClassName="bg-gradient-to-r from-primary to-accent" />
                   </div>
                 </div>
-                <Button onClick={urgentTasks[0].action} className="shrink-0">
-                  Fix now <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+
+                <div className="grid sm:grid-cols-3 gap-4">
+                  {setupSteps.map((step) => (
+                    <Card key={step.id} className={`bg-white/5 backdrop-blur-md border-white/10 transition-all ${!step.completed ? 'ring-1 ring-primary/50' : 'opacity-60'}`}>
+                      <CardContent className="p-5">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${step.completed ? 'bg-green-500/20 text-green-400' : 'bg-primary/20 text-primary'}`}>
+                            {step.completed ? <CheckCircle2 className="w-5 h-5" /> : <step.id === 1 ? <Store className="w-5 h-5" /> : step.id === 2 ? <PackagePlus className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
+                          </div>
+                          <span className="text-white/20 text-[10px] font-black tracking-widest">0{step.id}</span>
+                        </div>
+                        <h3 className="text-sm font-bold text-white mb-1">{step.title}</h3>
+                        <Button asChild variant="ghost" size="sm" className="w-full justify-between px-0 hover:bg-transparent text-indigo-300 hover:text-white group">
+                          <Link to={step.id === 1 ? "/my-store" : step.id === 2 ? "/products" : "/my-store"}>
+                            {step.completed ? 'Update Details' : 'Complete Step'}
+                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                          </Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            ) : (
+              /* Premium Command Header for Active Shops */
+              <div className="bg-gradient-to-br from-indigo-950 via-indigo-900 to-black border border-white/10 p-6 sm:p-8 relative z-10 rounded-[2.5rem] overflow-hidden shadow-2xl">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 pointer-events-none" />
+                <div className="relative">
+                  <div className="flex flex-col lg:flex-row items-center justify-between gap-6 mb-8">
+                    <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto">
+                      <div className="relative">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0 shadow-2xl">
+                          <Store className="w-8 h-8 text-white" />
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-4 border-indigo-950 flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                        </div>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight truncate">{shopFullData.shop_name}</h3>
+                          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[8px] font-black uppercase h-4 px-1.5">Live</Badge>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-indigo-200/50 text-xs font-bold overflow-hidden">
+                          <ExternalLink className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{window.location.origin.replace(/^https?:\/\//, '')}/shop/{shopFullData.shop_slug || shopFullData.id}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <Button 
+                        variant="outline" 
+                        className="flex-1 sm:flex-none border-white/10 bg-white/5 text-white hover:bg-white/10 rounded-xl h-11 px-4 font-bold text-xs"
+                        onClick={() => {
+                          const url = `${window.location.origin}/shop/${shopFullData.shop_slug || shopFullData.id}`;
+                          navigator.clipboard.writeText(url);
+                          setIsCopied(true);
+                          setTimeout(() => setIsCopied(false), 2000);
+                          toast({ title: "Copied!", description: "Store link copied" });
+                        }}
+                      >
+                        {isCopied ? <CheckCircle2 className="w-3.5 h-3.5 mr-2 text-green-400" /> : <Copy className="w-3.5 h-3.5 mr-2" />}
+                        Copy Link
+                      </Button>
+                      <Button 
+                        onClick={() => window.open(`${window.location.origin}/shop/${shopFullData.shop_slug || shopFullData.id}`, '_blank')}
+                        className="flex-1 sm:flex-none bg-white text-indigo-950 hover:bg-white/90 rounded-xl h-11 px-6 font-black shadow-xl"
+                      >
+                        Visit Store
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                    {[
+                      { label: "Revenue", value: `₦${totalRevenue.toLocaleString()}`, icon: Activity, color: "text-blue-400" },
+                      { label: "Orders", value: totalSales, icon: PackagePlus, color: "text-amber-400" },
+                      { label: "Traffic", value: shopFullData.view_count || "0", icon: Sparkles, color: "text-purple-400" },
+                      { label: "Contacts", value: shopFullData.contact_count || "0", icon: MessageCircle, color: "text-green-400" }
+                    ].map((stat, i) => (
+                      <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm group hover:bg-white/10 transition-all cursor-default">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className={`p-1.5 rounded-lg bg-white/5 ${stat.color}`}>
+                            <stat.icon className="w-3.5 h-3.5" />
+                          </div>
+                          <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
+                        </div>
+                        <h4 className="text-xl font-black text-white tracking-tight">{stat.value}</h4>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* SteerAds Growth Engine Inline Widget */}
+                  <div className="mt-6 p-5 rounded-3xl bg-gradient-to-r from-accent/10 to-primary/10 border border-white/10 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                      <Zap className="w-20 h-20 text-accent" />
+                    </div>
+                    <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Sparkles className="w-3.5 h-3.5 text-accent" />
+                          <span className="text-[10px] font-black text-accent uppercase tracking-widest leading-none">Growth Engine</span>
+                        </div>
+                        <h3 className="text-lg font-black text-white leading-tight">Get more sales with SteerAds</h3>
+                        <p className="text-indigo-200/50 text-xs mt-1">Daily automated promotion to reach thousands of buyers.</p>
+                      </div>
+                      <Button 
+                        size="sm"
+                        onClick={() => navigate('/steerads')}
+                        className="bg-accent hover:bg-accent/90 text-white rounded-xl font-black px-6"
+                      >
+                        Boost Now
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
-        <Card className="border border-border/60 shadow-sm">
-          <CardContent className="p-5 sm:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h3 className="font-extrabold text-lg">Quick tools</h3>
-                <p className="text-sm text-muted-foreground">Only the most-used actions are shown here.</p>
-              </div>
-              <div className="grid grid-cols-2 sm:flex gap-2">
-                <Button variant="outline" onClick={() => navigate('/my-store')}>Store settings</Button>
-                <Button variant="outline" onClick={() => navigate('/customers')}>Customers</Button>
-                <Button variant="outline" onClick={() => navigate('/marketing')}>Marketing</Button>
-                <Button variant="outline" onClick={() => navigate(`/shop/${shopFullData?.shop_slug || shopData?.id}`)}>Visit store</Button>
-              </div>
+        {/* Action Grid & Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6">
+          <div className="space-y-6">
+            {/* Main KPI Chart Card */}
+            <Card className="border-border/50 shadow-sm overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 bg-muted/20 px-6 py-4">
+                <div>
+                  <CardTitle className="text-base font-black">Sales Performance</CardTitle>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Last 7 Days</p>
+                </div>
+                <Badge variant="outline" className="font-bold text-xs bg-card">₦{totalRevenue.toLocaleString()}</Badge>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="h-[240px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData}>
+                      <defs>
+                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground))" strokeOpacity={0.1} />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700}} dy={10} />
+                      <YAxis hide />
+                      <Tooltip 
+                        contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)', fontWeight: 700}}
+                        itemStyle={{color: 'hsl(var(--primary))'}}
+                      />
+                      <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Tools Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: "Inventory", icon: Package, color: "from-blue-500/10 to-blue-500/20", text: "text-blue-600", path: "/products" },
+                { label: "Orders", icon: ShoppingCart, color: "from-amber-500/10 to-amber-500/20", text: "text-amber-600", path: "/orders" },
+                { label: "Wallet", icon: Wallet, color: "from-green-500/10 to-green-500/20", text: "text-green-600", onClick: () => setIsPayoutDialogOpen(true) },
+                { label: "Ads", icon: Zap, color: "from-purple-500/10 to-purple-500/20", text: "text-purple-600", path: "/steerads" }
+              ].map((tool, i) => (
+                <button 
+                  key={i}
+                  onClick={() => tool.path ? navigate(tool.path) : tool.onClick?.()}
+                  className="group flex flex-col items-center p-5 rounded-3xl bg-card border border-border/50 hover:border-primary/30 transition-all hover:shadow-lg"
+                >
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${tool.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                    <tool.icon className={`w-6 h-6 ${tool.text}`} />
+                  </div>
+                  <span className="text-xs font-black text-muted-foreground uppercase tracking-tight group-hover:text-foreground">{tool.label}</span>
+                </button>
+              ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          <aside className="space-y-6">
+            {/* Urgent Notification Card */}
+            {urgentTasks.length > 0 && (
+              <Card className="border-destructive/30 bg-destructive/5 overflow-hidden">
+                <CardHeader className="p-4 border-b border-destructive/10">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-destructive" />
+                    <span className="text-[10px] font-black text-destructive uppercase tracking-widest">Attention Required</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 space-y-4">
+                  {urgentTasks.map((task) => (
+                    <div key={task.id} className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-bold truncate">{task.label}</p>
+                      <Button size="sm" variant="destructive" className="h-8 rounded-lg px-4 font-bold text-[10px] uppercase tracking-wide" onClick={task.action}>Solve</Button>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* AI Sales Coach / Community Widget */}
+            <Card className="bg-gradient-to-br from-indigo-950 to-indigo-900 border-none shadow-xl overflow-hidden text-white">
+              <CardContent className="p-6 relative">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                  <MessageCircle className="w-16 h-16" />
+                </div>
+                <div className="relative z-10">
+                  <h3 className="text-lg font-black leading-tight mb-2">Join the Vendor Community</h3>
+                  <p className="text-indigo-200/70 text-xs leading-relaxed mb-6">
+                    Connect with 5,000+ top vendors in Nigeria. Share tips, get daily support, and grow together.
+                  </p>
+                  <Button 
+                    className="w-full bg-white text-indigo-950 hover:bg-indigo-50 font-black rounded-xl"
+                    onClick={() => window.open('https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76', '_blank')}
+                  >
+                    Join WhatsApp
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Bulk Upload Helper */}
+            <Card className="border-dashed border-2 border-border/60 hover:border-primary/40 transition-colors cursor-pointer group" onClick={() => setIsBulkUploadOpen(true)}>
+              <CardContent className="p-6 text-center">
+                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                </div>
+                <h4 className="text-sm font-bold mb-1">AI Bulk Upload</h4>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Fast Inventory Setup</p>
+              </CardContent>
+            </Card>
+          </aside>
+        </div>
+      </div>
+
+      {/* Bulk Upload Modal */}
+      {shopData && (
+        <BulkProductUpload 
+          open={isBulkUploadOpen} 
+          onClose={() => setIsBulkUploadOpen(false)} 
+          shopId={shopData.id}
+          onSuccess={() => {
+            loadData();
+            setIsBulkUploadOpen(false);
+          }}
+        />
+      )}
         </div>
 
       {/* ─── Mobile Bottom Navigation ────────────────────── */}

@@ -31,7 +31,7 @@ const PLATFORM_ROUTES = [
   { path: "/customers", name: "Customer List", role: "shop_owner" },
   { path: "/marketing", name: "Marketing Tools", role: "shop_owner" },
   { path: "/marketing/editor/:id?", name: "Poster Editor", role: "shop_owner" },
-  { path: "/marketing-services", name: "Marketing Services", role: "shop_owner" },
+  { path: "/marketing-services", name: "SteerAds", role: "shop_owner" },
   { path: "/ads-assistant", name: "AI Ads Assistant", role: "shop_owner" },
   { path: "/courses", name: "Seller Courses", role: "shop_owner" },
   { path: "/subscription", name: "Subscription Management", role: "shop_owner" },

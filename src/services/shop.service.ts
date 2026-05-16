@@ -41,6 +41,25 @@ const isMissingColumnError = (error: { message?: string; code?: string } | null 
 };
 
 const shopService = {
+  incrementViewCount: async (shopId: string) => {
+    // We use a simple RPC or direct update. Since view counts don't need strict transactionality,
+    // a direct update with increment logic is fine.
+    const { error } = await supabase.rpc('increment_shop_view_count', { shop_id: shopId });
+    if (error) {
+      // Fallback if RPC doesn't exist yet
+      const { data: shop } = await supabase.from('shops').select('view_count').eq('id', shopId).single();
+      await supabase.from('shops').update({ view_count: (shop?.view_count || 0) + 1 }).eq('id', shopId);
+    }
+  },
+
+  incrementContactCount: async (shopId: string) => {
+    const { error } = await supabase.rpc('increment_shop_contact_count', { shop_id: shopId });
+    if (error) {
+      // Fallback
+      const { data: shop } = await supabase.from('shops').select('contact_count').eq('id', shopId).single();
+      await supabase.from('shops').update({ contact_count: (shop?.contact_count || 0) + 1 }).eq('id', shopId);
+    }
+  },
 
   createDefaultShopAddress: async (shopId: string, data: CreateDefaultShopAddressRequest) => {
     // Use upsert to gracefully handle re-runs (UNIQUE constraint on shop_id + label).

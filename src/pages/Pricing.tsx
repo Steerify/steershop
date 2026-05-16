@@ -22,14 +22,14 @@ const planProfiles: Record<string, { bestFor: string; outcome: string; timeSaved
     timeSaved: "Save ~3 hours/week on order management",
   },
   pro: {
-    bestFor: "Structured Sellers with 10+ orders/month",
-    outcome: "Automate your Daily Sales Workflow",
-    timeSaved: "Save ~8 hours/week with AI & automation",
+    bestFor: "Growing Sellers seeking daily traffic",
+    outcome: "Get a Store + Daily SteerAds Promotion",
+    timeSaved: "Automated sales growth while you sleep",
   },
   business: {
-    bestFor: "Established brands scaling beyond WhatsApp",
-    outcome: "Full marketing suite to 3x your revenue",
-    timeSaved: "Save ~15 hours/week with done-for-you support",
+    bestFor: "Established brands scaling with Managed Ads",
+    outcome: "Full Managed Growth Suite & GMB",
+    timeSaved: "Expert-led scaling for maximum ROAS",
   },
 };
 
@@ -128,7 +128,7 @@ const Pricing = () => {
             Start Free. Upgrade When You Grow.
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
-            Your free store is forever. Paid plans pay for themselves — choose the one that matches your stage.
+            Get a professional store <strong>AND</strong> we promote it for you daily. Choose the plan that drives your growth.
           </p>
 
           {/* ROI highlights */}

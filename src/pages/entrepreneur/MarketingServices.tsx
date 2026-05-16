@@ -28,6 +28,10 @@ import {
   Megaphone,
   Target,
   BarChart,
+  Instagram,
+  Music2,
+  MessageCircle,
+  Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -143,7 +147,9 @@ const MarketingServices = () => {
     );
   }
 
-  if (!isBusinessPlan) {
+  const isProPlan = profile?.subscription_plans?.slug === 'pro' || isBusinessPlan;
+
+  if (!isProPlan) {
     return (
       <PageWrapper>
         <div className="container mx-auto px-4 py-8">
@@ -155,15 +161,15 @@ const MarketingServices = () => {
           <Card className="max-w-2xl mx-auto text-center">
             <CardContent className="py-12">
               <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Target className="w-8 h-8 text-primary" />
+                <TrendingUp className="w-8 h-8 text-primary" />
               </div>
-              <h2 className="text-2xl font-bold mb-4">Upgrade to Business Plan</h2>
+              <h2 className="text-2xl font-bold mb-4">Unlock SteerAds Growth Engine</h2>
               <p className="text-muted-foreground mb-6">
-                Marketing Services including Google My Business setup, SEO optimization, and ad consultations
-                are available exclusively on the Business plan.
+                SteerAds Pro including Daily Automated Promotion, Social Media Scaling, and WhatsApp Community Growth 
+                are available on Pro and Business plans.
               </p>
               <Button onClick={() => navigate('/subscription')} className="bg-gradient-to-r from-primary to-accent">
-                Upgrade Now
+                Upgrade to Pro + Promotion
               </Button>
             </CardContent>
           </Card>
@@ -182,30 +188,134 @@ const MarketingServices = () => {
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Marketing Services
+            SteerAds
           </h1>
           <p className="text-muted-foreground">
-            Manage your Google profile and request marketing consultations
+            Manage your store growth, marketing and ad performance
           </p>
         </div>
 
-        <Tabs defaultValue="google" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
-            <TabsTrigger value="google" className="gap-2">
-              <Globe className="w-4 h-4" />
-              Google Profile
-            </TabsTrigger>
-            <TabsTrigger value="services" className="gap-2">
-              <Megaphone className="w-4 h-4" />
-              Services
-            </TabsTrigger>
-            <TabsTrigger value="history" className="gap-2">
-              <BarChart className="w-4 h-4" />
-              History
-            </TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="overview" className="space-y-6">
+          <div className="overflow-x-auto pb-2 scrollbar-none">
+            <TabsList className="flex w-max min-w-full sm:grid sm:grid-cols-4 sm:max-w-2xl">
+              <TabsTrigger value="overview" className="gap-2 flex-1 sm:flex-none">
+                <TrendingUp className="w-4 h-4" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="google" className="gap-2 flex-1 sm:flex-none">
+                <Globe className="w-4 h-4" />
+                Google & SEO
+              </TabsTrigger>
+              <TabsTrigger value="social" className="gap-2 flex-1 sm:flex-none">
+                <Instagram className="w-4 h-4" />
+                Social Scaling
+              </TabsTrigger>
+              <TabsTrigger value="requests" className="gap-2 flex-1 sm:flex-none">
+                <Megaphone className="w-4 h-4" />
+                History
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          {/* Google Profile Tab */}
+          <TabsContent value="overview">
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Daily Promotion Status</CardTitle>
+                  <CardDescription>Your store is being promoted daily to thousands of shoppers.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                        <CheckCircle className="w-6 h-6 text-green-500" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-green-700 dark:text-green-400">Active</p>
+                        <p className="text-xs text-muted-foreground">Promotion running for {shop?.shop_name}</p>
+                      </div>
+                    </div>
+                    <Badge className="bg-green-500 text-white border-none">LIVE</Badge>
+                  </div>
+                  <div className="mt-6 space-y-4">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Total Ads Reach</span>
+                      <span className="font-bold">12.4k+</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Marketplace Features</span>
+                      <span className="font-bold">Daily</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Growth Potential</CardTitle>
+                  <CardDescription>Estimated performance based on current ads budget.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div>
+                      <div className="flex justify-between mb-2">
+                        <span className="text-xs font-bold uppercase text-muted-foreground">Reach Momentum</span>
+                        <span className="text-xs font-bold text-accent">85%</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-accent w-[85%]" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Pro plans receive 1 daily automated boost. Upgrade to Business for managed Meta/TikTok campaigns and expert optimization.
+                    </p>
+                    <Button variant="outline" className="w-full rounded-xl" onClick={() => navigate('/subscription')}>
+                      Compare Ad Packages
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="social">
+            <Card>
+              <CardHeader>
+                <CardTitle>Social Media Scaling</CardTitle>
+                <CardDescription>Promote your Instagram, TikTok, and WhatsApp communities.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-8">
+                <div className="grid sm:grid-cols-3 gap-4">
+                  {[
+                    { l: "Instagram Growth", d: "Drive targeted followers and engagement.", i: <Instagram className="w-5 h-5" /> },
+                    { l: "TikTok Virality", d: "Boost your videos to Nigerian beauty audiences.", i: <Music2 className="w-5 h-5" /> },
+                    { l: "WhatsApp Community", d: "Grow your private selling group fast.", i: <MessageCircle className="w-5 h-5" /> }
+                  ].map((s, i) => (
+                    <div key={i} className="p-4 rounded-2xl border border-border bg-card hover:border-accent/40 transition-all cursor-pointer">
+                      <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent mb-4">
+                        {s.i}
+                      </div>
+                      <h4 className="font-bold mb-1 text-sm">{s.l}</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{s.d}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20">
+                  <h4 className="font-bold mb-2 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    How it works
+                  </h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    Our AI identifies your best content and features it in front of shoppers who are most likely to buy from you. 
+                    Daily promotion is included in your Pro subscription.
+                  </p>
+                  <Button className="rounded-xl">Request Custom Boost</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="google" className="space-y-6">
             <Card>
               <CardHeader>
@@ -265,8 +375,7 @@ const MarketingServices = () => {
             </Card>
           </TabsContent>
 
-          {/* Services Tab */}
-          <TabsContent value="services" className="space-y-6">
+          <TabsContent value="requests" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               <Card className="border-2 hover:border-primary/50 transition-colors">
                 <CardHeader>
@@ -307,7 +416,7 @@ const MarketingServices = () => {
                       <Search className="w-6 h-6 text-blue-500" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">Google Ads</CardTitle>
+                      <CardTitle className="text-lg">Google Search Ads</CardTitle>
                       <Badge variant="outline">Add-on Service</Badge>
                     </div>
                   </div>
@@ -317,9 +426,9 @@ const MarketingServices = () => {
                     Appear at the top of Google search results when customers are looking for your products.
                   </p>
                   <ul className="text-sm space-y-1">
-                    <li>• Search advertising</li>
-                    <li>• Display network campaigns</li>
-                    <li>• Shopping ads for products</li>
+                    <li>• Keyword research and targeting</li>
+                    <li>• Professional ad copy writing</li>
+                    <li>• Performance tracking and optimization</li>
                   </ul>
                   <p className="text-primary font-medium">Starting from ₦30,000/month</p>
                   <Button 
@@ -333,62 +442,36 @@ const MarketingServices = () => {
               </Card>
             </div>
 
-            <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
-              <CardContent className="py-6">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div>
-                    <h3 className="font-bold text-lg mb-1">Not sure which service is right for you?</h3>
-                    <p className="text-muted-foreground">
-                      Schedule a free 30-minute consultation with our marketing team
-                    </p>
-                  </div>
-                  <Button onClick={() => setShowConsultation(true)} className="bg-gradient-to-r from-primary to-accent">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Book Free Consultation
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* History Tab */}
-          <TabsContent value="history" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Service Requests</CardTitle>
-                <CardDescription>Track your marketing service requests and consultations</CardDescription>
+                <CardTitle>Service Request History</CardTitle>
+                <CardDescription>Track your active and previous marketing service requests</CardDescription>
               </CardHeader>
               <CardContent>
                 {services.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No service requests yet</p>
-                    <p className="text-sm">Request a consultation to get started</p>
+                  <div className="text-center py-12 bg-muted/30 rounded-lg">
+                    <Megaphone className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-20" />
+                    <p className="text-muted-foreground">No service requests yet</p>
+                    <p className="text-xs text-muted-foreground mt-1">Book a consultation to get started</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {services.map((service) => (
-                      <div
-                        key={service.id}
-                        className="flex items-center justify-between p-4 border rounded-lg"
-                      >
-                        <div className="flex items-center gap-4">
+                      <div key={service.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                            {service.service_type === 'youtube_ads' && <Video className="w-5 h-5 text-red-500" />}
-                            {service.service_type === 'google_ads' && <Search className="w-5 h-5 text-blue-500" />}
-                            {service.service_type === 'consultation' && <Calendar className="w-5 h-5 text-primary" />}
-                            {service.service_type === 'google_my_business' && <Globe className="w-5 h-5 text-green-500" />}
+                            <Target className="w-5 h-5 text-primary" />
                           </div>
                           <div>
-                            <p className="font-medium capitalize">
-                              {service.service_type.replace(/_/g, ' ')}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Requested {format(new Date(service.created_at), 'MMM dd, yyyy')}
+                            <h4 className="font-medium capitalize">{service.service_type.replace('_', ' ')}</h4>
+                            <p className="text-xs text-muted-foreground">
+                              Requested on {format(new Date(service.created_at), 'PPP')}
                             </p>
                           </div>
                         </div>
-                        {getStatusBadge(service.status)}
+                        <div className="flex flex-col items-end gap-2">
+                          {getStatusBadge(service.status)}
+                        </div>
                       </div>
                     ))}
                   </div>

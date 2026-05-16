@@ -384,7 +384,7 @@ const AdminAds = () => {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Ads Manager
+            SteerAds Manager
           </h1>
           <p className="text-muted-foreground text-sm mt-0.5">
             Generate AI-powered ad copy and launch campaigns across all major platforms

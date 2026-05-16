@@ -327,11 +327,26 @@ const ShopStorefront = () => {
         .from('orders').select('*', { count: 'exact', head: true })
         .eq('shop_id', shopData.id).eq('status', 'completed');
       setCompletedOrders(ordersCount || 0);
+
+      // --- View Tracking ---
+      const sessionKey = `viewed_shop_${shopData.id}`;
+      if (!sessionStorage.getItem(sessionKey)) {
+        shopService.incrementViewCount(shopData.id);
+        sessionStorage.setItem(sessionKey, 'true');
+      }
+
     } catch (error: any) {
       console.error("Error loading shop:", error);
       toast({ title: "Error", description: "Failed to load shop data", variant: "destructive" });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleWhatsAppContact = () => {
+    if (shop?.whatsapp_number) {
+      shopService.incrementContactCount(shop.id);
+      openWhatsAppContact(shop.whatsapp_number, shop.shop_name);
     }
   };
 
@@ -574,7 +589,7 @@ const ShopStorefront = () => {
                           {shop.whatsapp_number && (
                             <Button
                               variant="outline"
-                              onClick={() => openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)}
+                              onClick={handleWhatsAppContact}
                               className="flex-1 lg:flex-none rounded-xl h-12 px-6 border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-500/5 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/50 hover:border-emerald-500/30 transition-all font-semibold gap-2"
                             >
                               <MessageCircle className="w-5 h-5" />

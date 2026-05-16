@@ -50,8 +50,8 @@ const menuGroups = [
   {
     label: "Tools",
     items: [
-      { title: "Ads Manager", url: "/admin/ads", icon: Tv },
-      { title: "Marketing Requests", url: "/admin/marketing", icon: Megaphone },
+      { title: "SteerAds Manager", url: "/admin/ads", icon: Tv },
+      { title: "SteerAds Requests", url: "/admin/marketing", icon: Megaphone },
       { title: "Courses", url: "/admin/courses", icon: GraduationCap },
       { title: "Rewards", url: "/admin/prizes", icon: Award },
       { title: "Special Offers", url: "/admin/offers", icon: Gift },

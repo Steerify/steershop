@@ -190,10 +190,10 @@ const HeroTextSlider = () => {
   const phrases = [
     {
       eyebrow: "For WhatsApp · Instagram · TikTok vendors",
-      h1: "You already have<br />the audience.<br /><em style='font-style:normal;color:hsl(var(--accent-bright))'>Give them somewhere to buy.</em>",
-      p: "500,000+ Nigerian beauty vendors sell on social media every day — and lose buyers because there's nowhere to send them after the DM. SteerSolo is that place.",
-      cta1: { label: "Claim your free store", link: "/auth/signup", icon: ArrowRight },
-      cta2: { label: "See a demo store", link: "/demo" }
+      h1: "Get a Store <br />AND <em style='font-style:normal;color:hsl(var(--accent-bright))'>We Promote It Daily.</em>",
+      p: "The only platform that doesn't just give you a link, but drives real traffic to it through SteerAds. Bundle your storefront with daily automated promotion.",
+      cta1: { label: "Get Started + Promotion", link: "/auth/signup", icon: ArrowRight },
+      cta2: { label: "How SteerAds Works", link: "/steerads" }
     },
     {
       eyebrow: "For the Savvy Nigerian Shopper",
@@ -471,13 +471,99 @@ const Index = () => (
           ))}
         </div>
 
-        <div className="bg-primary/5 rounded-2xl p-6 md:p-8 mt-12 border border-primary/20 text-center shadow-sm">
-          <p className="text-foreground font-bold" style={{ fontSize:"1.4rem", margin:0, display:"flex", alignItems:"center", justifyContent:"center", gap:"10px" }}>
-            <span style={{ fontSize:"1.8rem" }}>💬</span> And the best part?
-          </p>
-          <p className="text-primary font-extrabold" style={{ fontSize:"1.7rem", margin:"12px 0 0" }}>
-            Every order goes straight to your WhatsApp!
-          </p>
+        </div>
+      </div>
+    </section>
+
+    {/* ══════════════════════════════════════════════════════
+        §3.5 STEERADS — The Growth Engine (Prominent)
+    ══════════════════════════════════════════════════════ */}
+    <section className="py-24 bg-brand-hero relative overflow-hidden">
+      <div style={{ position:"absolute",inset:0,opacity:0.05, backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)", backgroundSize: "40px 40px" }} />
+      <div className="container mx-auto px-4 relative z-10" style={{ maxWidth: 1200 }}>
+        <div className="flex flex-col lg:flex-row items-center gap-16">
+          <div className="flex-1 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 border border-accent/30 text-accent-bright mb-6">
+              <Zap className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-widest">New: The Front Offer</span>
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
+              Don't just open a shop.<br />
+              <span className="text-accent-bright">Get daily promotion.</span>
+            </h2>
+            <p className="text-white/60 text-lg md:text-xl mb-10 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+              SteerAds isn't an add-on; it's our core promise. We promote your store, your social media, and your WhatsApp community to thousands of shoppers every single day. 
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
+              {[
+                { t: "Automated Daily Boost", d: "Your store is featured in our marketplace and partner networks daily.", i: <TrendingUp className="text-accent-bright" /> },
+                { t: "Social Media Scaling", d: "We drive traffic to your Instagram and TikTok profiles automatically.", i: <Instagram className="text-accent-bright" /> },
+                { t: "WhatsApp Growth", d: "Build a massive community with our direct-to-WhatsApp ad funnels.", i: <MessageCircle className="text-accent-bright" /> },
+                { t: "Managed for You", d: "No complex ad dashboards. We handle the optimization; you handle the orders.", i: <Shield className="text-accent-bright" /> }
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-start gap-4 text-left">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                    {item.i}
+                  </div>
+                  <div>
+                    <h4 className="text-white font-bold mb-1">{item.t}</h4>
+                    <p className="text-white/40 text-sm leading-relaxed">{item.d}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap justify-center lg:justify-start gap-4">
+              <Link to="/auth/signup">
+                <button className="px-8 py-4 rounded-2xl bg-white text-primary font-bold text-lg hover:translate-y-[-2px] transition-all shadow-xl">
+                  Start Selling + Growing
+                </button>
+              </Link>
+              <Link to="/steerads">
+                <button className="px-8 py-4 rounded-2xl bg-white/10 border border-white/20 text-white font-bold text-lg hover:bg-white/20 transition-all">
+                  Promote My Socials
+                </button>
+              </Link>
+            </div>
+          </div>
+          
+          <div className="flex-1 relative w-full max-w-lg">
+            <div className="absolute -inset-4 bg-accent/20 blur-3xl rounded-full" />
+            <div className="relative bg-card/40 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 shadow-2xl">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1">Growth Status</p>
+                  <h3 className="text-white text-2xl font-black">Live Performance</h3>
+                </div>
+                <div className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-[10px] font-bold border border-green-500/30 flex items-center gap-1.5 animate-pulse">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400" /> ACTIVE
+                </div>
+              </div>
+              
+              <div className="space-y-6">
+                {[
+                  { l: "Store Page Views", v: "2,481", p: "+18%", c: "text-accent-bright" },
+                  { l: "WhatsApp Clicks", v: "142", p: "+24%", c: "text-green-400" },
+                  { l: "Ads Reach (Lagos/Abuja)", v: "15.2k", p: "+12%", c: "text-blue-400" }
+                ].map((stat, i) => (
+                  <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-white/60 text-sm">{stat.l}</span>
+                      <span className={`text-xs font-bold ${stat.c}`}>{stat.p}</span>
+                    </div>
+                    <div className="text-white text-2xl font-black">{stat.v}</div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-8 pt-8 border-t border-white/5">
+                <p className="text-white/40 text-xs text-center italic">
+                  "Since switching to SteerAds Pro, my sales have grown by 310% in 30 days."
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

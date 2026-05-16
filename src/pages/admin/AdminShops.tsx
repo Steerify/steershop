@@ -23,7 +23,9 @@ import {
   Plus,
   Clock,
   Package,
-  Phone
+  Phone,
+  LayoutGrid,
+  Image as ImageIcon,
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
@@ -54,6 +56,9 @@ export default function AdminShops() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [shopProducts, setShopProducts] = useState<any[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [productsDialogOpen, setProductsDialogOpen] = useState(false);
   const [usersWithoutShops, setUsersWithoutShops] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     shop_name: "",
@@ -136,19 +141,33 @@ export default function AdminShops() {
         }
       }
 
-      // Fetch product counts per shop
+      // Fetch products (first 3 images and total count) per shop
       const shopIds = shopsData?.map(s => s.id) || [];
       const productCountByShop = new Map<string, number>();
+      const productImagesByShop = new Map<string, string[]>();
+
       if (shopIds.length > 0) {
-        const { data: productRows, error: productCountErr } = await supabase
+        const { data: allProducts, error: productErr } = await supabase
           .from("products")
-          .select("shop_id")
-          .in("shop_id", shopIds);
-        if (productCountErr) {
-          console.error("Product count fetch error:", productCountErr);
+          .select("id, shop_id, image_url")
+          .in("shop_id", shopIds)
+          .order("created_at", { ascending: false });
+
+        if (productErr) {
+          console.error("Products fetch error:", productErr);
         } else {
-          (productRows || []).forEach((row: any) => {
-            productCountByShop.set(row.shop_id, (productCountByShop.get(row.shop_id) || 0) + 1);
+          (allProducts || []).forEach((product: any) => {
+            // Count
+            productCountByShop.set(product.shop_id, (productCountByShop.get(product.shop_id) || 0) + 1);
+            
+            // Collect images (up to 3)
+            if (product.image_url) {
+              const images = productImagesByShop.get(product.shop_id) || [];
+              if (images.length < 3) {
+                images.push(product.image_url);
+                productImagesByShop.set(product.shop_id, images);
+              }
+            }
           });
         }
       }
@@ -160,6 +179,7 @@ export default function AdminShops() {
           ...shop,
           profiles: profile || null,
           product_count: productCountByShop.get(shop.id) || 0,
+          product_images: productImagesByShop.get(shop.id) || [],
         };
       }) || [];
 
@@ -397,6 +417,29 @@ export default function AdminShops() {
         description: error.message,
         variant: "destructive" 
       });
+    }
+  };
+
+  const fetchShopProducts = async (shopId: string) => {
+    setIsLoadingProducts(true);
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("shop_id", shopId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setShopProducts(data || []);
+      setProductsDialogOpen(true);
+    } catch (error: any) {
+      toast({
+        title: "Error loading products",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingProducts(false);
     }
   };
 
@@ -725,6 +768,18 @@ export default function AdminShops() {
                           <Package className="w-3 h-3" />
                           {shop.product_count} {shop.product_count === 1 ? "product" : "products"}
                         </Badge>
+                        {shop.product_images && shop.product_images.length > 0 && (
+                          <div className="flex gap-1 mt-1">
+                            {shop.product_images.map((url: string, idx: number) => (
+                              <img 
+                                key={idx}
+                                src={url} 
+                                className="h-8 w-8 rounded-lg object-cover border border-white/10" 
+                                alt="Product preview"
+                              />
+                            ))}
+                          </div>
+                        )}
                         <Badge variant="outline" className="text-[10px] font-medium bg-muted/50 border-border/50">
                           {getOwnerEmail(shop)}
                         </Badge>
@@ -760,6 +815,15 @@ export default function AdminShops() {
                             {shop.is_active ? "Deactivate" : "Activate"}
                           </Button>
                         )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full rounded-xl font-semibold h-9 gap-1.5"
+                          onClick={() => fetchShopProducts(shop.id)}
+                        >
+                          <Package className="w-4 h-4" />
+                          Inventory
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
@@ -842,10 +906,24 @@ export default function AdminShops() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="gap-1 font-medium">
-                            <Package className="w-3 h-3" />
-                            {shop.product_count}
-                          </Badge>
+                          <div className="flex flex-col gap-2">
+                            <Badge variant="outline" className="gap-1 font-medium w-fit">
+                              <Package className="w-3 h-3" />
+                              {shop.product_count}
+                            </Badge>
+                            {shop.product_images && shop.product_images.length > 0 && (
+                              <div className="flex -space-x-2 overflow-hidden">
+                                {shop.product_images.map((url: string, idx: number) => (
+                                  <img 
+                                    key={idx}
+                                    src={url} 
+                                    className="inline-block h-6 w-6 rounded-md ring-2 ring-background object-cover bg-muted" 
+                                    alt="Product preview"
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {getOwnerEmail(shop)}
@@ -904,6 +982,11 @@ export default function AdminShops() {
                                   <DropdownMenuSeparator />
                                 </>
                               )}
+                              <DropdownMenuItem onClick={() => fetchShopProducts(shop.id)}>
+                                <Package className="w-4 h-4 mr-2" />
+                                View Inventory
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => handleEditShop(shop)}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit Shop
@@ -1323,6 +1406,12 @@ export default function AdminShops() {
                     <Edit className="w-4 h-4 text-muted-foreground" /> Edit Details
                   </button>
                   <button
+                    onClick={() => { const s = mobileActionsShop; setMobileActionsShop(null); fetchShopProducts(s.id); }}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-sm font-medium hover:bg-muted active:bg-muted min-h-[48px]"
+                  >
+                    <Package className="w-4 h-4 text-muted-foreground" /> View Inventory
+                  </button>
+                  <button
                     onClick={() => { const s = mobileActionsShop; setMobileActionsShop(null); handleViewOwner(s); }}
                     className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-sm font-medium hover:bg-muted active:bg-muted min-h-[48px]"
                   >
@@ -1478,6 +1567,89 @@ export default function AdminShops() {
                 {isCreating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                 Create Shop
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Shop Inventory Preview Dialog */}
+        <Dialog open={productsDialogOpen} onOpenChange={setProductsDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Package className="w-5 h-5 text-primary" />
+                Shop Inventory: {selectedShop?.shop_name}
+              </DialogTitle>
+              <DialogDescription>
+                Reviewing {shopProducts.length} items in this store
+              </DialogDescription>
+            </DialogHeader>
+
+            {isLoadingProducts ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <p className="text-muted-foreground">Loading products...</p>
+              </div>
+            ) : shopProducts.length === 0 ? (
+              <div className="text-center py-20 border-2 border-dashed rounded-3xl bg-muted/30">
+                <Package className="w-16 h-16 opacity-10 mx-auto mb-4" />
+                <h3 className="text-lg font-bold">No products found</h3>
+                <p className="text-muted-foreground max-w-xs mx-auto">This shop hasn't uploaded any products yet.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+                {shopProducts.map((product) => (
+                  <Card key={product.id} className="overflow-hidden border-primary/10 hover:shadow-md transition-shadow">
+                    <div className="aspect-square bg-muted relative">
+                      {product.image_url ? (
+                        <img 
+                          src={product.image_url} 
+                          alt={product.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-2">
+                          <ImageIcon className="w-10 h-10 opacity-20" />
+                          <span className="text-xs">No image</span>
+                        </div>
+                      )}
+                      <div className="absolute top-2 right-2">
+                        <Badge className="bg-background/80 backdrop-blur-md text-foreground border-none shadow-sm">
+                          ₦{Number(product.price).toLocaleString()}
+                        </Badge>
+                      </div>
+                    </div>
+                    <CardContent className="p-3">
+                      <h4 className="font-bold text-sm truncate mb-1">{product.name}</h4>
+                      <div className="flex items-center justify-between gap-2">
+                        <Badge variant="outline" className="text-[10px] py-0 h-5">
+                          {product.category || 'General'}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground">
+                          Stock: {product.stock_quantity}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+            
+            <DialogFooter className="sticky bottom-0 bg-background pt-4 border-t">
+              <Button variant="outline" onClick={() => setProductsDialogOpen(false)}>
+                Close Preview
+              </Button>
+              {isPending(selectedShop) && (
+                <Button 
+                  className="bg-accent hover:bg-accent/90"
+                  onClick={() => {
+                    setProductsDialogOpen(false);
+                    toggleShopStatus(selectedShop);
+                  }}
+                >
+                  <Check className="w-4 h-4 mr-2" />
+                  Approve Shop Now
+                </Button>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>

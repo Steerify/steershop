@@ -197,8 +197,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check if Termii API key is configured
     const termiiApiKey = Deno.env.get("TERMII_API_KEY");
-    
+    const termiiBaseUrl = "https://api.ng.termii.com";
     const isSmsConfigured = !!(termiiApiKey && termiiApiKey.length > 10);
+    let delivery: "sms" | "fallback" = isSmsConfigured ? "sms" : "fallback";
 
     if (isSmsConfigured) {
       console.log("Sending OTP via Termii...");
@@ -244,11 +245,11 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: isSmsConfigured
+        message: delivery === "sms"
           ? "Verification code sent to your phone"
           : "SMS is not configured. Contact support.",
         expiresIn: 300,
-        delivery: isSmsConfigured ? "sms" : "fallback",
+        delivery,
       }),
       {
         status: 200,
