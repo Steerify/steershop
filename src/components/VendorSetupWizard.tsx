@@ -11,7 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Store, Package, MessageCircle, ArrowRight, Sparkles, CheckCircle2, MapPin, ImagePlus, Upload, X } from "lucide-react";
+import { Loader2, Store, Package, Briefcase, Clock, Calendar, MessageCircle, ArrowRight, Sparkles, CheckCircle2, MapPin, ImagePlus, Upload, X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
 import { uploadService } from "@/services/upload.service";
@@ -77,6 +78,11 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   const [productStock, setProductStock] = useState("1");
   const [productImageFile, setProductImageFile] = useState<File | null>(null);
   const [productImagePreview, setProductImagePreview] = useState<string | null>(null);
+  const [productType, setProductType] = useState<"product" | "service">("product");
+  const [durationMinutes, setDurationMinutes] = useState("");
+  const [bookingRequired, setBookingRequired] = useState(false);
+  const [scheduleDeletion, setScheduleDeletion] = useState(false);
+  const [deleteAt, setDeleteAt] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
 
   const [createdShopId, setCreatedShopId] = useState<string | null>(null);
@@ -95,6 +101,11 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
     productDescription,
     productPrice,
     productStock,
+    productType,
+    durationMinutes,
+    bookingRequired,
+    scheduleDeletion,
+    deleteAt,
     whatsappNumber,
     createdShopId
   };
@@ -118,6 +129,11 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       if (draft.productDescription) setProductDescription(draft.productDescription);
       if (draft.productPrice) setProductPrice(draft.productPrice);
       if (draft.productStock) setProductStock(draft.productStock);
+      if (draft.productType) setProductType(draft.productType);
+      if (draft.durationMinutes) setDurationMinutes(draft.durationMinutes);
+      if (draft.bookingRequired !== undefined) setBookingRequired(draft.bookingRequired);
+      if (draft.scheduleDeletion !== undefined) setScheduleDeletion(draft.scheduleDeletion);
+      if (draft.deleteAt) setDeleteAt(draft.deleteAt);
       if (draft.whatsappNumber) setWhatsappNumber(draft.whatsappNumber);
       if (draft.createdShopId) setCreatedShopId(draft.createdShopId);
     }
@@ -209,7 +225,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
 
   const handleCreateProduct = async () => {
     if (!productName.trim() || !productPrice.trim()) {
-      toast({ title: "Product name and price required", variant: "destructive" });
+      toast({ title: "Name and price required", variant: "destructive" });
       return;
     }
 
@@ -219,10 +235,23 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       return;
     }
 
-    const stockNum = Math.max(1, Number.parseInt(productStock, 10) || 1);
+    const stockNum = productType === "service" ? 9999 : Math.max(1, Number.parseInt(productStock, 10) || 1);
+
+    if (productType === "service" && durationMinutes) {
+      const durationNum = Number(durationMinutes);
+      if (!Number.isFinite(durationNum) || durationNum <= 0) {
+        toast({ title: "Enter a valid duration", description: "Duration must be greater than zero.", variant: "destructive" });
+        return;
+      }
+    }
+
+    if (scheduleDeletion && !deleteAt) {
+      toast({ title: "Deletion date required", description: "Please select a date and time for automatic deletion.", variant: "destructive" });
+      return;
+    }
 
     if (!createdShopId) {
-      toast({ title: "Store not ready", description: "Please create your store before adding a product.", variant: "destructive" });
+      toast({ title: "Store not ready", description: "Please create your store before adding an item.", variant: "destructive" });
       return;
     }
 
@@ -234,7 +263,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         imageUrl = uploadRes.url;
       }
 
-      // Create product using the professional productService
+      // Create product/service using the professional productService
       const productRes = await productService.createProduct({
         shopId: createdShopId,
         name: productName.trim(),
@@ -243,17 +272,20 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         price: priceNum,
         inventory: stockNum,
         images: imageUrl ? [{ url: imageUrl, alt: productName.trim(), position: 1 }] : [],
-        type: "product",
+        type: productType,
         is_available: true,
-        stockUnit: "units",
+        duration_minutes: productType === "service" && durationMinutes ? Number(durationMinutes) : undefined,
+        booking_required: productType === "service" ? bookingRequired : undefined,
+        stockUnit: productType === "service" ? "slots" : "units",
         category: shopCategory || "general",
+        deleteAt: scheduleDeletion && deleteAt ? new Date(deleteAt).toISOString() : undefined,
       });
 
-      if (!productRes.success) throw new Error("Failed to create product");
+      if (!productRes.success) throw new Error("Failed to create item");
 
       setStep(3);
     } catch (error: unknown) {
-      toast({ title: "Error adding product", description: getErrorMessage(error), variant: "destructive" });
+      toast({ title: "Error adding item", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -533,31 +565,71 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
             )}
 
             {step === 2 && (
-              <div className="space-y-6 relative z-10">
+              <div className="space-y-6 relative z-10 animate-fade-in">
+                {/* Product/Service Type Toggle Segmented Control */}
+                <div className="space-y-3">
+                  <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest">Listing Type</Label>
+                  <div className="grid grid-cols-2 gap-1 p-1 bg-muted/40 backdrop-blur-md rounded-2xl border border-border/50">
+                    <button
+                      type="button"
+                      onClick={() => setProductType("product")}
+                      className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all duration-300 ${
+                        productType === "product"
+                          ? "bg-primary text-white shadow-md scale-[1.02]"
+                          : "text-muted-foreground hover:bg-muted/30"
+                      }`}
+                    >
+                      <Package className="w-4 h-4" />
+                      Physical Product
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProductType("service")}
+                      className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all duration-300 ${
+                        productType === "service"
+                          ? "bg-accent text-accent-foreground shadow-md scale-[1.02]"
+                          : "text-muted-foreground hover:bg-muted/30"
+                      }`}
+                    >
+                      <Briefcase className="w-4 h-4" />
+                      Digital Service
+                    </button>
+                  </div>
+                </div>
+
                 <div className="space-y-4">
-                  <div className="space-y-3">
-                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Product / Service Name</Label>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest">
+                      {productType === "service" ? "Service Name *" : "Product Name *"}
+                    </Label>
                     <Input
-                      placeholder="e.g. Chocolate Cake or Consultation"
+                      placeholder={productType === "service" ? "e.g. Hair Styling, Consultation" : "e.g. Leather Bag, Chocolate Cake"}
                       value={productName}
                       onChange={e => setProductName(e.target.value)}
-                      className="h-14 text-lg bg-background/50 border-primary/20"
+                      className="h-12 bg-background/50 border-primary/20 focus:border-primary/50 text-foreground transition-all duration-200"
                       autoFocus
                     />
                   </div>
-                  <div className="space-y-3">
-                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Description</Label>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest">Description</Label>
                     <Textarea
-                      placeholder="A short detail that helps customers decide..."
+                      placeholder={
+                        productType === "service"
+                          ? "Describe the service, what is included, etc..."
+                          : "Describe size, materials, or features that make this special..."
+                      }
                       value={productDescription}
                       onChange={e => setProductDescription(e.target.value)}
-                      className="min-h-[84px] bg-background/50 border-primary/20"
+                      className="min-h-[80px] bg-background/50 border-primary/20 text-foreground transition-all duration-200"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-3">
-                      <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Price (₦)</Label>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest">
+                        {productType === "service" ? "Session Fee (₦) *" : "Price (₦) *"}
+                      </Label>
                       <Input
                         type="number"
                         inputMode="decimal"
@@ -565,25 +637,92 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                         placeholder="e.g. 5000"
                         value={productPrice}
                         onChange={e => setProductPrice(e.target.value)}
-                        className="h-14 text-lg bg-background/50 border-primary/20"
+                        className="h-12 bg-background/50 border-primary/20 focus:border-primary/50 text-foreground transition-all duration-200"
                       />
                     </div>
-                    <div className="space-y-3">
-                      <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Stock quantity</Label>
-                      <Input
-                        type="number"
-                        inputMode="numeric"
-                        min="1"
-                        placeholder="e.g. 10"
-                        value={productStock}
-                        onChange={e => setProductStock(e.target.value)}
-                        className="h-14 text-lg bg-background/50 border-primary/20"
-                      />
-                    </div>
+
+                    {productType === "product" ? (
+                      <div className="space-y-2">
+                        <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest">Stock Quantity</Label>
+                        <Input
+                          type="number"
+                          inputMode="numeric"
+                          min="1"
+                          placeholder="e.g. 10"
+                          value={productStock}
+                          onChange={e => setProductStock(e.target.value)}
+                          className="h-12 bg-background/50 border-primary/20 focus:border-primary/50 text-foreground transition-all duration-200"
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest">Duration (Minutes)</Label>
+                        <Input
+                          type="number"
+                          inputMode="numeric"
+                          min="1"
+                          placeholder="e.g. 60 (Optional)"
+                          value={durationMinutes}
+                          onChange={e => setDurationMinutes(e.target.value)}
+                          className="h-12 bg-background/50 border-primary/20 focus:border-primary/50 text-foreground transition-all duration-200"
+                        />
+                      </div>
+                    )}
                   </div>
 
-                  <div className="space-y-3">
-                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Product Image</Label>
+                  {/* Service Specific: Booking Toggle */}
+                  {productType === "service" && (
+                    <div className="p-4 rounded-2xl bg-accent/5 border border-accent/20 flex items-center justify-between transition-all duration-300">
+                      <div className="space-y-0.5">
+                        <Label className="text-xs font-bold text-foreground">Requires Booking</Label>
+                        <p className="text-[11px] text-muted-foreground leading-tight">Customers must schedule a calendar slot</p>
+                      </div>
+                      <Switch
+                        checked={bookingRequired}
+                        onCheckedChange={setBookingRequired}
+                        className="data-[state=checked]:bg-accent"
+                      />
+                    </div>
+                  )}
+
+                  {/* Scheduled Self-Deletion Panel */}
+                  <div className="p-4 rounded-2xl bg-muted/30 border border-border/60 space-y-3 transition-all duration-300">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-xs font-bold text-foreground">Automatic Scheduled Deletion</Label>
+                        <p className="text-[11px] text-muted-foreground leading-tight">Delete item automatically at a chosen date/time</p>
+                      </div>
+                      <Switch
+                        checked={scheduleDeletion}
+                        onCheckedChange={setScheduleDeletion}
+                      />
+                    </div>
+
+                    {scheduleDeletion && (
+                      <div className="space-y-2 animate-slide-down">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Deletion Date & Time *</Label>
+                        <div className="relative">
+                          <Input
+                            type="datetime-local"
+                            value={deleteAt}
+                            onChange={e => setDeleteAt(e.target.value)}
+                            min={new Date().toISOString().slice(0, 16)}
+                            className="h-12 bg-background border-primary/20 focus:border-primary/50 text-foreground pl-10"
+                          />
+                          <Calendar className="absolute left-3.5 top-3.5 w-4 h-4 text-muted-foreground pointer-events-none" />
+                        </div>
+                        <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-700 dark:text-amber-500 font-semibold flex items-center gap-2">
+                          ⚠️ This item will be permanently removed at the chosen date/time. Order histories will be preserved.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Image Upload */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest">
+                      {productType === "service" ? "Service Banner Image" : "Product Image"}
+                    </Label>
                     <div className="relative group w-full sm:w-40">
                       <input
                         type="file"
@@ -594,32 +733,37 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                       />
                       <label
                         htmlFor="product-image-upload"
-                        className={`flex flex-col items-center justify-center w-full aspect-square rounded-xl border-2 border-dashed transition-all cursor-pointer ${productImagePreview ? 'border-primary' : 'border-primary/20 hover:border-primary/40'}`}
+                        className={`flex flex-col items-center justify-center w-full aspect-square rounded-2xl border-2 border-dashed transition-all cursor-pointer ${
+                          productImagePreview 
+                            ? 'border-primary bg-primary/5' 
+                            : 'border-primary/20 hover:border-primary/40 bg-background/30 hover:bg-background/60'
+                        }`}
                       >
                         {productImagePreview ? (
                           <div className="relative w-full h-full p-2">
-                            <img src={productImagePreview} alt="Product" className="w-full h-full object-cover rounded-lg" />
+                            <img src={productImagePreview} alt="Product" className="w-full h-full object-cover rounded-xl" />
                             <button
                               onClick={(e) => { e.preventDefault(); setProductImageFile(null); setProductImagePreview(null); }}
-                              className="absolute -top-1 -right-1 bg-destructive text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute -top-1.5 -right-1.5 bg-destructive text-white p-1 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all"
                             >
-                              <X className="w-3 h-3" />
+                              <X className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         ) : (
                           <>
                             <ImagePlus className="w-6 h-6 text-primary/40 mb-1" />
-                            <span className="text-[10px] font-bold text-primary/60">Upload</span>
+                            <span className="text-[10px] font-bold text-primary/60">Upload Image</span>
                           </>
                         )}
                       </label>
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-3 pt-4">
+
+                <div className="flex gap-3 pt-2">
                   <Button 
                     variant="outline"
-                    className="flex-1 h-12 border-border/50 rounded-2xl font-bold hover:bg-muted/50"
+                    className="flex-1 h-12 border-border/50 rounded-2xl font-bold hover:bg-muted/50 transition-all active:scale-[0.98]"
                     onClick={handleBack}
                     disabled={isLoading}
                   >
@@ -631,7 +775,10 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                     disabled={isLoading || !productName.trim() || !productPrice}
                   >
                     {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (
-                      <>Add Product <ArrowRight className="ml-2 w-4 h-4" /></>
+                      <>
+                        {productType === "service" ? "Create Service" : "Add Product"}
+                        <ArrowRight className="ml-2 w-4 h-4" />
+                      </>
                     )}
                   </Button>
                 </div>

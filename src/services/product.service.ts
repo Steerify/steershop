@@ -16,6 +16,7 @@ type ProductUpdateData = {
   category?: string;
   nafdac_number?: string | null;
   stock_unit?: string;
+  delete_at?: string | null;
 };
 
 type ProductSearchRow = {
@@ -56,6 +57,7 @@ export interface CreateProductRequest {
   stockUnit?: string;
   category?: string;
   nafdac_number?: string;
+  deleteAt?: string;
 }
 
 const productService = {
@@ -84,6 +86,7 @@ const productService = {
         category: data.category || 'general',
         nafdac_number: data.nafdac_number || null,
         stock_unit: data.stockUnit || 'units',
+        delete_at: data.deleteAt || null,
       })
       .select()
       .single();
@@ -158,6 +161,7 @@ const productService = {
       booking_required: p.booking_required,
       video_url: p.video_url || undefined,
       stockUnit: p.stock_unit || 'units',
+      delete_at: p.delete_at || undefined,
     }));
 
     return {
@@ -203,6 +207,7 @@ const productService = {
       booking_required: product.booking_required,
       video_url: product.video_url || undefined,
       stockUnit: product.stock_unit || 'units',
+      delete_at: product.delete_at || undefined,
     };
 
     return {
@@ -229,6 +234,7 @@ const productService = {
     if (data.category) updateData.category = data.category;
     if (data.nafdac_number !== undefined) updateData.nafdac_number = data.nafdac_number || null;
     if (data.stockUnit !== undefined) updateData.stock_unit = data.stockUnit || "units";
+    if (data.deleteAt !== undefined) updateData.delete_at = data.deleteAt || null;
 
     const { data: product, error } = await supabase
       .from('products')
@@ -319,6 +325,7 @@ const productService = {
       averageRating: p.average_rating ? Number(p.average_rating) : undefined,
       totalReviews: p.total_reviews || 0,
       stockUnit: p.stock_unit || "units",
+      delete_at: p.delete_at || undefined,
     }));
 
     return {

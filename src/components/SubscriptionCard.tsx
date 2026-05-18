@@ -22,7 +22,7 @@ const planIcons: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export const SubscriptionCard = ({ plans, currentPlanId, onSubscriptionSuccess }: SubscriptionCardProps) => {
-  const [isYearly, setIsYearly] = useState(false);
+  const [isYearly, setIsYearly] = useState(true);
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const { toast } = useToast();
 

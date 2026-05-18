@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Sparkles, Check, Zap, Crown, HelpCircle, Clock, Users, TrendingUp, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, Check, Zap, Crown, HelpCircle, Clock, Users, TrendingUp, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { SubscriptionCard } from "@/components/SubscriptionCard";
 import subscriptionService, { SubscriptionPlan } from "@/services/subscription.service";
@@ -183,6 +183,32 @@ const Pricing = () => {
             currentPlanId={currentPlanId}
           />
         )}
+
+        {/* Steerify Ads Cross-Promotion Banner */}
+        <div className="max-w-4xl mx-auto mt-12 p-6 sm:p-8 rounded-3xl bg-neutral-900 text-white border border-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-3 text-center md:text-left">
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/15 border border-primary/20 px-2.5 py-1 rounded-md">
+                Growth Accelerated
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight">
+                Want more customers, not just a better store?
+              </h2>
+              <p className="text-xs text-neutral-400 max-w-xl leading-relaxed">
+                Steerify Ads promotes your store and social media across Facebook, Instagram, TikTok, Google, and our growing WhatsApp marketplace daily. 
+                Plans start from <span className="text-white font-bold">₦12,000/month</span> (management fee only). You control your budget.
+              </p>
+            </div>
+            <Button 
+              onClick={() => navigate('/ads')} 
+              className="bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-widest px-6 py-4 h-auto rounded-xl active:scale-[0.98] transition-all whitespace-nowrap shrink-0"
+            >
+              Get More Customers
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        </div>
 
         {/* Guarantee Banner */}
         <div className="max-w-3xl mx-auto mt-10">

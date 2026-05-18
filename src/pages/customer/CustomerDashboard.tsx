@@ -50,6 +50,100 @@ const CustomerDashboard = () => {
     }
   };
 
+  const getContextualRecommendation = () => {
+    const productNames: string[] = [];
+    recentOrders.forEach((order: any) => {
+      if (Array.isArray(order.order_items)) {
+        order.order_items.forEach((item: any) => {
+          if (item?.products?.name) {
+            productNames.push(item.products.name.toLowerCase());
+          }
+          if (item?.products?.description) {
+            productNames.push(item.products.description.toLowerCase());
+          }
+        });
+      }
+    });
+
+    let matchedCategory = {
+      name: "Featured Collections",
+      slug: "featured",
+      reason: "your interests in high-quality local products",
+      gradient: "from-primary/10 via-accent/5 to-primary/5",
+      border: "border-primary/20 animate-pulse",
+      emoji: "🌟",
+      desc: "Explore top-rated, certified local premium shops across all categories on SteerSolo."
+    };
+
+    const textToScan = productNames.join(" ");
+    
+    if (/soap|oil|skin|cream|glow|cosmetics|serum|makeup|lotion|beauty/i.test(textToScan)) {
+      matchedCategory = {
+        name: "Premium Skincare & Beauty Hub",
+        slug: "skincare",
+        reason: "your recent purchase of skincare/beauty products",
+        gradient: "from-pink-500/10 via-purple-500/5 to-pink-500/5",
+        border: "border-pink-500/30",
+        emoji: "✨",
+        desc: "Glow naturally! Discover handpicked, local premium brands specializing in organic oils, shea butter, and tailored skincare."
+      };
+    } else if (/dress|shoe|shirt|bag|clothes|wear|fashion|boutique|cloth|ring|jewelry/i.test(textToScan)) {
+      matchedCategory = {
+        name: "Bespoke Fashion & Accessories Hub",
+        slug: "fashion",
+        reason: "your active interest in stylish fashion and wears",
+        gradient: "from-indigo-500/10 via-blue-500/5 to-indigo-500/5",
+        border: "border-indigo-500/30",
+        emoji: "👗",
+        desc: "Style that defines you! Browse local artisans offering bespoke tailors, ready-to-wear dresses, and premium footwear."
+      };
+    } else if (/cake|drink|food|spice|snack|meat|chops|bake|cookie|juice/i.test(textToScan)) {
+      matchedCategory = {
+        name: "Gourmet Food & Beverages Hub",
+        slug: "food",
+        reason: "your recent orders for delicious food or drinks",
+        gradient: "from-emerald-500/10 via-teal-500/5 to-emerald-500/5",
+        border: "border-emerald-500/30",
+        emoji: "🍲",
+        desc: "Taste the premium quality! Explore Nigeria's finest local gourmet shops, home bakeries, and organic beverage makers."
+      };
+    }
+
+    return (
+      <Card className={`rounded-3xl overflow-hidden border-2 bg-gradient-to-br ${matchedCategory.gradient} ${matchedCategory.border} transition-all duration-300 hover:shadow-lg`}>
+        <CardContent className="p-6 relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border/80 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                <span className="text-sm leading-none">{matchedCategory.emoji}</span>
+                Tailored Recommendation
+              </div>
+              <h3 className="text-xl font-heading font-bold text-foreground">
+                Explore the {matchedCategory.name}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Based on <span className="font-bold text-primary">{matchedCategory.reason}</span>, we recommend these trusted, premium vendors:
+              </p>
+              <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed max-w-2xl pt-1">
+                {matchedCategory.desc}
+              </p>
+            </div>
+            <div className="shrink-0 flex items-center">
+              <Button
+                onClick={() => navigate(`/discover/${matchedCategory.slug}`)}
+                className="bg-gradient-to-r from-primary to-accent hover:opacity-90 active:scale-[0.98] transition-all text-white font-black text-xs uppercase tracking-widest px-5 h-11 rounded-xl shadow-md"
+              >
+                Explore Premium Shops
+                <ArrowRight className="w-4 h-4 ml-2 animate-bounce" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   useEffect(() => {
     if (!isAuthLoading) {
       if (user) {
@@ -202,6 +296,9 @@ const CustomerDashboard = () => {
               </h2>
               <p className="text-sm sm:text-base text-muted-foreground">Track orders, rewards, and next actions in one place</p>
             </div>
+
+            {/* Contextual Recommendation Banner */}
+            {getContextualRecommendation()}
 
             <Card className="border-primary/15 bg-primary/5">
               <CardContent className="p-4 sm:p-5">

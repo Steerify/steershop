@@ -1,13 +1,20 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Check, Store, ShoppingBag, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
+import NoticeBadge from "@/components/NoticeBadge";
 import logo from "@/assets/steersolo-logo.jpg";
 import { UserRole } from "@/types/api";
 
@@ -22,7 +29,9 @@ const RoleSelection = () => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (!session) {
           navigate("/auth/login");
           return;
@@ -43,7 +52,9 @@ const RoleSelection = () => {
 
     setIsLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       if (!session?.user) {
         throw new Error("No user session found");
@@ -54,34 +65,39 @@ const RoleSelection = () => {
       let appRole: "admin" | "customer" | "shop_owner";
 
       switch (selectedRole) {
-        case 'ENTREPRENEUR':
-          dbRole = 'shop_owner';
-          appRole = 'shop_owner';
+        case "ENTREPRENEUR":
+          dbRole = "shop_owner";
+          appRole = "shop_owner";
           break;
-        case 'CUSTOMER':
-          dbRole = 'customer';
-          appRole = 'customer';
+        case "CUSTOMER":
+          dbRole = "customer";
+          appRole = "customer";
           break;
-        case 'ADMIN':
-          dbRole = 'admin';
-          appRole = 'admin';
+        case "ADMIN":
+          dbRole = "admin";
+          appRole = "admin";
           break;
         default:
-          dbRole = 'customer';
-          appRole = 'customer';
+          dbRole = "customer";
+          appRole = "customer";
       }
 
-      console.log('Updating profile and role for user:', session.user.id, 'to:', dbRole);
+      console.log(
+        "Updating profile and role for user:",
+        session.user.id,
+        "to:",
+        dbRole,
+      );
 
       // Update the user's profile with the selected role and clear the flag
       const { error: profileError } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({
           role: dbRole,
           needs_role_selection: false,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', session.user.id);
+        .eq("id", session.user.id);
 
       if (profileError) {
         console.error("Error updating profile:", profileError);
@@ -90,20 +106,20 @@ const RoleSelection = () => {
 
       // Also update user_roles table to keep it in sync
       const { error: roleError } = await supabase
-        .from('user_roles')
+        .from("user_roles")
         .update({
-          role: appRole
+          role: appRole,
         })
-        .eq('user_id', session.user.id);
+        .eq("user_id", session.user.id);
 
       if (roleError) {
         console.error("Error updating user_roles:", roleError);
         // Try to upsert if update fails (though update should work with RLS)
         const { error: insertError } = await supabase
-          .from('user_roles')
+          .from("user_roles")
           .upsert({
             user_id: session.user.id,
-            role: appRole
+            role: appRole,
           });
 
         if (insertError) {
@@ -116,16 +132,15 @@ const RoleSelection = () => {
 
       toast({
         title: "Role selected!",
-        description: `Welcome as ${selectedRole === 'ENTREPRENEUR' ? "an Entrepreneur" : "a Customer"}`,
+        description: `Welcome as ${selectedRole === "ENTREPRENEUR" ? "an Entrepreneur" : "a Customer"}`,
       });
 
       // Entrepreneurs go to the dashboard where the Setup Wizard modal will be triggered.
-      if (selectedRole === 'ENTREPRENEUR') {
+      if (selectedRole === "ENTREPRENEUR") {
         navigate("/dashboard");
       } else {
         navigate("/customer_dashboard");
       }
-
     } catch (error: any) {
       console.error("Error setting role:", error);
       toast({
@@ -148,13 +163,20 @@ const RoleSelection = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4 relative overflow-hidden">
-      <AdirePattern variant="geometric" className="absolute inset-0 opacity-5" />
+      <AdirePattern
+        variant="geometric"
+        className="absolute inset-0 opacity-5"
+      />
 
       <Card className="w-full max-w-2xl relative z-10 border-primary/10 shadow-2xl backdrop-blur-sm bg-card/95">
         <CardHeader className="text-center border-b border-border/50 pb-6">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 rounded-xl overflow-hidden shadow-lg ring-4 ring-primary/20">
-              <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+              <img
+                src={logo}
+                alt="SteerSolo"
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
           <CardTitle className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -167,85 +189,135 @@ const RoleSelection = () => {
 
         <CardContent className="p-6">
           <div className="space-y-4">
-            <div
-              onClick={() => setSelectedRole('ENTREPRENEUR')}
+            <NoticeBadge
+              variant="legal"
+              dismissible
+              storageKey="notice_role_selection_legal"
+              className="w-full"
+            >
+              By proceeding you agree to our{" "}
+              <Link to="/terms" className="underline">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link to="/privacy" className="underline">
+                Privacy Policy
+              </Link>
+              .
+            </NoticeBadge>
+            <div className="text-sm text-muted-foreground">
+              Select the option that best matches how you plan to use SteerSolo,
+              then continue to complete your setup.
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedRole("ENTREPRENEUR")}
+              aria-pressed={selectedRole === "ENTREPRENEUR"}
               className={cn(
-                "relative flex items-start gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 group",
-                selectedRole === 'ENTREPRENEUR'
+                "relative w-full text-left flex items-start gap-4 p-5 rounded-2xl border-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/40",
+                selectedRole === "ENTREPRENEUR"
                   ? "border-indigo-600 bg-indigo-600/5 shadow-xl shadow-indigo-600/10 scale-[1.02]"
-                  : "border-muted hover:border-indigo-600/50 hover:bg-indigo-600/5"
+                  : "border-muted hover:border-indigo-600/50 hover:bg-indigo-600/5",
               )}
             >
-              <div className={cn(
-                "p-4 rounded-xl transition-all duration-300 shadow-sm",
-                selectedRole === 'ENTREPRENEUR' 
-                  ? "bg-indigo-600 text-white scale-110" 
-                  : "bg-muted text-muted-foreground group-hover:bg-indigo-100 group-hover:text-indigo-600"
-              )}>
+              <div
+                className={cn(
+                  "p-4 rounded-xl transition-all duration-300 shadow-sm",
+                  selectedRole === "ENTREPRENEUR"
+                    ? "bg-indigo-600 text-white scale-110"
+                    : "bg-muted text-muted-foreground hover:bg-indigo-100 hover:text-indigo-600",
+                )}
+              >
                 <Store className="w-7 h-7" />
               </div>
               <div className="flex-1">
-                <h3 className={cn(
-                  "font-bold text-xl transition-colors",
-                  selectedRole === 'ENTREPRENEUR' ? "text-indigo-600" : "text-foreground"
-                )}>Entrepreneur</h3>
+                <h3
+                  className={cn(
+                    "font-bold text-xl transition-colors",
+                    selectedRole === "ENTREPRENEUR"
+                      ? "text-indigo-600"
+                      : "text-foreground",
+                  )}
+                >
+                  Entrepreneur
+                </h3>
                 <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                  Start your business journey. Create a store, list products, and reach thousands of Nigerian shoppers.
+                  Start your business journey. Create a store, list products,
+                  and reach thousands of Nigerian shoppers.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {["Store Builder", "Order Tracking", "SafeBeauty Badge"].map(tag => (
-                    <span key={tag} className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-600/10 text-indigo-700">
-                      {tag}
-                    </span>
-                  ))}
+                  {["Store Builder", "Order Tracking", "SafeBeauty Badge"].map(
+                    tag => (
+                      <span
+                        key={tag}
+                        className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-600/10 text-indigo-700"
+                      >
+                        {tag}
+                      </span>
+                    ),
+                  )}
                 </div>
               </div>
-              {selectedRole === 'ENTREPRENEUR' && (
+              {selectedRole === "ENTREPRENEUR" && (
                 <div className="absolute top-4 right-4 text-indigo-600 animate-in zoom-in">
                   <Check className="w-6 h-6" />
                 </div>
               )}
-            </div>
+            </button>
 
-            <div
-              onClick={() => setSelectedRole('CUSTOMER')}
+            <button
+              type="button"
+              onClick={() => setSelectedRole("CUSTOMER")}
+              aria-pressed={selectedRole === "CUSTOMER"}
               className={cn(
-                "relative flex items-start gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 group",
-                selectedRole === 'CUSTOMER'
+                "relative w-full text-left flex items-start gap-4 p-5 rounded-2xl border-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/40",
+                selectedRole === "CUSTOMER"
                   ? "border-emerald-600 bg-emerald-600/5 shadow-xl shadow-emerald-600/10 scale-[1.02]"
-                  : "border-muted hover:border-emerald-600/50 hover:bg-emerald-600/5"
+                  : "border-muted hover:border-emerald-600/50 hover:bg-emerald-600/5",
               )}
             >
-              <div className={cn(
-                "p-4 rounded-xl transition-all duration-300 shadow-sm",
-                selectedRole === 'CUSTOMER' 
-                  ? "bg-emerald-600 text-white scale-110" 
-                  : "bg-muted text-muted-foreground group-hover:bg-emerald-100 group-hover:text-emerald-600"
-              )}>
+              <div
+                className={cn(
+                  "p-4 rounded-xl transition-all duration-300 shadow-sm",
+                  selectedRole === "CUSTOMER"
+                    ? "bg-emerald-600 text-white scale-110"
+                    : "bg-muted text-muted-foreground hover:bg-emerald-100 hover:text-emerald-600",
+                )}
+              >
                 <ShoppingBag className="w-7 h-7" />
               </div>
               <div className="flex-1">
-                <h3 className={cn(
-                  "font-bold text-xl transition-colors",
-                  selectedRole === 'CUSTOMER' ? "text-emerald-600" : "text-foreground"
-                )}>Customer</h3>
+                <h3
+                  className={cn(
+                    "font-bold text-xl transition-colors",
+                    selectedRole === "CUSTOMER"
+                      ? "text-emerald-600"
+                      : "text-foreground",
+                  )}
+                >
+                  Customer
+                </h3>
                 <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                  Browse curated collections from verified Nigerian brands. Shop with confidence and zero friction.
+                  Browse curated collections from verified Nigerian brands. Shop
+                  with confidence and zero friction.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {["Secure Checkout", "Wishlist", "Order History"].map(tag => (
-                    <span key={tag} className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-700">
+                    <span
+                      key={tag}
+                      className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-700"
+                    >
                       {tag}
                     </span>
                   ))}
                 </div>
               </div>
-              {selectedRole === 'CUSTOMER' && (
+              {selectedRole === "CUSTOMER" && (
                 <div className="absolute top-4 right-4 text-emerald-600 animate-in zoom-in">
                   <Check className="w-6 h-6" />
                 </div>
               )}
-            </div>
+            </button>
           </div>
 
           <div className="mt-8">

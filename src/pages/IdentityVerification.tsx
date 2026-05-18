@@ -50,42 +50,73 @@ const IdentityVerification = () => {
           </div>
         </div>
 
-        {/* Recommended Method Banner */}
-        <Alert className="mb-6 border-accent/30 bg-accent/5">
-          <Info className="h-4 w-4 text-accent" />
-          <AlertTitle className="text-accent">Recommended: Bank Account Verification</AlertTitle>
-          <AlertDescription>
-            Verify your bank account to receive payments directly and display the "Verified Seller" badge on your shop.
-          </AlertDescription>
-        </Alert>
+        {/* Interactive Trust Roadmap & Milestones Checklist */}
+        <div className="mb-8 p-6 rounded-3xl bg-card/65 border border-border/40 backdrop-blur-md relative overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.015)]">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="flex items-center gap-2 mb-4">
+            <ShieldCheck className="w-5 h-5 text-primary shrink-0" />
+            <h2 className="text-xs font-black uppercase tracking-widest text-foreground">SteerSolo Trust & Verification Roadmap</h2>
+          </div>
 
-        {/* Verification Badge Info */}
-        <Alert className="mb-6 border-primary/30 bg-primary/5">
-          <ShieldCheck className="h-4 w-4 text-primary" />
-          <AlertTitle className="text-primary">How to Earn the "Verified Business" Badge</AlertTitle>
-          <AlertDescription className="text-sm">
-            Complete bank verification, receive 10+ completed orders, maintain a 3.5+ rating, and have your shop active for at least 7 days. Track your progress on the Dashboard.
-          </AlertDescription>
-        </Alert>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { 
+                step: "1", 
+                title: "Bank Account Setup", 
+                desc: "Link payout details powered securely by Paystack to unlock credit settlement.", 
+                status: "action_required",
+                color: "border-l-accent text-accent bg-accent/5" 
+              },
+              { 
+                step: "2", 
+                title: "Earn Verified Badge", 
+                desc: "Requires 10+ completed orders, active for 7+ days, and a 3.5+ rating.", 
+                status: "in_progress",
+                color: "border-l-primary text-primary bg-primary/5" 
+              },
+              { 
+                step: "3", 
+                title: "Elite Partner Badge", 
+                desc: "Highest score on our Professional Vitality index (95+ rating).", 
+                status: "soon",
+                color: "border-l-muted-foreground text-muted-foreground bg-muted/40" 
+              }
+            ].map((item, i) => (
+              <div key={i} className={`p-4 rounded-2xl border-l-4 ${item.color} flex flex-col justify-between space-y-2`}>
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Step {item.step}</span>
+                    <Badge variant="outline" className="text-[9px] uppercase font-black tracking-wider py-0 px-2 bg-background border-current/25">
+                      {item.status.replace(/_/g, ' ')}
+                    </Badge>
+                  </div>
+                  <h4 className="text-xs font-black uppercase tracking-tight text-foreground mt-1">{item.title}</h4>
+                  <p className="text-[10px] text-muted-foreground mt-1 leading-normal">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-8 p-1 bg-muted/50 border border-border/50">
+              <TabsList className="grid w-full grid-cols-2 mb-8 p-1 bg-muted/30 border border-border/40 rounded-xl backdrop-blur-sm">
                 <TabsTrigger 
                   value="level1" 
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium relative"
+                  className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm font-black text-xs relative transition-all py-2 rounded-lg"
                 >
                   Level 1: BVN
-                  <span className="absolute -top-2 -right-2 text-[10px] bg-muted-foreground/20 text-muted-foreground px-1.5 py-0.5 rounded-full">
+                  <span className="absolute -top-2.5 -right-1 text-[8px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded-md">
                     Soon
                   </span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="level2" 
-                  className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground font-medium"
+                  className="data-[state=active]:bg-background data-[state=active]:text-accent data-[state=active]:shadow-sm font-black text-xs transition-all py-2 rounded-lg"
                 >
-                  Level 2: Bank Account ✓
+                  Level 2: Bank Settlement ✓
                 </TabsTrigger>
               </TabsList>
 

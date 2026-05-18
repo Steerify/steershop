@@ -105,35 +105,116 @@ function generateProductPageHTML(shop: any, product: any, shopUrl: string): Resp
   <meta property="og:site_name" content="SteerSolo" />
   <meta property="product:price:amount" content="${product.price}" />
   <meta property="product:price:currency" content="NGN" />
+  <meta property="product:availability" content="${product.is_available ? 'instock' : 'outofstock'}" />
+  <meta property="product:brand" content="${shopName}" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${productName} - ${shopName}" />
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image" content="${imageUrl}" />
   <script type="application/ld+json">${JSON.stringify([productSchema, breadcrumbSchema])}</script>
   <meta http-equiv="refresh" content="0;url=${productUrl}">
+  <style>
+    :root {
+      --bg: #09090b;
+      --card: #18181b;
+      --border: rgba(255,255,255,0.08);
+      --primary: #a1a1aa;
+      --foreground: #f4f4f5;
+      --accent: #10b981;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--foreground);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .product-img {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      border-radius: 16px;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      margin: 0 0 0.5rem 0;
+      letter-spacing: -0.025em;
+    }
+    p {
+      color: var(--primary);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin: 0 0 1.5rem 0;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--accent);
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    .price-tag {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--foreground);
+      margin-bottom: 1.5rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--foreground);
+      color: var(--bg);
+      font-weight: 600;
+      text-decoration: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 14px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .redirect-msg {
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--primary);
+    }
+  </style>
 </head>
 <body>
-  <nav aria-label="breadcrumb">
-    <ol>
-      <li><a href="${SITE_URL}">SteerSolo</a></li>
-      <li><a href="${SITE_URL}/shops">Shops</a></li>
-      <li><a href="${shopUrl}">${shopName}</a></li>
-      <li>${productName}</li>
-    </ol>
-  </nav>
-  <main>
-    <article>
-      <h1>${productName}</h1>
-      ${product.image_url ? `<img src="${product.image_url}" alt="${productName}" />` : ''}
-      <p>${description}</p>
-      <p><strong>Price:</strong> ${formatPrice(product.price)}</p>
-      <p><strong>Availability:</strong> ${product.is_available ? 'In Stock' : 'Out of Stock'}</p>
-      ${product.category ? `<p><strong>Category:</strong> ${escapeHtml(product.category)}</p>` : ''}
-      <p><strong>Sold by:</strong> <a href="${shopUrl}">${shopName}</a></p>
-      ${product.average_rating ? `<p><strong>Rating:</strong> ${product.average_rating}/5 (${product.total_reviews} reviews)</p>` : ''}
-    </article>
-  </main>
-  <p>Redirecting to ${productName}...</p>
+  <div class="card">
+    ${product.image_url ? `<img src="${product.image_url}" alt="${productName}" class="product-img" />` : ''}
+    <div>
+      <span class="badge">Product Listing</span>
+    </div>
+    <h1>${productName}</h1>
+    <p>${description}</p>
+    <div class="price-tag">${formatPrice(product.price)}</div>
+    <a href="${productUrl}" class="btn">View on Storefront</a>
+    <div class="redirect-msg">Redirecting to ${shopName} in seconds...</div>
+  </div>
 </body>
 </html>`;
 
@@ -391,34 +472,178 @@ serve(async (req) => {
   <meta name="twitter:image" content="${imageUrl}" />
   <script type="application/ld+json">${JSON.stringify(allSchemas)}</script>
   <meta http-equiv="refresh" content="0;url=${shopUrl}">
+  <style>
+    :root {
+      --bg: #09090b;
+      --card: #18181b;
+      --border: rgba(255,255,255,0.08);
+      --primary: #a1a1aa;
+      --foreground: #f4f4f5;
+      --accent: #10b981;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--foreground);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2.5rem 2rem;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .logo {
+      width: 90px;
+      height: 90px;
+      border-radius: 24px;
+      object-fit: cover;
+      margin: 0 auto 1.5rem auto;
+      border: 2px solid var(--border);
+      display: block;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      margin: 0 0 0.5rem 0;
+      letter-spacing: -0.025em;
+    }
+    p {
+      color: var(--primary);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin: 0 0 1.5rem 0;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--accent);
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    .stats-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 0;
+      font-size: 0.85rem;
+      color: var(--primary);
+    }
+    .stats-item strong {
+      color: var(--foreground);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--foreground);
+      color: var(--bg);
+      font-weight: 600;
+      text-decoration: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 14px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .redirect-msg {
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--primary);
+    }
+    .products-preview {
+      margin-top: 2rem;
+      text-align: left;
+      border-top: 1px solid var(--border);
+      padding-top: 1.5rem;
+    }
+    .products-preview h2 {
+      font-size: 1rem;
+      margin: 0 0 1rem 0;
+      font-weight: 700;
+      color: var(--foreground);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .prod-item {
+      display: flex;
+      align-items: center;
+      justify-content: justify;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+    .prod-item img {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+    }
+    .prod-info {
+      flex: 1;
+    }
+    .prod-name {
+      font-weight: 600;
+      color: var(--foreground);
+      margin-bottom: 0.15rem;
+    }
+    .prod-price {
+      color: var(--accent);
+      font-weight: 700;
+    }
+  </style>
 </head>
 <body>
-  <nav aria-label="breadcrumb">
-    <ol>
-      <li><a href="${SITE_URL}">SteerSolo</a></li>
-      <li><a href="${SITE_URL}/shops">Shops</a></li>
-      <li>${shopName}</li>
-    </ol>
-  </nav>
-  <main>
-    <header>
-      <h1>${shopName}</h1>
-      <p>${description}</p>
-      ${locationText ? `<p><strong>Location:</strong> ${escapeHtml(locationText)}</p>` : ''}
-      ${shop.average_rating && shop.total_reviews ? `<p><strong>Rating:</strong> ${shop.average_rating}/5 (${shop.total_reviews} reviews)</p>` : ''}
-      ${categories.length > 0 ? `<p><strong>Categories:</strong> ${categories.map(c => escapeHtml(c)).join(', ')}</p>` : ''}
-    </header>
-    <section>
-      <h2>Products</h2>
-      ${shopProducts.map(p => `<article>
-        <h3><a href="${shopUrl}/product/${p.id}">${escapeHtml(p.name)}</a></h3>
+  <div class="card">
+    <img src="${imageUrl}" alt="${shopName}" class="logo" />
+    <div>
+      <span class="badge">${isPremium ? 'Premium Store' : 'Verified Store'}</span>
+    </div>
+    <h1>${shopName}</h1>
+    <p>${description}</p>
+    <div class="stats-row">
+      ${locationText ? `<div class="stats-item">📍 ${escapeHtml(locationText)}</div>` : ''}
+      ${shop.average_rating ? `<div class="stats-item">⭐ <strong>${shop.average_rating.toFixed(1)}</strong> (${shop.total_reviews})</div>` : ''}
+    </div>
+    <a href="${shopUrl}" class="btn">Visit Storefront</a>
+    
+    ${shopProducts.length > 0 ? `
+    <div class="products-preview">
+      <h2>Catalog Highlights</h2>
+      ${shopProducts.slice(0, 3).map(p => `
+      <div class="prod-item">
         ${p.image_url ? `<img src="${p.image_url}" alt="${escapeHtml(p.name)}" />` : ''}
-        ${p.description ? `<p>${escapeHtml(p.description)}</p>` : ''}
-        <p><strong>Price:</strong> ${formatPrice(p.price)}</p>
-      </article>`).join('\n      ')}
-    </section>
-  </main>
-  <p>Redirecting to ${shopName}...</p>
+        <div class="prod-info">
+          <div class="prod-name">${escapeHtml(p.name)}</div>
+          <div class="prod-price">${formatPrice(p.price)}</div>
+        </div>
+      </div>
+      `).join('')}
+    </div>
+    ` : ''}
+    
+    <div class="redirect-msg">Redirecting to ${shopName} in seconds...</div>
+  </div>
 </body>
 </html>`;
 

@@ -96,34 +96,53 @@ type DashboardOrderSummary = {
 type UrgentTask = { id: string; label: string; icon: LucideIcon; color: string; action: () => void };
 
 const StatCard = ({
-  label, value, icon: Icon, trend, trendValue
+  label, value, icon: Icon, trend, trendValue, color = "primary"
 }: {
   label: string;
   value: string;
   icon: React.ElementType;
   trend?: "up" | "down" | "neutral";
   trendValue?: string;
-}) => (
-  <Card className="border border-border/50 shadow-sm bg-card overflow-hidden transition-all hover:shadow-md">
-    <CardContent className="p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center">
-          <Icon className="w-5 h-5 text-primary" />
-        </div>
-        {trendValue && (
-          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${trend === "up" ? "bg-green-500/10 text-green-600" : trend === "down" ? "bg-red-500/10 text-red-600" : "bg-muted text-muted-foreground"}`}>
-            {trend === "up" ? <TrendingUp className="w-2.5 h-2.5" /> : trend === "down" ? <TrendingDown className="w-2.5 h-2.5" /> : null}
-            {trendValue}
+  color?: "primary" | "accent" | "emerald" | "amber";
+}) => {
+  const colorMap = {
+    primary: "from-primary/15 to-primary/5 text-primary border-primary/20",
+    accent: "from-accent/15 to-accent/5 text-accent border-accent/20",
+    emerald: "from-emerald-500/15 to-emerald-500/5 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    amber: "from-amber-500/15 to-amber-500/5 text-amber-600 dark:text-amber-400 border-amber-500/20",
+  };
+
+  return (
+    <Card className="relative group overflow-hidden border border-border/40 bg-gradient-to-b from-card/90 to-card/60 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300 hover:shadow-[0_16px_40px_rgba(0,0,0,0.05)] hover:-translate-y-1 hover:border-primary/30">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-accent/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      <CardContent className="p-5 relative z-10">
+        <div className="flex items-center justify-between mb-4">
+          <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${colorMap[color]} flex items-center justify-center border transition-all duration-300 group-hover:scale-110`}>
+            <Icon className="w-5.5 h-5.5" />
           </div>
-        )}
-      </div>
-      <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
-        <p className="text-2xl font-black tracking-tight">{value}</p>
-      </div>
-    </CardContent>
-  </Card>
-);
+          {trendValue && (
+            <div className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+              trend === "up" 
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" 
+                : trend === "down" 
+                ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20" 
+                : "bg-muted text-muted-foreground"
+            }`}>
+              {trend === "up" ? <TrendingUp className="w-2.5 h-2.5" /> : trend === "down" ? <TrendingDown className="w-2.5 h-2.5" /> : null}
+              {trendValue}
+            </div>
+          )}
+        </div>
+        <div>
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{label}</p>
+          <p className="text-3xl font-black tracking-tight bg-gradient-to-r from-foreground via-foreground to-foreground/80 bg-clip-text text-transparent group-hover:text-primary transition-colors duration-300">
+            {value}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 // ─── Quick Action Item (App-like) ─────────────────────────────────────────────
 const QuickActionButton = ({
@@ -579,6 +598,42 @@ const Dashboard = () => {
       );
     }
 
+    const daysActive = shopFullData?.created_at ? differenceInDays(new Date(), new Date(shopFullData.created_at)) : 0;
+
+    // Active & selling & eligible for Ads - show premium Steerify Ads banner
+    if (shopData && productsCount >= 5 && daysActive >= 14) {
+      return (
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-purple-900 to-indigo-900 border border-indigo-500/30 p-6 shadow-xl min-h-[120px] flex items-center group transition-all duration-300 hover:shadow-indigo-500/10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
+          <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
+            <div className="space-y-1.5 max-w-2xl">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-wider text-indigo-300">
+                <Sparkles className="w-3 h-3 text-indigo-400" />
+                Steerify Ads Recommendation
+              </div>
+              <h3 className="text-white font-extrabold text-lg sm:text-xl tracking-tight leading-tight">
+                Launch your first conversion campaign in 60s 🚀
+              </h3>
+              <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed">
+                You listed <strong className="text-white">{productsCount} products</strong>. Expand your reach and get local buyers checking out directly on WhatsApp starting at just <strong className="text-white">₦12,000/month</strong>.
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-3 shrink-0">
+              <Button
+                onClick={() => navigate('/ads')}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 px-5 h-11 border-0 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                Boost Sales <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // Active & selling — join community banner
     return (
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#075E54] to-[hsl(145,65%,30%)] p-5 shadow-lg min-h-[110px] flex items-center">
@@ -785,112 +840,102 @@ const Dashboard = () => {
         {/* Vendor Command Center for Entrepreneurs */}
         {rbac.isEntrepreneur(user) && <VendorCommandCenter />}
 
+        {/* Contextual Banner */}
+        {getContextualBanner()}
+
         {/* ProductNudges moved into carousel */}
 
-        {/* Welcome Hero - Minimalist & Premium */}
-        <div className="relative rounded-3xl overflow-hidden mb-2 bg-card border border-border/50 p-6 shadow-sm">
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-            <div className="flex items-center gap-5">
-              <div className="relative">
-                {shopData ? (
-                  <ShopAvatar
-                    name={shopData.name}
-                    logoUrl={shopFullData?.logo_url}
-                    className="w-16 h-16 rounded-2xl shadow-sm ring-1 ring-border"
-                    initialsClassName="text-2xl"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl">
-                    {firstName.charAt(0).toUpperCase()}
+        {/* Welcome Hero - Minimalist & Premium (Only shown for non-entrepreneurs to avoid merchant console bloat) */}
+        {!rbac.isEntrepreneur(user) && (
+          <div className="relative rounded-3xl overflow-hidden mb-2 bg-card border border-border/50 p-6 shadow-sm">
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div className="flex items-center gap-5">
+                <div className="relative">
+                  {shopData ? (
+                    <ShopAvatar
+                      name={shopData.name}
+                      logoUrl={shopFullData?.logo_url}
+                      className="w-16 h-16 rounded-2xl shadow-sm ring-1 ring-border"
+                      initialsClassName="text-2xl"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl">
+                      {firstName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-green-500 border-4 border-card flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                   </div>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm font-medium mb-0.5">{greeting},</p>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-1">{firstName}! 👋</h1>
+                  <div className="flex items-center gap-2">
+                    {shopData && <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] uppercase tracking-wider">{shopData.name}</Badge>}
+                    <ShopStatusBadge status={subscriptionStatus} daysRemaining={daysRemaining} />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {shopData && (
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(`/shop/${shopFullData?.shop_slug || shopData.id}`)}
+                    className="rounded-xl font-bold border-border shadow-sm hover:bg-muted"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Visit Store
+                  </Button>
                 )}
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-green-500 border-4 border-card flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                </div>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm font-medium mb-0.5">{greeting},</p>
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-1">{firstName}! 👋</h1>
-                <div className="flex items-center gap-2">
-                  {shopData && <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] uppercase tracking-wider">{shopData.name}</Badge>}
-                  <ShopStatusBadge status={subscriptionStatus} daysRemaining={daysRemaining} />
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              {shopData && (
                 <Button
-                  variant="outline"
-                  onClick={() => navigate(`/shop/${shopFullData?.shop_slug || shopData.id}`)}
-                  className="rounded-xl font-bold border-border shadow-sm hover:bg-muted"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate('/settings')}
+                  className="rounded-full h-11 w-11 bg-muted/50"
                 >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Visit Store
+                  <Settings className="h-5 w-5" />
                 </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate('/settings')}
-                className="rounded-full h-11 w-11 bg-muted/50"
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Simple seller path has been replaced by VendorCommandCenter at the top */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-4">
-          {/* Main Dashboard Stats Card */}
-          <Card className="border border-border/60 shadow-sm">
-            <CardContent className="p-5 sm:p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Your shop</p>
-                  <h2 className="text-xl font-black truncate">{shopData?.name || 'No shop yet'}</h2>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => navigate('/my-store')}>
-                  Edit
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-2xl bg-muted/40 p-4">
-                  <p className="text-xs text-muted-foreground font-bold uppercase">Revenue</p>
-                  <p className="text-2xl font-black mt-1">₦{totalRevenue.toLocaleString()}</p>
-                </div>
-                <div className="rounded-2xl bg-muted/40 p-4">
-                  <p className="text-xs text-muted-foreground font-bold uppercase">Sales</p>
-                  <p className="text-2xl font-black mt-1">{totalSales}</p>
-                </div>
-                <div className="rounded-2xl bg-muted/40 p-4">
-                  <p className="text-xs text-muted-foreground font-bold uppercase">Products</p>
-                  <p className="text-2xl font-black mt-1">{productsCount}</p>
-                </div>
-                <div className="rounded-2xl bg-muted/40 p-4">
-                  <p className="text-xs text-muted-foreground font-bold uppercase">Wallet</p>
-                  <p className="text-2xl font-black mt-1">₦{payoutBalance.availableBalance.toLocaleString()}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <Button className="h-11" onClick={() => navigate('/products')}>
-                  <Package className="w-4 h-4 mr-2" /> Products
-                </Button>
-                <Button variant="outline" className="h-11" onClick={() => navigate('/orders')}>
-                  <ShoppingCart className="w-4 h-4 mr-2" /> Orders
-                </Button>
-                <Button variant="outline" className="h-11" onClick={() => setIsPayoutDialogOpen(true)}>
-                  <Wallet className="w-4 h-4 mr-2" /> Wallet
-                </Button>
-                <Button variant="outline" className="h-11" onClick={() => window.open('https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76', '_blank')}>
-                  <HelpCircle className="w-4 h-4 mr-2" /> Help
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Premium World-Class Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-tour="stats-grid">
+          <StatCard
+            label="Revenue"
+            value={`₦${totalRevenue.toLocaleString()}`}
+            icon={DollarSign}
+            trend="up"
+            trendValue="+12% MoM"
+            color="emerald"
+          />
+          <StatCard
+            label="Total Sales"
+            value={totalSales.toString()}
+            icon={ShoppingCart}
+            trend="neutral"
+            trendValue="Stable"
+            color="primary"
+          />
+          <StatCard
+            label="Catalog Items"
+            value={productsCount.toString()}
+            icon={Package}
+            trend="up"
+            trendValue="Active"
+            color="accent"
+          />
+          <StatCard
+            label="Wallet Balance"
+            value={`₦${payoutBalance.availableBalance.toLocaleString()}`}
+            icon={Wallet}
+            trend="up"
+            trendValue="Available"
+            color="amber"
+          />
         </div>
 
         {urgentTasks.length > 0 && (

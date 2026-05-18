@@ -247,25 +247,21 @@ const Bookings = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
-          <Card className="card-spotify border-l-4 border-l-yellow-500 bg-yellow-500/5">
-            <CardContent className="p-3 sm:pt-4 text-center">
-              <p className="text-xl sm:text-2xl font-bold text-yellow-600">{pendingCount}</p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Pending</p>
-            </CardContent>
-          </Card>
-          <Card className="card-spotify border-l-4 border-l-blue-500 bg-blue-500/5">
-            <CardContent className="p-3 sm:pt-4 text-center">
-              <p className="text-xl sm:text-2xl font-bold text-blue-600">{confirmedCount}</p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Confirmed</p>
-            </CardContent>
-          </Card>
-          <Card className="card-spotify border-l-4 border-l-green-500 bg-green-500/5">
-            <CardContent className="p-3 sm:pt-4 text-center">
-              <p className="text-xl sm:text-2xl font-bold text-green-600">{completedCount}</p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Completed</p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
+          {[
+            { label: "Pending", count: pendingCount, color: "text-amber-500", glow: "border-l-amber-500/80 bg-amber-500/5", desc: "Awaiting Confirmation" },
+            { label: "Confirmed", count: confirmedCount, color: "text-blue-500", glow: "border-l-blue-500/80 bg-blue-500/5", desc: "Scheduled Sessions" },
+            { label: "Completed", count: completedCount, color: "text-emerald-500", glow: "border-l-emerald-500/80 bg-emerald-500/5", desc: "Done Bookings" }
+          ].map((item, i) => (
+            <Card key={i} className={`bg-card/65 border border-border/40 border-l-4 ${item.glow} backdrop-blur-md shadow-sm hover:shadow-md transition-all duration-300`}>
+              <CardContent className="p-3 sm:p-5 text-center sm:text-left">
+                <p className="text-muted-foreground text-[10px] font-black uppercase tracking-wider mb-1">{item.label}</p>
+                <div className="flex items-baseline justify-center sm:justify-start gap-1.5">
+                  <span className={`text-xl sm:text-3xl font-black ${item.color} tracking-tight`}>{item.count}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Tabs */}
@@ -279,20 +275,23 @@ const Bookings = () => {
         </Tabs>
 
         {filteredBookings.length === 0 ? (
-          <Card className="border-primary/10">
-            <CardContent className="py-16 text-center">
-              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center">
-                <CalendarCheck className="w-10 h-10 text-primary" />
+          <Card className="border border-border/40 bg-card/65 backdrop-blur-md relative overflow-hidden p-8">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+            <CardContent className="py-16 text-center max-w-md mx-auto space-y-4">
+              <div className="w-20 h-20 mx-auto mb-2 bg-gradient-to-tr from-primary to-accent rounded-3xl flex items-center justify-center shadow-md animate-pulse">
+                <CalendarCheck className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-heading font-semibold mb-2">No bookings yet</h3>
-              <p className="text-muted-foreground">Bookings will appear here when customers book your services</p>
+              <h3 className="text-xl font-extrabold tracking-tight text-foreground">No bookings scheduled yet</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Your boutique service queue is empty! As soon as customers schedule slots, they will appear in this timeline.
+              </p>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-4">
             {filteredBookings.map((booking) => (
-              <Card key={booking.id} className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all">
-                <CardHeader className="border-b border-border/50">
+              <Card key={booking.id} className="bg-card/65 border border-border/40 backdrop-blur-md hover:shadow-lg hover:border-primary/20 transition-all duration-300">
+                <CardHeader className="border-b border-border/40">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                     <div className="flex-1">
                       <CardTitle className="flex items-center gap-2 mb-2 font-heading">
@@ -361,14 +360,15 @@ const Bookings = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-4 pt-4 border-t border-border/50">
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-4 pt-4 border-t border-border/40">
                     {booking.status === "pending" && (
                       <>
                         <Button
                           size="sm"
+                          variant="outline"
                           onClick={() => updateBookingStatus(booking.id, "confirmed")}
                           disabled={updatingBookingId === booking.id}
-                          className="bg-blue-500 hover:bg-blue-600"
+                          className="border-blue-500/30 text-blue-600 hover:bg-blue-500/5 active:scale-[0.98] transition-all rounded-xl"
                         >
                           {updatingBookingId === booking.id ? (
                             <Loader2 className="w-4 h-4 animate-spin mr-1" />
@@ -379,9 +379,10 @@ const Bookings = () => {
                         </Button>
                         <Button
                           size="sm"
-                          variant="destructive"
+                          variant="outline"
                           onClick={() => updateBookingStatus(booking.id, "cancelled")}
                           disabled={updatingBookingId === booking.id}
+                          className="border-destructive/30 text-destructive hover:bg-destructive/5 active:scale-[0.98] transition-all rounded-xl"
                         >
                           <XCircle className="w-4 h-4 mr-1" />
                           Cancel
@@ -392,9 +393,10 @@ const Bookings = () => {
                       <>
                         <Button
                           size="sm"
+                          variant="outline"
                           onClick={() => updateBookingStatus(booking.id, "completed")}
                           disabled={updatingBookingId === booking.id}
-                          className="bg-green-500 hover:bg-green-600"
+                          className="border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/5 active:scale-[0.98] transition-all rounded-xl"
                         >
                           <CheckCircle className="w-4 h-4 mr-1" />
                           Mark Completed
@@ -404,6 +406,7 @@ const Bookings = () => {
                           variant="outline"
                           onClick={() => updateBookingStatus(booking.id, "no_show")}
                           disabled={updatingBookingId === booking.id}
+                          className="border-muted-foreground/30 text-muted-foreground hover:bg-muted active:scale-[0.98] transition-all rounded-xl"
                         >
                           <AlertCircle className="w-4 h-4 mr-1" />
                           No Show
@@ -414,7 +417,7 @@ const Bookings = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => openWhatsApp(booking)}
-                      className="border-green-500/30 text-green-600 hover:bg-green-500/10"
+                      className="border-green-500/30 text-green-600 hover:bg-green-500/10 active:scale-[0.98] transition-all rounded-xl"
                     >
                       <MessageCircle className="w-4 h-4 mr-1" />
                       WhatsApp

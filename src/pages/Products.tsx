@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle, Sparkles, Check, Copy, Megaphone, TrendingUp, Video, AlertTriangle, X } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle, Sparkles, Check, Copy, Megaphone, TrendingUp, Video, AlertTriangle, Calendar, X } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { ImageUpload } from "@/components/ImageUpload";
 import { VideoUpload } from "@/components/VideoUpload";
@@ -124,6 +124,8 @@ const Products = () => {
     nafdac_number: "",
     stockUnit: "units",
     customStockUnit: "",
+    scheduleDeletion: false,
+    deleteAt: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -207,6 +209,8 @@ const Products = () => {
       nafdac_number: "",
       stockUnit: "units",
       customStockUnit: "",
+      scheduleDeletion: false,
+      deleteAt: "",
     });
     setImageUrl("");
     setVideoUrl("");
@@ -270,6 +274,8 @@ const Products = () => {
         nafdac_number: (product as any).nafdac_number || "",
         stockUnit: isPresetStockUnit ? normalizedStockUnit : "other",
         customStockUnit: isPresetStockUnit ? "" : normalizedStockUnit,
+        scheduleDeletion: !!product.delete_at,
+        deleteAt: product.delete_at ? new Date(product.delete_at).toISOString().slice(0, 16) : "",
       });
       setImageUrl(product.images?.[0]?.url || "");
       setVideoUrl(product.video_url || "");
@@ -394,11 +400,11 @@ const Products = () => {
         shopId: shop.id,
         categoryId: "default-category",
         name: formData.name,
-        slug: formData.name.toLowerCase().replace(/ /g, '-'),
+        slug: formData.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-'),
         description: formData.description,
         price: parsedPrice,
         comparePrice: parsedComparePrice,
-        inventory: parsedInventory,
+        inventory: formData.type === "service" ? 9999 : parsedInventory,
         images: images,
         type: formData.type,
         duration_minutes: parsedDuration,
@@ -408,6 +414,7 @@ const Products = () => {
         category: formData.category,
         nafdac_number: formData.nafdac_number || undefined,
         stockUnit: formData.type === "service" ? "slots" : normalizedStockUnit,
+        deleteAt: formData.scheduleDeletion && formData.deleteAt ? new Date(formData.deleteAt).toISOString() : null,
       };
 
       if (editingProduct) {
@@ -716,6 +723,12 @@ const Products = () => {
                         <span className="text-accent font-semibold">Required</span>
                       </div>
                     )}
+                    {product.delete_at && (
+                      <div className="flex items-center gap-1.5 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-700 dark:text-amber-500 font-bold justify-center animate-pulse">
+                        <Clock className="w-3.5 h-3.5" />
+                        Deletes: {new Date(product.delete_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -1010,6 +1023,39 @@ const Products = () => {
                 onChange={(url) => setVideoUrl(url)}
                 shopId={shop?.id}
               />
+            </div>
+
+            {/* Scheduled Self-Deletion Panel */}
+            <div className="p-4 rounded-xl bg-muted/40 border border-border/80 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-xs font-bold text-foreground">Automatic Scheduled Deletion</Label>
+                  <p className="text-[11px] text-muted-foreground leading-tight">Delete this {formData.type} automatically at a chosen date/time</p>
+                </div>
+                <Switch
+                  checked={formData.scheduleDeletion}
+                  onCheckedChange={(checked) => setFormData({ ...formData, scheduleDeletion: checked })}
+                />
+              </div>
+
+              {formData.scheduleDeletion && (
+                <div className="space-y-2 animate-slide-down">
+                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Deletion Date & Time *</Label>
+                  <div className="relative">
+                    <Input
+                      type="datetime-local"
+                      value={formData.deleteAt}
+                      onChange={(e) => setFormData({ ...formData, deleteAt: e.target.value })}
+                      min={new Date().toISOString().slice(0, 16)}
+                      className="bg-background border-primary/25 pl-10"
+                    />
+                    <Calendar className="absolute left-3.5 top-3 w-4 h-4 text-muted-foreground pointer-events-none" />
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-700 dark:text-amber-500 font-semibold flex items-center gap-2">
+                    ⚠️ This item will be permanently removed at the chosen date and time. Order histories will be preserved.
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-between">
