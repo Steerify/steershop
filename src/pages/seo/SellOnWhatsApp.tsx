@@ -49,7 +49,7 @@ const SellOnWhatsApp = () => (
     testimonial={{
       quote: "Before SteerSolo, I was losing orders in my WhatsApp DMs. Now I share one link and customers order by themselves. My sales increased by 40% in the first month!",
       name: "Amina O.",
-      business: "Fashion Vendor, Lagos"
+      business: "Fashion Merchant, Lagos"
     }}
     faqs={[
       { question: "How do I create a WhatsApp store in Nigeria?", answer: "Sign up on SteerSolo for free, add your products, and share your unique store link on WhatsApp. Customers can browse and order directly. No coding needed." },

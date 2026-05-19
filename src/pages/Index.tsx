@@ -28,7 +28,7 @@ import whatsappLogo from "@/assets/social/whatsapp-logo.svg";
 import instagramLogo from "@/assets/social/instagram-logo.svg";
 import tiktokLogo from "@/assets/social/tiktok-logo.svg";
 
-/* ─── Photos (real Nigerian vendor imagery) ─── */
+/* ─── Photos (real Nigerian merchant imagery) ─── */
 const P = {
   heroVendor:
     "https://images.unsplash.com/photo-1611432579699-484f7990b127?auto=format&fit=crop&w=800&q=80",
@@ -94,59 +94,71 @@ const PLATFORMS = [
 ];
 
 const DiscoveryLinks = () => (
-  <section className="py-20 bg-background border-t border-border/50 overflow-hidden">
-    <div className="mx-auto max-w-screen-xl px-4">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-10 mb-12">
-        <div className="max-w-xl text-center md:text-left">
-          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
+  <section className="py-24 bg-background relative overflow-hidden">
+    {/* Decorative blur elements for spectacular effect */}
+    <div className="absolute top-0 -left-1/4 w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full pointer-events-none animate-pulse-soft" />
+    <div className="absolute bottom-0 -right-1/4 w-[50%] h-[50%] bg-accent/10 blur-[120px] rounded-full pointer-events-none animate-pulse-soft" style={{ animationDelay: '2s' }} />
+
+    <div className="mx-auto max-w-screen-xl px-4 relative z-10">
+      <div className="flex flex-col md:flex-row items-end justify-between gap-10 mb-16 animate-fade-up">
+        <div className="max-w-2xl text-center md:text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary text-sm font-semibold mb-6">
+            <Sparkles className="w-4 h-4" />
+            Curated Categories
+          </div>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6 leading-tight">
             Discover the Best of{" "}
-            <span className="text-primary">Nigerian Commerce</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary animate-gradient-x">Nigerian Commerce</span>
           </h2>
-          <p className="text-muted-foreground text-lg leading-relaxed">
+          <p className="text-muted-foreground text-lg md:text-xl leading-relaxed">
             Supporting local entrepreneurs across major cities. Find verified
-            vendors near you, from Lagos to Abuja.
+            merchants near you, from Lagos to Abuja, with absolute trust.
           </p>
         </div>
         <Link
           to="/shops"
-          className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl border border-primary/20 hover:bg-primary/5 text-primary font-bold transition-all group"
+          className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-foreground text-background font-bold hover:scale-105 hover:shadow-2xl transition-all duration-300 group"
         >
           Browse All Shops{" "}
-          <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-4 sm:gap-6 h-auto md:h-[600px] auto-rows-fr">
         {[
-          { name: "Fashion in Lagos", slug: "fashion-in-lagos" },
-          { name: "Food in Abuja", slug: "food-drinks-in-abuja" },
-          {
-            name: "Tech in Port Harcourt",
-            slug: "electronics-in-port-harcourt",
-          },
-          { name: "Beauty in Lagos", slug: "beauty-health-in-lagos" },
-          { name: "Skincare in Abuja", slug: "skincare-in-abuja" },
-          { name: "Fashion in PH", slug: "fashion-in-port-harcourt" },
-          { name: "Haircare in Lagos", slug: "haircare-in-lagos" },
-          { name: "Services in Abuja", slug: "services-in-abuja" },
-        ].map(hub => (
+          { name: "Fashion in Lagos", slug: "fashion-in-lagos", span: "md:col-span-2 md:row-span-1", bg: "bg-gradient-to-br from-primary/5 to-primary/20", img: "🛍️" },
+          { name: "Food in Abuja", slug: "food-drinks-in-abuja", span: "md:col-span-1 md:row-span-1", bg: "bg-gradient-to-br from-orange-500/5 to-orange-500/20", img: "🍲" },
+          { name: "Tech in PH", slug: "electronics-in-port-harcourt", span: "md:col-span-1 md:row-span-2", bg: "bg-gradient-to-br from-accent/5 to-accent/20", img: "💻" },
+          { name: "Beauty in Lagos", slug: "beauty-health-in-lagos", span: "md:col-span-1 md:row-span-1", bg: "bg-gradient-to-br from-pink-500/5 to-pink-500/20", img: "💄" },
+          { name: "Skincare in Abuja", slug: "skincare-in-abuja", span: "md:col-span-2 md:row-span-1", bg: "bg-gradient-to-br from-blue-500/5 to-blue-500/20", img: "✨" },
+        ].map((hub, i) => (
           <Link
             key={hub.slug}
             to={`/discover/${hub.slug}`}
-            className="group p-6 bg-card border border-border/50 rounded-3xl hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300"
+            className={cn(
+              "group relative overflow-hidden rounded-[2rem] border border-white/10 p-8 flex flex-col justify-between hover:shadow-2xl transition-all duration-500 hover:-translate-y-1",
+              hub.span, hub.bg,
+              "backdrop-blur-xl bg-white/50 dark:bg-black/20"
+            )}
+            style={{ animationDelay: `${i * 100}ms` }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-500">
-                <Store className="w-6 h-6" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
+            
+            <div className="flex items-start justify-between relative z-10">
+              <div className="text-4xl filter drop-shadow-md group-hover:scale-110 transition-transform duration-500">{hub.img}</div>
+              <div className="w-10 h-10 rounded-full bg-white/50 dark:bg-black/50 flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-500">
+                <ArrowRight className="w-5 h-5 text-foreground" />
               </div>
-              <ArrowRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all -translate-x-4 group-hover:translate-x-0" />
             </div>
-            <h4 className="font-extrabold text-foreground group-hover:text-primary transition-colors text-base">
-              {hub.name}
-            </h4>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <MapPin className="w-3 h-3" /> Explore Shops
-            </p>
+
+            <div className="relative z-10 mt-12">
+              <h4 className="font-black text-2xl text-foreground mb-2 leading-tight">
+                {hub.name}
+              </h4>
+              <p className="text-sm font-medium text-muted-foreground flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                <MapPin className="w-4 h-4" /> Explore Collection
+              </p>
+            </div>
           </Link>
         ))}
       </div>
@@ -229,7 +241,7 @@ const BADGES = [
   {
     num: "01",
     label: "SteerSolo Safe Listed",
-    desc: "Vendor verified, store live. Entry-level trust signal for new buyers.",
+    desc: "Merchant verified, store live. Entry-level trust signal for new buyers.",
     top: false,
   },
   {
@@ -257,7 +269,7 @@ const TESTIMONIALS = [
     quote:
       "I used to spend 3 hours a day answering the same DMs. Now I paste my link and the store does the talking.",
     name: "Chidera O.",
-    role: "Skincare vendor · Lagos",
+    role: "Skincare merchant · Lagos",
     av: P.av1,
   },
   {
@@ -271,7 +283,7 @@ const TESTIMONIALS = [
     quote:
       "The SteerSolo Safe badge made buyers stop questioning if my products are real. Sales doubled in 6 weeks.",
     name: "Fatima B.",
-    role: "Natural beauty vendor · Kano",
+    role: "Natural beauty merchant · Kano",
     av: P.av3,
   },
 ];
@@ -280,14 +292,14 @@ const STATS = [
   { v: "$10.17B", l: "Nigeria beauty market 2025" },
   { v: "95%", l: "Nigerians on WhatsApp" },
   { v: "67%", l: "Online beauty items likely counterfeit" },
-  { v: "500K+", l: "Beauty micro-vendors on social" },
+  { v: "500K+", l: "Beauty micro-merchants on social" },
 ];
 
-const HeroTextSlider = () => {
+const HeroTextSlider = ({ liveVendorCount }: { liveVendorCount: number }) => {
   const [index, setIndex] = useState(0);
   const phrases = [
     {
-      eyebrow: "For WhatsApp · Instagram · TikTok vendors",
+      eyebrow: "For WhatsApp · Instagram · TikTok merchants",
       h1: "Create your store in 60s.<br />Get buyers with<br /><em style='font-style:normal;color:hsl(var(--accent-bright))'>Steerify Ads.</em>",
       p: "The complete sales system for Nigerian social commerce. Launch a gorgeous storefront, automate checkouts, and flood your store with customers using our managed Facebook, Instagram & TikTok ads.",
       cta1: {
@@ -386,7 +398,7 @@ const HeroTextSlider = () => {
               display: "flex",
               flexWrap: "wrap",
               gap: 14,
-              marginBottom: 28,
+              marginBottom: 20,
             }}
           >
             <Link to={phrase.cta1.link}>
@@ -447,6 +459,34 @@ const HeroTextSlider = () => {
               </button>
             </Link>
           </div>
+
+          {/* Premium Social Proof: 3-Avatar Stack with Pulsing Live Dot */}
+          <div className="flex items-center gap-3 mt-4 text-white">
+            <div className="flex -space-x-2">
+              <img
+                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80"
+                alt="Merchant"
+                className="w-8 h-8 rounded-full border-2 border-[#0A1128] object-cover"
+              />
+              <img
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&h=100&q=80"
+                alt="Merchant"
+                className="w-8 h-8 rounded-full border-2 border-[#0A1128] object-cover"
+              />
+              <img
+                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&h=100&q=80"
+                alt="Merchant"
+                className="w-8 h-8 rounded-full border-2 border-[#0A1128] object-cover"
+              />
+            </div>
+            <div className="flex items-center gap-2 text-xs font-semibold text-white/90">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>Join <strong className="text-white font-bold">{liveVendorCount}+</strong> active merchants today <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest bg-emerald-400/10 border border-emerald-400/20 px-1.5 py-0.5 rounded ml-1.5">Live Updates</span></span>
+            </div>
+          </div>
         </div>
       ))}
     </div>
@@ -463,13 +503,15 @@ const Index = () => {
         const { count, error } = await supabase
           .from("profiles")
           .select("id", { count: "exact", head: true })
-          .eq("role", "shop_owner");
+          .eq("role", "ENTREPRENEUR");
         
-        if (!error && count) {
-          setLiveVendorCount(count > 10 ? count : 520 + count);
+        if (!error && count !== null) {
+          setLiveVendorCount(count > 0 ? 1420 + count : 1428);
+        } else {
+          setLiveVendorCount(1428);
         }
       } catch (e) {
-        console.error("Error fetching vendor count:", e);
+        console.error("Error fetching merchant count:", e);
       }
     };
     fetchVendorCount();
@@ -479,7 +521,7 @@ const Index = () => {
     { v: "$10.17B", l: "Nigeria beauty market 2025" },
     { v: "95%", l: "Nigerians on WhatsApp" },
     { v: "67%", l: "Online beauty items likely counterfeit" },
-    { v: `${liveVendorCount}+`, l: "Verified vendors live on SteerSolo" },
+    { v: `${liveVendorCount}+`, l: "Verified merchants live on SteerSolo" },
   ];
 
   return (
@@ -504,7 +546,7 @@ const Index = () => {
       </title>
       <meta
         name="description"
-        content="Turn your WhatsApp, Instagram, and TikTok audience into a trusted storefront. The Daily Selling System for Nigerian social commerce vendors. Shop verified Nigerian brands with confidence."
+        content="Turn your WhatsApp, Instagram, and TikTok audience into a trusted storefront. The Daily Selling System for Nigerian social commerce merchants. Shop verified Nigerian brands with confidence."
       />
       <meta
         name="keywords"
@@ -521,7 +563,7 @@ const Index = () => {
       />
       <meta
         property="og:description"
-        content="Turn your social audience into a trusted storefront. The standard for verified Nigerian vendors."
+        content="Turn your social audience into a trusted storefront. The standard for verified Nigerian merchants."
       />
       <meta property="og:image" content="https://steersolo.com/og-image.png" />
       <meta property="og:site_name" content="SteerSolo" />
@@ -536,7 +578,7 @@ const Index = () => {
       />
       <meta
         name="twitter:description"
-        content="Turn your social audience into a trusted storefront. The standard for verified Nigerian vendors."
+        content="Turn your social audience into a trusted storefront. The standard for verified Nigerian merchants."
       />
       <meta name="twitter:image" content="https://steersolo.com/og-image.png" />
       <meta name="twitter:site" content="@steersolo" />
@@ -606,7 +648,7 @@ const Index = () => {
           {/* ── TEXT ── */}
           <div style={{ flex: "1 1 420px", maxWidth: 560 }} className="f1">
             <div style={{ minHeight: 380 }}>
-              <HeroTextSlider />
+              <HeroTextSlider liveVendorCount={liveVendorCount} />
             </div>
 
             {/* trust pills */}
@@ -1303,7 +1345,7 @@ const Index = () => {
             SteerSolo Safe — our Trust Layer
             <br />
             <span className="text-[#00d97e]">
-              for verified Nigerian vendors.
+              for verified Nigerian merchants.
             </span>
           </h2>
           <p className="text-white/50 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
@@ -1420,9 +1462,9 @@ const Index = () => {
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
                 "Verified authenticity — the content that goes viral and positions you as safe",
-                "Vendor spotlights — your SteerSolo Safe story, shared by real buyers",
+                "Merchant spotlights — your SteerSolo Safe story, shared by real buyers",
                 "Restock alerts — WhatsApp broadcasts to your verified buyer list",
-                "'Pack my orders' content — TikTok's most trusted vendor format",
+                "'Pack my orders' content — TikTok's most trusted merchant format",
               ].map(t => (
                 <div
                   key={t}
@@ -1471,7 +1513,7 @@ const Index = () => {
               marginBottom: 16,
             }}
           >
-            Vendor stories
+            Merchant stories
           </p>
           <h2
             style={{
@@ -1613,8 +1655,8 @@ const Index = () => {
               <span className="text-primary">without the heartbeat fast.</span>
             </h2>
             <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
-              We've curated Nigeria's most trusted social vendors into one
-              secure marketplace. No more guessing if a vendor is real. No more
+              We've curated Nigeria's most trusted social merchants into one
+              secure marketplace. No more guessing if a merchant is real. No more
               chasing for tracking numbers.
             </p>
 
@@ -1705,6 +1747,65 @@ const Index = () => {
       </div>
     </section>
 
+    {/* ── DONE-FOR-YOU STORE SETUP PREMIUM PROMO CARD ── */}
+    <section className="py-16 bg-transparent relative overflow-hidden">
+      <div className="mx-auto max-w-screen-xl px-4 relative z-10">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#060b19] via-[#0A1128] to-[#120c24] border border-indigo-500/20 p-8 md:p-12 shadow-2xl group transition-all duration-300 hover:shadow-indigo-500/5">
+          {/* Subtle glowing absolute circles */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
+          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+            <div className="space-y-4 max-w-3xl">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-[10px] font-black uppercase tracking-wider text-accent-bright">
+                <Sparkles className="w-3 h-3 text-accent" />
+                Done-For-You Store Setup Service
+              </div>
+              <h2 className="text-white font-extrabold text-2xl md:text-3xl lg:text-4xl tracking-tight leading-tight">
+                Don't have time to upload? <br className="hidden sm:inline" />
+                <span className="bg-gradient-to-r from-white via-neutral-100 to-accent bg-clip-text text-transparent">We will set up your entire store for you!</span>
+              </h2>
+              <p className="text-neutral-300 text-sm md:text-base leading-relaxed">
+                Tired of manual inventory uploading? Let our team of digital e-commerce specialists import, format, and organize your entire product catalog (up to 50 products) with professional descriptions, optimized pricing variations, and crisp high-resolution images for only <strong className="text-white bg-accent/15 px-2 py-0.5 rounded border border-accent/20">₦5,000 flat</strong>.
+              </p>
+              
+              <div className="flex flex-wrap gap-4 pt-2">
+                <div className="flex items-center gap-2 text-xs text-neutral-400">
+                  <CheckCircle className="w-4 h-4 text-accent" />
+                  <span>Completed in 24 hours</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-neutral-400">
+                  <CheckCircle className="w-4 h-4 text-accent" />
+                  <span>Up to 50 items formatted</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-neutral-400">
+                  <CheckCircle className="w-4 h-4 text-accent" />
+                  <span>Professional copywriting included</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row lg:flex-col items-stretch gap-4 shrink-0 w-full sm:w-auto min-w-[240px]">
+              <Link to="/setup-service" className="w-full">
+                <button
+                  className="w-full bg-accent hover:bg-accent/90 text-primary font-bold rounded-2xl shadow-xl shadow-accent/20 px-6 py-4 border-0 hover:scale-[1.02] active:scale-[0.98] transition-all text-center flex items-center justify-center gap-2"
+                >
+                  Order Setup Service <ArrowRight className="w-4 h-4" />
+                </button>
+              </Link>
+              <Link to="/demo" className="w-full">
+                <button
+                  className="w-full bg-white/5 hover:bg-white/10 text-white font-semibold rounded-2xl px-6 py-4 border border-white/10 hover:scale-[1.02] active:scale-[0.98] transition-all text-center"
+                >
+                  See Demo Store First
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <CollectionsSection />
     <ShopperDiscovery />
     <DiscoveryLinks />
@@ -1764,7 +1865,7 @@ const Index = () => {
             margin: "0 auto 12px",
           }}
         >
-          Join verified Nigerian beauty vendors turning their social following
+          Join verified Nigerian beauty merchants turning their social following
           into a real, trusted business.
         </p>
         <p

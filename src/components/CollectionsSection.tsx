@@ -18,7 +18,7 @@ const collections = [
     id: "tech-gadgets",
     title: "Verified Tech Shops",
     location: "Online",
-    description: "Quality smartphones, laptops, and accessories from trusted vendors.",
+    description: "Quality smartphones, laptops, and accessories from trusted merchants.",
     image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=800",
     count: 18,
     color: "bg-emerald-500",

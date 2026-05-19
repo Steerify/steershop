@@ -160,6 +160,39 @@ const CustomerOrders = () => {
                       <CardContent className="pt-4 space-y-4">
                         {/* Order Timeline */}
                         <OrderTimeline order={order} />
+
+                        {order.order_items?.some((item: any) => item.products?.is_digital) && (order.paid_at || ["confirmed", "processing", "delivered", "completed"].includes(order.status)) && (
+                          <div className="p-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-xl space-y-3">
+                            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-heading font-semibold text-sm">
+                              <span className="p-1.5 rounded-lg bg-emerald-500/20">📥</span>
+                              Instant Digital Delivery
+                            </div>
+                            <div className="space-y-2">
+                              {order.order_items.filter((item: any) => item.products?.is_digital).map((item: any) => (
+                                <div key={item.id} className="text-xs p-3 bg-card border border-border/60 rounded-lg flex flex-col gap-2 shadow-sm">
+                                  <div className="flex items-center justify-between font-bold text-foreground">
+                                    <span>{item.products?.name}</span>
+                                    {item.products?.digital_file_url && (
+                                      <a
+                                        href={item.products.digital_file_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-md hover:shadow-md transition-all flex items-center gap-1.5 text-[11px]"
+                                      >
+                                        Download File 📥
+                                      </a>
+                                    )}
+                                  </div>
+                                  {item.products?.digital_delivery_text && (
+                                    <div className="p-2.5 bg-muted rounded-md text-muted-foreground whitespace-pre-wrap font-mono text-[11px] leading-relaxed border border-border/40">
+                                      {item.products.digital_delivery_text}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         
                         <div className="border border-border/50 rounded-lg divide-y divide-border/50">
                           {order.order_items?.map((item: any) => (

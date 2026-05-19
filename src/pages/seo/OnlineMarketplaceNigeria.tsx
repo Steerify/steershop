@@ -2,8 +2,8 @@ import SEOPageTemplate from "./SEOPageTemplate";
 
 const OnlineMarketplaceNigeria = () => (
   <SEOPageTemplate
-    metaTitle="Online Marketplace Nigeria for Trusted Vendors | SteerSolo Marketplace"
-    metaDescription="Discover trusted Nigerian vendors across beauty, fashion, food, gadgets, and services on SteerSolo Marketplace. Browse stores and shop with confidence."
+    metaTitle="Online Marketplace Nigeria for Trusted Merchants | SteerSolo Marketplace"
+    metaDescription="Discover trusted Nigerian merchants across beauty, fashion, food, gadgets, and services on SteerSolo Marketplace. Browse stores and shop with confidence."
     heroTitle="The SteerSolo Marketplace in Nigeria"
     heroSubtitle="Find verified and growing Nigerian sellers in one marketplace. Compare stores, discover products, and shop from trusted storefronts."
     heroCTA="Start Selling on Marketplace"
@@ -38,7 +38,7 @@ const OnlineMarketplaceNigeria = () => (
         points: [
           "Beauty and personal care",
           "Fashion and accessories",
-          "Food vendors and kitchen brands",
+          "Food merchants and kitchen brands",
           "Gadgets and phone accessories",
           "Home and lifestyle products",
           "Professional and creative services"

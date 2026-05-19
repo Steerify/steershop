@@ -93,7 +93,7 @@ const DiscoveryHub = () => {
   }, [categorySlug, city]);
 
   const title = `Top ${categoryLabel} Shops in ${city} | SteerSolo Discover`;
-  const description = `Discover and shop from the best ${categoryLabel} businesses in ${city}. Verified local vendors with fast delivery.`;
+  const description = `Discover and shop from the best ${categoryLabel} businesses in ${city}. Verified local merchants with fast delivery.`;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -134,7 +134,7 @@ const DiscoveryHub = () => {
 
               <div className="flex flex-col items-center gap-3 p-6 bg-background border border-primary/20 rounded-2xl shadow-xl shadow-primary/5">
                 <div className="text-center">
-                  <p className="text-sm font-bold text-foreground">Are you a vendor in {city}?</p>
+                  <p className="text-sm font-bold text-foreground">Are you a merchant in {city}?</p>
                   <p className="text-xs text-muted-foreground mb-3">Join our community and reach more customers.</p>
                 </div>
                 <Link to="/auth/entrepreneur" className="w-full">
@@ -153,7 +153,7 @@ const DiscoveryHub = () => {
               <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Store className="w-4 h-4 text-primary" />
               </div>
-              <h2 className="text-xl font-bold">Recommended Vendors</h2>
+              <h2 className="text-xl font-bold">Recommended Merchants</h2>
             </div>
             
             <div className="hidden sm:flex items-center gap-3">
@@ -205,7 +205,7 @@ const DiscoveryHub = () => {
               </div>
               <h3 className="text-2xl font-bold mb-2">No {categoryLabel} shops yet in {city}</h3>
               <p className="text-muted-foreground max-w-md mx-auto mb-8">
-                We're currently expanding our network in {city}. Be the first {categoryLabel} vendor to join and claim this spot!
+                We're currently expanding our network in {city}. Be the first {categoryLabel} merchant to join and claim this spot!
               </p>
               <Link to="/auth/entrepreneur">
                 <Button size="lg" className="rounded-2xl px-8 bg-primary">

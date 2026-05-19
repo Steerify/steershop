@@ -48,6 +48,9 @@ interface Product {
   name: string;
   price: number;
   stock_quantity: number;
+  is_digital?: boolean;
+  digital_file_url?: string;
+  digital_delivery_text?: string;
 }
 
 interface CartItem {
@@ -109,6 +112,24 @@ const checkoutSchema = z.object({
     .max(500, "Address too long"),
   delivery_city: z.string().trim().min(2, "City is required"),
   delivery_state: z.string().trim().min(2, "State is required"),
+});
+
+const digitalCheckoutSchema = z.object({
+  customer_name: z
+    .string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name too long"),
+  customer_email: z
+    .string()
+    .trim()
+    .email("Invalid email address")
+    .max(255, "Email too long"),
+  customer_phone: z
+    .string()
+    .trim()
+    .min(10, "Phone number must be at least 10 digits")
+    .max(20, "Phone number too long"),
 });
 
 // Paystack fee calculator: 1.5% + NGN 100, capped at NGN 2,000
@@ -219,6 +240,7 @@ const openWhatsAppWithOrderDetails = (
     shopName: string;
     paymentMethod: string;
     requiresProof?: boolean;
+    isDigital?: boolean;
   },
 ) => {
   if (!shopWhatsappNumber) {
@@ -236,13 +258,16 @@ const openWhatsAppWithOrderDetails = (
   }
   const phoneNumber = cleaned;
 
-  // Create detailed order summary
   const orderSummary = orderDetails.cart
     .map(
       item =>
         `• ${item.product.name} x ${item.quantity} - ₦${(item.product.price * item.quantity).toLocaleString()}`,
     )
     .join("%0A");
+
+  const deliveryAddressStr = orderDetails.isDigital
+    ? "Digital Product (Instant Online Access)"
+    : `${orderDetails.deliveryAddress}, ${orderDetails.deliveryCity}, ${orderDetails.deliveryState}`;
 
   let message = "";
 
@@ -261,7 +286,7 @@ const openWhatsAppWithOrderDetails = (
       `Name: ${orderDetails.customerName}%0A` +
       `Phone: ${orderDetails.customerPhone}%0A` +
       `Email: ${orderDetails.customerEmail}%0A` +
-      `Delivery Address: ${orderDetails.deliveryAddress}%0A%0A` +
+      `Delivery Address: ${deliveryAddressStr}%0A%0A` +
       `⚠️ *PLEASE ATTACH YOUR PAYMENT SCREENSHOT TO THIS MESSAGE*`;
   } else if (orderDetails.paymentMethod === "delivery_before") {
     // Pay after service message
@@ -279,7 +304,7 @@ const openWhatsAppWithOrderDetails = (
       `Name: ${orderDetails.customerName}%0A` +
       `Phone: ${orderDetails.customerPhone}%0A` +
       `Email: ${orderDetails.customerEmail}%0A` +
-      `Delivery Address: ${orderDetails.deliveryAddress}%0A%0A` +
+      `Delivery Address: ${deliveryAddressStr}%0A%0A` +
       `Order ID: ${orderDetails.orderId}%0A%0A` +
       `Please confirm availability and delivery timeline.`;
   } else {
@@ -298,7 +323,7 @@ const openWhatsAppWithOrderDetails = (
       `Name: ${orderDetails.customerName}%0A` +
       `Phone: ${orderDetails.customerPhone}%0A` +
       `Email: ${orderDetails.customerEmail}%0A` +
-      `Delivery Address: ${orderDetails.deliveryAddress}, ${orderDetails.deliveryCity}, ${orderDetails.deliveryState}%0A%0A` +
+      `Delivery Address: ${deliveryAddressStr}%0A%0A` +
       `Order ID: ${orderDetails.orderId}%0A%0A` +
       `Please confirm delivery timeline.`;
   }
@@ -353,6 +378,14 @@ const CheckoutDialog = ({
     delivery_city: checkoutDraft?.deliveryCity || "",
     delivery_state: checkoutDraft?.deliveryState || "",
   });
+  
+  const isCartOnlyDigital = cart.length > 0 && cart.every(item => item.product.is_digital);
+
+  useEffect(() => {
+    if (isOpen && isCartOnlyDigital) {
+      setPaymentChoice("pay_before");
+    }
+  }, [isOpen, isCartOnlyDigital]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [orderCreated, setOrderCreated] = useState(false);
@@ -473,6 +506,12 @@ const CheckoutDialog = ({
   // Fetch shipping rates when address is reasonably complete
   useEffect(() => {
     const fetchRates = async () => {
+      if (isCartOnlyDigital) {
+        setShippingRates([]);
+        setSelectedRate(null);
+        return;
+      }
+
       if (
         formData.customer_name &&
         formData.customer_phone &&
@@ -748,6 +787,7 @@ const CheckoutDialog = ({
           shippingFee: selectedRate?.price,
           shopName: shop.shop_name,
           paymentMethod: "delivery_before",
+          isDigital: isCartOnlyDigital,
         },
       );
 
@@ -790,7 +830,9 @@ const CheckoutDialog = ({
     e.preventDefault();
     setErrors({});
 
-    const validation = checkoutSchema.safeParse(formData);
+    const validation = isCartOnlyDigital
+      ? digitalCheckoutSchema.safeParse(formData)
+      : checkoutSchema.safeParse(formData);
 
     if (!validation.success) {
       const newErrors: Record<string, string> = {};
@@ -832,9 +874,9 @@ const CheckoutDialog = ({
         customer_name: formData.customer_name,
         customer_email: formData.customer_email,
         customer_phone: formData.customer_phone,
-        delivery_address: formData.delivery_address,
-        delivery_city: formData.delivery_city,
-        delivery_state: formData.delivery_state,
+        delivery_address: isCartOnlyDigital ? "Digital Delivery" : formData.delivery_address,
+        delivery_city: isCartOnlyDigital ? "Digital" : formData.delivery_city,
+        delivery_state: isCartOnlyDigital ? "Digital" : formData.delivery_state,
         total_amount: effectiveTotal,
         status:
           paymentChoice === "delivery_before" ? "awaiting_approval" : "pending",
@@ -970,6 +1012,7 @@ const CheckoutDialog = ({
       shopName: shop.shop_name,
       paymentMethod: "pay_before",
       requiresProof: true,
+      isDigital: isCartOnlyDigital,
     });
 
     setProofSent(true);

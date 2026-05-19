@@ -65,10 +65,18 @@ const CustomerDashboard = () => {
       }
     });
 
+    // Capture user's marketplace search query for recommendation tailoring
+    const storedSearch = localStorage.getItem("steersolo_customer_search");
+    if (storedSearch) {
+      productNames.push(storedSearch.toLowerCase());
+    }
+
     let matchedCategory = {
       name: "Featured Collections",
       slug: "featured",
-      reason: "your interests in high-quality local products",
+      reason: storedSearch 
+        ? `your search for "${storedSearch}"`
+        : "your interests in high-quality local products",
       gradient: "from-primary/10 via-accent/5 to-primary/5",
       border: "border-primary/20 animate-pulse",
       emoji: "🌟",
@@ -81,7 +89,9 @@ const CustomerDashboard = () => {
       matchedCategory = {
         name: "Premium Skincare & Beauty Hub",
         slug: "skincare",
-        reason: "your recent purchase of skincare/beauty products",
+        reason: storedSearch && /soap|oil|skin|cream|glow|cosmetics|serum|makeup|lotion|beauty/i.test(storedSearch)
+          ? `your search for "${storedSearch}"`
+          : "your recent purchase of skincare/beauty products",
         gradient: "from-pink-500/10 via-purple-500/5 to-pink-500/5",
         border: "border-pink-500/30",
         emoji: "✨",
@@ -91,7 +101,9 @@ const CustomerDashboard = () => {
       matchedCategory = {
         name: "Bespoke Fashion & Accessories Hub",
         slug: "fashion",
-        reason: "your active interest in stylish fashion and wears",
+        reason: storedSearch && /dress|shoe|shirt|bag|clothes|wear|fashion|boutique|cloth|ring|jewelry/i.test(storedSearch)
+          ? `your search for "${storedSearch}"`
+          : "your active interest in stylish fashion and wears",
         gradient: "from-indigo-500/10 via-blue-500/5 to-indigo-500/5",
         border: "border-indigo-500/30",
         emoji: "👗",
@@ -101,7 +113,9 @@ const CustomerDashboard = () => {
       matchedCategory = {
         name: "Gourmet Food & Beverages Hub",
         slug: "food",
-        reason: "your recent orders for delicious food or drinks",
+        reason: storedSearch && /cake|drink|food|spice|snack|meat|chops|bake|cookie|juice/i.test(storedSearch)
+          ? `your search for "${storedSearch}"`
+          : "your recent orders for delicious food or drinks",
         gradient: "from-emerald-500/10 via-teal-500/5 to-emerald-500/5",
         border: "border-emerald-500/30",
         emoji: "🍲",
@@ -123,7 +137,7 @@ const CustomerDashboard = () => {
                 Explore the {matchedCategory.name}
               </h3>
               <p className="text-xs text-muted-foreground">
-                Based on <span className="font-bold text-primary">{matchedCategory.reason}</span>, we recommend these trusted, premium vendors:
+                Based on <span className="font-bold text-primary">{matchedCategory.reason}</span>, we recommend these trusted, premium merchants:
               </p>
               <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed max-w-2xl pt-1">
                 {matchedCategory.desc}

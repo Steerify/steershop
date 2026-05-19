@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
 import { uploadService } from "@/services/upload.service";
+import { DigitalFileUpload } from "@/components/DigitalFileUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { useAuth } from "@/context/AuthContext";
@@ -84,6 +85,10 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   const [scheduleDeletion, setScheduleDeletion] = useState(false);
   const [deleteAt, setDeleteAt] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
+  
+  const [isDigital, setIsDigital] = useState(false);
+  const [digitalFileUrl, setDigitalFileUrl] = useState("");
+  const [digitalDeliveryText, setDigitalDeliveryText] = useState("");
 
   const [createdShopId, setCreatedShopId] = useState<string | null>(null);
   const { user } = useAuth();
@@ -107,7 +112,10 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
     scheduleDeletion,
     deleteAt,
     whatsappNumber,
-    createdShopId
+    createdShopId,
+    isDigital,
+    digitalFileUrl,
+    digitalDeliveryText
   };
 
   const draftKey = user?.id ? `vendor_wizard_draft_${user.id}` : "";
@@ -136,16 +144,19 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       if (draft.deleteAt) setDeleteAt(draft.deleteAt);
       if (draft.whatsappNumber) setWhatsappNumber(draft.whatsappNumber);
       if (draft.createdShopId) setCreatedShopId(draft.createdShopId);
+      if (draft.isDigital !== undefined) setIsDigital(draft.isDigital);
+      if (draft.digitalFileUrl) setDigitalFileUrl(draft.digitalFileUrl);
+      if (draft.digitalDeliveryText) setDigitalDeliveryText(draft.digitalDeliveryText);
     }
   }, [user?.id]);
 
   // Lock body scroll and scroll wizard to top when it opens
   useEffect(() => {
     if (!open) return;
-    document.body.classList.add("vendor-wizard-open");
+    document.body.classList.add("merchant-wizard-open");
     wizardRef.current?.scrollTo({ top: 0, behavior: "instant" });
     return () => {
-      document.body.classList.remove("vendor-wizard-open");
+      document.body.classList.remove("merchant-wizard-open");
     };
   }, [open]);
 
@@ -250,6 +261,15 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
       return;
     }
 
+    if (productType === "product" && isDigital && !digitalFileUrl.trim() && !digitalDeliveryText.trim()) {
+      toast({ 
+        title: "Digital deliverable required", 
+        description: "Please upload a deliverable file or write access instructions.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     if (!createdShopId) {
       toast({ title: "Store not ready", description: "Please create your store before adding an item.", variant: "destructive" });
       return;
@@ -270,7 +290,7 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         slug: productName.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
         description: productDescription.trim() || productName.trim(),
         price: priceNum,
-        inventory: stockNum,
+        inventory: isDigital ? 9999 : stockNum,
         images: imageUrl ? [{ url: imageUrl, alt: productName.trim(), position: 1 }] : [],
         type: productType,
         is_available: true,
@@ -279,6 +299,9 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
         stockUnit: productType === "service" ? "slots" : "units",
         category: shopCategory || "general",
         deleteAt: scheduleDeletion && deleteAt ? new Date(deleteAt).toISOString() : undefined,
+        is_digital: productType === "product" ? isDigital : undefined,
+        digital_file_url: productType === "product" && isDigital ? digitalFileUrl : undefined,
+        digital_delivery_text: productType === "product" && isDigital ? digitalDeliveryText : undefined,
       });
 
       if (!productRes.success) throw new Error("Failed to create item");
@@ -361,10 +384,10 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
   return (
     <div
       ref={wizardRef}
-      className="vendor-wizard-page bg-gradient-to-br from-background via-background to-primary/5"
+      className="merchant-wizard-page bg-gradient-to-br from-background via-background to-primary/5"
       role="dialog"
       aria-modal="true"
-      aria-label="Vendor setup wizard"
+      aria-label="Merchant setup wizard"
     >
       <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
 
@@ -669,6 +692,50 @@ export const VendorSetupWizard = ({ open, onComplete }: VendorSetupWizardProps) 
                       </div>
                     )}
                   </div>
+
+                  {/* Digital Product Settings */}
+                  {productType === "product" && (
+                    <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-4 transition-all duration-300">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label className="text-xs font-bold text-foreground">Digital Deliverable</Label>
+                          <p className="text-[11px] text-muted-foreground leading-tight font-normal">eBook, PDF guide, software file, or template</p>
+                        </div>
+                        <Switch
+                          checked={isDigital}
+                          onCheckedChange={(checked) => {
+                            setIsDigital(checked);
+                            if (checked) {
+                              setProductStock("9999");
+                            }
+                          }}
+                        />
+                      </div>
+
+                      {isDigital && (
+                        <div className="space-y-4 pt-3 border-t border-primary/10 animate-fade-in">
+                          <div className="space-y-1.5">
+                            <Label className="text-xs font-bold text-muted-foreground">Deliverable File (PDF, ZIP, DOC, EPUB)</Label>
+                            <DigitalFileUpload
+                              value={digitalFileUrl}
+                              onChange={setDigitalFileUrl}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-xs font-bold text-muted-foreground">Access Instructions / Custom Text *</Label>
+                            <Textarea
+                              placeholder="e.g. Thank you for your purchase! Access your eBook here: ..."
+                              value={digitalDeliveryText}
+                              onChange={(e) => setDigitalDeliveryText(e.target.value)}
+                              className="min-h-[60px] bg-background/50 border-primary/20 text-foreground transition-all duration-200"
+                              rows={2}
+                            />
+                            <p className="text-[10px] text-muted-foreground leading-tight">This message is instantly displayed and delivered to paid customers.</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Service Specific: Booking Toggle */}
                   {productType === "service" && (

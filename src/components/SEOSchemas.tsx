@@ -34,7 +34,7 @@ export const SEOSchemas = () => {
         "business growth", "digital storefront", "social media selling", "online marketplace",
         "Nigerian entrepreneurs", "solo entrepreneur tools", "business automation", "delivery logistics",
         "revenue tracking", "subscription commerce", "booking system", "service marketplace",
-        "online marketplace Nigeria", "digital marketplace for vendors", "social selling tools Nigeria",
+        "online marketplace Nigeria", "digital marketplace for merchants", "social selling tools Nigeria",
         "small business marketplace", "online storefront Nigeria", "SteerSolo marketplace"
       ],
       "address": {
@@ -203,7 +203,7 @@ export const SEOSchemas = () => {
           "name": "How do I sell food online in Nigeria?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Create a SteerSolo store, add your food items with photos and prices, and share your link on WhatsApp and Instagram. Customers can order and pay online. Perfect for cake businesses, small chops vendors, meal prep services, and restaurant owners in Lagos, Abuja, and across Nigeria."
+            "text": "Create a SteerSolo store, add your food items with photos and prices, and share your link on WhatsApp and Instagram. Customers can order and pay online. Perfect for cake businesses, small chops merchants, meal prep services, and restaurant owners in Lagos, Abuja, and across Nigeria."
           }
         },
         {

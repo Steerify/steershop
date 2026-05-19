@@ -14,6 +14,7 @@ import {
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PageWrapper } from "@/components/PageWrapper";
+import NoticeBadge from "@/components/NoticeBadge";
 
 const SecurityPage = () => {
   const securityFeatures = [

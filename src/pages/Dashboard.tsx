@@ -599,9 +599,13 @@ const Dashboard = () => {
     }
 
     const daysActive = shopFullData?.created_at ? differenceInDays(new Date(), new Date(shopFullData.created_at)) : 0;
+    const hasLowTraffic = shopFullData?.total_views !== null && 
+                          shopFullData?.total_views !== undefined && 
+                          shopFullData.total_views < 50 && 
+                          productsCount >= 1;
 
     // Active & selling & eligible for Ads - show premium Steerify Ads banner
-    if (shopData && productsCount >= 5 && daysActive >= 14) {
+    if (shopData && (productsCount >= 5 || hasLowTraffic)) {
       return (
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-purple-900 to-indigo-900 border border-indigo-500/30 p-6 shadow-xl min-h-[120px] flex items-center group transition-all duration-300 hover:shadow-indigo-500/10">
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
@@ -614,10 +618,16 @@ const Dashboard = () => {
                 Steerify Ads Recommendation
               </div>
               <h3 className="text-white font-extrabold text-lg sm:text-xl tracking-tight leading-tight">
-                Launch your first conversion campaign in 60s 🚀
+                {hasLowTraffic && productsCount < 5 
+                  ? "Get more customers and drive traffic to your store! 📈"
+                  : "Launch your first conversion campaign in 60s 🚀"
+                }
               </h3>
               <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed">
-                You listed <strong className="text-white">{productsCount} products</strong>. Expand your reach and get local buyers checking out directly on WhatsApp starting at just <strong className="text-white">₦12,000/month</strong>.
+                {hasLowTraffic && productsCount < 5
+                  ? `Your store currently has ${shopFullData?.total_views || 0} views. Turn searchers into active buyers checking out directly on WhatsApp starting at just ₦12,000/month.`
+                  : `You listed ${productsCount} products. Expand your reach and get local buyers checking out directly on WhatsApp starting at just ₦12,000/month.`
+                }
               </p>
             </div>
             
@@ -644,7 +654,7 @@ const Dashboard = () => {
               <MessageCircle className="w-4 h-4 text-white" />
               <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Community</span>
             </div>
-            <h3 className="text-white font-extrabold text-base leading-tight">Join 5,000+ vendors on WhatsApp</h3>
+            <h3 className="text-white font-extrabold text-base leading-tight">Join 5,000+ merchants on WhatsApp</h3>
             <p className="text-white/90 text-xs mt-0.5">Tips, support, buyer traffic & giveaways — free!</p>
           </div>
           <Button
@@ -681,7 +691,7 @@ const Dashboard = () => {
     { icon: BookOpen, label: "Tutorials", description: "Learn & earn points", path: "/courses", color: "from-accent/15 to-accent/8", textColor: "text-accent" },
     { icon: Users, label: "Customers", description: "Customer records", path: "/customers", color: "from-primary/15 to-primary/8", textColor: "text-primary" },
     { icon: Crown, label: "Ambassador", description: "Refer & earn", path: "/ambassador", color: "from-[hsl(42,90%,55%)]/20 to-[hsl(42,90%,55%)]/10", textColor: "text-[hsl(42,80%,35%)]" },
-    { icon: Share2, label: "Invite Vendors", description: "Grow community", path: "/vendor-invite", color: "from-primary/20 to-primary/10", textColor: "text-primary" },
+    { icon: Share2, label: "Invite Merchants", description: "Grow community", path: "/merchant-invite", color: "from-primary/20 to-primary/10", textColor: "text-primary" },
   ];
 
   if (isLoading) {
@@ -837,7 +847,7 @@ const Dashboard = () => {
       {/* ─── Main Content ─────────────────────────────────── */}
       <div className="container mx-auto px-4 py-3 pb-24 md:pb-8 max-w-7xl space-y-4">
         
-        {/* Vendor Command Center for Entrepreneurs */}
+        {/* Merchant Command Center for Entrepreneurs */}
         {rbac.isEntrepreneur(user) && <VendorCommandCenter />}
 
         {/* Contextual Banner */}

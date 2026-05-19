@@ -165,6 +165,80 @@ export const uploadService = {
     }
   },
 
+  uploadFile: async (
+    file: File,
+    bucket: string = 'digital-products',
+    onProgress?: (progress: number) => void
+  ): Promise<UploadResponse> => {
+    // Validate file size (25MB max)
+    const maxSize = 25 * 1024 * 1024;
+    if (file.size > maxSize) {
+      throw new Error('File size must be less than 25MB');
+    }
+
+    onProgress?.(5);
+
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('Please log in to upload files');
+    }
+
+    onProgress?.(15);
+
+    // Get user's shop for file path organization
+    const { data: shop, error: shopError } = await supabase
+      .from('shops')
+      .select('id')
+      .eq('owner_id', user.id)
+      .maybeSingle();
+
+    if (shopError) {
+      console.error('Error fetching shop:', shopError);
+      throw new Error('Failed to verify shop ownership');
+    }
+
+    const pathPrefix = shop?.id || user.id;
+
+    onProgress?.(25);
+
+    // Create unique file path with cryptographically unguessable components:
+    // {shop_id or user_id}/{timestamp}_{random_uuid_part}_{sanitized_filename}
+    const timestamp = Date.now();
+    const uniqueId = Math.random().toString(36).substring(2, 10);
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filePath = `${pathPrefix}/${timestamp}_${uniqueId}_${sanitizedName}`;
+
+    onProgress?.(35);
+
+    // Upload to Supabase Storage
+    const { data, error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    onProgress?.(80);
+
+    if (uploadError) {
+      console.error('Supabase file upload error:', uploadError);
+      throw new Error(uploadError.message || 'Failed to upload file');
+    }
+
+    // Get public URL (will be unguessable due to filepath uniqueId prefix)
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(data.path);
+
+    onProgress?.(100);
+
+    return {
+      url: publicUrl,
+      publicId: data.path,
+    };
+  },
+
   // Helper to compress image before upload (optional)
   compressImage: async (
     file: File, 

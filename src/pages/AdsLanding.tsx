@@ -68,6 +68,20 @@ const TRAFFIC_PACKAGES: AdPackage[] = [
       "Direct Priority Support line",
     ],
   },
+  {
+    id: "dominate",
+    name: "Dominate Plan",
+    price: "₦95,000",
+    desc: "Ultimate market takeover with comprehensive Omnichannel ads.",
+    features: [
+      "Full Omni-channel coverage (Meta, TikTok, Google, YouTube)",
+      "Continuous optimization & custom creatives",
+      "Managed budget above ₦400K/mo",
+      "Advanced custom database matching & custom audiences",
+      "Dedicated senior growth partner",
+      "Daily real-time performance dashboard",
+    ],
+  },
 ];
 
 const FOLLOW_PACKAGES: AdPackage[] = [
@@ -84,16 +98,42 @@ const FOLLOW_PACKAGES: AdPackage[] = [
     ],
   },
   {
-    id: "viral",
-    name: "Viral Growth",
+    id: "active",
+    name: "Active Growth",
     price: "₦35,000",
-    desc: "Accelerate social proof and establish market leadership.",
+    desc: "Accelerate social proof and establish market authority.",
     features: [
       "Grow 1,500 - 3,500+ targeted local followers",
       "Real, active Nigerian profiles",
       "Split-tested Meta & TikTok profile campaigns",
       "Competitor audience target hijacking",
       "Social profile content audit & advice",
+    ],
+  },
+  {
+    id: "viral",
+    name: "Viral Push",
+    price: "₦65,000",
+    desc: "Rapidly expand your brand presence across multiple platforms.",
+    features: [
+      "Grow 4,000 - 8,000+ targeted local followers",
+      "Premium Meta, Instagram & TikTok placement",
+      "Aggressive video engagement boosting",
+      "Influencer format mimic testing",
+      "Content strategy & caption writing",
+    ],
+  },
+  {
+    id: "domination",
+    name: "Full Domination",
+    price: "₦120,000",
+    desc: "Dominate your niche and gain massive celebrity-tier social presence.",
+    features: [
+      "Grow 10,000+ local targeted followers monthly",
+      "Full omnipresent brand takeover",
+      "Viral reel/video distribution push",
+      "Dedicated content advisor",
+      "Guaranteed profile authority upgrade",
     ],
   },
 ];
@@ -186,11 +226,12 @@ export default function AdsLanding() {
 
     setIsLoading(true);
     try {
+      let serviceId = "";
       // Save consultation entry into marketing_services table in Supabase
       if (user && myShop) {
         const notes = `Package: ${selectedPackage.name} (${selectedPackage.price}/mo). Target Audience: ${formData.targetAudience || "Not specified"}. Estimated Monthly Budget: ${formData.estimatedBudget}. Store: ${formData.storeUrl || "None"}.`;
         
-        await supabase
+        const { data, error } = await supabase
           .from("marketing_services")
           .insert({
             shop_id: myShop.id,
@@ -198,36 +239,83 @@ export default function AdsLanding() {
             consultation_notes: notes,
             status: "pending",
             payment_status: "pending",
-          });
+          })
+          .select("id")
+          .single();
+          
+        if (error) throw error;
+        if (data) serviceId = data.id;
       }
 
-      // Format elegant, conversion-focused WhatsApp message
-      const whatsappMsg = 
-        `🚀 *NEW STEERIFY ADS CONSULT REQUEST* 🚀%0A%0A` +
-        `• *Business Name:* ${formData.businessName}%0A` +
-        `• *WhatsApp Number:* ${formData.whatsappNumber}%0A` +
-        `• *Store URL:* ${formData.storeUrl || "Not yet created"}%0A` +
-        `• *Selected Package:* ${selectedPackage.name} (${selectedPackage.price}/mo)%0A` +
-        `• *Target Audience:* ${formData.targetAudience || "General social buyers"}%0A` +
-        `• *Est. Monthly Spend:* ${formData.estimatedBudget}%0A%0A` +
-        `👋 Hello SteerSolo Team! I just submitted my Steerify Ads setup request. I am ready to get more customers and scale my store sales!`;
-
-      // Open team contact (using SteerSolo default support number or default admin number)
-      openWhatsAppContact("08012345678", "SteerSolo Ads Specialist", whatsappMsg);
+      // Format price for Paystack (remove ₦ and commas, multiply by 100 for kobo)
+      const numericPrice = parseInt(selectedPackage.price.replace(/[^0-9]/g, ''), 10);
+      const amountInKobo = numericPrice * 100;
       
-      setIsSuccess(true);
-      toast({
-        title: "Request Submitted! 🎉",
-        description: "Redirecting you to our ads specialist on WhatsApp for final launch setup.",
+      // Initialize Paystack Checkout
+      import('@paystack/inline-js').then((module) => {
+        const PaystackPop = module.default;
+        const paystack = new PaystackPop();
+        
+        paystack.newTransaction({
+          key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder", // Replace with your actual Paystack public key
+          email: user?.email || "customer@steersolo.com",
+          amount: amountInKobo,
+          currency: "NGN",
+          metadata: {
+            custom_fields: [
+              {
+                display_name: "Service ID",
+                variable_name: "service_id",
+                value: serviceId
+              },
+              {
+                display_name: "Package",
+                variable_name: "package_name",
+                value: selectedPackage.name
+              }
+            ]
+          },
+          onSuccess: async (transaction: any) => {
+            if (serviceId) {
+              await supabase
+                .from("marketing_services")
+                .update({ payment_status: "paid" })
+                .eq("id", serviceId);
+            }
+            
+            setIsSuccess(true);
+            toast({
+              title: "Payment Successful! 🎉",
+              description: "Your Steerify Ads package is now active. Let's start the onboarding.",
+            });
+            setIsLoading(false);
+          },
+          onCancel: () => {
+            toast({
+              title: "Payment Cancelled",
+              description: "You cancelled the payment. Please try again when you are ready.",
+              variant: "destructive",
+            });
+            setIsLoading(false);
+          }
+        });
+      }).catch(err => {
+        console.error("Failed to load Paystack:", err);
+        setIsLoading(false);
+        toast({
+          title: "Payment Gateway Error",
+          description: "Could not load the payment gateway. Please check your internet connection.",
+          variant: "destructive",
+        });
       });
+
     } catch (err: any) {
       console.error("Error submitting ads form:", err);
       toast({
         title: "Submission Error",
-        description: err.message || "Something went wrong. Redirecting you directly to WhatsApp...",
+        description: err.message || "Something went wrong saving your request.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };

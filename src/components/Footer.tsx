@@ -116,10 +116,18 @@ export const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/vendor"
+                  to="/merchant"
                   className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm"
                 >
                   Start Selling
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/ads"
+                  className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm"
+                >
+                  Steerify Ads
                 </Link>
               </li>
               <li>

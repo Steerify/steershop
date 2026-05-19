@@ -33,8 +33,8 @@ const MARKET_SNAPSHOT = [
 const TRUST_STACK = [
   {
     icon: Shield,
-    title: "Vendor Verification",
-    desc: "Vendors provide business identity and accountable profiles before public listing.",
+    title: "Merchant Verification",
+    desc: "Merchants provide business identity and accountable profiles before public listing.",
   },
   {
     icon: Globe,
@@ -49,7 +49,7 @@ const TRUST_STACK = [
   {
     icon: Users,
     title: "Buyer Social Proof",
-    desc: "Ratings and reviews are visible publicly to separate reliable vendors from risky ones.",
+    desc: "Ratings and reviews are visible publicly to separate reliable merchants from risky ones.",
   },
   {
     icon: Target,
@@ -203,7 +203,7 @@ const About = () => {
             <div className="space-y-4 sm:space-y-6 text-base sm:text-lg text-muted-foreground leading-relaxed">
               <p>
                 SteerSolo was born from a simple observation: Africa's solo entrepreneurs are exhausted.
-                The tailor running her business on WhatsApp, the shoe vendor posting daily on Instagram, 
+                The tailor running her business on WhatsApp, the shoe merchant posting daily on Instagram, 
                 the skincare seller who DMs every customer manually. They are always "on," yet growth is slow.
               </p>
               <p>

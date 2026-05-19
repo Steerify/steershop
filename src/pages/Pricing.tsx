@@ -11,7 +11,7 @@ import logo from "@/assets/steersolo-logo.jpg";
 import { PageThemeShell } from "@/components/PageThemeShell";
 
 const planProfiles: Record<string, { bestFor: string; outcome: string; timeSaved: string }> = {
-  free: {
+  starter: {
     bestFor: "Testing the Daily Selling System",
     outcome: "Launch your first store in 10 minutes",
     timeSaved: "Start building your One Link habit today",

@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  Link,
   useNavigate,
   useSearchParams,
   useLocation,
@@ -58,13 +59,14 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import NoticeBadge from "@/components/NoticeBadge";
 import { UserRole } from "@/types/api";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { clearSessionExpired, setReturnUrl } from "@/store/slices/uiSlice";
 import { resetSession, setRememberMe } from "@/store/slices/activitySlice";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
-type AuthPersona = "default" | "vendor" | "shopper";
+type AuthPersona = "default" | "merchant" | "shopper";
 
 // Password input component with eye toggle
 const PasswordInput = ({
@@ -187,10 +189,10 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const { type } = useParams();
-  const isVendorSignupPath = location.pathname === "/vendor-signup";
+  const isVendorSignupPath = location.pathname === "/merchant-signup";
   const isShopperSignupPath = location.pathname === "/shopper-signup";
-  const persona: AuthPersona = location.pathname.startsWith("/vendor")
-    ? "vendor"
+  const persona: AuthPersona = location.pathname.startsWith("/merchant")
+    ? "merchant"
     : location.pathname.startsWith("/shopper")
       ? "shopper"
       : "default";
@@ -238,7 +240,7 @@ const Auth = () => {
   });
 
   useEffect(() => {
-    if (persona === "vendor") {
+    if (persona === "merchant") {
       signupForm.setValue("role", "ENTREPRENEUR");
     } else if (persona === "shopper") {
       signupForm.setValue("role", "CUSTOMER");
@@ -246,18 +248,18 @@ const Auth = () => {
   }, [persona, signupForm]);
 
   const personaContent =
-    persona === "vendor"
+    persona === "merchant"
       ? {
           title: "Launch and grow your store.",
           subtitle:
-            "Built for vendors: structured storefront, orders, payments, and marketing.",
+            "Built for merchants: structured storefront, orders, payments, and marketing.",
           chips: [
             { emoji: "🏪", text: "Create your storefront fast" },
             { emoji: "📦", text: "Upload products and services" },
             { emoji: "💳", text: "Set up payment collection" },
             { emoji: "📈", text: "Track growth and performance" },
           ],
-          ctaLabel: "Vendor Portal",
+          ctaLabel: "Merchant Portal",
         }
       : persona === "shopper"
         ? {
@@ -605,7 +607,7 @@ const Auth = () => {
             </div>
             <div>
               <p className="text-white font-bold text-sm">
-                Join growing vendors
+                Join growing merchants
               </p>
               <p className="text-white/60 text-xs">{personaContent.ctaLabel}</p>
             </div>
@@ -1011,7 +1013,7 @@ const Auth = () => {
                         {isLoading ? (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : null}
-                        {persona === "vendor"
+                        {persona === "merchant"
                           ? "Start Selling for Free"
                           : "Create Account"}
                       </Button>
@@ -1031,7 +1033,7 @@ const Auth = () => {
                           </Link>
                           .
                         </NoticeBadge>
-                        {persona === "vendor" && (
+                        {persona === "merchant" && (
                           <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full">
                             No credit card required
                           </p>

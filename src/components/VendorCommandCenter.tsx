@@ -180,7 +180,7 @@ export const VendorCommandCenter = () => {
                   <div className="relative flex justify-between">
                     {[
                       { step: 1, label: "Funded", active: true, icon: Lock, desc: "Escrow Locked" },
-                      { step: 2, label: "In Progress", active: true, icon: Activity, desc: "Vendor Crafting" },
+                      { step: 2, label: "In Progress", active: true, icon: Activity, desc: "Merchant Crafting" },
                       { step: 3, label: "Delivered", active: true, icon: CheckCircle2, desc: "Pending Review" },
                       { step: 4, label: "Paid", active: false, icon: Unlock, desc: "Wallet Payout" },
                     ].map((item, i) => (
@@ -320,7 +320,7 @@ export const VendorCommandCenter = () => {
       <div className="container mx-auto max-w-4xl relative">
         <div className="text-center mb-8 px-2">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-200 text-xs font-semibold uppercase tracking-wider mb-3">
-            <Store className="w-3.5 h-3.5" /> Vendor Command Center
+            <Store className="w-3.5 h-3.5" /> Merchant Command Center
           </span>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-white mb-2 leading-tight">
             Welcome, {user.firstName || 'Entrepreneur'}! Let's build your store.

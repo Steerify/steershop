@@ -43,6 +43,12 @@ vi.mock("@/hooks/use-toast", () => ({
   }),
 }));
 
+vi.mock("@/context/AuthContext", () => ({
+  useAuth: () => ({
+    user: { id: "test-user-id" },
+  }),
+}));
+
 vi.mock("@/components/patterns/AdirePattern", () => ({
   AdirePattern: () => <div data-testid="adire-pattern" />,
 }));
@@ -86,15 +92,17 @@ describe("VendorSetupWizard", () => {
     render(<VendorSetupWizard open={true} onComplete={onComplete} />);
 
     await fillRequiredShopFields();
-    fireEvent.click(screen.getByText("Create Store"));
+    fireEvent.click(screen.getByText("Continue Setup"));
 
     await waitFor(() => {
       expect(shopService.createShop).toHaveBeenCalledWith(expect.objectContaining({
         name: "My Test Shop",
+        description: "Welcome to My Test Shop",
+      }));
+      expect(shopService.updateShop).toHaveBeenCalledWith("shop-123", expect.objectContaining({
         category: "Fashion & Apparel",
         state: "Lagos",
         city: "Ikeja",
-        description: "Welcome to My Test Shop",
       }));
       expect(screen.getByText("What are you selling?")).toBeInTheDocument();
     });
@@ -112,11 +120,11 @@ describe("VendorSetupWizard", () => {
     render(<VendorSetupWizard open={true} onComplete={onComplete} />);
 
     await fillRequiredShopFields();
-    fireEvent.click(screen.getByText("Create Store"));
+    fireEvent.click(screen.getByText("Continue Setup"));
 
     await screen.findByText("What are you selling?");
-    fireEvent.change(screen.getByPlaceholderText("e.g. Chocolate Cake or Consultation"), { target: { value: "Chocolate Cake" } });
-    fireEvent.change(screen.getByPlaceholderText("A short detail that helps customers decide..."), { target: { value: "Rich chocolate cake" } });
+    fireEvent.change(screen.getByPlaceholderText("e.g. Leather Bag, Chocolate Cake"), { target: { value: "Chocolate Cake" } });
+    fireEvent.change(screen.getByPlaceholderText("Describe size, materials, or features that make this special..."), { target: { value: "Rich chocolate cake" } });
     fireEvent.change(screen.getByPlaceholderText("e.g. 5000"), { target: { value: "5000" } });
     fireEvent.change(screen.getByPlaceholderText("e.g. 10"), { target: { value: "5" } });
     fireEvent.click(screen.getByText("Add Product"));
@@ -138,18 +146,24 @@ describe("VendorSetupWizard", () => {
     render(<VendorSetupWizard open={true} onComplete={onComplete} />);
 
     await fillRequiredShopFields();
-    fireEvent.click(screen.getByText("Create Store"));
+    fireEvent.click(screen.getByText("Continue Setup"));
     await screen.findByText("What are you selling?");
-    fireEvent.click(screen.getByText("Skip for now"));
+    fireEvent.change(screen.getByPlaceholderText("e.g. Leather Bag, Chocolate Cake"), { target: { value: "Chocolate Cake" } });
+    fireEvent.change(screen.getByPlaceholderText("e.g. 5000"), { target: { value: "5000" } });
+    fireEvent.click(screen.getByText("Add Product"));
     await screen.findByText("How will they reach you?");
 
     fireEvent.change(screen.getByPlaceholderText("e.g. 08012345678"), { target: { value: "08012345678" } });
-    fireEvent.click(screen.getByText("Finish Setup"));
+    fireEvent.click(screen.getByText("Launch My Store"));
 
     await waitFor(() => {
       expect(shopService.updateShop).toHaveBeenCalledWith("shop-123", {
         whatsapp_number: "+2348012345678",
         is_active: true,
+        category: "Fashion & Apparel",
+        city: "Ikeja",
+        state: "Lagos",
+        address: "",
       });
       expect(supabase.from).toHaveBeenCalledWith("profiles");
     });
@@ -161,13 +175,15 @@ describe("VendorSetupWizard", () => {
 
     await fillRequiredShopFields();
     fireEvent.change(screen.getByPlaceholderText("e.g. 123 Herbert Macaulay Way"), { target: { value: "123 Herbert Macaulay Way" } });
-    fireEvent.click(screen.getByText("Create Store"));
+    fireEvent.click(screen.getByText("Continue Setup"));
     await screen.findByText("What are you selling?");
-    fireEvent.click(screen.getByText("Skip for now"));
+    fireEvent.change(screen.getByPlaceholderText("e.g. Leather Bag, Chocolate Cake"), { target: { value: "Chocolate Cake" } });
+    fireEvent.change(screen.getByPlaceholderText("e.g. 5000"), { target: { value: "5000" } });
+    fireEvent.click(screen.getByText("Add Product"));
     await screen.findByText("How will they reach you?");
 
     fireEvent.change(screen.getByPlaceholderText("e.g. 08012345678"), { target: { value: "08012345678" } });
-    fireEvent.click(screen.getByText("Finish Setup"));
+    fireEvent.click(screen.getByText("Launch My Store"));
 
     await waitFor(() => {
       expect(shopService.createDefaultShopAddress).toHaveBeenCalledWith("shop-123", {
@@ -188,13 +204,15 @@ describe("VendorSetupWizard", () => {
 
     await fillRequiredShopFields();
     fireEvent.change(screen.getByPlaceholderText("e.g. 123 Herbert Macaulay Way"), { target: { value: "123 Herbert Macaulay Way" } });
-    fireEvent.click(screen.getByText("Create Store"));
+    fireEvent.click(screen.getByText("Continue Setup"));
     await screen.findByText("What are you selling?");
-    fireEvent.click(screen.getByText("Skip for now"));
+    fireEvent.change(screen.getByPlaceholderText("e.g. Leather Bag, Chocolate Cake"), { target: { value: "Chocolate Cake" } });
+    fireEvent.change(screen.getByPlaceholderText("e.g. 5000"), { target: { value: "5000" } });
+    fireEvent.click(screen.getByText("Add Product"));
     await screen.findByText("How will they reach you?");
 
     fireEvent.change(screen.getByPlaceholderText("e.g. 08012345678"), { target: { value: "08012345678" } });
-    fireEvent.click(screen.getByText("Finish Setup"));
+    fireEvent.click(screen.getByText("Launch My Store"));
 
     await waitFor(() => {
       // Should still reach the final step despite the address error

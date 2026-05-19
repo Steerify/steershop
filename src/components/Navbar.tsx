@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { UserRole } from "@/types/api";
 import { 
   User, Menu, X, Gift, Moon, Sun, Star, Home,
-  Heart, Flag, Ghost, Egg, Sparkles, Store, MessageSquare, CalendarDays, Tag
+  Heart, Flag, Ghost, Egg, Sparkles, Store, MessageSquare, CalendarDays, Tag, Megaphone
 } from "lucide-react";
 import { AdireAccent } from "./patterns/AdirePattern";
 import logoLight from "@/assets/steersolo-logo.jpg";
@@ -38,7 +38,7 @@ interface Celebration {
 const CELEBRATIONS: Celebration[] = [
   { name: "Christmas", startDate: "12-20", endDate: "12-27", type: 'christian', vibe: "Festive gifting season", ctaLabel: "Holiday-ready shops", ctaHref: "/shops" },
   { name: "New Year", startDate: "12-31", endDate: "01-02", type: 'general', vibe: "Fresh goals, fresh products", ctaLabel: "Start selling stronger", ctaHref: "/auth/signup" },
-  { name: "Eid al-Fitr", startDate: "04-09", endDate: "04-11", type: 'muslim', vibe: "Celebrate with trusted vendors", ctaLabel: "View Eid specials", ctaHref: "/shops" },
+  { name: "Eid al-Fitr", startDate: "04-09", endDate: "04-11", type: 'muslim', vibe: "Celebrate with trusted merchants", ctaLabel: "View Eid specials", ctaHref: "/shops" },
   { name: "Valentine's Day", startDate: "02-14", endDate: "02-14", type: 'general', vibe: "Love-inspired gifting", ctaLabel: "Discover gift shops", ctaHref: "/shops" },
   { name: "Independence Day", startDate: "10-01", endDate: "10-01", type: 'cultural', vibe: "Naija-made excellence", ctaLabel: "Support local brands", ctaHref: "/shops" },
   { name: "Halloween", startDate: "10-31", endDate: "10-31", type: 'general', vibe: "Bold looks, spooky vibes", ctaLabel: "See trending stores", ctaHref: "/shops" },
@@ -271,6 +271,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
               {[
                 { label: "Shops", href: "/shops" },
                 { label: "Pricing", href: "/pricing" },
+                { label: "Steerify Ads", href: "/ads" },
                 { label: "About", href: "/about" },
                 { label: "Ambassador", href: "/ambassador-program" },
                 { label: "Feedback", href: "/feedback" },
@@ -321,7 +322,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                               : "bg-emerald-600/10 text-emerald-600"
                           )}
                         >
-                          {user?.role === 'ENTREPRENEUR' ? 'Vendor Mode' : 'Shopper Mode'}
+                          {user?.role === 'ENTREPRENEUR' ? 'Merchant Mode' : 'Shopper Mode'}
                         </Badge>
                       </div>
                     </button>
@@ -335,7 +336,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                     <DropdownMenuItem asChild>
                       <Link to={user?.role === 'ENTREPRENEUR' ? "/dashboard" : "/shopper"} className="flex items-center gap-2 cursor-pointer rounded-lg">
                         <User className="w-4 h-4" />
-                        {user?.role === 'ENTREPRENEUR' ? "Vendor Dashboard" : "My Orders"}
+                        {user?.role === 'ENTREPRENEUR' ? "Merchant Dashboard" : "My Orders"}
                       </Link>
                     </DropdownMenuItem>
                     {user?.role === 'ENTREPRENEUR' && (
@@ -415,6 +416,10 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
           <Link to="/pricing" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
             <Tag className="w-5 h-5" />
             Pricing
+          </Link>
+          <Link to="/ads" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
+            <Megaphone className="w-5 h-5" />
+            Steerify Ads
           </Link>
           <Link to="/about" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
             <Star className="w-5 h-5" />
