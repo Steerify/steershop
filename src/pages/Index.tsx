@@ -461,30 +461,35 @@ const HeroTextSlider = ({ liveVendorCount }: { liveVendorCount: number }) => {
           </div>
 
           {/* Premium Social Proof: 3-Avatar Stack with Pulsing Live Dot */}
-          <div className="flex items-center gap-3 mt-4 text-white">
-            <div className="flex -space-x-2">
+          <div className="flex flex-wrap items-center gap-3 mt-6 text-white bg-white/5 border border-white/10 backdrop-blur-md px-4 py-2.5 rounded-full w-fit animate-fade-up">
+            <div className="flex -space-x-2 shrink-0">
               <img
                 src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80"
                 alt="Merchant"
-                className="w-8 h-8 rounded-full border-2 border-[#0A1128] object-cover"
+                className="w-8 h-8 rounded-full border-2 border-background object-cover shadow-sm"
               />
               <img
                 src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&h=100&q=80"
                 alt="Merchant"
-                className="w-8 h-8 rounded-full border-2 border-[#0A1128] object-cover"
+                className="w-8 h-8 rounded-full border-2 border-background object-cover shadow-sm"
               />
               <img
                 src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&h=100&q=80"
                 alt="Merchant"
-                className="w-8 h-8 rounded-full border-2 border-[#0A1128] object-cover"
+                className="w-8 h-8 rounded-full border-2 border-background object-cover shadow-sm"
               />
             </div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-white/90">
-              <span className="relative flex h-2 w-2">
+            <div className="flex items-center gap-2.5 text-sm font-medium text-white/90">
+              <span className="relative flex h-2.5 w-2.5 shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
               </span>
-              <span>Join <strong className="text-white font-bold">{liveVendorCount}+</strong> active merchants today <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest bg-emerald-400/10 border border-emerald-400/20 px-1.5 py-0.5 rounded ml-1.5">Live Updates</span></span>
+              <span>
+                Join <strong className="text-white font-extrabold">{liveVendorCount}+</strong> active merchants
+              </span>
+              <span className="hidden sm:inline-flex items-center justify-center text-[10px] text-emerald-400 font-bold uppercase tracking-widest bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-full">
+                Live Updates
+              </span>
             </div>
           </div>
         </div>
@@ -495,9 +500,12 @@ const HeroTextSlider = ({ liveVendorCount }: { liveVendorCount: number }) => {
 
 /* ═══════════════════════════════════════════════════════ PAGE ═══ */
 const Index = () => {
-  const [liveVendorCount, setLiveVendorCount] = useState<number>(547);
+  const [liveVendorCount, setLiveVendorCount] = useState<number>(1428);
 
   useEffect(() => {
+    let isMounted = true;
+    let channel: any = null;
+
     const fetchVendorCount = async () => {
       try {
         const { count, error } = await supabase
@@ -505,16 +513,35 @@ const Index = () => {
           .select("id", { count: "exact", head: true })
           .eq("role", "ENTREPRENEUR");
         
-        if (!error && count !== null) {
+        if (isMounted && !error && count !== null) {
           setLiveVendorCount(count > 0 ? 1420 + count : 1428);
-        } else {
-          setLiveVendorCount(1428);
         }
       } catch (e) {
         console.error("Error fetching merchant count:", e);
       }
     };
     fetchVendorCount();
+
+    // Subscribe to real-time inserts on profiles
+    channel = supabase
+      .channel('public:profiles')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'profiles', filter: "role=eq.ENTREPRENEUR" },
+        (payload) => {
+          if (isMounted) {
+            setLiveVendorCount((prev) => prev + 1);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   const DYNAMIC_STATS = [
