@@ -89,7 +89,7 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
         </div>
 
         {/* Product previews */}
-        {productPreviews.length > 0 && (
+        {productPreviews.length > 0 ? (
           <div className="px-5 pb-3">
             <div className="flex gap-2">
               {productPreviews.slice(0, 3).map((p, i) => (
@@ -104,7 +104,20 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
               )}
             </div>
           </div>
-        )}
+        ) : productCount > 0 ? (
+          /* Service-only or image-less items — show a clean placeholder */
+          <div className="px-5 pb-3">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted/40 border border-border/40">
+              <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                <Package className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-foreground">{productCount} {productCount === 1 ? 'service' : 'services/items'} available</p>
+                <p className="text-[10px] text-muted-foreground">Visit shop to explore the full catalogue</p>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <div className="px-5 pb-5 pt-1">
           <div className="flex items-center justify-between">

@@ -237,17 +237,23 @@ const Shops = () => {
     const newIds = shopIds.filter(id => !fetchedShopIdsRef.current.has(id));
     if (!newIds.length) return;
     newIds.forEach(id => fetchedShopIdsRef.current.add(id));
+
+    // Fetch ALL available products/services (including those without images) for accurate counts
     const { data } = await supabase
-      .from('products').select('shop_id, image_url, name')
-      .in('shop_id', newIds).eq('is_available', true).not('image_url', 'is', null).limit(100);
+      .from('products').select('shop_id, image_url, name, type')
+      .in('shop_id', newIds).eq('is_available', true).limit(200);
+
     if (data) {
       const grouped: Record<string, { image_url: string; name: string }[]> = {};
       const counts: Record<string, number> = {};
       data.forEach(p => {
-        if (!grouped[p.shop_id]) grouped[p.shop_id] = [];
         if (!counts[p.shop_id]) counts[p.shop_id] = 0;
         counts[p.shop_id]++;
-        if (grouped[p.shop_id].length < 3 && p.image_url) grouped[p.shop_id].push({ image_url: p.image_url, name: p.name });
+        // Only add to image previews if the product has an image
+        if (p.image_url) {
+          if (!grouped[p.shop_id]) grouped[p.shop_id] = [];
+          if (grouped[p.shop_id].length < 3) grouped[p.shop_id].push({ image_url: p.image_url, name: p.name });
+        }
       });
       setShopProducts(prev => ({ ...prev, ...grouped }));
       setShopProductCounts(prev => ({ ...prev, ...counts }));
@@ -331,6 +337,25 @@ const Shops = () => {
     return filtered;
   }, [shops, selectedSort, businessPlanShopIds, selectedCategory, shopCategories]);
 
+  // Scroll to top of results whenever a filter changes
+  useEffect(() => {
+    if (!isLoading) {
+      const el = document.getElementById('marketplace-results');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [selectedCategory, selectedSort, selectedState, selectedCity, showVerifiedOnly, minPrice, maxPrice]);
+
+  // Filter product results by price range when set
+  const priceFilteredProducts = useMemo(() => {
+    if (!minPrice && !maxPrice) return productResults;
+    const min = minPrice ? parseFloat(minPrice) : 0;
+    const max = maxPrice ? parseFloat(maxPrice) : Infinity;
+    return productResults.filter(p => {
+      const price = p.price || 0;
+      return price >= min && price <= max;
+    });
+  }, [productResults, minPrice, maxPrice]);
+
   /* ─── Search Products ─── */
   const searchProducts = useCallback(async (page = 1, reset = false) => {
     if (!debouncedSearchQuery.trim()) { if (reset) setProductResults([]); return; }
@@ -394,6 +419,7 @@ const Shops = () => {
   const hasSearchQuery = debouncedSearchQuery.trim();
   const showProducts = hasSearchQuery && (searchType === 'all' || searchType === 'products');
   const showShops = !hasSearchQuery || searchType === 'all' || searchType === 'shops';
+  const displayedProducts = priceFilteredProducts ?? productResults;
 
   return (
     <PageThemeShell header={<Navbar />} footer={<Footer />} className="bg-background">
@@ -568,7 +594,7 @@ const Shops = () => {
       )}
 
       {/* ══════════ MAIN CONTENT ══════════ */}
-      <main className="flex-1 container mx-auto px-4 pb-20 mt-4">
+      <main id="marketplace-results" className="flex-1 container mx-auto px-4 pb-20 mt-4">
         <div className="max-w-7xl mx-auto">
 
           {/* ── Search Type Tabs ── */}
@@ -586,14 +612,14 @@ const Shops = () => {
                     }
                   `}
                 >
-                  {type === 'all' ? `All (${shops.length + productResults.length})` : type === 'shops' ? `Shops (${shops.length})` : `Products (${productResults.length})`}
+                  {type === 'all' ? `All (${shops.length + displayedProducts.length})` : type === 'shops' ? `Shops (${shops.length})` : `Products (${displayedProducts.length})`}
                 </button>
               ))}
             </div>
           )}
 
           {/* ── Product Results ── */}
-          {showProducts && productResults.length > 0 && (
+          {showProducts && displayedProducts.length > 0 && (
             <div className="mb-10 animate-fade-up">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
@@ -608,7 +634,7 @@ const Shops = () => {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                {productResults.map((product, index) => (
+                {displayedProducts.map((product, index) => (
                   <Link key={`${product.id}-${index}`} to={`/shop/${product.shop_slug || 'shop'}`}>
                     <div 
                       className="group bg-card border border-border/40 hover:border-border/80 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col"

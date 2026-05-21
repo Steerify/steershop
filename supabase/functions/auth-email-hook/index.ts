@@ -1,63 +1,49 @@
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
-import { parseEmailWebhookPayload } from 'npm:@lovable.dev/email-js'
-import { WebhookError, verifyWebhookRequest } from 'npm:@lovable.dev/webhooks-js'
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import nodemailer from 'npm:nodemailer'
+
+// Import existing SteerSolo templates
 import { SignupEmail } from '../_shared/email-templates/signup.tsx'
 import { InviteEmail } from '../_shared/email-templates/invite.tsx'
 import { MagicLinkEmail } from '../_shared/email-templates/magic-link.tsx'
 import { RecoveryEmail } from '../_shared/email-templates/recovery.tsx'
 import { EmailChangeEmail } from '../_shared/email-templates/email-change.tsx'
 import { ReauthenticationEmail } from '../_shared/email-templates/reauthentication.tsx'
-import nodemailer from 'npm:nodemailer'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type, x-lovable-signature, x-lovable-timestamp, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers': 'authorization, x-webhook-secret, content-type',
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirm your email',
-  invite: "You've been invited",
-  magiclink: 'Your login link',
-  recovery: 'Reset your password',
+  signup: 'Confirm your SteerSolo account',
+  invite: "You've been invited to SteerSolo",
+  magiclink: 'Your SteerSolo login link',
+  recovery: 'Reset your SteerSolo password',
   email_change: 'Confirm your new email',
   reauthentication: 'Your verification code',
 }
 
-interface EmailTemplateProps {
-  siteName: string
-  siteUrl: string
-  recipient: string
-  confirmationUrl: string
-  token: string
-  email: string
-  newEmail: string
+// Native Supabase Custom Auth Webhook Payload
+interface SupabaseAuthWebhookPayload {
+  user: {
+    id: string;
+    email: string;
+    user_metadata: any;
+  };
+  email_data: {
+    token: string;
+    token_hash: string;
+    redirect_to: string;
+    email_action_type: string;
+    site_url: string;
+    token_new?: string;
+    token_hash_new?: string;
+  };
 }
 
-interface EmailWebhookPayload {
-  version: string
-  run_id: string
-  type?: string
-  data: {
-    action_type: string
-    email: string
-    url: string
-    token: string
-    new_email?: string
-    user_metadata?: {
-      role?: string
-      full_name?: string
-      phone?: string
-    }
-    user_id?: string
-    id?: string
-  }
-}
-
-// Template mapping
-const EMAIL_TEMPLATES: Record<string, React.ComponentType<EmailTemplateProps>> = {
+const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   signup: SignupEmail,
   invite: InviteEmail,
   magiclink: MagicLinkEmail,
@@ -66,427 +52,193 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<EmailTemplateProps>> =
   reauthentication: ReauthenticationEmail,
 }
 
-// Configuration
-const SITE_NAME = "steersolo"
+const SITE_NAME = "SteerSolo"
 const ROOT_DOMAIN = "steersolo.com"
-const FROM_DOMAIN = "steersolo.com" // Domain shown in From address (may be root or sender subdomain)
 const SENDER_EMAIL = Deno.env.get('SMTP_FROM_EMAIL') || 'mail@steersolo.com'
-
-// Sample data for preview mode ONLY (not used in actual email sending).
-// URLs are baked in at scaffold time from the project's real data.
-// The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
-// can always find-and-replace it with the actual recipient when sending test emails,
-// even if the project's domain has changed since the template was scaffolded.
-const SAMPLE_PROJECT_URL = "https://steersolo.com"
-const SAMPLE_EMAIL = "user@example.test"
 const ADMIN_SIGNUP_EMAIL = "steerifygroup@gmail.com"
-const SAMPLE_DATA: Record<string, object> = {
-  signup: {
-    siteName: SITE_NAME,
-    siteUrl: SAMPLE_PROJECT_URL,
-    recipient: SAMPLE_EMAIL,
-    confirmationUrl: SAMPLE_PROJECT_URL,
-  },
-  magiclink: {
-    siteName: SITE_NAME,
-    confirmationUrl: SAMPLE_PROJECT_URL,
-  },
-  recovery: {
-    siteName: SITE_NAME,
-    confirmationUrl: SAMPLE_PROJECT_URL,
-  },
-  invite: {
-    siteName: SITE_NAME,
-    siteUrl: SAMPLE_PROJECT_URL,
-    confirmationUrl: SAMPLE_PROJECT_URL,
-  },
-  email_change: {
-    siteName: SITE_NAME,
-    email: SAMPLE_EMAIL,
-    newEmail: SAMPLE_EMAIL,
-    confirmationUrl: SAMPLE_PROJECT_URL,
-  },
-  reauthentication: {
-    token: '123456',
-  },
-}
 
-// Preview endpoint handler - returns rendered HTML without sending email
-async function handlePreview(req: Request): Promise<Response> {
-  const previewCorsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, content-type',
-  }
+async function handleWebhook(req: Request): Promise<Response> {
+  const webhookSecret = Deno.env.get('WEBHOOK_SECRET')
+  const reqSecret = req.headers.get('x-webhook-secret')
 
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: previewCorsHeaders })
-  }
-
-  const apiKey = Deno.env.get('LOVABLE_API_KEY')
-  const authHeader = req.headers.get('Authorization')
-
-  if (!apiKey || authHeader !== `Bearer ${apiKey}`) {
+  if (!webhookSecret || reqSecret !== webhookSecret) {
+    console.error('Unauthorized: Invalid or missing x-webhook-secret')
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
-      headers: { ...previewCorsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
-  let type: string
+  let payload: SupabaseAuthWebhookPayload
   try {
-    const body = await req.json()
-    type = body.type
+    payload = await req.json()
   } catch (error) {
-    return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
+    console.error('Invalid JSON payload', error)
+    return new Response(JSON.stringify({ error: 'Invalid JSON payload' }), {
       status: 400,
-      headers: { ...previewCorsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
-  const EmailTemplate = EMAIL_TEMPLATES[type]
-
-  if (!EmailTemplate) {
-    return new Response(JSON.stringify({ error: `Unknown email type: ${type}` }), {
+  if (!payload.user || !payload.email_data) {
+    console.error('Invalid payload structure: missing user or email_data')
+    return new Response(JSON.stringify({ error: 'Invalid payload structure' }), {
       status: 400,
-      headers: { ...previewCorsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
-  const sampleData = SAMPLE_DATA[type] || {}
-  const html = await renderAsync(React.createElement(EmailTemplate, sampleData))
-
-  return new Response(html, {
-    status: 200,
-    headers: { ...previewCorsHeaders, 'Content-Type': 'text/html; charset=utf-8' },
-  })
-}
-
-// Webhook handler - verifies signature and sends email
-async function handleWebhook(req: Request): Promise<Response> {
-  const apiKey = Deno.env.get('LOVABLE_API_KEY')
-
-  if (!apiKey) {
-    console.error('LOVABLE_API_KEY not configured')
-    return new Response(
-      JSON.stringify({ error: 'Server configuration error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  // Verify signature + timestamp, then parse payload.
-  let payload: EmailWebhookPayload
-  let run_id = ''
-  try {
-    const verified = await verifyWebhookRequest({
-      req,
-      secret: apiKey,
-      parser: parseEmailWebhookPayload,
-    })
-    payload = verified.payload as EmailWebhookPayload
-    run_id = payload.run_id
-  } catch (error) {
-    if (error instanceof WebhookError) {
-      switch (error.code) {
-        case 'invalid_signature':
-        case 'missing_timestamp':
-        case 'invalid_timestamp':
-        case 'stale_timestamp':
-          console.error('Invalid webhook signature', { error: error.message })
-          return new Response(JSON.stringify({ error: 'Invalid signature' }), {
-            status: 401,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
-        case 'invalid_payload':
-        case 'invalid_json':
-          console.error('Invalid webhook payload', { error: error.message })
-          return new Response(
-            JSON.stringify({ error: 'Invalid webhook payload' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-      }
-    }
-
-    console.error('Webhook verification failed', { error })
-    return new Response(
-      JSON.stringify({ error: 'Invalid webhook payload' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  if (!run_id) {
-    console.error('Webhook payload missing run_id')
-    return new Response(
-      JSON.stringify({ error: 'Invalid webhook payload' }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
-  }
-
-  if (payload.version !== '1') {
-    console.error('Unsupported payload version', { version: payload.version, run_id })
-    return new Response(
-      JSON.stringify({ error: `Unsupported payload version: ${payload.version}` }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
-  }
-
-  // The email action type is in payload.data.action_type (e.g., "signup", "recovery")
-  // payload.type is the hook event type ("auth")
-  const emailType = payload.data.action_type
-  console.log('Received auth event', { emailType, email: payload.data.email, run_id })
+  const emailType = payload.email_data.email_action_type
+  const recipientEmail = payload.user.email
+  console.log(`Received auth event: ${emailType} for ${recipientEmail}`)
 
   const EmailTemplate = EMAIL_TEMPLATES[emailType]
   if (!EmailTemplate) {
-    console.error('Unknown email type', { emailType, run_id })
-    return new Response(
-      JSON.stringify({ error: `Unknown email type: ${emailType}` }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    console.error(`Unknown email type: ${emailType}`)
+    return new Response(JSON.stringify({ error: `Unknown email type: ${emailType}` }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
 
-  // Build template props from payload.data (HookData structure)
+  // Construct standard Supabase PKCE confirmation URL
+  const siteUrl = payload.email_data.site_url || `https://${ROOT_DOMAIN}`
+  const confirmationUrl = `${siteUrl}/auth/callback?token_hash=${payload.email_data.token_hash}&type=${emailType}&next=${encodeURIComponent(payload.email_data.redirect_to || siteUrl)}`
+
   const templateProps = {
     siteName: SITE_NAME,
-    siteUrl: `https://${ROOT_DOMAIN}`,
-    recipient: payload.data.email,
-    confirmationUrl: payload.data.url,
-    token: payload.data.token,
-    email: payload.data.email,
-    newEmail: payload.data.new_email || '',
+    siteUrl: siteUrl,
+    recipient: recipientEmail,
+    confirmationUrl: confirmationUrl,
+    token: payload.email_data.token,
+    email: recipientEmail,
+    newEmail: payload.email_data.token_new ? 'new_email_placeholder' : '',
   }
 
-  // Render React Email to HTML and plain text
   const html = await renderAsync(React.createElement(EmailTemplate, templateProps))
-  const text = await renderAsync(React.createElement(EmailTemplate, templateProps), {
-    plainText: true,
-  })
+  const text = await renderAsync(React.createElement(EmailTemplate, templateProps), { plainText: true })
 
-  // Send email IMMEDIATELY via Spacemail SMTP
   const smtpHost = Deno.env.get('SMTP_HOST')
   const smtpPort = Deno.env.get('SMTP_PORT') || '465'
   const smtpUser = Deno.env.get('SMTP_USER')
   const smtpPass = Deno.env.get('SMTP_PASS')
 
   if (!smtpHost || !smtpUser || !smtpPass) {
-    console.error('Missing SMTP credentials for immediate sending', { run_id })
+    console.error('Missing SMTP credentials')
     return new Response(JSON.stringify({ error: 'Missing SMTP credentials' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
-  try {
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: parseInt(smtpPort),
-      secure: parseInt(smtpPort) === 465,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    })
+  const transporter = nodemailer.createTransport({
+    host: smtpHost,
+    port: parseInt(smtpPort),
+    secure: parseInt(smtpPort) === 465,
+    auth: { user: smtpUser, pass: smtpPass },
+  })
 
+  // 1. Send the primary auth email to the user
+  try {
     const info = await transporter.sendMail({
       from: `SteerSolo <${SENDER_EMAIL}>`,
-      to: payload.data.email,
+      to: recipientEmail,
       replyTo: SENDER_EMAIL,
       subject: EMAIL_SUBJECTS[emailType] || 'Notification',
       html,
       text,
     })
-    console.log('Auth email sent IMMEDIATELY', { emailType, email: payload.data.email, messageId: info.messageId, run_id })
+    console.log(`Auth email sent successfully: ${info.messageId}`)
   } catch (sendError) {
-    console.error('Failed to send auth email immediately', { error: sendError, run_id, emailType })
+    console.error('Failed to send auth email', sendError)
     return new Response(JSON.stringify({ error: 'Failed to send email' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
-  // Also notify SteerSolo admin inbox on successful signup (best-effort, non-blocking).
+  // 2. Admin & Onboarding logic strictly for 'signup'
   if (emailType === 'signup') {
     try {
-      const metadata = payload?.data?.user_metadata || {}
-      const role = metadata?.role || 'unknown'
-      const fullName = typeof metadata?.full_name === 'string' ? metadata.full_name.trim() : ''
-      const phone = metadata?.phone || 'Not provided'
-      const userId = payload?.data?.user_id || payload?.data?.id || null
-
-      let profileName = ''
-      let profileRole = ''
-      let onboardingCompleted = false
-
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-      )
-
-      if (userId) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name, role')
-          .eq('id', userId)
-          .maybeSingle()
-
-        profileName = profile?.full_name || ''
-        profileRole = profile?.role || ''
-
-        if ((profile?.role || role) === 'shop_owner') {
-          const { data: onboardingRows } = await supabase
-            .from('onboarding_responses')
-            .select('id')
-            .eq('user_id', userId)
-            .limit(1)
-
-          onboardingCompleted = !!(onboardingRows && onboardingRows.length > 0)
-        }
-      }
-
-      const resolvedName = fullName || profileName || 'Not provided'
-      const resolvedRole = profileRole || role
-      const signedUpAt = new Date().toISOString()
-      const userStatus =
-        resolvedRole === 'shop_owner'
-          ? (onboardingCompleted ? 'Entrepreneur account • Onboarding completed' : 'Entrepreneur account • Onboarding pending')
-          : 'Customer account • Active'
-
-      const adminSubject = `New signup on SteerSolo: ${payload.data.email}`
+      const metadata = payload.user.user_metadata || {}
+      const role = metadata.role || 'unknown'
+      const fullName = typeof metadata.full_name === 'string' ? metadata.full_name.trim() : 'Not provided'
+      const phone = metadata.phone || 'Not provided'
+      
+      const adminSubject = `New signup on SteerSolo: ${recipientEmail}`
       const adminHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; padding: 16px;">
           <h2 style="margin: 0 0 12px; color: #123C72;">New SteerSolo Registration</h2>
-          <p style="margin: 0 0 16px; color: #475467;">A new user just registered successfully.</p>
-
           <table style="border-collapse: collapse; width: 100%; border: 1px solid #E4E7EC;">
             <tbody>
-              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Email</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${payload.data.email}</td></tr>
-              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Name</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${resolvedName}</td></tr>
+              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Email</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${recipientEmail}</td></tr>
+              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Name</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${fullName}</td></tr>
               <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Phone</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${phone}</td></tr>
-              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Role</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${resolvedRole}</td></tr>
-              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">User Status</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${userStatus}</td></tr>
-              <tr><td style="padding: 10px; font-weight: 700;">Registered At (UTC)</td><td style="padding: 10px;">${signedUpAt}</td></tr>
+              <tr><td style="padding: 10px; border-bottom: 1px solid #E4E7EC; font-weight: 700;">Role</td><td style="padding: 10px; border-bottom: 1px solid #E4E7EC;">${role}</td></tr>
             </tbody>
           </table>
         </div>
       `
-      const adminText = [
-        'New SteerSolo Registration',
-        `Email: ${payload.data.email}`,
-        `Name: ${resolvedName}`,
-        `Phone: ${phone}`,
-        `Role: ${resolvedRole}`,
-        `User Status: ${userStatus}`,
-        `Registered At (UTC): ${signedUpAt}`,
-      ].join('\n')
-
-      // Send Admin Alert immediately
-      try {
-        const transporter = nodemailer.createTransport({
-          host: smtpHost,
-          port: parseInt(smtpPort),
-          secure: parseInt(smtpPort) === 465,
-          auth: { user: smtpUser, pass: smtpPass },
-        })
-        await transporter.sendMail({
-          from: `SteerSolo <${SENDER_EMAIL}>`,
-          to: ADMIN_SIGNUP_EMAIL,
-          replyTo: SENDER_EMAIL,
-          subject: adminSubject,
-          html: adminHtml,
-          text: adminText,
-        })
-        console.log('Admin signup alert sent immediately', { run_id, adminEmail: ADMIN_SIGNUP_EMAIL })
-      } catch (adminEnqueueError) {
-        console.error('Failed to send admin signup alert', { error: adminEnqueueError, run_id })
-      }
-
-      // Onboarding / welcome email check:
-      const onboardingSubject =
-        resolvedRole === 'shop_owner'
-          ? 'Welcome to SteerSolo — Complete your onboarding'
-          : 'Welcome to SteerSolo — Start exploring stores'
-      const onboardingCtaUrl =
-        resolvedRole === 'shop_owner'
-          ? `https://${ROOT_DOMAIN}/onboarding`
-          : `https://${ROOT_DOMAIN}/shops`
+      
+      // Admin Notification
+      await transporter.sendMail({
+        from: `SteerSolo <${SENDER_EMAIL}>`,
+        to: ADMIN_SIGNUP_EMAIL,
+        replyTo: SENDER_EMAIL,
+        subject: adminSubject,
+        html: adminHtml,
+        text: `New Signup: ${recipientEmail} | Role: ${role}`,
+      })
+      console.log('Admin signup alert sent successfully')
+      
+      // Onboarding Welcome
+      const onboardingSubject = role === 'shop_owner' 
+        ? 'Welcome to SteerSolo — Complete your onboarding' 
+        : 'Welcome to SteerSolo — Start exploring stores'
+      const onboardingCtaUrl = role === 'shop_owner' ? `${siteUrl}/onboarding` : `${siteUrl}/shops`
       const onboardingHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; padding: 16px;">
-          <h2 style="margin: 0 0 10px; color: #123C72;">Welcome to SteerSolo, ${resolvedName === 'Not provided' ? 'there' : resolvedName} 👋</h2>
+          <h2 style="margin: 0 0 10px; color: #123C72;">Welcome to SteerSolo, ${fullName === 'Not provided' ? 'there' : fullName} 👋</h2>
           <p style="margin: 0 0 14px; color: #475467;">
-            Your account is ready. ${
-              resolvedRole === 'shop_owner'
-                ? 'Complete your onboarding to set up your business details and start selling.'
-                : 'You can now browse trusted stores and start shopping.'
-            }
+            Your account is ready. ${role === 'shop_owner' ? 'Complete your onboarding to start selling.' : 'You can now browse trusted stores.'}
           </p>
           <a href="${onboardingCtaUrl}" style="display:inline-block;background:#123C72;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">
-            ${resolvedRole === 'shop_owner' ? 'Complete Onboarding' : 'Explore Stores'}
+            ${role === 'shop_owner' ? 'Complete Onboarding' : 'Explore Stores'}
           </a>
         </div>
       `
-      const onboardingText = [
-        `Welcome to SteerSolo, ${resolvedName === 'Not provided' ? 'there' : resolvedName}!`,
-        resolvedRole === 'shop_owner'
-          ? 'Complete your onboarding to set up your business details and start selling.'
-          : 'You can now browse trusted stores and start shopping.',
-        `Next step: ${onboardingCtaUrl}`,
-      ].join('\n')
-
-      // Send Onboarding Welcome immediately
-      try {
-        const transporter = nodemailer.createTransport({
-          host: smtpHost,
-          port: parseInt(smtpPort),
-          secure: parseInt(smtpPort) === 465,
-          auth: { user: smtpUser, pass: smtpPass },
-        })
-        await transporter.sendMail({
-          from: `SteerSolo <${SENDER_EMAIL}>`,
-          to: payload.data.email,
-          replyTo: SENDER_EMAIL,
-          subject: onboardingSubject,
-          html: onboardingHtml,
-          text: onboardingText,
-        })
-        console.log('Onboarding welcome email sent immediately', { run_id, email: payload.data.email })
-      } catch (onboardingEnqueueError) {
-        console.error('Failed to send onboarding welcome email', { error: onboardingEnqueueError, run_id })
-      }
-    } catch (adminError) {
-      console.error('Admin signup alert error (ignored)', { adminError, run_id })
+      
+      await transporter.sendMail({
+        from: `SteerSolo <${SENDER_EMAIL}>`,
+        to: recipientEmail,
+        replyTo: SENDER_EMAIL,
+        subject: onboardingSubject,
+        html: onboardingHtml,
+        text: `Welcome! Next step: ${onboardingCtaUrl}`,
+      })
+      console.log('Onboarding welcome email sent successfully')
+      
+    } catch (e) {
+      console.error('Non-blocking error sending supplemental signup emails:', e)
     }
   }
 
-  return new Response(
-    JSON.stringify({ success: true, queued: true }),
-    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
+  return new Response(JSON.stringify({ success: true }), { 
+    status: 200, 
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+  })
 }
 
 Deno.serve(async (req) => {
-  const url = new URL(req.url)
-
-  // Handle CORS preflight for main endpoint
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
-  // Route to preview handler for /preview path
-  if (url.pathname.endsWith('/preview')) {
-    return handlePreview(req)
-  }
-
-  // Main webhook handler
   try {
     return await handleWebhook(req)
   } catch (error) {
     console.error('Webhook handler error:', error)
-    const message = error instanceof Error ? error.message : 'Unknown error'
-    return new Response(JSON.stringify({ error: message }), {
+    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

@@ -147,16 +147,16 @@ export default function AdminDashboard() {
   };
 
   const statCards = [
-    { title: "Total Shops", value: stats.totalShops, icon: Store, gradient: "bg-gradient-to-br from-[hsl(215,65%,25%)] to-[hsl(215,65%,35%)]", subtitle: "Active storefronts" },
-    { title: "Total Products", value: stats.totalProducts, icon: Package, gradient: "bg-gradient-to-br from-[hsl(132,68%,31%)] to-[hsl(132,68%,40%)]", subtitle: "Listed items" },
-    { title: "Total Orders", value: stats.totalOrders, icon: ShoppingCart, gradient: "bg-gradient-to-br from-[hsl(215,65%,25%)] to-[hsl(132,68%,31%)]", subtitle: "All time" },
-    { title: "Total Users", value: stats.totalUsers, icon: Users, gradient: "bg-gradient-to-br from-[hsl(215,65%,18%)] to-[hsl(215,65%,28%)]", subtitle: "Registered accounts" },
+    { title: "Total Shops",    value: stats.totalShops,    icon: Store,        gradient: "bg-gradient-to-br from-[hsl(222,60%,12%)] to-[hsl(222,60%,22%)]", subtitle: "Active storefronts" },
+    { title: "Total Products", value: stats.totalProducts, icon: Package,      gradient: "bg-gradient-to-br from-[hsl(162,82%,22%)] to-[hsl(162,82%,36%)]", subtitle: "Listed items" },
+    { title: "Total Orders",   value: stats.totalOrders,   icon: ShoppingCart, gradient: "bg-gradient-to-br from-[hsl(222,60%,12%)] to-[hsl(162,82%,28%)]", subtitle: "All time" },
+    { title: "Total Users",    value: stats.totalUsers,    icon: Users,        gradient: "bg-gradient-to-br from-[hsl(222,60%,10%)] to-[hsl(222,60%,20%)]", subtitle: "Registered accounts" },
   ];
 
   const visitCards = [
-    { title: "Visits Today", value: stats.visitTotals.today, icon: MousePointerClick, gradient: "bg-gradient-to-br from-[hsl(215,65%,30%)] to-[hsl(215,65%,42%)]", subtitle: "Last 24h" },
-    { title: "Visits (7d)", value: stats.visitTotals.days7, icon: Globe, gradient: "bg-gradient-to-br from-[hsl(132,68%,28%)] to-[hsl(132,68%,38%)]", subtitle: "Rolling week" },
-    { title: "Visits (30d)", value: stats.visitTotals.days30, icon: TrendingUp, gradient: "bg-gradient-to-br from-[hsl(215,55%,22%)] to-[hsl(132,60%,30%)]", subtitle: "Rolling month" },
+    { title: "Visits Today", value: stats.visitTotals.today,  icon: MousePointerClick, gradient: "bg-gradient-to-br from-[hsl(222,60%,18%)] to-[hsl(222,60%,30%)]", subtitle: "Last 24h" },
+    { title: "Visits (7d)",  value: stats.visitTotals.days7,  icon: Globe,             gradient: "bg-gradient-to-br from-[hsl(162,82%,24%)] to-[hsl(162,82%,36%)]", subtitle: "Rolling week" },
+    { title: "Visits (30d)", value: stats.visitTotals.days30, icon: TrendingUp,        gradient: "bg-gradient-to-br from-[hsl(222,55%,16%)] to-[hsl(162,70%,28%)]", subtitle: "Rolling month" },
   ];
 
   const quickLinks = [
@@ -245,7 +245,7 @@ export default function AdminDashboard() {
                     <XAxis dataKey="date" tickFormatter={(value) => value.slice(5)} />
                     <YAxis />
                     <Tooltip />
-                    <Line type="monotone" dataKey="visits" stroke="#16a34a" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="visits" stroke="hsl(162,82%,38%)" strokeWidth={2.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -268,7 +268,7 @@ export default function AdminDashboard() {
                           <XAxis type="number" />
                           <YAxis type="category" width={120} dataKey="path" tickFormatter={(v) => v.length > 18 ? `${v.slice(0, 18)}…` : v} />
                           <Tooltip />
-                          <Bar dataKey="visits" fill="#6366f1" radius={[4, 4, 4, 4]} />
+                          <Bar dataKey="visits" fill="hsl(222,60%,45%)" radius={[4, 4, 4, 4]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>

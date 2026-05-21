@@ -269,7 +269,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
             {/* Desktop Nav - Updated typography */}
             <div className="hidden md:flex items-center gap-6 font-display">
               {[
-                { label: "Shops", href: "/shops" },
+                { label: "Marketplace", href: "/shops" },
                 { label: "Pricing", href: "/pricing" },
                 { label: "Steerify Ads", href: "/ads" },
                 { label: "About", href: "/about" },

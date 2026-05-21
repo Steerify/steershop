@@ -119,7 +119,7 @@ const DiscoveryLinks = () => (
           to="/shops"
           className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-foreground text-background font-bold hover:scale-105 hover:shadow-2xl transition-all duration-300 group"
         >
-          Browse All Shops{" "}
+          Explore Marketplace{" "}
           <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
@@ -295,7 +295,37 @@ const STATS = [
   { v: "500K+", l: "Beauty micro-merchants on social" },
 ];
 
-const HeroTextSlider = ({ liveVendorCount }: { liveVendorCount: number }) => {
+const AnimatedCounter = ({ target }: { target: number }) => {
+  const [count, setCount] = useState(target > 20 ? target - 20 : 0);
+
+  useEffect(() => {
+    let start = target > 20 ? target - 20 : 0;
+    if (start === count && start === target) return;
+    
+    // Animate up to the target
+    const duration = 1000; // 1 second animation duration
+    const steps = 20;
+    const stepTime = Math.max(duration / steps, 20);
+    const increment = Math.ceil((target - start) / steps) || 1;
+
+    let current = start;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        setCount(target);
+        clearInterval(timer);
+      } else {
+        setCount(current);
+      }
+    }, stepTime);
+
+    return () => clearInterval(timer);
+  }, [target]);
+
+  return <>{count}</>;
+};
+
+const HeroTextSlider = () => {
   const [index, setIndex] = useState(0);
   const phrases = [
     {
@@ -326,7 +356,7 @@ const HeroTextSlider = ({ liveVendorCount }: { liveVendorCount: number }) => {
   }, []);
 
   return (
-    <div style={{ position: "relative", overflow: "hidden" }}>
+    <div className="relative overflow-hidden">
       <style>{`
         @keyframes slideIn {
           from { opacity: 0; transform: translateX(30px); }
@@ -344,153 +374,50 @@ const HeroTextSlider = ({ liveVendorCount }: { liveVendorCount: number }) => {
             i === index ? "block animate-slide-in" : "hidden",
           )}
         >
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: 28,
-              borderBottom: `1.5px solid rgba(255,255,255,0.3)`,
-              paddingBottom: 6,
-            }}
-          >
-            <Sparkles
-              style={{ width: 14, height: 14, color: "rgba(255,255,255,0.6)" }}
-            />
-            <span
-              style={{
-                fontSize: "0.72rem",
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.22em",
-                color: "rgba(255,255,255,0.6)",
-              }}
-            >
-              {phrase.eyebrow}
-            </span>
+          {/* Aligned Escrow Pill & Eyebrow Badge Row */}
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md text-emerald-400 text-xs font-semibold select-none">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
+              🔒 Paystack Secured Escrow Enabled
+            </div>
+
+            <span className="text-white/20 text-xs hidden sm:inline">|</span>
+
+            <div className="inline-flex items-center gap-1.5 py-1">
+              <Sparkles className="w-3.5 h-3.5 text-accent-bright animate-pulse" />
+              <span className="text-[11.5px] font-bold uppercase tracking-[0.2em] text-white/70">
+                {phrase.eyebrow}
+              </span>
+            </div>
           </div>
+
           <h1
-            style={{
-              fontWeight: 800,
-              color: "#fff",
-              lineHeight: 1.08,
-              marginBottom: 20,
-              fontSize: "clamp(2.15rem,4.25vw,3.8rem)",
-            }}
+            className="font-extrabold text-white leading-[1.1] mb-5 text-4xl sm:text-5xl lg:text-6xl tracking-tight"
             dangerouslySetInnerHTML={{ __html: phrase.h1 }}
           />
-          <p
-            style={{
-              fontSize: "clamp(1rem,1.35vw,1.08rem)",
-              lineHeight: 1.65,
-              color: "rgba(255,255,255,.62)",
-              fontWeight: 300,
-              maxWidth: 500,
-              marginBottom: 30,
-            }}
-          >
+
+          <p className="text-base sm:text-lg text-white/70 font-light max-w-lg mb-8 leading-relaxed">
             {phrase.p}
           </p>
 
-          {/* CTAs moved inside slider */}
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 14,
-              marginBottom: 20,
-            }}
-          >
+          {/* CTAs with Premium Hover & Scale Effects */}
+          <div className="flex flex-wrap gap-4 mb-2">
             <Link to={phrase.cta1.link}>
-              <button
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "12px 26px",
-                  borderRadius: 9999,
-                  fontWeight: 700,
-                  fontSize: "1rem",
-                  color: "hsl(var(--primary))",
-                  background: "#fff",
-                  boxShadow: `0 8px 32px rgba(0,0,0,0.25)`,
-                  border: "none",
-                  cursor: "pointer",
-                  transition: "all .25s ease",
-                }}
-                onMouseEnter={e =>
-                  (e.currentTarget.style.transform = "translateY(-2px)")
-                }
-                onMouseLeave={e =>
-                  (e.currentTarget.style.transform = "translateY(0)")
-                }
-              >
+              <button className="flex items-center gap-2.5 px-7 py-3.5 rounded-full font-bold text-base text-primary bg-white shadow-lg shadow-black/10 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/10 active:translate-y-0 active:scale-95 transition-all duration-300 transform">
                 {phrase.cta1.label}
                 {phrase.cta1.icon && (
-                  <phrase.cta1.icon style={{ width: 16, height: 16 }} />
+                  <phrase.cta1.icon className="w-4 h-4" />
                 )}
               </button>
             </Link>
             <Link to={phrase.cta2.link}>
-              <button
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "12px 24px",
-                  borderRadius: 9999,
-                  fontWeight: 600,
-                  fontSize: "0.9rem",
-                  background: "rgba(255,255,255,0.12)",
-                  border: "1.5px solid rgba(255,255,255,0.25)",
-                  color: "#fff",
-                  cursor: "pointer",
-                  transition: "all .25s ease",
-                  backdropFilter: "blur(10px)",
-                }}
-                onMouseEnter={e =>
-                  (e.currentTarget.style.background = "rgba(255,255,255,0.2)")
-                }
-                onMouseLeave={e =>
-                  (e.currentTarget.style.background = "rgba(255,255,255,0.12)")
-                }
-              >
+              <button className="flex items-center gap-2.5 px-6 py-3.5 rounded-full font-semibold text-sm bg-white/10 border border-white/20 text-white backdrop-blur-md hover:-translate-y-0.5 hover:bg-white/20 active:translate-y-0 active:scale-95 transition-all duration-300 transform">
                 {phrase.cta2.label}
               </button>
             </Link>
-          </div>
-
-          {/* Premium Social Proof: 3-Avatar Stack with Pulsing Live Dot */}
-          <div className="flex flex-wrap items-center gap-3 mt-6 text-white bg-white/5 border border-white/10 backdrop-blur-md px-4 py-2.5 rounded-full w-fit animate-fade-up">
-            <div className="flex -space-x-2 shrink-0">
-              <img
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80"
-                alt="Merchant"
-                className="w-8 h-8 rounded-full border-2 border-background object-cover shadow-sm"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&h=100&q=80"
-                alt="Merchant"
-                className="w-8 h-8 rounded-full border-2 border-background object-cover shadow-sm"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&h=100&q=80"
-                alt="Merchant"
-                className="w-8 h-8 rounded-full border-2 border-background object-cover shadow-sm"
-              />
-            </div>
-            <div className="flex items-center gap-2.5 text-sm font-medium text-white/90">
-              <span className="relative flex h-2.5 w-2.5 shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-              </span>
-              <span>
-                Join <strong className="text-white font-extrabold">{liveVendorCount}+</strong> active merchants
-              </span>
-              <span className="hidden sm:inline-flex items-center justify-center text-[10px] text-emerald-400 font-bold uppercase tracking-widest bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-full">
-                Live Updates
-              </span>
-            </div>
           </div>
         </div>
       ))}
@@ -511,10 +438,12 @@ const Index = () => {
         const { count, error } = await supabase
           .from("profiles")
           .select("id", { count: "exact", head: true })
-          .eq("role", "ENTREPRENEUR");
+          .eq("role", "shop_owner");
         
         if (isMounted && !error && count !== null) {
           setLiveVendorCount(count > 0 ? 1420 + count : 1428);
+        } else {
+          console.warn("Could not fetch merchant count:", error?.message);
         }
       } catch (e) {
         console.error("Error fetching merchant count:", e);
@@ -522,15 +451,15 @@ const Index = () => {
     };
     fetchVendorCount();
 
-    // Subscribe to real-time inserts on profiles
+    // Subscribe to all changes on profiles table to keep counts perfectly in sync
     channel = supabase
-      .channel('public:profiles')
+      .channel('public:profiles-count-sync')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'profiles', filter: "role=eq.ENTREPRENEUR" },
+        { event: '*', schema: 'public', table: 'profiles' },
         (payload) => {
           if (isMounted) {
-            setLiveVendorCount((prev) => prev + 1);
+            fetchVendorCount();
           }
         }
       )
@@ -674,38 +603,74 @@ const Index = () => {
         <div className="flex flex-col lg:flex-row items-center gap-10 pb-24">
           {/* ── TEXT ── */}
           <div style={{ flex: "1 1 420px", maxWidth: 560 }} className="f1">
-            <div style={{ minHeight: 380 }}>
-              <HeroTextSlider liveVendorCount={liveVendorCount} />
+            <div style={{ minHeight: 280 }}>
+              <HeroTextSlider />
             </div>
 
-            {/* trust pills */}
-            <div
-              style={{ display: "flex", flexWrap: "wrap", gap: 10 }}
-              className="f3"
-            >
-              {[
-                { I: CheckCircle, t: "Verification-first" },
-                { I: Zap, t: "Instant Stores" },
-                { I: Shield, t: "SteerSolo Safe Marketplace" },
-              ].map(({ I, t }) => (
-                <span
-                  key={t}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: "0.75rem",
-                    padding: "6px 14px",
-                    borderRadius: 9999,
-                    fontWeight: 500,
-                    background: "rgba(255,255,255,0.1)",
-                    color: "rgba(255,255,255,0.75)",
-                  }}
-                >
-                  <I style={{ width: 13, height: 13 }} />
-                  {t}
-                </span>
-              ))}
+            {/* Consolidated Premium Social Proof & Trust Section */}
+            <div className="mt-8 p-5 rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-xl shadow-xl space-y-4 animate-fade-up f3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                {/* Active Merchant Count with avatars */}
+                <div className="inline-flex items-center gap-3">
+                  <div className="flex -space-x-2 shrink-0">
+                    <img
+                      src={P.av1}
+                      alt="Merchant 1"
+                      className="w-8 h-8 rounded-full border-2 border-[hsl(var(--brand-blue-deep))] object-cover"
+                    />
+                    <img
+                      src={P.av2}
+                      alt="Merchant 2"
+                      className="w-8 h-8 rounded-full border-2 border-[hsl(var(--brand-blue-deep))] object-cover"
+                    />
+                    <img
+                      src={P.av3}
+                      alt="Merchant 3"
+                      className="w-8 h-8 rounded-full border-2 border-[hsl(var(--brand-blue-deep))] object-cover"
+                    />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white flex items-center gap-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-white font-extrabold">
+                        <AnimatedCounter target={liveVendorCount} />+
+                      </span>{" "}
+                      active merchants
+                    </div>
+                    <p className="text-[10px] text-white/50">
+                      Live storefronts in Lagos, Abuja & across Nigeria
+                    </p>
+                  </div>
+                </div>
+                {/* Live Status indicator */}
+                <div className="flex items-center shrink-0">
+                  <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-widest bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-0.5 rounded-full">
+                    Live
+                  </span>
+                </div>
+              </div>
+
+              {/* Trust badges row */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { I: CheckCircle, t: "Verification-first", d: "Strict identity checks" },
+                  { I: Zap, t: "Instant Stores", d: "Set up under 60 seconds" },
+                  { I: Shield, t: "Safe Escrow", d: "Paystack escrow security" },
+                ].map(({ I, t, d }) => (
+                  <div
+                    key={t}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-300 border border-white/5"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-emerald-400 shrink-0">
+                      <I className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-white/90 leading-none mb-0.5">{t}</p>
+                      <p className="text-[9px] text-white/40 leading-none">{d}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -714,33 +679,16 @@ const Index = () => {
         </div>
 
         {/* ── STAT STRIP ── */}
-        <div className="f4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border-t border-white/10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-white/10 bg-white/[0.01] backdrop-blur-md">
           {DYNAMIC_STATS.map((s, i) => (
             <div
               key={s.l}
-              style={{
-                padding: "28px 20px",
-                textAlign: "center",
-                borderRight: i < 3 ? "1px solid rgba(255,255,255,.08)" : "none",
-              }}
+              className="py-8 px-6 text-center border-b sm:border-b-0 border-white/10 last:border-0 sm:even:border-r lg:border-r lg:last:border-r-0 transition-colors duration-300 hover:bg-white/[0.03]"
             >
-              <p
-                style={{
-                  fontWeight: 800,
-                  color: "#fff",
-                  fontSize: "clamp(1.35rem,2.2vw,2rem)",
-                  marginBottom: 4,
-                }}
-              >
+              <p className="font-black text-white text-2xl sm:text-3xl lg:text-4xl mb-2 tracking-tight">
                 {s.v}
               </p>
-              <p
-                style={{
-                  fontSize: "0.72rem",
-                  color: "rgba(255,255,255,.38)",
-                  lineHeight: 1.4,
-                }}
-              >
+              <p className="text-xs font-semibold text-white/50 leading-relaxed uppercase tracking-wider">
                 {s.l}
               </p>
             </div>
@@ -752,19 +700,12 @@ const Index = () => {
     {/* ══════════════════════════════════════════════════════
         §2  TICKER — Accent green strip
     ══════════════════════════════════════════════════════ */}
-    <div
-      style={{
-        overflow: "hidden",
-        padding: "14px 0",
-        background: "hsl(var(--accent))",
-      }}
-    >
+    <div className="w-full overflow-hidden py-3.5 bg-accent">
       <div
+        className="flex items-center"
         style={{
           animation: "tick 32s linear infinite",
           width: "max-content",
-          display: "flex",
-          alignItems: "center",
         }}
       >
         {Array(2)
@@ -779,23 +720,9 @@ const Index = () => {
           .map((t, i) => (
             <span
               key={i}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 20,
-                padding: "0 28px",
-                fontSize: "0.82rem",
-                fontWeight: 700,
-                letterSpacing: "0.04em",
-                color: "#fff",
-                whiteSpace: "nowrap",
-              }}
+              className="inline-flex items-center gap-5 px-7 text-xs sm:text-sm font-bold tracking-wider text-white uppercase select-none"
             >
-              <span
-                style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.45rem" }}
-              >
-                ◆
-              </span>
+              <span className="text-white/40 text-[6px]">◆</span>
               {t}
             </span>
           ))}
@@ -827,41 +754,38 @@ const Index = () => {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             {
               q: '"What do you sell?"',
               b: "Buyers hate guessing. SteerSolo gives you a beautiful catalog that shows exactly what you offer, instantly.",
+              icon: "🛍️",
             },
             {
               q: '"How much is it?"',
               b: "Hide-and-seek pricing kills sales. Clear prices and discounts build urgent trust and convert faster.",
+              icon: "💰",
             },
             {
               q: '"How do I pay?"',
               b: "No more sending account numbers manually. Secure checkout is built-in.",
+              icon: "💳",
             },
           ].map(p => (
             <div
               key={p.q}
-              style={{ display: "flex", flexDirection: "column", gap: 16 }}
+              className="relative p-8 rounded-[2rem] bg-card border border-border/80 shadow-sm hover:shadow-elegant transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between overflow-hidden"
             >
-              <p
-                className="text-foreground font-bold"
-                style={{ fontSize: "1.25rem", margin: 0 }}
-              >
-                {p.q}
-              </p>
-              <div
-                className="bg-primary"
-                style={{ width: 40, height: 2, borderRadius: 9 }}
-              />
-              <p
-                className="text-muted-foreground"
-                style={{ fontSize: "0.9rem", lineHeight: 1.7, margin: 0 }}
-              >
-                {p.b}
-              </p>
+              <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-primary via-accent to-indigo-500" />
+              <div>
+                <span className="text-4xl mb-6 inline-block select-none">{p.icon}</span>
+                <p className="text-foreground font-black text-xl mb-3 tracking-tight">
+                  {p.q}
+                </p>
+                <p className="text-muted-foreground text-[14px] leading-relaxed font-light">
+                  {p.b}
+                </p>
+              </div>
             </div>
           ))}
         </div>
@@ -905,128 +829,76 @@ const Index = () => {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {PLATFORMS.map(pl => (
             <div
               key={pl.name}
-              className="lift card-elevated"
-              style={{
-                borderRadius: 24,
-                overflow: "hidden",
-              }}
+              className="group overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-sm hover:shadow-elegant hover:-translate-y-2 transition-all duration-300 flex flex-col"
             >
-              <div
-                className="img-zoom"
-                style={{
-                  height: 200,
-                  overflow: "hidden",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "rgba(255,255,255,0.02)",
-                }}
-              >
-                <PlatformLogo platform={pl} />
+              {/* Logo container with colored ambient glows */}
+              <div className="relative h-48 overflow-hidden flex items-center justify-center bg-muted/20">
+                <div 
+                  className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(circle at center, ${pl.dot} 0%, transparent 70%)`
+                  }}
+                />
+                <div className="transform group-hover:scale-105 transition-transform duration-500 z-10">
+                  <PlatformLogo platform={pl} />
+                </div>
               </div>
-              <div className="bg-card" style={{ padding: 28 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    marginBottom: 6,
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      background: pl.dot,
-                      display: "inline-block",
-                    }}
-                  />
-                  <span className="text-foreground font-semibold">
-                    {pl.name}
-                  </span>
-                  <span
-                    style={{
-                      marginLeft: "auto",
-                      fontSize: "0.72rem",
-                      padding: "3px 12px",
-                      borderRadius: 9999,
-                      fontWeight: 700,
-                      background: pl.dotBg,
-                      color: pl.dot,
-                    }}
-                  >
-                    {pl.stat}
-                  </span>
-                </div>
-                <p
-                  className="text-muted-foreground"
-                  style={{
-                    fontSize: "0.72rem",
-                    marginBottom: 20,
-                    marginTop: 0,
-                  }}
-                >
-                  {pl.statSub}
-                </p>
-                <div
-                  className="bg-destructive/5"
-                  style={{ borderRadius: 12, padding: 16, marginBottom: 12 }}
-                >
-                  <p
-                    style={{
-                      fontSize: "0.65rem",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.12em",
-                      color: "hsl(0,65%,45%)",
-                      marginBottom: 4,
-                      margin: 0,
-                    }}
-                  >
-                    The bottleneck
+              
+              {/* Card Content */}
+              <div className="p-8 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: pl.dot,
+                        display: "inline-block",
+                      }}
+                      className="animate-pulse"
+                    />
+                    <span className="text-foreground font-black text-lg tracking-tight">
+                      {pl.name}
+                    </span>
+                    <span
+                      className="ml-auto text-[10px] px-2.5 py-1 rounded-full font-extrabold select-none whitespace-nowrap"
+                      style={{
+                        background: pl.dotBg,
+                        color: pl.dot,
+                      }}
+                    >
+                      {pl.stat}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-medium mb-6">
+                    {pl.statSub}
                   </p>
-                  <p
-                    className="text-muted-foreground"
-                    style={{
-                      fontSize: "0.85rem",
-                      lineHeight: 1.65,
-                      margin: "6px 0 0",
-                    }}
-                  >
-                    {pl.problem}
-                  </p>
-                </div>
-                <div
-                  className="bg-primary/5"
-                  style={{ borderRadius: 12, padding: 16 }}
-                >
-                  <p
-                    className="text-primary"
-                    style={{
-                      fontSize: "0.65rem",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.12em",
-                      margin: 0,
-                    }}
-                  >
-                    The SteerSolo Advantage
-                  </p>
-                  <p
-                    className="text-muted-foreground"
-                    style={{
-                      fontSize: "0.85rem",
-                      lineHeight: 1.65,
-                      margin: "6px 0 0",
-                    }}
-                  >
-                    {pl.fix}
-                  </p>
+
+                  <div className="space-y-4">
+                    {/* The bottleneck */}
+                    <div className="bg-destructive/[0.03] border border-destructive/5 rounded-2xl p-4">
+                      <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1.5">
+                        The bottleneck
+                      </p>
+                      <p className="text-muted-foreground text-[13px] leading-relaxed">
+                        {pl.problem}
+                      </p>
+                    </div>
+                    {/* The SteerSolo Advantage */}
+                    <div className="bg-accent/[0.03] border border-accent/5 rounded-2xl p-4">
+                      <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1.5">
+                        The SteerSolo Advantage
+                      </p>
+                      <p className="text-muted-foreground text-[13px] leading-relaxed">
+                        {pl.fix}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1167,20 +1039,7 @@ const Index = () => {
         </div>
 
         {/* flow bar — always indigo */}
-        <div
-          style={{
-            borderRadius: 24,
-            padding: "28px 32px",
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 20,
-            textAlign: "center",
-            background: "hsl(var(--primary))",
-            boxShadow: "0 16px 48px hsl(var(--primary) / 0.33)",
-          }}
-        >
+        <div className="rounded-3xl p-7 md:px-8 flex flex-wrap items-center justify-between gap-5 text-center bg-primary shadow-[0_16px_48px_hsl(var(--primary)/0.33)]">
           {[
             {
               e: "📲",
@@ -1201,38 +1060,20 @@ const Index = () => {
             !item ? (
               <span
                 key={i}
-                style={{ color: "rgba(255,255,255,.2)", fontSize: "1.4rem" }}
+                className="text-white/20 text-2xl hidden md:block"
               >
                 →
               </span>
             ) : (
               <div
                 key={i}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 4,
-                }}
+                className="flex flex-col items-center gap-1 mx-auto md:mx-0"
               >
-                <span style={{ fontSize: "1.4rem" }}>{item.e}</span>
-                <p
-                  style={{
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                    color: "#fff",
-                    margin: 0,
-                  }}
-                >
+                <span className="text-2xl">{item.e}</span>
+                <p className="text-xs font-semibold text-white m-0">
                   {item.l}
                 </p>
-                <p
-                  style={{
-                    fontSize: "0.68rem",
-                    color: "rgba(255,255,255,.38)",
-                    margin: 0,
-                  }}
-                >
+                <p className="text-[11px] text-white/40 m-0">
                   {item.s}
                 </p>
               </div>
@@ -1247,32 +1088,15 @@ const Index = () => {
     ══════════════════════════════════════════════════════ */}
     <section className="bg-ink-section">
       <div className="flex flex-col lg:flex-row min-h-[420px]">
-        <div
-          className="img-zoom"
-          style={{ flex: 1, overflow: "hidden", minHeight: 320 }}
-        >
+        <div className="img-zoom flex-1 overflow-hidden min-h-[320px]">
           <img
             src={P.storefront}
             alt="Online storefront"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              minHeight: 320,
-            }}
+            className="w-full h-full object-cover min-h-[320px]"
           />
         </div>
         <div className="flex-1 flex flex-col justify-center p-10 md:p-14">
-          <p
-            style={{
-              fontSize: "0.72rem",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.22em",
-              color: "hsl(var(--accent-bright))",
-              marginBottom: 32,
-            }}
-          >
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#00d97e] mb-8">
             The reality of selling online in Nigeria
           </p>
           {[
@@ -1288,64 +1112,21 @@ const Index = () => {
           ].map(s => (
             <div
               key={s.n}
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 20,
-                marginBottom: 28,
-              }}
+              className="flex items-start gap-5 mb-7"
             >
-              <span
-                style={{
-                  fontWeight: 800,
-                  color: "#fff",
-                  fontSize: "2.6rem",
-                  lineHeight: 1,
-                  flexShrink: 0,
-                }}
-              >
+              <span className="font-black text-white text-4xl sm:text-5xl leading-none shrink-0">
                 {s.n}
               </span>
-              <p
-                style={{
-                  fontSize: "0.95rem",
-                  lineHeight: 1.65,
-                  color: "rgba(255,255,255,.48)",
-                  fontWeight: 300,
-                  margin: "4px 0 0",
-                }}
-              >
+              <p className="text-sm sm:text-base leading-relaxed text-white/50 font-light mt-1">
                 {s.t}
               </p>
             </div>
           ))}
-          <div style={{ marginTop: 8 }}>
+          <div className="mt-2">
             <Link to="/auth/signup">
-              <button
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "13px 26px",
-                  borderRadius: 9999,
-                  fontWeight: 700,
-                  fontSize: "0.875rem",
-                  color: "hsl(var(--primary))",
-                  background: "#fff",
-                  border: "none",
-                  cursor: "pointer",
-                  transition: "all .25s ease",
-                  boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
-                }}
-                onMouseEnter={e =>
-                  (e.currentTarget.style.transform = "translateY(-2px)")
-                }
-                onMouseLeave={e =>
-                  (e.currentTarget.style.transform = "translateY(0)")
-                }
-              >
+              <button className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full font-bold text-sm text-primary bg-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl hover:bg-white/95 active:translate-y-0 transition-all duration-300">
                 Be the exception{" "}
-                <ArrowRight style={{ width: 15, height: 15 }} />
+                <ArrowRight className="w-4 h-4" />
               </button>
             </Link>
           </div>
@@ -1387,42 +1168,48 @@ const Index = () => {
             <div
               key={badge.label}
               className={cn(
-                "group relative p-8 rounded-[32px] border transition-all duration-500 hover:-translate-y-2",
+                "group relative p-8 rounded-[2.5rem] border transition-all duration-500 hover:-translate-y-2 overflow-hidden flex flex-col justify-between min-h-[300px]",
                 badge.top
-                  ? "bg-[#22c55e] border-[#22c55e] shadow-[0_20px_50px_rgba(34,197,94,0.3)]"
-                  : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20",
+                  ? "bg-gradient-to-br from-emerald-500 to-teal-600 border-emerald-400 shadow-[0_0_35px_rgba(16,185,129,0.3)] animate-pulse-soft"
+                  : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/25",
               )}
             >
-              <div
-                className={cn(
-                  "text-6xl font-black mb-6 transition-colors duration-500",
-                  badge.top
-                    ? "text-white/30"
-                    : "text-white/10 group-hover:text-white/20",
-                )}
-              >
-                {badge.num}
+              <div>
+                <div
+                  className={cn(
+                    "text-6xl font-black mb-6 transition-colors duration-500 select-none",
+                    badge.top
+                      ? "text-white/20"
+                      : "text-white/10 group-hover:text-white/20",
+                  )}
+                >
+                  {badge.num}
+                </div>
+                <h3
+                  className={cn(
+                    "text-xl font-extrabold mb-3 tracking-tight",
+                    badge.top ? "text-white" : "text-white",
+                  )}
+                >
+                  {badge.label}
+                </h3>
+                <p
+                  className={cn(
+                    "text-sm leading-relaxed font-light",
+                    badge.top ? "text-white/90" : "text-white/50",
+                  )}
+                >
+                  {badge.desc}
+                </p>
               </div>
-              <h3
-                className={cn(
-                  "text-xl font-bold mb-3",
-                  badge.top ? "text-white" : "text-white",
-                )}
-              >
-                {badge.label}
-              </h3>
-              <p
-                className={cn(
-                  "text-sm leading-relaxed",
-                  badge.top ? "text-white/80" : "text-white/50",
-                )}
-              >
-                {badge.desc}
-              </p>
 
               {/* Decorative accent for non-highlighted cards */}
-              {!badge.top && (
-                <div className="absolute bottom-6 right-8 w-8 h-1 bg-white/10 rounded-full group-hover:bg-primary/40 transition-colors" />
+              {!badge.top ? (
+                <div className="absolute bottom-6 right-8 w-8 h-1 bg-white/10 rounded-full group-hover:bg-accent-bright transition-colors" />
+              ) : (
+                <div className="absolute bottom-6 right-8 w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-white select-none">
+                  ✓
+                </div>
               )}
             </div>
           ))}
@@ -1530,26 +1317,10 @@ const Index = () => {
     <section className="bg-ink-section py-24">
       <div className="mx-auto max-w-screen-xl px-4">
         <div className="text-center mb-14">
-          <p
-            style={{
-              fontSize: "0.72rem",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.22em",
-              color: "hsl(var(--accent-bright))",
-              marginBottom: 16,
-            }}
-          >
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#00d97e] mb-4">
             Merchant stories
           </p>
-          <h2
-            style={{
-              fontWeight: 800,
-              color: "#fff",
-              fontSize: "clamp(1.9rem,4vw,2.8rem)",
-              margin: 0,
-            }}
-          >
+          <h2 className="font-extrabold text-white text-3xl sm:text-4xl tracking-tight m-0">
             Social sellers who made the switch.
           </h2>
         </div>
@@ -1557,81 +1328,30 @@ const Index = () => {
           {TESTIMONIALS.map(t => (
             <div
               key={t.name}
-              className="lift"
-              style={{
-                borderRadius: 24,
-                padding: 28,
-                display: "flex",
-                flexDirection: "column",
-                gap: 20,
-                background: "rgba(255,255,255,.05)",
-                border: "1px solid rgba(255,255,255,.08)",
-              }}
+              className="lift rounded-3xl p-7 flex flex-col gap-5 bg-white/5 border border-white/10"
             >
-              <div style={{ display: "flex", gap: 4, marginBottom: 4 }}>
+              <div className="flex gap-1 mb-1">
                 {[1, 2, 3, 4, 5].map(s => (
                   <Star
                     key={s}
-                    style={{
-                      width: 13,
-                      height: 13,
-                      fill: "hsl(var(--accent))",
-                      color: "hsl(var(--accent))",
-                    }}
+                    className="w-3.5 h-3.5 fill-accent text-accent"
                   />
                 ))}
               </div>
-              <p
-                style={{
-                  fontWeight: 400,
-                  fontStyle: "italic",
-                  color: "rgba(255,255,255,.88)",
-                  lineHeight: 1.65,
-                  fontSize: "1rem",
-                  margin: 0,
-                }}
-              >
+              <p className="font-light italic text-white/90 leading-relaxed text-base m-0">
                 "{t.quote}"
               </p>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  marginTop: "auto",
-                }}
-              >
+              <div className="flex items-center gap-3 mt-auto">
                 <img
                   src={t.av}
                   alt={t.name}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    objectPosition: "top",
-                    flexShrink: 0,
-                    border: "2px solid rgba(255,255,255,0.3)",
-                  }}
+                  className="w-10 h-10 rounded-full object-cover object-top shrink-0 border-2 border-white/30"
                 />
                 <div>
-                  <p
-                    style={{
-                      fontWeight: 600,
-                      fontSize: "0.875rem",
-                      color: "#fff",
-                      margin: 0,
-                    }}
-                  >
+                  <p className="font-semibold text-sm text-white m-0">
                     {t.name}
                   </p>
-                  <p
-                    style={{
-                      fontSize: "0.72rem",
-                      color: "rgba(255,255,255,.38)",
-                      margin: 0,
-                    }}
-                  >
+                  <p className="text-xs text-white/40 m-0">
                     {t.role}
                   </p>
                 </div>
@@ -1666,17 +1386,11 @@ const Index = () => {
     <section className="py-24 bg-background relative overflow-hidden">
       <div className="mx-auto max-w-screen-xl px-4">
         <div className="flex flex-col lg:flex-row items-start gap-16">
-          <div style={{ flex: "1 1 400px" }}>
+          <div className="flex-1 min-w-[320px]">
             <p className="text-xs font-bold uppercase tracking-widest text-accent mb-4">
               The SteerSolo Safe Marketplace
             </p>
-            <h2
-              className="text-foreground font-extrabold mb-6"
-              style={{
-                lineHeight: 1.1,
-                fontSize: "clamp(2.2rem,4.5vw,3.5rem)",
-              }}
-            >
+            <h2 className="text-foreground font-extrabold mb-6 text-3xl sm:text-4xl lg:text-5xl leading-tight">
               Finally, a place to shop
               <br />
               <span className="text-primary">without the heartbeat fast.</span>
@@ -1711,7 +1425,7 @@ const Index = () => {
                 },
               ].map((f, idx) => (
                 <div key={idx}>
-                  <div style={{ fontSize: "1.5rem", marginBottom: 12 }}>
+                  <div className="text-2xl mb-3">
                     {f.i}
                   </div>
                   <h4 className="font-bold text-foreground mb-2">{f.t}</h4>
@@ -1723,29 +1437,12 @@ const Index = () => {
             </div>
           </div>
 
-          <div style={{ flex: "1 1 400px", position: "relative" }}>
-            <div
-              style={{
-                background:
-                  "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--brand-blue-strong)))",
-                borderRadius: 32,
-                padding: 40,
-                color: "#fff",
-                boxShadow: "0 40px 80px rgba(0,0,0,0.15)",
-                position: "relative",
-                zIndex: 2,
-              }}
-            >
-              <h3
-                style={{
-                  fontSize: "1.8rem",
-                  fontWeight: 800,
-                  marginBottom: 20,
-                }}
-              >
+          <div className="flex-1 min-w-[320px] relative">
+            <div className="bg-gradient-to-br from-primary to-[#0A1128] rounded-[32px] p-10 text-white shadow-xl shadow-black/10 relative z-10">
+              <h3 className="text-2xl font-extrabold mb-5">
                 Ready to discover?
               </h3>
-              <p style={{ opacity: 0.8, marginBottom: 32, fontSize: "1.1rem" }}>
+              <p className="opacity-80 mb-8 text-base">
                 Thousands of authentic products are waiting for you in the
                 marketplace.
               </p>
@@ -1757,18 +1454,7 @@ const Index = () => {
               </Link>
             </div>
             {/* decorative circle */}
-            <div
-              style={{
-                position: "absolute",
-                top: -20,
-                right: -20,
-                width: 120,
-                height: 120,
-                borderRadius: "50%",
-                background: "hsl(var(--accent) / 0.2)",
-                zIndex: 1,
-              }}
-            />
+            <div className="absolute -top-5 -right-5 w-28 h-28 rounded-full bg-accent/20 z-0 pointer-events-none" />
           </div>
         </div>
       </div>
@@ -1777,14 +1463,17 @@ const Index = () => {
     {/* ── DONE-FOR-YOU STORE SETUP PREMIUM PROMO CARD ── */}
     <section className="py-16 bg-transparent relative overflow-hidden">
       <div className="mx-auto max-w-screen-xl px-4 relative z-10">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#060b19] via-[#0A1128] to-[#120c24] border border-indigo-500/20 p-8 md:p-12 shadow-2xl group transition-all duration-300 hover:shadow-indigo-500/5">
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#060b19] via-[#0A1128] to-[#120c24] border border-indigo-500/25 p-8 md:p-12 shadow-2xl group transition-all duration-300 hover:shadow-[0_0_50px_rgba(99,102,241,0.15)]">
           {/* Subtle glowing absolute circles */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
           <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
           
+          {/* Beautiful glowing accent border overlay */}
+          <div className="absolute inset-0 border border-transparent rounded-[2.5rem] bg-gradient-to-br from-indigo-500/20 via-transparent to-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
           <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="space-y-4 max-w-3xl">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-[10px] font-black uppercase tracking-wider text-accent-bright">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-[10px] font-black uppercase tracking-wider text-accent-bright animate-pulse-soft">
                 <Sparkles className="w-3 h-3 text-accent" />
                 Done-For-You Store Setup Service
               </div>
@@ -1798,15 +1487,15 @@ const Index = () => {
               
               <div className="flex flex-wrap gap-4 pt-2">
                 <div className="flex items-center gap-2 text-xs text-neutral-400">
-                  <CheckCircle className="w-4 h-4 text-accent" />
+                  <CheckCircle className="w-4 h-4 text-accent-bright" />
                   <span>Completed in 24 hours</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-neutral-400">
-                  <CheckCircle className="w-4 h-4 text-accent" />
+                  <CheckCircle className="w-4 h-4 text-accent-bright" />
                   <span>Up to 50 items formatted</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-neutral-400">
-                  <CheckCircle className="w-4 h-4 text-accent" />
+                  <CheckCircle className="w-4 h-4 text-accent-bright" />
                   <span>Professional copywriting included</span>
                 </div>
               </div>
@@ -1859,50 +1548,19 @@ const Index = () => {
       />
 
       <div className="mx-auto max-w-3xl px-4 relative z-10">
-        <ShoppingBag
-          style={{
-            width: 32,
-            height: 32,
-            margin: "0 auto 24px",
-            color: "rgba(255,255,255,.35)",
-          }}
-        />
-        <h2
-          style={{
-            fontWeight: 800,
-            color: "#fff",
-            lineHeight: 1.1,
-            fontSize: "clamp(2.2rem,5vw,3.8rem)",
-            marginBottom: 20,
-          }}
-        >
+        <ShoppingBag className="w-8 h-8 mx-auto mb-6 text-white/35" />
+        <h2 className="font-extrabold text-white leading-tight text-3xl sm:text-4xl lg:text-5xl mb-5">
           Your audience is ready.
           <br />
-          <em
-            style={{ fontStyle: "normal", color: "hsl(var(--accent-bright))" }}
-          >
+          <em className="not-italic text-[#00d97e]">
             Is your storefront?
           </em>
         </h2>
-        <p
-          style={{
-            fontSize: "1.05rem",
-            color: "rgba(255,255,255,.58)",
-            maxWidth: 460,
-            margin: "0 auto 12px",
-          }}
-        >
+        <p className="text-base sm:text-lg text-white/60 max-w-lg mx-auto mb-3">
           Join verified Nigerian beauty merchants turning their social following
           into a real, trusted business.
         </p>
-        <p
-          style={{
-            fontSize: "0.85rem",
-            fontStyle: "italic",
-            color: "rgba(255,255,255,.28)",
-            marginBottom: 40,
-          }}
-        >
+        <p className="text-xs sm:text-sm italic text-white/30 mb-10">
           "SteerSolo made my business look professional from day one."
         </p>
         <div className="flex flex-wrap justify-center gap-4 mb-9">
@@ -1920,16 +1578,7 @@ const Index = () => {
             View a demo store first
           </Link>
         </div>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            gap: 20,
-            fontSize: "0.78rem",
-            color: "rgba(255,255,255,.38)",
-          }}
-        >
+        <div className="flex flex-wrap justify-center gap-5 text-xs text-white/40">
           {[
             "Instant Setup",
             "Works on WhatsApp, IG & TikTok",
@@ -1937,15 +1586,9 @@ const Index = () => {
           ].map(t => (
             <span
               key={t}
-              style={{ display: "flex", alignItems: "center", gap: 6 }}
+              className="flex items-center gap-1.5"
             >
-              <CheckCircle
-                style={{
-                  width: 13,
-                  height: 13,
-                  color: "rgba(255,255,255,.48)",
-                }}
-              />
+              <CheckCircle className="w-3.5 h-3.5 text-white/50" />
               {t}
             </span>
           ))}

@@ -1,5 +1,5 @@
 import React from "react";
-import PageThemeShell from "@/components/PageThemeShell";
+import { PageThemeShell } from "@/components/PageThemeShell";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ShieldCheck, Database, Server, Eye, Lock } from "lucide-react";
 

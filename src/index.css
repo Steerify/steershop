@@ -8,139 +8,138 @@
 
 @layer base {
   :root {
-    /* SteerSolo brand palette — Deep Navy + Nigerian Green
-       Approved hexes (locked):
-         #0a1f44 deep navy   #050d24 ink     #008751 nigerian green
-         #006b41 deep green  #1a4d8c navy soft  #00a862 green bright
-         #f7f9fc mist        #5a6275 slate
+    /* SteerSolo brand palette — Deep Navy + Midnight Emerald + Lemon Accent
+       Approved HSL values:
+         Navy base: hsl(222, 60%, 12%)
+         Midnight Emerald: hsl(162, 82%, 32%)
+         Lemon Green: hsl(95, 85%, 50%)
+         Warm Cream: hsl(30, 20%, 98.5%)
     */
-    --background: 215 33% 98%;            /* mist */
-    --foreground: 222 67% 8%;             /* ink */
+    --background: 30 20% 98.5%;           /* Warm Cream Alabaster */
+    --foreground: 224 47% 4%;             /* Midnight Obsidian */
 
-    /* Brand navy family — DEEP navy */
-    --brand-blue: 220 52% 14%;            /* Brand anchor */
-    --brand-blue-deep: 220 52% 8%;        /* Deepest navy */
-    --brand-blue-soft: 220 45% 25%;       /* Soft navy */
-    --brand-blue-strong: 220 52% 18%;
+    /* Brand navy family */
+    --brand-blue: 222 60% 12%;
+    --brand-blue-deep: 222 60% 8%;
+    --brand-blue-soft: 222 40% 20%;
+    --brand-blue-strong: 222 60% 16%;
 
-    /* Brand green family — Nigerian flag green */
-    --accent-deep: 152 100% 21%;          /* #006b41 */
-    --accent-muted: 152 70% 18%;
-    --accent-forest: 152 80% 10%;
-    --accent-bright: 152 100% 33%;        /* #00a862 */
+    /* Brand green & lemon accent family */
+    --accent-deep: 162 85% 24%;           /* Deep Midnight Emerald */
+    --accent-muted: 162 60% 28%;
+    --accent-forest: 162 85% 10%;
+    --accent-bright: 95 85% 50%;          /* Vibrant Lemon Green Accent */
 
-    --card: 0 0% 100%;
-    --card-foreground: 232 73% 9%;
+    --card: 0 0% 100%;                     /* White base for cards */
+    --card-foreground: 224 47% 4%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 232 73% 9%;
+    --popover-foreground: 224 47% 4%;
 
     /* Primary = Deep Navy */
-    --primary: 220 52% 14%;
+    --primary: 222 60% 12%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 25% 95%;
-    --secondary-foreground: 218 74% 15%;
+    --secondary: 30 15% 95%;              /* Warm Cream-Grey */
+    --secondary-foreground: 222 60% 12%;
 
-    --muted: 215 20% 92%;
-    --muted-foreground: 220 12% 40%;      /* slate */
+    --muted: 30 10% 92%;
+    --muted-foreground: 220 12% 40%;
 
-    /* Accent = Nigerian Green */
-    --accent: 152 100% 26%;               /* #008751 nigerian green */
+    /* Accent = Midnight Emerald */
+    --accent: 162 82% 32%;
     --accent-foreground: 0 0% 100%;
 
-    /* Rating — used ONLY by star icons. NOT a brand color. */
     --rating: 42 90% 55%;
-    --rating-foreground: 232 73% 9%;
+    --rating-foreground: 224 47% 4%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 150 12% 88%;
-    --input: 150 12% 88%;
-    --ring: 218 74% 15%;                 /* ring = primary navy */
+    --border: 30 10% 90%;
+    --input: 30 10% 90%;
+    --ring: 222 60% 12%;
 
     --radius: 0.75rem;
 
-    /* Brand gradients (navy → green only) */
+    /* Brand gradients */
     --hero-gradient: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--brand-blue-soft)), hsl(var(--accent)));
     --adire-gradient: linear-gradient(135deg, hsl(var(--brand-blue-deep)), hsl(var(--primary)), hsl(var(--accent)));
-    --card-gradient: linear-gradient(180deg, hsl(0 0% 100%), hsl(150 12% 96%));
+    --card-gradient: linear-gradient(180deg, hsl(0 0% 100%), hsl(30 20% 97.5%));
     --pattern-overlay: linear-gradient(180deg, hsl(var(--primary) / 0.03), transparent);
 
     /* Shadows */
-    --shadow-elegant: 0 10px 40px -10px hsl(var(--primary) / 0.2);
-    --shadow-glow: 0 0 30px hsl(var(--primary) / 0.24);
+    --shadow-elegant: 0 10px 40px -10px hsl(var(--primary) / 0.15);
+    --shadow-glow: 0 0 30px hsl(var(--accent) / 0.2);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     /* Sidebar */
-    --sidebar-background: 150 20% 98%;
-    --sidebar-foreground: 218 74% 15%;
-    --sidebar-primary: 218 74% 15%;
+    --sidebar-background: 30 20% 98%;
+    --sidebar-foreground: 222 60% 12%;
+    --sidebar-primary: 222 60% 12%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 150 12% 95%;
-    --sidebar-accent-foreground: 218 74% 15%;
-    --sidebar-border: 150 12% 88%;
-    --sidebar-ring: 218 74% 15%;
+    --sidebar-accent: 30 15% 95%;
+    --sidebar-accent-foreground: 222 60% 12%;
+    --sidebar-border: 30 10% 90%;
+    --sidebar-ring: 222 60% 12%;
   }
 
   .dark {
-    --background: 220 50% 8%;              /* Premium Deep Navy */
-    --foreground: 150 20% 96%;
+    --background: 222 45% 7%;              /* Midnight Obsidian */
+    --foreground: 30 20% 96%;              /* Warm White */
 
-    --card: 230 50% 13%;
-    --card-foreground: 150 20% 96%;
+    --card: 222 40% 11%;
+    --card-foreground: 30 20% 96%;
 
-    --popover: 230 50% 11%;
-    --popover-foreground: 150 20% 96%;
+    --popover: 222 40% 9%;
+    --popover-foreground: 30 20% 96%;
 
-    /* Lift navy in dark mode for AA contrast on dark surfaces */
-    --primary: 152 100% 33%;               /* surface promoted to green */
-    --primary-foreground: 232 73% 9%;
+    --primary: 162 82% 32%;               /* Green Accent for Surface elements */
+    --primary-foreground: 224 47% 4%;
 
-    --brand-blue: 220 60% 50%;
-    --brand-blue-deep: 220 52% 8%;
-    --brand-blue-soft: 220 40% 20%;
-    --brand-blue-strong: 220 60% 55%;
+    --brand-blue: 222 60% 50%;
+    --brand-blue-deep: 222 60% 6%;
+    --brand-blue-soft: 222 35% 16%;
+    --brand-blue-strong: 222 60% 55%;
 
-    --secondary: 230 35% 18%;
-    --secondary-foreground: 150 20% 96%;
+    --secondary: 222 30% 16%;
+    --secondary-foreground: 30 20% 96%;
 
-    --muted: 230 28% 18%;
-    --muted-foreground: 226 12% 70%;
+    --muted: 222 25% 16%;
+    --muted-foreground: 224 12% 70%;
 
-    --accent: 152 100% 33%;
-    --accent-foreground: 232 73% 9%;
-    --accent-deep: 145 53% 38%;
-    --accent-muted: 99 41% 30%;
-    --accent-forest: 145 47% 12%;
-    --accent-bright: 95 67% 59%;
+    --accent: 162 82% 32%;
+    --accent-foreground: 224 47% 4%;
+    --accent-deep: 162 70% 24%;
+    --accent-muted: 162 50% 20%;
+    --accent-forest: 162 70% 8%;
+    --accent-bright: 95 85% 55%;          /* Luminous Lemon Accent in Dark Mode */
 
     --rating: 42 88% 58%;
-    --rating-foreground: 232 73% 9%;
+    --rating-foreground: 224 47% 4%;
 
     --destructive: 0 70% 54%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 230 30% 24%;
-    --input: 230 30% 24%;
-    --ring: 152 100% 33%;
+    --border: 222 25% 20%;
+    --input: 222 25% 20%;
+    --ring: 162 82% 32%;
 
-    --hero-gradient: linear-gradient(135deg, hsl(220 52% 15%), hsl(220 50% 10%), hsl(var(--accent)));
-    --adire-gradient: linear-gradient(135deg, hsl(230 70% 18%), hsl(var(--brand-blue-deep)), hsl(var(--accent-deep)));
-    --card-gradient: linear-gradient(180deg, hsl(230 50% 13%), hsl(230 50% 11%));
+    --hero-gradient: linear-gradient(135deg, hsl(222 60% 12%), hsl(222 50% 8%), hsl(var(--accent)));
+    --adire-gradient: linear-gradient(135deg, hsl(222 70% 14%), hsl(var(--brand-blue-deep)), hsl(var(--accent-deep)));
+    --card-gradient: linear-gradient(180deg, hsl(222 40% 11%), hsl(222 40% 9%));
     --pattern-overlay: linear-gradient(180deg, hsl(var(--accent) / 0.04), transparent);
-    --shadow-elegant: 0 10px 40px -10px hsl(232 73% 4% / 0.62);
-    --shadow-glow: 0 0 30px hsl(var(--accent) / 0.28);
+    --shadow-elegant: 0 10px 40px -10px hsl(224 47% 2% / 0.6);
+    --shadow-glow: 0 0 30px hsl(var(--accent) / 0.25);
 
-    --sidebar-background: 232 60% 8%;
-    --sidebar-foreground: 150 20% 96%;
-    --sidebar-primary: 152 100% 33%;
-    --sidebar-primary-foreground: 232 73% 9%;
-    --sidebar-accent: 230 35% 18%;
-    --sidebar-accent-foreground: 150 20% 96%;
-    --sidebar-border: 230 30% 22%;
-    --sidebar-ring: 152 100% 33%;
+    --sidebar-background: 222 50% 6%;
+    --sidebar-foreground: 30 20% 96%;
+    --sidebar-primary: 162 82% 32%;
+    --sidebar-primary-foreground: 224 47% 4%;
+    --sidebar-accent: 222 30% 16%;
+    --sidebar-accent-foreground: 30 20% 96%;
+    --sidebar-border: 222 25% 18%;
+    --sidebar-ring: 162 82% 32%;
   }
 }
 
