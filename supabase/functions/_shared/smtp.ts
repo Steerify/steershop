@@ -56,17 +56,35 @@ export function assertSmtpConfigured(): {
   };
 }
 
-function createSmtpTransporter() {
-  const smtp = assertSmtpConfigured();
-  return nodemailer.createTransport({
-    host: smtp.host,
-    port: smtp.port,
-    secure: smtp.secure,
-    auth: {
-      user: smtp.user,
-      pass: smtp.pass,
-    },
-  });
+function readProviderConfig(prefix: "SPACEMAIL" | "BREVO" | "SUPABASE"): ProviderConfig | null {
+  const host = Deno.env.get(`${prefix}_SMTP_HOST`);
+  const user = Deno.env.get(`${prefix}_SMTP_USER`);
+  const pass = Deno.env.get(`${prefix}_SMTP_PASS`);
+  if (!host || !user || !pass) return null;
+  const port = Number(Deno.env.get(`${prefix}_SMTP_PORT`) || "465");
+  return { name: prefix.toLowerCase(), host, port, user, pass, secure: port === 465 };
+}
+
+function resolveProviderOrder(): ProviderConfig[] {
+  const providers: ProviderConfig[] = [];
+  const primary = Deno.env.get("EMAIL_PRIMARY_PROVIDER")?.toLowerCase();
+  const spacemail = readProviderConfig("SPACEMAIL");
+  const brevo = readProviderConfig("BREVO");
+  const supabase = readProviderConfig("SUPABASE");
+  if (primary === "brevo") {
+    if (brevo) providers.push(brevo);
+    if (spacemail) providers.push(spacemail);
+  } else {
+    if (spacemail) providers.push(spacemail);
+    if (brevo) providers.push(brevo);
+  }
+
+  if (providers.length === 0) {
+    const smtp = assertSmtpConfigured();
+    providers.push({ name: "smtp", ...smtp });
+  }
+  if (supabase) providers.push(supabase);
+  return providers;
 }
 
 function readProviderConfig(prefix: "SPACEMAIL" | "BREVO"): ProviderConfig | null {

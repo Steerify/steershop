@@ -247,9 +247,9 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: isSmsConfigured
+        message: delivery === "sms"
           ? "Verification code sent to your phone"
-          : "SMS is not configured. Contact support.",
+          : "SMS provider is unavailable. Contact support.",
         expiresIn: 300,
         delivery,
       }),
