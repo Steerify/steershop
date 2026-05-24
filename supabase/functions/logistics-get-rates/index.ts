@@ -23,6 +23,7 @@ interface RateRequest {
 
 const SENDBOX_API_KEY = Deno.env.get('SENDBOX_API_KEY');
 const SENDBOX_BASE_URL = 'https://live.sendbox.co/shipping';
+const ALLOW_MOCK_RATES = Deno.env.get('LOGISTICS_ALLOW_MOCK_RATES') === 'true';
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -34,7 +35,7 @@ serve(async (req: Request) => {
     const { pickup_address, delivery_address, weight_kg = 1 } = body;
 
     // Optional mock fallback if no API key
-    if (!SENDBOX_API_KEY) {
+    if (!SENDBOX_API_KEY && ALLOW_MOCK_RATES) {
       console.log('Sendbox API key not configured, returning mock rates');
       const basePrice = pickup_address.city === delivery_address.city ? 1500 : 3000;
       return new Response(
@@ -51,6 +52,13 @@ serve(async (req: Request) => {
             }
           ],
         }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!SENDBOX_API_KEY) {
+      return new Response(
+        JSON.stringify({ success: true, rates: [] }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -86,18 +94,28 @@ serve(async (req: Request) => {
     }
 
     const quoteData = await quoteRes.json();
-    const fee = quoteData.fee || quoteData.data?.fee || 2000;
-    
-    const rates = [
-      {
-        carrier: 'Sendbox',
-        carrier_logo: 'https://sendbox.co/logo.png',
-        price: fee,
-        currency: 'NGN',
-        estimated_days: 3,
-        rate_id: `sb_rate_${Date.now()}`,
-      }
-    ];
+    const options = quoteData?.data?.rates || quoteData?.rates || [];
+    const parsed = Array.isArray(options)
+      ? options.map((option: any, idx: number) => ({
+          carrier: option.courier_name || option.name || option.carrier || 'Sendbox Partner',
+          carrier_logo: option.logo_url || option.carrier_logo || 'https://sendbox.co/logo.png',
+          price: Number(option.fee || option.amount || option.price || 0),
+          currency: String(option.currency || 'NGN'),
+          estimated_days: Number(option.estimated_days || option.eta_days || 3),
+          rate_id: String(option.rate_id || option.id || `sb_rate_${Date.now()}_${idx}`),
+        })).filter((r: any) => Number.isFinite(r.price) && r.price > 0)
+      : [];
+
+    const rates = parsed.length > 0
+      ? parsed
+      : [{
+          carrier: 'Sendbox',
+          carrier_logo: 'https://sendbox.co/logo.png',
+          price: Number(quoteData?.fee || quoteData?.data?.fee || 0),
+          currency: 'NGN',
+          estimated_days: 3,
+          rate_id: `sb_rate_${Date.now()}`,
+        }].filter((r) => Number.isFinite(r.price) && r.price > 0);
 
     return new Response(
       JSON.stringify({ success: true, rates }),

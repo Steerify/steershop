@@ -409,6 +409,8 @@ const CheckoutDialog = ({
   const [selectedRate, setSelectedRate] = useState<DeliveryRate | null>(null);
   const [defaultPickupAddress, setDefaultPickupAddress] =
     useState<ShopPickupAddress | null>(null);
+  const [shopUsesOwnLogistics, setShopUsesOwnLogistics] = useState(false);
+  const [shopOwnLogisticsNote, setShopOwnLogisticsNote] = useState<string>("");
 
   const formatPickupAddress = useCallback(
     (address: ShopPickupAddress) => ({
@@ -490,13 +492,28 @@ const CheckoutDialog = ({
       if (!isOpen || !shop.id) return;
 
       try {
-        const addresses = await deliveryService.getShopAddresses(shop.id);
+        const [addresses, shopSettings] = await Promise.all([
+          deliveryService.getShopAddresses(shop.id),
+          supabase
+            .from("shops")
+            .select("uses_own_logistics, own_logistics_note")
+            .eq("id", shop.id)
+            .maybeSingle(),
+        ]);
+
         setDefaultPickupAddress(
           (addresses?.[0] as ShopPickupAddress | undefined) || null,
         );
+        const shopConfig = (shopSettings.data || null) as
+          | { uses_own_logistics?: boolean | null; own_logistics_note?: string | null }
+          | null;
+        setShopUsesOwnLogistics(Boolean(shopConfig?.uses_own_logistics));
+        setShopOwnLogisticsNote(shopConfig?.own_logistics_note || "");
       } catch (error) {
         console.error("Failed to load shop pickup address", error);
         setDefaultPickupAddress(null);
+        setShopUsesOwnLogistics(false);
+        setShopOwnLogisticsNote("");
       }
     };
 
@@ -506,7 +523,7 @@ const CheckoutDialog = ({
   // Fetch shipping rates when address is reasonably complete
   useEffect(() => {
     const fetchRates = async () => {
-      if (isCartOnlyDigital) {
+      if (isCartOnlyDigital || shopUsesOwnLogistics) {
         setShippingRates([]);
         setSelectedRate(null);
         return;
@@ -567,6 +584,7 @@ const CheckoutDialog = ({
     selectedRate,
     formatPickupAddress,
     cart.length,
+    shopUsesOwnLogistics,
   ]);
 
   // Reset states when dialog closes
@@ -584,6 +602,8 @@ const CheckoutDialog = ({
       setShippingRates([]);
       setSelectedRate(null);
       setDefaultPickupAddress(null);
+      setShopUsesOwnLogistics(false);
+      setShopOwnLogisticsNote("");
     }
   }, [isOpen]);
 
@@ -600,7 +620,7 @@ const CheckoutDialog = ({
       try {
         const { data: shopData } = await supabase
           .from("shops")
-          .select("owner_id, whatsapp_number")
+          .select("owner_id, whatsapp_number, uses_own_logistics, own_logistics_note")
           .eq("id", shop.id)
           .single();
         shopOwnerPhone = shopData?.whatsapp_number || null;
@@ -1402,6 +1422,20 @@ const CheckoutDialog = ({
                   )}
                 </div>
               </div>
+
+              {shopUsesOwnLogistics && !isCartOnlyDigital && (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+                  <p className="font-medium text-primary">Vendor-managed delivery</p>
+                  <p className="text-muted-foreground">
+                    This store handles logistics directly. Delivery fee and timeline will be confirmed by the vendor after order placement.
+                  </p>
+                  {shopOwnLogisticsNote && (
+                    <p className="mt-2 text-muted-foreground">
+                      <span className="font-medium">Vendor note:</span> {shopOwnLogisticsNote}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Shipping Rates Selection */}
               {(shippingRates.length > 0 || isFetchingRates) && (

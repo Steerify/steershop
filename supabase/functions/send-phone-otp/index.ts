@@ -11,6 +11,8 @@ interface SendOTPRequest {
   phone: string;
 }
 
+const TERMII_BASE_URL = Deno.env.get("TERMII_BASE_URL") || "https://api.ng.termii.com";
+
 // Generate a 6-digit OTP
 const generateOTP = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -199,11 +201,12 @@ const handler = async (req: Request): Promise<Response> => {
     const termiiApiKey = Deno.env.get("TERMII_API_KEY");
     
     const isSmsConfigured = !!(termiiApiKey && termiiApiKey.length > 10);
+    let delivery: "sms" | "fallback" = isSmsConfigured ? "sms" : "fallback";
 
     if (isSmsConfigured) {
       console.log("Sending OTP via Termii...");
       try {
-        const termiiResponse = await fetch(`${termiiBaseUrl}/api/sms/send`, {
+        const termiiResponse = await fetch(`${TERMII_BASE_URL}/api/sms/send`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -244,11 +247,11 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: isSmsConfigured
+        message: delivery === "sms"
           ? "Verification code sent to your phone"
-          : "SMS is not configured. Contact support.",
+          : "SMS provider is unavailable. Contact support.",
         expiresIn: 300,
-        delivery: isSmsConfigured ? "sms" : "fallback",
+        delivery,
       }),
       {
         status: 200,
