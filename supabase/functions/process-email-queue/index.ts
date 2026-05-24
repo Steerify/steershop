@@ -7,6 +7,37 @@ const DEFAULT_SEND_DELAY_MS = 200
 const DEFAULT_AUTH_TTL_MINUTES = 15
 const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
 
+function buildProviders() {
+  const read = (prefix: 'SPACEMAIL' | 'BREVO') => {
+    const host = Deno.env.get(`${prefix}_SMTP_HOST`)
+    const user = Deno.env.get(`${prefix}_SMTP_USER`)
+    const pass = Deno.env.get(`${prefix}_SMTP_PASS`)
+    if (!host || !user || !pass) return null
+    const port = Number(Deno.env.get(`${prefix}_SMTP_PORT`) || '465')
+    return { name: prefix.toLowerCase(), host, port, secure: port === 465, user, pass }
+  }
+  const primary = Deno.env.get('EMAIL_PRIMARY_PROVIDER')?.toLowerCase()
+  const spacemail = read('SPACEMAIL')
+  const brevo = read('BREVO')
+  const providers = [] as Array<{ name: string; host: string; port: number; secure: boolean; user: string; pass: string }>
+  if (primary === 'brevo') {
+    if (brevo) providers.push(brevo)
+    if (spacemail) providers.push(spacemail)
+  } else {
+    if (spacemail) providers.push(spacemail)
+    if (brevo) providers.push(brevo)
+  }
+
+  if (providers.length === 0) {
+    const host = Deno.env.get('SMTP_HOST')
+    const user = Deno.env.get('SMTP_USER')
+    const pass = Deno.env.get('SMTP_PASS')
+    const port = Number(Deno.env.get('SMTP_PORT') || '465')
+    if (host && user && pass) providers.push({ name: 'smtp', host, port, secure: port === 465, user, pass })
+  }
+  return providers
+}
+
 function getErrorStatus(error: unknown): number | null {
   if (!error || typeof error !== 'object') return null
   if ('status' in error && typeof (error as { status: unknown }).status === 'number') {
@@ -73,11 +104,7 @@ async function moveToDlq(
 }
 
 Deno.serve(async (req) => {
-  const smtpHost = Deno.env.get('SMTP_HOST')
-  const smtpPort = Number(Deno.env.get('SMTP_PORT'))
-  const smtpUser = Deno.env.get('SMTP_USER')
-  const smtpPass = Deno.env.get('SMTP_PASS')
-  const smtpFromEmail = Deno.env.get('SMTP_FROM_EMAIL') || 'mail@steersolo.com'
+    const smtpFromEmail = Deno.env.get('SMTP_FROM_EMAIL') || 'mail@steersolo.com'
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
@@ -107,15 +134,7 @@ Deno.serve(async (req) => {
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: smtpPort,
-    secure: smtpPort === 465,
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
-    },
-  })
+  const smtpProviders = buildProviders()
 
   const { data: state } = await (supabase as any)
     .from('email_send_state')
@@ -240,25 +259,44 @@ Deno.serve(async (req) => {
       }
 
       try {
-        if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
+        if (smtpProviders.length === 0) {
           throw new Error('Missing SMTP environment variables. Emails cannot be sent.')
         }
 
-        const sendResult = await transporter.sendMail({
-          from: payload.from || `SteerSolo <${smtpFromEmail}>`,
-          to: payload.to,
-          subject: payload.subject,
-          html: payload.html,
-          text: payload.text,
-          replyTo: 'mail@steersolo.com',
-        })
+        let sendResult: any = null
+        let sentProvider = 'unknown'
+        let lastError: unknown = null
+        for (const provider of smtpProviders) {
+          try {
+            const transporter = nodemailer.createTransport({
+              host: provider.host,
+              port: provider.port,
+              secure: provider.secure,
+              auth: { user: provider.user, pass: provider.pass },
+            })
+            sendResult = await transporter.sendMail({
+              from: payload.from || `SteerSolo <${smtpFromEmail}>`,
+              to: payload.to,
+              subject: payload.subject,
+              html: payload.html,
+              text: payload.text,
+              replyTo: 'mail@steersolo.com',
+            })
+            sentProvider = provider.name
+            break
+          } catch (providerError) {
+            lastError = providerError
+            console.error('Provider send failed', { provider: provider.name, msg_id: msg.msg_id, error: providerError instanceof Error ? providerError.message : String(providerError) })
+          }
+        }
+        if (!sendResult) throw (lastError instanceof Error ? lastError : new Error('All providers failed'))
 
         await (supabase as any).from('email_send_log').insert({
           message_id: sendResult?.messageId || payload.message_id,
           template_name: payload.label || queue,
           recipient_email: payload.to,
           status: 'sent',
-          metadata: sendResult?.messageId ? { queue_message_id: payload.message_id } : null,
+          metadata: sendResult?.messageId ? { queue_message_id: payload.message_id, provider: sentProvider } : { provider: sentProvider },
         })
 
         const { error: delError } = await (supabase as any).rpc('delete_email', {

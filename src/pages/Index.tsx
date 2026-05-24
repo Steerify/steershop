@@ -427,7 +427,7 @@ const HeroTextSlider = () => {
 
 /* ═══════════════════════════════════════════════════════ PAGE ═══ */
 const Index = () => {
-  const [liveVendorCount, setLiveVendorCount] = useState<number>(1428);
+  const [liveVendorCount, setLiveVendorCount] = useState<number>(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -441,7 +441,7 @@ const Index = () => {
           .eq("role", "shop_owner");
         
         if (isMounted && !error && count !== null) {
-          setLiveVendorCount(count > 0 ? 1420 + count : 1428);
+          setLiveVendorCount(count);
         } else {
           console.warn("Could not fetch merchant count:", error?.message);
         }
@@ -477,7 +477,7 @@ const Index = () => {
     { v: "$10.17B", l: "Nigeria beauty market 2025" },
     { v: "95%", l: "Nigerians on WhatsApp" },
     { v: "67%", l: "Online beauty items likely counterfeit" },
-    { v: `${liveVendorCount}+`, l: "Verified merchants live on SteerSolo" },
+        { v: `${liveVendorCount.toLocaleString()}`, l: "Verified merchants live on SteerSolo" },
   ];
 
   return (
