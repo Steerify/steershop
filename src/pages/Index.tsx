@@ -477,7 +477,7 @@ const Index = () => {
     { v: "$10.17B", l: "Nigeria beauty market 2025" },
     { v: "95%", l: "Nigerians on WhatsApp" },
     { v: "67%", l: "Online beauty items likely counterfeit" },
-    { v: `${liveVendorCount.toLocaleString()}`, l: "Verified merchants live on SteerSolo" },
+        { v: `${liveVendorCount.toLocaleString()}`, l: "Verified merchants live on SteerSolo" },
   ];
 
   return (

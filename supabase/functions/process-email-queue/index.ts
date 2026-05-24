@@ -8,7 +8,7 @@ const DEFAULT_AUTH_TTL_MINUTES = 15
 const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
 
 function buildProviders() {
-  const read = (prefix: 'SPACEMAIL' | 'BREVO' | 'SUPABASE') => {
+  const read = (prefix: 'SPACEMAIL' | 'BREVO') => {
     const host = Deno.env.get(`${prefix}_SMTP_HOST`)
     const user = Deno.env.get(`${prefix}_SMTP_USER`)
     const pass = Deno.env.get(`${prefix}_SMTP_PASS`)
@@ -19,7 +19,6 @@ function buildProviders() {
   const primary = Deno.env.get('EMAIL_PRIMARY_PROVIDER')?.toLowerCase()
   const spacemail = read('SPACEMAIL')
   const brevo = read('BREVO')
-  const supabase = read('SUPABASE')
   const providers = [] as Array<{ name: string; host: string; port: number; secure: boolean; user: string; pass: string }>
   if (primary === 'brevo') {
     if (brevo) providers.push(brevo)
@@ -36,7 +35,6 @@ function buildProviders() {
     const port = Number(Deno.env.get('SMTP_PORT') || '465')
     if (host && user && pass) providers.push({ name: 'smtp', host, port, secure: port === 465, user, pass })
   }
-  if (supabase) providers.push(supabase)
   return providers
 }
 
