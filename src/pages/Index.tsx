@@ -281,7 +281,7 @@ const HeroTextSlider = () => {
   );
 };
 
-/* ═══════════════════════════════════════════════════════ PAGE ═══ */
+/* ═════ PAGE ═════ */
 const Index = () => (
   <div className="font-sans overflow-x-hidden bg-background text-foreground">
 
