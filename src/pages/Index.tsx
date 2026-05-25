@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { ArrowRight, CheckCircle, Shield, Zap, Sparkles, ShoppingBag, Star, Instagram, MessageCircle, Music2, MapPin, Store, ChevronRight } from "lucide-react";
+import { ArrowRight, CheckCircle, Shield, Zap, Sparkles, ShoppingBag, Star, Instagram, MessageCircle, Music2, MapPin, Store, ChevronRight, TrendingUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -471,7 +471,6 @@ const Index = () => (
           ))}
         </div>
 
-        </div>
       </div>
     </section>
 

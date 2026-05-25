@@ -197,7 +197,6 @@ const Dashboard = () => {
   const { user, signOut, isLoading: isAuthLoading } = useAuth();
   const [profile, setProfile] = useState<DashboardProfile | null>(null);
   const [isSubscribing, setIsSubscribing] = useState(false);
-  const [shopFullData, setShopFullData] = useState<any>(null);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [setupProgress, setSetupProgress] = useState(0);
@@ -832,7 +831,7 @@ const Dashboard = () => {
                       <CardContent className="p-5">
                         <div className="flex justify-between items-start mb-4">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${step.completed ? 'bg-green-500/20 text-green-400' : 'bg-primary/20 text-primary'}`}>
-                            {step.completed ? <CheckCircle2 className="w-5 h-5" /> : <step.id === 1 ? <Store className="w-5 h-5" /> : step.id === 2 ? <PackagePlus className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
+                            {step.completed ? <CheckCircle2 className="w-5 h-5" /> : (step.id === 1 ? <Store className="w-5 h-5" /> : step.id === 2 ? <PackagePlus className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />)}
                           </div>
                           <span className="text-white/20 text-[10px] font-black tracking-widest">0{step.id}</span>
                         </div>
@@ -1073,7 +1072,6 @@ const Dashboard = () => {
           }}
         />
       )}
-        </div>
 
       {/* ─── Mobile Bottom Navigation ────────────────────── */}
       <MobileBottomNav />

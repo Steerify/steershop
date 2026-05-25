@@ -18,6 +18,7 @@ export const useInactivityTimeout = () => {
   const isWarningShown = useAppSelector((state) => state.activity.isWarningShown);
   const rememberMe = useAppSelector((state) => state.activity.rememberMe);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const wasHiddenRef = useRef(false);
 
   const INACTIVITY_TIMEOUT = useMemo(() => 
     rememberMe ? EXTENDED_TIMEOUT : STANDARD_TIMEOUT
@@ -71,11 +72,27 @@ export const useInactivityTimeout = () => {
     const handleFocus = () => handleUserActivity();
     window.addEventListener('focus', handleFocus);
 
+    // When users briefly switch tabs/apps, avoid immediate expiry behavior.
+    // We resume tracking once they come back.
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        wasHiddenRef.current = true;
+        return;
+      }
+
+      if (wasHiddenRef.current) {
+        wasHiddenRef.current = false;
+        resetTimer();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       events.forEach((event) => {
         window.removeEventListener(event, throttledHandler);
       });
       window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (throttleTimeout) clearTimeout(throttleTimeout);
     };
   }, [user, handleUserActivity]);
@@ -91,6 +108,8 @@ export const useInactivityTimeout = () => {
     }
 
     intervalRef.current = setInterval(() => {
+      if (document.hidden) return;
+
       const now = Date.now();
       const timeSinceActivity = now - lastActivity;
 
