@@ -101,7 +101,7 @@ const shopService = {
     if (data.state) shopPayload.state = data.state;
     if (data.address) shopPayload.address = data.address.trim();
 
-    const { data: shop, error } = await supabase
+    let { data: shop, error } = await supabase
       .from('shops')
       .insert(shopPayload)
       .select()

@@ -181,7 +181,8 @@ const Products = () => {
       const formattedShopId = formatUUIDWithHyphens(userShop.id);
       const productsResponse = await productService.getProducts({ 
         shopId: formattedShopId,
-        limit: 100 
+        limit: 100,
+        includeUnavailable: true // Vendors should see ALL their products, including unavailable ones
       });
 
       setProducts(productsResponse.data || []);
@@ -431,7 +432,17 @@ const Products = () => {
       setShowDraftBanner(false);
       loadShopAndProducts();
     } catch (error: any) {
-      // Error handled by handleApiError
+      const msg = error?.message || "Failed to save. Please try again.";
+      const isPermission =
+        msg.toLowerCase().includes("row-level security") ||
+        msg.toLowerCase().includes("permission");
+      toast({
+        title: isPermission ? "Permission Error" : "Error",
+        description: isPermission
+          ? "Could not save product. Make sure your shop is set up correctly and try again."
+          : msg,
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }

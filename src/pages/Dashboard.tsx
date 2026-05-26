@@ -845,7 +845,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-4">
           {/* Main Dashboard Stats Card */}
           <Card className="border border-border/60 shadow-sm">
-            <CardContent className="p-5 sm:p-6 space-y-4">
+            <CardContent className="p-5 sm:p-6 space-y-4 flex flex-col justify-between h-full">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Your shop</p>
@@ -874,63 +874,63 @@ const Dashboard = () => {
                   <p className="text-2xl font-black mt-1">₦{payoutBalance.availableBalance.toLocaleString()}</p>
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <Button className="h-11" onClick={() => navigate('/products')}>
-                  <Package className="w-4 h-4 mr-2" /> Products
-                </Button>
-                <Button variant="outline" className="h-11" onClick={() => navigate('/orders')}>
-                  <ShoppingCart className="w-4 h-4 mr-2" /> Orders
-                </Button>
-                <Button variant="outline" className="h-11" onClick={() => setIsPayoutDialogOpen(true)}>
-                  <Wallet className="w-4 h-4 mr-2" /> Wallet
-                </Button>
-                <Button variant="outline" className="h-11" onClick={() => window.open('https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76', '_blank')}>
-                  <HelpCircle className="w-4 h-4 mr-2" /> Help
-                </Button>
-              </div>
             </CardContent>
           </Card>
-        </div>
 
-        {urgentTasks.length > 0 && (
-          <Card className="border border-amber-500/30 bg-amber-500/5 shadow-sm">
-            <CardContent className="p-4 sm:p-5">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
-                    <AlertCircle className="w-5 h-5" />
+          {/* Quick Tools & Urgent Tasks */}
+          <div className="space-y-4 flex flex-col">
+            {urgentTasks.length > 0 && (
+              <Card className="border border-amber-500/30 bg-amber-500/5 shadow-sm">
+                <CardContent className="p-4 sm:p-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+                        <AlertCircle className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-extrabold">Needs attention</h3>
+                        <p className="text-sm text-muted-foreground">{urgentTasks[0].label}</p>
+                      </div>
+                    </div>
+                    <Button onClick={urgentTasks[0].action} className="shrink-0">
+                      Fix now <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
                   </div>
-                  <div>
-                    <h3 className="font-extrabold">Needs attention</h3>
-                    <p className="text-sm text-muted-foreground">{urgentTasks[0].label}</p>
-                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="border border-border/60 shadow-sm flex-1">
+              <CardContent className="p-5 sm:p-6 flex flex-col justify-between h-full">
+                <div className="mb-4">
+                  <h3 className="font-extrabold text-lg">Quick tools</h3>
+                  <p className="text-sm text-muted-foreground">Manage your store efficiently.</p>
                 </div>
-                <Button onClick={urgentTasks[0].action} className="shrink-0">
-                  Fix now <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <Card className="border border-border/60 shadow-sm">
-          <CardContent className="p-5 sm:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h3 className="font-extrabold text-lg">Quick tools</h3>
-                <p className="text-sm text-muted-foreground">Only the most-used actions are shown here.</p>
-              </div>
-              <div className="grid grid-cols-2 sm:flex gap-2">
-                <Button variant="outline" onClick={() => navigate('/my-store')}>Store settings</Button>
-                <Button variant="outline" onClick={() => navigate('/customers')}>Customers</Button>
-                <Button variant="outline" onClick={() => navigate('/marketing')}>Marketing</Button>
-                <Button variant="outline" onClick={() => navigate(`/shop/${shopFullData?.shop_slug || shopData?.id}`)}>Visit store</Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" className="h-11 justify-start" onClick={() => navigate('/products')}>
+                    <Package className="w-4 h-4 mr-2 text-muted-foreground" /> Products
+                  </Button>
+                  <Button variant="outline" className="h-11 justify-start" onClick={() => navigate('/orders')}>
+                    <ShoppingCart className="w-4 h-4 mr-2 text-muted-foreground" /> Orders
+                  </Button>
+                  <Button variant="outline" className="h-11 justify-start" onClick={() => navigate('/customers')}>
+                    <Users className="w-4 h-4 mr-2 text-muted-foreground" /> Customers
+                  </Button>
+                  <Button variant="outline" className="h-11 justify-start" onClick={() => setIsPayoutDialogOpen(true)}>
+                    <Wallet className="w-4 h-4 mr-2 text-muted-foreground" /> Wallet
+                  </Button>
+                  <Button variant="outline" className="h-11 justify-start" onClick={() => navigate('/my-store')}>
+                    <Store className="w-4 h-4 mr-2 text-muted-foreground" /> Settings
+                  </Button>
+                  <Button variant="outline" className="h-11 justify-start" onClick={() => navigate(`/shop/${shopFullData?.shop_slug || shopData?.id}`)}>
+                    <ExternalLink className="w-4 h-4 mr-2 text-muted-foreground" /> View Shop
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
+      </div>
 
       {/* ─── Mobile Bottom Navigation ────────────────────── */}
       <MobileBottomNav />
