@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck, ChevronLeft, ChevronRight, Share2, Shield, Truck } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck, ChevronLeft, ChevronRight, Share2, Shield, Truck, Clock } from "lucide-react";
 import { WishlistButton } from "@/components/WishlistButton";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -410,6 +410,23 @@ const ProductDetails = () => {
                 totalReviews={product.totalReviews || 0}
               />
             </div>
+
+            {/* Self-Deletion Warning / Scarcity Badge (FOMO Indicator) */}
+            {product.delete_at && (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3 text-amber-600 dark:text-amber-400">
+                <Clock className="w-5 h-5 shrink-0 mt-0.5 animate-pulse" />
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-wider">Limited Time Listing</p>
+                  <p className="text-xs font-semibold mt-0.5 leading-normal">
+                    This offering is scheduled to automatically delete on{" "}
+                    <span className="font-bold underline">
+                      {format(new Date(product.delete_at), "eeee, MMMM dd 'at' hh:mm a")}
+                    </span>
+                    . Secure it now before it's gone permanently!
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Price */}
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">

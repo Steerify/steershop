@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,12 +15,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { couponService } from "@/services/coupon.service";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Minus, Plus, ShoppingCart, Trash2, CreditCard, MessageCircle, Copy, Check, Upload, Camera, User, Building2, Truck, Zap } from "lucide-react";
+import NoticeBadge from "@/components/NoticeBadge";
+import {
+  Loader2,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Trash2,
+  CreditCard,
+  MessageCircle,
+  Copy,
+  Check,
+  Upload,
+  Camera,
+  User,
+  Building2,
+  Truck,
+  Zap,
+} from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { z } from "zod";
 import deliveryService, { DeliveryRate } from "@/services/delivery.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { saveCheckoutDraft, clearCheckoutDraft } from "@/store/slices/formSlice";
+import {
+  saveCheckoutDraft,
+  clearCheckoutDraft,
+} from "@/store/slices/formSlice";
 import { clearCart } from "@/store/slices/cartSlice";
 
 interface Product {
@@ -22,6 +48,9 @@ interface Product {
   name: string;
   price: number;
   stock_quantity: number;
+  is_digital?: boolean;
+  digital_file_url?: string;
+  digital_delivery_text?: string;
 }
 
 interface CartItem {
@@ -61,54 +90,93 @@ interface CheckoutDialogProps {
 }
 
 const checkoutSchema = z.object({
-  customer_name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name too long"),
-  customer_email: z.string().trim().email("Invalid email address").max(255, "Email too long"),
-  customer_phone: z.string().trim().min(10, "Phone number must be at least 10 digits").max(20, "Phone number too long"),
-  delivery_address: z.string().trim().min(10, "Address must be at least 10 characters").max(500, "Address too long"),
+  customer_name: z
+    .string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name too long"),
+  customer_email: z
+    .string()
+    .trim()
+    .email("Invalid email address")
+    .max(255, "Email too long"),
+  customer_phone: z
+    .string()
+    .trim()
+    .min(10, "Phone number must be at least 10 digits")
+    .max(20, "Phone number too long"),
+  delivery_address: z
+    .string()
+    .trim()
+    .min(10, "Address must be at least 10 characters")
+    .max(500, "Address too long"),
   delivery_city: z.string().trim().min(2, "City is required"),
   delivery_state: z.string().trim().min(2, "State is required"),
 });
 
+const digitalCheckoutSchema = z.object({
+  customer_name: z
+    .string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name too long"),
+  customer_email: z
+    .string()
+    .trim()
+    .email("Invalid email address")
+    .max(255, "Email too long"),
+  customer_phone: z
+    .string()
+    .trim()
+    .min(10, "Phone number must be at least 10 digits")
+    .max(20, "Phone number too long"),
+});
+
 // Paystack fee calculator: 1.5% + NGN 100, capped at NGN 2,000
 const calculatePaystackFee = (amountInNaira: number): number => {
-  const fee = (amountInNaira * 0.015) + 100;
+  const fee = amountInNaira * 0.015 + 100;
   return Math.min(fee, 2000);
 };
 
 // Paystack utilities
 const loadPaystackScript = (): Promise<boolean> => {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     // Check if already loaded
-    if (typeof window.PaystackPop !== 'undefined') {
+    if (typeof window.PaystackPop !== "undefined") {
       console.log("Paystack script already loaded");
       resolve(true);
       return;
     }
 
     // Check if script is already being loaded
-    const existingScript = document.querySelector('script[src="https://js.paystack.co/v1/inline.js"]');
+    const existingScript = document.querySelector(
+      'script[src="https://js.paystack.co/v1/inline.js"]',
+    );
     if (existingScript) {
       console.log("Paystack script already exists, waiting for load...");
-      existingScript.addEventListener('load', () => resolve(true));
-      existingScript.addEventListener('error', () => resolve(false));
+      existingScript.addEventListener("load", () => resolve(true));
+      existingScript.addEventListener("error", () => resolve(false));
       return;
     }
 
     console.log("Loading Paystack script...");
-    const script = document.createElement('script');
-    script.src = 'https://js.paystack.co/v1/inline.js';
+    const script = document.createElement("script");
+    script.src = "https://js.paystack.co/v1/inline.js";
     script.async = true;
-    
+
     script.onload = () => {
       console.log("Paystack script loaded successfully");
       resolve(true);
     };
-    
-    script.onerror = (error) => {
-      console.error("Failed to load Paystack script - may be blocked by CSP or network issue:", error);
+
+    script.onerror = error => {
+      console.error(
+        "Failed to load Paystack script - may be blocked by CSP or network issue:",
+        error,
+      );
       resolve(false);
     };
-    
+
     document.head.appendChild(script);
   });
 };
@@ -122,8 +190,8 @@ const initializePaystackPayment = (config: {
   callback?: (response: any) => void;
   onClose?: () => void;
 }) => {
-  if (typeof window.PaystackPop === 'undefined') {
-    console.error('Paystack script not loaded');
+  if (typeof window.PaystackPop === "undefined") {
+    console.error("Paystack script not loaded");
     return false;
   }
 
@@ -132,8 +200,8 @@ const initializePaystackPayment = (config: {
       key: config.key,
       email: config.email,
       amount: config.amount * 100,
-      currency: config.currency || 'NGN',
-      ref: config.ref || `PS_${Math.floor((Math.random() * 1000000000) + 1)}`,
+      currency: config.currency || "NGN",
+      ref: config.ref || `PS_${Math.floor(Math.random() * 1000000000 + 1)}`,
       callback: (response: any) => {
         if (config.callback) {
           config.callback(response);
@@ -149,7 +217,7 @@ const initializePaystackPayment = (config: {
     handler.openIframe();
     return true;
   } catch (error) {
-    console.error('Error initializing Paystack:', error);
+    console.error("Error initializing Paystack:", error);
     return false;
   }
 };
@@ -172,7 +240,8 @@ const openWhatsAppWithOrderDetails = (
     shopName: string;
     paymentMethod: string;
     requiresProof?: boolean;
-  }
+    isDigital?: boolean;
+  },
 ) => {
   if (!shopWhatsappNumber) {
     console.error("WhatsApp number not configured");
@@ -180,23 +249,32 @@ const openWhatsAppWithOrderDetails = (
   }
 
   // Clean the phone number - remove all non-digits except leading +
-  let cleaned = shopWhatsappNumber.replace(/[^\d+]/g, '');
+  let cleaned = shopWhatsappNumber.replace(/[^\d+]/g, "");
   // Ensure it has country code
-  if (!cleaned.startsWith('+')) {
-    cleaned = cleaned.startsWith('234') ? `+${cleaned}` : `+234${cleaned.replace(/^0+/, '')}`;
+  if (!cleaned.startsWith("+")) {
+    cleaned = cleaned.startsWith("234")
+      ? `+${cleaned}`
+      : `+234${cleaned.replace(/^0+/, "")}`;
   }
   const phoneNumber = cleaned;
 
-  // Create detailed order summary
-  const orderSummary = orderDetails.cart.map(item => 
-    `• ${item.product.name} x ${item.quantity} - ₦${(item.product.price * item.quantity).toLocaleString()}`
-  ).join('%0A');
+  const orderSummary = orderDetails.cart
+    .map(
+      item =>
+        `• ${item.product.name} x ${item.quantity} - ₦${(item.product.price * item.quantity).toLocaleString()}`,
+    )
+    .join("%0A");
 
-  let message = '';
+  const deliveryAddressStr = orderDetails.isDigital
+    ? "Digital Product (Instant Online Access)"
+    : `${orderDetails.deliveryAddress}, ${orderDetails.deliveryCity}, ${orderDetails.deliveryState}`;
+
+  let message = "";
 
   if (orderDetails.requiresProof) {
     // Bank transfer proof submission message
-    message = `🧾 *PAYMENT PROOF SUBMISSION*%0A%0A` +
+    message =
+      `🧾 *PAYMENT PROOF SUBMISSION*%0A%0A` +
       `Hello ${orderDetails.shopName},%0A%0A` +
       `I have made a bank transfer payment for my order. Please find my payment proof attached.%0A%0A` +
       `*📋 ORDER DETAILS:*%0A` +
@@ -208,11 +286,12 @@ const openWhatsAppWithOrderDetails = (
       `Name: ${orderDetails.customerName}%0A` +
       `Phone: ${orderDetails.customerPhone}%0A` +
       `Email: ${orderDetails.customerEmail}%0A` +
-      `Delivery Address: ${orderDetails.deliveryAddress}%0A%0A` +
+      `Delivery Address: ${deliveryAddressStr}%0A%0A` +
       `⚠️ *PLEASE ATTACH YOUR PAYMENT SCREENSHOT TO THIS MESSAGE*`;
-  } else if (orderDetails.paymentMethod === 'delivery_before') {
+  } else if (orderDetails.paymentMethod === "delivery_before") {
     // Pay after service message
-    message = `📦 *ORDER REQUEST - PAY ON DELIVERY*%0A%0A` +
+    message =
+      `📦 *ORDER REQUEST - PAY ON DELIVERY*%0A%0A` +
       `Hello ${orderDetails.shopName},%0A%0A` +
       `I would like to place an order and pay upon delivery. Please confirm if you can fulfill this order:%0A%0A` +
       `*📦 ORDER ITEMS:*%0A` +
@@ -225,31 +304,32 @@ const openWhatsAppWithOrderDetails = (
       `Name: ${orderDetails.customerName}%0A` +
       `Phone: ${orderDetails.customerPhone}%0A` +
       `Email: ${orderDetails.customerEmail}%0A` +
-      `Delivery Address: ${orderDetails.deliveryAddress}%0A%0A` +
+      `Delivery Address: ${deliveryAddressStr}%0A%0A` +
       `Order ID: ${orderDetails.orderId}%0A%0A` +
       `Please confirm availability and delivery timeline.`;
   } else {
     // Paystack payment success message
-    message = `🎉 *PAYMENT SUCCESSFUL*%0A%0A` +
+    message =
+      `🎉 *PAYMENT SUCCESSFUL*%0A%0A` +
       `Hello ${orderDetails.shopName},%0A%0A` +
       `I have completed my order and payment. Here are the details:%0A%0A` +
       `*📦 ORDER ITEMS:*%0A` +
       `${orderSummary}%0A%0A` +
       `*💰 PAYMENT DETAILS:*%0A` +
       `Total: ₦${orderDetails.totalAmount.toLocaleString()}%0A` +
-      `Reference: ${orderDetails.paymentReference || 'N/A'}%0A` +
+      `Reference: ${orderDetails.paymentReference || "N/A"}%0A` +
       `Status: ✅ PAID%0A%0A` +
       `*👤 CUSTOMER INFO:*%0A` +
       `Name: ${orderDetails.customerName}%0A` +
       `Phone: ${orderDetails.customerPhone}%0A` +
       `Email: ${orderDetails.customerEmail}%0A` +
-      `Delivery Address: ${orderDetails.deliveryAddress}, ${orderDetails.deliveryCity}, ${orderDetails.deliveryState}%0A%0A` +
+      `Delivery Address: ${deliveryAddressStr}%0A%0A` +
       `Order ID: ${orderDetails.orderId}%0A%0A` +
       `Please confirm delivery timeline.`;
   }
 
   // Create deep link and web link
-  const deepLink = `whatsapp://send?phone=${phoneNumber.replace('+', '')}&text=${message}`;
+  const deepLink = `whatsapp://send?phone=${phoneNumber.replace("+", "")}&text=${message}`;
   const webLink = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${message}`;
 
   // Detect mobile vs desktop
@@ -263,24 +343,33 @@ const openWhatsAppWithOrderDetails = (
     // Fallback to web link if deep link doesn't work
     setTimeout(() => {
       if (Date.now() - start < 2000) {
-        window.open(webLink, '_blank');
+        window.open(webLink, "_blank");
       }
     }, 1500);
   } else {
     // Desktop: use web link directly
-    window.open(webLink, '_blank');
+    window.open(webLink, "_blank");
   }
 
   return true;
 };
 
-const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAmount }: CheckoutDialogProps) => {
+const CheckoutDialog = ({
+  isOpen,
+  onClose,
+  cart,
+  shop,
+  onUpdateQuantity,
+  totalAmount,
+}: CheckoutDialogProps) => {
   const { toast } = useToast();
   const { user, isLoading: isAuthLoading } = useAuth();
   const dispatch = useAppDispatch();
-  const checkoutDraft = useAppSelector((state) => state.forms.checkoutDraft);
+  const checkoutDraft = useAppSelector(state => state.forms.checkoutDraft);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentChoice, setPaymentChoice] = useState<"pay_before" | "delivery_before">("delivery_before");
+  const [paymentChoice, setPaymentChoice] = useState<
+    "pay_before" | "delivery_before"
+  >("delivery_before");
   const [formData, setFormData] = useState({
     customer_name: checkoutDraft?.customerName || "",
     customer_email: checkoutDraft?.customerEmail || "",
@@ -289,6 +378,14 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     delivery_city: checkoutDraft?.deliveryCity || "",
     delivery_state: checkoutDraft?.deliveryState || "",
   });
+  
+  const isCartOnlyDigital = cart.length > 0 && cart.every(item => item.product.is_digital);
+
+  useEffect(() => {
+    if (isOpen && isCartOnlyDigital) {
+      setPaymentChoice("pay_before");
+    }
+  }, [isOpen, isCartOnlyDigital]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [orderCreated, setOrderCreated] = useState(false);
@@ -296,8 +393,11 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   const [isInitializingPayment, setIsInitializingPayment] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [proofSent, setProofSent] = useState(false);
-  const [showPaymentMethodSelection, setShowPaymentMethodSelection] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'paystack' | 'bank_transfer' | null>(null);
+  const [showPaymentMethodSelection, setShowPaymentMethodSelection] =
+    useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
+    "paystack" | "bank_transfer" | null
+  >(null);
   const [couponCode, setCouponCode] = useState("");
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
@@ -307,32 +407,51 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   const [shippingRates, setShippingRates] = useState<DeliveryRate[]>([]);
   const [isFetchingRates, setIsFetchingRates] = useState(false);
   const [selectedRate, setSelectedRate] = useState<DeliveryRate | null>(null);
-  const [defaultPickupAddress, setDefaultPickupAddress] = useState<ShopPickupAddress | null>(null);
+  const [defaultPickupAddress, setDefaultPickupAddress] =
+    useState<ShopPickupAddress | null>(null);
+  const [shopUsesOwnLogistics, setShopUsesOwnLogistics] = useState(false);
+  const [shopOwnLogisticsNote, setShopOwnLogisticsNote] = useState<string>("");
 
-  const formatPickupAddress = useCallback((address: ShopPickupAddress) => ({
-    name: address.contact_name || shop.shop_name,
-    phone: address.contact_phone || shop.whatsapp_number || '0000000000',
-    address: [address.address_line_1, address.address_line_2].filter(Boolean).join(', '),
-    city: address.city,
-    state: address.state,
-    country: address.country || 'NG',
-  }), [shop.shop_name, shop.whatsapp_number]);
+  const formatPickupAddress = useCallback(
+    (address: ShopPickupAddress) => ({
+      name: address.contact_name || shop.shop_name,
+      phone: address.contact_phone || shop.whatsapp_number || "0000000000",
+      address: [address.address_line_1, address.address_line_2]
+        .filter(Boolean)
+        .join(", "),
+      city: address.city,
+      state: address.state,
+      country: address.country || "NG",
+    }),
+    [shop.shop_name, shop.whatsapp_number],
+  );
 
-  const effectiveTotal = Math.max(0, totalAmount + (selectedRate?.price || 0) - couponDiscount);
+  const effectiveTotal = Math.max(
+    0,
+    totalAmount + (selectedRate?.price || 0) - couponDiscount,
+  );
   const paystackFee = calculatePaystackFee(effectiveTotal);
   const totalWithFee = effectiveTotal + paystackFee;
 
   // Save form data to Redux on change
   const handleFormChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    dispatch(saveCheckoutDraft({
-      customerName: field === 'customer_name' ? value : formData.customer_name,
-      customerEmail: field === 'customer_email' ? value : formData.customer_email,
-      customerPhone: field === 'customer_phone' ? value : formData.customer_phone,
-      deliveryAddress: field === 'delivery_address' ? value : formData.delivery_address,
-      deliveryCity: field === 'delivery_city' ? value : formData.delivery_city,
-      deliveryState: field === 'delivery_state' ? value : formData.delivery_state,
-    }));
+    dispatch(
+      saveCheckoutDraft({
+        customerName:
+          field === "customer_name" ? value : formData.customer_name,
+        customerEmail:
+          field === "customer_email" ? value : formData.customer_email,
+        customerPhone:
+          field === "customer_phone" ? value : formData.customer_phone,
+        deliveryAddress:
+          field === "delivery_address" ? value : formData.delivery_address,
+        deliveryCity:
+          field === "delivery_city" ? value : formData.delivery_city,
+        deliveryState:
+          field === "delivery_state" ? value : formData.delivery_state,
+      }),
+    );
   };
 
   // Auto-fill customer info for logged-in users
@@ -343,9 +462,9 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       try {
         if (user) {
           const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, email, phone')
-            .eq('id', user.id)
+            .from("profiles")
+            .select("full_name, email, phone")
+            .eq("id", user.id)
             .maybeSingle();
 
           if (profile) {
@@ -373,11 +492,28 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       if (!isOpen || !shop.id) return;
 
       try {
-        const addresses = await deliveryService.getShopAddresses(shop.id);
-        setDefaultPickupAddress((addresses?.[0] as ShopPickupAddress | undefined) || null);
+        const [addresses, shopSettings] = await Promise.all([
+          deliveryService.getShopAddresses(shop.id),
+          supabase
+            .from("shops")
+            .select("uses_own_logistics, own_logistics_note")
+            .eq("id", shop.id)
+            .maybeSingle(),
+        ]);
+
+        setDefaultPickupAddress(
+          (addresses?.[0] as ShopPickupAddress | undefined) || null,
+        );
+        const shopConfig = (shopSettings.data || null) as
+          | { uses_own_logistics?: boolean | null; own_logistics_note?: string | null }
+          | null;
+        setShopUsesOwnLogistics(Boolean(shopConfig?.uses_own_logistics));
+        setShopOwnLogisticsNote(shopConfig?.own_logistics_note || "");
       } catch (error) {
-        console.error('Failed to load shop pickup address', error);
+        console.error("Failed to load shop pickup address", error);
         setDefaultPickupAddress(null);
+        setShopUsesOwnLogistics(false);
+        setShopOwnLogisticsNote("");
       }
     };
 
@@ -387,6 +523,12 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   // Fetch shipping rates when address is reasonably complete
   useEffect(() => {
     const fetchRates = async () => {
+      if (isCartOnlyDigital || shopUsesOwnLogistics) {
+        setShippingRates([]);
+        setSelectedRate(null);
+        return;
+      }
+
       if (
         formData.customer_name &&
         formData.customer_phone &&
@@ -403,9 +545,9 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
         setIsFetchingRates(true);
         try {
           const pickupAddress = formatPickupAddress(defaultPickupAddress);
-          
+
           const rates = await deliveryService.getRates({
-            order_id: 'temp_' + Date.now(),
+            order_id: "temp_" + Date.now(),
             pickup_address: pickupAddress,
             delivery_address: {
               name: formData.customer_name,
@@ -413,14 +555,14 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
               address: formData.delivery_address,
               city: formData.delivery_city,
               state: formData.delivery_state,
-              country: 'NG'
+              country: "NG",
             },
-            weight_kg: cart.length * 0.5 // Estimated weight
+            weight_kg: cart.length * 0.5, // Estimated weight
           });
-          
+
           setShippingRates(rates);
           if (rates.length > 0 && !selectedRate) {
-             setSelectedRate(rates[0]); // Auto-select first/cheapest rate
+            setSelectedRate(rates[0]); // Auto-select first/cheapest rate
           }
         } catch (error) {
           console.error("Failed to fetch shipping rates", error);
@@ -432,7 +574,18 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
 
     const debounceTimeout = setTimeout(fetchRates, 1000); // 1s debounce
     return () => clearTimeout(debounceTimeout);
-  }, [formData.customer_name, formData.customer_phone, formData.delivery_address, formData.delivery_city, formData.delivery_state, defaultPickupAddress, selectedRate, formatPickupAddress, cart.length]);
+  }, [
+    formData.customer_name,
+    formData.customer_phone,
+    formData.delivery_address,
+    formData.delivery_city,
+    formData.delivery_state,
+    defaultPickupAddress,
+    selectedRate,
+    formatPickupAddress,
+    cart.length,
+    shopUsesOwnLogistics,
+  ]);
 
   // Reset states when dialog closes
   useEffect(() => {
@@ -449,34 +602,42 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       setShippingRates([]);
       setSelectedRate(null);
       setDefaultPickupAddress(null);
+      setShopUsesOwnLogistics(false);
+      setShopOwnLogisticsNote("");
     }
   }, [isOpen]);
 
   // Send order notification (fire-and-forget) — also sends email to shop owner
-  const sendOrderNotification = async (orderId: string, eventType: string, extra?: Record<string, any>) => {
+  const sendOrderNotification = async (
+    orderId: string,
+    eventType: string,
+    extra?: Record<string, any>,
+  ) => {
     try {
       // Fetch shop owner email and phone
       let shopOwnerEmail: string | null = null;
       let shopOwnerPhone: string | null = null;
       try {
         const { data: shopData } = await supabase
-          .from('shops')
-          .select('owner_id, whatsapp_number')
-          .eq('id', shop.id)
+          .from("shops")
+          .select("owner_id, whatsapp_number, uses_own_logistics, own_logistics_note")
+          .eq("id", shop.id)
           .single();
         shopOwnerPhone = shopData?.whatsapp_number || null;
         if (shopData?.owner_id) {
           const { data: ownerProfile } = await supabase
-            .from('profiles')
-            .select('email, phone')
-            .eq('id', shopData.owner_id)
+            .from("profiles")
+            .select("email, phone")
+            .eq("id", shopData.owner_id)
             .single();
           shopOwnerEmail = ownerProfile?.email || null;
           if (!shopOwnerPhone) shopOwnerPhone = ownerProfile?.phone || null;
         }
-      } catch (e) { /* non-blocking */ }
+      } catch (e) {
+        /* non-blocking */
+      }
 
-      await supabase.functions.invoke('order-notifications', {
+      await supabase.functions.invoke("order-notifications", {
         body: {
           orderId,
           eventType,
@@ -484,14 +645,18 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
           customerEmail: formData.customer_email,
           customerName: formData.customer_name,
           totalAmount: effectiveTotal,
-          items: cart.map(item => ({ name: item.product.name, quantity: item.quantity, price: item.product.price })),
+          items: cart.map(item => ({
+            name: item.product.name,
+            quantity: item.quantity,
+            price: item.product.price,
+          })),
           shopOwnerEmail,
           shopOwnerPhone,
           ...extra,
         },
       });
     } catch (e) {
-      console.error('Notification failed (non-blocking):', e);
+      console.error("Notification failed (non-blocking):", e);
     }
   };
 
@@ -499,16 +664,31 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     if (!couponCode.trim()) return;
     setIsApplyingCoupon(true);
     try {
-      const result = await couponService.validateCoupon(couponCode, shop.id, totalAmount);
-      if (result.valid && 'coupon' in result) {
+      const result = await couponService.validateCoupon(
+        couponCode,
+        shop.id,
+        totalAmount,
+      );
+      if (result.valid && "coupon" in result) {
         setCouponDiscount(result.discount);
         setAppliedCoupon(result.coupon);
-        toast({ title: "Coupon Applied! 🎉", description: `You saved ₦${result.discount.toLocaleString()}` });
+        toast({
+          title: "Coupon Applied! 🎉",
+          description: `You saved ₦${result.discount.toLocaleString()}`,
+        });
       } else {
-        toast({ title: "Invalid Coupon", description: 'error' in result ? result.error : 'Invalid coupon', variant: "destructive" });
+        toast({
+          title: "Invalid Coupon",
+          description: "error" in result ? result.error : "Invalid coupon",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      toast({ title: "Error", description: "Failed to validate coupon", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to validate coupon",
+        variant: "destructive",
+      });
     } finally {
       setIsApplyingCoupon(false);
     }
@@ -538,7 +718,10 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     }
   };
 
-  const handlePaystackPayment = async (orderId: string, customerEmail: string) => {
+  const handlePaystackPayment = async (
+    orderId: string,
+    customerEmail: string,
+  ) => {
     setIsInitializingPayment(true);
 
     try {
@@ -554,20 +737,26 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       });
 
       // Call the backend edge function to initialize split payment
-      const { data, error: fnError } = await supabase.functions.invoke('paystack-initialize-order', {
-        body: {
-          order_id: orderId,
-          shop_id: shop.id,
-          amount: totalWithFee,
-          customer_email: customerEmail,
-          callback_url: window.location.origin + '/customer/orders',
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "paystack-initialize-order",
+        {
+          body: {
+            order_id: orderId,
+            shop_id: shop.id,
+            amount: totalWithFee,
+            customer_email: customerEmail,
+            callback_url: window.location.origin + "/customer/orders",
+          },
         },
-      });
+      );
 
       if (fnError || !data?.success) {
-        const errorMsg = data?.error || fnError?.message || 'Failed to initialize payment';
-        if (data?.code === 'NO_SUBACCOUNT') {
-          throw new Error("This shop hasn't set up their bank details for receiving payments yet. Please choose 'Pay on Delivery' or contact the seller.");
+        const errorMsg =
+          data?.error || fnError?.message || "Failed to initialize payment";
+        if (data?.code === "NO_SUBACCOUNT") {
+          throw new Error(
+            "This shop hasn't set up their bank details for receiving payments yet. Please choose 'Pay on Delivery' or contact the seller.",
+          );
         }
         throw new Error(errorMsg);
       }
@@ -580,7 +769,6 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
 
       // Redirect to Paystack checkout page
       window.location.href = data.data.authorization_url;
-
     } catch (error: any) {
       console.error("Payment initialization error:", error);
       setIsInitializingPayment(false);
@@ -596,28 +784,32 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     try {
       const { error: updateError } = await supabase
         .from("orders")
-        .update({ 
+        .update({
           status: "awaiting_approval",
-          payment_status: "unpaid"
+          payment_status: "unpaid",
         })
         .eq("id", orderId);
 
       if (updateError) throw updateError;
 
-      const whatsappOpened = openWhatsAppWithOrderDetails(shop.whatsapp_number || '', {
-        orderId,
-        customerName: formData.customer_name,
-        customerEmail: formData.customer_email,
-        customerPhone: formData.customer_phone,
-        deliveryAddress: formData.delivery_address,
-        deliveryCity: formData.delivery_city,
-        deliveryState: formData.delivery_state,
-        cart,
-        totalAmount: effectiveTotal,
-        shippingFee: selectedRate?.price,
-        shopName: shop.shop_name,
-        paymentMethod: "delivery_before"
-      });
+      const whatsappOpened = openWhatsAppWithOrderDetails(
+        shop.whatsapp_number || "",
+        {
+          orderId,
+          customerName: formData.customer_name,
+          customerEmail: formData.customer_email,
+          customerPhone: formData.customer_phone,
+          deliveryAddress: formData.delivery_address,
+          deliveryCity: formData.delivery_city,
+          deliveryState: formData.delivery_state,
+          cart,
+          totalAmount: effectiveTotal,
+          shippingFee: selectedRate?.price,
+          shopName: shop.shop_name,
+          paymentMethod: "delivery_before",
+          isDigital: isCartOnlyDigital,
+        },
+      );
 
       if (whatsappOpened) {
         toast({
@@ -627,15 +819,15 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
         });
       }
 
-      cart.forEach((item) => onUpdateQuantity(item.product.id, 0));
+      cart.forEach(item => onUpdateQuantity(item.product.id, 0));
       resetForm();
       onClose();
-
     } catch (error: any) {
       console.error("Error in delivery before service:", error);
       toast({
         title: "Order Request Submitted!",
-        description: "Your order request has been saved. The seller will contact you.",
+        description:
+          "Your order request has been saved. The seller will contact you.",
       });
     }
   };
@@ -658,11 +850,13 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     e.preventDefault();
     setErrors({});
 
-    const validation = checkoutSchema.safeParse(formData);
+    const validation = isCartOnlyDigital
+      ? digitalCheckoutSchema.safeParse(formData)
+      : checkoutSchema.safeParse(formData);
 
     if (!validation.success) {
       const newErrors: Record<string, string> = {};
-      validation.error.errors.forEach((err) => {
+      validation.error.errors.forEach(err => {
         if (err.path[0]) {
           newErrors[err.path[0] as string] = err.message;
         }
@@ -672,7 +866,11 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
     }
 
     // If paying before service and both methods enabled, show selection first
-    if (paymentChoice === "pay_before" && shop.payment_method === "both" && !selectedPaymentMethod) {
+    if (
+      paymentChoice === "pay_before" &&
+      shop.payment_method === "both" &&
+      !selectedPaymentMethod
+    ) {
       setShowPaymentMethodSelection(true);
       return;
     }
@@ -681,35 +879,36 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   };
 
   // New function to handle order creation and payment
-  const createOrderAndProcessPayment = async (paymentMethod?: 'paystack' | 'bank_transfer') => {
+  const createOrderAndProcessPayment = async (
+    paymentMethod?: "paystack" | "bank_transfer",
+  ) => {
     setIsProcessing(true);
 
     try {
       const orderId = crypto.randomUUID();
 
-      const { error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          id: orderId,
-          shop_id: shop.id,
-          customer_id: user?.id || null,
-          customer_name: formData.customer_name,
-          customer_email: formData.customer_email,
-          customer_phone: formData.customer_phone,
-          delivery_address: formData.delivery_address,
-          delivery_city: formData.delivery_city,
-          delivery_state: formData.delivery_state,
-          total_amount: effectiveTotal,
-          status: paymentChoice === "delivery_before" ? "awaiting_approval" : "pending",
-          payment_status: paymentChoice === "pay_before" ? "pending" : "unpaid",
-        });
+      const { error: orderError } = await supabase.from("orders").insert({
+        id: orderId,
+        shop_id: shop.id,
+        customer_id: user?.id || null,
+        customer_name: formData.customer_name,
+        customer_email: formData.customer_email,
+        customer_phone: formData.customer_phone,
+        delivery_address: isCartOnlyDigital ? "Digital Delivery" : formData.delivery_address,
+        delivery_city: isCartOnlyDigital ? "Digital" : formData.delivery_city,
+        delivery_state: isCartOnlyDigital ? "Digital" : formData.delivery_state,
+        total_amount: effectiveTotal,
+        status:
+          paymentChoice === "delivery_before" ? "awaiting_approval" : "pending",
+        payment_status: paymentChoice === "pay_before" ? "pending" : "unpaid",
+      });
 
       if (orderError) {
-        console.error('Order creation error:', orderError);
+        console.error("Order creation error:", orderError);
         throw orderError;
       }
 
-      const orderItems = cart.map((item) => ({
+      const orderItems = cart.map(item => ({
         order_id: orderId,
         product_id: item.product.id,
         quantity: item.quantity,
@@ -725,12 +924,17 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       // Decrement stock for each ordered product (best-effort, non-blocking)
       try {
         await Promise.all(
-          cart.map((item) =>
+          cart.map(item =>
             supabase
               .from("products")
-              .update({ stock_quantity: Math.max(0, item.product.stock_quantity - item.quantity) })
-              .eq("id", item.product.id)
-          )
+              .update({
+                stock_quantity: Math.max(
+                  0,
+                  item.product.stock_quantity - item.quantity,
+                ),
+              })
+              .eq("id", item.product.id),
+          ),
         );
       } catch (stockError) {
         console.error("Stock decrement failed (non-blocking):", stockError);
@@ -739,25 +943,28 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       // Book shipping if a rate was selected and the shop has a default pickup address.
       if (selectedRate && defaultPickupAddress) {
         try {
-           await deliveryService.bookDelivery({
-             order_id: orderId,
-             shop_id: shop.id,
-             rate_id: selectedRate.rate_id,
-             provider: 'sendbox',
-             pickup_address: formatPickupAddress(defaultPickupAddress),
-             delivery_address: {
-               name: formData.customer_name,
-               phone: formData.customer_phone,
-               address: formData.delivery_address,
-               city: formData.delivery_city,
-               state: formData.delivery_state,
-               country: 'NG'
-             },
-             delivery_fee: selectedRate.price,
-             weight_kg: cart.length * 0.5,
-           });
+          await deliveryService.bookDelivery({
+            order_id: orderId,
+            shop_id: shop.id,
+            rate_id: selectedRate.rate_id,
+            provider: "sendbox",
+            pickup_address: formatPickupAddress(defaultPickupAddress),
+            delivery_address: {
+              name: formData.customer_name,
+              phone: formData.customer_phone,
+              address: formData.delivery_address,
+              city: formData.delivery_city,
+              state: formData.delivery_state,
+              country: "NG",
+            },
+            delivery_fee: selectedRate.price,
+            weight_kg: cart.length * 0.5,
+          });
         } catch (shippingError) {
-           console.error("Failed to book shipping, but order created:", shippingError);
+          console.error(
+            "Failed to book shipping, but order created:",
+            shippingError,
+          );
         }
       }
 
@@ -779,19 +986,22 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       } else {
         // Determine which payment method to use
         const effectivePaymentMethod = paymentMethod || shop.payment_method;
-        
+
         // Handle payment before service - trigger Paystack for paystack or when selected via "both"
-        if (effectivePaymentMethod === "paystack" || (shop.payment_method === "both" && paymentMethod === "paystack")) {
+        if (
+          effectivePaymentMethod === "paystack" ||
+          (shop.payment_method === "both" && paymentMethod === "paystack")
+        ) {
           await handlePaystackPayment(orderId, formData.customer_email);
         }
         // For bank transfer, the UI will show bank details and require proof
       }
-      
     } catch (error: any) {
       console.error("Error creating order:", error);
       toast({
         title: "Order Failed",
-        description: error.message || "Failed to create order. Please try again.",
+        description:
+          error.message || "Failed to create order. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -808,7 +1018,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
   const handleSendProofViaWhatsApp = () => {
     if (!currentOrderId) return;
 
-    openWhatsAppWithOrderDetails(shop.whatsapp_number || '', {
+    openWhatsAppWithOrderDetails(shop.whatsapp_number || "", {
       orderId: currentOrderId,
       customerName: formData.customer_name,
       customerEmail: formData.customer_email,
@@ -821,7 +1031,8 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
       shippingFee: selectedRate?.price,
       shopName: shop.shop_name,
       paymentMethod: "pay_before",
-      requiresProof: true
+      requiresProof: true,
+      isDigital: isCartOnlyDigital,
     });
 
     setProofSent(true);
@@ -829,25 +1040,28 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
 
   const handleCompleteOrder = () => {
     // Check if bank transfer proof is required
-    const isBankTransferPayment = selectedPaymentMethod === 'bank_transfer' || 
-      (shop.payment_method === 'bank_transfer' && !selectedPaymentMethod);
+    const isBankTransferPayment =
+      selectedPaymentMethod === "bank_transfer" ||
+      (shop.payment_method === "bank_transfer" && !selectedPaymentMethod);
 
     if (!proofSent && paymentChoice === "pay_before" && isBankTransferPayment) {
       toast({
         title: "Please send payment proof first",
-        description: "You must send your payment proof via WhatsApp before completing the order.",
+        description:
+          "You must send your payment proof via WhatsApp before completing the order.",
         variant: "destructive",
       });
       return;
     }
 
-    cart.forEach((item) => onUpdateQuantity(item.product.id, 0));
+    cart.forEach(item => onUpdateQuantity(item.product.id, 0));
     resetForm();
     onClose();
-    
+
     toast({
       title: "Order Submitted",
-      description: "Thank you! The shop owner will verify your payment and process your order.",
+      description:
+        "Thank you! The shop owner will verify your payment and process your order.",
     });
   };
 
@@ -862,19 +1076,41 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
           <DialogDescription className="text-sm mt-1">
             {showPaymentMethodSelection && !orderCreated
               ? "Choose how you'd like to pay"
-              : orderCreated && paymentChoice === "pay_before" && (shop.payment_method === "bank_transfer" || selectedPaymentMethod === "bank_transfer")
-              ? "Make payment and send proof via WhatsApp"
-              : isInitializingPayment
-              ? "Initializing payment gateway..."
-              : "Complete your order"}
+              : orderCreated &&
+                  paymentChoice === "pay_before" &&
+                  (shop.payment_method === "bank_transfer" ||
+                    selectedPaymentMethod === "bank_transfer")
+                ? "Make payment and send proof via WhatsApp"
+                : isInitializingPayment
+                  ? "Initializing payment gateway..."
+                  : "Complete your order"}
           </DialogDescription>
         </div>
 
         <div className="p-4 sm:p-6 space-y-6">
+          <NoticeBadge
+            variant="legal"
+            dismissible
+            storageKey="notice_checkout_legal"
+            className="w-full"
+          >
+            By proceeding with checkout you acknowledge our{" "}
+            <Link to="/terms" className="underline">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link to="/privacy" className="underline">
+              Privacy Policy
+            </Link>
+            .
+          </NoticeBadge>
+
           {/* Step 1: Cart Items */}
           <div className="bg-card/50 backdrop-blur border border-primary/10 rounded-2xl p-5 shadow-sm">
             <h3 className="font-bold mb-4 text-lg flex items-center gap-2 text-primary">
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">1</span>
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">
+                1
+              </span>
               Order Summary
             </h3>
             <div className="space-y-2 sm:space-y-3">
@@ -885,33 +1121,50 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                   </div>
                   <div>
                     <p className="font-semibold text-sm">Your cart is empty</p>
-                    <p className="text-xs text-muted-foreground mt-1">Add items from the store before checking out.</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Add items from the store before checking out.
+                    </p>
                   </div>
                 </div>
               ) : (
-                cart.map((item) => (
-                  <div key={item.product.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-muted rounded-lg">
+                cart.map(item => (
+                  <div
+                    key={item.product.id}
+                    className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-muted rounded-lg"
+                  >
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm sm:text-base truncate">{item.product.name}</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground">₦{item.product.price.toLocaleString()}</p>
+                      <p className="font-medium text-sm sm:text-base truncate">
+                        {item.product.name}
+                      </p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        ₦{item.product.price.toLocaleString()}
+                      </p>
                     </div>
-                    
+
                     <div className="flex items-center justify-between sm:justify-end gap-2">
                       <div className="flex items-center gap-1 sm:gap-2">
                         <Button
                           size="icon"
                           variant="outline"
-                          onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
+                          onClick={() =>
+                            onUpdateQuantity(item.product.id, item.quantity - 1)
+                          }
                           className="h-8 w-8 sm:h-9 sm:w-9"
                         >
                           <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
                         </Button>
-                        <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{item.quantity}</span>
+                        <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">
+                          {item.quantity}
+                        </span>
                         <Button
                           size="icon"
                           variant="outline"
-                          onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
-                          disabled={item.quantity >= item.product.stock_quantity}
+                          onClick={() =>
+                            onUpdateQuantity(item.product.id, item.quantity + 1)
+                          }
+                          disabled={
+                            item.quantity >= item.product.stock_quantity
+                          }
                           className="h-8 w-8 sm:h-9 sm:w-9"
                         >
                           <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -925,7 +1178,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                           <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                         </Button>
                       </div>
-                      
+
                       <div className="font-semibold text-sm sm:text-base min-w-[80px] sm:w-24 text-right">
                         ₦{(item.product.price * item.quantity).toLocaleString()}
                       </div>
@@ -934,7 +1187,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 ))
               )}
             </div>
-            
+
             <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Subtotal:</span>
@@ -942,28 +1195,46 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
               </div>
               {selectedRate && (
                 <div className="flex justify-between items-center text-muted-foreground">
-                  <span className="text-sm">Delivery ({selectedRate.carrier}):</span>
-                  <span className="text-sm">₦{selectedRate.price.toLocaleString()}</span>
+                  <span className="text-sm">
+                    Delivery ({selectedRate.carrier}):
+                  </span>
+                  <span className="text-sm">
+                    ₦{selectedRate.price.toLocaleString()}
+                  </span>
                 </div>
               )}
               {couponDiscount > 0 && (
                 <div className="flex justify-between items-center text-primary">
-                  <span className="text-sm">Coupon ({appliedCoupon?.code}):</span>
-                  <span className="text-sm">-₦{couponDiscount.toLocaleString()}</span>
+                  <span className="text-sm">
+                    Coupon ({appliedCoupon?.code}):
+                  </span>
+                  <span className="text-sm">
+                    -₦{couponDiscount.toLocaleString()}
+                  </span>
                 </div>
               )}
               {paymentChoice === "pay_before" &&
-                (selectedPaymentMethod === "paystack" || shop.payment_method === "paystack" ||
-                 (shop.payment_method === "both" && (selectedPaymentMethod as string) === "paystack")) && (
-                <div className="flex justify-between items-center text-muted-foreground">
-                  <span className="text-sm">Processing fee:</span>
-                  <span className="text-sm">₦{Math.round(paystackFee).toLocaleString()}</span>
-                </div>
-              )}
+                (selectedPaymentMethod === "paystack" ||
+                  shop.payment_method === "paystack" ||
+                  (shop.payment_method === "both" &&
+                    (selectedPaymentMethod as string) === "paystack")) && (
+                  <div className="flex justify-between items-center text-muted-foreground">
+                    <span className="text-sm">Processing fee:</span>
+                    <span className="text-sm">
+                      ₦{Math.round(paystackFee).toLocaleString()}
+                    </span>
+                  </div>
+                )}
               <div className="flex justify-between items-center">
-                <span className="text-base sm:text-lg font-semibold">Total:</span>
+                <span className="text-base sm:text-lg font-semibold">
+                  Total:
+                </span>
                 <span className="text-xl sm:text-2xl font-bold">
-                  ₦{(paymentChoice === "pay_before" ? totalWithFee : effectiveTotal).toLocaleString()}
+                  ₦
+                  {(paymentChoice === "pay_before"
+                    ? totalWithFee
+                    : effectiveTotal
+                  ).toLocaleString()}
                 </span>
               </div>
 
@@ -972,18 +1243,35 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 <div className="flex gap-2">
                   <Input
                     value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    onChange={e => setCouponCode(e.target.value.toUpperCase())}
                     placeholder="Coupon code"
                     className="min-h-[40px] text-sm"
                   />
-                  <Button type="button" variant="outline" size="sm" onClick={handleApplyCoupon} disabled={isApplyingCoupon || !couponCode.trim()} className="min-h-[40px] whitespace-nowrap">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleApplyCoupon}
+                    disabled={isApplyingCoupon || !couponCode.trim()}
+                    className="min-h-[40px] whitespace-nowrap"
+                  >
                     {isApplyingCoupon ? "..." : "Apply"}
                   </Button>
                 </div>
               ) : (
                 <div className="flex items-center justify-between p-2 bg-green-500/10 border border-green-500/20 rounded-lg">
-                  <span className="text-sm text-green-700 dark:text-green-400 font-medium">✓ {appliedCoupon.code}</span>
-                  <Button type="button" variant="ghost" size="sm" onClick={removeCoupon} className="text-xs h-7">Remove</Button>
+                  <span className="text-sm text-green-700 dark:text-green-400 font-medium">
+                    ✓ {appliedCoupon.code}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={removeCoupon}
+                    className="text-xs h-7"
+                  >
+                    Remove
+                  </Button>
                 </div>
               )}
             </div>
@@ -1004,107 +1292,161 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
               {/* Step 2: Delivery Details */}
               <div className="bg-card/50 backdrop-blur border border-primary/10 rounded-2xl p-5 shadow-sm space-y-4">
                 <h3 className="font-bold mb-4 text-lg flex items-center gap-2 text-primary">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">2</span>
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">
+                    2
+                  </span>
                   Delivery Details
                 </h3>
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="customer_name" className="text-sm">Full Name *</Label>
-                <Input
-                  id="customer_name"
-                  value={formData.customer_name}
-                  onChange={(e) => handleFormChange('customer_name', e.target.value)}
-                  placeholder="John Doe"
-                  className={`min-h-[44px] ${errors.customer_name ? "border-destructive" : ""}`}
-                />
-                {errors.customer_name && (
-                  <p className="text-xs sm:text-sm text-destructive">{errors.customer_name}</p>
-                )}
-              </div>
-
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="customer_email" className="text-sm">Email *</Label>
-                <Input
-                  id="customer_email"
-                  type="email"
-                  value={formData.customer_email}
-                  onChange={(e) => handleFormChange('customer_email', e.target.value)}
-                  placeholder="john@example.com"
-                  className={`min-h-[44px] ${errors.customer_email ? "border-destructive" : ""}`}
-                />
-                {errors.customer_email && (
-                  <p className="text-xs sm:text-sm text-destructive">{errors.customer_email}</p>
-                )}
-              </div>
-
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="customer_phone" className="text-sm">Phone Number *</Label>
-                <Input
-                  id="customer_phone"
-                  type="tel"
-                  value={formData.customer_phone}
-                  onChange={(e) => handleFormChange('customer_phone', e.target.value)}
-                  placeholder="+234 800 000 0000"
-                  className={`min-h-[44px] ${errors.customer_phone ? "border-destructive" : ""}`}
-                />
-                {errors.customer_phone && (
-                  <p className="text-xs sm:text-sm text-destructive">{errors.customer_phone}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1.5 sm:space-y-2">
-                  <Label htmlFor="delivery_city" className="text-sm">City *</Label>
+                  <Label htmlFor="customer_name" className="text-sm">
+                    Full Name *
+                  </Label>
                   <Input
-                    id="delivery_city"
-                    value={formData.delivery_city}
-                    onChange={(e) => handleFormChange('delivery_city', e.target.value)}
-                    placeholder="E.g. Ikeja"
-                    className={`min-h-[44px] ${errors.delivery_city ? "border-destructive" : ""}`}
+                    id="customer_name"
+                    value={formData.customer_name}
+                    onChange={e =>
+                      handleFormChange("customer_name", e.target.value)
+                    }
+                    placeholder="John Doe"
+                    className={`min-h-[44px] ${errors.customer_name ? "border-destructive" : ""}`}
                   />
-                  {errors.delivery_city && (
-                    <p className="text-xs sm:text-sm text-destructive">{errors.delivery_city}</p>
+                  {errors.customer_name && (
+                    <p className="text-xs sm:text-sm text-destructive">
+                      {errors.customer_name}
+                    </p>
                   )}
                 </div>
 
                 <div className="space-y-1.5 sm:space-y-2">
-                  <Label htmlFor="delivery_state" className="text-sm">State *</Label>
+                  <Label htmlFor="customer_email" className="text-sm">
+                    Email *
+                  </Label>
                   <Input
-                    id="delivery_state"
-                    value={formData.delivery_state}
-                    onChange={(e) => handleFormChange('delivery_state', e.target.value)}
-                    placeholder="E.g. Lagos"
-                    className={`min-h-[44px] ${errors.delivery_state ? "border-destructive" : ""}`}
+                    id="customer_email"
+                    type="email"
+                    value={formData.customer_email}
+                    onChange={e =>
+                      handleFormChange("customer_email", e.target.value)
+                    }
+                    placeholder="john@example.com"
+                    className={`min-h-[44px] ${errors.customer_email ? "border-destructive" : ""}`}
                   />
-                  {errors.delivery_state && (
-                    <p className="text-xs sm:text-sm text-destructive">{errors.delivery_state}</p>
+                  {errors.customer_email && (
+                    <p className="text-xs sm:text-sm text-destructive">
+                      {errors.customer_email}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="customer_phone" className="text-sm">
+                    Phone Number *
+                  </Label>
+                  <Input
+                    id="customer_phone"
+                    type="tel"
+                    value={formData.customer_phone}
+                    onChange={e =>
+                      handleFormChange("customer_phone", e.target.value)
+                    }
+                    placeholder="+234 800 000 0000"
+                    className={`min-h-[44px] ${errors.customer_phone ? "border-destructive" : ""}`}
+                  />
+                  {errors.customer_phone && (
+                    <p className="text-xs sm:text-sm text-destructive">
+                      {errors.customer_phone}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="delivery_city" className="text-sm">
+                      City *
+                    </Label>
+                    <Input
+                      id="delivery_city"
+                      value={formData.delivery_city}
+                      onChange={e =>
+                        handleFormChange("delivery_city", e.target.value)
+                      }
+                      placeholder="E.g. Ikeja"
+                      className={`min-h-[44px] ${errors.delivery_city ? "border-destructive" : ""}`}
+                    />
+                    {errors.delivery_city && (
+                      <p className="text-xs sm:text-sm text-destructive">
+                        {errors.delivery_city}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="delivery_state" className="text-sm">
+                      State *
+                    </Label>
+                    <Input
+                      id="delivery_state"
+                      value={formData.delivery_state}
+                      onChange={e =>
+                        handleFormChange("delivery_state", e.target.value)
+                      }
+                      placeholder="E.g. Lagos"
+                      className={`min-h-[44px] ${errors.delivery_state ? "border-destructive" : ""}`}
+                    />
+                    {errors.delivery_state && (
+                      <p className="text-xs sm:text-sm text-destructive">
+                        {errors.delivery_state}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="delivery_address" className="text-sm">
+                    Delivery Address *
+                  </Label>
+                  <Textarea
+                    id="delivery_address"
+                    value={formData.delivery_address}
+                    onChange={e =>
+                      handleFormChange("delivery_address", e.target.value)
+                    }
+                    placeholder="Enter your full street address including landmarks"
+                    rows={3}
+                    className={`min-h-[80px] ${errors.delivery_address ? "border-destructive" : ""}`}
+                  />
+                  {errors.delivery_address && (
+                    <p className="text-xs sm:text-sm text-destructive">
+                      {errors.delivery_address}
+                    </p>
                   )}
                 </div>
               </div>
 
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="delivery_address" className="text-sm">Delivery Address *</Label>
-                <Textarea
-                  id="delivery_address"
-                  value={formData.delivery_address}
-                  onChange={(e) => handleFormChange('delivery_address', e.target.value)}
-                  placeholder="Enter your full street address including landmarks"
-                  rows={3}
-                  className={`min-h-[80px] ${errors.delivery_address ? "border-destructive" : ""}`}
-                />
-                {errors.delivery_address && (
-                  <p className="text-xs sm:text-sm text-destructive">{errors.delivery_address}</p>
-                )}
-              </div>
-              </div>
+              {shopUsesOwnLogistics && !isCartOnlyDigital && (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+                  <p className="font-medium text-primary">Vendor-managed delivery</p>
+                  <p className="text-muted-foreground">
+                    This store handles logistics directly. Delivery fee and timeline will be confirmed by the vendor after order placement.
+                  </p>
+                  {shopOwnLogisticsNote && (
+                    <p className="mt-2 text-muted-foreground">
+                      <span className="font-medium">Vendor note:</span> {shopOwnLogisticsNote}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Shipping Rates Selection */}
               {(shippingRates.length > 0 || isFetchingRates) && (
                 <div className="space-y-2 sm:space-y-3 pt-2">
                   <Label className="text-sm flex items-center justify-between">
                     <span>Delivery Method</span>
-                    {isFetchingRates && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+                    {isFetchingRates && (
+                      <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                    )}
                   </Label>
-                  
+
                   {isFetchingRates ? (
                     <div className="p-4 border rounded-lg text-sm text-muted-foreground flex items-center justify-center bg-muted/30">
                       Calculating real-time rates...
@@ -1112,22 +1454,42 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                   ) : (
                     <RadioGroup
                       value={selectedRate?.rate_id}
-                      onValueChange={(val) => {
-                         const rate = shippingRates.find(r => r.rate_id === val);
-                         if (rate) setSelectedRate(rate);
+                      onValueChange={val => {
+                        const rate = shippingRates.find(r => r.rate_id === val);
+                        if (rate) setSelectedRate(rate);
                       }}
                       className="space-y-2"
                     >
-                      {shippingRates.map((rate) => (
-                        <div key={rate.rate_id} className={`flex items-start justify-between p-3 border rounded-lg cursor-pointer transition-colors ${selectedRate?.rate_id === rate.rate_id ? 'border-primary bg-primary/5' : 'hover:bg-muted'}`} onClick={() => setSelectedRate(rate)}>
+                      {shippingRates.map(rate => (
+                        <div
+                          key={rate.rate_id}
+                          className={`flex items-start justify-between p-3 border rounded-lg cursor-pointer transition-colors ${selectedRate?.rate_id === rate.rate_id ? "border-primary bg-primary/5" : "hover:bg-muted"}`}
+                          onClick={() => setSelectedRate(rate)}
+                        >
                           <div className="flex items-center gap-3">
-                            <RadioGroupItem value={rate.rate_id} id={rate.rate_id} />
+                            <RadioGroupItem
+                              value={rate.rate_id}
+                              id={rate.rate_id}
+                            />
                             <div>
-                               <Label htmlFor={rate.rate_id} className="font-medium cursor-pointer flex items-center gap-2">
-                                 {rate.carrier_logo ? <img src={rate.carrier_logo} alt={rate.carrier} className="h-4 object-contain" /> : <Truck className="w-4 h-4" />}
-                                 {rate.carrier}
-                               </Label>
-                               <span className="text-xs text-muted-foreground block mt-0.5">Estimated: {rate.estimated_days} days</span>
+                              <Label
+                                htmlFor={rate.rate_id}
+                                className="font-medium cursor-pointer flex items-center gap-2"
+                              >
+                                {rate.carrier_logo ? (
+                                  <img
+                                    src={rate.carrier_logo}
+                                    alt={rate.carrier}
+                                    className="h-4 object-contain"
+                                  />
+                                ) : (
+                                  <Truck className="w-4 h-4" />
+                                )}
+                                {rate.carrier}
+                              </Label>
+                              <span className="text-xs text-muted-foreground block mt-0.5">
+                                Estimated: {rate.estimated_days} days
+                              </span>
                             </div>
                           </div>
                           <div className="font-semibold">
@@ -1143,40 +1505,59 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
               {/* Step 3: Payment Choice */}
               <div className="bg-card/50 backdrop-blur border border-primary/10 rounded-2xl p-5 shadow-sm space-y-4 mt-6">
                 <h3 className="font-bold mb-4 text-lg flex items-center gap-2 text-primary">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">3</span>
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">
+                    3
+                  </span>
                   Payment Method
                 </h3>
                 <RadioGroup
                   value={paymentChoice}
-                  onValueChange={(value: "pay_before" | "delivery_before") => setPaymentChoice(value)}
+                  onValueChange={(value: "pay_before" | "delivery_before") =>
+                    setPaymentChoice(value)
+                  }
                   className="space-y-2"
                 >
                   <div className="flex items-start space-x-2 sm:space-x-3 p-2.5 sm:p-3 border rounded-lg hover:bg-muted cursor-pointer min-h-[60px]">
-                    <RadioGroupItem value="pay_before" id="pay_before" className="mt-1" />
+                    <RadioGroupItem
+                      value="pay_before"
+                      id="pay_before"
+                      className="mt-1"
+                    />
                     <div className="flex-1 min-w-0">
-                      <Label htmlFor="pay_before" className="font-medium cursor-pointer flex items-center gap-2 text-sm sm:text-base">
+                      <Label
+                        htmlFor="pay_before"
+                        className="font-medium cursor-pointer flex items-center gap-2 text-sm sm:text-base"
+                      >
                         <CreditCard className="w-4 h-4 flex-shrink-0" />
                         <span>Pay Before Service</span>
                       </Label>
                       <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                        {shop.payment_method === "paystack" 
+                        {shop.payment_method === "paystack"
                           ? "Complete payment via Paystack before delivery"
                           : shop.payment_method === "both"
-                          ? "Choose Paystack or Bank Transfer"
-                          : "Transfer to shop's bank account before delivery"}
+                            ? "Choose Paystack or Bank Transfer"
+                            : "Transfer to shop's bank account before delivery"}
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start space-x-2 sm:space-x-3 p-2.5 sm:p-3 border rounded-lg hover:bg-muted cursor-pointer min-h-[60px]">
-                    <RadioGroupItem value="delivery_before" id="delivery_before" className="mt-1" />
+                    <RadioGroupItem
+                      value="delivery_before"
+                      id="delivery_before"
+                      className="mt-1"
+                    />
                     <div className="flex-1 min-w-0">
-                      <Label htmlFor="delivery_before" className="font-medium cursor-pointer flex items-center gap-2 text-sm sm:text-base">
+                      <Label
+                        htmlFor="delivery_before"
+                        className="font-medium cursor-pointer flex items-center gap-2 text-sm sm:text-base"
+                      >
                         <MessageCircle className="w-4 h-4 flex-shrink-0" />
                         <span>Pay on Delivery</span>
                       </Label>
                       <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                        Pay when your order arrives. We'll contact you via WhatsApp to confirm.
+                        Pay when your order arrives. We'll contact you via
+                        WhatsApp to confirm.
                       </p>
                     </div>
                   </div>
@@ -1184,114 +1565,165 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
               </div>
 
               {/* Payment Method Selection - shown when 'both' methods available */}
-              {showPaymentMethodSelection && paymentChoice === "pay_before" && shop.payment_method === "both" && !orderCreated && (
-                <div className="space-y-4 p-4 bg-muted rounded-lg">
-                  <h4 className="font-semibold">Choose Payment Method</h4>
-                  <div className="space-y-3">
-                    {/* Paystack Option */}
-                    <div 
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                        selectedPaymentMethod === 'paystack' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                      }`}
-                      onClick={() => setSelectedPaymentMethod('paystack')}
-                    >
-                      <div className="flex items-center gap-3">
-                        <CreditCard className="w-5 h-5" />
-                        <div>
-                          <p className="font-medium">Pay with Paystack</p>
-                          <p className="text-sm text-muted-foreground">Card, Bank Transfer, USSD</p>
+              {showPaymentMethodSelection &&
+                paymentChoice === "pay_before" &&
+                shop.payment_method === "both" &&
+                !orderCreated && (
+                  <div className="space-y-4 p-4 bg-muted rounded-lg">
+                    <h4 className="font-semibold">Choose Payment Method</h4>
+                    <div className="space-y-3">
+                      {/* Paystack Option */}
+                      <div
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          selectedPaymentMethod === "paystack"
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                        onClick={() => setSelectedPaymentMethod("paystack")}
+                      >
+                        <div className="flex items-center gap-3">
+                          <CreditCard className="w-5 h-5" />
+                          <div>
+                            <p className="font-medium">Pay with Paystack</p>
+                            <p className="text-sm text-muted-foreground">
+                              Card, Bank Transfer, USSD
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bank Transfer Option */}
+                      <div
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          selectedPaymentMethod === "bank_transfer"
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                        onClick={() =>
+                          setSelectedPaymentMethod("bank_transfer")
+                        }
+                      >
+                        <div className="flex items-center gap-3">
+                          <Building2 className="w-5 h-5" />
+                          <div>
+                            <p className="font-medium">Manual Bank Transfer</p>
+                            <p className="text-sm text-muted-foreground">
+                              Transfer to seller's account
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                    
-                    {/* Bank Transfer Option */}
-                    <div 
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                        selectedPaymentMethod === 'bank_transfer' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                      }`}
-                      onClick={() => setSelectedPaymentMethod('bank_transfer')}
+
+                    <Button
+                      onClick={handlePaymentMethodConfirm}
+                      disabled={!selectedPaymentMethod || isProcessing}
+                      className="w-full"
                     >
-                      <div className="flex items-center gap-3">
-                        <Building2 className="w-5 h-5" />
-                        <div>
-                          <p className="font-medium">Manual Bank Transfer</p>
-                          <p className="text-sm text-muted-foreground">Transfer to seller's account</p>
-                        </div>
-                      </div>
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        `Continue with ${selectedPaymentMethod === "paystack" ? "Paystack" : selectedPaymentMethod === "bank_transfer" ? "Bank Transfer" : "..."}`
+                      )}
+                    </Button>
+                  </div>
+                )}
+
+              {!isUserLoggedIn && (
+                <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 mb-6 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <Zap className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold">Returning customer?</p>
+                      <p className="text-xs text-muted-foreground">
+                        Sign in with a Magic Link to skip the form.
+                      </p>
                     </div>
                   </div>
-                  
-                  <Button 
-                    onClick={handlePaymentMethodConfirm}
-                    disabled={!selectedPaymentMethod || isProcessing}
-                    className="w-full"
+                  <Link to="/auth/login?tab=login&method=magic-link">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-lg h-9 text-xs font-semibold"
+                    >
+                      Send Link
+                    </Button>
+                  </Link>
+                </div>
+              )}
+              {/* Show bank details preview for "Pay Before" with bank transfer only */}
+              {paymentChoice === "pay_before" &&
+                shop.payment_method === "bank_transfer" &&
+                !showPaymentMethodSelection && (
+                  <div className="p-4 bg-muted rounded-lg space-y-2">
+                    <h4 className="font-semibold">
+                      Bank Transfer Details (Preview)
+                    </h4>
+                    <div className="text-sm space-y-1">
+                      <p>
+                        <span className="font-medium">Account Name:</span>{" "}
+                        {shop.bank_account_name}
+                      </p>
+                      <p>
+                        <span className="font-medium">Bank:</span>{" "}
+                        {shop.bank_name}
+                      </p>
+                      <p>
+                        <span className="font-medium">Account Number:</span>{" "}
+                        {shop.bank_account_number}
+                      </p>
+                      <p className="text-muted-foreground text-xs mt-2">
+                        After placing the order, you'll need to transfer and
+                        send proof via WhatsApp.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+              {/* Hide submit buttons when payment method selection is shown */}
+              {!showPaymentMethodSelection && (
+                <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-4 pt-3 sm:pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onClose}
+                    disabled={isProcessing || isInitializingPayment}
+                    className="min-h-[48px] w-full sm:w-auto"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={
+                      isProcessing || cart.length === 0 || isInitializingPayment
+                    }
+                    className="flex-1 min-h-[48px] text-sm sm:text-base"
                   >
                     {isProcessing ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Processing...
                       </>
-                    ) : (
-                      `Continue with ${selectedPaymentMethod === 'paystack' ? 'Paystack' : selectedPaymentMethod === 'bank_transfer' ? 'Bank Transfer' : '...'}`
-                    )}
-                  </Button>
-                </div>
-              )}
-
-              {!isUserLoggedIn && (
-              <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 mb-6 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <Zap className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold">Returning customer?</p>
-                    <p className="text-xs text-muted-foreground">Sign in with a Magic Link to skip the form.</p>
-                  </div>
-                </div>
-                <Link to="/auth/login?tab=login&method=magic-link">
-                  <Button variant="outline" size="sm" className="rounded-lg h-9 text-xs font-semibold">
-                    Send Link
-                  </Button>
-                </Link>
-              </div>
-            )}
-              {/* Show bank details preview for "Pay Before" with bank transfer only */}
-              {paymentChoice === "pay_before" && shop.payment_method === "bank_transfer" && !showPaymentMethodSelection && (
-                <div className="p-4 bg-muted rounded-lg space-y-2">
-                  <h4 className="font-semibold">Bank Transfer Details (Preview)</h4>
-                  <div className="text-sm space-y-1">
-                    <p><span className="font-medium">Account Name:</span> {shop.bank_account_name}</p>
-                    <p><span className="font-medium">Bank:</span> {shop.bank_name}</p>
-                    <p><span className="font-medium">Account Number:</span> {shop.bank_account_number}</p>
-                    <p className="text-muted-foreground text-xs mt-2">
-                      After placing the order, you'll need to transfer and send proof via WhatsApp.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Hide submit buttons when payment method selection is shown */}
-              {!showPaymentMethodSelection && (
-                <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-4 pt-3 sm:pt-4">
-                  <Button type="button" variant="outline" onClick={onClose} disabled={isProcessing || isInitializingPayment} className="min-h-[48px] w-full sm:w-auto">
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={isProcessing || cart.length === 0 || isInitializingPayment} 
-                    className="flex-1 min-h-[48px] text-sm sm:text-base"
-                  >
-                    {isProcessing ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</>
                     ) : isInitializingPayment ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Initializing...</>
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Initializing...
+                      </>
                     ) : cart.length === 0 ? (
                       "Add items to cart first"
                     ) : paymentChoice === "delivery_before" ? (
-                      <span className="truncate">Place Order - ₦{effectiveTotal.toLocaleString()}</span>
+                      <span className="truncate">
+                        Place Order - ₦{effectiveTotal.toLocaleString()}
+                      </span>
                     ) : (
-                      <span className="truncate">Pay ₦{Math.round(totalWithFee).toLocaleString()}</span>
+                      <span className="truncate">
+                        Pay ₦{Math.round(totalWithFee).toLocaleString()}
+                      </span>
                     )}
                   </Button>
                 </div>
@@ -1300,15 +1732,22 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
           ) : isInitializingPayment ? (
             <div className="text-center py-8">
               <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-              <p className="text-muted-foreground">Initializing payment gateway...</p>
+              <p className="text-muted-foreground">
+                Initializing payment gateway...
+              </p>
             </div>
-          ) : orderCreated && (shop.payment_method === "bank_transfer" || selectedPaymentMethod === "bank_transfer") ? (
+          ) : orderCreated &&
+            (shop.payment_method === "bank_transfer" ||
+              selectedPaymentMethod === "bank_transfer") ? (
             /* Bank Transfer Payment + Proof Section */
             <div className="space-y-4">
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-950/20 dark:border-green-900">
-                <h4 className="font-semibold text-green-800 dark:text-green-400 mb-2">Order Created Successfully!</h4>
+                <h4 className="font-semibold text-green-800 dark:text-green-400 mb-2">
+                  Order Created Successfully!
+                </h4>
                 <p className="text-sm text-green-700 dark:text-green-300">
-                  Please complete your bank transfer and send proof via WhatsApp.
+                  Please complete your bank transfer and send proof via
+                  WhatsApp.
                 </p>
               </div>
 
@@ -1318,61 +1757,107 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                   <CreditCard className="w-4 h-4" />
                   Bank Transfer Details
                 </h4>
-                
+
                 <div className="space-y-3">
                   <div className="flex justify-between items-center p-2 sm:p-3 bg-background rounded border">
                     <div className="min-w-0 flex-1 mr-2">
-                      <p className="font-medium text-xs sm:text-sm">Account Name</p>
-                      <p className="text-sm sm:text-lg truncate">{shop.bank_account_name}</p>
+                      <p className="font-medium text-xs sm:text-sm">
+                        Account Name
+                      </p>
+                      <p className="text-sm sm:text-lg truncate">
+                        {shop.bank_account_name}
+                      </p>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => copyToClipboard(shop.bank_account_name || '', 'Account Name')}
+                      onClick={() =>
+                        copyToClipboard(
+                          shop.bank_account_name || "",
+                          "Account Name",
+                        )
+                      }
                     >
-                      {copiedField === 'Account Name' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {copiedField === "Account Name" ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
                     </Button>
                   </div>
 
                   <div className="flex justify-between items-center p-2 sm:p-3 bg-background rounded border">
                     <div className="min-w-0 flex-1 mr-2">
-                      <p className="font-medium text-xs sm:text-sm">Bank Name</p>
-                      <p className="text-sm sm:text-lg truncate">{shop.bank_name}</p>
+                      <p className="font-medium text-xs sm:text-sm">
+                        Bank Name
+                      </p>
+                      <p className="text-sm sm:text-lg truncate">
+                        {shop.bank_name}
+                      </p>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => copyToClipboard(shop.bank_name || '', 'Bank Name')}
+                      onClick={() =>
+                        copyToClipboard(shop.bank_name || "", "Bank Name")
+                      }
                     >
-                      {copiedField === 'Bank Name' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {copiedField === "Bank Name" ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
                     </Button>
                   </div>
 
                   <div className="flex justify-between items-center p-2 sm:p-3 bg-background rounded border">
                     <div className="min-w-0 flex-1 mr-2">
-                      <p className="font-medium text-xs sm:text-sm">Account Number</p>
-                      <p className="text-sm sm:text-lg truncate">{shop.bank_account_number}</p>
+                      <p className="font-medium text-xs sm:text-sm">
+                        Account Number
+                      </p>
+                      <p className="text-sm sm:text-lg truncate">
+                        {shop.bank_account_number}
+                      </p>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => copyToClipboard(shop.bank_account_number || '', 'Account Number')}
+                      onClick={() =>
+                        copyToClipboard(
+                          shop.bank_account_number || "",
+                          "Account Number",
+                        )
+                      }
                     >
-                      {copiedField === 'Account Number' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {copiedField === "Account Number" ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
                     </Button>
                   </div>
 
                   <div className="flex justify-between items-center p-2 sm:p-3 bg-background rounded border">
                     <div className="min-w-0 flex-1 mr-2">
-                      <p className="font-medium text-xs sm:text-sm">Amount to Transfer</p>
-                      <p className="text-sm sm:text-lg font-bold">₦{effectiveTotal.toLocaleString()}</p>
+                      <p className="font-medium text-xs sm:text-sm">
+                        Amount to Transfer
+                      </p>
+                      <p className="text-sm sm:text-lg font-bold">
+                        ₦{effectiveTotal.toLocaleString()}
+                      </p>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => copyToClipboard(effectiveTotal.toString(), 'Amount')}
+                      onClick={() =>
+                        copyToClipboard(effectiveTotal.toString(), "Amount")
+                      }
                     >
-                      {copiedField === 'Amount' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {copiedField === "Amount" ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -1384,7 +1869,10 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                     Important Steps
                   </h5>
                   <ol className="text-sm text-amber-700 dark:text-amber-300 space-y-1 list-decimal list-inside">
-                    <li>Transfer ₦{totalAmount.toLocaleString()} to the account above</li>
+                    <li>
+                      Transfer ₦{totalAmount.toLocaleString()} to the account
+                      above
+                    </li>
                     <li>Take a screenshot of your payment confirmation</li>
                     <li>Click "Send Payment Proof" below to open WhatsApp</li>
                     <li>Attach your screenshot to the WhatsApp message</li>
@@ -1395,7 +1883,7 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
                 {shop.whatsapp_number && (
                   <Button
                     type="button"
-                    className={`w-full ${proofSent ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                    className={`w-full ${proofSent ? "bg-green-600 hover:bg-green-700" : ""}`}
                     onClick={handleSendProofViaWhatsApp}
                   >
                     {proofSent ? (
@@ -1432,7 +1920,8 @@ const CheckoutDialog = ({ isOpen, onClose, cart, shop, onUpdateQuantity, totalAm
 
                 {!proofSent && (
                   <p className="text-xs text-muted-foreground text-center">
-                    You must send payment proof via WhatsApp before completing the order
+                    You must send payment proof via WhatsApp before completing
+                    the order
                   </p>
                 )}
               </div>

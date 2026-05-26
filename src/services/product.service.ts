@@ -16,6 +16,10 @@ type ProductUpdateData = {
   category?: string;
   nafdac_number?: string | null;
   stock_unit?: string;
+  delete_at?: string | null;
+  is_digital?: boolean;
+  digital_file_url?: string | null;
+  digital_delivery_text?: string | null;
 };
 
 type ProductSearchRow = {
@@ -56,6 +60,10 @@ export interface CreateProductRequest {
   stockUnit?: string;
   category?: string;
   nafdac_number?: string;
+  deleteAt?: string;
+  is_digital?: boolean;
+  digital_file_url?: string;
+  digital_delivery_text?: string;
 }
 
 const productService = {
@@ -84,6 +92,10 @@ const productService = {
         category: data.category || 'general',
         nafdac_number: data.nafdac_number || null,
         stock_unit: data.stockUnit || 'units',
+        delete_at: data.deleteAt || null,
+        is_digital: data.is_digital || false,
+        digital_file_url: data.digital_file_url || null,
+        digital_delivery_text: data.digital_delivery_text || null,
       })
       .select()
       .single();
@@ -158,6 +170,10 @@ const productService = {
       booking_required: p.booking_required,
       video_url: p.video_url || undefined,
       stockUnit: p.stock_unit || 'units',
+      delete_at: p.delete_at || undefined,
+      is_digital: p.is_digital,
+      digital_file_url: p.digital_file_url || undefined,
+      digital_delivery_text: p.digital_delivery_text || undefined,
     }));
 
     return {
@@ -203,6 +219,10 @@ const productService = {
       booking_required: product.booking_required,
       video_url: product.video_url || undefined,
       stockUnit: product.stock_unit || 'units',
+      delete_at: product.delete_at || undefined,
+      is_digital: product.is_digital,
+      digital_file_url: product.digital_file_url || undefined,
+      digital_delivery_text: product.digital_delivery_text || undefined,
     };
 
     return {
@@ -229,6 +249,10 @@ const productService = {
     if (data.category) updateData.category = data.category;
     if (data.nafdac_number !== undefined) updateData.nafdac_number = data.nafdac_number || null;
     if (data.stockUnit !== undefined) updateData.stock_unit = data.stockUnit || "units";
+    if (data.deleteAt !== undefined) updateData.delete_at = data.deleteAt || null;
+    if (data.is_digital !== undefined) updateData.is_digital = data.is_digital;
+    if (data.digital_file_url !== undefined) updateData.digital_file_url = data.digital_file_url || null;
+    if (data.digital_delivery_text !== undefined) updateData.digital_delivery_text = data.digital_delivery_text || null;
 
     const { data: product, error } = await supabase
       .from('products')
@@ -319,6 +343,10 @@ const productService = {
       averageRating: p.average_rating ? Number(p.average_rating) : undefined,
       totalReviews: p.total_reviews || 0,
       stockUnit: p.stock_unit || "units",
+      delete_at: p.delete_at || undefined,
+      is_digital: p.is_digital,
+      digital_file_url: p.digital_file_url || undefined,
+      digital_delivery_text: p.digital_delivery_text || undefined,
     }));
 
     return {

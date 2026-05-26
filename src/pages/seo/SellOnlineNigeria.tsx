@@ -5,7 +5,7 @@ const SellOnlineNigeria = () => (
     metaTitle="How to Start Selling Online in Nigeria — Step-by-Step Guide | SteerSolo"
     metaDescription="Complete beginner's guide to selling online in Nigeria. Learn how to create a store, add products, accept payments, and get your first sale. Start free."
     heroTitle="How to Start Selling Online in Nigeria — Step-by-Step Guide"
-    heroSubtitle="Whether you're a student, stay-at-home mom, or experienced vendor — this guide shows you exactly how to start selling online in Nigeria today."
+    heroSubtitle="Whether you're a student, stay-at-home mom, or experienced merchant — this guide shows you exactly how to start selling online in Nigeria today."
     heroCTA="Start Selling Online Free"
     sections={[
       {
@@ -60,7 +60,7 @@ const SellOnlineNigeria = () => (
     testimonial={{
       quote: "I'm a university student and I started selling shoes online with SteerSolo. I made ₦150,000 in my first month just from sharing my store link on WhatsApp!",
       name: "David O.",
-      business: "Sneaker Vendor, Ibadan"
+      business: "Sneaker Merchant, Ibadan"
     }}
     faqs={[
       { question: "How do I start selling online in Nigeria as a beginner?", answer: "Create a free SteerSolo store, add your products with photos and prices, and share your store link on WhatsApp and Instagram. You can get your first sale within 48 hours." },

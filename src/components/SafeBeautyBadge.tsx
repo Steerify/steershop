@@ -12,7 +12,7 @@ const TIER_CONFIG: Record<string, {
     label: 'SteerSolo Safe Listed',
     icon: Shield,
     className: 'bg-white/5 text-white/70 border-white/10',
-    description: 'Vendor verified, store live. Entry-level trust signal for new buyers.',
+    description: 'Merchant verified, store live. Entry-level trust signal for new buyers.',
   },
   checked: {
     label: 'SteerSolo Safe Checked',
@@ -36,7 +36,7 @@ const TIER_CONFIG: Record<string, {
     label: 'SteerSolo Safe Premium',
     icon: Crown,
     className: 'bg-amber-500/20 text-amber-500 border-amber-500/30 font-bold',
-    description: 'Top-tier vendor: fully verified with exceptional track record and compliance.',
+    description: 'Top-tier merchant: fully verified with exceptional track record and compliance.',
   },
 };
 

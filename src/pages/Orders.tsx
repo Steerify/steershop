@@ -11,7 +11,7 @@ import shopService from "@/services/shop.service";
 import { revenueService } from "@/services/revenue.service";
 import deliveryService from "@/services/delivery.service";
 import { DeliveryTracking } from "@/components/delivery/DeliveryTracking";
-import { ManualDeliveryForm } from "@/components/delivery/ManualDeliveryForm";
+import { UnifiedDeliveryForm } from "@/components/delivery/UnifiedDeliveryForm";
 import { ArrowLeft, Loader2, ShoppingCart, Package, Clock, CheckCircle, XCircle, MessageCircle, ThumbsUp, Truck, Banknote, CalendarCheck, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { PageWrapper } from "@/components/PageWrapper";
@@ -605,9 +605,9 @@ const Orders = () => {
         />
       )}
 
-      {/* Manual Delivery Dialog */}
+      {/* Unified Delivery Dialog */}
       {deliveryDialogOrder && shop && (
-        <ManualDeliveryForm
+        <UnifiedDeliveryForm
           open={!!deliveryDialogOrder}
           onOpenChange={(open) => !open && setDeliveryDialogOrder(null)}
           orderId={deliveryDialogOrder.id}

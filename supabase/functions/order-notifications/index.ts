@@ -92,6 +92,88 @@ serve(async (req) => {
     const shortId = orderId.slice(0, 8).toUpperCase();
     const formattedAmount = `₦${Number(totalAmount || 0).toLocaleString()}`;
 
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Check if the order is paid and query for any digital product assets
+    let isPaid = false;
+    let digitalItemsHtml = "";
+    try {
+      const { data: orderRow } = await supabase
+        .from("orders")
+        .select("payment_status, status")
+        .eq("id", orderId)
+        .maybeSingle();
+
+      isPaid = orderRow?.payment_status === "paid" || 
+               ["confirmed", "processing", "out_for_delivery", "delivered", "completed"].includes(orderRow?.status || statusUpdate || "");
+
+      const { data: orderItems, error: itemsErr } = await supabase
+        .from("order_items")
+        .select("quantity, price, products(name, is_digital, digital_file_url, digital_delivery_text)")
+        .eq("order_id", orderId);
+
+      if (!itemsErr && orderItems && orderItems.length > 0) {
+        const digitalItems = orderItems.filter((item: any) => item.products?.is_digital);
+        if (digitalItems.length > 0) {
+          if (isPaid) {
+            digitalItemsHtml = `
+              <div style="margin: 20px 0; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; font-family: Arial, sans-serif;">
+                <h3 style="margin: 0 0 12px; color: #166534; font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                  ⚡ Your Digital Downloads
+                </h3>
+                <p style="margin: 0 0 16px; color: #1e293b; font-size: 14px;">Your payment has been verified! Click the links below to download your digital products immediately:</p>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+            `;
+
+            for (const item of digitalItems) {
+              const prod = item.products as any;
+              const fileUrl = prod?.digital_file_url || "";
+              const deliveryText = prod?.digital_delivery_text || "";
+              
+              digitalItemsHtml += `
+                <div style="padding: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;">
+                  <p style="margin: 0 0 8px; font-weight: bold; color: #0f172a; font-size: 14px;">${prod?.name || "Digital Item"}</p>
+                  ${fileUrl ? `
+                    <a href="${fileUrl}" target="_blank" style="display: inline-block; background: #166534; color: #ffffff; padding: 8px 16px; font-size: 13px; font-weight: bold; border-radius: 6px; text-decoration: none; margin-bottom: 8px;">
+                      Download File 📥
+                    </a>
+                  ` : `
+                    <p style="margin: 0 0 8px; font-size: 12px; color: #64748b; font-style: italic;">No direct file download link. Access via instructions below.</p>
+                  `}
+                  ${deliveryText ? `
+                    <div style="margin-top: 6px; padding: 8px; background: #f8fafc; border-left: 3px solid #cbd5e1; border-radius: 4px; font-size: 12px; color: #334155; white-space: pre-wrap;">
+                      <strong>Instructions:</strong><br/>${deliveryText}
+                    </div>
+                  ` : ""}
+                </div>
+              `;
+            }
+
+            digitalItemsHtml += `
+                </div>
+              </div>
+            `;
+          } else {
+            digitalItemsHtml = `
+              <div style="margin: 20px 0; padding: 20px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; font-family: Arial, sans-serif;">
+                <h3 style="margin: 0 0 8px; color: #b45309; font-size: 15px; font-weight: bold;">
+                  🔒 Digital Downloads Pending Verification
+                </h3>
+                <p style="margin: 0; color: #4b5563; font-size: 13px;">
+                  Your digital products are ready! The files will become immediately downloadable as soon as the shop owner confirms your payment.
+                </p>
+              </div>
+            `;
+          }
+        }
+      }
+    } catch (dbErr) {
+      console.error("Non-fatal: failed to check order items for digital assets:", dbErr);
+    }
+
     // Build item list HTML
     const itemsHtml = (items || [])
       .map(
@@ -123,6 +205,7 @@ serve(async (req) => {
                 <tfoot><tr><td colspan="2" style="padding:8px;font-weight:bold">Total</td><td style="padding:8px;text-align:right;font-weight:bold">${formattedAmount}</td></tr></tfoot>
               </table>
               <p>The seller will review and process your order shortly.</p>
+              ${digitalItemsHtml}
               <p style="color:#6b7280;font-size:12px;margin-top:24px">This is an automated email from SteerSolo. Please do not reply directly.</p>
             </div>
           </div>`;
@@ -176,12 +259,12 @@ serve(async (req) => {
                 <p style="margin:8px 0 0;color:#374151">${statusMessages[statusUpdate] || "Your order status has been updated."}</p>
               </div>
               <p>Amount: <strong>${formattedAmount}</strong></p>
+              ${digitalItemsHtml}
               <p style="color:#6b7280;font-size:12px;margin-top:24px">This is an automated email from SteerSolo.</p>
             </div>
           </div>`;
         break;
       }
-
       default:
         return new Response(JSON.stringify({ error: "Unknown event type" }), {
           status: 400,
@@ -191,7 +274,7 @@ serve(async (req) => {
 
     // Send email to customer
     if (customerEmail && customerSubject) {
-      await emailConfig.transporter.sendMail({
+      const info = await emailConfig.transporter.sendMail({
         from: emailConfig.from,
         replyTo: emailConfig.replyTo,
         to: customerEmail,
@@ -203,7 +286,7 @@ serve(async (req) => {
 
     // Send email to shop owner (for order_placed)
     if (shopOwnerEmail && ownerSubject) {
-      await emailConfig.transporter.sendMail({
+      const info = await emailConfig.transporter.sendMail({
         from: emailConfig.from,
         replyTo: emailConfig.replyTo,
         to: shopOwnerEmail,
@@ -211,6 +294,7 @@ serve(async (req) => {
         html: ownerBodyHtml,
       });
       console.log("Shop owner order email sent", { eventType, orderId, shopOwnerEmail, messageId: info.messageId });
+    }geId });
     }
 
     // Send SMS to shop owner via Termii (automatic - no WhatsApp button needed)

@@ -1,7 +1,13 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
-import { UserRole } from '@/types/api';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { User, Session } from "@supabase/supabase-js";
+import { UserRole } from "@/types/api";
 
 export interface AppUser {
   id: string;
@@ -17,8 +23,13 @@ interface AuthContextType {
   user: AppUser | null;
   session: Session | null;
   isLoading: boolean;
-  signIn: (identifier: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (data: SignUpData) => Promise<{ error: string | null; user?: AppUser }>;
+  signIn: (
+    identifier: string,
+    password: string,
+  ) => Promise<{ error: string | null }>;
+  signUp: (
+    data: SignUpData,
+  ) => Promise<{ error: string | null; user?: AppUser }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
@@ -36,137 +47,179 @@ export interface SignUpData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const ADMIN_EMAILS = new Set(['steerifygroup@gmail.com']);
+const ADMIN_EMAILS = new Set(["steerifygroup@gmail.com"]);
 
-const normalizeEmail = (email: string | null | undefined): string => (email || '').trim().toLowerCase();
+const normalizeEmail = (email: string | null | undefined): string =>
+  (email || "").trim().toLowerCase();
 
 // Helper to map DB role to UserRole enum
 const mapDbRole = (dbRole: string | null | undefined): UserRole => {
-  if (!dbRole) return 'CUSTOMER';
+  if (!dbRole) return "CUSTOMER";
   switch (dbRole.toLowerCase()) {
-    case 'shop_owner': return 'ENTREPRENEUR';
-    case 'admin': return 'ADMIN';
-    case 'customer': return 'CUSTOMER';
+    case "shop_owner":
+      return "ENTREPRENEUR";
+    case "admin":
+      return "ADMIN";
+    case "customer":
+      return "CUSTOMER";
     default:
-      console.warn('Unknown role in database, defaulting to CUSTOMER:', dbRole);
-      return 'CUSTOMER';
+      console.warn("Unknown role in database, defaulting to CUSTOMER:", dbRole);
+      return "CUSTOMER";
   }
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchUserProfile = useCallback(async (supabaseUser: User, retryCount = 0): Promise<AppUser | null> => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', supabaseUser.id)
-        .single();
+  const fetchUserProfile = useCallback(
+    async (supabaseUser: User, retryCount = 0): Promise<AppUser | null> => {
+      try {
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", supabaseUser.id)
+          .single();
 
-      if (error || !profile) {
-        // Retry once after 1.5s for race condition with handle_new_user trigger
-        if (retryCount < 1) {
-          console.log('Profile not ready, retrying in 1.5s...');
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          return fetchUserProfile(supabaseUser, retryCount + 1);
+        if (error || !profile) {
+          // Retry once after 1.5s for race condition with handle_new_user trigger
+          if (retryCount < 1) {
+            console.log("Profile not ready, retrying in 1.5s...");
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            return fetchUserProfile(supabaseUser, retryCount + 1);
+          }
+          console.error("Error fetching profile after retry:", error);
+          return null;
         }
-        console.error('Error fetching profile after retry:', error);
+
+        const role = mapDbRole(profile.role);
+        const normalizedEmail = normalizeEmail(
+          profile.email || supabaseUser.email,
+        );
+        const resolvedRole = ADMIN_EMAILS.has(normalizedEmail) ? "ADMIN" : role;
+
+        // Check onboarding completion for entrepreneurs
+        let onboardingCompleted = false;
+        if (resolvedRole === "ENTREPRENEUR") {
+          const { data: onboardingData } = await supabase
+            .from("onboarding_responses")
+            .select("id")
+            .eq("user_id", supabaseUser.id)
+            .limit(1);
+          onboardingCompleted = !!(onboardingData && onboardingData.length > 0);
+        }
+
+        return {
+          id: supabaseUser.id,
+          email: profile.email || supabaseUser.email || "",
+          role: resolvedRole,
+          firstName:
+            profile.full_name?.split(" ")[0] ||
+            supabaseUser.user_metadata?.full_name?.split(" ")[0] ||
+            "",
+          lastName:
+            profile.full_name?.split(" ").slice(1).join(" ") ||
+            supabaseUser.user_metadata?.full_name
+              ?.split(" ")
+              .slice(1)
+              .join(" ") ||
+            "",
+          phone: profile.phone || "",
+          onboardingCompleted,
+        };
+      } catch (err) {
+        console.error("Error in fetchUserProfile:", err);
         return null;
       }
-
-      const role = mapDbRole(profile.role);
-      const normalizedEmail = normalizeEmail(profile.email || supabaseUser.email);
-      const resolvedRole = ADMIN_EMAILS.has(normalizedEmail) ? 'ADMIN' : role;
-
-      // Check onboarding completion for entrepreneurs
-      let onboardingCompleted = false;
-      if (resolvedRole === 'ENTREPRENEUR') {
-        const { data: onboardingData } = await supabase
-          .from('onboarding_responses')
-          .select('id')
-          .eq('user_id', supabaseUser.id)
-          .limit(1);
-        onboardingCompleted = !!(onboardingData && onboardingData.length > 0);
-      }
-
-      return {
-        id: supabaseUser.id,
-        email: profile.email || supabaseUser.email || '',
-        role: resolvedRole,
-        firstName: profile.full_name?.split(' ')[0] || supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
-        lastName: profile.full_name?.split(' ').slice(1).join(' ') || supabaseUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-        phone: profile.phone || '',
-        onboardingCompleted,
-      };
-    } catch (err) {
-      console.error('Error in fetchUserProfile:', err);
-      return null;
-    }
-  }, []);
+    },
+    [],
+  );
 
   // refreshUser: re-fetches the profile from DB and updates state
   const refreshUser = useCallback(async () => {
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (authUser) {
+    try {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+      if (!authUser) {
+        setUser(null);
+        return;
+      }
+
       const appUser = await fetchUserProfile(authUser);
       if (appUser) {
         setUser(appUser);
+      } else {
+        setUser(null);
       }
+    } catch (err) {
+      console.error("Error refreshing user:", err);
+      setUser(null);
     }
   }, [fetchUserProfile]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        console.log('Auth state changed:', event);
-        setSession(currentSession);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      console.log("Auth state changed:", event);
+      setSession(currentSession);
 
-        if (currentSession?.user) {
-          setTimeout(() => {
-            fetchUserProfile(currentSession.user).then(setUser);
-          }, 0);
-        } else {
-          setUser(null);
-        }
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-      setSession(existingSession);
-      if (existingSession?.user) {
-        fetchUserProfile(existingSession.user).then((appUser) => {
-          setUser(appUser);
-          setIsLoading(false);
-        });
+      if (currentSession?.user) {
+        setTimeout(() => {
+          fetchUserProfile(currentSession.user).then(appUser => {
+            setUser(appUser);
+            setIsLoading(false);
+          });
+        }, 0);
       } else {
+        setUser(null);
         setIsLoading(false);
       }
     });
+
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: existingSession } }) => {
+        setSession(existingSession);
+        if (existingSession?.user) {
+          fetchUserProfile(existingSession.user).then(appUser => {
+            setUser(appUser);
+            setIsLoading(false);
+          });
+        } else {
+          setIsLoading(false);
+        }
+      });
 
     return () => subscription.unsubscribe();
   }, [fetchUserProfile]);
 
   const signIn = async (identifier: string, password: string) => {
     try {
-      const isEmail = identifier.includes('@');
-      const credentials = isEmail ? { email: identifier, password } : { phone: identifier, password };
+      const isEmail = identifier.includes("@");
+      const credentials = isEmail
+        ? { email: identifier, password }
+        : { phone: identifier, password };
       const { error } = await supabase.auth.signInWithPassword(credentials);
       if (error) return { error: error.message };
       return { error: null };
     } catch (err: any) {
-      return { error: err.message || 'An error occurred during sign in' };
+      return { error: err.message || "An error occurred during sign in" };
     }
   };
 
   const signUp = async (data: SignUpData) => {
     try {
-      const dbRole = data.role === 'ENTREPRENEUR' ? 'shop_owner' : 'customer';
+      const dbRole = data.role === "ENTREPRENEUR" ? "shop_owner" : "customer";
 
-      const isEmail = data.identifier.includes('@');
-      const credentials = isEmail ? { email: data.identifier, password: data.password } : { phone: data.identifier, password: data.password };
+      const isEmail = data.identifier.includes("@");
+      const credentials = isEmail
+        ? { email: data.identifier, password: data.password }
+        : { phone: data.identifier, password: data.password };
 
       const { data: authData, error } = await supabase.auth.signUp({
         ...credentials,
@@ -176,8 +229,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             full_name: `${data.firstName} ${data.lastName}`,
             phone: isEmail ? data.phone : data.identifier,
             role: dbRole,
-          }
-        }
+          },
+        },
       });
 
       if (error) return { error: error.message };
@@ -189,22 +242,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error: null };
     } catch (err: any) {
-      return { error: err.message || 'An error occurred during sign up' };
+      return { error: err.message || "An error occurred during sign up" };
     }
   };
 
   const signInWithGoogle = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-        }
+        },
       });
       if (error) return { error: error.message };
       return { error: null };
     } catch (err: any) {
-      return { error: err.message || 'An error occurred during Google sign in' };
+      return {
+        error: err.message || "An error occurred during Google sign in",
+      };
     }
   };
 
@@ -225,22 +280,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) return { error: error.message };
       return { error: null };
     } catch (err: any) {
-      return { error: err.message || 'An error occurred' };
+      return { error: err.message || "An error occurred" };
     }
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      session,
-      isLoading,
-      signIn,
-      signUp,
-      signInWithGoogle,
-      signOut,
-      resetPassword,
-      refreshUser,
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        isLoading,
+        signIn,
+        signUp,
+        signInWithGoogle,
+        signOut,
+        resetPassword,
+        refreshUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -249,7 +306,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

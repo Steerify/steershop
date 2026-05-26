@@ -22,7 +22,7 @@ const planIcons: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export const SubscriptionCard = ({ plans, currentPlanId, onSubscriptionSuccess }: SubscriptionCardProps) => {
-  const [isYearly, setIsYearly] = useState(false);
+  const [isYearly, setIsYearly] = useState(true);
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -77,7 +77,7 @@ export const SubscriptionCard = ({ plans, currentPlanId, onSubscriptionSuccess }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Billing Toggle */}
       <div className="flex items-center justify-center gap-4 p-4 bg-muted/50 rounded-xl">
         <Label 
@@ -104,8 +104,37 @@ export const SubscriptionCard = ({ plans, currentPlanId, onSubscriptionSuccess }
         )}
       </div>
 
+      {/* Visual Stepper Timeline Upgrade Path */}
+      <div className="max-w-4xl mx-auto py-6 px-4 hidden md:block">
+        <div className="relative flex items-center justify-between">
+          {/* Glowing Connection Line */}
+          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-neutral-800 via-primary/50 to-accent/50 rounded-full" />
+          
+          {[
+            { label: "Free (Starter)", desc: "Build & Test", color: "from-neutral-700 to-neutral-900" },
+            { label: "Basic", desc: "Start Selling", color: "from-indigo-600 to-indigo-800" },
+            { label: "Pro", desc: "Automate & Scale", color: "from-primary to-accent" },
+            { label: "Business", desc: "Dominate Market", color: "from-accent to-purple-600" }
+          ].map((step, idx) => (
+            <div key={idx} className="relative z-10 flex flex-col items-center">
+              <div className={cn(
+                "w-10 h-10 rounded-full bg-gradient-to-br flex items-center justify-center font-bold text-white shadow-lg border-2 border-background transition-transform duration-300 hover:scale-110",
+                idx === 2 ? "ring-4 ring-primary/30 animate-pulse-soft" : "",
+                idx === 0 ? "from-neutral-700 to-neutral-900 border-neutral-600" :
+                idx === 1 ? "from-indigo-500 to-indigo-700 border-indigo-400" :
+                idx === 2 ? "from-primary to-accent border-primary" : "from-accent to-purple-500 border-accent"
+              )}>
+                {idx + 1}
+              </div>
+              <span className="text-xs font-bold text-foreground mt-2 bg-card px-2.5 py-0.5 rounded border border-border shadow-sm">{step.label}</span>
+              <span className="text-[10px] text-muted-foreground mt-0.5">{step.desc}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {plans.map((plan) => {
           const Icon = planIcons[plan.slug] || Zap;
           const price = isYearly && plan.price_yearly ? plan.price_yearly : plan.price_monthly;

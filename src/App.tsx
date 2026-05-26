@@ -86,6 +86,7 @@ const Insights = lazy(() => import("./pages/Insights"));
 const AdsAssistant = lazy(() => import("./pages/entrepreneur/AdsAssistant"));
 const GoogleBusinessProfile = lazy(() => import("./pages/entrepreneur/GoogleBusinessProfile"));
 const VendorInvite = lazy(() => import("./pages/entrepreneur/VendorInvite"));
+const AdsLanding = lazy(() => import("./pages/AdsLanding"));
 
 // Feature pages
 const WhatsAppFeature = lazy(() => import("./pages/features/WhatsAppFeature"));
@@ -175,6 +176,7 @@ const App = () => (
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/ads" element={<AdsLanding />} />
             <Route path="/setup-service" element={<SetupService />} />
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/faq" element={<FAQ />} />

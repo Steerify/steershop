@@ -4,7 +4,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Bell } from "lucide-react";
+import { LogOut, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +46,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const { user, signOut, isLoading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!authLoading) checkAdminAccess();
@@ -124,29 +130,48 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {/* Admin Header */}
-          <header className="h-14 border-b border-border/60 flex items-center justify-between px-3 sm:px-6 bg-card/95 sticky top-0 z-30">
+          <header className="h-14 border-b border-border/60 flex items-center justify-between px-3 sm:px-6 bg-card/98 backdrop-blur-sm sticky top-0 z-30 shadow-sm">
             <div className="flex items-center gap-3">
-              <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
-              <div className="h-4 w-px bg-border" />
-              <p className="text-xs font-semibold text-foreground sm:hidden truncate max-w-[120px]">{pageTitle}</p>
-              <div className="hidden sm:block">
-                <p className="text-xs text-muted-foreground font-medium">Admin Panel</p>
-                <h1 className="text-sm font-bold text-foreground leading-none">{pageTitle}</h1>
+              <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
+              <div className="h-4 w-px bg-border/60" />
+              {/* Mobile: just page title */}
+              <p className="text-xs font-bold text-foreground sm:hidden truncate max-w-[130px]">{pageTitle}</p>
+              {/* Desktop: breadcrumb */}
+              <div className="hidden sm:flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground font-medium">Admin</span>
+                <span className="text-muted-foreground/40 text-xs">/</span>
+                <h1 className="text-xs font-bold text-foreground">{pageTitle}</h1>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Admin badge */}
-              <Badge variant="outline" className="hidden sm:flex bg-primary/10 text-primary border-primary/20 text-xs font-semibold">
-                Admin
-              </Badge>
-
-              {/* Admin avatar */}
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                {adminName.charAt(0).toUpperCase()}
+              {/* Live clock — desktop only */}
+              <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 rounded-lg px-2.5 py-1 border border-border/40">
+                <Clock className="w-3 h-3" />
+                <span className="tabular-nums font-medium">
+                  {currentTime.toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                </span>
               </div>
 
-              <Button variant="ghost" size="sm" onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive gap-1 text-xs h-8 px-2 sm:px-3">
+              {/* Admin role badge */}
+              <Badge className="hidden sm:flex bg-gradient-to-r from-primary to-accent text-white border-0 text-[10px] font-bold px-2 shadow-sm">
+                ADMIN
+              </Badge>
+
+              {/* Avatar with gradient ring */}
+              <div className="relative">
+                <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-br from-primary to-accent opacity-60 blur-[1px]" />
+                <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-extrabold shadow-sm">
+                  {adminName.charAt(0).toUpperCase()}
+                </div>
+              </div>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="hover:bg-destructive/10 hover:text-destructive gap-1.5 text-xs h-8 px-2 sm:px-3 rounded-lg transition-colors"
+              >
                 <LogOut className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Logout</span>
               </Button>

@@ -455,6 +455,27 @@ const shopService = {
       message: 'Shop updated successfully'
     };
   },
+
+  releaseEscrow: async (orderId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error("Unauthorized");
+
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/release-escrow`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ orderId })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.error || "Failed to release escrow");
+    }
+
+    return await response.json();
+  },
 };
 
 export default shopService;

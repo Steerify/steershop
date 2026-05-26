@@ -126,6 +126,10 @@ export interface Product {
   duration_minutes?: number;
   booking_required?: boolean;
   video_url?: string;
+  delete_at?: string;
+  is_digital?: boolean;
+  digital_file_url?: string;
+  digital_delivery_text?: string;
   // Additional fields for search results
   shop_slug?: string;
   image_url?: string;

@@ -16,7 +16,7 @@ const INVITE_SCRIPTS = [
   {
     title: "Personal Invite",
     emoji: "💌",
-    description: "For vendors you know personally",
+    description: "For merchants you know personally",
     message: (link: string) =>
       `Hey! 👋 I've been using SteerSolo to run my online store and it's been a game-changer. No more "DM to order" stress — my customers can browse, pay, and checkout by themselves.\n\nI think it would be perfect for your business too. You can set up your store in minutes:\n\n${link}\n\nLet me know if you need help getting started! 🚀`,
   },
@@ -25,14 +25,14 @@ const INVITE_SCRIPTS = [
     emoji: "📈",
     description: "Share how SteerSolo helped your business",
     message: (link: string) =>
-      `Since I started using SteerSolo, my orders have been more organized, my customers trust me more (SafeBeauty badge!), and I spend less time replying DMs with bank details 😅\n\nIf you sell online, you should check it out — it's built specifically for Nigerian vendors like us:\n\n${link}\n\nWe both get rewards when you sign up! 🎁`,
+      `Since I started using SteerSolo, my orders have been more organized, my customers trust me more (SafeBeauty badge!), and I spend less time replying DMs with bank details 😅\n\nIf you sell online, you should check it out — it's built specifically for Nigerian merchants like us:\n\n${link}\n\nWe both get rewards when you sign up! 🎁`,
   },
   {
     title: "Business Opportunity",
     emoji: "💰",
-    description: "For business-minded vendors",
+    description: "For business-minded merchants",
     message: (link: string) =>
-      `I found a platform that's changing the game for online vendors in Nigeria. SteerSolo gives you a professional store, payment processing, delivery tracking, and a trust badge system — all from your phone.\n\nNo monthly fees to start, and your customers can actually checkout without sending you DMs.\n\nJoin here: ${link}\n\nLet's grow together! 🌱`,
+      `I found a platform that's changing the game for online merchants in Nigeria. SteerSolo gives you a professional store, payment processing, delivery tracking, and a trust badge system — all from your phone.\n\nNo monthly fees to start, and your customers can actually checkout without sending you DMs.\n\nJoin here: ${link}\n\nLet's grow together! 🌱`,
   },
 ];
 
@@ -105,7 +105,7 @@ const VendorInvite = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold font-heading text-foreground">Invite Vendors</h1>
+              <h1 className="text-2xl font-bold font-heading text-foreground">Invite Merchants</h1>
               <p className="text-sm text-muted-foreground">Grow the community, earn rewards together</p>
             </div>
           </div>

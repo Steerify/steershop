@@ -513,235 +513,259 @@ const MyStore = () => {
                 <CardTitle className="text-xl sm:text-2xl">Store Information</CardTitle>
                 <CardDescription className="text-sm">Manage your store details and branding</CardDescription>
               </CardHeader>
-              <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
-                <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
-                  {/* Store Name */}
-                  <div className="space-y-2">
-                    <Label htmlFor="shop_name">Store Name</Label>
-                    <Input
-                      id="shop_name"
-                      value={formData.shop_name}
-                      onChange={(e) => {
-                        const name = e.target.value;
-                        const autoSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-                        setFormData({ ...formData, shop_name: name, shop_slug: autoSlug });
-                        setSlugAvailable(null);
-                        setIsDirty(true);
-                      }}
-                      placeholder="Enter store name"
-                      className={`min-h-[44px] ${errors.shop_name ? "border-red-500" : ""}`}
-                    />
-                    {errors.shop_name && (
-                      <p className="text-red-500 text-sm">{errors.shop_name}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="shop_slug">Store Link (Auto-generated)</Label>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="max-w-xs text-xs">This is your unique store address on SteerSolo. It is automatically created from your store name.</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Group 1: Basic Identity */}
+                  <div className="p-5 rounded-2xl bg-card/30 border border-border/40 backdrop-blur-sm space-y-4">
+                    <div className="flex items-center gap-2 border-b border-border/40 pb-2 mb-2">
+                      <Store className="w-4 h-4 text-primary" />
+                      <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Basic Identity</h3>
                     </div>
-                    <div className="relative">
+                    
+                    {/* Store Name */}
+                    <div className="space-y-2">
+                      <Label htmlFor="shop_name">Store Name</Label>
                       <Input
-                        id="shop_slug"
-                        value={formData.shop_slug}
-                        readOnly
-                        className="bg-muted text-muted-foreground pr-10 min-h-[44px]"
+                        id="shop_name"
+                        value={formData.shop_name}
+                        onChange={(e) => {
+                          const name = e.target.value;
+                          const autoSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                          setFormData({ ...formData, shop_name: name, shop_slug: autoSlug });
+                          setSlugAvailable(null);
+                          setIsDirty(true);
+                        }}
+                        placeholder="Enter store name"
+                        className={`min-h-[44px] ${errors.shop_name ? "border-red-500" : ""}`}
                       />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        {checkingSlug && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
-                        {!checkingSlug && slugAvailable === true && <Check className="w-4 h-4 text-green-500" />}
-                        {!checkingSlug && slugAvailable === false && <X className="w-4 h-4 text-destructive" />}
+                      {errors.shop_name && (
+                        <p className="text-red-500 text-sm">{errors.shop_name}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="shop_slug">Store Link (Auto-generated)</Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="max-w-xs text-xs">This is your unique store address on SteerSolo. It is automatically created from your store name.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="shop_slug"
+                          value={formData.shop_slug}
+                          readOnly
+                          className="bg-muted text-muted-foreground pr-10 min-h-[44px]"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {checkingSlug && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                          {!checkingSlug && slugAvailable === true && <Check className="w-4 h-4 text-green-500" />}
+                          {!checkingSlug && slugAvailable === false && <X className="w-4 h-4 text-destructive" />}
+                        </div>
+                      </div>
+                      {slugAvailable === false && (
+                        <p className="text-destructive text-sm">This store name is already taken. Try adding a unique word.</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Your store URL: steersolo.com/shop/{formData.shop_slug || 'your-store'}
+                      </p>
+                    </div>
+
+                    {/* Description */}
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => {
+                          setFormData({ ...formData, description: e.target.value });
+                          setIsDirty(true);
+                        }}
+                        placeholder="Describe your store"
+                        className="min-h-[100px]"
+                      />
+                    </div>
+
+                    {/* AI SEO DNA Section */}
+                    {shop && (
+                      <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-primary" />
+                            <Label className="font-bold text-primary">AI SEO DNA Generator</Label>
+                          </div>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 border-primary/30 text-primary hover:bg-primary/10"
+                            onClick={handleGenerateSEO}
+                            disabled={isGeneratingSEO}
+                          >
+                            {isGeneratingSEO ? <Loader2 className="w-3 h-3 animate-spin mr-1.5" /> : <Sparkles className="w-3 h-3 mr-1.5" />}
+                            {shop.seo_dna_updated_at ? "Refresh SEO" : "Generate SEO"}
+                          </Button>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                          Our AI analyzes your products to create a unique "SEO DNA" that helps your store rank higher on Google.
+                        </p>
+                        {shop.seo_dna_updated_at && (
+                          <div className="pt-2 space-y-2">
+                            <div className="flex flex-wrap gap-1.5">
+                              {shop.seo_keywords?.slice(0, 5).map((kw: string, i: number) => (
+                                <Badge key={kw} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 border-none text-[10px] py-0">
+                                  {kw}
+                                </Badge>
+                              ))}
+                              {(shop.seo_keywords?.length || 0) > 5 && (
+                                <span className="text-[10px] text-muted-foreground">+{shop.seo_keywords.length - 5} more</span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground italic line-clamp-2">
+                              "{shop.seo_description}"
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Group 2: Location & Contact */}
+                  <div className="p-5 rounded-2xl bg-card/30 border border-border/40 backdrop-blur-sm space-y-4">
+                    <div className="flex items-center gap-2 border-b border-border/40 pb-2 mb-2">
+                      <MessageCircle className="w-4 h-4 text-accent" />
+                      <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Location & Support Contact</h3>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="whatsapp_number">WhatsApp Number</Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="max-w-xs text-xs">Used for customer inquiries. Include your country code (e.g., +23480...)</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <Input
+                        id="whatsapp_number"
+                        value={formData.whatsapp_number}
+                        onChange={(e) => {
+                          setFormData({ ...formData, whatsapp_number: e.target.value });
+                          setIsDirty(true);
+                        }}
+                        placeholder="+2348012345678"
+                        className={`min-h-[44px] ${errors.whatsapp_number ? "border-red-500" : ""}`}
+                      />
+                      {errors.whatsapp_number && (
+                        <p className="text-red-500 text-sm">{errors.whatsapp_number}</p>
+                      )}
+                    </div>
+
+                    {/* Location Details */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="state">State</Label>
+                        <select
+                          id="state"
+                          value={formData.state}
+                          onChange={(e) => {
+                            setFormData({ ...formData, state: e.target.value });
+                            setIsDirty(true);
+                          }}
+                          className="w-full h-[44px] min-h-[44px] px-3 rounded-md border border-input bg-background text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                        >
+                          <option value="">Select State</option>
+                          {[
+                            "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", 
+                            "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT - Abuja", "Gombe", 
+                            "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", 
+                            "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", 
+                            "Taraba", "Yobe", "Zamfara"
+                          ].map(state => (
+                            <option key={state} value={state}>{state}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="city">City / Area</Label>
+                        <Input
+                          id="city"
+                          value={formData.city}
+                          onChange={(e) => {
+                            setFormData({ ...formData, city: e.target.value });
+                            setIsDirty(true);
+                          }}
+                          placeholder="e.g. Lekki, Ikeja, etc."
+                          className="min-h-[44px]"
+                        />
                       </div>
                     </div>
-                    {slugAvailable === false && (
-                      <p className="text-destructive text-sm">This store name is already taken. Try adding a unique word.</p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      Your store URL: steersolo.com/shop/{formData.shop_slug || 'your-store'}
-                    </p>
                   </div>
 
-                  {/* Description */}
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => {
-                        setFormData({ ...formData, description: e.target.value });
-                        setIsDirty(true);
-                      }}
-                      placeholder="Describe your store"
-                      className="min-h-[100px]"
-                    />
-                  </div>
+                  {/* Group 3: Branding & Assets */}
+                  <div className="p-5 rounded-2xl bg-card/30 border border-border/40 backdrop-blur-sm space-y-4">
+                    <div className="flex items-center gap-2 border-b border-border/40 pb-2 mb-2">
+                      <CreditCard className="w-4 h-4 text-primary" />
+                      <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Branding & Assets</h3>
+                    </div>
 
-                  {/* AI SEO DNA Section */}
-                  {shop && (
-                    <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <Sparkles className="w-4 h-4 text-primary" />
-                          <Label className="font-bold text-primary">AI SEO DNA Generator</Label>
-                        </div>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8 border-primary/30 text-primary hover:bg-primary/10"
-                          onClick={handleGenerateSEO}
-                          disabled={isGeneratingSEO}
-                        >
-                          {isGeneratingSEO ? <Loader2 className="w-3 h-3 animate-spin mr-1.5" /> : <Sparkles className="w-3 h-3 mr-1.5" />}
-                          {shop.seo_dna_updated_at ? "Refresh SEO" : "Generate SEO"}
-                        </Button>
+                    {/* LOGO */}
+                    <div className="space-y-2">
+                      <Label>Store Logo</Label>
+                      <ImageUpload
+                        label="Upload Logo"
+                        value={formData.logo_url}
+                        onChange={(url) =>
+                          setFormData({ ...formData, logo_url: url })
+                        }
+                        folder="shop-images"
+                      />
+                      <div className="mt-2">
+                        <ShopAvatar
+                          name={formData.shop_name || "Your Store"}
+                          logoUrl={formData.logo_url}
+                          className="w-32 h-32 rounded-lg border"
+                          initialsClassName="text-4xl"
+                        />
                       </div>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">
-                        Our AI analyzes your products to create a unique "SEO DNA" that helps your store rank higher on Google.
-                      </p>
-                      {shop.seo_dna_updated_at && (
-                        <div className="pt-2 space-y-2">
-                          <div className="flex flex-wrap gap-1.5">
-                            {shop.seo_keywords?.slice(0, 5).map((kw: string, i: number) => (
-                              <Badge key={kw} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 border-none text-[10px] py-0">
-                                {kw}
-                              </Badge>
-                            ))}
-                            {(shop.seo_keywords?.length || 0) > 5 && (
-                              <span className="text-[10px] text-muted-foreground">+{shop.seo_keywords.length - 5} more</span>
-                            )}
-                          </div>
-                          <p className="text-[10px] text-muted-foreground italic line-clamp-2">
-                            "{shop.seo_description}"
-                          </p>
+                    </div>
+
+                    {/* BANNER */}
+                    <div className="space-y-2">
+                      <Label>Store Banner</Label>
+                      <ImageUpload
+                        label="Upload Banner"
+                        value={formData.banner_url}
+                        onChange={(url) =>
+                          setFormData({ ...formData, banner_url: url })
+                        }
+                        folder="shop-images"
+                      />
+                      {formData.banner_url && (
+                        <div className="mt-2">
+                          <img
+                            src={formData.banner_url}
+                            alt="Store Banner"
+                            className="w-full h-48 object-cover rounded-lg border"
+                          />
                         </div>
                       )}
                     </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="whatsapp_number">WhatsApp Number</Label>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="max-w-xs text-xs">Used for customer inquiries. Include your country code (e.g., +23480...)</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <Input
-                      id="whatsapp_number"
-                      value={formData.whatsapp_number}
-                      onChange={(e) => {
-                        setFormData({ ...formData, whatsapp_number: e.target.value });
-                        setIsDirty(true);
-                      }}
-                      placeholder="+2348012345678"
-                      className={`min-h-[44px] ${errors.whatsapp_number ? "border-red-500" : ""}`}
-                    />
-                    {errors.whatsapp_number && (
-                      <p className="text-red-500 text-sm">{errors.whatsapp_number}</p>
-                    )}
                   </div>
 
-                  {/* Location Details */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="state">State</Label>
-                      <select
-                        id="state"
-                        value={formData.state}
-                        onChange={(e) => {
-                          setFormData({ ...formData, state: e.target.value });
-                          setIsDirty(true);
-                        }}
-                        className="w-full h-[44px] min-h-[44px] px-3 rounded-md border border-input bg-background text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                      >
-                        <option value="">Select State</option>
-                        {[
-                          "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", 
-                          "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT - Abuja", "Gombe", 
-                          "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", 
-                          "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", 
-                          "Taraba", "Yobe", "Zamfara"
-                        ].map(state => (
-                          <option key={state} value={state}>{state}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="city">City / Area</Label>
-                      <Input
-                        id="city"
-                        value={formData.city}
-                        onChange={(e) => {
-                          setFormData({ ...formData, city: e.target.value });
-                          setIsDirty(true);
-                        }}
-                        placeholder="e.g. Lekki, Ikeja, etc."
-                        className="min-h-[44px]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* LOGO */}
-                  <div className="space-y-2">
-                    <Label>Store Logo</Label>
-                    <ImageUpload
-                      label="Upload Logo"
-                      value={formData.logo_url}
-                      onChange={(url) =>
-                        setFormData({ ...formData, logo_url: url })
-                      }
-                      folder="shop-images"
-                    />
-                    <div className="mt-2">
-                      <ShopAvatar
-                        name={formData.shop_name || "Your Store"}
-                        logoUrl={formData.logo_url}
-                        className="w-32 h-32 rounded-lg border"
-                        initialsClassName="text-4xl"
-                      />
-                    </div>
-                  </div>
-
-                  {/* BANNER */}
-                  <div className="space-y-2">
-                    <Label>Store Banner</Label>
-                    <ImageUpload
-                      label="Upload Banner"
-                      value={formData.banner_url}
-                      onChange={(url) =>
-                        setFormData({ ...formData, banner_url: url })
-                      }
-                      folder="shop-images"
-                    />
-                    {formData.banner_url && (
-                      <div className="mt-2">
-                        <img
-                          src={formData.banner_url}
-                          alt="Store Banner"
-                          className="w-full h-48 object-cover rounded-lg border"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <Button type="submit" disabled={isSaving || slugAvailable === false} className="w-full min-h-[48px] text-base">
+                  <Button type="submit" disabled={isSaving || slugAvailable === false} className="w-full min-h-[48px] text-base shadow-sm">
                     {isSaving ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
                     ) : (
