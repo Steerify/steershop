@@ -1000,7 +1000,6 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </div>
-        </div>
       </div>
 
       {/* ─── Mobile Bottom Navigation ────────────────────── */}
