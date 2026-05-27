@@ -8,7 +8,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { CustomerSidebar } from "@/components/CustomerSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShoppingCart, ArrowRight } from "lucide-react";
+import { Loader2, ShoppingCart, ArrowRight, ShieldCheck, PackageCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { OrderReviewPrompt } from "@/components/OrderReviewPrompt";
@@ -22,7 +22,34 @@ const CustomerOrders = () => {
   const { user, isLoading: isAuthLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [orders, setOrders] = useState<any[]>([]);
-  // ... rest of state
+  const [releasingOrderId, setReleasingOrderId] = useState<string | null>(null);
+
+  const handleReleaseEscrow = async (orderId: string) => {
+    if (
+      !confirm(
+        "Confirm you have received this order? This releases your payment from escrow to the seller and cannot be undone.",
+      )
+    ) {
+      return;
+    }
+    setReleasingOrderId(orderId);
+    try {
+      const result = await orderService.releaseEscrow(orderId);
+      toast({
+        title: "Payment released 🎉",
+        description: result?.message || "Thanks for confirming delivery. The seller has been paid.",
+      });
+      await loadOrders();
+    } catch (error: any) {
+      toast({
+        title: "Couldn't release payment",
+        description: error?.message || "Please try again shortly. Your funds remain safely held.",
+        variant: "destructive",
+      });
+    } finally {
+      setReleasingOrderId(null);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthLoading) {
@@ -160,6 +187,50 @@ const CustomerOrders = () => {
                       <CardContent className="pt-4 space-y-4">
                         {/* Order Timeline */}
                         <OrderTimeline order={order} />
+
+                        {/* Escrow: buyer confirms delivery to release funds */}
+                        {order.payment_status === "held_in_escrow" && (
+                          <div className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-xl space-y-3">
+                            <div className="flex items-start gap-2.5">
+                              <span className="p-1.5 rounded-lg bg-primary/15 text-primary shrink-0">
+                                <ShieldCheck className="w-4 h-4" />
+                              </span>
+                              <div>
+                                <p className="font-heading font-semibold text-sm text-foreground">
+                                  Your payment is protected in escrow
+                                </p>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                  We're holding ₦{parseFloat(order.total_amount).toLocaleString()} securely.
+                                  Once your order arrives, confirm delivery to release the funds to the seller.
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              onClick={() => handleReleaseEscrow(order.id)}
+                              disabled={releasingOrderId === order.id}
+                              className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                            >
+                              {releasingOrderId === order.id ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Releasing payment...
+                                </>
+                              ) : (
+                                <>
+                                  <PackageCheck className="w-4 h-4 mr-2" />
+                                  Confirm Delivery &amp; Release Payment
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        )}
+
+                        {order.payment_status === "released_from_escrow" && (
+                          <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-xl text-sm text-green-700 dark:text-green-400">
+                            <ShieldCheck className="w-4 h-4 shrink-0" />
+                            <span className="font-medium">Delivery confirmed — payment released to the seller.</span>
+                          </div>
+                        )}
 
                         {order.order_items?.some((item: any) => item.products?.is_digital) && (order.paid_at || ["confirmed", "processing", "delivered", "completed"].includes(order.status)) && (
                           <div className="p-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-xl space-y-3">

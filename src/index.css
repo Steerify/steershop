@@ -68,9 +68,13 @@
     --card-gradient: linear-gradient(180deg, hsl(0 0% 100%), hsl(30 20% 97.5%));
     --pattern-overlay: linear-gradient(180deg, hsl(var(--primary) / 0.03), transparent);
 
-    /* Shadows */
-    --shadow-elegant: 0 10px 40px -10px hsl(var(--primary) / 0.15);
-    --shadow-glow: 0 0 30px hsl(var(--accent) / 0.2);
+    /* Elevation — crisp, layered, neutral shadows for an enterprise feel
+       (replaces the soft single-color glow that read as generic/startup) */
+    --shadow-elegant: 0 1px 2px hsl(222 47% 11% / 0.06), 0 6px 16px -4px hsl(222 47% 11% / 0.10);
+    --shadow-glow: 0 0 0 1px hsl(var(--accent) / 0.12), 0 8px 24px -8px hsl(var(--accent) / 0.22);
+    --elevation-1: 0 1px 2px hsl(222 47% 11% / 0.05), 0 1px 3px hsl(222 47% 11% / 0.06);
+    --elevation-2: 0 2px 4px -1px hsl(222 47% 11% / 0.06), 0 6px 16px -4px hsl(222 47% 11% / 0.10);
+    --elevation-3: 0 4px 8px -2px hsl(222 47% 11% / 0.08), 0 16px 32px -8px hsl(222 47% 11% / 0.14);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     /* Sidebar */
@@ -129,8 +133,11 @@
     --adire-gradient: linear-gradient(135deg, hsl(222 70% 14%), hsl(var(--brand-blue-deep)), hsl(var(--accent-deep)));
     --card-gradient: linear-gradient(180deg, hsl(222 40% 11%), hsl(222 40% 9%));
     --pattern-overlay: linear-gradient(180deg, hsl(var(--accent) / 0.04), transparent);
-    --shadow-elegant: 0 10px 40px -10px hsl(224 47% 2% / 0.6);
-    --shadow-glow: 0 0 30px hsl(var(--accent) / 0.25);
+    --shadow-elegant: 0 1px 2px hsl(0 0% 0% / 0.4), 0 8px 24px -8px hsl(0 0% 0% / 0.5);
+    --shadow-glow: 0 0 0 1px hsl(var(--accent) / 0.18), 0 10px 28px -8px hsl(var(--accent) / 0.28);
+    --elevation-1: 0 1px 2px hsl(0 0% 0% / 0.35), 0 1px 3px hsl(0 0% 0% / 0.4);
+    --elevation-2: 0 2px 4px -1px hsl(0 0% 0% / 0.4), 0 8px 20px -6px hsl(0 0% 0% / 0.5);
+    --elevation-3: 0 4px 8px -2px hsl(0 0% 0% / 0.45), 0 18px 36px -10px hsl(0 0% 0% / 0.6);
 
     --sidebar-background: 222 50% 6%;
     --sidebar-foreground: 30 20% 96%;
@@ -446,6 +453,38 @@
   /* Shared page theme shell */
   .theme-page-shell {
     background: hsl(var(--background));
+  }
+
+  /* ── Enterprise primitives ─────────────────────────────────
+     Crisp surfaces and confident, on-brand controls for a more
+     professional, less "generic startup" appearance. */
+  .elevation-1 { box-shadow: var(--elevation-1); }
+  .elevation-2 { box-shadow: var(--elevation-2); }
+  .elevation-3 { box-shadow: var(--elevation-3); }
+
+  /* A clean, bordered surface with subtle elevation — the default
+     enterprise card. Use in place of heavy gradient/glow cards. */
+  .surface-card {
+    @apply rounded-xl border border-border bg-card;
+    box-shadow: var(--elevation-1);
+    transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .surface-card:hover {
+    box-shadow: var(--elevation-2);
+    border-color: hsl(var(--border) / 0.7);
+  }
+
+  /* Solid, on-brand primary action — confident and crisp rather
+     than a multi-stop gradient. */
+  .btn-enterprise {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg font-semibold;
+    @apply bg-primary text-primary-foreground transition-colors;
+    box-shadow: var(--elevation-1);
+  }
+  .btn-enterprise:hover {
+    background: hsl(var(--primary) / 0.92);
   }
 
   .theme-bg-layer {

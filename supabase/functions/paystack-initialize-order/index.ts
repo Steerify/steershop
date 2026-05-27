@@ -124,6 +124,11 @@ serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const { order_id, shop_id, customer_email, callback_url } = body;
+    // Escrow mode: the platform holds the full amount and releases it to the
+    // vendor only after the buyer confirms delivery. Defaults to true so the
+    // marketplace runs on escrow; pass escrow:false to keep the legacy
+    // instant split-to-subaccount behaviour.
+    const useEscrow = body.escrow !== false;
 
     if (!order_id || !shop_id || !isValidUuid(order_id) || !isValidUuid(shop_id)) {
       return new Response(
@@ -197,9 +202,12 @@ serve(async (req) => {
 
     const paymentReference = `ORDER_${order.id}_${Date.now()}`;
     const hasSubaccount = !!shop.paystack_subaccount_code;
-    const paymentMode = hasSubaccount ? "split" : "direct";
+    // In escrow mode the platform must receive the full amount (no split),
+    // so it can hold the funds and transfer the vendor's share on release.
+    const splitToSubaccount = hasSubaccount && !useEscrow;
+    const paymentMode = useEscrow ? "escrow" : (splitToSubaccount ? "split" : "direct");
 
-    // Build Paystack payload - include subaccount fields only if shop has one
+    // Build Paystack payload - include subaccount fields only when splitting
     const paystackPayload: Record<string, unknown> = {
       email: paymentEmail,
       amount: amountInKobo,
@@ -210,6 +218,7 @@ serve(async (req) => {
         order_id: order.id,
         shop_id,
         payment_mode: paymentMode,
+        escrow: useEscrow,
         custom_fields: [
           {
             display_name: "Order ID",
@@ -225,7 +234,7 @@ serve(async (req) => {
       },
     };
 
-    if (hasSubaccount) {
+    if (splitToSubaccount) {
       paystackPayload.subaccount = shop.paystack_subaccount_code;
       paystackPayload.bearer = "subaccount";
     }

@@ -363,7 +363,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                     </Button>
                   </Link>
                   <Link to="/auth/login?tab=signup">
-                    <Button size="sm" className="h-9 px-4 text-sm bg-gradient-to-r from-indigo-600 to-teal-500 hover:from-indigo-500 hover:to-teal-400 text-white transition-all font-semibold shadow-lg shadow-indigo-500/25 border border-white/10">
+                    <Button size="sm" className="h-9 px-4 text-sm btn-enterprise">
                       Get Started
                     </Button>
                   </Link>
@@ -440,7 +440,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
               <Button variant="outline" className="w-full min-h-[48px] border-primary/30 font-display">Login</Button>
             </Link>
             <Link to="/auth/login?tab=signup">
-              <Button className="w-full min-h-[48px] bg-gradient-to-r from-indigo-600 to-teal-500 hover:from-indigo-500 hover:to-teal-400 text-white transition-all font-display font-semibold shadow-lg shadow-indigo-500/25 border border-white/10">Get Started</Button>
+              <Button className="w-full min-h-[48px] btn-enterprise font-display">Get Started</Button>
             </Link>
           </div>
         </div>

@@ -289,8 +289,41 @@ serve(async (req) => {
         }
       }
 
-      // If this is an order payment (has order_id and shop_id) - record revenue with platform fee
-      if (order_id && shop_id) {
+      // Escrow order payment: hold the funds on the platform balance instead
+      // of recognising revenue now. Revenue/earnings are recorded at release
+      // (release-escrow), when the money actually moves to the vendor.
+      const isEscrowOrder = event.data.metadata?.escrow === true
+        || event.data.metadata?.payment_mode === 'escrow';
+
+      if (order_id && shop_id && isEscrowOrder) {
+        const grossAmount = event.data.amount / 100;
+        const { error: holdError } = await supabase
+          .from('orders')
+          .update({
+            payment_status: 'held_in_escrow',
+            status: 'processing',
+            payment_reference: event.data.reference,
+            payment_instrument_fingerprint: paymentInstrumentFingerprint,
+          })
+          .eq('id', order_id);
+
+        if (holdError) {
+          logError('Error holding order in escrow', { error: holdError, order_id, paymentReference });
+        } else {
+          logInfo('Order funds held in escrow', { order_id, shop_id, grossAmount });
+          await supabase.from('escrow_events').insert({
+            order_id,
+            shop_id,
+            event: 'held',
+            amount_ngn: grossAmount,
+            reference: event.data.reference,
+            metadata: { channel: event.data.channel },
+          });
+        }
+      }
+
+      // If this is a non-escrow order payment (has order_id and shop_id) - record revenue with platform fee
+      if (order_id && shop_id && !isEscrowOrder) {
         const grossAmount = event.data.amount / 100; // Paystack sends amount in kobo
         const feePercentage = 1; // Platform fee percentage (1% via split payments)
         const platformFee = Math.round(grossAmount * (feePercentage / 100) * 100) / 100;

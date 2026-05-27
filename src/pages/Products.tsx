@@ -179,14 +179,19 @@ const Products = () => {
       setShop(userShop);
 
       const formattedShopId = formatUUIDWithHyphens(userShop.id);
-      const productsResponse = await productService.getProducts({ 
+      const productsResponse = await productService.getProducts({
         shopId: formattedShopId,
-        limit: 100 
+        limit: 100,
+        includeUnavailable: true, // Vendors manage ALL their items, including paused/unavailable ones
       });
 
       setProducts(productsResponse.data || []);
-    } catch (error) {
-      // Error already handled
+    } catch (error: any) {
+      toast({
+        title: "Couldn't load your products",
+        description: error?.message || "Please refresh and try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -431,7 +436,19 @@ const Products = () => {
       setShowDraftBanner(false);
       loadShopAndProducts();
     } catch (error: any) {
-      // Error handled by handleApiError
+      const msg = error?.message || "Failed to save. Please try again.";
+      const isPermission =
+        msg.toLowerCase().includes("row-level security") ||
+        msg.toLowerCase().includes("row level security") ||
+        msg.toLowerCase().includes("permission") ||
+        msg.toLowerCase().includes("policy");
+      toast({
+        title: isPermission ? "Permission Error" : "Error",
+        description: isPermission
+          ? "Could not save. Make sure your shop is fully set up, then try again. If this persists, your account may need updated store permissions."
+          : msg,
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }

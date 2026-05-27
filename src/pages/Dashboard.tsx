@@ -1001,7 +1001,6 @@ const Dashboard = () => {
             </Card>
           </div>
         </div>
-      </div>
 
       {/* ─── Mobile Bottom Navigation ────────────────────── */}
       <MobileBottomNav />

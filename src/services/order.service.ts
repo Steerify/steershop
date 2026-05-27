@@ -141,6 +141,31 @@ const orderService = {
     return { success: true };
   },
 
+  // Buyer (or admin) confirms delivery and releases the escrowed funds to the vendor.
+  releaseEscrow: async (orderId: string) => {
+    const { data, error } = await supabase.functions.invoke('release-escrow', {
+      body: { orderId },
+    });
+
+    if (error) {
+      // Surface the edge function's JSON error message when available
+      const ctx = (error as any)?.context;
+      let message = error.message;
+      try {
+        if (ctx && typeof ctx.json === 'function') {
+          const body = await ctx.json();
+          if (body?.error) message = body.error;
+        }
+      } catch {
+        // ignore parse errors, fall back to error.message
+      }
+      throw new Error(message || 'Failed to release escrow');
+    }
+
+    if (data?.error) throw new Error(data.error);
+    return data as { success: boolean; message: string; vendorAmount?: number; platformFee?: number };
+  },
+
   getWhatsAppLink: async (id: string) => {
     const { data: order, error } = await supabase
       .from('orders')
