@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Shop } from '@/types/api';
 import activityLogService from './activity-log.service';
+import { escapeForOrIlike } from '@/lib/utils';
 
 
 export interface CreateDefaultShopAddressRequest {
@@ -160,7 +161,7 @@ const shopService = {
     }
 
     if (filters?.searchTerm) {
-      const q = `%${filters.searchTerm}%`;
+      const q = `"%${escapeForOrIlike(filters.searchTerm)}%"`;
       query = query.or(`shop_name.ilike.${q},description.ilike.${q},shop_slug.ilike.${q},category.ilike.${q},state.ilike.${q},city.ilike.${q}`);
     }
 

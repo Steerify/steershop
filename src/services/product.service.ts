@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductImage } from '@/types/api';
+import { escapeForOrIlike } from '@/lib/utils';
 
 type ProductUpdateData = {
   name?: string;
@@ -39,6 +40,10 @@ type ProductSearchRow = {
   booking_required?: boolean | null;
   video_url?: string | null;
   stock_unit?: string | null;
+  delete_at?: string | null;
+  is_digital?: boolean | null;
+  digital_file_url?: string | null;
+  digital_delivery_text?: string | null;
   shops?: { shop_slug?: string | null } | null;
 };
 
@@ -309,6 +314,7 @@ const productService = {
     const to = from + limit - 1;
 
     // Search products by name or description across all shops with valid subscriptions
+    const term = escapeForOrIlike(params.query);
     const { data: products, error, count } = await supabase
       .from('products')
       .select(`
@@ -316,7 +322,7 @@ const productService = {
         shops!inner(shop_slug, shop_name, owner_id)
       `, { count: 'exact' })
       .eq('is_available', true)
-      .or(`name.ilike.%${params.query}%,description.ilike.%${params.query}%`)
+      .or(`name.ilike."%${term}%",description.ilike."%${term}%"`)
       .range(from, to);
 
     if (error) {

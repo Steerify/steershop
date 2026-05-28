@@ -56,6 +56,29 @@ describe("productService", () => {
     });
   });
 
+  describe("searchProducts", () => {
+    it("sanitizes the query before embedding it in the or() filter", async () => {
+      const orSpy = vi.fn().mockReturnValue({
+        range: vi.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
+      });
+      const chain = {
+        eq: vi.fn().mockReturnValue({ or: orSpy }),
+      };
+      (supabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue(chain),
+      });
+
+      // A raw quote would prematurely close the double-quoted value; the comma
+      // and paren are safe once the value is double-quoted, so they're kept.
+      await productService.searchProducts({ query: 'shoes",red)' });
+
+      const filter = orSpy.mock.calls[0][0] as string;
+      expect(filter).toBe('name.ilike."%shoes ,red)%",description.ilike."%shoes ,red)%"');
+      // The user's stray double-quote must not survive unescaped.
+      expect(filter).not.toContain('shoes"');
+    });
+  });
+
   describe("getProducts", () => {
     it("applies is_available filter by default", async () => {
       const mockProducts = [{ id: "p1", name: "P1", price: 10, stock_quantity: 5 }];

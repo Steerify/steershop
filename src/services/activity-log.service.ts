@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { escapeForOrIlike } from '@/lib/utils';
 
 export interface ActivityLogEntry {
   action_type: 'create' | 'update' | 'delete' | 'login' | 'logout' | 'view' | 'export' | 'approve' | 'reject' | 'payment' | 'signup';
@@ -92,7 +93,8 @@ const activityLogService = {
     }
 
     if (params.search) {
-      query = query.or(`user_email.ilike.%${params.search}%,resource_name.ilike.%${params.search}%`);
+      const term = escapeForOrIlike(params.search);
+      query = query.or(`user_email.ilike."%${term}%",resource_name.ilike."%${term}%"`);
     }
 
     const { data, error, count } = await query;
