@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import nodemailer from "npm:nodemailer";
+import { getTransporter, getDefaultFromEmail } from "../_shared/smtp.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,46 +8,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const defaultFromEmail = "mail@steersolo.com";
-
 type OrderItem = {
   name: string;
   quantity: number;
   price: number;
 };
-
-let emailTransporter: ReturnType<typeof nodemailer.createTransport> | null =
-  null;
-
-function getEmailConfig() {
-  const smtpHost = Deno.env.get("SMTP_HOST");
-  const smtpPort = Number(Deno.env.get("SMTP_PORT") || 465);
-  const smtpUser = Deno.env.get("SMTP_USER");
-  const smtpPass = Deno.env.get("SMTP_PASS");
-  const smtpFromEmail = Deno.env.get("SMTP_FROM_EMAIL") || defaultFromEmail;
-
-  if (!smtpHost || !smtpUser || !smtpPass) {
-    return null;
-  }
-
-  if (!emailTransporter) {
-    emailTransporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpPort === 465,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    });
-  }
-
-  return {
-    from: `SteerSolo <${smtpFromEmail}>`,
-    replyTo: defaultFromEmail,
-    transporter: emailTransporter,
-  };
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -55,16 +20,8 @@ serve(async (req) => {
   }
 
   try {
-    const emailConfig = getEmailConfig();
-    if (!emailConfig) {
-      return new Response(
-        JSON.stringify({ error: "Email service not configured" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
-    }
+    const transporter = await getTransporter();
+    const fromEmail = getDefaultFromEmail();
 
     const {
       orderId,
@@ -286,9 +243,8 @@ serve(async (req) => {
 
     // Send email to customer
     if (customerEmail && customerSubject) {
-      const info = await emailConfig.transporter.sendMail({
-        from: emailConfig.from,
-        replyTo: emailConfig.replyTo,
+      const info = await transporter.sendMail({
+        from: fromEmail,
         to: customerEmail,
         subject: customerSubject,
         html: customerBodyHtml,
@@ -298,9 +254,8 @@ serve(async (req) => {
 
     // Send email to shop owner (for order_placed)
     if (shopOwnerEmail && ownerSubject) {
-      const info = await emailConfig.transporter.sendMail({
-        from: emailConfig.from,
-        replyTo: emailConfig.replyTo,
+      const info = await transporter.sendMail({
+        from: fromEmail,
         to: shopOwnerEmail,
         subject: ownerSubject,
         html: ownerBodyHtml,

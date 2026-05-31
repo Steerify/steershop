@@ -142,7 +142,7 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const fromEmail = 'SteerSolo <mail@steersolo.com>';
+    const fromEmail = getDefaultFromEmail();
     const replyTo = 'mail@steersolo.com';
     const supabase = createClient(supabaseUrl, supabaseKey);
 

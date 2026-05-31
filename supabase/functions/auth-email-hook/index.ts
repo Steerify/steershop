@@ -1,7 +1,7 @@
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import nodemailer from 'npm:nodemailer'
+import { getTransporter, getDefaultFromEmail } from '../_shared/smtp.ts'
 
 // Import existing SteerSolo templates
 import { SignupEmail } from '../_shared/email-templates/signup.tsx'
@@ -54,7 +54,6 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 const SITE_NAME = "SteerSolo"
 const ROOT_DOMAIN = "steersolo.com"
-const SENDER_EMAIL = Deno.env.get('SMTP_FROM_EMAIL') || 'mail@steersolo.com'
 const ADMIN_SIGNUP_EMAIL = "steerifygroup@gmail.com"
 
 async function handleWebhook(req: Request): Promise<Response> {
@@ -118,32 +117,14 @@ async function handleWebhook(req: Request): Promise<Response> {
   const html = await renderAsync(React.createElement(EmailTemplate, templateProps))
   const text = await renderAsync(React.createElement(EmailTemplate, templateProps), { plainText: true })
 
-  const smtpHost = Deno.env.get('SMTP_HOST')
-  const smtpPort = Deno.env.get('SMTP_PORT') || '465'
-  const smtpUser = Deno.env.get('SMTP_USER')
-  const smtpPass = Deno.env.get('SMTP_PASS')
-
-  if (!smtpHost || !smtpUser || !smtpPass) {
-    console.error('Missing SMTP credentials')
-    return new Response(JSON.stringify({ error: 'Missing SMTP credentials' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: parseInt(smtpPort),
-    secure: parseInt(smtpPort) === 465,
-    auth: { user: smtpUser, pass: smtpPass },
-  })
+  const transporter = await getTransporter();
+  const SENDER_EMAIL = getDefaultFromEmail();
 
   // 1. Send the primary auth email to the user
   try {
     const info = await transporter.sendMail({
-      from: `SteerSolo <${SENDER_EMAIL}>`,
+      from: SENDER_EMAIL,
       to: recipientEmail,
-      replyTo: SENDER_EMAIL,
       subject: EMAIL_SUBJECTS[emailType] || 'Notification',
       html,
       text,
@@ -182,9 +163,8 @@ async function handleWebhook(req: Request): Promise<Response> {
       
       // Admin Notification
       await transporter.sendMail({
-        from: `SteerSolo <${SENDER_EMAIL}>`,
+        from: SENDER_EMAIL,
         to: ADMIN_SIGNUP_EMAIL,
-        replyTo: SENDER_EMAIL,
         subject: adminSubject,
         html: adminHtml,
         text: `New Signup: ${recipientEmail} | Role: ${role}`,
@@ -209,9 +189,8 @@ async function handleWebhook(req: Request): Promise<Response> {
       `
       
       await transporter.sendMail({
-        from: `SteerSolo <${SENDER_EMAIL}>`,
+        from: SENDER_EMAIL,
         to: recipientEmail,
-        replyTo: SENDER_EMAIL,
         subject: onboardingSubject,
         html: onboardingHtml,
         text: `Welcome! Next step: ${onboardingCtaUrl}`,

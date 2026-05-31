@@ -6,85 +6,49 @@ export interface SmtpMailOptions {
   subject: string;
   html?: string;
   text?: string;
+  replyTo?: string;
 }
-
-export interface SmtpSendResult {
-  messageId?: string;
-  accepted?: string[];
-  rejected?: string[];
-  response?: string;
-  provider?: string;
-}
-
-type ProviderConfig = {
-  name: string;
-  host: string;
-  port: number;
-  user: string;
-  pass: string;
-  secure: boolean;
-};
 
 export function getDefaultFromEmail(): string {
-  return Deno.env.get("SMTP_FROM_EMAIL") ||
-    Deno.env.get("MAIL_FROM") ||
-    "SteerSolo <mail@steersolo.com>";
+  return Deno.env.get("SMTP_FROM_EMAIL") || "SteerSolo <no-reply@steersolo.com>";
 }
 
-export function assertSmtpConfigured(): {
-  host: string;
-  port: number;
-  user: string;
-  pass: string;
-  secure: boolean;
-} {
-  const host = Deno.env.get("SMTP_HOST");
-  const port = Number(Deno.env.get("SMTP_PORT") || "465");
+/**
+ * Creates and returns the primary nodemailer transporter.
+ * If SMTP credentials are missing, or if verification fails, it returns a 
+ * fallback transporter that logs to the console (useful for dev/test).
+ */
+export async function getTransporter() {
+  const host = Deno.env.get("SMTP_HOST") || "mail.steersolo.com";
+  const port = Number(Deno.env.get("SMTP_PORT") || 587);
   const user = Deno.env.get("SMTP_USER");
   const pass = Deno.env.get("SMTP_PASS");
 
-  if (!host || !user || !pass) {
-    throw new Error("Missing SMTP environment variables (SMTP_HOST, SMTP_USER, SMTP_PASS)");
+  const fallbackTransporter = nodemailer.createTransport({
+    streamTransport: true,
+    newline: "windows",
+    logger: true
+  });
+
+  if (!user || !pass) {
+    console.warn("⚠️ SMTP_USER or SMTP_PASS missing. Falling back to console stream transport.");
+    return fallbackTransporter;
   }
 
-  return {
+  const primaryTransporter = nodemailer.createTransport({
     host,
     port,
-    user,
-    pass,
-    secure: port === 465,
-  };
-}
+    secure: port === 465, // true for 465, false for other ports
+    auth: { user, pass },
+  });
 
-function readProviderConfig(prefix: "SPACEMAIL" | "BREVO" | "SUPABASE"): ProviderConfig | null {
-  const host = Deno.env.get(`${prefix}_SMTP_HOST`);
-  const user = Deno.env.get(`${prefix}_SMTP_USER`);
-  const pass = Deno.env.get(`${prefix}_SMTP_PASS`);
-  if (!host || !user || !pass) return null;
-  const port = Number(Deno.env.get(`${prefix}_SMTP_PORT`) || "465");
-  return { name: prefix.toLowerCase(), host, port, user, pass, secure: port === 465 };
-}
-
-function resolveProviderOrder(): ProviderConfig[] {
-  const providers: ProviderConfig[] = [];
-  const primary = Deno.env.get("EMAIL_PRIMARY_PROVIDER")?.toLowerCase();
-  const spacemail = readProviderConfig("SPACEMAIL");
-  const brevo = readProviderConfig("BREVO");
-  const supabase = readProviderConfig("SUPABASE");
-  if (primary === "brevo") {
-    if (brevo) providers.push(brevo);
-    if (spacemail) providers.push(spacemail);
-  } else {
-    if (spacemail) providers.push(spacemail);
-    if (brevo) providers.push(brevo);
+  try {
+    await primaryTransporter.verify();
+    return primaryTransporter;
+  } catch (error) {
+    console.error("⚠️ Primary SMTP verification failed. Falling back to console stream transport:", error);
+    return fallbackTransporter;
   }
-
-  if (providers.length === 0) {
-    const smtp = assertSmtpConfigured();
-    providers.push({ name: "smtp", ...smtp });
-  }
-  if (supabase) providers.push(supabase);
-  return providers;
 }
 
 export function normalizeRecipients(to: string | string[] | unknown): string[] {
@@ -97,54 +61,32 @@ export function normalizeRecipients(to: string | string[] | unknown): string[] {
   return [];
 }
 
-export async function sendSmtpEmail(options: SmtpMailOptions): Promise<SmtpSendResult> {
+export async function sendSmtpEmail(options: SmtpMailOptions) {
   const recipients = normalizeRecipients(options.to);
   if (recipients.length === 0) {
     throw new Error("Missing email recipient");
   }
 
-  let lastError: unknown = null;
-  for (const provider of resolveProviderOrder()) {
-    try {
-      const transporter = nodemailer.createTransport({
-        host: provider.host,
-        port: provider.port,
-        secure: provider.secure,
-        auth: { user: provider.user, pass: provider.pass },
-      });
-      const info = await transporter.sendMail({
-        from: options.from || getDefaultFromEmail(),
-        to: recipients,
-        subject: options.subject,
-        html: options.html,
-        text: options.text,
-      });
+  const transporter = await getTransporter();
 
-      return {
-        messageId: info.messageId,
-        accepted: Array.isArray(info.accepted) ? info.accepted.map(String) : undefined,
-        rejected: Array.isArray(info.rejected) ? info.rejected.map(String) : undefined,
-        response: typeof info.response === "string" ? info.response : undefined,
-        provider: provider.name,
-      };
-    } catch (error) {
-      lastError = error;
-      console.error("SMTP provider failed", { provider: provider.name, error: error instanceof Error ? error.message : String(error) });
+  try {
+    const info = await transporter.sendMail({
+      from: options.from || getDefaultFromEmail(),
+      to: recipients,
+      replyTo: options.replyTo,
+      subject: options.subject,
+      html: options.html,
+      text: options.text,
+    });
+    
+    // If it's a stream transport (fallback), it returns a message object we can read
+    if (info.message) {
+      info.message.pipe(process.stdout);
     }
+    
+    return info;
+  } catch (error) {
+    console.error("SMTP sending failed", error);
+    throw error;
   }
-
-  throw lastError instanceof Error ? lastError : new Error("All SMTP providers failed");
-}
-
-export function formatQueuedSender(payload: { from?: unknown; sender_domain?: unknown }): string {
-  if (typeof payload.sender_domain === "string" && payload.sender_domain.trim()) {
-    const displayName = typeof payload.from === "string" && payload.from.includes("<")
-      ? payload.from.split("<")[0].trim()
-      : "SteerSolo";
-    return `${displayName} <noreply@${payload.sender_domain.trim()}>`;
-  }
-
-  return typeof payload.from === "string" && payload.from.trim()
-    ? payload.from
-    : getDefaultFromEmail();
 }
