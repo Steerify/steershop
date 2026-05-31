@@ -56,6 +56,42 @@ const orderService = {
 
     if (itemsError) throw itemsError;
 
+    // Fire email/SMS notification asynchronously
+    supabase.from('shops')
+      .select('shop_name, owner_id, whatsapp_number')
+      .eq('id', data.shopId)
+      .single()
+      .then(async ({ data: shopInfo }) => {
+        if (!shopInfo) return;
+        const { data: profileInfo } = await supabase
+          .from('profiles')
+          .select('email, full_name')
+          .eq('id', shopInfo.owner_id)
+          .single();
+
+        // Prepare items with names (since we only have productIds in `data.items`, we just map the raw data if names are missing. But data.items has names? OrderItem type usually has name)
+        // OrderItem actually has `name`? Let's check: The edge function expects `items: [{ name, quantity, price }]`
+        const emailItems = data.items.map(i => ({
+          name: (i as any).name || (i as any).productName || 'Product',
+          quantity: i.quantity,
+          price: i.price
+        }));
+
+        supabase.functions.invoke('order-notifications', {
+          body: {
+            orderId: order.id,
+            eventType: 'order_placed',
+            shopName: shopInfo.shop_name,
+            customerEmail: data.customerEmail,
+            customerName: data.customerName,
+            totalAmount: totalAmount,
+            items: emailItems,
+            shopOwnerEmail: profileInfo?.email,
+            shopOwnerPhone: shopInfo.whatsapp_number,
+          }
+        }).catch(err => console.error('Failed to invoke order-notifications:', err));
+      });
+
     return { id: order.id, status: order.status };
   },
 
@@ -138,6 +174,35 @@ const orderService = {
       .eq('id', id);
 
     if (error) throw error;
+
+    // Fire email/SMS notification asynchronously
+    supabase.from('orders')
+      .select('*, order_items(*, products(name)), shops(shop_name)')
+      .eq('id', id)
+      .single()
+      .then(({ data: orderFull }) => {
+        if (!orderFull) return;
+        
+        const itemsList = (orderFull.order_items || []).map((i: any) => ({
+          name: i.products?.name || 'Item',
+          quantity: i.quantity,
+          price: i.price
+        }));
+
+        supabase.functions.invoke('order-notifications', {
+          body: {
+            orderId: id,
+            eventType: 'status_update',
+            statusUpdate: status,
+            shopName: orderFull.shops?.shop_name || 'SteerSolo Shop',
+            customerEmail: orderFull.customer_email,
+            customerName: orderFull.customer_name,
+            totalAmount: orderFull.total_amount,
+            items: itemsList,
+          }
+        }).catch(err => console.error('Failed to invoke order-notifications on update:', err));
+      });
+
     return { success: true };
   },
 

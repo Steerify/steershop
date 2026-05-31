@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import shopService from "@/services/shop.service";
-import { ArrowLeft, Loader2, Users, Search, MessageCircle, Mail, Phone, ShoppingCart, TrendingUp } from "lucide-react";
+import { ArrowLeft, Loader2, Users, Search, MessageCircle, Mail, Phone, ShoppingCart, TrendingUp, Download, Copy, Megaphone } from "lucide-react";
 import { PageWrapper } from "@/components/PageWrapper";
 import { format } from "date-fns";
 
@@ -106,10 +106,52 @@ const Customers = () => {
   };
 
   const openWhatsApp = (phone: string, name: string) => {
-    const cleaned = phone.replace(/[^\\d+]/g, "");
+    const cleaned = phone.replace(/[^\d+]/g, "");
     const formatted = cleaned.startsWith("+") ? cleaned : `+${cleaned}`;
     const message = encodeURIComponent(`Hi ${name}, this is from our store. How can we help you today?`);
     window.open(`https://api.whatsapp.com/send?phone=${formatted}&text=${message}`, "_blank");
+  };
+
+  const downloadCSV = () => {
+    const headers = ["Name", "Email", "Phone", "Total Orders", "Total Spent (NGN)", "Last Order Date"];
+    const rows = customers.map(c => [
+      c.name,
+      c.email || "",
+      c.phone || "",
+      c.total_orders,
+      c.total_spent.toFixed(2),
+      format(new Date(c.last_order_date), "yyyy-MM-dd")
+    ]);
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `steersolo_customers_${format(new Date(), "yyyyMMdd")}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast({ title: "Downloaded!", description: `${customers.length} customers exported to CSV.` });
+  };
+
+  const copyBroadcastNumbers = () => {
+    const vipCustomers = customers.filter(c => c.total_orders > 1 && c.phone);
+    if (vipCustomers.length === 0) {
+      toast({ title: "No repeat customers yet", description: "WhatsApp numbers of repeat buyers will appear here.", variant: "destructive" });
+      return;
+    }
+    const numbers = vipCustomers
+      .map(c => {
+        const cleaned = (c.phone || "").replace(/[^\d+]/g, "");
+        return cleaned.startsWith("+") ? cleaned : `+234${cleaned.replace(/^0+/, "")}`;
+      })
+      .join("\n");
+    navigator.clipboard.writeText(numbers).then(() => {
+      toast({ title: "Copied to clipboard! 🎉", description: `${vipCustomers.length} repeat customer numbers ready to paste into a WhatsApp Broadcast.` });
+    });
   };
 
   if (isLoading) {
@@ -134,11 +176,40 @@ const Customers = () => {
           </Button>
         </div>
 
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold mb-1 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Customers
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground">Your customer relationships at a glance</p>
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold mb-1 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Customers
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Your customer relationships at a glance</p>
+          </div>
+
+          {/* Marketing Toolkit */}
+          {customers.length > 0 && (
+            <div className="flex flex-col xs:flex-row gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={copyBroadcastNumbers}
+                className="gap-2 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
+              >
+                <Megaphone className="w-4 h-4" />
+                WA Broadcast
+                <Badge variant="secondary" className="ml-0.5 px-1.5 py-0 text-xs">
+                  {customers.filter(c => c.total_orders > 1 && c.phone).length}
+                </Badge>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={downloadCSV}
+                className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
+              >
+                <Download className="w-4 h-4" />
+                Export CSV
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Summary Cards */}

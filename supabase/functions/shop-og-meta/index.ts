@@ -308,11 +308,11 @@ serve(async (req) => {
     const categories = [...new Set(shopProducts.map(p => p.category).filter(Boolean))];
     const keywordsMeta = [shopName, ...(categories.length ? categories : ['online shop']), 'SteerSolo', 'Nigeria', shop.state || ''].filter(Boolean).join(', ');
 
-    // LocalBusiness JSON-LD — enhanced for premium shops
+    // LocalBusiness JSON-LD — unlocked for all shops
     const jsonLd: any = {
       "@context": "https://schema.org",
-      "@type": isPremium ? "Store" : "LocalBusiness",
-      "@id": isPremium ? shopUrl : undefined,
+      "@type": "Store",
+      "@id": shopUrl,
       "name": shop.shop_name || 'Shop',
       "description": shop.description || `Shop at ${shop.shop_name} on SteerSolo`,
       "url": shopUrl,
@@ -336,27 +336,25 @@ serve(async (req) => {
       jsonLd.sameAs = [`https://wa.me/${phone.replace('+', '')}`];
     }
 
-    // Premium: add brand, isPartOf, potentialAction
-    if (isPremium) {
-      jsonLd.brand = { "@type": "Brand", "name": shop.shop_name };
-      jsonLd.isPartOf = { "@type": "WebSite", "name": "SteerSolo", "url": SITE_URL };
-      jsonLd.potentialAction = {
-        "@type": "SearchAction",
-        "target": `${shopUrl}?search={search_term}`,
-        "query-input": "required name=search_term"
+    // Add brand, isPartOf, potentialAction
+    jsonLd.brand = { "@type": "Brand", "name": shop.shop_name };
+    jsonLd.isPartOf = { "@type": "WebSite", "name": "SteerSolo", "url": SITE_URL };
+    jsonLd.potentialAction = {
+      "@type": "SearchAction",
+      "target": `${shopUrl}?search={search_term}`,
+      "query-input": "required name=search_term"
+    };
+    if (shop.whatsapp_number) {
+      jsonLd.contactPoint = {
+        "@type": "ContactPoint",
+        "telephone": jsonLd.telephone,
+        "contactType": "customer service",
+        "availableLanguage": ["English"]
       };
-      if (shop.whatsapp_number) {
-        jsonLd.contactPoint = {
-          "@type": "ContactPoint",
-          "telephone": jsonLd.telephone,
-          "contactType": "customer service",
-          "availableLanguage": ["English"]
-        };
-      }
     }
 
-    // Price range for paid shops
-    if ((isSubscribed || isPremium) && shopProducts.length > 0) {
+    // Price range
+    if (shopProducts.length > 0) {
       const prices = shopProducts.map(p => p.price).filter(Boolean);
       if (prices.length > 0) {
         const minP = Math.min(...prices);
@@ -411,8 +409,8 @@ serve(async (req) => {
           "seller": { "@type": "Organization", "name": shop.shop_name, "url": shopUrl }
         }
       };
-      // Premium: add aggregate rating per product
-      if (isPremium && p.average_rating && p.total_reviews) {
+      // Add aggregate rating per product
+      if (p.average_rating && p.total_reviews) {
         schema.aggregateRating = {
           "@type": "AggregateRating",
           "ratingValue": p.average_rating,
@@ -422,15 +420,15 @@ serve(async (req) => {
       return schema;
     });
 
-    // WebPage schema for premium shops
-    const webPageSchema = isPremium ? {
+    // WebPage schema
+    const webPageSchema = {
       "@context": "https://schema.org",
       "@type": "WebPage",
       "name": shop.shop_name,
       "url": shopUrl,
       "isPartOf": { "@type": "WebSite", "name": "SteerSolo", "url": SITE_URL },
       "about": { "@type": "Store", "@id": shopUrl }
-    } : null;
+    };
 
     // Breadcrumb schema
     const breadcrumbSchema = {
@@ -443,14 +441,11 @@ serve(async (req) => {
       ]
     };
     
-    const allSchemas = [jsonLd, breadcrumbSchema, ...productSchemas, ...(webPageSchema ? [webPageSchema] : [])];
+    const allSchemas = [jsonLd, breadcrumbSchema, ...productSchemas, webPageSchema];
     
     const locationText = [shop.state, shop.country].filter(Boolean).join(', ');
     
-    // Premium shops get noindex removed + richer title
-    const titleTag = isPremium 
-      ? `${shopName} — Shop Online | SteerSolo` 
-      : `${shopName} | SteerSolo`;
+    const titleTag = `${shopName} — Shop Online | SteerSolo`;
     
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -464,7 +459,7 @@ serve(async (req) => {
   <meta property="og:description" content="${description}" />
   <meta property="og:image" content="${imageUrl}" />
   <meta property="og:url" content="${shopUrl}" />
-  <meta property="og:type" content="${isPremium ? 'business.business' : 'website'}" />
+  <meta property="og:type" content="business.business" />
   <meta property="og:site_name" content="SteerSolo" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${shopName}" />

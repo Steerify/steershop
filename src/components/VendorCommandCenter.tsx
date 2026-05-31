@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/types/api";
@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { BulkProductUpload } from "@/components/BulkProductUpload";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
+import orderService from "@/services/order.service";
 import { Badge } from "@/components/ui/badge";
 
 export const VendorCommandCenter = () => {
@@ -23,6 +24,13 @@ export const VendorCommandCenter = () => {
   const [loading, setLoading] = useState(true);
   const [isCopied, setIsCopied] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+  
+  const [salesData, setSalesData] = useState({
+    todaySales: 0,
+    activeOrders: 0,
+    conversion: "0.0%"
+  });
+  const [latestEscrowOrder, setLatestEscrowOrder] = useState<any>(null);
 
   const fetchShopData = async () => {
     if (!user) return;
@@ -33,8 +41,45 @@ export const VendorCommandCenter = () => {
       setShop(shopData);
 
       if (shopData) {
-        const productsRes = await productService.getProducts({ shopId: shopData.id });
+        const [productsRes, ordersRes] = await Promise.all([
+          productService.getProducts({ shopId: shopData.id }),
+          orderService.getOrders({ shopId: shopData.id })
+        ]);
+        
         setProductsCount(productsRes.data?.length || 0);
+
+        const allOrders = ordersRes.data || [];
+        
+        // Calculate stats
+        const todayStr = new Date().toISOString().split('T')[0];
+        let todaySales = 0;
+        let activeOrdersCount = 0;
+        
+        allOrders.forEach((o: any) => {
+          if (o.order_status !== 'completed' && o.order_status !== 'cancelled') {
+            activeOrdersCount++;
+          }
+          if (o.payment_status === 'paid' && o.created_at && o.created_at.startsWith(todayStr)) {
+            todaySales += Number(o.total_amount || 0);
+          }
+        });
+        
+        const conversion = shopData.total_views && shopData.total_views > 0 
+          ? ((allOrders.length / shopData.total_views) * 100).toFixed(1) + "%"
+          : "0.0%";
+
+        setSalesData({
+          todaySales,
+          activeOrders: activeOrdersCount,
+          conversion
+        });
+
+        // Find the most recent order for escrow demo
+        const escrowOrder = allOrders.find((o: any) => 
+          ['held_in_escrow', 'released_from_escrow', 'paid', 'pending'].includes(o.payment_status)
+        ) || allOrders[0];
+        
+        setLatestEscrowOrder(escrowOrder || null);
       }
     } catch (err) {
       console.error("Error fetching shop data for command center:", err);
@@ -126,10 +171,10 @@ export const VendorCommandCenter = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Today's Sales", value: "₦0.00", icon: Activity, trend: "0%", color: "text-blue-500 bg-blue-500/5 border-blue-500/10" },
-                { label: "Active Orders", value: "0", icon: PackagePlus, trend: "0%", color: "text-amber-500 bg-amber-500/5 border-amber-500/10" },
-                { label: "Store Visits", value: "0", icon: Sparkles, trend: "0%", color: "text-purple-500 bg-purple-500/5 border-purple-500/10" },
-                { label: "Conversion", value: "0.0%", icon: ArrowRight, trend: "0%", color: "text-emerald-500 bg-emerald-500/5 border-emerald-500/10" }
+                { label: "Today's Sales", value: `₦${salesData.todaySales.toLocaleString()}`, icon: Activity, trend: "0%", color: "text-blue-500 bg-blue-500/5 border-blue-500/10" },
+                { label: "Active Orders", value: salesData.activeOrders.toString(), icon: PackagePlus, trend: "0%", color: "text-amber-500 bg-amber-500/5 border-amber-500/10" },
+                { label: "Store Visits", value: (shop.total_views || 0).toString(), icon: Sparkles, trend: "0%", color: "text-purple-500 bg-purple-500/5 border-purple-500/10" },
+                { label: "Conversion", value: salesData.conversion, icon: ArrowRight, trend: "0%", color: "text-emerald-500 bg-emerald-500/5 border-emerald-500/10" }
               ].map((stat, i) => (
                 <div key={i} className="p-4 rounded-2xl bg-card/65 border border-border/40 backdrop-blur-md group hover:bg-card/90 transition-all duration-300 cursor-default hover:border-primary/25 shadow-[0_4px_20px_rgba(0,0,0,0.015)]">
                   <div className="flex items-center justify-between mb-2">
@@ -158,47 +203,56 @@ export const VendorCommandCenter = () => {
                 </Badge>
               </div>
 
-              {/* Simulated Order Milestone Timeline (Neat, app-like visual clarity) */}
-              <div className="space-y-4">
-                <div className="p-3.5 rounded-xl bg-muted/40 border border-border/40 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-[9px] font-black text-primary uppercase tracking-wider">Interactive Demo Escrow</p>
-                    <p className="text-xs font-bold text-foreground mt-0.5">Custom Adire Fabric Order #ST-8492</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">Client: Sarah Alabi • Delivery Fee Included</p>
+              {latestEscrowOrder ? (
+                <div className="space-y-4">
+                  <div className="p-3.5 rounded-xl bg-muted/40 border border-border/40 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[9px] font-black text-primary uppercase tracking-wider">Latest Escrow Order</p>
+                      <p className="text-xs font-bold text-foreground mt-0.5">Order #{latestEscrowOrder.id.slice(0, 8).toUpperCase()}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Client: {latestEscrowOrder.customer_name || 'Anonymous'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider">
+                        {latestEscrowOrder.payment_status === 'released_from_escrow' ? 'Released Funds' : 'Locked Funds'}
+                      </p>
+                      <p className="text-base font-black text-emerald-600 dark:text-emerald-400">₦{(latestEscrowOrder.total_amount || 0).toLocaleString()}</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider">Locked Funds</p>
-                    <p className="text-base font-black text-emerald-600 dark:text-emerald-400">₦45,000.00</p>
-                  </div>
-                </div>
 
-                {/* Horizontal Stage Timeline */}
-                <div className="relative pt-6 pb-2">
-                  <div className="absolute top-1/2 left-0 w-full h-[2px] bg-border/60 -translate-y-1/2" />
-                  <div className="absolute top-1/2 left-0 w-[66%] h-[2px] bg-gradient-to-r from-emerald-500 to-primary -translate-y-1/2" />
-                  
-                  <div className="relative flex justify-between">
-                    {[
-                      { step: 1, label: "Funded", active: true, icon: Lock, desc: "Escrow Locked" },
-                      { step: 2, label: "In Progress", active: true, icon: Activity, desc: "Merchant Crafting" },
-                      { step: 3, label: "Delivered", active: true, icon: CheckCircle2, desc: "Pending Review" },
-                      { step: 4, label: "Paid", active: false, icon: Unlock, desc: "Wallet Payout" },
-                    ].map((item, i) => (
-                      <div key={i} className="flex flex-col items-center relative z-10">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-300 ${
-                          item.active 
-                            ? "bg-gradient-to-br from-emerald-500 to-primary text-white border-background scale-110 shadow-md" 
-                            : "bg-muted text-muted-foreground border-border"
-                        }`}>
-                          <item.icon className="w-3.5 h-3.5" />
+                  {/* Horizontal Stage Timeline */}
+                  <div className="relative pt-6 pb-2">
+                    <div className="absolute top-1/2 left-0 w-full h-[2px] bg-border/60 -translate-y-1/2" />
+                    <div className={`absolute top-1/2 left-0 h-[2px] bg-gradient-to-r from-emerald-500 to-primary -translate-y-1/2 transition-all`} style={{ width: latestEscrowOrder.payment_status === 'released_from_escrow' || latestEscrowOrder.status === 'completed' ? '100%' : latestEscrowOrder.status === 'delivered' ? '66%' : '33%' }} />
+                    
+                    <div className="relative flex justify-between">
+                      {[
+                        { step: 1, label: "Funded", active: true, icon: Lock, desc: "Escrow Locked" },
+                        { step: 2, label: "In Progress", active: !['pending', 'cancelled'].includes(latestEscrowOrder.status), icon: Activity, desc: "Merchant Crafting" },
+                        { step: 3, label: "Delivered", active: ['delivered', 'completed'].includes(latestEscrowOrder.status), icon: CheckCircle2, desc: "Pending Review" },
+                        { step: 4, label: "Paid", active: latestEscrowOrder.payment_status === 'released_from_escrow', icon: Unlock, desc: "Wallet Payout" },
+                      ].map((item, i) => (
+                        <div key={i} className="flex flex-col items-center relative z-10">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-300 ${
+                            item.active 
+                              ? "bg-gradient-to-br from-emerald-500 to-primary text-white border-background scale-110 shadow-md" 
+                              : "bg-muted text-muted-foreground border-border"
+                          }`}>
+                            <item.icon className="w-3.5 h-3.5" />
+                          </div>
+                          <p className={`text-[9px] font-black uppercase mt-2 tracking-tight ${item.active ? 'text-foreground' : 'text-muted-foreground/50'}`}>{item.label}</p>
+                          <p className="text-[8px] text-muted-foreground mt-0.5 hidden xs:block">{item.desc}</p>
                         </div>
-                        <p className={`text-[9px] font-black uppercase mt-2 tracking-tight ${item.active ? 'text-foreground' : 'text-muted-foreground/50'}`}>{item.label}</p>
-                        <p className="text-[8px] text-muted-foreground mt-0.5 hidden xs:block">{item.desc}</p>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="p-8 text-center bg-muted/40 rounded-xl border border-border/40">
+                  <ShieldCheck className="w-8 h-8 mx-auto text-muted-foreground/50 mb-3" />
+                  <p className="text-sm font-bold text-foreground">No Escrow Orders Yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">When customers pay securely, their escrow timeline will appear here.</p>
+                </div>
+              )}
 
               <div className="mt-4 pt-3 border-t border-border/40 flex items-center gap-2 text-[9px] text-muted-foreground leading-tight">
                 <Info className="w-3.5 h-3.5 text-primary shrink-0" />
@@ -215,49 +269,15 @@ export const VendorCommandCenter = () => {
               <div>
                 <div className="flex items-center gap-2 mb-5">
                   <Award className="w-4 h-4 text-primary" />
-                  <h4 className="text-xs font-black text-foreground uppercase tracking-widest">Professional Vitality Index</h4>
+                  <h4 className="text-xs font-black text-foreground uppercase tracking-widest">Verified Partner</h4>
                 </div>
 
                 {/* Circular SVG Gauge Chart */}
                 <div className="flex flex-col items-center justify-center my-4 relative">
-                  <svg className="w-24 h-24 transform -rotate-90">
-                    {/* Gray Circle */}
-                    <circle
-                      cx="48"
-                      cy="48"
-                      r="40"
-                      stroke="rgba(0,0,0,0.05)"
-                      strokeWidth="6"
-                      fill="transparent"
-                      className="dark:stroke-white/5"
-                    />
-                    {/* Progress Circle */}
-                    <circle
-                      cx="48"
-                      cy="48"
-                      r="40"
-                      stroke="url(#gradient)"
-                      strokeWidth="6"
-                      fill="transparent"
-                      strokeDasharray={2 * Math.PI * 40}
-                      strokeDashoffset={2 * Math.PI * 40 * (1 - 0.98)}
-                      strokeLinecap="round"
-                      className="transition-all duration-1000 ease-out"
-                    />
-                    <defs>
-                      <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#10b981" />
-                        <stop offset="100%" stopColor="#6366f1" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  
-                  {/* Centered Score */}
-                  <div className="absolute text-center">
-                    <p className="text-2xl font-black text-foreground tracking-tighter">98</p>
-                    <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest -mt-0.5">Rating</p>
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-primary flex items-center justify-center shadow-lg">
+                    <Award className="w-10 h-10 text-white" />
                   </div>
-
+                  
                   <div className="mt-4 text-center">
                     <Badge className="bg-gradient-to-r from-emerald-500 to-primary border-0 text-[9px] font-bold py-0.5 px-3 rounded-full uppercase tracking-wider text-white">
                       Elite Partner
@@ -268,9 +288,9 @@ export const VendorCommandCenter = () => {
                 {/* Trust Pillars */}
                 <div className="space-y-3 mt-6">
                   {[
-                    { label: "Milestone-Perfect Handoffs", value: "99.2%", width: "w-[99%]", color: "bg-primary" },
-                    { label: "Dispute-Free Escrow Rate", value: "100%", width: "w-[100%]", color: "bg-emerald-500" },
-                    { label: "Contextual Response Speed", value: "98.5%", width: "w-[98%]", color: "bg-indigo-400" },
+                    { label: "Identity Verified", value: "Yes", width: "w-[100%]", color: "bg-emerald-500" },
+                    { label: "Secure Payments", value: "Active", width: "w-[100%]", color: "bg-primary" },
+                    { label: "Community Rating", value: "Excellent", width: "w-[100%]", color: "bg-indigo-400" },
                   ].map((pill, i) => (
                     <div key={i} className="space-y-1">
                       <div className="flex justify-between text-[9px] font-bold text-muted-foreground">

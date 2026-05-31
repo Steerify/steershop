@@ -103,9 +103,11 @@ serve(async (req) => {
     try {
       const { data: orderRow } = await supabase
         .from("orders")
-        .select("payment_status, status")
+        .select("payment_status, status, shops(shop_slug)")
         .eq("id", orderId)
         .maybeSingle();
+
+      const shopSlug = (orderRow?.shops as any)?.shop_slug || null;
 
       isPaid = orderRow?.payment_status === "paid" || 
                ["confirmed", "processing", "out_for_delivery", "delivered", "completed"].includes(orderRow?.status || statusUpdate || "");
@@ -246,6 +248,15 @@ serve(async (req) => {
           cancelled:
             "Your order has been cancelled. If you have questions, please contact the seller.",
         };
+        const isDelivered = statusUpdate === "delivered";
+        const reviewHtml = (isDelivered && shopSlug) ? `
+          <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:24px 0;text-align:center;">
+            <h3 style="margin:0 0 8px;color:#92400e;">How did we do? ⭐</h3>
+            <p style="margin:0 0 16px;color:#92400e;font-size:14px;">Your feedback helps others make great choices. We'd love to see photos of your purchase!</p>
+            <a href="https://steersolo.com/shop/${shopSlug}" style="display:inline-block;background:#d97706;color:#ffffff;padding:10px 20px;font-weight:bold;text-decoration:none;border-radius:6px;">Leave a Review</a>
+          </div>
+        ` : "";
+
         customerBodyHtml = `
           <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
             <div style="background:#2563eb;color:white;padding:20px;text-align:center;border-radius:8px 8px 0 0">
@@ -260,6 +271,7 @@ serve(async (req) => {
               </div>
               <p>Amount: <strong>${formattedAmount}</strong></p>
               ${digitalItemsHtml}
+              ${reviewHtml}
               <p style="color:#6b7280;font-size:12px;margin-top:24px">This is an automated email from SteerSolo.</p>
             </div>
           </div>`;

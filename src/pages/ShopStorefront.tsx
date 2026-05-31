@@ -151,9 +151,9 @@ const ShopStorefront = () => {
     const imageUrl = shop.logo_url || shop.banner_url || '';
     const data: any = {
       "@context": "https://schema.org",
-      "@type": isPremiumPlan ? "Store" : "LocalBusiness",
+      "@type": "Store",
       "name": shop.shop_name,
-      "description": shop.description || `Shop ${shop.category ? `${getCategoryLabel(shop.category)} ` : ''}at ${shop.shop_name}${shop.city ? ` in ${shop.city}` : ''}${isPremiumPlan ? '' : ' on SteerSolo'}`,
+      "description": shop.description || `Shop ${shop.category ? `${getCategoryLabel(shop.category)} ` : ''}at ${shop.shop_name}${shop.city ? ` in ${shop.city}` : ''} on SteerSolo`,
       "url": shopUrl,
       "image": imageUrl || undefined,
       "category": shopCategoryLabel || undefined,
@@ -172,25 +172,25 @@ const ShopStorefront = () => {
           "reviewCount": shop.total_reviews
         }
       }),
-    };
-    if (isPremiumPlan) {
-      data["@id"] = shopUrl;
-      data.brand = { "@type": "Brand", "name": shop.shop_name };
-      data.isPartOf = { "@type": "WebSite", "name": "SteerSolo", "url": "https://steersolo.com" };
-      if (shop.whatsapp_number) {
-        let phone = shop.whatsapp_number.replace(/[^\d+]/g, '');
-        if (!phone.startsWith('+')) {
-          phone = phone.startsWith('234') ? `+${phone}` : `+234${phone.replace(/^0+/, '')}`;
-        }
-        data.contactPoint = { "@type": "ContactPoint", "telephone": phone, "contactType": "customer service", "availableLanguage": ["English"] };
-        data.sameAs = [`https://wa.me/${phone.replace('+', '')}`];
-      }
-      data.potentialAction = {
+      "@id": shopUrl,
+      "brand": { "@type": "Brand", "name": shop.shop_name },
+      "isPartOf": { "@type": "WebSite", "name": "SteerSolo", "url": "https://steersolo.com" },
+      "potentialAction": {
         "@type": "SearchAction",
         "target": `${shopUrl}?search={search_term}`,
         "query-input": "required name=search_term"
-      };
+      }
+    };
+    
+    if (shop.whatsapp_number) {
+      let phone = shop.whatsapp_number.replace(/[^\d+]/g, '');
+      if (!phone.startsWith('+')) {
+        phone = phone.startsWith('234') ? `+${phone}` : `+234${phone.replace(/^0+/, '')}`;
+      }
+      data.contactPoint = { "@type": "ContactPoint", "telephone": phone, "contactType": "customer service", "availableLanguage": ["English"] };
+      data.sameAs = [`https://wa.me/${phone.replace('+', '')}`];
     }
+
     if (products.length > 0) {
       data.hasOfferCatalog = {
         "@type": "OfferCatalog",
@@ -220,7 +220,7 @@ const ShopStorefront = () => {
     };
 
     return [data, breadcrumbs];
-  }, [shop, products, isPremiumPlan, shopCategoryLabel]);
+  }, [shop, products, shopCategoryLabel]);
 
   useEffect(() => {
     let filtered = products;
@@ -453,7 +453,7 @@ const ShopStorefront = () => {
     >
       {shop && (
         <Helmet>
-          <title>{isPremiumPlan ? `${shop.shop_name}${shop.city ? ` in ${shop.city}` : ''} — Shop Online` : `${shop.shop_name}${shopCategoryLabel ? ` ${shopCategoryLabel}` : ''} | SteerSolo Shop`}</title>
+          <title>{`${shop.shop_name}${shop.city ? ` in ${shop.city}` : ''} — Shop Online | SteerSolo`}</title>
           <meta name="description" content={metaDescription} />
           <meta name="keywords" content={shop.seo_keywords?.length ? shop.seo_keywords.join(', ') : `${shop.shop_name}, ${shopCategoryLabel || 'shop'}, ${shop.city || ''}, ${shop.state || 'Nigeria'}, buy ${shop.shop_name} products, social commerce, steersolo`} />
           
