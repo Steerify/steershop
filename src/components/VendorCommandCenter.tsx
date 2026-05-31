@@ -162,159 +162,120 @@ export const VendorCommandCenter = () => {
           </div>
         </div>
 
-        {/* Majestic Dual-Column Layout (Shernest Inspired Architecture) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Left & Middle Column (lg:col-span-2): Professional Metrics & Escrow Tracker */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* ── Unified Metrics + Trust Strip ── */}
+        <div className="rounded-2xl bg-card/60 border border-border/40 backdrop-blur-md overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+          {/* Stats row */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-border/40">
+            {[
+              { label: "Today's Sales", value: `₦${salesData.todaySales.toLocaleString()}`, icon: Activity,    color: "text-blue-500",   bg: "bg-blue-500/8 border-blue-500/12" },
+              { label: "Active Orders", value: salesData.activeOrders.toString(),             icon: PackagePlus, color: "text-amber-500",  bg: "bg-amber-500/8 border-amber-500/12" },
+              { label: "Store Visits",  value: (shop.total_views || 0).toString(),            icon: Sparkles,    color: "text-violet-500", bg: "bg-violet-500/8 border-violet-500/12" },
+              { label: "Conversion",    value: salesData.conversion,                          icon: ArrowRight,  color: "text-emerald-500",bg: "bg-emerald-500/8 border-emerald-500/12" },
+            ].map((stat, i) => (
+              <div key={i} className="flex items-center gap-3 px-5 py-4 hover:bg-muted/30 transition-colors cursor-default group">
+                <div className={`p-2 rounded-xl border shrink-0 ${stat.bg}`}>
+                  <stat.icon className={`w-3.5 h-3.5 ${stat.color}`} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest truncate">{stat.label}</p>
+                  <p className="text-base font-black text-foreground tracking-tight leading-tight mt-0.5">{stat.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Verified Partner micro-strip */}
+          <div className="border-t border-border/40 px-5 py-2.5 flex items-center justify-between gap-4 bg-gradient-to-r from-emerald-500/5 via-transparent to-primary/5">
+            <div className="flex items-center gap-2.5">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-primary flex items-center justify-center shrink-0 shadow-sm">
+                <Award className="w-3.5 h-3.5 text-white" />
+              </div>
+              <span className="text-[10px] font-black text-foreground uppercase tracking-wider">Verified Partner</span>
+              <Badge className="bg-gradient-to-r from-emerald-500 to-primary border-0 text-[8px] font-bold py-0 px-2 rounded-full uppercase tracking-wide text-white">Elite</Badge>
+            </div>
+            <div className="hidden sm:flex items-center gap-4">
               {[
-                { label: "Today's Sales", value: `₦${salesData.todaySales.toLocaleString()}`, icon: Activity, trend: "0%", color: "text-blue-500 bg-blue-500/5 border-blue-500/10" },
-                { label: "Active Orders", value: salesData.activeOrders.toString(), icon: PackagePlus, trend: "0%", color: "text-amber-500 bg-amber-500/5 border-amber-500/10" },
-                { label: "Store Visits", value: (shop.total_views || 0).toString(), icon: Sparkles, trend: "0%", color: "text-purple-500 bg-purple-500/5 border-purple-500/10" },
-                { label: "Conversion", value: salesData.conversion, icon: ArrowRight, trend: "0%", color: "text-emerald-500 bg-emerald-500/5 border-emerald-500/10" }
-              ].map((stat, i) => (
-                <div key={i} className="p-4 rounded-2xl bg-card/65 border border-border/40 backdrop-blur-md group hover:bg-card/90 transition-all duration-300 cursor-default hover:border-primary/25 shadow-[0_4px_20px_rgba(0,0,0,0.015)]">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className={`p-1.5 rounded-lg border ${stat.color}`}>
-                      <stat.icon className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{stat.trend}</span>
-                  </div>
-                  <p className="text-muted-foreground text-[9px] font-black uppercase tracking-wider mb-1">{stat.label}</p>
-                  <h4 className="text-lg sm:text-xl font-black text-foreground tracking-tight">{stat.value}</h4>
+                { label: "Identity", ok: true, color: "bg-emerald-500" },
+                { label: "Payments", ok: true, color: "bg-primary" },
+                { label: "Rating", ok: true, color: "bg-indigo-400" },
+              ].map((p, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <div className={`w-1.5 h-1.5 rounded-full ${p.color}`} />
+                  <span className="text-[9px] font-bold text-muted-foreground">{p.label}</span>
                 </div>
               ))}
             </div>
+            <span className="text-[9px] text-muted-foreground hidden md:block">🔒 SteerSolo Trust Protocol</span>
+          </div>
+        </div>
 
-            {/* Trust Escrow Timeline (Shernest Safe Payments Flow Mock) */}
-            <div className="p-5 rounded-3xl bg-card/65 border border-border/40 backdrop-blur-md relative overflow-hidden group shadow-[0_4px_20px_rgba(0,0,0,0.015)]">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-              
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <h4 className="text-xs font-black text-foreground uppercase tracking-widest">Secure Escrow & Payment Milestones</h4>
-                </div>
-                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[9px] uppercase font-black">
-                  Escrow Protected
-                </Badge>
-              </div>
+        {/* ── Escrow Timeline ── */}
+        <div className="p-5 rounded-2xl bg-card/60 border border-border/40 backdrop-blur-md relative overflow-hidden group shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-              {latestEscrowOrder ? (
-                <div className="space-y-4">
-                  <div className="p-3.5 rounded-xl bg-muted/40 border border-border/40 flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-[9px] font-black text-primary uppercase tracking-wider">Latest Escrow Order</p>
-                      <p className="text-xs font-bold text-foreground mt-0.5">Order #{latestEscrowOrder.id.slice(0, 8).toUpperCase()}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Client: {latestEscrowOrder.customer_name || 'Anonymous'}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider">
-                        {latestEscrowOrder.payment_status === 'released_from_escrow' ? 'Released Funds' : 'Locked Funds'}
-                      </p>
-                      <p className="text-base font-black text-emerald-600 dark:text-emerald-400">₦{(latestEscrowOrder.total_amount || 0).toLocaleString()}</p>
-                    </div>
-                  </div>
-
-                  {/* Horizontal Stage Timeline */}
-                  <div className="relative pt-6 pb-2">
-                    <div className="absolute top-1/2 left-0 w-full h-[2px] bg-border/60 -translate-y-1/2" />
-                    <div className={`absolute top-1/2 left-0 h-[2px] bg-gradient-to-r from-emerald-500 to-primary -translate-y-1/2 transition-all`} style={{ width: latestEscrowOrder.payment_status === 'released_from_escrow' || latestEscrowOrder.status === 'completed' ? '100%' : latestEscrowOrder.status === 'delivered' ? '66%' : '33%' }} />
-                    
-                    <div className="relative flex justify-between">
-                      {[
-                        { step: 1, label: "Funded", active: true, icon: Lock, desc: "Escrow Locked" },
-                        { step: 2, label: "In Progress", active: !['pending', 'cancelled'].includes(latestEscrowOrder.status), icon: Activity, desc: "Merchant Crafting" },
-                        { step: 3, label: "Delivered", active: ['delivered', 'completed'].includes(latestEscrowOrder.status), icon: CheckCircle2, desc: "Pending Review" },
-                        { step: 4, label: "Paid", active: latestEscrowOrder.payment_status === 'released_from_escrow', icon: Unlock, desc: "Wallet Payout" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex flex-col items-center relative z-10">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-300 ${
-                            item.active 
-                              ? "bg-gradient-to-br from-emerald-500 to-primary text-white border-background scale-110 shadow-md" 
-                              : "bg-muted text-muted-foreground border-border"
-                          }`}>
-                            <item.icon className="w-3.5 h-3.5" />
-                          </div>
-                          <p className={`text-[9px] font-black uppercase mt-2 tracking-tight ${item.active ? 'text-foreground' : 'text-muted-foreground/50'}`}>{item.label}</p>
-                          <p className="text-[8px] text-muted-foreground mt-0.5 hidden xs:block">{item.desc}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-8 text-center bg-muted/40 rounded-xl border border-border/40">
-                  <ShieldCheck className="w-8 h-8 mx-auto text-muted-foreground/50 mb-3" />
-                  <p className="text-sm font-bold text-foreground">No Escrow Orders Yet</p>
-                  <p className="text-xs text-muted-foreground mt-1">When customers pay securely, their escrow timeline will appear here.</p>
-                </div>
-              )}
-
-              <div className="mt-4 pt-3 border-t border-border/40 flex items-center gap-2 text-[9px] text-muted-foreground leading-tight">
-                <Info className="w-3.5 h-3.5 text-primary shrink-0" />
-                <p>Payments are automatically secured in safe multi-signature escrow. Released to your payout balance upon client/milestone approval.</p>
-              </div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+              <h4 className="text-[10px] font-black text-foreground uppercase tracking-widest">Secure Escrow & Payment Milestones</h4>
             </div>
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[9px] uppercase font-black">
+              Escrow Protected
+            </Badge>
           </div>
 
-          {/* Right Column (lg:col-span-1): SteerSolo Professional Vitality Index (Shernest Score) */}
-          <div className="lg:col-span-1">
-            <div className="p-6 rounded-3xl bg-card/65 border border-border/40 backdrop-blur-md relative overflow-hidden group hover:border-primary/20 transition-all duration-500 shadow-[0_4px_20px_rgba(0,0,0,0.015)] h-full flex flex-col justify-between">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-              
-              <div>
-                <div className="flex items-center gap-2 mb-5">
-                  <Award className="w-4 h-4 text-primary" />
-                  <h4 className="text-xs font-black text-foreground uppercase tracking-widest">Verified Partner</h4>
+          {latestEscrowOrder ? (
+            <div className="space-y-4">
+              <div className="p-3 rounded-xl bg-muted/40 border border-border/40 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[9px] font-black text-primary uppercase tracking-wider">Latest Escrow Order</p>
+                  <p className="text-xs font-bold text-foreground mt-0.5">Order #{latestEscrowOrder.id.slice(0, 8).toUpperCase()}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Client: {latestEscrowOrder.customer_name || 'Anonymous'}</p>
                 </div>
-
-                {/* Circular SVG Gauge Chart */}
-                <div className="flex flex-col items-center justify-center my-4 relative">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-primary flex items-center justify-center shadow-lg">
-                    <Award className="w-10 h-10 text-white" />
-                  </div>
-                  
-                  <div className="mt-4 text-center">
-                    <Badge className="bg-gradient-to-r from-emerald-500 to-primary border-0 text-[9px] font-bold py-0.5 px-3 rounded-full uppercase tracking-wider text-white">
-                      Elite Partner
-                    </Badge>
-                  </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider">
+                    {latestEscrowOrder.payment_status === 'released_from_escrow' ? 'Released' : 'Locked'}
+                  </p>
+                  <p className="text-base font-black text-emerald-600 dark:text-emerald-400">₦{(latestEscrowOrder.total_amount || 0).toLocaleString()}</p>
                 </div>
+              </div>
 
-                {/* Trust Pillars */}
-                <div className="space-y-3 mt-6">
+              <div className="relative py-4">
+                <div className="absolute top-1/2 left-0 w-full h-[2px] bg-border/60 -translate-y-1/2" />
+                <div className="absolute top-1/2 left-0 h-[2px] bg-gradient-to-r from-emerald-500 to-primary -translate-y-1/2 transition-all" style={{ width: latestEscrowOrder.payment_status === 'released_from_escrow' || latestEscrowOrder.status === 'completed' ? '100%' : latestEscrowOrder.status === 'delivered' ? '66%' : '33%' }} />
+                <div className="relative flex justify-between">
                   {[
-                    { label: "Identity Verified", value: "Yes", width: "w-[100%]", color: "bg-emerald-500" },
-                    { label: "Secure Payments", value: "Active", width: "w-[100%]", color: "bg-primary" },
-                    { label: "Community Rating", value: "Excellent", width: "w-[100%]", color: "bg-indigo-400" },
-                  ].map((pill, i) => (
-                    <div key={i} className="space-y-1">
-                      <div className="flex justify-between text-[9px] font-bold text-muted-foreground">
-                        <span>{pill.label}</span>
-                        <span className="text-foreground font-black">{pill.value}</span>
+                    { label: "Funded",      active: true,                                                                           icon: Lock,          desc: "Escrow Locked" },
+                    { label: "In Progress", active: !['pending','cancelled'].includes(latestEscrowOrder.status),                    icon: Activity,      desc: "Merchant Crafting" },
+                    { label: "Delivered",   active: ['delivered','completed'].includes(latestEscrowOrder.status),                   icon: CheckCircle2,  desc: "Pending Review" },
+                    { label: "Paid",        active: latestEscrowOrder.payment_status === 'released_from_escrow',                    icon: Unlock,        desc: "Wallet Payout" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex flex-col items-center relative z-10">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-300 ${item.active ? "bg-gradient-to-br from-emerald-500 to-primary text-white border-background scale-110 shadow-md" : "bg-muted text-muted-foreground border-border"}`}>
+                        <item.icon className="w-3.5 h-3.5" />
                       </div>
-                      <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                        <div className={`h-full ${pill.color} ${pill.width} rounded-full`} />
-                      </div>
+                      <p className={`text-[9px] font-black uppercase mt-2 tracking-tight ${item.active ? 'text-foreground' : 'text-muted-foreground/50'}`}>{item.label}</p>
+                      <p className="text-[8px] text-muted-foreground mt-0.5 hidden sm:block">{item.desc}</p>
                     </div>
                   ))}
                 </div>
               </div>
-
-              <div className="p-3 bg-muted/40 border border-border/40 rounded-2xl text-[9px] text-muted-foreground leading-normal mt-6">
-                🔒 Verified by **SteerSolo Trust Protocol**. Cryptographically attests to professional delivery and transaction security.
-              </div>
             </div>
-          </div>
+          ) : (
+            <div className="py-6 text-center bg-muted/30 rounded-xl border border-border/40">
+              <ShieldCheck className="w-7 h-7 mx-auto text-muted-foreground/40 mb-2" />
+              <p className="text-sm font-bold text-foreground">No Escrow Orders Yet</p>
+              <p className="text-xs text-muted-foreground mt-1">Secure payment timelines will appear here once customers check out.</p>
+            </div>
+          )}
 
+          <div className="mt-3 pt-3 border-t border-border/40 flex items-center gap-2 text-[9px] text-muted-foreground">
+            <Info className="w-3.5 h-3.5 text-primary shrink-0" />
+            <p>Payments are automatically secured in safe multi-signature escrow. Released to your payout balance upon client/milestone approval.</p>
+          </div>
         </div>
 
         {/* Quick Links Row */}
-        <div className="mt-2 pt-4 flex flex-wrap gap-2">
+        <div className="pt-2 flex flex-wrap gap-2">
           <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-muted text-xs font-bold rounded-xl" asChild>
             <Link to="/products"><PackagePlus className="w-4 h-4 mr-2" /> Add Inventory</Link>
           </Button>
