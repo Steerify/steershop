@@ -64,6 +64,7 @@ const AdminPlatformUpdates = lazy(() => import("./pages/admin/AdminPlatformUpdat
 const AdminAds = lazy(() => import("./pages/admin/AdminAds"));
 const AdminUXAudit = lazy(() => import("./pages/admin/AdminUXAudit"));
 const AdminFeaturePhases = lazy(() => import("./pages/admin/AdminFeaturePhases"));
+const AdminConcierge = lazy(() => import("./pages/admin/AdminConcierge"));
 const GrowthPage = lazy(() => import("./pages/GrowthPage"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const DemoStoreFront = lazy(() => import("./pages/DemoStoreFront"));
@@ -417,6 +418,11 @@ const App = () => (
             <Route path="/admin/feature-phases" element={
               <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminFeaturePhases />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/concierge" element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <AdminConcierge />
               </ProtectedRoute>
             } />
             

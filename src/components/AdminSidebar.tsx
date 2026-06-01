@@ -13,7 +13,7 @@ import {
 import {
   LayoutDashboard, Store, Package, ShoppingCart, Users,
   Gift, GraduationCap, Award, MessageSquare, UserPlus,
-  Crown, Sparkles, Megaphone, DollarSign, Tv, Activity, Bell, Brain, Rocket
+  Crown, Sparkles, Megaphone, DollarSign, Tv, Activity, Bell, Brain, Rocket, Send
 } from "lucide-react";
 import logoLight from "@/assets/steersolo-logo.jpg";
 import logoDark from "@/assets/steersolo-logo-dark.jpg";
@@ -51,6 +51,7 @@ const menuGroups = [
     label: "Tools",
     items: [
       { title: "Ads Manager", url: "/admin/ads", icon: Tv },
+      { title: "WA Concierge", url: "/admin/concierge", icon: Send },
       { title: "Marketing Requests", url: "/admin/marketing", icon: Megaphone },
       { title: "Courses", url: "/admin/courses", icon: GraduationCap },
       { title: "Rewards", url: "/admin/prizes", icon: Award },
