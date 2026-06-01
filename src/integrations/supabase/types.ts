@@ -722,6 +722,61 @@ export type Database = {
         }
         Relationships: []
       }
+      escrow_events: {
+        Row: {
+          amount_ngn: number | null
+          created_at: string
+          event: string
+          id: string
+          metadata: Json | null
+          order_id: string
+          reference: string | null
+          shop_id: string | null
+        }
+        Insert: {
+          amount_ngn?: number | null
+          created_at?: string
+          event: string
+          id?: string
+          metadata?: Json | null
+          order_id: string
+          reference?: string | null
+          shop_id?: string | null
+        }
+        Update: {
+          amount_ngn?: number | null
+          created_at?: string
+          event?: string
+          id?: string
+          metadata?: Json | null
+          order_id?: string
+          reference?: string | null
+          shop_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrow_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escrow_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escrow_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_usage: {
         Row: {
           created_at: string | null
@@ -1138,6 +1193,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          buyer_confirmed_at: string | null
           cancelled_at: string | null
           cancelled_by: string | null
           completed_at: string | null
@@ -1152,6 +1208,9 @@ export type Database = {
           delivery_city: string | null
           delivery_fee: number | null
           delivery_state: string | null
+          escrow_released_at: string | null
+          escrow_transfer_code: string | null
+          escrow_transfer_reference: string | null
           id: string
           notes: string | null
           out_for_delivery_at: string | null
@@ -1166,6 +1225,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          buyer_confirmed_at?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
           completed_at?: string | null
@@ -1180,6 +1240,9 @@ export type Database = {
           delivery_city?: string | null
           delivery_fee?: number | null
           delivery_state?: string | null
+          escrow_released_at?: string | null
+          escrow_transfer_code?: string | null
+          escrow_transfer_reference?: string | null
           id?: string
           notes?: string | null
           out_for_delivery_at?: string | null
@@ -1194,6 +1257,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          buyer_confirmed_at?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
           completed_at?: string | null
@@ -1208,6 +1272,9 @@ export type Database = {
           delivery_city?: string | null
           delivery_fee?: number | null
           delivery_state?: string | null
+          escrow_released_at?: string | null
+          escrow_transfer_code?: string | null
+          escrow_transfer_reference?: string | null
           id?: string
           notes?: string | null
           out_for_delivery_at?: string | null
@@ -1579,6 +1646,7 @@ export type Database = {
           category: string
           compare_price: number | null
           created_at: string
+          delete_at: string | null
           description: string | null
           duration_minutes: number | null
           id: string
@@ -1601,6 +1669,7 @@ export type Database = {
           category?: string
           compare_price?: number | null
           created_at?: string
+          delete_at?: string | null
           description?: string | null
           duration_minutes?: number | null
           id?: string
@@ -1623,6 +1692,7 @@ export type Database = {
           category?: string
           compare_price?: number | null
           created_at?: string
+          delete_at?: string | null
           description?: string | null
           duration_minutes?: number | null
           id?: string
@@ -2392,14 +2462,14 @@ export type Database = {
       shops: {
         Row: {
           accent_color: string | null
-          address: string | null
+          auto_abandoned_cart: boolean | null
+          auto_review_request: boolean | null
+          auto_winback: boolean | null
           average_rating: number | null
           bank_account_name: string | null
           bank_account_number: string | null
           bank_name: string | null
           banner_url: string | null
-          category: string | null
-          city: string | null
           country: string | null
           created_at: string
           description: string | null
@@ -2411,6 +2481,7 @@ export type Database = {
           owner_id: string
           payment_method: string | null
           paystack_public_key: string | null
+          paystack_recipient_code: string | null
           paystack_subaccount_code: string | null
           primary_color: string | null
           secondary_color: string | null
@@ -2418,7 +2489,6 @@ export type Database = {
           settlement_bank_code: string | null
           shop_name: string
           shop_slug: string
-          show_public_address: boolean
           state: string | null
           theme_mode: string | null
           total_reviews: number | null
@@ -2427,14 +2497,14 @@ export type Database = {
         }
         Insert: {
           accent_color?: string | null
-          address?: string | null
+          auto_abandoned_cart?: boolean | null
+          auto_review_request?: boolean | null
+          auto_winback?: boolean | null
           average_rating?: number | null
           bank_account_name?: string | null
           bank_account_number?: string | null
           bank_name?: string | null
           banner_url?: string | null
-          category?: string | null
-          city?: string | null
           country?: string | null
           created_at?: string
           description?: string | null
@@ -2446,6 +2516,7 @@ export type Database = {
           owner_id: string
           payment_method?: string | null
           paystack_public_key?: string | null
+          paystack_recipient_code?: string | null
           paystack_subaccount_code?: string | null
           primary_color?: string | null
           secondary_color?: string | null
@@ -2453,7 +2524,6 @@ export type Database = {
           settlement_bank_code?: string | null
           shop_name: string
           shop_slug: string
-          show_public_address?: boolean
           state?: string | null
           theme_mode?: string | null
           total_reviews?: number | null
@@ -2462,14 +2532,14 @@ export type Database = {
         }
         Update: {
           accent_color?: string | null
-          address?: string | null
+          auto_abandoned_cart?: boolean | null
+          auto_review_request?: boolean | null
+          auto_winback?: boolean | null
           average_rating?: number | null
           bank_account_name?: string | null
           bank_account_number?: string | null
           bank_name?: string | null
           banner_url?: string | null
-          category?: string | null
-          city?: string | null
           country?: string | null
           created_at?: string
           description?: string | null
@@ -2481,6 +2551,7 @@ export type Database = {
           owner_id?: string
           payment_method?: string | null
           paystack_public_key?: string | null
+          paystack_recipient_code?: string | null
           paystack_subaccount_code?: string | null
           primary_color?: string | null
           secondary_color?: string | null
@@ -2488,7 +2559,6 @@ export type Database = {
           settlement_bank_code?: string | null
           shop_name?: string
           shop_slug?: string
-          show_public_address?: boolean
           state?: string | null
           theme_mode?: string | null
           total_reviews?: number | null
@@ -2981,11 +3051,8 @@ export type Database = {
       shops_public: {
         Row: {
           accent_color: string | null
-          address: string | null
           average_rating: number | null
           banner_url: string | null
-          category: string | null
-          city: string | null
           country: string | null
           created_at: string | null
           description: string | null
@@ -3008,11 +3075,8 @@ export type Database = {
         }
         Insert: {
           accent_color?: string | null
-          address?: string | null
           average_rating?: number | null
           banner_url?: string | null
-          category?: string | null
-          city?: string | null
           country?: string | null
           created_at?: string | null
           description?: string | null
@@ -3035,11 +3099,8 @@ export type Database = {
         }
         Update: {
           accent_color?: string | null
-          address?: string | null
           average_rating?: number | null
           banner_url?: string | null
-          category?: string | null
-          city?: string | null
           country?: string | null
           created_at?: string | null
           description?: string | null
