@@ -330,7 +330,68 @@ export async function generateConversationStarterImage(): Promise<Buffer | null>
   }
 }
 
-// ─── 4. Group Invite Image ────────────────────────────────────────────────
+// ─── 4. Shopping Tip Image ──────────────────────────────────────────────────
+
+export async function generateShoppingTipImage(): Promise<Buffer | null> {
+  const W = 720;
+  const H = 720;
+  const CX = W / 2;
+  const accent = '#fbc531'; // Gold/Yellow for tips
+
+  const svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+        <stop offset="0%" style="stop-color:#2f3640"/>
+        <stop offset="100%" style="stop-color:#192a56"/>
+      </radialGradient>
+      <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="10" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+
+    <!-- Background -->
+    <rect width="${W}" height="${H}" fill="url(#bg)"/>
+
+    <!-- Decorative rings -->
+    <circle cx="${CX}" cy="${H / 2}" r="300" fill="none" stroke="${accent}"
+      stroke-width="1.5" opacity="0.12"/>
+    <circle cx="${CX}" cy="${H / 2}" r="230" fill="none" stroke="${accent}"
+      stroke-width="1" opacity="0.08"/>
+
+    <!-- Glowing lightbulb bubble -->
+    <circle cx="${CX}" cy="300" r="118" fill="${accent}" opacity="0.14" filter="url(#glow)"/>
+    <circle cx="${CX}" cy="300" r="96" fill="${accent}" opacity="0.22"/>
+    <text x="${CX}" y="300" font-size="80" text-anchor="middle"
+      dominant-baseline="middle">💡</text>
+
+    <!-- Headline -->
+    <text x="${CX}" y="480" font-family="sans-serif" font-size="34" font-weight="bold"
+      fill="#ffffff" text-anchor="middle">Shopping Tip!</text>
+    <text x="${CX}" y="520" font-family="sans-serif" font-size="20"
+      fill="rgba(255,255,255,0.7)" text-anchor="middle">Read the caption for today's advice 👇</text>
+
+    <!-- Branding strip -->
+    <rect x="0" y="${H - 80}" width="${W}" height="80" fill="rgba(0,0,0,0.35)"/>
+    <text x="${CX}" y="${H - 46}" font-family="sans-serif" font-size="18"
+      font-weight="bold" fill="rgba(255,255,255,0.6)" text-anchor="middle">
+      ⚡ SteerSolo Marketplace
+    </text>
+    <text x="${CX}" y="${H - 18}" font-family="sans-serif" font-size="13"
+      fill="rgba(255,255,255,0.3)" text-anchor="middle">steersolo.com</text>
+  </svg>`;
+
+  try {
+    const result = await sharp(Buffer.from(svg)).jpeg({ quality: 92 }).toBuffer();
+    console.log(`[collage] Shopping tip image — ${Math.round(result.byteLength / 1024)}KB`);
+    return result;
+  } catch (err: any) {
+    console.error('[collage] Shopping tip image failed:', err?.message);
+    return null;
+  }
+}
+
+// ─── 5. Group Invite Image ────────────────────────────────────────────────
 
 const INVITE_ACCENTS = ['#6c63ff', '#ff6b6b', '#26de81', '#ffd166', '#45aaf2'] as const;
 

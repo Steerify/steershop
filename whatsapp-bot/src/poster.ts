@@ -4,12 +4,14 @@ import {
   generateProductCollage,
   generateStoreSnapshot,
   generateConversationStarterImage,
+  generateShoppingTipImage,
   generateGroupInviteImage,
 } from './collage.js';
 import {
   buildCaption,
   buildTop5Caption,
   buildConversationStarterCaption,
+  buildShoppingTipCaption,
   buildGroupInviteCaption,
   selectHookType,
   type HookType,
@@ -90,7 +92,7 @@ async function postTop5(sock: WASocket): Promise<void> {
  */
 async function postSingleStore(
   sock: WASocket,
-  hookType: Exclude<HookType, 'top_products' | 'conversation_starter' | 'group_invite'>,
+  hookType: Exclude<HookType, 'top_products' | 'conversation_starter' | 'shopping_tip' | 'group_invite'>,
 ): Promise<void> {
   console.log(`[poster] Running ${hookType.toUpperCase()} hook…`);
 
@@ -151,7 +153,17 @@ async function postConversationStarter(sock: WASocket): Promise<void> {
   console.log('[poster] Conversation starter post complete.');
 }
 
-// ─── 4. Group invite post ──────────────────────────────────────────────────────
+// ─── 4. Shopping tip post ────────────────────────────────────────────────────────
+
+async function postShoppingTip(sock: WASocket): Promise<void> {
+  console.log('[poster] Running SHOPPING_TIP hook…');
+  const caption = buildShoppingTipCaption();
+  const image = await generateShoppingTipImage();
+  await sendWithFallback(sock, image, caption);
+  console.log('[poster] Shopping tip post complete.');
+}
+
+// ─── 5. Group invite post ──────────────────────────────────────────────────────
 
 /**
  * Posts a "share the group link" call-to-action.
@@ -190,13 +202,16 @@ export async function runPostCycle(sock: WASocket): Promise<void> {
       case 'conversation_starter':
         await postConversationStarter(sock);
         break;
+      case 'shopping_tip':
+        await postShoppingTip(sock);
+        break;
       case 'group_invite':
         await postGroupInvite(sock);
         break;
       default:
         await postSingleStore(
           sock,
-          hookType as Exclude<HookType, 'top_products' | 'conversation_starter' | 'group_invite'>,
+          hookType as Exclude<HookType, 'top_products' | 'conversation_starter' | 'shopping_tip' | 'group_invite'>,
         );
     }
   } catch (err: any) {

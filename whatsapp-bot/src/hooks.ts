@@ -9,24 +9,39 @@ export type HookType =
   | 'hidden_gem'
   | 'flash_deal'
   | 'conversation_starter'
+  | 'shopping_tip'
   | 'group_invite';
 
 /**
- * Rotates across all 7 hook types in 2-hour windows.
- * With 12 windows per day, types repeat with slight variation,
- * keeping the group feed fresh and diverse.
+ * Rotates across hook types in 2-hour windows using a 15-bucket cycle.
+ * This perfectly implements the 40-40-20 content delivery principle:
+ * - 40% Promotional (6/15 slots)
+ * - 40% Engaging (6/15 slots)
+ * - 20% Sharing/Community (3/15 slots)
+ * A 15-bucket cycle (30 hours) ensures post times shift naturally each day.
  */
 export function selectHookType(): HookType {
   const hour = new Date().getHours();
-  const bucket = Math.floor(hour / 2) % 7;
+  // Using epoch hours so the bucket advances continuously across days
+  const epochHours = Math.floor(Date.now() / (1000 * 60 * 60));
+  const bucket = Math.floor(epochHours / 2) % 15;
+  
   const types: HookType[] = [
-    'featured_store',
-    'top_products',
-    'new_arrival',
-    'conversation_starter',
-    'hidden_gem',
-    'flash_deal',
-    'group_invite',
+    'featured_store',       // Promo 1
+    'conversation_starter', // Engage 1
+    'group_invite',         // Share 1
+    'top_products',         // Promo 2
+    'shopping_tip',         // Engage 2
+    'new_arrival',          // Promo 3
+    'conversation_starter', // Engage 3
+    'group_invite',         // Share 2
+    'hidden_gem',           // Promo 4
+    'shopping_tip',         // Engage 4
+    'flash_deal',           // Promo 5
+    'conversation_starter', // Engage 5
+    'group_invite',         // Share 3
+    'top_products',         // Promo 6
+    'shopping_tip',         // Engage 6
   ];
   return types[bucket];
 }
@@ -168,6 +183,30 @@ export function buildConversationStarterCaption(): string {
   ].join('\n');
 }
 
+// ─── Shopping tip hook ────────────────────────────────────────────────────────
+
+const SHOPPING_TIPS = [
+  { title: "Check Vendor Ratings", text: "Always look for the trust badge and recent reviews before making a big purchase." },
+  { title: "Use Escrow", text: "For expensive items, SteerSolo's escrow service ensures you only release payment when you're satisfied." },
+  { title: "Flash Deals", text: "Check the platform every morning! Vendors often drop their biggest discounts before noon." },
+  { title: "Support Local", text: "Buying from vendors in your city? You can often arrange same-day delivery!" },
+  { title: "Bundle Up", text: "If you're buying multiple items from one store, message the vendor directly—they might give you a discount!" },
+];
+
+export function buildShoppingTipCaption(): string {
+  const tip = SHOPPING_TIPS[new Date().getHours() % SHOPPING_TIPS.length];
+  return [
+    `💡 *STEERSOLO SHOPPING TIP* 💡`,
+    ``,
+    `*${tip.title}*`,
+    tip.text,
+    ``,
+    `Shop safely and smartly with us today.`,
+    ``,
+    `🌐 steersolo.com`,
+  ].join('\n');
+}
+
 // ─── Group invite hook ───────────────────────────────────────────────────
 
 export function buildGroupInviteCaption(groupLink: string): string {
@@ -194,7 +233,7 @@ export function buildGroupInviteCaption(groupLink: string): string {
 // ─── Caption router ───────────────────────────────────────────────────────────
 
 export function buildCaption(
-  hookType: Exclude<HookType, 'top_products' | 'conversation_starter' | 'group_invite'>,
+  hookType: Exclude<HookType, 'top_products' | 'conversation_starter' | 'shopping_tip' | 'group_invite'>,
   store: Store,
   product: Product,
 ): string {
