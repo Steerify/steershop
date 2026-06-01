@@ -1042,6 +1042,110 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_metrics: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          meta: Json | null
+          post_id: string | null
+          shop_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          meta?: Json | null
+          post_id?: string | null
+          shop_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          meta?: Json | null
+          post_id?: string | null
+          shop_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_metrics_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_queue: {
+        Row: {
+          caption: string
+          created_at: string
+          id: string
+          image_url: string | null
+          link_url: string
+          meta: Json | null
+          product_ids: string[] | null
+          scheduled_for: string
+          sent_at: string | null
+          sent_by: string | null
+          shop_id: string | null
+          skipped_at: string | null
+          skipped_by: string | null
+          slot: string
+          status: string
+        }
+        Insert: {
+          caption: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          link_url: string
+          meta?: Json | null
+          product_ids?: string[] | null
+          scheduled_for?: string
+          sent_at?: string | null
+          sent_by?: string | null
+          shop_id?: string | null
+          skipped_at?: string | null
+          skipped_by?: string | null
+          slot: string
+          status?: string
+        }
+        Update: {
+          caption?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          link_url?: string
+          meta?: Json | null
+          product_ids?: string[] | null
+          scheduled_for?: string
+          sent_at?: string | null
+          sent_by?: string | null
+          shop_id?: string | null
+          skipped_at?: string | null
+          skipped_by?: string | null
+          slot?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_queue_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_queue_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_services: {
         Row: {
           amount: number | null
