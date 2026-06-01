@@ -11,6 +11,7 @@ import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 const IdentityVerification = () => {
   const navigate = useNavigate();

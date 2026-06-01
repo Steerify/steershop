@@ -1042,6 +1042,110 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_metrics: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          meta: Json | null
+          post_id: string | null
+          shop_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          meta?: Json | null
+          post_id?: string | null
+          shop_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          meta?: Json | null
+          post_id?: string | null
+          shop_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_metrics_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_queue: {
+        Row: {
+          caption: string
+          created_at: string
+          id: string
+          image_url: string | null
+          link_url: string
+          meta: Json | null
+          product_ids: string[] | null
+          scheduled_for: string
+          sent_at: string | null
+          sent_by: string | null
+          shop_id: string | null
+          skipped_at: string | null
+          skipped_by: string | null
+          slot: string
+          status: string
+        }
+        Insert: {
+          caption: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          link_url: string
+          meta?: Json | null
+          product_ids?: string[] | null
+          scheduled_for?: string
+          sent_at?: string | null
+          sent_by?: string | null
+          shop_id?: string | null
+          skipped_at?: string | null
+          skipped_by?: string | null
+          slot: string
+          status?: string
+        }
+        Update: {
+          caption?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          link_url?: string
+          meta?: Json | null
+          product_ids?: string[] | null
+          scheduled_for?: string
+          sent_at?: string | null
+          sent_by?: string | null
+          shop_id?: string | null
+          skipped_at?: string | null
+          skipped_by?: string | null
+          slot?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_queue_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_queue_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_services: {
         Row: {
           amount: number | null
@@ -1648,10 +1752,13 @@ export type Database = {
           created_at: string
           delete_at: string | null
           description: string | null
+          digital_delivery_text: string | null
+          digital_file_url: string | null
           duration_minutes: number | null
           id: string
           image_url: string | null
           is_available: boolean
+          is_digital: boolean | null
           nafdac_number: string | null
           name: string
           price: number
@@ -1671,10 +1778,13 @@ export type Database = {
           created_at?: string
           delete_at?: string | null
           description?: string | null
+          digital_delivery_text?: string | null
+          digital_file_url?: string | null
           duration_minutes?: number | null
           id?: string
           image_url?: string | null
           is_available?: boolean
+          is_digital?: boolean | null
           nafdac_number?: string | null
           name: string
           price: number
@@ -1694,10 +1804,13 @@ export type Database = {
           created_at?: string
           delete_at?: string | null
           description?: string | null
+          digital_delivery_text?: string | null
+          digital_file_url?: string | null
           duration_minutes?: number | null
           id?: string
           image_url?: string | null
           is_available?: boolean
+          is_digital?: boolean | null
           nafdac_number?: string | null
           name?: string
           price?: number
@@ -1741,12 +1854,14 @@ export type Database = {
           is_subscribed: boolean
           kyc_level: number | null
           needs_role_selection: boolean | null
+          newsletter_subscription: boolean | null
           payment_reference: string | null
           phone: string | null
           phone_verification_code: string | null
           phone_verification_expires: string | null
           phone_verified: boolean | null
           role: Database["public"]["Enums"]["user_role"]
+          shopping_interests: string[] | null
           subscription_expires_at: string | null
           subscription_plan_id: string | null
           subscription_type: string | null
@@ -1767,12 +1882,14 @@ export type Database = {
           is_subscribed?: boolean
           kyc_level?: number | null
           needs_role_selection?: boolean | null
+          newsletter_subscription?: boolean | null
           payment_reference?: string | null
           phone?: string | null
           phone_verification_code?: string | null
           phone_verification_expires?: string | null
           phone_verified?: boolean | null
           role?: Database["public"]["Enums"]["user_role"]
+          shopping_interests?: string[] | null
           subscription_expires_at?: string | null
           subscription_plan_id?: string | null
           subscription_type?: string | null
@@ -1793,12 +1910,14 @@ export type Database = {
           is_subscribed?: boolean
           kyc_level?: number | null
           needs_role_selection?: boolean | null
+          newsletter_subscription?: boolean | null
           payment_reference?: string | null
           phone?: string | null
           phone_verification_code?: string | null
           phone_verification_expires?: string | null
           phone_verified?: boolean | null
           role?: Database["public"]["Enums"]["user_role"]
+          shopping_interests?: string[] | null
           subscription_expires_at?: string | null
           subscription_plan_id?: string | null
           subscription_type?: string | null
@@ -2462,6 +2581,7 @@ export type Database = {
       shops: {
         Row: {
           accent_color: string | null
+          address: string | null
           auto_abandoned_cart: boolean | null
           auto_review_request: boolean | null
           auto_winback: boolean | null
@@ -2470,6 +2590,8 @@ export type Database = {
           bank_account_number: string | null
           bank_name: string | null
           banner_url: string | null
+          category: string | null
+          city: string | null
           country: string | null
           created_at: string
           description: string | null
@@ -2478,6 +2600,7 @@ export type Database = {
           is_active: boolean
           is_verified: boolean | null
           logo_url: string | null
+          own_logistics_note: string | null
           owner_id: string
           payment_method: string | null
           paystack_public_key: string | null
@@ -2485,18 +2608,25 @@ export type Database = {
           paystack_subaccount_code: string | null
           primary_color: string | null
           secondary_color: string | null
+          seo_description: string | null
+          seo_dna_updated_at: string | null
+          seo_keywords: string[] | null
+          seo_metadata: Json | null
           settlement_account_number: string | null
           settlement_bank_code: string | null
           shop_name: string
           shop_slug: string
+          show_public_address: boolean | null
           state: string | null
           theme_mode: string | null
           total_reviews: number | null
           updated_at: string
+          uses_own_logistics: boolean | null
           whatsapp_number: string | null
         }
         Insert: {
           accent_color?: string | null
+          address?: string | null
           auto_abandoned_cart?: boolean | null
           auto_review_request?: boolean | null
           auto_winback?: boolean | null
@@ -2505,6 +2635,8 @@ export type Database = {
           bank_account_number?: string | null
           bank_name?: string | null
           banner_url?: string | null
+          category?: string | null
+          city?: string | null
           country?: string | null
           created_at?: string
           description?: string | null
@@ -2513,6 +2645,7 @@ export type Database = {
           is_active?: boolean
           is_verified?: boolean | null
           logo_url?: string | null
+          own_logistics_note?: string | null
           owner_id: string
           payment_method?: string | null
           paystack_public_key?: string | null
@@ -2520,18 +2653,25 @@ export type Database = {
           paystack_subaccount_code?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          seo_description?: string | null
+          seo_dna_updated_at?: string | null
+          seo_keywords?: string[] | null
+          seo_metadata?: Json | null
           settlement_account_number?: string | null
           settlement_bank_code?: string | null
           shop_name: string
           shop_slug: string
+          show_public_address?: boolean | null
           state?: string | null
           theme_mode?: string | null
           total_reviews?: number | null
           updated_at?: string
+          uses_own_logistics?: boolean | null
           whatsapp_number?: string | null
         }
         Update: {
           accent_color?: string | null
+          address?: string | null
           auto_abandoned_cart?: boolean | null
           auto_review_request?: boolean | null
           auto_winback?: boolean | null
@@ -2540,6 +2680,8 @@ export type Database = {
           bank_account_number?: string | null
           bank_name?: string | null
           banner_url?: string | null
+          category?: string | null
+          city?: string | null
           country?: string | null
           created_at?: string
           description?: string | null
@@ -2548,6 +2690,7 @@ export type Database = {
           is_active?: boolean
           is_verified?: boolean | null
           logo_url?: string | null
+          own_logistics_note?: string | null
           owner_id?: string
           payment_method?: string | null
           paystack_public_key?: string | null
@@ -2555,14 +2698,20 @@ export type Database = {
           paystack_subaccount_code?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          seo_description?: string | null
+          seo_dna_updated_at?: string | null
+          seo_keywords?: string[] | null
+          seo_metadata?: Json | null
           settlement_account_number?: string | null
           settlement_bank_code?: string | null
           shop_name?: string
           shop_slug?: string
+          show_public_address?: boolean | null
           state?: string | null
           theme_mode?: string | null
           total_reviews?: number | null
           updated_at?: string
+          uses_own_logistics?: boolean | null
           whatsapp_number?: string | null
         }
         Relationships: [
