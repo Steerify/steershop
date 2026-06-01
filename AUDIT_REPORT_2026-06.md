@@ -1,5 +1,15 @@
 # SteerSolo Audit Report — 2026-06-01
 
+> **Build-blocker fixes already applied in this loop** (not in the table below — these were P0 schema drift breaking the TS build, so they had to ship with the Concierge feature):
+> - **shops**: added `category`, `city`, `address`, `show_public_address`, `seo_keywords`, `seo_description`, `seo_metadata`, `seo_dna_updated_at`, `uses_own_logistics`, `own_logistics_note`
+> - **profiles**: added `newsletter_subscription`, `shopping_interests`
+> - **products**: added `is_digital`, `digital_file_url`, `digital_delivery_text`
+> - **shop.service.ts / IdentityVerification / Dashboard / FeaturedStoresHeroCarousel / UnifiedDeliveryForm / VendorSetupWizard.test**: surgical TS fixes for drifted types and missing imports.
+>
+> Everything below is the rest of the findings — review and pick what to address next.
+
+
+
 ## Executive Summary
 
 - **27 total findings** (3 P0, 14 P1, 10 P2)
