@@ -418,7 +418,7 @@ const Dashboard = () => {
       if (balance) setPayoutBalance(balance);
 
       if (badgesRes.success && badgesRes.data) {
-        setUserBadges(badgesRes.data.map(ub => ub.badges).filter(Boolean));
+        setUserBadges(badgesRes.data.map(ub => ub.badges).filter(Boolean) as any);
       }
 
       if (offersRes.success && offersRes.data) {
@@ -598,7 +598,7 @@ const Dashboard = () => {
       );
     }
 
-    const daysActive = shopFullData?.created_at ? differenceInDays(new Date(), new Date(shopFullData.created_at)) : 0;
+    const daysActive = (shopFullData as any)?.created_at ? differenceInDays(new Date(), new Date((shopFullData as any).created_at)) : 0;
     const hasLowTraffic = shopFullData?.total_views !== null && 
                           shopFullData?.total_views !== undefined && 
                           shopFullData.total_views < 50 && 
@@ -833,7 +833,7 @@ const Dashboard = () => {
 
                     {userBadges.length > 0 && (
                       <div className="p-4 border-t border-border">
-                        <BadgeDisplay badges={userBadges} size="sm" />
+                        <BadgeDisplay badges={userBadges as any} size="sm" />
                       </div>
                     )}
                   </div>

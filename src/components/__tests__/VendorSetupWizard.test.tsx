@@ -77,7 +77,7 @@ describe("VendorSetupWizard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(shopService.createShop).mockResolvedValue({ success: true, data: { id: "shop-123", slug: "my-test-shop" }, message: "Shop created successfully" });
-    vi.mocked(shopService.createDefaultShopAddress).mockResolvedValue({ success: true, data: { id: "address-123" }, message: "Shop address created successfully" });
+    vi.mocked(shopService.createDefaultShopAddress).mockResolvedValue({ success: true, data: { id: "address-123" } as any, message: "Shop address created successfully" });
     vi.mocked(productService.createProduct).mockResolvedValue({ success: true, data: { id: "product-123" }, message: "Product created successfully" });
   });
 

@@ -177,6 +177,7 @@ export const FeaturedStoresHeroCarousel = () => {
             label: "NEW STORE",
             tagline: "Just joined SteerSolo",
             shop: s,
+            shops: s as any,
             isManual: false
           }));
 

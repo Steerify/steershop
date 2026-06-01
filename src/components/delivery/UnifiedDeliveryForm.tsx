@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Truck, Loader2, MapPin, Plus, Check, Star, AlertCircle } from "lucide-react";
-import deliveryService, { DeliveryAddress, CourierRate } from "@/services/delivery.service";
+import deliveryService, { DeliveryAddress, DeliveryRate as CourierRate } from "@/services/delivery.service";
 import { useToast } from "@/hooks/use-toast";
 
 interface UnifiedDeliveryFormProps {
@@ -101,13 +101,21 @@ export const UnifiedDeliveryForm = ({
 
     setIsLoading(true);
     try {
-      const added = await deliveryService.saveShopAddress(shopId, newAddress);
+      const added = await deliveryService.saveShopAddress({
+        shop_id: shopId,
+        label: newAddress.name || "Warehouse",
+        contact_name: newAddress.name,
+        contact_phone: newAddress.phone,
+        address_line_1: newAddress.address,
+        city: newAddress.city,
+        state: newAddress.state,
+      } as any);
       toast({
         title: "Address Saved! 📍",
         description: "Pickup location added successfully.",
       });
       await loadAddresses();
-      setSelectedAddressId(added.id);
+      setSelectedAddressId((added as any).id);
       setShowAddAddressForm(false);
     } catch (error: any) {
       toast({
@@ -137,7 +145,7 @@ export const UnifiedDeliveryForm = ({
 
     try {
       const response = await deliveryService.getRates({
-        shop_id: shopId,
+        order_id: orderId,
         pickup_address: {
           name: activePickup.name,
           phone: activePickup.phone,
