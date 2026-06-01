@@ -73,3 +73,9 @@ project_id = "hwkcqgmtinbgyjjgcgmp"
     verify_jwt = false
   [functions.process-email-queue]
     verify_jwt = true
+  [functions.concierge-generate]
+    verify_jwt = false
+  [functions.concierge-mark-sent]
+    verify_jwt = false
+  [functions.concierge-click]
+    verify_jwt = false
