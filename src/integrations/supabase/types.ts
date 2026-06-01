@@ -2600,6 +2600,7 @@ export type Database = {
           is_active: boolean
           is_verified: boolean | null
           logo_url: string | null
+          own_logistics_note: string | null
           owner_id: string
           payment_method: string | null
           paystack_public_key: string | null
@@ -2644,6 +2645,7 @@ export type Database = {
           is_active?: boolean
           is_verified?: boolean | null
           logo_url?: string | null
+          own_logistics_note?: string | null
           owner_id: string
           payment_method?: string | null
           paystack_public_key?: string | null
@@ -2688,6 +2690,7 @@ export type Database = {
           is_active?: boolean
           is_verified?: boolean | null
           logo_url?: string | null
+          own_logistics_note?: string | null
           owner_id?: string
           payment_method?: string | null
           paystack_public_key?: string | null
