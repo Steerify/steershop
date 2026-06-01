@@ -330,6 +330,124 @@ export async function generateConversationStarterImage(): Promise<Buffer | null>
   }
 }
 
+// ─── 4. Group Invite Image ────────────────────────────────────────────────
+
+const INVITE_ACCENTS = ['#6c63ff', '#ff6b6b', '#26de81', '#ffd166', '#45aaf2'] as const;
+
+/**
+ * Generates a vibrant community-growth "Join Us" banner.
+ * Includes a people-cluster motif, pulse rings, social proof pill,
+ * and the actual group invite link as the CTA.
+ *
+ * @param groupLink - The WhatsApp group invite URL (https://chat.whatsapp.com/...)
+ */
+export async function generateGroupInviteImage(groupLink: string): Promise<Buffer | null> {
+  const W = 720;
+  const H = 720;
+  const CX = W / 2;
+  const accent = INVITE_ACCENTS[new Date().getHours() % INVITE_ACCENTS.length];
+  const safeLink = esc(groupLink);
+
+  // ── People silhouettes (3 overlapping circles representing a community) ──
+  // Positioned in a cluster below the headline text
+  const people = [
+    { cx: CX - 56, cy: 270 },
+    { cx: CX,      cy: 254 }, // centre person slightly higher
+    { cx: CX + 56, cy: 270 },
+  ];
+
+  const silhouettes = people
+    .map(
+      ({ cx, cy }) => `
+    <circle cx="${cx}" cy="${cy - 18}" r="22" fill="${accent}" opacity="0.9"/>
+    <ellipse cx="${cx}" cy="${cy + 24}" rx="28" ry="20" fill="${accent}" opacity="0.9"/>`,
+    )
+    .join('');
+
+  const svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="45%" r="70%">
+        <stop offset="0%" style="stop-color:#1e1b4b"/>
+        <stop offset="100%" style="stop-color:#0a0a16"/>
+      </radialGradient>
+      <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="12" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <clipPath id="avatarClip">
+        <rect x="${CX - 100}" y="220" width="200" height="120" rx="10"/>
+      </clipPath>
+    </defs>
+
+    <!-- Background -->
+    <rect width="${W}" height="${H}" fill="url(#bg)"/>
+
+    <!-- Pulse rings centred on the people cluster -->
+    <circle cx="${CX}" cy="262" r="120" fill="none" stroke="${accent}"
+      stroke-width="1.5" opacity="0.10"/>
+    <circle cx="${CX}" cy="262" r="155" fill="none" stroke="${accent}"
+      stroke-width="1" opacity="0.07"/>
+    <circle cx="${CX}" cy="262" r="195" fill="none" stroke="${accent}"
+      stroke-width="0.8" opacity="0.05"/>
+
+    <!-- Glow halo behind people -->
+    <circle cx="${CX}" cy="262" r="95" fill="${accent}" opacity="0.10"
+      filter="url(#glow)"/>
+
+    <!-- People silhouettes -->
+    ${silhouettes}
+
+    <!-- "+" join indicator (top-right of cluster) -->
+    <circle cx="${CX + 90}" cy="238" r="20" fill="${accent}"/>
+    <text x="${CX + 90}" y="238" font-family="sans-serif" font-size="22" font-weight="bold"
+      fill="#fff" text-anchor="middle" dominant-baseline="middle">+</text>
+
+    <!-- Headline -->
+    <text x="${CX}" y="400" font-family="sans-serif" font-size="32" font-weight="bold"
+      fill="#ffffff" text-anchor="middle">Join the SteerSolo Community!</text>
+    <text x="${CX}" y="440" font-family="sans-serif" font-size="18"
+      fill="rgba(255,255,255,0.7)" text-anchor="middle">Deals, drops &amp; marketplace tips — daily.</text>
+
+    <!-- Divider -->
+    <line x1="${CX - 80}" y1="462" x2="${CX + 80}" y2="462"
+      stroke="${accent}" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+
+    <!-- CTA pill -->
+    <rect x="${CX - 170}" y="476" width="340" height="46" rx="23"
+      fill="${accent}" opacity="0.22"/>
+    <rect x="${CX - 168}" y="478" width="336" height="42" rx="21"
+      fill="none" stroke="${accent}" stroke-width="1.5" opacity="0.5"/>
+    <text x="${CX}" y="503" font-family="sans-serif" font-size="15"
+      fill="${accent}" text-anchor="middle" font-weight="bold">👥 Tap the link below to join 👇</text>
+
+    <!-- Invite link box -->
+    <rect x="60" y="536" width="${W - 120}" height="44" rx="8"
+      fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+    <text x="${CX}" y="561" font-family="monospace" font-size="13"
+      fill="rgba(255,255,255,0.85)" text-anchor="middle">${safeLink}</text>
+
+    <!-- Share nudge -->
+    <text x="${CX}" y="612" font-family="sans-serif" font-size="16"
+      fill="rgba(255,255,255,0.5)" text-anchor="middle">📲 Share this with a friend who loves a good deal!</text>
+
+    <!-- Branding strip -->
+    <rect x="0" y="${H - 70}" width="${W}" height="70" fill="rgba(0,0,0,0.4)"/>
+    <text x="${CX}" y="${H - 38}" font-family="sans-serif" font-size="17"
+      font-weight="bold" fill="rgba(255,255,255,0.55)" text-anchor="middle">⚡ SteerSolo Marketplace</text>
+    <text x="${CX}" y="${H - 14}" font-family="sans-serif" font-size="12"
+      fill="rgba(255,255,255,0.28)" text-anchor="middle">steersolo.com</text>
+  </svg>`;
+
+  try {
+    const result = await sharp(Buffer.from(svg)).jpeg({ quality: 92 }).toBuffer();
+    console.log(`[collage] Group invite image — ${Math.round(result.byteLength / 1024)}KB`);
+    return result;
+  } catch (err: any) {
+    console.error('[collage] Group invite image failed:', err?.message);
+    return null;
+  }
+}
+
 // ─── Legacy alias ─────────────────────────────────────────────────────────────
 
 /** @deprecated Use generateProductCollage instead */

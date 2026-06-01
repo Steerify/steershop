@@ -4,11 +4,13 @@ import {
   generateProductCollage,
   generateStoreSnapshot,
   generateConversationStarterImage,
+  generateGroupInviteImage,
 } from './collage.js';
 import {
   buildCaption,
   buildTop5Caption,
   buildConversationStarterCaption,
+  buildGroupInviteCaption,
   selectHookType,
   type HookType,
 } from './hooks.js';
@@ -88,7 +90,7 @@ async function postTop5(sock: WASocket): Promise<void> {
  */
 async function postSingleStore(
   sock: WASocket,
-  hookType: Exclude<HookType, 'top_products' | 'conversation_starter'>,
+  hookType: Exclude<HookType, 'top_products' | 'conversation_starter' | 'group_invite'>,
 ): Promise<void> {
   console.log(`[poster] Running ${hookType.toUpperCase()} hook…`);
 
@@ -139,24 +141,42 @@ async function postSingleStore(
   console.warn('[poster] Could not find a fresh store to post. Skipping this cycle.');
 }
 
-// ─── 3. Conversation starter post ─────────────────────────────────────────────
+// ─── 3. Conversation starter post ──────────────────────────────────────────────────
 
-/**
- * Sends a branded conversation-starter image + an engaging question caption.
- * No product or store is needed — pure community engagement.
- */
 async function postConversationStarter(sock: WASocket): Promise<void> {
   console.log('[poster] Running CONVERSATION_STARTER hook…');
-
   const caption = buildConversationStarterCaption();
   const image = await generateConversationStarterImage();
-
   await sendWithFallback(sock, image, caption);
-
   console.log('[poster] Conversation starter post complete.');
 }
 
-// ─── Main poster entry point ──────────────────────────────────────────────────
+// ─── 4. Group invite post ──────────────────────────────────────────────────────
+
+/**
+ * Posts a "share the group link" call-to-action.
+ * Reads the invite link from WHATSAPP_GROUP_INVITE_LINK env var.
+ * If the env var is not set the post is skipped with a warning.
+ */
+async function postGroupInvite(sock: WASocket): Promise<void> {
+  console.log('[poster] Running GROUP_INVITE hook…');
+
+  const groupLink = process.env.WHATSAPP_GROUP_INVITE_LINK;
+  if (!groupLink) {
+    console.warn(
+      '[poster] WHATSAPP_GROUP_INVITE_LINK is not set. Skipping group invite post.',
+    );
+    return;
+  }
+
+  const caption = buildGroupInviteCaption(groupLink);
+  const image = await generateGroupInviteImage(groupLink);
+
+  await sendWithFallback(sock, image, caption);
+  console.log('[poster] Group invite post complete.');
+}
+
+// ─── Main poster entry point ─────────────────────────────────────────────────────
 
 export async function runPostCycle(sock: WASocket): Promise<void> {
   const hookType = selectHookType();
@@ -170,8 +190,14 @@ export async function runPostCycle(sock: WASocket): Promise<void> {
       case 'conversation_starter':
         await postConversationStarter(sock);
         break;
+      case 'group_invite':
+        await postGroupInvite(sock);
+        break;
       default:
-        await postSingleStore(sock, hookType);
+        await postSingleStore(
+          sock,
+          hookType as Exclude<HookType, 'top_products' | 'conversation_starter' | 'group_invite'>,
+        );
     }
   } catch (err: any) {
     console.error('[poster] Error during post cycle:', err?.message ?? err);

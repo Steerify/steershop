@@ -8,15 +8,17 @@ export type HookType =
   | 'new_arrival'
   | 'hidden_gem'
   | 'flash_deal'
-  | 'conversation_starter';
+  | 'conversation_starter'
+  | 'group_invite';
 
 /**
- * Rotates across all 6 hook types in 2-hour windows.
- * With 12 windows per day each type fires twice, keeping content fresh.
+ * Rotates across all 7 hook types in 2-hour windows.
+ * With 12 windows per day, types repeat with slight variation,
+ * keeping the group feed fresh and diverse.
  */
 export function selectHookType(): HookType {
   const hour = new Date().getHours();
-  const bucket = Math.floor(hour / 2) % 6;
+  const bucket = Math.floor(hour / 2) % 7;
   const types: HookType[] = [
     'featured_store',
     'top_products',
@@ -24,6 +26,7 @@ export function selectHookType(): HookType {
     'conversation_starter',
     'hidden_gem',
     'flash_deal',
+    'group_invite',
   ];
   return types[bucket];
 }
@@ -165,10 +168,33 @@ export function buildConversationStarterCaption(): string {
   ].join('\n');
 }
 
+// ─── Group invite hook ───────────────────────────────────────────────────
+
+export function buildGroupInviteCaption(groupLink: string): string {
+  return [
+    `👥 *GROW THE COMMUNITY* 👥`,
+    ``,
+    `Know someone who loves great deals and supporting local businesses?`,
+    ``,
+    `Invite them to the *SteerSolo Marketplace Group* — where we share:`,
+    `• Daily product drops 🔥`,
+    `• Flash deals you won’t find elsewhere ⚡`,
+    `• Hidden gem stores 💎`,
+    `• Community shopping tips 💡`,
+    ``,
+    `👇 *Share this link:*`,
+    `${groupLink}`,
+    ``,
+    `The more, the merrier 🎉 Help us build Nigeria’s biggest marketplace community!`,
+    ``,
+    `⚡ Powered by *SteerSolo Marketplace* | steersolo.com`,
+  ].join('\n');
+}
+
 // ─── Caption router ───────────────────────────────────────────────────────────
 
 export function buildCaption(
-  hookType: Exclude<HookType, 'top_products' | 'conversation_starter'>,
+  hookType: Exclude<HookType, 'top_products' | 'conversation_starter' | 'group_invite'>,
   store: Store,
   product: Product,
 ): string {
