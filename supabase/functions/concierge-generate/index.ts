@@ -65,7 +65,7 @@ async function fetchEligibleShops(supabase: any) {
   // Active shops, not featured by concierge in last 7d.
   const { data, error } = await supabase
     .from("shops")
-    .select("id, shop_name, shop_slug, description, logo_url, banner_url, category, city, state, average_rating, total_reviews, total_views, is_active")
+    .select("id, shop_name, shop_slug, description, logo_url, banner_url, category, city, state, average_rating, total_reviews, is_active")
     .eq("is_active", true)
     .not("shop_slug", "is", null)
     .limit(80);
