@@ -24,25 +24,27 @@ const feedbackService = {
     feedback_type: string;
     rating?: number;
   }) => {
-    const { data: result, error } = await supabase
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id ?? null;
+
+    const { error } = await supabase
       .from('platform_feedback')
       .insert({
-        customer_name: data.customer_name,
-        customer_email: data.customer_email,
+        user_id: userId,
+        customer_name: data.customer_name.trim(),
+        customer_email: data.customer_email.trim().toLowerCase(),
         feedback_type: data.feedback_type,
-        subject: data.subject,
-        message: data.message,
+        subject: data.subject.trim(),
+        message: data.message.trim(),
         rating: data.rating,
         show_on_homepage: data.rating && data.rating >= 4 ? true : false,
-      })
-      .select()
-      .single();
+      });
 
     if (error) throw error;
 
     return {
       success: true,
-      data: result as Feedback,
+      data: null,
       message: 'Feedback submitted successfully'
     };
   },

@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Footer } from "@/components/Footer";
@@ -42,40 +42,35 @@ export const SEOPageTemplate = ({
   faqs,
   testimonial,
 }: SEOPageProps) => {
-  useEffect(() => {
-    document.title = metaTitle;
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) metaDesc.setAttribute("content", metaDescription);
-    else {
-      const meta = document.createElement("meta");
-      meta.name = "description";
-      meta.content = metaDescription;
-      document.head.appendChild(meta);
-    }
-
-    // FAQ Schema
-    const faqSchema = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": faqs.map((f) => ({
-        "@type": "Question",
-        "name": f.question,
-        "acceptedAnswer": { "@type": "Answer", "text": f.answer },
-      })),
-    };
-    const script = document.createElement("script");
-    script.type = "application/ld+json";
-    script.id = "seo-page-faq";
-    script.text = JSON.stringify(faqSchema);
-    document.head.appendChild(script);
-
-    return () => {
-      document.getElementById("seo-page-faq")?.remove();
-    };
-  }, [metaTitle, metaDescription, faqs]);
+  const { pathname } = useLocation();
+  const canonical = `https://steersolo.com${pathname}`;
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.question,
+      acceptedAnswer: { "@type": "Answer", text: f.answer },
+    })),
+  };
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{metaTitle}</title>
+        <meta name="description" content={metaDescription} />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={canonical} />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={metaTitle} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:site_name" content="SteerSolo" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={metaTitle} />
+        <meta name="twitter:description" content={metaDescription} />
+        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
+      </Helmet>
       <Navbar />
 
       {/* Hero */}
@@ -88,7 +83,7 @@ export const SEOPageTemplate = ({
             {heroSubtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/merchant">
+            <Link to="/auth/login?tab=signup">
               <Button size="lg" className="w-full sm:w-auto text-base px-8">
                 {heroCTA} <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
@@ -173,7 +168,7 @@ export const SEOPageTemplate = ({
           <p className="text-primary-foreground/80 mb-6">
             Join 500+ Nigerian entrepreneurs already using SteerSolo. Free forever plan — no credit card required.
           </p>
-          <Link to="/merchant">
+          <Link to="/auth/login?tab=signup">
             <Button size="lg" variant="secondary" className="text-base px-8">
               Create Your Free Store <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
