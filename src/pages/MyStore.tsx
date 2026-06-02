@@ -388,8 +388,11 @@ const MyStore = () => {
         body: { shop_id: shop.id }
       });
       if (error) throw error;
-      toast({ title: "SEO DNA Generated! 🚀", description: "Your store's visibility has been boosted." });
-      loadShop();
+      if (!res?.success || !res?.data?.seo_dna_updated_at) {
+        throw new Error(res?.error || "SEO data was generated but not confirmed saved.");
+      }
+      toast({ title: "SEO DNA Generated! 🚀", description: "Your store's SEO data was saved successfully." });
+      await loadShop();
     } catch (error: any) {
       toast({ title: "SEO Generation Failed", description: error.message, variant: "destructive" });
     } finally {

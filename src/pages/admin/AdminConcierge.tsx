@@ -21,6 +21,7 @@ import {
   Loader2,
   ExternalLink,
   CheckCircle2,
+  Link as LinkIcon,
   Image as ImageIcon,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -50,6 +51,50 @@ const TARGET_LABELS: Record<TargetGroup, { label: string; color: string }> = {
   foundry: { label: "Foundry", color: "bg-purple-500/10 text-purple-600 border-purple-200" },
   vendor: { label: "Vendor", color: "bg-emerald-500/10 text-emerald-600 border-emerald-200" },
 };
+
+const LINK_PLACEHOLDER_PATTERN = /\n?\s*\[(?:shop|product)?\s*link\]\s*/gi;
+const URL_PATTERN = /https?:\/\/\S+/i;
+const FEEDBACK_SECTION_URL = "https://steersolo.com/feedback#feedback-form";
+
+function getPostActionUrl(post: ConciergePost) {
+  const linkUrl = post.link_url || "https://steersolo.com";
+  const productId = post.product_ids?.length === 1 ? post.product_ids[0] : null;
+
+  if (post.slot === "conversation") {
+    return FEEDBACK_SECTION_URL;
+  }
+
+  if (!productId || linkUrl.includes("/product/") || !linkUrl.includes("/shop/")) {
+    return linkUrl;
+  }
+
+  try {
+    const url = new URL(linkUrl, "https://steersolo.com");
+    if (url.pathname.split("/").filter(Boolean).length === 2) {
+      url.pathname = `${url.pathname.replace(/\/$/, "")}/product/${productId}`;
+      return url.toString();
+    }
+  } catch {
+    // Fall back to the saved link when it cannot be parsed.
+  }
+
+  return linkUrl;
+}
+
+function getShareCaption(post: ConciergePost) {
+  const actionUrl = getPostActionUrl(post);
+  let caption = post.caption.replace(LINK_PLACEHOLDER_PATTERN, `\n\nView on SteerSolo: ${actionUrl}`).trim();
+
+  if (post.link_url && actionUrl !== post.link_url) {
+    caption = caption.replaceAll(post.link_url, actionUrl);
+  }
+
+  if (!URL_PATTERN.test(caption)) {
+    caption = `${caption}\n\nView on SteerSolo: ${actionUrl}`;
+  }
+
+  return caption;
+}
 
 export default function AdminConcierge() {
   const { toast } = useToast();
@@ -111,7 +156,7 @@ export default function AdminConcierge() {
     setActingId(post.id);
     try {
       const result = await shareToSteersoloGroup({
-        caption: post.caption,
+        caption: getShareCaption(post),
         imageUrl: post.image_url,
         targetGroup: post.target_group,
       });
@@ -332,6 +377,14 @@ function PostCard({
   onSend: () => void;
   onSkip: () => void;
 }) {
+  const actionUrl = getPostActionUrl(post);
+  const shareCaption = getShareCaption(post);
+  const linkLabel = actionUrl.includes("/feedback")
+    ? "SteerSolo feedback link"
+    : actionUrl.includes("/product/")
+      ? "SteerSolo product link"
+      : "SteerSolo link";
+
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
@@ -367,7 +420,7 @@ function PostCard({
               <span>•</span>
               <StatusPill status={post.status} />
               <a
-                href={post.link_url}
+                href={actionUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="ml-auto inline-flex items-center gap-1 text-primary hover:underline"
@@ -376,7 +429,21 @@ function PostCard({
               </a>
             </div>
 
-            <p className="text-sm whitespace-pre-wrap leading-relaxed">{post.caption}</p>
+            <p className="text-sm whitespace-pre-wrap leading-relaxed">{shareCaption}</p>
+
+            <a
+              href={actionUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="group rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm transition-colors hover:bg-primary/10"
+            >
+              <span className="flex items-center gap-2 font-semibold text-primary">
+                <LinkIcon className="w-4 h-4" />
+                {linkLabel}
+                <ExternalLink className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+              </span>
+              <span className="mt-1 block break-all text-xs text-muted-foreground">{actionUrl}</span>
+            </a>
 
             {post.status === "pending" && (
               <div className="flex flex-wrap gap-2 mt-auto pt-2">
