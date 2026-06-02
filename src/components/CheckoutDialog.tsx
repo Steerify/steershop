@@ -897,23 +897,30 @@ const CheckoutDialog = ({
 
       if (itemsError) throw itemsError;
 
-      // Decrement stock for each ordered product (best-effort, non-blocking)
+      // P0: Atomic stock decrement. Roll back order if any item is out of stock.
       try {
-        await Promise.all(
-          cart.map(item =>
-            supabase
-              .from("products")
-              .update({
-                stock_quantity: Math.max(
-                  0,
-                  item.product.stock_quantity - item.quantity,
-                ),
-              })
-              .eq("id", item.product.id),
-          ),
-        );
-      } catch (stockError) {
-        console.error("Stock decrement failed (non-blocking):", stockError);
+        for (const item of cart) {
+          const { data: ok, error: rpcErr } = await supabase.rpc(
+            "decrement_stock_if_available",
+            { _product_id: item.product.id, _quantity: item.quantity },
+          );
+          if (rpcErr || !ok) {
+            // Rollback: delete the freshly inserted order + items
+            await supabase.from("order_items").delete().eq("order_id", orderId);
+            await supabase.from("orders").delete().eq("id", orderId);
+            throw new Error(
+              `"${item.product.name}" just sold out or only has limited stock. Please refresh and adjust your cart.`,
+            );
+          }
+        }
+      } catch (stockError: any) {
+        setIsProcessing(false);
+        toast({
+          title: "Item unavailable",
+          description: stockError.message || "One of your items is out of stock.",
+          variant: "destructive",
+        });
+        return;
       }
 
       // Book shipping if a rate was selected and the shop has a default pickup address.
