@@ -960,8 +960,17 @@ const CheckoutDialog = ({
         couponService.incrementUsage(appliedCoupon.id).catch(console.error);
       }
 
-      // Send order notification (fire-and-forget)
-      sendOrderNotification(orderId, "order_placed");
+      // Notify shop owner ONLY when the order is actionable right now:
+      //  - delivery-before-payment (seller needs to approve/contact)
+      //  - bank-transfer (seller awaits proof)
+      // For paystack, the paystack-webhook fires the notification on payment confirmation.
+      const willTriggerPaystack =
+        paymentChoice === "pay_before" &&
+        ((paymentMethod || shop.payment_method) === "paystack" ||
+          (shop.payment_method === "both" && paymentMethod === "paystack"));
+      if (!willTriggerPaystack) {
+        sendOrderNotification(orderId, "order_placed");
+      }
 
       // Handle payment choice
       if (paymentChoice === "delivery_before") {
