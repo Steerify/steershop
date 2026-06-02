@@ -54,15 +54,10 @@ const TARGET_LABELS: Record<TargetGroup, { label: string; color: string }> = {
 
 const LINK_PLACEHOLDER_PATTERN = /\n?\s*\[(?:shop|product)?\s*link\]\s*/gi;
 const URL_PATTERN = /https?:\/\/\S+/i;
-const FEEDBACK_SECTION_URL = "https://steersolo.com/feedback#feedback-form";
 
 function getPostActionUrl(post: ConciergePost) {
   const linkUrl = post.link_url || "https://steersolo.com";
   const productId = post.product_ids?.length === 1 ? post.product_ids[0] : null;
-
-  if (post.slot === "conversation") {
-    return FEEDBACK_SECTION_URL;
-  }
 
   if (!productId || linkUrl.includes("/product/") || !linkUrl.includes("/shop/")) {
     return linkUrl;
@@ -379,11 +374,7 @@ function PostCard({
 }) {
   const actionUrl = getPostActionUrl(post);
   const shareCaption = getShareCaption(post);
-  const linkLabel = actionUrl.includes("/feedback")
-    ? "SteerSolo feedback link"
-    : actionUrl.includes("/product/")
-      ? "SteerSolo product link"
-      : "SteerSolo link";
+  const linkLabel = actionUrl.includes("/product/") ? "SteerSolo product link" : "SteerSolo link";
 
   return (
     <Card className="overflow-hidden">

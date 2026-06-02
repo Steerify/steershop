@@ -10,7 +10,6 @@ const corsHeaders = {
 };
 
 const ORIGIN = "https://steersolo.com";
-const FEEDBACK_SECTION_URL = `${ORIGIN}/feedback#feedback-form`;
 const LINK_PLACEHOLDER_PATTERN = /\n?\s*\[(?:shop|product)?\s*link\]\s*/gi;
 
 function appendSteerSoloLink(caption: string, cta: string, linkUrl: string) {
@@ -286,8 +285,8 @@ async function generateForSlot(supabase: any, slot: Slot, targetGroup: TargetGro
   if (slot === "conversation") {
     const ctx = `Active categories: fashion, beauty, electronics, food.`;
     let caption = await aiCaption(prompt, ctx);
-    const link_url = FEEDBACK_SECTION_URL;
-    caption = appendSteerSoloLink(caption, "Drop your feedback here", link_url);
+    const link_url = `${ORIGIN}/explore?ref=concierge_chat`;
+    caption = appendSteerSoloLink(caption, "Join SteerSolo", link_url);
     return {
       slot,
       target_group: targetGroup,
