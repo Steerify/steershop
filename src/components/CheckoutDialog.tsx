@@ -607,40 +607,18 @@ const CheckoutDialog = ({
     }
   }, [isOpen]);
 
-  // Send order notification (fire-and-forget) — also sends email to shop owner
+  // Send order notification — shop owner email is resolved server-side in the edge function
   const sendOrderNotification = async (
     orderId: string,
     eventType: string,
     extra?: Record<string, any>,
   ) => {
     try {
-      // Fetch shop owner email and phone
-      let shopOwnerEmail: string | null = null;
-      let shopOwnerPhone: string | null = null;
-      try {
-        const { data: shopData } = await supabase
-          .from("shops")
-          .select("owner_id, whatsapp_number, uses_own_logistics, own_logistics_note")
-          .eq("id", shop.id)
-          .single();
-        shopOwnerPhone = shopData?.whatsapp_number || null;
-        if (shopData?.owner_id) {
-          const { data: ownerProfile } = await supabase
-            .from("profiles")
-            .select("email, phone")
-            .eq("id", shopData.owner_id)
-            .single();
-          shopOwnerEmail = ownerProfile?.email || null;
-          if (!shopOwnerPhone) shopOwnerPhone = ownerProfile?.phone || null;
-        }
-      } catch (e) {
-        /* non-blocking */
-      }
-
       await supabase.functions.invoke("order-notifications", {
         body: {
           orderId,
           eventType,
+          shopId: shop.id,
           shopName: shop.shop_name,
           customerEmail: formData.customer_email,
           customerName: formData.customer_name,
@@ -650,8 +628,6 @@ const CheckoutDialog = ({
             quantity: item.quantity,
             price: item.product.price,
           })),
-          shopOwnerEmail,
-          shopOwnerPhone,
           ...extra,
         },
       });
@@ -921,23 +897,30 @@ const CheckoutDialog = ({
 
       if (itemsError) throw itemsError;
 
-      // Decrement stock for each ordered product (best-effort, non-blocking)
+      // P0: Atomic stock decrement. Roll back order if any item is out of stock.
       try {
-        await Promise.all(
-          cart.map(item =>
-            supabase
-              .from("products")
-              .update({
-                stock_quantity: Math.max(
-                  0,
-                  item.product.stock_quantity - item.quantity,
-                ),
-              })
-              .eq("id", item.product.id),
-          ),
-        );
-      } catch (stockError) {
-        console.error("Stock decrement failed (non-blocking):", stockError);
+        for (const item of cart) {
+          const { data: ok, error: rpcErr } = await supabase.rpc(
+            "decrement_stock_if_available",
+            { _product_id: item.product.id, _quantity: item.quantity },
+          );
+          if (rpcErr || !ok) {
+            // Rollback: delete the freshly inserted order + items
+            await supabase.from("order_items").delete().eq("order_id", orderId);
+            await supabase.from("orders").delete().eq("id", orderId);
+            throw new Error(
+              `"${item.product.name}" just sold out or only has limited stock. Please refresh and adjust your cart.`,
+            );
+          }
+        }
+      } catch (stockError: any) {
+        setIsProcessing(false);
+        toast({
+          title: "Item unavailable",
+          description: stockError.message || "One of your items is out of stock.",
+          variant: "destructive",
+        });
+        return;
       }
 
       // Book shipping if a rate was selected and the shop has a default pickup address.
@@ -977,8 +960,17 @@ const CheckoutDialog = ({
         couponService.incrementUsage(appliedCoupon.id).catch(console.error);
       }
 
-      // Send order notification (fire-and-forget)
-      sendOrderNotification(orderId, "order_placed");
+      // Notify shop owner ONLY when the order is actionable right now:
+      //  - delivery-before-payment (seller needs to approve/contact)
+      //  - bank-transfer (seller awaits proof)
+      // For paystack, the paystack-webhook fires the notification on payment confirmation.
+      const willTriggerPaystack =
+        paymentChoice === "pay_before" &&
+        ((paymentMethod || shop.payment_method) === "paystack" ||
+          (shop.payment_method === "both" && paymentMethod === "paystack"));
+      if (!willTriggerPaystack) {
+        sendOrderNotification(orderId, "order_placed");
+      }
 
       // Handle payment choice
       if (paymentChoice === "delivery_before") {

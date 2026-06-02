@@ -63,7 +63,7 @@ const Bookings = () => {
 
       const { data: shopData, error: shopError } = await supabase
         .from("shops")
-        .select("*")
+        .select("id, shop_name, shop_slug, owner_id, is_active, payment_method, whatsapp_number")
         .eq("owner_id", user.id)
         .single();
 

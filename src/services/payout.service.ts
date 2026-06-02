@@ -9,64 +9,52 @@ export interface PayoutRequest {
 }
 
 export const payoutService = {
+  // Server-authoritative balance (validates caller owns the shop)
   getBalance: async (shopId: string) => {
-    // Total net revenue from paid Paystack orders (platform holds these funds)
-    const { data: revenue, error: revError } = await supabase
-      .from('revenue_transactions')
-      .select('amount')
-      .eq('shop_id', shopId)
-      .eq('payment_method', 'paystack');
+    const { data: balance, error: balErr } = await supabase
+      .rpc('get_shop_balance', { _shop_id: shopId });
+    if (balErr) throw balErr;
 
-    if (revError) throw revError;
-
-    const totalRevenue = (revenue || []).reduce((sum, r) => sum + Number(r.amount), 0);
-
-    // Total already withdrawn
+    // Pull payout breakdown (RLS-scoped) for the UI
     const { data: payouts, error: payError } = await supabase
       .from('shop_payouts')
       .select('amount, status')
       .eq('shop_id', shopId)
       .in('status', ['pending', 'processing', 'completed']);
-
     if (payError) throw payError;
 
     const totalWithdrawn = (payouts || [])
       .filter(p => p.status === 'completed')
       .reduce((sum, p) => sum + Number(p.amount), 0);
-
     const totalPending = (payouts || [])
       .filter(p => p.status === 'pending' || p.status === 'processing')
       .reduce((sum, p) => sum + Number(p.amount), 0);
 
+    const availableBalance = Number(balance ?? 0);
     return {
-      totalRevenue,
+      totalRevenue: availableBalance + totalWithdrawn + totalPending,
       totalWithdrawn,
       totalPending,
-      availableBalance: totalRevenue - totalWithdrawn - totalPending,
+      availableBalance,
     };
   },
 
+  // Idempotent server-side payout request (duplicate guard inside RPC)
   requestPayout: async (data: PayoutRequest) => {
     const MIN_WITHDRAWAL = 5000;
     if (data.amount < MIN_WITHDRAWAL) {
       throw new Error(`Minimum withdrawal is ₦${MIN_WITHDRAWAL.toLocaleString()}`);
     }
 
-    const { data: payout, error } = await supabase
-      .from('shop_payouts')
-      .insert({
-        shop_id: data.shop_id,
-        amount: data.amount,
-        bank_name: data.bank_name,
-        account_number: data.account_number,
-        account_name: data.account_name,
-        status: 'pending',
-      })
-      .select()
-      .single();
-
+    const { data: payoutId, error } = await supabase.rpc('request_payout', {
+      _shop_id: data.shop_id,
+      _amount: data.amount,
+      _bank_name: data.bank_name,
+      _account_number: data.account_number,
+      _account_name: data.account_name,
+    });
     if (error) throw error;
-    return payout;
+    return { id: payoutId };
   },
 
   getPayoutHistory: async (shopId: string) => {

@@ -82,11 +82,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         .eq("role", "admin")
         .single();
 
-      if (!roles && user.role === 'ADMIN') {
-        // Role set in profile but missing from user_roles — grant access anyway
-        setIsAdmin(true);
-        return;
-      }
+      // SECURITY: require explicit user_roles entry. Do NOT trust profiles.role alone.
 
       if (!roles) {
         toast({ title: "Access Denied", description: "You don't have admin privileges", variant: "destructive" });

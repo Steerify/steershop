@@ -395,6 +395,17 @@ serve(async (req) => {
           logError('Error updating order', { error: orderError, order_id, paymentReference });
         }
       }
+
+      // Fire order_paid notification once payment is confirmed (escrow or direct)
+      if (order_id && shop_id) {
+        try {
+          await supabase.functions.invoke('order-notifications', {
+            body: { orderId: order_id, eventType: 'order_paid', shopId: shop_id },
+          });
+        } catch (notifyErr) {
+          logWarn('Order paid notification failed', { error: String(notifyErr), order_id });
+        }
+      }
     }
 
     if (REVERSAL_EVENTS.has(event.event)) {

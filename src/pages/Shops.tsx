@@ -163,7 +163,7 @@ const Shops = () => {
 
     const fetchBusinessPlanShops = async () => {
       const { data: businessProfiles } = await supabase
-        .from('profiles').select('id, subscription_plan_id').not('subscription_plan_id', 'is', null);
+        .from('profiles').select('id, subscription_plan_id').not('subscription_plan_id', 'is', null).limit(1000);
       if (businessProfiles?.length) {
         const planIds = [...new Set(businessProfiles.map(p => p.subscription_plan_id).filter(Boolean))];
         const { data: plans } = await supabase

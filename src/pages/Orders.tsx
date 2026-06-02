@@ -246,20 +246,28 @@ const Orders = () => {
 
       await orderService.updateOrderStatus(orderId, status, extraFields);
 
-      // Send notification to customer (fire-and-forget)
+      // Send notification to customer (awaited so we surface delivery failures)
       const order = orders.find(o => o.id === orderId);
       if (order?.customer_email) {
-        supabase.functions.invoke('order-notifications', {
-          body: {
-            orderId,
-            eventType: 'status_update',
-            shopName: shop?.shop_name,
-            customerEmail: order.customer_email,
-            customerName: order.customer_name,
-            totalAmount: order.total_amount,
-            statusUpdate: status,
-          },
-        }).catch(e => console.error('Notification failed:', e));
+        try {
+          await supabase.functions.invoke('order-notifications', {
+            body: {
+              orderId,
+              eventType: 'status_update',
+              shopName: shop?.shop_name,
+              customerEmail: order.customer_email,
+              customerName: order.customer_name,
+              totalAmount: order.total_amount,
+              statusUpdate: status,
+            },
+          });
+        } catch (e) {
+          console.error('Notification failed:', e);
+          toast({
+            title: "Status updated, notification not sent",
+            description: "We couldn't email the customer — they'll still see the new status.",
+          });
+        }
       }
 
       toast({

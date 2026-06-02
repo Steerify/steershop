@@ -219,7 +219,7 @@ export const BulkProductUpload = ({ open, onClose, shopId, onSuccess }: BulkProd
       await supabase.from("subscription_history").insert({
         user_id: (await supabase.auth.getUser()).data.user?.id,
         event_type: "bulk_upload_fee",
-        amount: 500000,
+        amount: 5000,
         payment_reference: reference,
         notes: `Bulk upload fee for ${drafts.length} products`,
       });

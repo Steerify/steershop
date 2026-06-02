@@ -2873,6 +2873,8 @@ export type Database = {
           is_active: boolean | null
           max_products: number | null
           name: string
+          paystack_plan_monthly: string | null
+          paystack_plan_yearly: string | null
           price_monthly: number
           price_yearly: number | null
           priority_support: boolean | null
@@ -2892,6 +2894,8 @@ export type Database = {
           is_active?: boolean | null
           max_products?: number | null
           name: string
+          paystack_plan_monthly?: string | null
+          paystack_plan_yearly?: string | null
           price_monthly: number
           price_yearly?: number | null
           priority_support?: boolean | null
@@ -2911,6 +2915,8 @@ export type Database = {
           is_active?: boolean | null
           max_products?: number | null
           name?: string
+          paystack_plan_monthly?: string | null
+          paystack_plan_yearly?: string | null
           price_monthly?: number
           price_yearly?: number | null
           priority_support?: boolean | null
@@ -3298,6 +3304,10 @@ export type Database = {
       }
       cleanup_expired_featured_shops: { Args: never; Returns: undefined }
       cleanup_expired_rate_limits: { Args: never; Returns: undefined }
+      decrement_stock_if_available: {
+        Args: { _product_id: string; _quantity: number }
+        Returns: boolean
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -3307,6 +3317,7 @@ export type Database = {
         Returns: number
       }
       get_admin_stats: { Args: never; Returns: Json }
+      get_shop_balance: { Args: { _shop_id: string }; Returns: number }
       get_website_visit_analytics: { Args: never; Returns: Json }
       has_role: {
         Args: {
@@ -3340,6 +3351,16 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      request_payout: {
+        Args: {
+          _account_name: string
+          _account_number: string
+          _amount: number
+          _bank_name: string
+          _shop_id: string
+        }
+        Returns: string
       }
       shop_has_valid_subscription: {
         Args: { shop_id_param: string }

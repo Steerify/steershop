@@ -161,3 +161,39 @@ Every P0 and P1 ordered by risk:
 15. **[P1-12]** `Dashboard.tsx:282` + `:325`: consolidate the two separate `profiles` fetches into one to eliminate duplicate network round-trips.
 16. **[P1-13]** `Dashboard.tsx:300` and `Products.tsx:232`: add visible toast error handling when edge function calls fail, rather than silent `console.error`.
 17. **[P1-14]** `CustomerOrders`: also query orders by `customer_email` so guest orders are visible to returning logged-in customers.
+
+---
+
+## ✅ 2026-06-02 — P0 + P1 FIX PASS (Sprint completed)
+
+### Done (this loop)
+- **[P0-A]** Added `paystack_plan_monthly` / `paystack_plan_yearly` to `subscription_plans`.
+- **[P0-B]** Replaced client-side stock decrement with atomic RPC `decrement_stock_if_available` (rolls back order on stock-out) — `src/components/CheckoutDialog.tsx`.
+- **[P0-C]** Order notification now fires from `paystack-webhook` on payment confirmation; checkout dialog only fires for delivery-before / bank-transfer flows.
+- **[P1-1]** `AdminLayout.tsx` — removed `profiles.role` fallback; `user_roles` row now mandatory.
+- **[P1-2]** Shop-owner email lookup moved out of customer browser into `order-notifications` edge function (resolved server-side from `orderId`).
+- **[P1-3]** `Shops.tsx` profiles query — added `.limit(1000)`.
+- **[P1-4]** `Customers.tsx` orders fetch — added `.limit(1000)`.
+- **[P1-5]** `Bookings.tsx` shops query — scoped explicit columns (no bank credentials).
+- **[P1-6]** `BulkProductUpload.tsx` — amount corrected `500000 → 5000` (naira).
+- **[P1-7]** `Dashboard.tsx` — toast on payment verification error.
+- **[P1-8]** `Orders.tsx` — status-update notification now awaited; failure surfaces a toast.
+- **[P1-9]** `CustomerOrders.tsx` — also matches by `customer_email` so guest orders appear after signup.
+- **[P1-10]** `payout.service.ts` — `getBalance` uses new `get_shop_balance` RPC; `requestPayout` uses `request_payout` RPC (60-second duplicate guard + server-side balance check).
+- **[P1-11]** Added `BEFORE UPDATE` trigger on `orders.updated_at`.
+- **EMAIL FIX (out-of-scope but blocking)** — `_shared/smtp.ts` now trims env vars (Cloud secrets had trailing `\t` that broke DNS); verified live against `mail.spacemail.com:465` as `mail@steersolo.com`.
+- Removed dead `src/utils/emailTransport.ts` (had Deno-only `npm:` import in client bundle).
+- Fixed pre-existing syntax error (`}geId });`) in `order-notifications`.
+- Added `smtp-verify` edge function for ongoing diagnostics.
+
+### Audit items already correct (no action needed)
+- Settings.tsx (column scoping was already done)
+- ShopStorefront.tsx (explicit `.eq('id', owner_id)` already present)
+- Subscription.tsx (explicit `.eq('user_id', ...)` already present)
+- Products.tsx (AI-edge-function errors already surfaced)
+- Dashboard.tsx loadData (audit said duplicate fetch — only one exists; the second was inside Paystack polling, which is intentional)
+
+### Deferred (needs separate plan / heavier rewrite)
+- **KYC server-side validation** — `KYCLevel{1,2}Form` currently update `profiles` directly. Routing through a server edge function with validation requires new function `kyc-submit` and form refactor. Tracked for next sprint.
+- **`admin_security_alerts` / `admin_mutation_rate_limits` wiring** — confirm edge functions log to them; if not, add logging.
+- All P2 items (10 of them) — non-blocking polish.
