@@ -65,7 +65,7 @@ const CustomerOrders = () => {
     try {
       if (!user) return;
 
-      const orders = await orderService.getOrdersByCustomer(user.id);
+      const orders = await orderService.getOrdersByCustomer(user.id, user.email ?? undefined);
       setOrders(orders || []);
     } catch (error: any) {
       console.error("Error loading orders:", error);
