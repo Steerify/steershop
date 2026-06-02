@@ -65,7 +65,8 @@ const Customers = () => {
         .from("orders")
         .select("customer_name, customer_email, customer_phone, total_amount, created_at")
         .eq("shop_id", shop.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(1000);
 
       if (error) throw error;
 
