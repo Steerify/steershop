@@ -8,11 +8,11 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  const host = Deno.env.get("SMTP_HOST") || "mail.spacemail.com";
-  const port = Number(Deno.env.get("SMTP_PORT") || 465);
-  const user = Deno.env.get("SMTP_USER");
-  const pass = Deno.env.get("SMTP_PASS");
-  const from = Deno.env.get("SMTP_FROM_EMAIL") || user;
+  const host = (Deno.env.get("SMTP_HOST") || "mail.spacemail.com").trim();
+  const port = Number((Deno.env.get("SMTP_PORT") || "465").trim());
+  const user = Deno.env.get("SMTP_USER")?.trim();
+  const pass = Deno.env.get("SMTP_PASS")?.trim();
+  const from = (Deno.env.get("SMTP_FROM_EMAIL") || user || "").trim();
 
   if (!user || !pass) {
     return new Response(JSON.stringify({ ok: false, error: "Missing SMTP_USER or SMTP_PASS" }), {
