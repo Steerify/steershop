@@ -346,9 +346,9 @@ Deno.serve(async (req) => {
     }
 
     const targetGroups: TargetGroup[] = forcedGroup ? [forcedGroup] : ["marketplace", "foundry", "vendor"];
-    const generatedPosts = [];
+    const generatedPosts: any[] = [];
 
-    for (const group of targetGroups) {
+    await Promise.all(targetGroups.map(async (group) => {
       try {
         const slot = forcedSlot ?? pickSlotForGroup(watHour, group);
         const post = await generateForSlot(supabase, slot, group);
@@ -357,7 +357,7 @@ Deno.serve(async (req) => {
           .from("marketing_queue")
           .insert({
             slot: post.slot,
-            target_group: post.target_group, // Note: This requires the database migration to have run
+            target_group: post.target_group,
             shop_id: post.shop_id,
             product_ids: post.product_ids,
             caption: post.caption,
@@ -373,7 +373,7 @@ Deno.serve(async (req) => {
       } catch (err) {
         console.error(`Failed generating for group ${group}:`, err);
       }
-    }
+    }));
 
     return new Response(JSON.stringify({ ok: true, posts: generatedPosts }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
