@@ -607,40 +607,18 @@ const CheckoutDialog = ({
     }
   }, [isOpen]);
 
-  // Send order notification (fire-and-forget) — also sends email to shop owner
+  // Send order notification — shop owner email is resolved server-side in the edge function
   const sendOrderNotification = async (
     orderId: string,
     eventType: string,
     extra?: Record<string, any>,
   ) => {
     try {
-      // Fetch shop owner email and phone
-      let shopOwnerEmail: string | null = null;
-      let shopOwnerPhone: string | null = null;
-      try {
-        const { data: shopData } = await supabase
-          .from("shops")
-          .select("owner_id, whatsapp_number, uses_own_logistics, own_logistics_note")
-          .eq("id", shop.id)
-          .single();
-        shopOwnerPhone = shopData?.whatsapp_number || null;
-        if (shopData?.owner_id) {
-          const { data: ownerProfile } = await supabase
-            .from("profiles")
-            .select("email, phone")
-            .eq("id", shopData.owner_id)
-            .single();
-          shopOwnerEmail = ownerProfile?.email || null;
-          if (!shopOwnerPhone) shopOwnerPhone = ownerProfile?.phone || null;
-        }
-      } catch (e) {
-        /* non-blocking */
-      }
-
       await supabase.functions.invoke("order-notifications", {
         body: {
           orderId,
           eventType,
+          shopId: shop.id,
           shopName: shop.shop_name,
           customerEmail: formData.customer_email,
           customerName: formData.customer_name,
@@ -650,8 +628,6 @@ const CheckoutDialog = ({
             quantity: item.quantity,
             price: item.product.price,
           })),
-          shopOwnerEmail,
-          shopOwnerPhone,
           ...extra,
         },
       });
