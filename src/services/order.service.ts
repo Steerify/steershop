@@ -138,12 +138,17 @@ const orderService = {
     return data;
   },
 
-  getOrdersByCustomer: async (customerId: string) => {
-    const { data, error } = await supabase
+  getOrdersByCustomer: async (customerId: string, customerEmail?: string) => {
+    // Match by user id OR by the email used during guest checkout
+    let query = supabase
       .from('orders')
-      .select('*, order_items(*, products(*)), shops(shop_name)')
-      .eq('customer_id', customerId)
-      .order('created_at', { ascending: false });
+      .select('*, order_items(*, products(*)), shops(shop_name)');
+    if (customerEmail) {
+      query = query.or(`customer_id.eq.${customerId},customer_email.eq.${customerEmail}`);
+    } else {
+      query = query.eq('customer_id', customerId);
+    }
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) throw error;
     return data || [];
