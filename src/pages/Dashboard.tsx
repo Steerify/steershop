@@ -299,6 +299,11 @@ const Dashboard = () => {
         });
       } catch (error) {
         console.error('Payment verification error:', error);
+        toast({
+          title: "Verification error",
+          description: "We couldn't confirm your payment automatically. Please refresh in a moment.",
+          variant: "destructive",
+        });
       } finally {
         setIsSubscribing(false);
         navigate('/dashboard', { replace: true });
