@@ -10,6 +10,16 @@ const corsHeaders = {
 };
 
 const ORIGIN = "https://steersolo.com";
+const LINK_PLACEHOLDER_PATTERN = /\n?\s*\[(?:shop|product)?\s*link\]\s*/gi;
+
+function appendSteerSoloLink(caption: string, cta: string, linkUrl: string) {
+  const cleanCaption = caption.replace(LINK_PLACEHOLDER_PATTERN, "").trim();
+  return `${cleanCaption}\n\n${cta}: ${linkUrl}`;
+}
+
+function productUrl(shopSlug: string, productId: string, ref: string) {
+  return `${ORIGIN}/shop/${shopSlug}/product/${productId}?ref=${ref}`;
+}
 
 type TargetGroup = "marketplace" | "foundry" | "vendor";
 
@@ -199,7 +209,7 @@ async function generateForSlot(supabase: any, slot: Slot, targetGroup: TargetGro
     let caption = await aiCaption(prompt, "No specific context needed.");
     // Foundry/Vendor posts might not need a product link, but we'll attach SteerSolo main link for context.
     const link_url = ORIGIN;
-    caption += `\n\n${link_url}`;
+    caption = appendSteerSoloLink(caption, "Join SteerSolo", link_url);
     
     return {
       slot,
@@ -220,7 +230,7 @@ async function generateForSlot(supabase: any, slot: Slot, targetGroup: TargetGro
     const context = items.map((p: any, i: number) => `${i + 1}. ${p.name} — by ${p.shops.shop_name}`).join("\n");
     let caption = await aiCaption(prompt, context);
     const link_url = `${ORIGIN}/explore?ref=concierge_top5`;
-    caption += `\n\nCheck them out here: ${link_url}`;
+    caption = appendSteerSoloLink(caption, "Check them out here", link_url);
     return {
       slot,
       target_group: targetGroup,
@@ -238,8 +248,8 @@ async function generateForSlot(supabase: any, slot: Slot, targetGroup: TargetGro
     if (!p) throw new Error("No discounted product available");
     const ctx = `Product: ${p.name}\nWas: ₦${Number(p.compare_price).toLocaleString()}\nNow: ₦${Number(p.price).toLocaleString()}\nShop: ${p.shops.shop_name}`;
     let caption = await aiCaption(prompt, ctx);
-    const link_url = `${ORIGIN}/shop/${p.shops.shop_slug}?ref=concierge_lunch`;
-    caption += `\n\nGrab the deal: ${link_url}`;
+    const link_url = productUrl(p.shops.shop_slug, p.id, "concierge_lunch");
+    caption = appendSteerSoloLink(caption, "Grab the deal", link_url);
     return {
       slot,
       target_group: targetGroup,
@@ -259,7 +269,7 @@ async function generateForSlot(supabase: any, slot: Slot, targetGroup: TargetGro
     const ctx = `Shop: ${shop.shop_name}\nLocation: ${[shop.city, shop.state].filter(Boolean).join(", ") || "Nigeria"}\nRating: ${shop.average_rating || "new"}`;
     let caption = await aiCaption(prompt, ctx);
     const link_url = `${ORIGIN}/shop/${shop.shop_slug}?ref=concierge_featured`;
-    caption += `\n\nVisit their store: ${link_url}`;
+    caption = appendSteerSoloLink(caption, "Visit their store", link_url);
     return {
       slot,
       target_group: targetGroup,
@@ -276,7 +286,7 @@ async function generateForSlot(supabase: any, slot: Slot, targetGroup: TargetGro
     const ctx = `Active categories: fashion, beauty, electronics, food.`;
     let caption = await aiCaption(prompt, ctx);
     const link_url = `${ORIGIN}/explore?ref=concierge_chat`;
-    caption += `\n\n${link_url}`;
+    caption = appendSteerSoloLink(caption, "Join SteerSolo", link_url);
     return {
       slot,
       target_group: targetGroup,
@@ -297,8 +307,8 @@ async function generateForSlot(supabase: any, slot: Slot, targetGroup: TargetGro
   const p = products[Math.floor(Math.random() * products.length)];
   const ctx = `Product: ${p.name}\nPrice: ₦${Number(p.price).toLocaleString()}\nShop: ${shop.shop_name}`;
   let caption = await aiCaption(prompt, ctx);
-  const link_url = `${ORIGIN}/shop/${shop.shop_slug}?ref=concierge_${slot}`;
-  caption += `\n\nTap here to peep it: ${link_url}`;
+  const link_url = productUrl(shop.shop_slug, p.id, `concierge_${slot}`);
+  caption = appendSteerSoloLink(caption, "Tap here to peep it", link_url);
   return {
     slot,
     target_group: targetGroup,
