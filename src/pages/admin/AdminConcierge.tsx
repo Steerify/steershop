@@ -10,6 +10,7 @@ import conciergeService, {
   ConciergeStatus,
   ConciergeMetrics,
   ConciergeSlot,
+  TargetGroup,
 } from "@/services/concierge.service";
 import { shareToSteersoloGroup } from "@/utils/whatsappGroupShare";
 import {
@@ -44,6 +45,12 @@ const SLOTS: ConciergeSlot[] = [
   "conversation",
 ];
 
+const TARGET_LABELS: Record<TargetGroup, { label: string; color: string }> = {
+  marketplace: { label: "Marketplace", color: "bg-orange-500/10 text-orange-600 border-orange-200" },
+  foundry: { label: "Foundry", color: "bg-purple-500/10 text-purple-600 border-purple-200" },
+  vendor: { label: "Vendor", color: "bg-emerald-500/10 text-emerald-600 border-emerald-200" },
+};
+
 export default function AdminConcierge() {
   const { toast } = useToast();
   const [tab, setTab] = useState<ConciergeStatus>("pending");
@@ -52,6 +59,7 @@ export default function AdminConcierge() {
   const [metrics, setMetrics] = useState<ConciergeMetrics | null>(null);
   const [generating, setGenerating] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [filterGroup, setFilterGroup] = useState<TargetGroup | "all">("all");
 
   const load = async (status: ConciergeStatus = tab) => {
     setLoading(true);
@@ -105,6 +113,7 @@ export default function AdminConcierge() {
       const result = await shareToSteersoloGroup({
         caption: post.caption,
         imageUrl: post.image_url,
+        targetGroup: post.target_group,
       });
       await conciergeService.markSent(post.id);
 
@@ -209,23 +218,41 @@ export default function AdminConcierge() {
         </Card>
 
         {/* Queue */}
-        <Tabs value={tab} onValueChange={(v) => setTab(v as ConciergeStatus)}>
-          <TabsList>
-            <TabsTrigger value="pending">Pending</TabsTrigger>
-            <TabsTrigger value="sent">Sent</TabsTrigger>
-            <TabsTrigger value="skipped">Skipped</TabsTrigger>
-          </TabsList>
+        <div className="flex flex-col sm:flex-row gap-4 justify-between">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as ConciergeStatus)} className="w-full sm:w-auto">
+            <TabsList>
+              <TabsTrigger value="pending">Pending</TabsTrigger>
+              <TabsTrigger value="sent">Sent</TabsTrigger>
+              <TabsTrigger value="skipped">Skipped</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <div className="flex gap-2">
+            {(["all", "marketplace", "foundry", "vendor"] as const).map((g) => (
+              <Button 
+                key={g} 
+                variant={filterGroup === g ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setFilterGroup(g)}
+                className="capitalize"
+              >
+                {g}
+              </Button>
+            ))}
+          </div>
+        </div>
 
-          <TabsContent value={tab} className="mt-4">
-            {loading ? (
-              <div className="flex justify-center py-16">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : posts.length === 0 ? (
-              <EmptyState status={tab} onGenerate={() => handleGenerate()} />
-            ) : (
-              <div className="space-y-3">
-                {posts.map((p) => (
+        <div className="mt-4">
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : posts.filter(p => filterGroup === "all" || p.target_group === filterGroup).length === 0 ? (
+            <EmptyState status={tab} onGenerate={() => handleGenerate()} />
+          ) : (
+            <div className="space-y-3">
+              {posts
+                .filter(p => filterGroup === "all" || p.target_group === filterGroup)
+                .map((p) => (
                   <PostCard
                     key={p.id}
                     post={p}
@@ -233,11 +260,10 @@ export default function AdminConcierge() {
                     onSend={() => handleSend(p)}
                     onSkip={() => handleSkip(p)}
                   />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </AdminLayout>
   );
@@ -324,10 +350,15 @@ function PostCard({
                 <ImageIcon className="w-8 h-8" />
               </div>
             )}
-            <Badge className="absolute top-2 left-2 text-[10px] font-bold uppercase">
-              {SLOT_LABELS[post.slot] ?? post.slot}
-            </Badge>
-          </div>
+              <Badge className="absolute top-2 left-2 text-[10px] font-bold uppercase shadow-sm border bg-background/80 text-foreground backdrop-blur-sm">
+                {SLOT_LABELS[post.slot] ?? post.slot}
+              </Badge>
+              {post.target_group && (
+                <Badge className={`absolute bottom-2 right-2 text-[10px] font-bold shadow-sm border backdrop-blur-sm ${TARGET_LABELS[post.target_group]?.color || ""}`}>
+                  {TARGET_LABELS[post.target_group]?.label || post.target_group}
+                </Badge>
+              )}
+            </div>
 
           {/* Content */}
           <div className="p-4 flex flex-col gap-3">

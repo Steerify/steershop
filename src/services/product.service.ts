@@ -137,6 +137,7 @@ const productService = {
     let query = supabase
       .from('products')
       .select('*', { count: 'exact' })
+      .is('delete_at', null)
       .range(from, to);
 
     // Only filter by is_available if not explicitly requesting all
@@ -292,7 +293,10 @@ const productService = {
   deleteProduct: async (id: string) => {
     const { error } = await supabase
       .from('products')
-      .update({ is_available: false })
+      .update({ 
+        is_available: false,
+        delete_at: new Date().toISOString()
+      })
       .eq('id', id);
 
     if (error) {
@@ -322,6 +326,7 @@ const productService = {
         shops!inner(shop_slug, shop_name, owner_id)
       `, { count: 'exact' })
       .eq('is_available', true)
+      .is('delete_at', null)
       .or(`name.ilike."%${term}%",description.ilike."%${term}%"`)
       .range(from, to);
 

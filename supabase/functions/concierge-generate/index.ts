@@ -1,17 +1,17 @@
-// SteerSolo Marketing Concierge — generates ONE queued post per invocation.
-// Cron: every 2 hours. Picks a slot format based on the WAT (Africa/Lagos) hour,
-// selects a shop/product using fairness + performance weighting, asks Lovable AI
-// for a Naija-English caption, and inserts a row into marketing_queue.
+// SteerSolo Marketing Concierge — generates ONE queued post per group per invocation.
+// Cron: every 2 hours between 8am - 8pm WAT (Africa/Lagos).
+// Inserts rows into marketing_queue for marketplace, foundry, and vendor groups.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 const ORIGIN = "https://steersolo.com";
+
+type TargetGroup = "marketplace" | "foundry" | "vendor";
 
 type Slot =
   | "morning_pick"
@@ -20,49 +20,62 @@ type Slot =
   | "shop_spotlight"
   | "top5"
   | "featured_store"
-  | "conversation";
+  | "conversation"
+  | "tech_insight"
+  | "community_poll"
+  | "founder_story"
+  | "sales_tip"
+  | "platform_feature"
+  | "merchant_win";
 
-function pickSlot(forcedHour?: number): Slot {
-  // Compute WAT hour (UTC+1, no DST)
-  const utc = new Date();
-  const watHour =
-    typeof forcedHour === "number" ? forcedHour : (utc.getUTCHours() + 1) % 24;
-
-  const table: Record<number, Slot> = {
-    9: "morning_pick",
-    11: "new_arrivals",
-    13: "lunch_deal",
-    15: "shop_spotlight",
-    17: "top5",
-    19: "featured_store",
-    21: "conversation",
-  };
-  // Nearest slot if cron runs slightly off
-  const nearest = Object.keys(table)
-    .map(Number)
-    .reduce((a, b) => (Math.abs(b - watHour) < Math.abs(a - watHour) ? b : a));
-  return table[nearest];
+function pickSlotForGroup(watHour: number, group: TargetGroup): Slot {
+  if (group === "marketplace") {
+    const table: Record<number, Slot> = {
+      8: "morning_pick",
+      10: "new_arrivals",
+      12: "lunch_deal",
+      14: "shop_spotlight",
+      16: "top5",
+      18: "featured_store",
+      20: "conversation",
+    };
+    const nearest = Object.keys(table)
+      .map(Number)
+      .reduce((a, b) => (Math.abs(b - watHour) < Math.abs(a - watHour) ? b : a));
+    return table[nearest];
+  } else if (group === "foundry") {
+    // Rotate 3 slots for Foundry
+    const slots: Slot[] = ["tech_insight", "community_poll", "founder_story"];
+    return slots[Math.floor(watHour / 2) % slots.length];
+  } else {
+    // Rotate 3 slots for Vendor
+    const slots: Slot[] = ["sales_tip", "platform_feature", "merchant_win"];
+    return slots[Math.floor(watHour / 2) % slots.length];
+  }
 }
 
 const SLOT_PROMPT: Record<Slot, string> = {
-  morning_pick:
-    "Write a warm 'Good morning Naija!' style hook (1 emoji opener), then highlight ONE product as today's morning pick. Friendly, Nigerian English, soft urgency (3–4 sentences).",
-  new_arrivals:
-    "Announce this product as a fresh new arrival on SteerSolo. Build curiosity, 3 sentences, end with a soft 'Tap the link to peep it'.",
-  lunch_deal:
-    "Frame this as a midday deal. Lead with the discount strikethrough idea ('was X, now Y'), 3 sentences, playful tone.",
-  shop_spotlight:
-    "Spotlight this shop. Two sentences about what they sell, one sentence inviting people to visit. Personal, conversational.",
-  top5:
-    "Introduce the day's 'Top 5 picks on SteerSolo'. Then list the 5 products as bullet points with name and short benefit (no prices). End with one CTA line.",
-  featured_store:
-    "Crown this as 'Featured Store of the Day'. Story-driven (2 short paragraphs). Mention what makes them special. End with a 'Drop a 🙌 if you support naija businesses' nudge.",
-  conversation:
-    "Write a short conversation starter / poll for the group. Tie it to a shopping category. Encourage replies. Keep it 2–3 sentences, end with a question.",
+  // Marketplace
+  morning_pick: "Write a warm 'Good morning Naija!' style hook (1 emoji opener), then highlight ONE product as today's morning pick. Friendly, Nigerian English, soft urgency (3–4 sentences).",
+  new_arrivals: "Announce this product as a fresh new arrival on SteerSolo. Build curiosity, 3 sentences, end with a soft 'Tap the link to peep it'.",
+  lunch_deal: "Frame this as a midday deal. Lead with the discount strikethrough idea ('was X, now Y'), 3 sentences, playful tone.",
+  shop_spotlight: "Spotlight this shop. Two sentences about what they sell, one sentence inviting people to visit. Personal, conversational.",
+  top5: "Introduce the day's 'Top 5 picks on SteerSolo'. Then list the 5 products as bullet points with name and short benefit (no prices). End with one CTA line.",
+  featured_store: "Crown this as 'Featured Store of the Day'. Story-driven (2 short paragraphs). Mention what makes them special. End with a 'Drop a 🙌 if you support naija businesses' nudge.",
+  conversation: "Write a short conversation starter / poll for the group. Tie it to a shopping category. Encourage replies. Keep it 2–3 sentences, end with a question.",
+  
+  // Foundry (Contributors & Builders)
+  tech_insight: "You are talking to the 'Foundry' group, a community of contributors, engineers, and builders for the SteerSolo platform. Write a short, encouraging message about the importance of building scalable tech, writing clean code, or celebrating an engineering win. Keep it conversational, 3 sentences.",
+  community_poll: "You are talking to the 'Foundry' group (SteerSolo contributors). Ask a thought-provoking poll question about product design, software engineering, or start-up growth in Nigeria. 2 sentences.",
+  founder_story: "You are talking to the 'Foundry' group (SteerSolo contributors). Share a brief encouraging word about the journey of building an e-commerce platform from scratch in Africa. Mention resilience, shipping fast, and community effort. 3 sentences.",
+
+  // Vendor (Merchants)
+  sales_tip: "You are talking to SteerSolo merchants. Share a quick, actionable e-commerce sales tip (e.g., taking good product photos, writing clear descriptions, or customer service). Professional yet encouraging. 3 sentences.",
+  platform_feature: "You are talking to SteerSolo merchants. Remind them to use a platform feature (like sharing their SteerSolo shop link on their IG, or updating their inventory). Keep it hype and supportive. 3 sentences.",
+  merchant_win: "You are talking to SteerSolo merchants. Post an encouraging message about the hustle of running a business in Nigeria and how SteerSolo is here to help them reach more buyers. 3 sentences.",
 };
 
 async function fetchEligibleShops(supabase: any) {
-  // Active shops, not featured by concierge in last 7d.
   const { data, error } = await supabase
     .from("shops")
     .select("id, shop_name, shop_slug, description, logo_url, banner_url, category, city, state, average_rating, total_reviews, is_active")
@@ -118,7 +131,6 @@ async function fetchProductsForShop(supabase: any, shopId: string, limit = 8) {
 }
 
 async function fetchTrendingProducts(supabase: any, limit = 5) {
-  // Most-viewed shops' newest in-stock products
   const { data } = await supabase
     .from("products")
     .select("id, name, description, price, compare_price, image_url, shop_id, shops!inner(shop_slug, shop_name, is_active)")
@@ -141,9 +153,7 @@ async function fetchDiscountProduct(supabase: any) {
     .not("image_url", "is", null)
     .order("created_at", { ascending: false })
     .limit(20);
-  const list = (data || []).filter(
-    (p: any) => Number(p.compare_price) > Number(p.price)
-  );
+  const list = (data || []).filter((p: any) => Number(p.compare_price) > Number(p.price));
   if (list.length === 0) return null;
   return list[Math.floor(Math.random() * list.length)];
 }
@@ -152,13 +162,13 @@ async function aiCaption(prompt: string, context: string) {
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) throw new Error("LOVABLE_API_KEY missing");
 
-  const sys = `You are a senior Nigerian marketing copywriter for SteerSolo, a marketplace of small Nigerian businesses. You write WhatsApp group promo posts that feel like a friend sharing a good find, NEVER spammy. House style:
+  const sys = `You are a senior Nigerian marketing copywriter for SteerSolo.
+RULES:
 - Naija English, warm, confident, 1 emoji in the opener.
-- 3–5 short sentences max (unless the format demands a list).
-- Always end with the shop/product link.
-- Include a soft group-growth nudge ("share with someone who needs this", "drop your thoughts", etc).
-- Never invent prices, ratings, or claims. Use only the context provided.
-- All prices in Naira (₦). No "$" or other currencies.`;
+- 3–5 short sentences max.
+- Include a soft group-growth nudge ("share your thoughts", "drop a comment", etc).
+- NEVER invent prices, ratings, claims, or URLs.
+- DO NOT INCLUDE ANY LINK PLACEHOLDERS like [Shop Link] or [Link]. The link will be appended mechanically by the system after you generate the text.`;
 
   const body = {
     model: "google/gemini-2.5-flash",
@@ -170,10 +180,7 @@ async function aiCaption(prompt: string, context: string) {
 
   const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   if (!r.ok) {
@@ -184,27 +191,44 @@ async function aiCaption(prompt: string, context: string) {
   return (j.choices?.[0]?.message?.content || "").trim();
 }
 
-async function generateForSlot(supabase: any, slot: Slot) {
+async function generateForSlot(supabase: any, slot: Slot, targetGroup: TargetGroup) {
   const prompt = SLOT_PROMPT[slot];
 
+  // Foundry & Vendor slots
+  if (targetGroup === "foundry" || targetGroup === "vendor") {
+    let caption = await aiCaption(prompt, "No specific context needed.");
+    // Foundry/Vendor posts might not need a product link, but we'll attach SteerSolo main link for context.
+    const link_url = ORIGIN;
+    caption += `\n\n${link_url}`;
+    
+    return {
+      slot,
+      target_group: targetGroup,
+      shop_id: null,
+      product_ids: [],
+      caption,
+      image_url: null,
+      link_url,
+      meta: {},
+    };
+  }
+
+  // Marketplace slots
   if (slot === "top5") {
     const items = await fetchTrendingProducts(supabase, 5);
     if (items.length < 3) throw new Error("Not enough products for top5");
-    const context = items
-      .map(
-        (p: any, i: number) =>
-          `${i + 1}. ${p.name} — ${p.description?.slice(0, 80) || ""} — by ${p.shops.shop_name}`
-      )
-      .join("\n");
-    const caption = await aiCaption(prompt, context);
-    const link = `${ORIGIN}/explore?ref=concierge_top5`;
+    const context = items.map((p: any, i: number) => `${i + 1}. ${p.name} — by ${p.shops.shop_name}`).join("\n");
+    let caption = await aiCaption(prompt, context);
+    const link_url = `${ORIGIN}/explore?ref=concierge_top5`;
+    caption += `\n\nCheck them out here: ${link_url}`;
     return {
       slot,
+      target_group: targetGroup,
       shop_id: null,
       product_ids: items.map((p: any) => p.id),
       caption,
       image_url: items[0]?.image_url || null,
-      link_url: link,
+      link_url,
       meta: { products: items.map((p: any) => ({ id: p.id, name: p.name, shop: p.shops.shop_name })) },
     };
   }
@@ -212,15 +236,18 @@ async function generateForSlot(supabase: any, slot: Slot) {
   if (slot === "lunch_deal") {
     const p = await fetchDiscountProduct(supabase);
     if (!p) throw new Error("No discounted product available");
-    const ctx = `Product: ${p.name}\nDescription: ${p.description || ""}\nWas: ₦${Number(p.compare_price).toLocaleString()}\nNow: ₦${Number(p.price).toLocaleString()}\nShop: ${p.shops.shop_name}`;
-    const caption = await aiCaption(prompt, ctx);
+    const ctx = `Product: ${p.name}\nWas: ₦${Number(p.compare_price).toLocaleString()}\nNow: ₦${Number(p.price).toLocaleString()}\nShop: ${p.shops.shop_name}`;
+    let caption = await aiCaption(prompt, ctx);
+    const link_url = `${ORIGIN}/shop/${p.shops.shop_slug}?ref=concierge_lunch`;
+    caption += `\n\nGrab the deal: ${link_url}`;
     return {
       slot,
+      target_group: targetGroup,
       shop_id: p.shop_id,
       product_ids: [p.id],
       caption,
       image_url: p.image_url,
-      link_url: `${ORIGIN}/shop/${p.shops.shop_slug}?ref=concierge_lunch`,
+      link_url,
       meta: { product: p.name, was: p.compare_price, now: p.price },
     };
   }
@@ -229,48 +256,57 @@ async function generateForSlot(supabase: any, slot: Slot) {
     const shop = await pickShop(supabase);
     if (!shop) throw new Error("No shop available");
     const products = await fetchProductsForShop(supabase, shop.id, 3);
-    const ctx = `Shop: ${shop.shop_name}\nDescription: ${shop.description || ""}\nLocation: ${[shop.city, shop.state].filter(Boolean).join(", ")}\nRating: ${shop.average_rating || "new"}\nSample products: ${products.map((p: any) => p.name).join(", ") || "various"}`;
-    const caption = await aiCaption(prompt, ctx);
+    const ctx = `Shop: ${shop.shop_name}\nLocation: ${[shop.city, shop.state].filter(Boolean).join(", ") || "Nigeria"}\nRating: ${shop.average_rating || "new"}`;
+    let caption = await aiCaption(prompt, ctx);
+    const link_url = `${ORIGIN}/shop/${shop.shop_slug}?ref=concierge_featured`;
+    caption += `\n\nVisit their store: ${link_url}`;
     return {
       slot,
+      target_group: targetGroup,
       shop_id: shop.id,
       product_ids: products.map((p: any) => p.id),
       caption,
       image_url: shop.banner_url || shop.logo_url || products[0]?.image_url || null,
-      link_url: `${ORIGIN}/shop/${shop.shop_slug}?ref=concierge_featured`,
+      link_url,
       meta: { shop: shop.shop_name },
     };
   }
 
   if (slot === "conversation") {
-    const ctx = `Today's WAT hour: ${new Date().getUTCHours() + 1}. Active categories on the platform: fashion, beauty, electronics, food & drinks, home, art & craft, services.`;
-    const caption = await aiCaption(prompt, ctx);
+    const ctx = `Active categories: fashion, beauty, electronics, food.`;
+    let caption = await aiCaption(prompt, ctx);
+    const link_url = `${ORIGIN}/explore?ref=concierge_chat`;
+    caption += `\n\n${link_url}`;
     return {
       slot,
+      target_group: targetGroup,
       shop_id: null,
       product_ids: [],
       caption,
       image_url: null,
-      link_url: `${ORIGIN}/explore?ref=concierge_chat`,
+      link_url,
       meta: {},
     };
   }
 
-  // morning_pick / new_arrivals / shop_spotlight all use a single product from a chosen shop
+  // morning_pick / new_arrivals / shop_spotlight
   const shop = await pickShop(supabase);
   if (!shop) throw new Error("No shop available");
   const products = await fetchProductsForShop(supabase, shop.id, 8);
   if (products.length === 0) throw new Error("Shop has no products");
   const p = products[Math.floor(Math.random() * products.length)];
-  const ctx = `Product: ${p.name}\nDescription: ${p.description || ""}\nPrice: ₦${Number(p.price).toLocaleString()}\nShop: ${shop.shop_name}\nLocation: ${[shop.city, shop.state].filter(Boolean).join(", ") || "Nigeria"}`;
-  const caption = await aiCaption(prompt, ctx);
+  const ctx = `Product: ${p.name}\nPrice: ₦${Number(p.price).toLocaleString()}\nShop: ${shop.shop_name}`;
+  let caption = await aiCaption(prompt, ctx);
+  const link_url = `${ORIGIN}/shop/${shop.shop_slug}?ref=concierge_${slot}`;
+  caption += `\n\nTap here to peep it: ${link_url}`;
   return {
     slot,
+    target_group: targetGroup,
     shop_id: shop.id,
     product_ids: [p.id],
     caption,
     image_url: p.image_url,
-    link_url: `${ORIGIN}/shop/${shop.shop_slug}?ref=concierge_${slot}`,
+    link_url,
     meta: { product: p.name, shop: shop.shop_name },
   };
 }
@@ -284,49 +320,69 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Allow forcing a specific slot via body for manual admin "regenerate"
     let forcedSlot: Slot | undefined;
     let forcedHour: number | undefined;
+    let forcedGroup: TargetGroup | undefined;
+    
     if (req.method === "POST") {
       try {
         const body = await req.json();
         if (body?.slot) forcedSlot = body.slot;
         if (typeof body?.hour === "number") forcedHour = body.hour;
+        if (body?.group) forcedGroup = body.group;
       } catch {
         // ignore
       }
     }
 
-    const slot = forcedSlot ?? pickSlot(forcedHour);
-    const post = await generateForSlot(supabase, slot);
+    const utc = new Date();
+    const watHour = typeof forcedHour === "number" ? forcedHour : (utc.getUTCHours() + 1) % 24;
 
-    const { data, error } = await supabase
-      .from("marketing_queue")
-      .insert({
-        slot: post.slot,
-        shop_id: post.shop_id,
-        product_ids: post.product_ids,
-        caption: post.caption,
-        image_url: post.image_url,
-        link_url: post.link_url,
-        meta: post.meta,
-      })
-      .select()
-      .single();
+    // Enforce 8am-8pm constraint for automated cron runs
+    if (forcedHour === undefined && forcedSlot === undefined && (watHour < 8 || watHour > 20)) {
+      return new Response(JSON.stringify({ ok: true, skipped: "Outside 8am-8pm window" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    if (error) throw error;
+    const targetGroups: TargetGroup[] = forcedGroup ? [forcedGroup] : ["marketplace", "foundry", "vendor"];
+    const generatedPosts = [];
 
-    return new Response(JSON.stringify({ ok: true, post: data }), {
+    for (const group of targetGroups) {
+      try {
+        const slot = forcedSlot ?? pickSlotForGroup(watHour, group);
+        const post = await generateForSlot(supabase, slot, group);
+
+        const { data, error } = await supabase
+          .from("marketing_queue")
+          .insert({
+            slot: post.slot,
+            target_group: post.target_group, // Note: This requires the database migration to have run
+            shop_id: post.shop_id,
+            product_ids: post.product_ids,
+            caption: post.caption,
+            image_url: post.image_url,
+            link_url: post.link_url,
+            meta: post.meta,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        generatedPosts.push(data);
+      } catch (err) {
+        console.error(`Failed generating for group ${group}:`, err);
+      }
+    }
+
+    return new Response(JSON.stringify({ ok: true, posts: generatedPosts }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("concierge-generate error", e);
     return new Response(
       JSON.stringify({ ok: false, error: e instanceof Error ? e.message : String(e) }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

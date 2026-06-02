@@ -8,10 +8,19 @@ export type ConciergeSlot =
   | "shop_spotlight"
   | "top5"
   | "featured_store"
-  | "conversation";
+  | "conversation"
+  | "tech_insight"
+  | "community_poll"
+  | "founder_story"
+  | "sales_tip"
+  | "platform_feature"
+  | "merchant_win";
+
+export type TargetGroup = "marketplace" | "foundry" | "vendor";
 
 export interface ConciergePost {
   id: string;
+  target_group: TargetGroup;
   slot: ConciergeSlot;
   shop_id: string | null;
   product_ids: string[] | null;
@@ -48,13 +57,17 @@ const conciergeService = {
     return (data || []) as unknown as ConciergePost[];
   },
 
-  async generateNow(slot?: ConciergeSlot): Promise<ConciergePost> {
+  async generateNow(slot?: ConciergeSlot, group?: TargetGroup): Promise<ConciergePost[]> {
+    const body: any = {};
+    if (slot) body.slot = slot;
+    if (group) body.group = group;
+
     const { data, error } = await supabase.functions.invoke("concierge-generate", {
-      body: slot ? { slot } : {},
+      body,
     });
     if (error) throw error;
     if (!data?.ok) throw new Error(data?.error || "Generation failed");
-    return data.post as ConciergePost;
+    return data.posts as ConciergePost[];
   },
 
   async markSent(postId: string): Promise<void> {

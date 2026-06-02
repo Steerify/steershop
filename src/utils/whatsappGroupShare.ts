@@ -8,8 +8,11 @@
  *          invite in a new tab.
  */
 
-export const STEERSOLO_GROUP_INVITE =
-  "https://chat.whatsapp.com/C9owGcbmv03EWG65ehYQD5";
+export const GROUP_INVITES = {
+  marketplace: "https://chat.whatsapp.com/C9owGcbmv03EWG65ehYQD5",
+  foundry: "https://chat.whatsapp.com/HGnDf61Wqyq8wYuclsULtP",
+  vendor: "https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76",
+};
 
 async function fetchImageAsFile(imageUrl: string): Promise<File | null> {
   try {
@@ -52,6 +55,7 @@ async function copyText(text: string) {
 export interface ShareToGroupInput {
   caption: string;
   imageUrl?: string | null;
+  targetGroup?: "marketplace" | "foundry" | "vendor";
 }
 
 export interface ShareToGroupResult {
@@ -63,7 +67,8 @@ export interface ShareToGroupResult {
 export async function shareToSteersoloGroup(
   input: ShareToGroupInput
 ): Promise<ShareToGroupResult> {
-  const { caption, imageUrl } = input;
+  const { caption, imageUrl, targetGroup = "marketplace" } = input;
+  const inviteLink = GROUP_INVITES[targetGroup] || GROUP_INVITES.marketplace;
 
   // Mobile: try Web Share API with the image attached
   if (isMobile() && typeof navigator.share === "function") {
@@ -81,7 +86,7 @@ export async function shareToSteersoloGroup(
       try {
         await navigator.share({ text: caption });
         // user picks group, but they'll still need to open invite link separately
-        window.open(STEERSOLO_GROUP_INVITE, "_blank", "noopener");
+        window.open(inviteLink, "_blank", "noopener");
         return { method: "web-share", imageCopied: false, textCopied: true };
       } catch {
         // fall through
@@ -101,7 +106,7 @@ export async function shareToSteersoloGroup(
     }
   }
 
-  window.open(STEERSOLO_GROUP_INVITE, "_blank", "noopener");
+  window.open(inviteLink, "_blank", "noopener");
 
   return {
     method: imageUrl ? "download-and-open" : "open-only",
