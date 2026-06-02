@@ -10,7 +10,7 @@ export interface SmtpMailOptions {
 }
 
 export function getDefaultFromEmail(): string {
-  return Deno.env.get("SMTP_FROM_EMAIL") || "SteerSolo <no-reply@steersolo.com>";
+  return (Deno.env.get("SMTP_FROM_EMAIL") || "SteerSolo <no-reply@steersolo.com>").trim();
 }
 
 /**
@@ -19,10 +19,10 @@ export function getDefaultFromEmail(): string {
  * fallback transporter that logs to the console (useful for dev/test).
  */
 export async function getTransporter() {
-  const host = Deno.env.get("SMTP_HOST") || "mail.steersolo.com";
-  const port = Number(Deno.env.get("SMTP_PORT") || 587);
-  const user = Deno.env.get("SMTP_USER");
-  const pass = Deno.env.get("SMTP_PASS");
+  const host = (Deno.env.get("SMTP_HOST") || "mail.spacemail.com").trim();
+  const port = Number((Deno.env.get("SMTP_PORT") || "465").trim());
+  const user = Deno.env.get("SMTP_USER")?.trim();
+  const pass = Deno.env.get("SMTP_PASS")?.trim();
 
   const fallbackTransporter = nodemailer.createTransport({
     streamTransport: true,
