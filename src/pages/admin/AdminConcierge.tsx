@@ -93,7 +93,7 @@ function getShareCaption(post: ConciergePost) {
   let caption = post.caption.replace(LINK_PLACEHOLDER_PATTERN, `\n\nView on SteerSolo: ${actionUrl}`).trim();
 
   if (post.link_url && actionUrl !== post.link_url) {
-    caption = caption.replaceAll(post.link_url, actionUrl);
+    caption = caption.split(post.link_url).join(actionUrl);
   }
 
   if (!URL_PATTERN.test(caption)) {
