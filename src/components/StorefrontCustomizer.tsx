@@ -127,6 +127,7 @@ export const StorefrontCustomizer = ({
   currentSecondaryColor,
   currentFontStyle,
   currentThemeMode,
+  onSaved,
 }: StorefrontCustomizerProps) => {
   const { toast } = useToast();
   const [accentColor, setAccentColor] = useState(normalizeColor(currentAccentColor, "#059669"));
