@@ -11,6 +11,7 @@ import {
   ArrowRight,
   Target
 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Input } from "@/components/ui/input";
@@ -237,9 +238,32 @@ const FAQ = () => {
 
   const totalResults = filteredCategories.reduce((acc, cat) => acc + cat.faqs.length, 0);
 
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqCategories.flatMap(cat => 
+      cat.faqs.map(faq => ({
+        "@type": "Question",
+        "name": faq.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": faq.answer
+        }
+      }))
+    )
+  };
+
   return (
     <PageThemeShell header={<Navbar />} footer={<Footer />}>
+      <Helmet>
+        <title>SteerSolo FAQ - Frequently Asked Questions</title>
+        <meta name="description" content="Find answers to common questions about SteerSolo, Nigeria's #1 platform for online sellers." />
+        <script type="application/ld+json">
+          {JSON.stringify(schemaData)}
+        </script>
+      </Helmet>
       
+      <main id="main-content">
       {/* Hero Section */}
       <section className="relative pt-24 pb-16 overflow-hidden theme-surface-primary">
         <AdirePattern variant="geometric" className="text-primary" opacity={0.05} />
@@ -397,6 +421,7 @@ const FAQ = () => {
           </Card>
         </div>
       </section>
+      </main>
 
     </PageThemeShell>
   );

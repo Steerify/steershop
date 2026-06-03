@@ -111,6 +111,7 @@ const AcceptPaymentsOnWhatsAppNigeria = lazy(() => import("./pages/seo/AcceptPay
 const WhatsappSellingNigeriaArticle = lazy(() => import("./pages/seo/WhatsappSellingNigeriaArticle"));
 const MarketplaceGrowthPlaybookArticle = lazy(() => import("./pages/seo/MarketplaceGrowthPlaybookArticle"));
 const TrustedStorefrontNigeriaArticle = lazy(() => import("./pages/seo/TrustedStorefrontNigeriaArticle"));
+const TrendingProductsNigeriaArticle = lazy(() => import("./pages/seo/TrendingProductsNigeriaArticle"));
 
 // Brand pages
 const BrandPage = lazy(() => import("./pages/BrandPage"));
@@ -208,6 +209,7 @@ const App = () => (
             <Route path="/insights/whatsapp-selling-nigeria" element={<WhatsappSellingNigeriaArticle />} />
             <Route path="/insights/marketplace-growth-playbook" element={<MarketplaceGrowthPlaybookArticle />} />
             <Route path="/insights/trusted-storefront-nigeria" element={<TrustedStorefrontNigeriaArticle />} />
+            <Route path="/insights/trending-products-nigeria" element={<TrendingProductsNigeriaArticle />} />
             <Route path="/ambassador-program" element={<AmbassadorProgramPage />} />
             <Route path="/ambassador" element={
               <ProtectedRoute allowedRoles={['ENTREPRENEUR', 'CUSTOMER']}>

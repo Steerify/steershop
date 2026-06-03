@@ -22,6 +22,11 @@ const articles = [
     description: "The trust signals and page structure that help customers choose your store with confidence.",
     href: "/insights/trusted-storefront-nigeria",
   },
+  {
+    title: "Top selling products in Nigeria: What to sell online",
+    description: "Discover high-demand product categories and what sells best in the Nigerian market.",
+    href: "/insights/trending-products-nigeria",
+  },
 ];
 
 const Insights = () => {

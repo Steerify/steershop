@@ -464,7 +464,7 @@ const ShopStorefront = () => {
     >
       {shop && (
         <Helmet>
-          <title>{`${shop.shop_name}${shop.city ? ` in ${shop.city}` : ''} — Shop Online | SteerSolo`}</title>
+          <title>{`${shop.shop_name} | SteerSolo Store`}</title>
           <meta name="description" content={metaDescription} />
           <meta name="keywords" content={shop.seo_keywords?.length ? shop.seo_keywords.join(', ') : `${shop.shop_name}, ${shopCategoryLabel || 'shop'}, ${shop.city || ''}, ${shop.state || 'Nigeria'}, buy ${shop.shop_name} products, social commerce, steersolo`} />
           
@@ -486,10 +486,12 @@ const ShopStorefront = () => {
               {JSON.stringify(schemaData)}
             </script>
           )}
+
         </Helmet>
       )}
       <Navbar shopBranding={isPremiumPlan ? { name: shop.shop_name, logoUrl: shop.logo_url } : null} />
       
+      <main id="main-content" className="flex-1 flex flex-col">
       {isOwner && isSetupIncomplete && (
         <div className="bg-amber-500/10 border-b border-amber-500/20 py-3 mt-16 sm:mt-14">
           <div className="container mx-auto px-4 flex items-center justify-between gap-4">
@@ -968,6 +970,7 @@ const ShopStorefront = () => {
         </div>
       </section>
 
+      </main>
       <Footer />
 
       {/* Checkout Dialog */}

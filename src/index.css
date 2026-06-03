@@ -44,7 +44,7 @@
     --secondary-foreground: 222 60% 12%;
 
     --muted: 30 10% 92%;
-    --muted-foreground: 220 12% 40%;
+    --muted-foreground: 220 12% 35%; /* Darkened from 40% for better accessibility contrast */
 
     /* Accent = Midnight Emerald */
     --accent: 162 82% 32%;

@@ -368,6 +368,13 @@ const MyStore = () => {
       setShowDraftBanner(false);
       setIsDirty(false);
       loadShop();
+
+      // Automatically run SEO generation in the background
+      if (currentShopId) {
+        supabase.functions.invoke('generate-shop-seo-dna', {
+          body: { shop_id: currentShopId }
+        }).catch(err => console.error("Background SEO generation failed:", err));
+      }
     } catch (error: any) {
       console.error("Error saving shop:", error);
       toast({
@@ -380,25 +387,7 @@ const MyStore = () => {
     }
   };
 
-  const handleGenerateSEO = async () => {
-    if (!shop?.id) return;
-    setIsGeneratingSEO(true);
-    try {
-      const { data: res, error } = await supabase.functions.invoke('generate-shop-seo-dna', {
-        body: { shop_id: shop.id }
-      });
-      if (error) throw error;
-      if (!res?.success || !res?.data?.seo_dna_updated_at) {
-        throw new Error(res?.error || "SEO data was generated but not confirmed saved.");
-      }
-      toast({ title: "SEO DNA Generated! 🚀", description: "Your store's SEO data was saved successfully." });
-      await loadShop();
-    } catch (error: any) {
-      toast({ title: "SEO Generation Failed", description: error.message, variant: "destructive" });
-    } finally {
-      setIsGeneratingSEO(false);
-    }
-  };
+  // The SEO generation now happens automatically in the background after save or via database triggers.
 
   if (isLoading) {
     return (
@@ -602,22 +591,11 @@ const MyStore = () => {
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
                             <Sparkles className="w-4 h-4 text-primary" />
-                            <Label className="font-bold text-primary">AI SEO DNA Generator</Label>
+                            <Label className="font-bold text-primary">AI SEO DNA</Label>
                           </div>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-8 border-primary/30 text-primary hover:bg-primary/10"
-                            onClick={handleGenerateSEO}
-                            disabled={isGeneratingSEO}
-                          >
-                            {isGeneratingSEO ? <Loader2 className="w-3 h-3 animate-spin mr-1.5" /> : <Sparkles className="w-3 h-3 mr-1.5" />}
-                            {shop.seo_dna_updated_at ? "Refresh SEO" : "Generate SEO"}
-                          </Button>
                         </div>
                         <p className="text-[11px] text-muted-foreground leading-relaxed">
-                          Our AI analyzes your products to create a unique "SEO DNA" that helps your store rank higher on Google.
+                          Our AI automatically analyzes your store info and products to create a unique "SEO DNA" that helps your store rank higher on Google. This updates automatically when you make changes.
                         </p>
                         {shop.seo_dna_updated_at && (
                           <div className="pt-2 space-y-2">

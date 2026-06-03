@@ -435,6 +435,13 @@ const Products = () => {
       clearDraft();
       setShowDraftBanner(false);
       loadShopAndProducts();
+
+      // Automatically run SEO generation in the background
+      if (shop.id) {
+        supabase.functions.invoke('generate-shop-seo-dna', {
+          body: { shop_id: shop.id }
+        }).catch(err => console.error("Background SEO generation failed:", err));
+      }
     } catch (error: any) {
       const msg = error?.message || "Failed to save. Please try again.";
       const isPermission =
@@ -467,6 +474,13 @@ const Products = () => {
       });
 
       loadShopAndProducts();
+
+      // Automatically run SEO generation in the background
+      if (shop?.id) {
+        supabase.functions.invoke('generate-shop-seo-dna', {
+          body: { shop_id: shop.id }
+        }).catch(err => console.error("Background SEO generation failed:", err));
+      }
     } catch (error: any) {
       toast({
         title: "Error",

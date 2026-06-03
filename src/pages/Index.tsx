@@ -498,7 +498,7 @@ const Index = () => {
 
     <Helmet>
       <title>
-        SteerSolo - Nigeria's Verified Beauty & Social Commerce Storefronts
+        SteerSolo - Verified Beauty & Social Commerce
       </title>
       <meta
         name="description"
@@ -541,17 +541,30 @@ const Index = () => {
 
       {/* AI & Search Engine Richness */}
       <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "SteerSolo",
-          url: "https://steersolo.com",
-          potentialAction: {
-            "@type": "SearchAction",
-            target: "https://steersolo.com/shops?search={search_term_string}",
-            "query-input": "required name=search_term_string",
+        {JSON.stringify([
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "SteerSolo",
+            "url": "https://steersolo.com",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://steersolo.com/shops?search={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
           },
-        })}
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "SteerSolo",
+            "url": "https://steersolo.com",
+            "logo": "https://steersolo.com/og-image.jpg",
+            "sameAs": [
+              "https://twitter.com/SteerifyGroup",
+              "https://instagram.com/SteerifyGroup"
+            ]
+          }
+        ])}
       </script>
     </Helmet>
     <GoogleOneTap />
@@ -560,6 +573,7 @@ const Index = () => {
     {/* ══════════════════════════════════════════════════════
         §1  HERO — Always dark Adire Indigo
     ══════════════════════════════════════════════════════ */}
+    <main id="main-content">
     <section className="bg-brand-hero relative overflow-hidden min-h-[92vh] pt-24">
       {/* subtle adire diagonal texture */}
       <div
@@ -637,7 +651,7 @@ const Index = () => {
                       </span>{" "}
                       active merchants
                     </div>
-                    <p className="text-[10px] text-white/50">
+                    <p className="text-[10px] text-white/70">
                       Live storefronts in Lagos, Abuja & across Nigeria
                     </p>
                   </div>
@@ -666,7 +680,7 @@ const Index = () => {
                     </div>
                     <div>
                       <p className="text-xs font-bold text-white/90 leading-none mb-0.5">{t}</p>
-                      <p className="text-[9px] text-white/40 leading-none">{d}</p>
+                      <p className="text-[9px] text-white/70 leading-none">{d}</p>
                     </div>
                   </div>
                 ))}
@@ -688,7 +702,7 @@ const Index = () => {
               <p className="font-black text-white text-2xl sm:text-3xl lg:text-4xl mb-2 tracking-tight">
                 {s.v}
               </p>
-              <p className="text-xs font-semibold text-white/50 leading-relaxed uppercase tracking-wider">
+              <p className="text-xs font-semibold text-white/70 leading-relaxed uppercase tracking-wider">
                 {s.l}
               </p>
             </div>
@@ -722,7 +736,7 @@ const Index = () => {
               key={i}
               className="inline-flex items-center gap-5 px-7 text-xs sm:text-sm font-bold tracking-wider text-white uppercase select-none"
             >
-              <span className="text-white/40 text-[6px]">◆</span>
+              <span className="text-white/70 text-[6px]">◆</span>
               {t}
             </span>
           ))}
@@ -1073,7 +1087,7 @@ const Index = () => {
                 <p className="text-xs font-semibold text-white m-0">
                   {item.l}
                 </p>
-                <p className="text-[11px] text-white/40 m-0">
+                <p className="text-[11px] text-white/70 m-0">
                   {item.s}
                 </p>
               </div>
@@ -1117,7 +1131,7 @@ const Index = () => {
               <span className="font-black text-white text-4xl sm:text-5xl leading-none shrink-0">
                 {s.n}
               </span>
-              <p className="text-sm sm:text-base leading-relaxed text-white/50 font-light mt-1">
+              <p className="text-sm sm:text-base leading-relaxed text-white/70 font-light mt-1">
                 {s.t}
               </p>
             </div>
@@ -1156,7 +1170,7 @@ const Index = () => {
               for verified Nigerian merchants.
             </span>
           </h2>
-          <p className="text-white/50 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
+          <p className="text-white/70 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
             Every badge is earned, not bought. Buyers instantly know how trusted
             <br className="hidden md:block" /> your store is before they spend a
             kobo.
@@ -1196,7 +1210,7 @@ const Index = () => {
                 <p
                   className={cn(
                     "text-sm leading-relaxed font-light",
-                    badge.top ? "text-white/90" : "text-white/50",
+                    badge.top ? "text-white/90" : "text-white/70",
                   )}
                 >
                   {badge.desc}
@@ -1351,7 +1365,7 @@ const Index = () => {
                   <p className="font-semibold text-sm text-white m-0">
                     {t.name}
                   </p>
-                  <p className="text-xs text-white/40 m-0">
+                  <p className="text-xs text-white/70 m-0">
                     {t.role}
                   </p>
                 </div>
@@ -1548,7 +1562,7 @@ const Index = () => {
       />
 
       <div className="mx-auto max-w-3xl px-4 relative z-10">
-        <ShoppingBag className="w-8 h-8 mx-auto mb-6 text-white/35" />
+        <ShoppingBag className="w-8 h-8 mx-auto mb-6 text-white/70" />
         <h2 className="font-extrabold text-white leading-tight text-3xl sm:text-4xl lg:text-5xl mb-5">
           Your audience is ready.
           <br />
@@ -1560,7 +1574,7 @@ const Index = () => {
           Join verified Nigerian beauty merchants turning their social following
           into a real, trusted business.
         </p>
-        <p className="text-xs sm:text-sm italic text-white/30 mb-10">
+        <p className="text-xs sm:text-sm italic text-white/70 mb-10">
           "SteerSolo made my business look professional from day one."
         </p>
         <div className="flex flex-wrap justify-center gap-4 mb-9">
@@ -1578,7 +1592,7 @@ const Index = () => {
             View a demo store first
           </Link>
         </div>
-        <div className="flex flex-wrap justify-center gap-5 text-xs text-white/40">
+        <div className="flex flex-wrap justify-center gap-5 text-xs text-white/70">
           {[
             "Instant Setup",
             "Works on WhatsApp, IG & TikTok",
@@ -1588,13 +1602,14 @@ const Index = () => {
               key={t}
               className="flex items-center gap-1.5"
             >
-              <CheckCircle className="w-3.5 h-3.5 text-white/50" />
+              <CheckCircle className="w-3.5 h-3.5 text-white/70" />
               {t}
             </span>
           ))}
         </div>
       </div>
     </section>
+    </main>
 
     <Footer />
   </div>

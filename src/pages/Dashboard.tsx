@@ -57,7 +57,8 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { VendorSetupWizard } from "@/components/VendorSetupWizard";
 import { VendorCommandCenter } from "@/components/VendorCommandCenter";
 
-// ─── Stat Card Component (Minimalist) ──────────────────────────────────────────
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 type DashboardProfile = {
   full_name?: string | null;
@@ -94,119 +95,6 @@ type DashboardOrderSummary = {
 };
 
 type UrgentTask = { id: string; label: string; icon: LucideIcon; color: string; action: () => void };
-
-const StatCard = ({
-  label, value, icon: Icon, trend, trendValue, color = "primary"
-}: {
-  label: string;
-  value: string;
-  icon: React.ElementType;
-  trend?: "up" | "down" | "neutral";
-  trendValue?: string;
-  color?: "primary" | "accent" | "emerald" | "amber";
-}) => {
-  const colorMap = {
-    primary: "from-primary/15 to-primary/5 text-primary border-primary/20",
-    accent: "from-accent/15 to-accent/5 text-accent border-accent/20",
-    emerald: "from-emerald-500/15 to-emerald-500/5 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-    amber: "from-amber-500/15 to-amber-500/5 text-amber-600 dark:text-amber-400 border-amber-500/20",
-  };
-
-  return (
-    <Card className="relative group overflow-hidden border border-border/40 bg-gradient-to-b from-card/90 to-card/60 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300 hover:shadow-[0_16px_40px_rgba(0,0,0,0.05)] hover:-translate-y-1 hover:border-primary/30">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-accent/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-      <CardContent className="p-5 relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${colorMap[color]} flex items-center justify-center border transition-all duration-300 group-hover:scale-110`}>
-            <Icon className="w-5.5 h-5.5" />
-          </div>
-          {trendValue && (
-            <div className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-              trend === "up" 
-                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" 
-                : trend === "down" 
-                ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20" 
-                : "bg-muted text-muted-foreground"
-            }`}>
-              {trend === "up" ? <TrendingUp className="w-2.5 h-2.5" /> : trend === "down" ? <TrendingDown className="w-2.5 h-2.5" /> : null}
-              {trendValue}
-            </div>
-          )}
-        </div>
-        <div>
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{label}</p>
-          <p className="text-3xl font-black tracking-tight bg-gradient-to-r from-foreground via-foreground to-foreground/80 bg-clip-text text-transparent group-hover:text-primary transition-colors duration-300">
-            {value}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-// ─── Quick Action Item (App-like) ─────────────────────────────────────────────
-const QuickActionButton = ({
-  icon: Icon, label, onClick, color, textColor
-}: {
-  icon: React.ElementType;
-  label: string;
-  onClick: () => void;
-  color: string;
-  textColor: string;
-}) => (
-  <button 
-    onClick={onClick}
-    className="flex flex-col items-center gap-2 group transition-all"
-  >
-    <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:-translate-y-1 transition-all`}>
-      <Icon className={`w-6 h-6 sm:w-7 sm:h-7 ${textColor}`} />
-    </div>
-    <span className="text-[11px] sm:text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors uppercase tracking-tight text-center leading-tight px-1">
-      {label}
-    </span>
-  </button>
-);
-
-
-// ─── Urgent Tasks Component ──────────────────────────────────────────────────
-const UrgentTasks = ({ tasks, onAction }: { 
-  tasks: UrgentTask[];
-  onAction: () => void;
-}) => {
-  if (tasks.length === 0) return null;
-
-  return (
-    <div className="mb-6 animate-fade-in">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center">
-          <AlertCircle className="w-3 h-3 text-destructive" />
-        </div>
-        <h3 className="text-sm font-bold text-foreground">Urgent Tasks</h3>
-        <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-bold">
-          {tasks.length}
-        </Badge>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {tasks.map((task) => (
-          <button
-            key={task.id}
-            onClick={task.action}
-            className="flex items-center gap-3 p-3 bg-card border border-destructive/20 rounded-2xl hover:border-destructive/40 hover:shadow-md transition-all text-left group"
-          >
-            <div className={`w-10 h-10 rounded-xl ${task.color} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
-              <task.icon className="w-5 h-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-foreground truncate">{task.label}</p>
-              <p className="text-xs text-muted-foreground">Action required</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 group-hover:translate-x-1 transition-transform" />
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 // ─── Main Dashboard Component ──────────────────────────────────────────────────
 const Dashboard = () => {
@@ -916,95 +804,79 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Simple seller path has been replaced by VendorCommandCenter at the top */}
-        {/* Premium World-Class Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-tour="stats-grid">
-          <StatCard
-            label="Revenue"
-            value={`₦${totalRevenue.toLocaleString()}`}
-            icon={DollarSign}
-            trend="up"
-            trendValue="+12% MoM"
-            color="emerald"
-          />
-          <StatCard
-            label="Total Sales"
-            value={totalSales.toString()}
-            icon={ShoppingCart}
-            trend="neutral"
-            trendValue="Stable"
-            color="primary"
-          />
-          <StatCard
-            label="Catalog Items"
-            value={productsCount.toString()}
-            icon={Package}
-            trend="up"
-            trendValue="Active"
-            color="accent"
-          />
-          <StatCard
-            label="Wallet Balance"
-            value={`₦${payoutBalance.availableBalance.toLocaleString()}`}
-            icon={Wallet}
-            trend="up"
-            trendValue="Available"
-            color="amber"
-          />
-        </div>
-
-          {/* Quick Tools & Urgent Tasks */}
-          <div className="space-y-4 flex flex-col">
-            {urgentTasks.length > 0 && (
-              <Card className="border border-amber-500/30 bg-amber-500/5 shadow-sm">
-                <CardContent className="p-4 sm:p-5">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
-                        <AlertCircle className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-extrabold">Needs attention</h3>
-                        <p className="text-sm text-muted-foreground">{urgentTasks[0].label}</p>
-                      </div>
-                    </div>
-                    <Button onClick={urgentTasks[0].action} className="shrink-0">
-                      Fix now <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <Card className="border border-border/60 shadow-sm flex-1">
-              <CardContent className="p-5 sm:p-6 flex flex-col justify-between h-full">
-                <div className="mb-4">
-                  <h3 className="font-extrabold text-lg">Quick tools</h3>
-                  <p className="text-sm text-muted-foreground">Manage your store efficiently.</p>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" className="h-11 justify-start" onClick={() => navigate('/products')}>
-                    <Package className="w-4 h-4 mr-2 text-muted-foreground" /> Products
-                  </Button>
-                  <Button variant="outline" className="h-11 justify-start" onClick={() => navigate('/orders')}>
-                    <ShoppingCart className="w-4 h-4 mr-2 text-muted-foreground" /> Orders
-                  </Button>
-                  <Button variant="outline" className="h-11 justify-start" onClick={() => navigate('/customers')}>
-                    <Users className="w-4 h-4 mr-2 text-muted-foreground" /> Customers
-                  </Button>
-                  <Button variant="outline" className="h-11 justify-start" onClick={() => setIsPayoutDialogOpen(true)}>
-                    <Wallet className="w-4 h-4 mr-2 text-muted-foreground" /> Wallet
-                  </Button>
-                  <Button variant="outline" className="h-11 justify-start" onClick={() => navigate('/my-store')}>
-                    <Store className="w-4 h-4 mr-2 text-muted-foreground" /> Settings
-                  </Button>
-                  <Button variant="outline" className="h-11 justify-start" onClick={() => navigate(`/shop/${shopFullData?.shop_slug || shopData?.id}`)}>
-                    <ExternalLink className="w-4 h-4 mr-2 text-muted-foreground" /> View Shop
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+        {/* ── Stats + Actions (non-entrepreneurs only, entrepreneurs get VendorCommandCenter) ── */}
+        {!rbac.isEntrepreneur(user) && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" data-tour="stats-grid">
+            {[
+              { label: "Revenue", value: `₦${totalRevenue.toLocaleString()}`, color: "text-emerald-600 dark:text-emerald-400" },
+              { label: "Sales",   value: totalSales.toString(),                color: "text-primary" },
+              { label: "Products",value: productsCount.toString(),             color: "text-accent" },
+              { label: "Wallet",  value: `₦${payoutBalance.availableBalance.toLocaleString()}`, color: "text-amber-600 dark:text-amber-400" },
+            ].map(s => (
+              <div key={s.label} className="rounded-2xl border border-border/50 bg-card px-4 py-4">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{s.label}</p>
+                <p className={`text-2xl font-black tabular-nums ${s.color}`}>{s.value}</p>
+              </div>
+            ))}
           </div>
+        )}
+
+        {/* ── Entrepreneur compact stats row ── */}
+        {rbac.isEntrepreneur(user) && (
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: "All-time Revenue", value: `₦${totalRevenue.toLocaleString()}` },
+              { label: "Wallet Balance",   value: `₦${payoutBalance.availableBalance.toLocaleString()}` },
+            ].map(s => (
+              <div key={s.label} className="rounded-2xl border border-border/50 bg-card px-4 py-3">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{s.label}</p>
+                <p className="text-xl font-black tabular-nums text-foreground">{s.value}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── Urgent task (single, most important) ── */}
+        {urgentTasks.length > 0 && (
+          <button
+            onClick={urgentTasks[0].action}
+            className="w-full flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 px-4 py-3.5 text-left hover:bg-amber-500/10 transition-colors"
+          >
+            <div className={`w-9 h-9 rounded-xl ${urgentTasks[0].color} flex items-center justify-center shrink-0`}>
+              {(() => { const T = urgentTasks[0].icon; return <T className="w-4 h-4" />; })()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground truncate">{urgentTasks[0].label}</p>
+              <p className="text-xs text-muted-foreground">Tap to resolve</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+          </button>
+        )}
+
+        {/* ── Quick navigation: minimal list card ── */}
+        <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+          {[
+            { icon: Package, label: "Products",     sub: "Manage your catalog",     path: "/products" },
+            { icon: ShoppingCart, label: "Orders",  sub: "View & fulfil orders",    path: "/orders" },
+            { icon: Users,   label: "Customers",    sub: "Your buyer records",      path: "/customers" },
+            { icon: Wallet,  label: "Wallet",       sub: "Earnings & payouts",      action: () => setIsPayoutDialogOpen(true) },
+            { icon: Store,   label: "Store Settings",sub: "Customize your shop",    path: "/my-store" },
+          ].map((item, i, arr) => (
+            <button
+              key={item.label}
+              onClick={item.action ? item.action : () => navigate(item.path!)}
+              className={`flex items-center gap-3 w-full px-4 py-3.5 hover:bg-muted/40 transition-colors text-left ${i < arr.length - 1 ? 'border-b border-border/40' : ''}`}
+            >
+              <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                <item.icon className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                <p className="text-xs text-muted-foreground">{item.sub}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+            </button>
+          ))}
         </div>
 
       {/* ─── Mobile Bottom Navigation ────────────────────── */}

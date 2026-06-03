@@ -415,7 +415,8 @@ export const FeaturedStoresHeroCarousel = () => {
                             src={logoUrl!}
                             alt={shop.shop_name}
                             style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                            loading="lazy"
+                            loading={idx === 0 ? "eager" : "lazy"}
+                            {...(idx === 0 ? { fetchPriority: "high" } as any : {})}
                             onError={() => { brokenLogos.current.add(shop.id); }}
                           />
                         ) : (
@@ -471,7 +472,8 @@ export const FeaturedStoresHeroCarousel = () => {
                                     src={imgUrl!}
                                     alt={p.name}
                                     style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s ease" }}
-                                    loading="lazy"
+                                    loading={idx === 0 ? "eager" : "lazy"}
+                                    {...(idx === 0 ? { fetchPriority: "high" } as any : {})}
                                     onError={() => { brokenProductImgs.current.add(p.id); }}
                                     onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.08)")}
                                     onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
