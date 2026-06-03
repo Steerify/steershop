@@ -275,15 +275,17 @@ const productService = {
     }
 
     // Trigger proactive indexing
-    supabase.from('shops').select('shop_slug').eq('id', product.shop_id).single().then(({ data: shop }) => {
-      if (shop?.shop_slug) {
-        const urls = [
-          `https://steersolo.com/shop/${shop.shop_slug}/product/${product.id}`,
-          `https://steersolo.com/shop/${shop.shop_slug}`
-        ];
-        supabase.functions.invoke('index-now', { body: { urls } }).catch(console.error);
-      }
-    });
+    supabase.from('shops').select('shop_slug').eq('id', product.shop_id).single()
+      .then(({ data: shop, error: shopErr }) => {
+        if (shopErr) { console.warn('[index-now] shop lookup failed', shopErr); return; }
+        if (shop?.shop_slug) {
+          const urls = [
+            `https://steersolo.com/shop/${shop.shop_slug}/product/${product.id}`,
+            `https://steersolo.com/shop/${shop.shop_slug}`
+          ];
+          supabase.functions.invoke('index-now', { body: { urls } }).catch(e => console.warn('[index-now] invoke failed', e));
+        }
+      }, (e) => console.warn('[index-now] thenable rejected', e));
 
     return {
       success: true,
