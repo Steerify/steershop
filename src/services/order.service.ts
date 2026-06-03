@@ -155,7 +155,35 @@ const orderService = {
   },
 
   updateOrderStatus: async (id: string, status: string, extraFields?: Record<string, any>) => {
-    const updateData: Record<string, any> = { 
+    // Guard against status regression (terminal -> earlier state) from the UI
+    const STATUS_RANK: Record<string, number> = {
+      pending: 0,
+      confirmed: 1,
+      processing: 2,
+      out_for_delivery: 3,
+      delivered: 4,
+      completed: 5,
+      cancelled: 99, // terminal but allowed from any non-completed state
+    };
+    const { data: existing, error: existingErr } = await supabase
+      .from('orders')
+      .select('status')
+      .eq('id', id)
+      .single();
+    if (existingErr) throw existingErr;
+    const currentRank = STATUS_RANK[existing?.status ?? 'pending'] ?? 0;
+    const nextRank = STATUS_RANK[status] ?? 0;
+    if (existing?.status === 'completed' && status !== 'completed') {
+      throw new Error('Cannot change status of a completed order');
+    }
+    if (existing?.status === 'cancelled' && status !== 'cancelled') {
+      throw new Error('Cannot reopen a cancelled order');
+    }
+    if (status !== 'cancelled' && nextRank < currentRank) {
+      throw new Error(`Cannot regress order status from "${existing?.status}" to "${status}"`);
+    }
+
+    const updateData: Record<string, any> = {
       status,
       updated_at: new Date().toISOString(),
     };
