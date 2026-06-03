@@ -91,6 +91,7 @@ const Bookings = () => {
   };
 
   const loadBookings = async (shopId: string) => {
+    setIsLoading(true);
     try {
       const { data: bookingsData, error } = await supabase
         .from("bookings")
