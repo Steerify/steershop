@@ -10,45 +10,73 @@ export interface SmtpMailOptions {
 }
 
 export function getDefaultFromEmail(): string {
+  // If using Resend without a verified domain, you might need to use onboarding@resend.dev to test
   return (Deno.env.get("SMTP_FROM_EMAIL") || "SteerSolo <no-reply@steersolo.com>").trim();
 }
 
 /**
- * Creates and returns the primary nodemailer transporter.
- * If SMTP credentials are missing, or if verification fails, it returns a 
- * fallback transporter that logs to the console (useful for dev/test).
+ * Creates and returns the primary transporter.
+ * We default to using the Resend REST API for the most professional and reliable delivery.
+ * If RESEND_API_KEY is not provided, we fall back to standard SMTP if credentials exist.
  */
 export async function getTransporter() {
-  const host = (Deno.env.get("SMTP_HOST") || "mail.spacemail.com").trim();
+  const resendApiKey = Deno.env.get("RESEND_API_KEY")?.trim();
+
+  // 1. Professional Resend API Transport
+  if (resendApiKey) {
+    return {
+      sendMail: async (options: any) => {
+        const res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            from: options.from || getDefaultFromEmail(),
+            to: Array.isArray(options.to) ? options.to : [options.to],
+            subject: options.subject,
+            html: options.html,
+            text: options.text,
+            reply_to: options.replyTo,
+          })
+        });
+
+        if (!res.ok) {
+          const error = await res.text();
+          console.error("Resend API error:", error);
+          throw new Error(`Resend API error: ${error}`);
+        }
+        const data = await res.json();
+        return { messageId: data.id };
+      }
+    };
+  }
+
+  // 2. Standard SMTP Fallback
+  const host = (Deno.env.get("SMTP_HOST") || "").trim();
   const port = Number((Deno.env.get("SMTP_PORT") || "465").trim());
   const user = Deno.env.get("SMTP_USER")?.trim();
   const pass = Deno.env.get("SMTP_PASS")?.trim();
 
-  const fallbackTransporter = nodemailer.createTransport({
-    streamTransport: true,
-    newline: "windows",
-    logger: true
-  });
-
-  if (!user || !pass) {
-    console.warn("⚠️ SMTP_USER or SMTP_PASS missing. Falling back to console stream transport.");
-    return fallbackTransporter;
+  if (host && user && pass) {
+    const primaryTransporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+    });
+    
+    try {
+      await primaryTransporter.verify();
+      return primaryTransporter;
+    } catch (error) {
+      console.error("⚠️ Primary SMTP verification failed:", error);
+      throw error;
+    }
   }
 
-  const primaryTransporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465, // true for 465, false for other ports
-    auth: { user, pass },
-  });
-
-  try {
-    await primaryTransporter.verify();
-    return primaryTransporter;
-  } catch (error) {
-    console.error("⚠️ Primary SMTP verification failed. Falling back to console stream transport:", error);
-    return fallbackTransporter;
-  }
+  throw new Error("No email service configured. Please set RESEND_API_KEY in your Supabase project secrets to handle emails professionally.");
 }
 
 export function normalizeRecipients(to: string | string[] | unknown): string[] {
@@ -79,14 +107,9 @@ export async function sendSmtpEmail(options: SmtpMailOptions) {
       text: options.text,
     });
     
-    // If it's a stream transport (fallback), it returns a message object we can read
-    if (info.message) {
-      info.message.pipe(process.stdout);
-    }
-    
     return info;
   } catch (error) {
-    console.error("SMTP sending failed", error);
+    console.error("Email sending failed", error);
     throw error;
   }
 }

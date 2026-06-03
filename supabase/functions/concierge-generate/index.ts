@@ -38,8 +38,10 @@ type Slot =
   | "platform_feature"
   | "merchant_win";
 
-function pickSlotForGroup(watHour: number, group: TargetGroup): Slot {
+function pickSlotForGroup(watHour: number, group: TargetGroup): Slot | null {
   if (group === "marketplace") {
+    // Marketplace: 8am, 10am, 12pm, 2pm, 4pm, 6pm, 8pm
+    if (watHour < 8 || watHour > 20 || watHour % 2 !== 0) return null;
     const table: Record<number, Slot> = {
       8: "morning_pick",
       10: "new_arrivals",
@@ -49,18 +51,19 @@ function pickSlotForGroup(watHour: number, group: TargetGroup): Slot {
       18: "featured_store",
       20: "conversation",
     };
-    const nearest = Object.keys(table)
-      .map(Number)
-      .reduce((a, b) => (Math.abs(b - watHour) < Math.abs(a - watHour) ? b : a));
-    return table[nearest];
+    return table[watHour] || null;
   } else if (group === "foundry") {
-    // Rotate 3 slots for Foundry
-    const slots: Slot[] = ["tech_insight", "community_poll", "founder_story"];
-    return slots[Math.floor(watHour / 2) % slots.length];
+    // Foundry: 7am, 1pm, 7pm
+    if (watHour === 7) return "tech_insight";
+    if (watHour === 13) return "community_poll";
+    if (watHour === 19) return "founder_story";
+    return null;
   } else {
-    // Rotate 3 slots for Vendor
-    const slots: Slot[] = ["sales_tip", "platform_feature", "merchant_win"];
-    return slots[Math.floor(watHour / 2) % slots.length];
+    // Vendor: 7am, 1pm, 7pm
+    if (watHour === 7) return "sales_tip";
+    if (watHour === 13) return "platform_feature";
+    if (watHour === 19) return "merchant_win";
+    return null;
   }
 }
 
@@ -348,19 +351,28 @@ Deno.serve(async (req) => {
     const utc = new Date();
     const watHour = typeof forcedHour === "number" ? forcedHour : (utc.getUTCHours() + 1) % 24;
 
-    // Enforce 8am-8pm constraint for automated cron runs
-    if (forcedHour === undefined && forcedSlot === undefined && (watHour < 8 || watHour > 20)) {
-      return new Response(JSON.stringify({ ok: true, skipped: "Outside 8am-8pm window" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const targetGroups: TargetGroup[] = forcedGroup ? [forcedGroup] : ["marketplace", "foundry", "vendor"];
     const generatedPosts: any[] = [];
 
     await Promise.all(targetGroups.map(async (group) => {
       try {
+        // Prevent queue overflow: if there are >= 10 pending posts for this group, pause generation
+        const { count, error: countErr } = await supabase
+          .from("marketing_queue")
+          .select("*", { count: "exact", head: true })
+          .eq("target_group", group)
+          .eq("status", "pending");
+
+        if (countErr) {
+          console.error(`Error counting pending posts for ${group}:`, countErr);
+        } else if (count !== null && count >= 10) {
+          console.log(`Skipping generation for ${group} - ${count} pending posts in queue.`);
+          return;
+        }
+
         const slot = forcedSlot ?? pickSlotForGroup(watHour, group);
+        if (!slot) return; // Not scheduled for this group at this hour
+
         const post = await generateForSlot(supabase, slot, group);
 
         const { data, error } = await supabase
