@@ -307,7 +307,7 @@ const ShopStorefront = () => {
       if (!isOwnerView) productsQuery = productsQuery.eq("is_available", true);
       const { data: productsData, error: productsError } = await productsQuery;
       if (productsError) throw productsError;
-      const productsList = (productsData || []).map(p => ({
+      const productsList = ((productsData || []) as any[]).map((p: any) => ({
         ...p,
         type: (p.type || 'product') as 'product' | 'service',
         booking_required: p.booking_required ?? false
