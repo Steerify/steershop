@@ -243,6 +243,7 @@ export const StorefrontCustomizer = ({
 
       if (error) throw error;
       toast({ title: "Customizations saved!", description: autoDesignEnabled ? "AI autodesign applied and saved." : "Your storefront has been updated." });
+      onSaved?.();
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Failed to save", variant: "destructive" });
     } finally {
