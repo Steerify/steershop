@@ -17,6 +17,7 @@ interface StorefrontCustomizerProps {
   currentSecondaryColor?: string | null;
   currentFontStyle?: string | null;
   currentThemeMode?: string | null;
+  onSaved?: () => void;
 }
 
 const ACCENT_COLORS = [
