@@ -821,21 +821,6 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* ── Entrepreneur compact stats row ── */}
-        {rbac.isEntrepreneur(user) && (
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "All-time Revenue", value: `₦${totalRevenue.toLocaleString()}` },
-              { label: "Wallet Balance",   value: `₦${payoutBalance.availableBalance.toLocaleString()}` },
-            ].map(s => (
-              <div key={s.label} className="rounded-2xl border border-border/50 bg-card px-4 py-3">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{s.label}</p>
-                <p className="text-xl font-black tabular-nums text-foreground">{s.value}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* ── Urgent task (single, most important) ── */}
         {urgentTasks.length > 0 && (
           <button
@@ -853,31 +838,34 @@ const Dashboard = () => {
           </button>
         )}
 
-        {/* ── Quick navigation: minimal list card ── */}
-        <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
-          {[
-            { icon: Package, label: "Products",     sub: "Manage your catalog",     path: "/products" },
-            { icon: ShoppingCart, label: "Orders",  sub: "View & fulfil orders",    path: "/orders" },
-            { icon: Users,   label: "Customers",    sub: "Your buyer records",      path: "/customers" },
-            { icon: Wallet,  label: "Wallet",       sub: "Earnings & payouts",      action: () => setIsPayoutDialogOpen(true) },
-            { icon: Store,   label: "Store Settings",sub: "Customize your shop",    path: "/my-store" },
-          ].map((item, i, arr) => (
-            <button
-              key={item.label}
-              onClick={item.action ? item.action : () => navigate(item.path!)}
-              className={`flex items-center gap-3 w-full px-4 py-3.5 hover:bg-muted/40 transition-colors text-left ${i < arr.length - 1 ? 'border-b border-border/40' : ''}`}
-            >
-              <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
-                <item.icon className="w-4 h-4 text-muted-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground">{item.label}</p>
-                <p className="text-xs text-muted-foreground">{item.sub}</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-            </button>
-          ))}
-        </div>
+        {/* ── Quick navigation: minimal list card (For non-entrepreneurs only) ── */}
+        {!rbac.isEntrepreneur(user) && (
+          <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+            {[
+              { icon: Package, label: "Products",     sub: "Manage your catalog",     path: "/products" },
+              { icon: ShoppingCart, label: "Orders",  sub: "View & fulfil orders",    path: "/orders" },
+              { icon: Users,   label: "Customers",    sub: "Your buyer records",      path: "/customers" },
+              { icon: Wallet,  label: "Wallet",       sub: "Earnings & payouts",      action: () => setIsPayoutDialogOpen(true) },
+              { icon: Store,   label: "Store Settings",sub: "Customize your shop",    path: "/my-store" },
+            ].map((item, i, arr) => (
+              <button
+                key={item.label}
+                onClick={item.action ? item.action : () => navigate(item.path!)}
+                className={`flex items-center gap-3 w-full px-4 py-3.5 hover:bg-muted/40 transition-colors text-left ${i < arr.length - 1 ? 'border-b border-border/40' : ''}`}
+              >
+                <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                  <item.icon className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                  <p className="text-xs text-muted-foreground">{item.sub}</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* ─── Mobile Bottom Navigation ────────────────────── */}
       <MobileBottomNav />

@@ -16,6 +16,7 @@ import { BulkProductUpload } from "@/components/BulkProductUpload";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
 import orderService from "@/services/order.service";
+import { payoutService } from "@/services/payout.service";
 import { Badge } from "@/components/ui/badge";
 
 export const VendorCommandCenter = () => {
@@ -32,6 +33,7 @@ export const VendorCommandCenter = () => {
     todaySales: 0,
     activeOrders: 0,
     conversion: "0.0%",
+    walletBalance: 0,
   });
 
   const fetchShopData = async () => {
@@ -43,9 +45,10 @@ export const VendorCommandCenter = () => {
       setShop(shopData);
 
       if (shopData) {
-        const [productsRes, ordersRes] = await Promise.all([
+        const [productsRes, ordersRes, balanceRes] = await Promise.all([
           productService.getProducts({ shopId: shopData.id }),
           orderService.getOrders({ shopId: shopData.id }),
+          payoutService.getBalance(shopData.id).catch(() => null)
         ]);
 
         setProductsCount(productsRes.data?.length || 0);
@@ -69,7 +72,12 @@ export const VendorCommandCenter = () => {
             ? ((allOrders.length / shopData.total_views) * 100).toFixed(1) + "%"
             : "0.0%";
 
-        setSalesData({ todaySales, activeOrders: activeOrdersCount, conversion });
+        setSalesData({ 
+          todaySales, 
+          activeOrders: activeOrdersCount, 
+          conversion,
+          walletBalance: balanceRes?.availableBalance || 0 
+        });
       }
     } catch (err) {
       console.error("VendorCommandCenter fetch error:", err);
@@ -102,26 +110,28 @@ export const VendorCommandCenter = () => {
     return (
       <>
         {/* Store identity + key numbers — single card */}
-        <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+        <div className="rounded-2xl border border-border/50 bg-card overflow-hidden shadow-sm">
           {/* Top row: name + live badge + CTAs */}
-          <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 border-b border-border/40 bg-muted/20">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0">
-                <Store className="w-4 h-4 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-sm">
+                <Store className="w-5 h-5 text-primary-foreground" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="font-bold text-sm text-foreground truncate">{shop.shop_name}</p>
-                  <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[9px] uppercase font-black px-1.5 py-0 rounded-md">Live</Badge>
+                  <p className="font-extrabold text-base text-foreground truncate">{shop.shop_name}</p>
+                  <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] uppercase font-black px-2 py-0.5 rounded-md">Live</Badge>
                 </div>
-                <p className="text-[10px] text-muted-foreground truncate">/shop/{shop.shop_slug || shop.id}</p>
+                <p className="text-xs text-muted-foreground truncate hover:text-foreground transition-colors cursor-pointer" onClick={() => window.open(storeUrl, "_blank")}>
+                  {storeUrl.replace(/^https?:\/\//, '')}
+                </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
               <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-xl hover:bg-muted"
+                variant="outline"
+                size="sm"
+                className="h-9 rounded-xl font-bold bg-background shadow-sm hover:shadow-md transition-all"
                 onClick={() => {
                   navigator.clipboard.writeText(storeUrl);
                   setIsCopied(true);
@@ -129,44 +139,42 @@ export const VendorCommandCenter = () => {
                   toast({ title: "Copied!", description: "Store link copied" });
                 }}
               >
-                {isCopied ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
-              </Button>
-              <Button
-                size="sm"
-                className="h-8 rounded-xl text-xs font-bold px-3"
-                onClick={() => window.open(storeUrl, "_blank")}
-              >
-                Visit <ExternalLink className="w-3 h-3 ml-1" />
+                {isCopied ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mr-2" /> : <Copy className="w-4 h-4 text-muted-foreground mr-2" />}
+                {isCopied ? "Copied" : "Copy Link"}
               </Button>
             </div>
           </div>
 
-          {/* Metrics strip */}
-          <div className="grid grid-cols-3 divide-x divide-border/40">
+          {/* Metrics strip - 2x2 grid on mobile, 1x4 on desktop */}
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border/40">
             {[
-              { label: "Today's Sales", value: `₦${salesData.todaySales.toLocaleString()}` },
-              { label: "Active Orders", value: salesData.activeOrders.toString() },
-              { label: "Store Views", value: (shop.total_views || 0).toString() },
+              { label: "Today's Sales", value: `₦${salesData.todaySales.toLocaleString()}`, color: "text-foreground" },
+              { label: "Active Orders", value: salesData.activeOrders.toString(), color: "text-amber-600 dark:text-amber-400" },
+              { label: "Wallet Balance", value: `₦${(salesData as any).walletBalance?.toLocaleString() || '0'}`, color: "text-emerald-600 dark:text-emerald-400" },
+              { label: "Store Views", value: (shop.total_views || 0).toString(), color: "text-primary" },
             ].map((m, i) => (
-              <div key={i} className="px-4 py-3 text-center">
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-0.5">{m.label}</p>
-                <p className="text-lg font-black text-foreground tabular-nums">{m.value}</p>
+              <div key={i} className={`px-5 py-4 ${i % 2 !== 0 ? 'border-l border-border/40 md:border-l-0' : ''}`}>
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1">{m.label}</p>
+                <p className={`text-xl md:text-2xl font-black tabular-nums ${m.color}`}>{m.value}</p>
               </div>
             ))}
           </div>
-        </div>
 
-        {/* Quick-link pill row */}
-        <div className="flex flex-wrap gap-2 pt-1">
-          <Button variant="ghost" size="sm" className="text-xs font-bold rounded-xl text-muted-foreground hover:text-foreground" asChild>
-            <Link to="/products"><PackagePlus className="w-3.5 h-3.5 mr-1.5" />Add Products</Link>
-          </Button>
-          <Button variant="ghost" size="sm" className="text-xs font-bold rounded-xl text-muted-foreground hover:text-foreground" onClick={() => setIsBulkUploadOpen(true)}>
-            <Sparkles className="w-3.5 h-3.5 mr-1.5" />AI Upload
-          </Button>
-          <Button variant="ghost" size="sm" className="text-xs font-bold rounded-xl text-muted-foreground hover:text-foreground" asChild>
-            <Link to="/my-store"><Store className="w-3.5 h-3.5 mr-1.5" />Store Settings</Link>
-          </Button>
+          {/* Primary Action Bar */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 px-4 py-3 bg-muted/10 border-t border-border/40">
+            <Button size="sm" className="w-full sm:w-auto text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm h-9" asChild>
+              <Link to="/products"><PackagePlus className="w-3.5 h-3.5 mr-1.5" />Add Product</Link>
+            </Button>
+            <Button size="sm" variant="outline" className="w-full sm:w-auto text-xs font-bold rounded-xl shadow-sm h-9" asChild>
+              <Link to="/orders"><ShoppingCart className="w-3.5 h-3.5 mr-1.5" />Orders</Link>
+            </Button>
+            <Button size="sm" variant="outline" className="w-full sm:w-auto text-xs font-bold rounded-xl shadow-sm h-9" onClick={() => setIsBulkUploadOpen(true)}>
+              <Sparkles className="w-3.5 h-3.5 mr-1.5 text-accent" />AI Upload
+            </Button>
+            <Button size="sm" variant="outline" className="w-full sm:w-auto text-xs font-bold rounded-xl shadow-sm h-9" asChild>
+              <Link to="/my-store"><Store className="w-3.5 h-3.5 mr-1.5" />Settings</Link>
+            </Button>
+          </div>
         </div>
 
         {shop && (

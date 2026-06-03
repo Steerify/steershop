@@ -115,7 +115,7 @@ const DemoStoreFront = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <section className="relative pt-16">
+      <section className="relative pt-24 sm:pt-28">
         <div className="relative h-52 sm:h-64 md:h-80 overflow-hidden">
           <img src={demoShop.banner_url} alt="Demo banner" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-transparent" />

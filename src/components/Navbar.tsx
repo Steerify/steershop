@@ -158,10 +158,10 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
   const logo = theme === 'dark' ? logoDark : logoLight;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50">
+    <nav className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
       {/* Restored-session "Back to Dashboard" Banner */}
       {showRestoredBanner && user && (
-        <div className="bg-gradient-to-r from-[hsl(215,65%,22%)] to-[hsl(145,55%,26%)] text-white border-b border-white/10">
+        <div className="bg-gradient-to-r from-[hsl(215,65%,22%)] to-[hsl(145,55%,26%)] text-white border-b border-white/10 shadow-sm relative z-50 pointer-events-auto">
           <div className="container mx-auto px-3 py-2">
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm font-medium">
               <div className="flex items-center gap-2">
@@ -194,7 +194,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
 
       {/* Celebration Hint Banner */}
       {showCelebrationHint && primary && (
-        <div className="bg-gradient-to-r from-primary via-primary/90 to-accent text-white border-b border-primary/40">
+        <div className="bg-gradient-to-r from-primary via-primary/90 to-accent text-white border-b border-primary/40 shadow-sm relative z-50 pointer-events-auto">
           <div className="container mx-auto px-3 py-2">
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm font-medium">
               <Sparkles className="w-4 h-4" />
@@ -203,10 +203,10 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
               <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px]">
                 <CalendarDays className="w-3 h-3" /> {daysRemaining === 0 ? 'Today only' : `${daysRemaining} day${daysRemaining > 1 ? 's' : ''} left`}
               </span>
-              <Link to={primary.ctaHref} className="underline underline-offset-2 font-semibold">
+              <Link to={primary.ctaHref} className="underline underline-offset-2 font-semibold hover:text-white/80 transition-colors">
                 {primary.ctaLabel}
               </Link>
-              <button onClick={dismissCelebrationHint} className="rounded-md px-1.5 py-0.5 hover:bg-white/15" aria-label="Dismiss celebration banner">
+              <button onClick={dismissCelebrationHint} className="rounded-md px-1.5 py-0.5 hover:bg-white/15 transition-colors" aria-label="Dismiss celebration banner">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -214,234 +214,244 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
         </div>
       )}
       
-      <AdireAccent className="h-1" />
-      
-      <div className={cn(
-        "bg-card/90 backdrop-blur-xl border-b transition-all duration-500",
-        user?.role === 'ENTREPRENEUR' 
-          ? "border-indigo-600/30 shadow-[0_1px_10px_rgba(79,70,229,0.1)]" 
-          : "border-border/50"
-      )}>
-        <div className="container mx-auto px-4 py-3 md:py-2.5">
-          <div className="flex items-center justify-between">
-            
-            {/* Logo Section */}
-            <div className="flex items-center gap-3 group relative">
-              <div
-                className={`w-12 h-12 rounded-xl overflow-hidden shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 relative select-none ${theme === 'dark' ? '' : 'bg-white'}`}
-                onContextMenu={(e) => e.preventDefault()}
-                aria-label="Brand logo"
-              >
-                {shopBranding ? (
-                  <ShopAvatar
-                    name={shopBranding.name}
-                    logoUrl={shopBranding.logoUrl}
-                    className="w-full h-full"
-                    initialsClassName="text-xl"
-                  />
-                ) : (
-                  <img
-                    src={logo}
-                    alt="SteerSolo"
-                    className="w-full h-full object-cover"
-                    draggable={false}
-                    onContextMenu={(e) => e.preventDefault()}
-                  />
-                )}
-                
-                {/* Visual Effects (Non-animated) */}
-                {!shopBranding && isNewYear && <FireworkFlare />}
-                {!shopBranding && isChristmas && <SantaHat />}
-                {!shopBranding && !isChristmas && primary && <CelebrationBadge celebration={primary} />}
+      {/* Floating Pill Navbar Container */}
+      <div className="px-2 sm:px-4 md:px-6 pt-3 sm:pt-4 transition-all duration-300">
+        <div className="max-w-[1200px] mx-auto relative pointer-events-auto">
+          <div className={cn(
+            "bg-card/85 backdrop-blur-2xl border transition-all duration-500 shadow-sm sm:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.1)] rounded-[2rem]",
+            user?.role === 'ENTREPRENEUR' 
+              ? "border-indigo-600/30 shadow-[0_4px_20px_rgba(79,70,229,0.15)]" 
+              : "border-border/60"
+          )}>
+            <div className="px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between">
+              
+              {/* Logo Section */}
+              <div className="flex items-center gap-3 group relative">
+                <div
+                  className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden shadow-sm ring-1 ring-border group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-[1.03] relative select-none ${theme === 'dark' ? '' : 'bg-white'}`}
+                  onContextMenu={(e) => e.preventDefault()}
+                  aria-label="Brand logo"
+                >
+                  {shopBranding ? (
+                    <ShopAvatar
+                      name={shopBranding.name}
+                      logoUrl={shopBranding.logoUrl}
+                      className="w-full h-full"
+                      initialsClassName="text-lg"
+                    />
+                  ) : (
+                    <img
+                      src={logo}
+                      alt="SteerSolo"
+                      className="w-full h-full object-cover"
+                      draggable={false}
+                      onContextMenu={(e) => e.preventDefault()}
+                    />
+                  )}
+                  
+                  {/* Visual Effects (Non-animated) */}
+                  {!shopBranding && isNewYear && <FireworkFlare />}
+                  {!shopBranding && isChristmas && <SantaHat />}
+                  {!shopBranding && !isChristmas && primary && <CelebrationBadge celebration={primary} />}
+                </div>
+
+                {/* Updated typography to match index page */}
+                <span className="hidden min-[400px]:inline font-display text-lg sm:text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  {shopBranding?.name || "SteerSolo"}
+                  {!shopBranding && primary && (
+                    <span className="ml-1.5 text-base inline-block text-primary">
+                      {isChristmas ? "🎄" : <Sparkles className="inline w-4 h-4" />}
+                    </span>
+                  )}
+                </span>
               </div>
 
-              {/* Updated typography to match index page */}
-              <span className="hidden min-[360px]:inline font-display text-lg sm:text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                {shopBranding?.name || "SteerSolo"}
-                {!shopBranding && primary && (
-                  <span className="ml-2 text-lg inline-block text-primary">
-                    {isChristmas ? "🎄" : <Sparkles className="inline w-5 h-5" />}
-                  </span>
+              {/* Desktop Nav - Updated typography */}
+              <div className="hidden lg:flex items-center gap-6 font-display absolute left-1/2 -translate-x-1/2">
+                {[
+                  { label: "Marketplace", href: "/shops" },
+                  { label: "Pricing", href: "/pricing" },
+                  { label: "Steerify Ads", href: "/ads" },
+                  { label: "About", href: "/about" },
+                ].map((item) => (
+                  <Link 
+                    key={item.label}
+                    to={item.href}
+                    className="text-[13px] font-semibold text-foreground/70 hover:text-primary transition-colors tracking-wide"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+
+              {/* Desktop Auth - Updated typography */}
+              <div className="hidden md:flex items-center gap-2 font-display">
+                {/* Dark Mode Toggle */}
+                {mounted && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    className="rounded-full w-9 h-9 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors border border-transparent hover:border-border/50"
+                    aria-label="Toggle theme"
+                  >
+                    {theme === 'dark' ? (
+                      <Sun className="h-4 w-4 text-yellow-500" />
+                    ) : (
+                      <Moon className="h-4 w-4" />
+                    )}
+                  </Button>
                 )}
-              </span>
-            </div>
-
-            {/* Desktop Nav - Updated typography */}
-            <div className="hidden md:flex items-center gap-6 font-display">
-              {[
-                { label: "Marketplace", href: "/shops" },
-                { label: "Pricing", href: "/pricing" },
-                { label: "Steerify Ads", href: "/ads" },
-                { label: "About", href: "/about" },
-                { label: "Ambassador", href: "/ambassador-program" },
-                { label: "Feedback", href: "/feedback" },
-              ].map((item) => (
-                <Link 
-                  key={item.label}
-                  to={item.href}
-                  className="text-sm lg:text-base text-foreground/80 hover:text-primary transition-colors font-medium relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Desktop Auth - Updated typography */}
-            <div className="hidden md:flex items-center gap-2.5 font-display">
-              {/* Dark Mode Toggle */}
-              {mounted && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
-                  aria-label="Toggle theme"
-                >
-                  {theme === 'dark' ? (
-                    <Sun className="h-5 w-5 text-yellow-500" />
-                  ) : (
-                    <Moon className="h-5 w-5" />
-                  )}
-                </Button>
-              )}
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-primary/10 transition-colors">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-bold ring-2 ring-primary/20">
-                        {(user?.firstName || user?.email || 'U')[0].toUpperCase()}
-                      </div>
-                      <div className="hidden lg:block text-left">
-                        <p className="text-xs font-bold leading-none">{user?.firstName || 'User'}</p>
-                        <Badge 
-                          variant="outline" 
-                          className={cn(
-                            "text-[9px] h-3.5 px-1 mt-0.5 border-none",
-                            user?.role === 'ENTREPRENEUR' 
-                              ? "bg-indigo-600/10 text-indigo-600" 
-                              : "bg-emerald-600/10 text-emerald-600"
-                          )}
-                        >
-                          {user?.role === 'ENTREPRENEUR' ? 'Merchant Mode' : 'Shopper Mode'}
-                        </Badge>
-                      </div>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl p-1 shadow-xl">
-                    <DropdownMenuLabel className="px-3 py-2">
-                      <p className="text-xs font-medium text-muted-foreground">Signed in as</p>
-                      <p className="text-sm font-bold truncate">{user.email}</p>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to={user?.role === 'ENTREPRENEUR' ? "/dashboard" : "/shopper"} className="flex items-center gap-2 cursor-pointer rounded-lg">
-                        <User className="w-4 h-4" />
-                        {user?.role === 'ENTREPRENEUR' ? "Merchant Dashboard" : "My Orders"}
-                      </Link>
-                    </DropdownMenuItem>
-                    {user?.role === 'ENTREPRENEUR' && (
+                {user ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full hover:bg-muted/50 border border-transparent hover:border-border/50 transition-all">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-bold shadow-sm ring-1 ring-white/20">
+                          {(user?.firstName || user?.email || 'U')[0].toUpperCase()}
+                        </div>
+                        <div className="hidden lg:block text-left">
+                          <p className="text-[11px] font-bold leading-none mb-0.5">{user?.firstName || 'User'}</p>
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "text-[8px] h-3 px-1.5 border-none",
+                              user?.role === 'ENTREPRENEUR' 
+                                ? "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400" 
+                                : "bg-emerald-600/10 text-emerald-600 dark:text-emerald-400"
+                            )}
+                          >
+                            {user?.role === 'ENTREPRENEUR' ? 'Merchant Mode' : 'Shopper Mode'}
+                          </Badge>
+                        </div>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 mt-2 rounded-2xl p-1 shadow-xl border-border/60">
+                      <DropdownMenuLabel className="px-3 py-2.5">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Signed in as</p>
+                        <p className="text-sm font-bold truncate">{user.email}</p>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator className="bg-border/60" />
                       <DropdownMenuItem asChild>
-                        <Link to="/my-store" className="flex items-center gap-2 cursor-pointer rounded-lg">
-                          <Store className="w-4 h-4" />
-                          Manage My Store
+                        <Link to={user?.role === 'ENTREPRENEUR' ? "/dashboard" : "/shopper"} className="flex items-center gap-3 cursor-pointer rounded-xl px-3 py-2.5">
+                          <User className="w-4 h-4 text-muted-foreground" />
+                          <span className="font-semibold text-sm">{user?.role === 'ENTREPRENEUR' ? "Merchant Dashboard" : "My Orders"}</span>
                         </Link>
                       </DropdownMenuItem>
+                      {user?.role === 'ENTREPRENEUR' && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/my-store" className="flex items-center gap-3 cursor-pointer rounded-xl px-3 py-2.5">
+                            <Store className="w-4 h-4 text-muted-foreground" />
+                            <span className="font-semibold text-sm">Manage My Store</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator className="bg-border/60" />
+                      <DropdownMenuItem onClick={() => signOut()} className="flex items-center gap-3 cursor-pointer rounded-xl px-3 py-2.5 text-destructive focus:text-destructive focus:bg-destructive/10">
+                        <X className="w-4 h-4" />
+                        <span className="font-bold text-sm">Logout</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <>
+                    <Link to="/shopper">
+                      <Button variant="ghost" size="sm" className="h-9 px-4 rounded-full text-[13px] font-semibold hover:bg-muted text-muted-foreground hover:text-foreground">
+                        Login
+                      </Button>
+                    </Link>
+                    <Link to="/auth/login?tab=signup">
+                      <Button size="sm" className="h-9 px-5 rounded-full text-[13px] font-bold shadow-md hover:shadow-lg transition-all bg-primary text-primary-foreground hover:bg-primary/90">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+
+              {/* Mobile Button */}
+              <div className="flex md:hidden items-center gap-1.5">
+                {mounted && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    className="rounded-full w-9 h-9 hover:bg-muted text-muted-foreground"
+                    aria-label="Toggle theme"
+                  >
+                    {theme === 'dark' ? (
+                      <Sun className="h-4 w-4 text-yellow-500" />
+                    ) : (
+                      <Moon className="h-4 w-4" />
                     )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => signOut()} className="flex items-center gap-2 cursor-pointer rounded-lg text-destructive focus:text-destructive focus:bg-destructive/5">
-                      <X className="w-4 h-4" />
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <>
-                  <Link to="/shopper">
-                    <Button variant="ghost" size="sm" className="h-9 px-3 text-sm font-medium hover:bg-primary/10 hover:text-primary">
-                      <User className="w-4 h-4 mr-2" />
-                      Login
-                    </Button>
-                  </Link>
-                  <Link to="/auth/login?tab=signup">
-                    <Button size="sm" className="h-9 px-4 text-sm btn-enterprise">
-                      Get Started
-                    </Button>
-                  </Link>
-                </>
-              )}
+                  </Button>
+                )}
+                <button 
+                  className="p-2 rounded-full hover:bg-muted text-foreground transition-colors relative" 
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+                >
+                  {activeCelebrations.length > 0 && (
+                    <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background"></div>
+                  )}
+                  {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
-
-            {/* Mobile Button */}
-            <button 
-              className="md:hidden p-2 rounded-lg hover:bg-muted relative" 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-            >
-              {activeCelebrations.length > 0 && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full"></div>
-              )}
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
           </div>
-        </div>
-      </div>
 
-      {/* Mobile Menu - Updated typography */}
-      <div className={`md:hidden bg-card/95 backdrop-blur-xl border-b border-border overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}>
-        <div className="container mx-auto px-4 py-4 space-y-1 font-display">
-          {/* Mobile Theme Toggle */}
-          {mounted && (
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="flex items-center gap-3 w-full min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium"
-            >
-              {theme === 'dark' ? (
-                <>
-                  <Sun className="h-5 w-5 text-yellow-500" />
-                  <span>Light Mode</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="h-5 w-5" />
-                  <span>Dark Mode</span>
-                </>
-              )}
-            </button>
-          )}
-          <div className="section-divider my-1" />
-          <Link to="/shops" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
-            <Store className="w-5 h-5" />
-            Shops
-          </Link>
-          <Link to="/pricing" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
-            <Tag className="w-5 h-5" />
-            Pricing
-          </Link>
-          <Link to="/ads" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
-            <Megaphone className="w-5 h-5" />
-            Steerify Ads
-          </Link>
-          <Link to="/about" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
-            <Star className="w-5 h-5" />
-            About
-          </Link>
-          <div className="section-divider my-1" />
-          <Link to="/feedback" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
-            <MessageSquare className="w-5 h-5" />
-            Feedback
-          </Link>
-          <div className="section-divider my-1" />
-          <Link to="/ambassador-program" className="flex items-center gap-3 min-h-[48px] py-3 px-4 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors font-medium">
-            <Gift className="w-5 h-5" />
-            Ambassador Program
-          </Link>
-          <div className="pt-4 border-t border-border space-y-3">
-            <Link to="/shopper">
-              <Button variant="outline" className="w-full min-h-[48px] border-primary/30 font-display">Login</Button>
-            </Link>
-            <Link to="/auth/login?tab=signup">
-              <Button className="w-full min-h-[48px] btn-enterprise font-display">Get Started</Button>
-            </Link>
+          {/* Floating Mobile Menu */}
+          <div className={`md:hidden absolute top-full left-0 right-0 mt-3 bg-card/95 backdrop-blur-2xl border border-border/60 rounded-[2rem] shadow-xl overflow-hidden transition-all duration-400 origin-top ${isMobileMenuOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0 pointer-events-none"}`}>
+            <div className="px-5 py-6 space-y-1 font-display">
+              <Link to="/shops" className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold" onClick={() => setIsMobileMenuOpen(false)}>
+                <Store className="w-5 h-5 text-muted-foreground" />
+                Marketplace
+              </Link>
+              <Link to="/pricing" className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold" onClick={() => setIsMobileMenuOpen(false)}>
+                <Tag className="w-5 h-5 text-muted-foreground" />
+                Pricing
+              </Link>
+              <Link to="/ads" className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold" onClick={() => setIsMobileMenuOpen(false)}>
+                <Megaphone className="w-5 h-5 text-muted-foreground" />
+                Steerify Ads
+              </Link>
+              <Link to="/about" className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold" onClick={() => setIsMobileMenuOpen(false)}>
+                <Star className="w-5 h-5 text-muted-foreground" />
+                About
+              </Link>
+              <div className="h-px bg-border/60 my-2" />
+              <Link to="/feedback" className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold" onClick={() => setIsMobileMenuOpen(false)}>
+                <MessageSquare className="w-5 h-5 text-muted-foreground" />
+                Feedback
+              </Link>
+              <Link to="/ambassador-program" className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold" onClick={() => setIsMobileMenuOpen(false)}>
+                <Gift className="w-5 h-5 text-muted-foreground" />
+                Ambassador Program
+              </Link>
+              
+              <div className="pt-6 mt-2 border-t border-border/60 space-y-3">
+                {user ? (
+                  <>
+                    <Link to={user?.role === 'ENTREPRENEUR' ? "/dashboard" : "/shopper"} onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button className="w-full h-12 rounded-full font-bold shadow-md bg-primary text-primary-foreground">
+                        {user?.role === 'ENTREPRENEUR' ? "Merchant Dashboard" : "My Orders"}
+                      </Button>
+                    </Link>
+                    <Button variant="outline" className="w-full h-12 rounded-full font-bold border-border/60" onClick={() => { signOut(); setIsMobileMenuOpen(false); }}>
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/shopper" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full h-12 rounded-full font-bold border-border/60">Login</Button>
+                    </Link>
+                    <Link to="/auth/login?tab=signup" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button className="w-full h-12 rounded-full font-bold shadow-md bg-primary text-primary-foreground">Get Started</Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

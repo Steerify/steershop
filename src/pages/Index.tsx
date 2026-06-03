@@ -341,7 +341,7 @@ const HeroTextSlider = () => {
     },
     {
       eyebrow: "For the Savvy Nigerian Shopper",
-      h1: "Shop verified brands<br />with 100% confidence.<br /><em style='font-style:normal;color:hsl(var(--accent-bright))'>No more 'What I Ordered' drama.</em>",
+      h1: "Shop verified brands<br />with 100% confidence.<br /><em style='font-style:normal;color:hsl(var(--primary))'>No more 'What I Ordered' drama.</em>",
       p: "Browse thousands of authentic products from verified Nigerian stores. Secure checkout, real reviews, and direct WhatsApp tracking for every order.",
       cta1: { label: "Explore Marketplace", link: "/shops", icon: ShoppingBag },
       cta2: { label: "Sign up for Free", link: "/shopper-signup" },
@@ -376,37 +376,37 @@ const HeroTextSlider = () => {
         >
           {/* Aligned Escrow Pill & Eyebrow Badge Row */}
           <div className="flex flex-wrap items-center gap-3 mb-6">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md text-emerald-400 text-xs font-semibold select-none">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md text-emerald-600 dark:text-emerald-400 text-xs font-semibold select-none">
               <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 dark:bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-600 dark:bg-emerald-500"></span>
               </span>
               🔒 Paystack Secured Escrow Enabled
             </div>
 
-            <span className="text-white/20 text-xs hidden sm:inline">|</span>
+            <span className="text-border text-xs hidden sm:inline">|</span>
 
             <div className="inline-flex items-center gap-1.5 py-1">
-              <Sparkles className="w-3.5 h-3.5 text-accent-bright animate-pulse" />
-              <span className="text-[11.5px] font-bold uppercase tracking-[0.2em] text-white/70">
+              <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
+              <span className="text-[11.5px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
                 {phrase.eyebrow}
               </span>
             </div>
           </div>
 
           <h1
-            className="font-extrabold text-white leading-[1.1] mb-5 text-4xl sm:text-5xl lg:text-6xl tracking-tight"
+            className="font-extrabold text-foreground leading-[1.05] mb-5 text-4xl sm:text-5xl lg:text-7xl tracking-tighter"
             dangerouslySetInnerHTML={{ __html: phrase.h1 }}
           />
 
-          <p className="text-base sm:text-lg text-white/70 font-light max-w-lg mb-8 leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground font-medium max-w-lg mb-8 leading-relaxed">
             {phrase.p}
           </p>
 
           {/* CTAs with Premium Hover & Scale Effects */}
           <div className="flex flex-wrap gap-4 mb-2">
             <Link to={phrase.cta1.link}>
-              <button className="flex items-center gap-2.5 px-7 py-3.5 rounded-full font-bold text-base text-primary bg-white shadow-lg shadow-black/10 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/10 active:translate-y-0 active:scale-95 transition-all duration-300 transform">
+              <button className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl font-bold text-base text-primary-foreground bg-primary shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:scale-95 transition-all duration-300 transform">
                 {phrase.cta1.label}
                 {phrase.cta1.icon && (
                   <phrase.cta1.icon className="w-4 h-4" />
@@ -414,7 +414,7 @@ const HeroTextSlider = () => {
               </button>
             </Link>
             <Link to={phrase.cta2.link}>
-              <button className="flex items-center gap-2.5 px-6 py-3.5 rounded-full font-semibold text-sm bg-white/10 border border-white/20 text-white backdrop-blur-md hover:-translate-y-0.5 hover:bg-white/20 active:translate-y-0 active:scale-95 transition-all duration-300 transform">
+              <button className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl font-semibold text-sm bg-muted text-foreground border border-border hover:-translate-y-0.5 hover:bg-muted/80 active:translate-y-0 active:scale-95 transition-all duration-300 transform">
                 {phrase.cta2.label}
               </button>
             </Link>
@@ -622,43 +622,43 @@ const Index = () => {
             </div>
 
             {/* Consolidated Premium Social Proof & Trust Section */}
-            <div className="mt-8 p-5 rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-xl shadow-xl space-y-4 animate-fade-up f3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+            <div className="mt-8 p-5 rounded-[2rem] bg-card/40 border border-border/50 backdrop-blur-xl shadow-xl space-y-4 animate-fade-up f3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-4">
                 {/* Active Merchant Count with avatars */}
                 <div className="inline-flex items-center gap-3">
                   <div className="flex -space-x-2 shrink-0">
                     <img
                       src={P.av1}
                       alt="Merchant 1"
-                      className="w-8 h-8 rounded-full border-2 border-[hsl(var(--brand-blue-deep))] object-cover"
+                      className="w-8 h-8 rounded-full border-2 border-background object-cover"
                     />
                     <img
                       src={P.av2}
                       alt="Merchant 2"
-                      className="w-8 h-8 rounded-full border-2 border-[hsl(var(--brand-blue-deep))] object-cover"
+                      className="w-8 h-8 rounded-full border-2 border-background object-cover"
                     />
                     <img
                       src={P.av3}
                       alt="Merchant 3"
-                      className="w-8 h-8 rounded-full border-2 border-[hsl(var(--brand-blue-deep))] object-cover"
+                      className="w-8 h-8 rounded-full border-2 border-background object-cover"
                     />
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-white flex items-center gap-1.5">
-                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <span className="text-white font-extrabold">
+                    <div className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-foreground font-extrabold">
                         <AnimatedCounter target={liveVendorCount} />+
                       </span>{" "}
                       active merchants
                     </div>
-                    <p className="text-[10px] text-white/70">
+                    <p className="text-[10px] text-muted-foreground">
                       Live storefronts in Lagos, Abuja & across Nigeria
                     </p>
                   </div>
                 </div>
                 {/* Live Status indicator */}
                 <div className="flex items-center shrink-0">
-                  <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-widest bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-0.5 rounded-full">
+                  <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
                     Live
                   </span>
                 </div>
@@ -673,14 +673,14 @@ const Index = () => {
                 ].map(({ I, t, d }) => (
                   <div
                     key={t}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-300 border border-white/5"
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-background/50 hover:bg-background transition-all duration-300 border border-border/50"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-emerald-400 shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
                       <I className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-white/90 leading-none mb-0.5">{t}</p>
-                      <p className="text-[9px] text-white/70 leading-none">{d}</p>
+                      <p className="text-xs font-bold text-foreground leading-none mb-0.5">{t}</p>
+                      <p className="text-[9px] text-muted-foreground leading-none">{d}</p>
                     </div>
                   </div>
                 ))}
@@ -693,16 +693,16 @@ const Index = () => {
         </div>
 
         {/* ── STAT STRIP ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-white/10 bg-white/[0.01] backdrop-blur-md">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-border/30 bg-card/20 backdrop-blur-md rounded-t-[2rem]">
           {DYNAMIC_STATS.map((s, i) => (
             <div
               key={s.l}
-              className="py-8 px-6 text-center border-b sm:border-b-0 border-white/10 last:border-0 sm:even:border-r lg:border-r lg:last:border-r-0 transition-colors duration-300 hover:bg-white/[0.03]"
+              className="py-8 px-6 text-center border-b sm:border-b-0 border-border/30 last:border-0 sm:even:border-r lg:border-r lg:last:border-r-0 transition-colors duration-300 hover:bg-muted/30"
             >
-              <p className="font-black text-white text-2xl sm:text-3xl lg:text-4xl mb-2 tracking-tight">
+              <p className="font-black text-foreground text-2xl sm:text-3xl lg:text-4xl mb-2 tracking-tight">
                 {s.v}
               </p>
-              <p className="text-xs font-semibold text-white/70 leading-relaxed uppercase tracking-wider">
+              <p className="text-xs font-semibold text-muted-foreground leading-relaxed uppercase tracking-wider">
                 {s.l}
               </p>
             </div>
@@ -744,24 +744,16 @@ const Index = () => {
     </div>
 
     {/* ══════════════════════════════════════════════════════
-        §3  PAIN MIRROR — Theme-aware background
+        §3  PAIN MIRROR — Clean & Simple
     ══════════════════════════════════════════════════════ */}
-    <section className="py-24 bg-background">
+    <section className="py-24 bg-secondary/30">
       <div className="mx-auto max-w-screen-xl px-4">
         <div className="text-center mb-16">
           <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">
             Sound familiar?
           </p>
-          <h2
-            className="text-foreground font-extrabold"
-            style={{
-              lineHeight: 1.2,
-              fontSize: "clamp(1.9rem,4vw,3rem)",
-              margin: 0,
-            }}
-          >
-            SteerSolo removes 3 questions
-            <br />
+          <h2 className="text-foreground font-black text-4xl md:text-[56px] leading-[0.95] tracking-tight m-0">
+            SteerSolo removes 3 questions<br />
             <span className="text-primary">
               from the minds of your customers.
             </span>
@@ -788,15 +780,14 @@ const Index = () => {
           ].map(p => (
             <div
               key={p.q}
-              className="relative p-8 rounded-[2rem] bg-card border border-border/80 shadow-sm hover:shadow-elegant transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between overflow-hidden"
+              className="p-8 rounded-[2rem] bg-card border border-border/40 shadow-sm hover:shadow-elegant transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between overflow-hidden"
             >
-              <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-primary via-accent to-indigo-500" />
               <div>
                 <span className="text-4xl mb-6 inline-block select-none">{p.icon}</span>
-                <p className="text-foreground font-black text-xl mb-3 tracking-tight">
+                <p className="text-foreground font-black text-2xl mb-3 tracking-tight">
                   {p.q}
                 </p>
-                <p className="text-muted-foreground text-[14px] leading-relaxed font-light">
+                <p className="text-muted-foreground text-[15px] leading-relaxed">
                   {p.b}
                 </p>
               </div>
@@ -804,14 +795,11 @@ const Index = () => {
           ))}
         </div>
 
-        <div className="bg-primary/5 rounded-2xl p-6 md:p-8 mt-12 border border-primary/20 text-center shadow-sm">
-          <p className="text-foreground font-bold text-[1.4rem] flex items-center justify-center gap-2 m-0">
-            <span className="text-[1.8rem]">💬</span> And the best part?
+        <div className="bg-primary/5 rounded-3xl p-6 md:p-8 mt-12 border border-primary/20 text-center shadow-sm">
+          <p className="text-foreground font-bold text-xl md:text-2xl flex items-center justify-center gap-2 m-0">
+            <span className="text-2xl md:text-3xl">💬</span> And the best part?
           </p>
-          <p
-            className="text-primary font-extrabold"
-            style={{ fontSize: "1.7rem", margin: "12px 0 0" }}
-          >
+          <p className="text-primary font-black text-2xl md:text-4xl mt-3 tracking-tight">
             Every order goes straight to your WhatsApp!
           </p>
         </div>
@@ -819,26 +807,19 @@ const Index = () => {
     </section>
 
     {/* ══════════════════════════════════════════════════════
-        §4  PLATFORM BREAKDOWN — Theme-aware secondary bg
+        §4  PLATFORM BREAKDOWN — Clean Card Style
     ══════════════════════════════════════════════════════ */}
-    <section className="py-24 bg-secondary/40">
+    <section className="py-24 bg-background">
       <div className="mx-auto max-w-screen-xl px-4">
         <div className="text-center mb-16">
           <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">
             The platforms you're already on
           </p>
-          <h2
-            className="text-foreground font-extrabold"
-            style={{
-              lineHeight: 1.2,
-              fontSize: "clamp(1.9rem,4vw,3rem)",
-              margin: 0,
-            }}
-          >
+          <h2 className="text-foreground font-black text-4xl md:text-[56px] leading-[0.95] tracking-tight m-0">
             Supercharge your social presence.
             <br />
             <span className="text-primary">
-              Turn every view into a seamless sale for Nigerian shoppers.
+              Turn every view into a seamless sale.
             </span>
           </h2>
         </div>
@@ -847,73 +828,39 @@ const Index = () => {
           {PLATFORMS.map(pl => (
             <div
               key={pl.name}
-              className="group overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-sm hover:shadow-elegant hover:-translate-y-2 transition-all duration-300 flex flex-col"
+              className="group relative overflow-hidden rounded-[32px] border border-border/40 bg-card p-8 shadow-sm transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 hover:shadow-elegant flex flex-col"
             >
-              {/* Logo container with colored ambient glows */}
-              <div className="relative h-48 overflow-hidden flex items-center justify-center bg-muted/20">
+              <div className="mb-8 flex items-center justify-between">
                 <div 
-                  className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none"
-                  style={{
-                    background: `radial-gradient(circle at center, ${pl.dot} 0%, transparent 70%)`
-                  }}
-                />
-                <div className="transform group-hover:scale-105 transition-transform duration-500 z-10">
+                  className="flex h-16 w-16 items-center justify-center rounded-2xl shadow-sm transition-transform duration-500 group-hover:scale-110"
+                  style={{ background: pl.dotBg }}
+                >
                   <PlatformLogo platform={pl} />
+                </div>
+                <div className="text-right">
+                  <span
+                    className="text-[11px] px-3 py-1.5 rounded-full font-extrabold select-none whitespace-nowrap"
+                    style={{ background: pl.dotBg, color: pl.dot }}
+                  >
+                    {pl.stat}
+                  </span>
+                  <p className="text-[10px] text-muted-foreground font-semibold mt-1 uppercase tracking-wider">
+                    {pl.statSub}
+                  </p>
                 </div>
               </div>
               
-              {/* Card Content */}
-              <div className="p-8 flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        background: pl.dot,
-                        display: "inline-block",
-                      }}
-                      className="animate-pulse"
-                    />
-                    <span className="text-foreground font-black text-lg tracking-tight">
-                      {pl.name}
-                    </span>
-                    <span
-                      className="ml-auto text-[10px] px-2.5 py-1 rounded-full font-extrabold select-none whitespace-nowrap"
-                      style={{
-                        background: pl.dotBg,
-                        color: pl.dot,
-                      }}
-                    >
-                      {pl.stat}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground font-medium mb-6">
-                    {pl.statSub}
-                  </p>
-
-                  <div className="space-y-4">
-                    {/* The bottleneck */}
-                    <div className="bg-destructive/[0.03] border border-destructive/5 rounded-2xl p-4">
-                      <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1.5">
-                        The bottleneck
-                      </p>
-                      <p className="text-muted-foreground text-[13px] leading-relaxed">
-                        {pl.problem}
-                      </p>
-                    </div>
-                    {/* The SteerSolo Advantage */}
-                    <div className="bg-accent/[0.03] border border-accent/5 rounded-2xl p-4">
-                      <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1.5">
-                        The SteerSolo Advantage
-                      </p>
-                      <p className="text-muted-foreground text-[13px] leading-relaxed">
-                        {pl.fix}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+              <h3 className="text-[24px] font-black tracking-tight text-foreground mb-4">
+                {pl.name}
+              </h3>
+              
+              <div className="space-y-4 flex-1">
+                <p className="text-muted-foreground text-[15px] leading-relaxed">
+                  <strong className="text-foreground">The issue:</strong> {pl.problem}
+                </p>
+                <p className="text-muted-foreground text-[15px] leading-relaxed">
+                  <strong className="text-emerald-600 dark:text-emerald-400">The fix:</strong> {pl.fix}
+                </p>
               </div>
             </div>
           ))}
@@ -987,130 +934,77 @@ const Index = () => {
     </div>
 
     {/* ══════════════════════════════════════════════════════
-        §6  HOW IT WORKS — Theme-aware background
+        §6  HOW IT WORKS — Clean Grid
     ══════════════════════════════════════════════════════ */}
     <section className="py-24 bg-background">
-      <div className="mx-auto max-w-screen-xl px-4">
-        <div className="text-center mb-16">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">
-            How it works
-          </p>
-          <h2
-            className="text-foreground font-extrabold"
-            style={{
-              lineHeight: 1.2,
-              fontSize: "clamp(1.9rem,4vw,3rem)",
-              margin: 0,
-            }}
-          >
-            Keep your audience.
-            <br />
-            <span className="text-primary">
-              Add the storefront they deserve.
-            </span>
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 mb-14">
-          {JOURNEY.map((s, i) => (
-            <div key={s.n} style={{ display: "flex", gap: 20 }}>
-              <div
-                className={
-                  i === 0
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-primary/10 text-primary"
-                }
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: "50%",
-                  flexShrink: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "0.8rem",
-                  fontWeight: 700,
-                }}
-              >
-                {s.n}
-              </div>
-              <div>
-                <p
-                  className="text-foreground font-semibold"
-                  style={{ fontSize: "0.95rem", margin: "0 0 8px" }}
-                >
-                  {s.title}
-                </p>
-                <p
-                  className="text-muted-foreground"
-                  style={{ fontSize: "0.875rem", lineHeight: 1.65, margin: 0 }}
-                >
-                  {s.body}
-                </p>
-              </div>
+      <div className="mx-auto mt-12 sm:mt-24 max-w-6xl px-6">
+        <div className="grid gap-12 lg:grid-cols-[0.88fr_1.12fr] lg:items-start">
+          <div className="max-w-xl text-left">
+            <div className="mb-6 inline-flex rounded-full bg-primary/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-primary">
+              How it works
             </div>
-          ))}
-        </div>
+            <h2 className="font-black leading-[0.95] tracking-tight text-foreground text-4xl md:text-[56px]">
+              Simple enough to understand in seconds
+            </h2>
+            <p className="mt-5 max-w-md text-[18px] leading-8 text-muted-foreground">
+              Create your store, paste the link in your bio, and let customers check out instantly. We handle the rest.
+            </p>
+          </div>
 
-        {/* flow bar — always indigo */}
-        <div className="rounded-3xl p-7 md:px-8 flex flex-wrap items-center justify-between gap-5 text-center bg-primary shadow-[0_16px_48px_hsl(var(--primary)/0.33)]">
-          {[
-            {
-              e: "📲",
-              l: "WhatsApp / IG / TikTok",
-              s: "Your existing audience",
-            },
-            null,
-            { e: "🔗", l: "Your SteerSolo link", s: "One URL in every bio" },
-            null,
-            {
-              e: "🛍️",
-              l: "Verified store page",
-              s: "Catalog + SteerSolo Safe badge",
-            },
-            null,
-            { e: "✅", l: "Real orders", s: "Tracked, confirmed, paid" },
-          ].map((item, i) =>
-            !item ? (
-              <span
-                key={i}
-                className="text-white/20 text-2xl hidden md:block"
-              >
-                →
-              </span>
-            ) : (
-              <div
-                key={i}
-                className="flex flex-col items-center gap-1 mx-auto md:mx-0"
-              >
-                <span className="text-2xl">{item.e}</span>
-                <p className="text-xs font-semibold text-white m-0">
-                  {item.l}
-                </p>
-                <p className="text-[11px] text-white/70 m-0">
-                  {item.s}
-                </p>
-              </div>
-            ),
-          )}
+          <div className="grid gap-4 md:grid-cols-2">
+            {JOURNEY.map((s, i) => {
+              // Alternate background colors slightly for visual interest, similar to Edgloe
+              const isAccentBg = i === 1 || i === 3;
+              
+              return (
+                <div 
+                  key={s.n} 
+                  className={cn(
+                    "rounded-[28px] p-6 shadow-sm border transition-all duration-300 hover:shadow-elegant hover:-translate-y-1",
+                    isAccentBg 
+                      ? "bg-secondary/30 border-transparent dark:bg-card dark:border-border/40" 
+                      : "bg-card border-border/40 dark:bg-card"
+                  )}
+                >
+                  <div className="mb-5 flex items-center justify-between">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+                      {i === 0 && <Store className="w-5 h-5" />}
+                      {i === 1 && <MapPin className="w-5 h-5" />}
+                      {i === 2 && <Zap className="w-5 h-5" />}
+                      {i === 3 && <MessageCircle className="w-5 h-5" />}
+                    </div>
+                    <div className="text-[12px] font-black text-muted-foreground/40 dark:text-muted-foreground/30">
+                      {s.n}
+                    </div>
+                  </div>
+                  <h3 className="text-[22px] font-black tracking-tight text-foreground">
+                    {s.title}
+                  </h3>
+                  <p className="mt-3 text-[15px] leading-7 text-muted-foreground">
+                    {s.body}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
 
     {/* ══════════════════════════════════════════════════════
-        §7  REALITY STATS SPLIT — Always dark (ink)
+        §5  REALITY STATS SPLIT — Clean Style
     ══════════════════════════════════════════════════════ */}
-    <section className="bg-ink-section">
+    <section className="bg-background border-y border-border/40">
       <div className="flex flex-col lg:flex-row min-h-[420px]">
-        <div className="img-zoom flex-1 overflow-hidden min-h-[320px]">
+        <div className="img-zoom flex-1 overflow-hidden min-h-[320px] bg-muted/20">
           <img
             src={P.storefront}
             alt="Online storefront"
             className="w-full h-full object-cover min-h-[320px]"
           />
         </div>
-        <div className="flex-1 flex flex-col justify-center p-10 md:p-14">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#00d97e] mb-8">
+        <div className="flex-1 flex flex-col justify-center p-10 md:p-14 bg-secondary/20">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary mb-8">
             The reality of selling online in Nigeria
           </p>
           {[
@@ -1128,17 +1022,17 @@ const Index = () => {
               key={s.n}
               className="flex items-start gap-5 mb-7"
             >
-              <span className="font-black text-white text-4xl sm:text-5xl leading-none shrink-0">
+              <span className="font-black text-foreground text-4xl sm:text-5xl leading-none shrink-0">
                 {s.n}
               </span>
-              <p className="text-sm sm:text-base leading-relaxed text-white/70 font-light mt-1">
+              <p className="text-sm sm:text-base leading-relaxed text-muted-foreground font-light mt-1">
                 {s.t}
               </p>
             </div>
           ))}
           <div className="mt-2">
             <Link to="/auth/signup">
-              <button className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full font-bold text-sm text-primary bg-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl hover:bg-white/95 active:translate-y-0 transition-all duration-300">
+              <button className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-2xl font-bold text-sm text-primary-foreground bg-primary shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 transition-all duration-300">
                 Be the exception{" "}
                 <ArrowRight className="w-4 h-4" />
               </button>
@@ -1149,28 +1043,28 @@ const Index = () => {
     </section>
 
     {/* ══════════════════════════════════════════════════════
-        §8  SAFEBEAUTY BADGES — Always brand indigo
+        §8  SAFEBEAUTY BADGES — Clean Style
     ══════════════════════════════════════════════════════ */}
-    <section className="bg-[#0A1128] py-24 md:py-32 relative overflow-hidden">
+    <section className="bg-secondary/30 py-24 md:py-32 relative overflow-hidden">
       {/* Background decorations */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-10">
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-[0.03]">
         <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[50%] bg-primary blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-5%] w-[50%] h-[60%] bg-accent blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-5%] w-[50%] h-[60%] bg-emerald-500 blur-[120px] rounded-full" />
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 md:mb-20">
-          <p className="text-[#00d97e] font-bold text-xs uppercase tracking-[0.3em] mb-4">
+          <p className="text-primary font-bold text-xs uppercase tracking-[0.3em] mb-4">
             The Trust Layer
           </p>
-          <h2 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+          <h2 className="text-4xl md:text-6xl font-extrabold text-foreground mb-6 tracking-tight leading-tight">
             SteerSolo Safe — our Trust Layer
             <br />
-            <span className="text-[#00d97e]">
+            <span className="text-emerald-600 dark:text-emerald-400">
               for verified Nigerian merchants.
             </span>
           </h2>
-          <p className="text-white/70 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
             Every badge is earned, not bought. Buyers instantly know how trusted
             <br className="hidden md:block" /> your store is before they spend a
             kobo.
@@ -1185,7 +1079,7 @@ const Index = () => {
                 "group relative p-8 rounded-[2.5rem] border transition-all duration-500 hover:-translate-y-2 overflow-hidden flex flex-col justify-between min-h-[300px]",
                 badge.top
                   ? "bg-gradient-to-br from-emerald-500 to-teal-600 border-emerald-400 shadow-[0_0_35px_rgba(16,185,129,0.3)] animate-pulse-soft"
-                  : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/25",
+                  : "bg-card border-border/40 hover:bg-card/90 hover:border-border/80 shadow-sm",
               )}
             >
               <div>
@@ -1194,7 +1088,7 @@ const Index = () => {
                     "text-6xl font-black mb-6 transition-colors duration-500 select-none",
                     badge.top
                       ? "text-white/20"
-                      : "text-white/10 group-hover:text-white/20",
+                      : "text-muted-foreground/10 group-hover:text-muted-foreground/20",
                   )}
                 >
                   {badge.num}
@@ -1202,7 +1096,7 @@ const Index = () => {
                 <h3
                   className={cn(
                     "text-xl font-extrabold mb-3 tracking-tight",
-                    badge.top ? "text-white" : "text-white",
+                    badge.top ? "text-white" : "text-foreground",
                   )}
                 >
                   {badge.label}
@@ -1210,7 +1104,7 @@ const Index = () => {
                 <p
                   className={cn(
                     "text-sm leading-relaxed font-light",
-                    badge.top ? "text-white/90" : "text-white/70",
+                    badge.top ? "text-white/90" : "text-muted-foreground",
                   )}
                 >
                   {badge.desc}
@@ -1219,7 +1113,7 @@ const Index = () => {
 
               {/* Decorative accent for non-highlighted cards */}
               {!badge.top ? (
-                <div className="absolute bottom-6 right-8 w-8 h-1 bg-white/10 rounded-full group-hover:bg-accent-bright transition-colors" />
+                <div className="absolute bottom-6 right-8 w-8 h-1 bg-border rounded-full group-hover:bg-primary transition-colors" />
               ) : (
                 <div className="absolute bottom-6 right-8 w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-white select-none">
                   ✓
@@ -1326,15 +1220,15 @@ const Index = () => {
     </section>
 
     {/* ══════════════════════════════════════════════════════
-        §10  TESTIMONIALS — Always dark (ink)
+        §10  TESTIMONIALS — Clean Style
     ══════════════════════════════════════════════════════ */}
-    <section className="bg-ink-section py-24">
+    <section className="bg-background py-24 border-y border-border/40">
       <div className="mx-auto max-w-screen-xl px-4">
         <div className="text-center mb-14">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#00d97e] mb-4">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary mb-4">
             Merchant stories
           </p>
-          <h2 className="font-extrabold text-white text-3xl sm:text-4xl tracking-tight m-0">
+          <h2 className="font-extrabold text-foreground text-3xl sm:text-4xl tracking-tight m-0">
             Social sellers who made the switch.
           </h2>
         </div>
@@ -1342,7 +1236,7 @@ const Index = () => {
           {TESTIMONIALS.map(t => (
             <div
               key={t.name}
-              className="lift rounded-3xl p-7 flex flex-col gap-5 bg-white/5 border border-white/10"
+              className="lift rounded-3xl p-7 flex flex-col gap-5 bg-card border border-border/40 shadow-sm"
             >
               <div className="flex gap-1 mb-1">
                 {[1, 2, 3, 4, 5].map(s => (
@@ -1352,20 +1246,20 @@ const Index = () => {
                   />
                 ))}
               </div>
-              <p className="font-light italic text-white/90 leading-relaxed text-base m-0">
+              <p className="font-light italic text-muted-foreground leading-relaxed text-base m-0">
                 "{t.quote}"
               </p>
               <div className="flex items-center gap-3 mt-auto">
                 <img
                   src={t.av}
                   alt={t.name}
-                  className="w-10 h-10 rounded-full object-cover object-top shrink-0 border-2 border-white/30"
+                  className="w-10 h-10 rounded-full object-cover object-top shrink-0 border border-border"
                 />
                 <div>
-                  <p className="font-semibold text-sm text-white m-0">
+                  <p className="font-semibold text-sm text-foreground m-0">
                     {t.name}
                   </p>
-                  <p className="text-xs text-white/70 m-0">
+                  <p className="text-xs text-muted-foreground m-0">
                     {t.role}
                   </p>
                 </div>
@@ -1541,58 +1435,58 @@ const Index = () => {
     <DiscoveryLinks />
 
     {/* ══════════════════════════════════════════════════════
-        §15  FINAL CTA — Always hero indigo
+        §15  FINAL CTA — Clean Style
     ══════════════════════════════════════════════════════ */}
-    <section className="bg-brand-cta relative overflow-hidden py-28 text-center">
+    <section className="bg-primary relative overflow-hidden py-28 text-center border-y border-border/40">
       {/* texture */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-4"
+        className="absolute inset-0 pointer-events-none opacity-[0.03]"
         style={{
           backgroundImage:
-            "repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,.6) 40px,rgba(255,255,255,.6) 41px)",
+            "repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(0,0,0,.6) 40px,rgba(0,0,0,.6) 41px)",
         }}
       />
       {/* accent glow */}
       <div
-        className="absolute -top-1/5 -right-1/10 w-1/2 h-4/5 pointer-events-none"
+        className="absolute -top-1/5 -right-1/10 w-1/2 h-4/5 pointer-events-none opacity-50"
         style={{
           background:
-            "radial-gradient(ellipse, hsl(var(--accent) / 0.15) 0%, transparent 65%)",
+            "radial-gradient(ellipse, hsl(var(--accent) / 0.3) 0%, transparent 65%)",
         }}
       />
 
       <div className="mx-auto max-w-3xl px-4 relative z-10">
-        <ShoppingBag className="w-8 h-8 mx-auto mb-6 text-white/70" />
-        <h2 className="font-extrabold text-white leading-tight text-3xl sm:text-4xl lg:text-5xl mb-5">
+        <ShoppingBag className="w-8 h-8 mx-auto mb-6 text-primary-foreground/70" />
+        <h2 className="font-extrabold text-primary-foreground leading-tight text-3xl sm:text-4xl lg:text-5xl mb-5">
           Your audience is ready.
           <br />
-          <em className="not-italic text-[#00d97e]">
+          <em className="not-italic text-accent-foreground/90 bg-accent/20 px-2 rounded-lg inline-block mt-2">
             Is your storefront?
           </em>
         </h2>
-        <p className="text-base sm:text-lg text-white/60 max-w-lg mx-auto mb-3">
+        <p className="text-base sm:text-lg text-primary-foreground/80 max-w-lg mx-auto mb-3">
           Join verified Nigerian beauty merchants turning their social following
           into a real, trusted business.
         </p>
-        <p className="text-xs sm:text-sm italic text-white/70 mb-10">
+        <p className="text-xs sm:text-sm italic text-primary-foreground/60 mb-10">
           "SteerSolo made my business look professional from day one."
         </p>
         <div className="flex flex-wrap justify-center gap-4 mb-9">
           <Link
             to="/auth/signup"
-            className="inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-full bg-white px-6 py-4 text-sm font-semibold text-primary transition-transform duration-200 hover:-translate-y-0.5 hover:bg-slate-100"
+            className="inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-background px-6 py-4 text-sm font-bold text-foreground transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg"
           >
             Start Free — No Card Needed
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             to="/demo"
-            className="inline-flex w-full max-w-xs items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 py-4 text-sm font-semibold text-white transition-colors duration-200 hover:bg-white/20"
+            className="inline-flex w-full max-w-xs items-center justify-center rounded-2xl border border-primary-foreground/20 bg-primary-foreground/10 px-6 py-4 text-sm font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary-foreground/20"
           >
             View a demo store first
           </Link>
         </div>
-        <div className="flex flex-wrap justify-center gap-5 text-xs text-white/70">
+        <div className="flex flex-wrap justify-center gap-5 text-xs text-primary-foreground/80">
           {[
             "Instant Setup",
             "Works on WhatsApp, IG & TikTok",
@@ -1602,7 +1496,7 @@ const Index = () => {
               key={t}
               className="flex items-center gap-1.5"
             >
-              <CheckCircle className="w-3.5 h-3.5 text-white/70" />
+              <CheckCircle className="w-3.5 h-3.5 text-primary-foreground/80" />
               {t}
             </span>
           ))}

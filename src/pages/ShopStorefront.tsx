@@ -509,11 +509,11 @@ const ShopStorefront = () => {
       )}
 
       {/* ══════════════════ HERO SECTION ══════════════════ */}
-      <section className="relative pt-16 sm:pt-16" data-tour="shop-header">
+      <section className="relative pt-24 sm:pt-28" data-tour="shop-header">
 
         {/* Banner — edge-to-edge on mobile per design system, contained on desktop */}
         <div className="relative h-36 sm:h-52 md:h-64 overflow-hidden sm:container sm:mx-auto sm:px-4 sm:mt-2">
-          <div className="absolute inset-0 sm:rounded-2xl overflow-hidden bg-muted">
+          <div className="absolute inset-0 sm:rounded-[2rem] overflow-hidden bg-muted shadow-sm">
             {shop.banner_url ? (
               <img
                 src={shop.banner_url}
