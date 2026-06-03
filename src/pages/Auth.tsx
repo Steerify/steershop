@@ -16,31 +16,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth, SignUpData } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2,
   Mail,
   ArrowLeft,
-  Store,
-  ShoppingBag,
   Eye,
   EyeOff,
-  Lock,
-  Sparkles,
-  CircleCheck,
-  ShieldCheck,
+  AlertCircle,
 } from "lucide-react";
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
@@ -58,17 +42,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-import NoticeBadge from "@/components/NoticeBadge";
 import { UserRole } from "@/types/api";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { clearSessionExpired, setReturnUrl } from "@/store/slices/uiSlice";
-import { resetSession, setRememberMe } from "@/store/slices/activitySlice";
+import { resetSession } from "@/store/slices/activitySlice";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { cn } from "@/lib/utils";
 
 type AuthPersona = "default" | "merchant" | "shopper";
 
-// Password input component with eye toggle
+// Password input component with eye toggle (Redesigned)
 const PasswordInput = ({
   field,
   placeholder,
@@ -84,17 +67,17 @@ const PasswordInput = ({
         type={showPassword ? "text" : "password"}
         placeholder={placeholder}
         {...field}
-        className="pr-10"
+        className="pr-10 min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base"
       />
       <button
         type="button"
         onClick={() => setShowPassword(!showPassword)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
       >
         {showPassword ? (
-          <EyeOff className="h-4 w-4" />
+          <EyeOff className="h-5 w-5" />
         ) : (
-          <Eye className="h-4 w-4" />
+          <Eye className="h-5 w-5" />
         )}
       </button>
     </div>
@@ -115,7 +98,7 @@ const InputWithIcon = ({
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
 }) => (
   <div className="relative">
-    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
       {icon}
     </span>
     <Input
@@ -123,7 +106,7 @@ const InputWithIcon = ({
       placeholder={placeholder}
       value={value}
       onChange={onChange}
-      className="pl-10 min-h-11"
+      className="pl-12 min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base"
     />
   </div>
 );
@@ -149,14 +132,13 @@ const identifierSchema = z
   .string()
   .trim()
   .min(1, "Email or phone is required")
-  .refine(value => isValidEmail(value) || isValidPhone(value), {
+  .refine((value) => isValidEmail(value) || isValidPhone(value), {
     message: "Enter a valid email or Nigerian phone number",
   });
 
-// Simplified signup - only email, password, role
 const signupSchema = z.object({
   identifier: identifierSchema,
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(8, "At least 8 characters"),
   role: z.enum(["ENTREPRENEUR", "CUSTOMER"]),
 });
 
@@ -189,22 +171,27 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const { type } = useParams();
+  
   const isVendorSignupPath = location.pathname === "/merchant-signup";
   const isShopperSignupPath = location.pathname === "/shopper-signup";
+  
   const persona: AuthPersona = location.pathname.startsWith("/merchant")
     ? "merchant"
     : location.pathname.startsWith("/shopper")
       ? "shopper"
       : "default";
+      
   const defaultTab =
     isVendorSignupPath || isShopperSignupPath
       ? "signup"
       : type === "signup"
         ? "signup"
         : searchParams.get("tab") || "login";
+        
   const navigate = useNavigate();
   const { toast } = useToast();
   const dispatch = useAppDispatch();
+  
   const [activeTab, setActiveTab] = useState(defaultTab);
   const {
     signIn,
@@ -213,19 +200,17 @@ const Auth = () => {
     user,
     isLoading: authLoading,
   } = useAuth();
+  
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
-  const [rememberMe, setRememberMeLocal] = useState(
-    localStorage.getItem("rememberMe") === "true",
-  );
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
 
-  const returnUrl = useAppSelector(state => state.ui.returnUrl);
-  const lastRoute = useAppSelector(state => state.ui.lastRoute);
+  const returnUrl = useAppSelector((state) => state.ui.returnUrl);
+  const lastRoute = useAppSelector((state) => state.ui.lastRoute);
   const locationState = location.state as {
     from?: { pathname: string };
   } | null;
@@ -235,58 +220,10 @@ const Auth = () => {
     defaultValues: {
       identifier: "",
       password: "",
-      role: "ENTREPRENEUR",
+      // Default to ENTREPRENEUR if not specified, but this isn't shown on the UI anymore
+      role: persona === "shopper" ? "CUSTOMER" : "ENTREPRENEUR",
     },
   });
-
-  useEffect(() => {
-    if (persona === "merchant") {
-      signupForm.setValue("role", "ENTREPRENEUR");
-    } else if (persona === "shopper") {
-      signupForm.setValue("role", "CUSTOMER");
-    }
-  }, [persona, signupForm]);
-
-  const personaContent =
-    persona === "merchant"
-      ? {
-          title: "Launch and grow your store.",
-          subtitle:
-            "Built for merchants: structured storefront, orders, payments, and marketing.",
-          chips: [
-            { emoji: "🏪", text: "Create your storefront fast" },
-            { emoji: "📦", text: "Upload products and services" },
-            { emoji: "💳", text: "Set up payment collection" },
-            { emoji: "📈", text: "Track growth and performance" },
-          ],
-          ctaLabel: "Merchant Portal",
-        }
-      : persona === "shopper"
-        ? {
-            title: "Discover trusted shops in one place.",
-            subtitle:
-              "Built for shoppers: view verified sellers, browse products, and buy with confidence.",
-            chips: [
-              { emoji: "🛍️", text: "Browse multiple categories" },
-              { emoji: "✅", text: "Find verified sellers" },
-              { emoji: "🔎", text: "Compare stores quickly" },
-              { emoji: "⚡", text: "Shop faster and safer" },
-            ],
-            ctaLabel: "Shopper Portal",
-          }
-        : {
-            title: "Turn your WhatsApp into a real business.",
-            subtitle:
-              "Professional store, order tracking, and AI-powered marketing — all in one place.",
-            chips: [
-              { emoji: "🏪", text: "Store ready in 10 minutes" },
-              { emoji: "📦", text: "Automated order management" },
-              { emoji: "🤖", text: "AI ad copy generation" },
-              { emoji: "💰", text: "Instant payouts to your bank" },
-              { emoji: "✅", text: "Free forever — no card needed" },
-            ],
-            ctaLabel: "SteerSolo",
-          };
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -301,11 +238,14 @@ const Auth = () => {
       const checkRoleSelection = async () => {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("needs_role_selection")
+          .select("needs_role_selection, role")
           .eq("id", user.id)
           .single();
 
-        if (profile?.needs_role_selection) {
+        // Admins skip onboarding/role-selection entirely
+        const isAdmin = user.role === "ADMIN" || profile?.role === "admin" || profile?.role === "ADMIN";
+
+        if (profile?.needs_role_selection && !isAdmin) {
           navigate("/select-role", { replace: true });
           return;
         }
@@ -322,8 +262,6 @@ const Auth = () => {
         dispatch(resetSession());
 
         if (redirectPath !== defaultPath) {
-          // Navigate to dashboard first (replacing the login page in history),
-          // then push the restored page on top — so pressing Back always goes to /dashboard.
           navigate(defaultPath, { replace: true });
           navigate(redirectPath, { state: { restoredFromLogin: true } });
         } else {
@@ -366,7 +304,7 @@ const Auth = () => {
 
       if (isEmail && isDisposableEmail(normalizedIdentifier)) {
         setAuthError(
-          "Please use a real email provider (e.g. Gmail/Outlook). Disposable inboxes often block verification emails.",
+          "Please use a real email provider (e.g. Gmail/Outlook). Disposable inboxes often block verification emails."
         );
         return;
       }
@@ -374,10 +312,10 @@ const Auth = () => {
       const signUpData: SignUpData = {
         identifier: normalizedIdentifier,
         password: data.password,
-        firstName: "", // Will be collected in onboarding
+        firstName: "",
         lastName: "",
         phone: isEmail ? "" : normalizedIdentifier,
-        role: data.role === "ENTREPRENEUR" ? "ENTREPRENEUR" : "CUSTOMER",
+        role: data.role,
       };
 
       const result = await signUp(signUpData);
@@ -385,17 +323,14 @@ const Auth = () => {
       if (result.error) {
         setAuthError(result.error);
       } else {
-        // Check if Supabase auto-logged them in (occurs if "Confirm Email" is disabled in settings)
-        const { data } = await supabase.auth.getSession();
+        const { data: sessionData } = await supabase.auth.getSession();
 
-        if (data.session) {
+        if (sessionData.session) {
           toast({
             title: "Welcome to SteerSolo!",
             description: "Logging you in seamlessly...",
           });
-          // The useEffect at the top of Auth.tsx will catch the session and navigate automatically.
         } else {
-          // Fallback UI if "Confirm Email" is left enabled in Supabase
           setRegisteredEmail(normalizedIdentifier);
           setShowEmailVerification(true);
 
@@ -426,7 +361,7 @@ const Auth = () => {
         const normalizedError = result.error.toLowerCase();
         if (normalizedError.includes("invalid login credentials")) {
           setAuthError(
-            "Invalid credentials. If you just signed up, verify your account first, then try again.",
+            "Invalid credentials. If you just signed up, verify your account first, then try again."
           );
         } else {
           setAuthError(result.error);
@@ -500,8 +435,7 @@ const Auth = () => {
       if (isDisposableEmail(emailValidation)) {
         toast({
           title: "Use a real inbox",
-          description:
-            "Disposable inboxes may not receive password reset emails.",
+          description: "Disposable inboxes may not receive password reset emails.",
           variant: "destructive",
         });
         return;
@@ -542,514 +476,342 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
-      {/* ── Left brand panel (hidden on mobile) ──────────── */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative overflow-hidden flex-col justify-between bg-gradient-to-br from-[hsl(215,65%,18%)] via-primary to-[hsl(145,55%,26%)] p-12">
-        {/* Background pattern */}
-        <AdirePattern
-          variant="geometric"
-          className="absolute inset-0 opacity-10"
-        />
-        {/* Blob decorations */}
-        <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-white/5 blur-3xl" />
-        <div className="absolute top-1/2 right-8 w-32 h-32 rounded-full bg-accent/30 blur-2xl -translate-y-1/2" />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 font-sans px-4 sm:px-6 py-6 sm:py-10 relative overflow-hidden">
+      {/* Background pattern */}
+      <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.06] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-accent/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-        {/* Logo + tagline */}
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-10">
-            <div className="w-14 h-14 rounded-2xl overflow-hidden ring-4 ring-white/25 shadow-xl">
-              <img
-                src={logo}
-                alt="SteerSolo"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <span className="text-2xl font-bold text-white">SteerSolo</span>
-          </div>
-
-          <h2 className="text-4xl xl:text-5xl font-extrabold text-white leading-tight mb-4 text-balance">
-            {personaContent.title}
-          </h2>
-          <p className="text-white/70 text-lg mb-10 leading-relaxed max-w-md">
-            {personaContent.subtitle}
-          </p>
-
-          {/* Feature highlights */}
-          <ul className="space-y-4">
-            {personaContent.chips.map((item, i) => (
-              <li
-                key={i}
-                className="flex items-center gap-3 text-white/90 animate-slide-up"
-                style={{ animationDelay: `${i * 80}ms` }}
-              >
-                <span className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-xl shadow-inner shrink-0">
-                  {item.emoji}
-                </span>
-                <span className="text-sm font-medium">{item.text}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Bottom trust pill */}
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 max-w-sm">
-            <div className="flex -space-x-2">
-              {["🛍️", "👗", "🍔", "💄", "👟"].map((e, i) => (
-                <div
-                  key={i}
-                  className="w-8 h-8 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center text-sm"
-                >
-                  {e}
-                </div>
-              ))}
-            </div>
-            <div>
-              <p className="text-white font-bold text-sm">
-                Join growing merchants
-              </p>
-              <p className="text-white/60 text-xs">{personaContent.ctaLabel}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Right form panel ─────────────────────────────── */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 md:p-10 relative overflow-hidden bg-gradient-to-br from-background via-background to-primary/3">
-        <AdirePattern
-          variant="dots"
-          className="absolute inset-0 opacity-4 pointer-events-none"
-        />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-accent/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-
-        {/* Mobile logo (shown only on small screens) */}
-        <div className="lg:hidden flex items-center gap-2.5 mb-8">
-          <div
-            className={`w-12 h-12 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-md ${theme === "dark" ? "" : "bg-white"}`}
+      {/* Card Container */}
+      <div className="w-full max-w-[500px] relative z-10">
+        {/* Top Nav: Back Home */}
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-[15px] font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            <img
-              src={logo}
-              alt="SteerSolo"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            SteerSolo
-          </span>
+            <ArrowLeft className="w-4 h-4" /> Back Home
+          </Link>
         </div>
 
-        <div className="w-full max-w-md relative z-10 animate-bounce-in">
-          <div className="mb-3 rounded-2xl border border-primary/15 bg-primary/5 p-3 sm:p-4">
-            <p className="text-sm font-semibold flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              Quick start
-            </p>
-            <ul className="mt-2 space-y-1.5 text-xs sm:text-sm text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <CircleCheck className="h-3.5 w-3.5 text-primary" />
-                Use Google for the fastest sign-in.
-              </li>
-              <li className="flex items-center gap-2">
-                <CircleCheck className="h-3.5 w-3.5 text-primary" />
-                Use Magic Link if you don't want a password.
-              </li>
-              <li className="flex items-center gap-2">
-                <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                Your login is secured with encrypted authentication.
-              </li>
-            </ul>
+        {/* Form Card */}
+        <div className="bg-card/95 backdrop-blur-xl rounded-3xl border border-border/60 shadow-2xl p-6 sm:p-8 md:p-10">
+        
+        {showEmailVerification ? (
+          <div className="text-center space-y-6 py-8">
+            <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+              <Mail className="w-10 h-10 text-primary" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-bold text-foreground">Check Your Email</h3>
+              <p className="text-muted-foreground">
+                We've sent a verification link to
+              </p>
+              <p className="font-semibold text-foreground text-lg">
+                {registeredEmail}
+              </p>
+            </div>
+            <div className="bg-muted/50 rounded-2xl p-6 text-sm text-muted-foreground space-y-3">
+              <p>Click the link in the email to activate your account.</p>
+              <p className="text-[13px]">
+                Check your spam folder if you don't see it within a few minutes.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowEmailVerification(false);
+                setActiveTab("login");
+              }}
+              className="w-full min-h-[52px] rounded-full text-base font-semibold"
+            >
+              Back to Login
+            </Button>
           </div>
+        ) : showForgotPassword ? (
+          <div className="space-y-6">
+            <Button
+              variant="ghost"
+              onClick={() => setShowForgotPassword(false)}
+              className="mb-2 px-0 hover:bg-transparent text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to login
+            </Button>
+            <div className="mb-6">
+              <h3 className="text-3xl font-bold tracking-tight text-foreground mb-2">Reset Password</h3>
+              <p className="text-[15px] text-muted-foreground">
+                Enter your email for a reset link
+              </p>
+            </div>
+            <form onSubmit={handleForgotPassword} className="space-y-5">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-foreground ml-1">Email Address</Label>
+                <Input
+                  type="email"
+                  placeholder="name@company.com"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  required
+                  className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base pl-4"
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full min-h-[52px] rounded-full bg-primary text-primary-foreground font-semibold text-base mt-2"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <Mail className="mr-2 h-5 w-5" />
+                )}
+                Send Reset Link
+              </Button>
+            </form>
+          </div>
+        ) : (
+          <>
+            {/* Header Section */}
+            <div className="mb-8 sm:mb-10">
+              <div className="flex items-center gap-2 mb-3">
+                <img
+                  src={logo}
+                  alt="SteerSolo"
+                  className="w-5 h-5 rounded-[4px] object-cover ring-1 ring-border shadow-sm"
+                />
+                <span className="text-[11px] font-bold tracking-[0.25em] text-muted-foreground uppercase">
+                  Steersolo
+                </span>
+              </div>
 
-          {/* Accent stripe */}
-          <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-primary via-accent to-primary mb-0" />
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 sm:gap-4">
+                <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-[1.05] whitespace-pre-line">
+                  {activeTab === "login" ? "Welcome\nback" : "Get\nstarted"}
+                </h1>
 
-          <div className="bg-card/95 backdrop-blur-xl rounded-b-3xl rounded-tr-3xl border border-border/60 shadow-2xl p-4 sm:p-6 md:p-8">
+                {/* Pill Tab Toggle */}
+                <div className="flex items-center p-1 bg-muted/60 rounded-full border border-border/40 shadow-sm self-start sm:self-auto">
+                  <button
+                    onClick={() => setActiveTab("login")}
+                    className={cn(
+                      "px-5 py-2 rounded-full text-[14px] font-semibold transition-all duration-300",
+                      activeTab === "login"
+                        ? "bg-background shadow-sm text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("signup")}
+                    className={cn(
+                      "px-5 py-2 rounded-full text-[14px] font-semibold transition-all duration-300",
+                      activeTab === "signup"
+                        ? "bg-background shadow-sm text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Sign up
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {authError && (
-              <Alert variant="destructive" className="mb-4">
+              <Alert variant="destructive" className="mb-6 rounded-2xl">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{authError}</AlertDescription>
               </Alert>
             )}
 
-            {showEmailVerification ? (
-              <div className="text-center space-y-6 py-4">
-                <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                  <Mail className="w-10 h-10 text-primary" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-semibold">Check Your Email</h3>
-                  <p className="text-muted-foreground">
-                    We've sent a verification link to
-                  </p>
-                  <p className="font-medium text-foreground">
-                    {registeredEmail}
-                  </p>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
-                  <p>Click the link in the email to activate your account.</p>
-                  <p className="text-xs">
-                    Check your spam folder if you don't see it within a few
-                    minutes.
-                  </p>
-                  <p className="text-xs">
-                    Some temporary/disposable inboxes may delay or block auth
-                    emails.
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowEmailVerification(false);
-                    setActiveTab("login");
-                  }}
-                  className="w-full"
-                >
-                  Back to Login
-                </Button>
-              </div>
-            ) : showForgotPassword ? (
-              <div className="space-y-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowForgotPassword(false)}
-                  className="mb-2"
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to login
-                </Button>
-                <div className="text-center mb-4">
-                  <h3 className="text-lg font-semibold">Reset Password</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Enter your email for a reset link
-                  </p>
-                </div>
-                <form onSubmit={handleForgotPassword} className="space-y-4">
-                  <Input
-                    type="email"
-                    placeholder="you@example.com"
-                    value={forgotEmail}
-                    onChange={e => setForgotEmail(e.target.value)}
-                    required
-                  />
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-primary to-accent"
-                    disabled={isLoading}
+            {/* Form Section */}
+            <div className="space-y-6">
+              {activeTab === "login" ? (
+                <Form {...loginForm}>
+                  <form
+                    onSubmit={loginForm.handleSubmit(onLoginSubmit)}
+                    className="space-y-5"
                   >
-                    {isLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Mail className="mr-2 h-4 w-4" />
-                    )}
-                    Send Reset Link
-                  </Button>
-                </form>
-              </div>
-            ) : (
-              <Tabs
-                value={activeTab}
-                onValueChange={setActiveTab}
-                className="w-full"
-              >
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="login">Login</TabsTrigger>
-                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                </TabsList>
-
-                {/* ================= LOGIN TAB ================= */}
-                <TabsContent value="login" className="space-y-4">
-                  <GoogleSignInButton text="continue_with" />
-
-                  <div className="relative">
-                    <Separator />
-                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">
-                      or
-                    </span>
-                  </div>
-
-                  <Form {...loginForm}>
-                    <form
-                      onSubmit={loginForm.handleSubmit(onLoginSubmit)}
-                      className="space-y-4"
-                    >
-                      <FormField
-                        control={loginForm.control}
-                        name="identifier"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email or Phone</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Mail className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                                <Input
-                                  placeholder="you@example.com or 080..."
-                                  {...field}
-                                  className="pl-10 min-h-11"
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={loginForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="flex justify-between">
-                              <FormLabel className="flex items-center gap-1.5">
-                                <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                                Password
-                              </FormLabel>
-                              <Button
-                                type="button"
-                                variant="link"
-                                className="px-0 text-xs"
-                                onClick={() => setShowForgotPassword(true)}
-                              >
-                                Forgot password?
-                              </Button>
-                            </div>
-                            <FormControl>
-                              <PasswordInput
-                                field={field}
-                                placeholder="••••••••"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="remember"
-                          checked={rememberMe}
-                          onCheckedChange={checked => {
-                            const value = checked === true;
-                            setRememberMeLocal(value);
-                            dispatch(setRememberMe(value));
-                          }}
-                        />
-                        <Label
-                          htmlFor="remember"
-                          className="text-sm text-muted-foreground cursor-pointer"
-                        >
-                          Remember me
-                        </Label>
-                      </div>
-
-                      <Button
-                        type="submit"
-                        className="w-full min-h-11 bg-gradient-to-r from-primary to-accent"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : null}
-                        Login
-                      </Button>
-                    </form>
-                  </Form>
-
-                  <div className="relative">
-                    <Separator />
-                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">
-                      easier login
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    <InputWithIcon
-                      type="email"
-                      value={magicLinkEmail}
-                      onChange={e => setMagicLinkEmail(e.target.value)}
-                      placeholder="Email for magic login link"
-                      icon={<Mail className="h-4 w-4" />}
+                    <FormField
+                      control={loginForm.control}
+                      name="identifier"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1.5">
+                          <FormLabel className="text-sm font-semibold text-foreground ml-1">
+                            Email Address or Phone
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="name@company.com"
+                              {...field}
+                              className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base pl-4"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
+                    
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1.5">
+                          <div className="flex justify-between items-center ml-1">
+                            <FormLabel className="text-sm font-semibold text-foreground">
+                              Password
+                            </FormLabel>
+                            <button
+                              type="button"
+                              onClick={() => setShowForgotPassword(true)}
+                              className="text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              Forgot password?
+                            </button>
+                          </div>
+                          <FormControl>
+                            <PasswordInput field={field} placeholder="••••••••" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full min-h-11"
-                      onClick={handleMagicLinkLogin}
+                      type="submit"
+                      className="w-full min-h-[52px] rounded-full bg-foreground hover:bg-foreground/90 text-background font-semibold text-base mt-4 transition-all"
                       disabled={isLoading}
                     >
                       {isLoading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Mail className="mr-2 h-4 w-4" />
-                      )}
-                      Send me a magic link
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      ) : null}
+                      Sign in
                     </Button>
-                  </div>
-                </TabsContent>
-
-                {/* ================= SIGNUP TAB ================= */}
-                <TabsContent value="signup" className="space-y-4">
-                  <GoogleSignInButton text="signup_with" />
-
-                  <div className="relative">
-                    <Separator />
-                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">
-                      or
-                    </span>
-                  </div>
-
-                  <Form {...signupForm}>
-                    <form
-                      onSubmit={signupForm.handleSubmit(onSignupSubmit)}
-                      className="space-y-4"
-                    >
-                      <FormField
-                        control={signupForm.control}
-                        name="identifier"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email or Phone</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Mail className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                                <Input
-                                  placeholder="you@example.com or 080..."
-                                  {...field}
-                                  className="pl-10 min-h-11"
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={signupForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="flex items-center gap-1.5">
-                              <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                              Password
-                            </FormLabel>
-                            <FormControl>
-                              <PasswordInput
-                                field={field}
-                                placeholder="Min 6 characters"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Role Selection - Visual Cards */}
-                      {persona === "default" && (
-                        <FormField
-                          control={signupForm.control}
-                          name="role"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>I want to:</FormLabel>
-                              <FormControl>
-                                <RadioGroup
-                                  onValueChange={field.onChange}
-                                  value={field.value}
-                                  className="grid grid-cols-2 gap-3"
-                                >
-                                  <Label
-                                    htmlFor="entrepreneur"
-                                    className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === "ENTREPRENEUR" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-muted hover:border-primary/50 bg-card"}`}
-                                  >
-                                    <RadioGroupItem
-                                      value="ENTREPRENEUR"
-                                      id="entrepreneur"
-                                      className="sr-only"
-                                    />
-                                    <Store
-                                      className={`w-8 h-8 mx-auto mb-2 transition-colors ${field.value === "ENTREPRENEUR" ? "text-primary" : "text-muted-foreground"}`}
-                                    />
-                                    <span className="font-semibold block text-center">
-                                      Sell
-                                    </span>
-                                    <span className="text-xs text-muted-foreground text-center">
-                                      Create my shop
-                                    </span>
-                                  </Label>
-
-                                  <Label
-                                    htmlFor="customer"
-                                    className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === "CUSTOMER" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-muted hover:border-primary/50 bg-card"}`}
-                                  >
-                                    <RadioGroupItem
-                                      value="CUSTOMER"
-                                      id="customer"
-                                      className="sr-only"
-                                    />
-                                    <ShoppingBag
-                                      className={`w-8 h-8 mx-auto mb-2 transition-colors ${field.value === "CUSTOMER" ? "text-primary" : "text-muted-foreground"}`}
-                                    />
-                                    <span className="font-semibold block text-center">
-                                      Shop
-                                    </span>
-                                    <span className="text-xs text-muted-foreground text-center">
-                                      Browse stores
-                                    </span>
-                                  </Label>
-                                </RadioGroup>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                  </form>
+                </Form>
+              ) : (
+                <Form {...signupForm}>
+                  <form
+                    onSubmit={signupForm.handleSubmit(onSignupSubmit)}
+                    className="space-y-5"
+                  >
+                    <FormField
+                      control={signupForm.control}
+                      name="identifier"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1.5">
+                          <FormLabel className="text-sm font-semibold text-foreground ml-1">
+                            Email Address or Phone
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="name@company.com"
+                              {...field}
+                              className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base pl-4"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
+                    />
 
+                    <FormField
+                      control={signupForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1.5">
+                          <FormLabel className="text-sm font-semibold text-foreground ml-1">
+                            Password
+                          </FormLabel>
+                          <FormControl>
+                            <PasswordInput field={field} placeholder="••••••••" />
+                          </FormControl>
+                          <p className="text-[13px] text-muted-foreground ml-1 mt-1.5">
+                            At least 8 characters
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      className="w-full min-h-[52px] rounded-full bg-foreground hover:bg-foreground/90 text-background font-semibold text-base mt-4 transition-all"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      ) : null}
+                      Create account
+                    </Button>
+                  </form>
+                </Form>
+              )}
+
+              {/* OR Divider */}
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border/60"></div>
+                </div>
+                <div className="relative flex justify-center text-[11px] font-bold tracking-widest uppercase">
+                  <span className="bg-background px-4 text-muted-foreground">Or</span>
+                </div>
+              </div>
+
+              {/* Alternative Auth Methods */}
+              <div className="space-y-4">
+                <GoogleSignInButton 
+                  text={activeTab === "login" ? "continue_with" : "signup_with"}
+                  className="w-full min-h-[52px] rounded-full bg-background border-border shadow-sm hover:bg-muted/50 text-base font-semibold transition-all [&>svg]:w-5 [&>svg]:h-5" 
+                />
+
+                {activeTab === "login" && (
+                  <div className="space-y-3 pt-2">
+                    <p className="text-center text-[13px] font-medium text-muted-foreground">
+                      Prefer a magic link?
+                    </p>
+                    <div className="relative flex items-center">
+                      <Input
+                        type="email"
+                        value={magicLinkEmail}
+                        onChange={(e) => setMagicLinkEmail(e.target.value)}
+                        placeholder="Enter email for magic link"
+                        className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-[14px] pl-4 pr-12"
+                      />
                       <Button
-                        type="submit"
-                        className="w-full min-h-11 bg-gradient-to-r from-primary to-accent"
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 rounded-xl text-muted-foreground hover:text-foreground h-9 w-9"
+                        onClick={handleMagicLinkLogin}
                         disabled={isLoading}
                       >
                         {isLoading ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : null}
-                        {persona === "merchant"
-                          ? "Start Selling for Free"
-                          : "Create Account"}
-                      </Button>
-
-                      <div className="flex flex-col items-center gap-2">
-                        <NoticeBadge
-                          variant="legal"
-                          className="w-full text-center"
-                        >
-                          By signing up you agree to our{" "}
-                          <Link to="/terms" className="underline">
-                            Terms of Service
-                          </Link>{" "}
-                          and{" "}
-                          <Link to="/privacy" className="underline">
-                            Privacy Policy
-                          </Link>
-                          .
-                        </NoticeBadge>
-                        {persona === "merchant" && (
-                          <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full">
-                            No credit card required
-                          </p>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Mail className="h-4 w-4" />
                         )}
-                      </div>
-                    </form>
-                  </Form>
-                </TabsContent>
-              </Tabs>
-            )}
-          </div>
-          {/* /form card */}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer text */}
+              <p className="text-center text-[13px] text-muted-foreground pt-6 pb-4">
+                By continuing, you agree to our{" "}
+                <Link to="/terms" className="underline hover:text-foreground transition-colors">terms</Link>{" "}
+                and{" "}
+                <Link to="/privacy" className="underline hover:text-foreground transition-colors">privacy policy</Link>.
+              </p>
+            </div>
+          </>
+        )}
         </div>
-        {/* /max-w-md */}
+        {/* /Form Card */}
       </div>
-      {/* /right panel */}
+      {/* /Card Container */}
     </div>
   );
 };

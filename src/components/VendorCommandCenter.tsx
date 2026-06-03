@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Loader2, Store, PackagePlus, Share2, ArrowRight, CheckCircle2,
   Copy, ExternalLink, Activity, Sparkles, ShieldCheck, Lock, Unlock,
-  Clock, Coins, Award, Info, HelpCircle, ChevronRight
+  Clock, Coins, Award, Info, HelpCircle, ChevronRight, ShoppingCart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
