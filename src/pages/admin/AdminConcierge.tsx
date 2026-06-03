@@ -34,6 +34,12 @@ const SLOT_LABELS: Record<ConciergeSlot, string> = {
   top5: "Top 5 Products",
   featured_store: "Featured Store",
   conversation: "Conversation Starter",
+  tech_insight: "Tech Insight",
+  community_poll: "Community Poll",
+  founder_story: "Founder Story",
+  sales_tip: "Sales Tip",
+  platform_feature: "Platform Feature",
+  merchant_win: "Merchant Win",
 };
 
 const SLOTS: ConciergeSlot[] = [
@@ -44,6 +50,12 @@ const SLOTS: ConciergeSlot[] = [
   "top5",
   "featured_store",
   "conversation",
+  "tech_insight",
+  "community_poll",
+  "founder_story",
+  "sales_tip",
+  "platform_feature",
+  "merchant_win",
 ];
 
 const TARGET_LABELS: Record<TargetGroup, { label: string; color: string }> = {
@@ -81,7 +93,7 @@ function getShareCaption(post: ConciergePost) {
   let caption = post.caption.replace(LINK_PLACEHOLDER_PATTERN, `\n\nView on SteerSolo: ${actionUrl}`).trim();
 
   if (post.link_url && actionUrl !== post.link_url) {
-    caption = caption.replaceAll(post.link_url, actionUrl);
+    caption = caption.split(post.link_url).join(actionUrl);
   }
 
   if (!URL_PATTERN.test(caption)) {

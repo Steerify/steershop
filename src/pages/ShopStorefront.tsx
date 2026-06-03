@@ -292,11 +292,22 @@ const ShopStorefront = () => {
           }
         }
       }
-      let productsQuery = supabase.from("products").select("*").eq("shop_id", shopData.id).order("created_at", { ascending: false });
-      if (!user || user.id !== shopData.owner_id) productsQuery = productsQuery.eq("is_available", true);
+      const isOwnerView = !!user && user.id === shopData.owner_id;
+      // For public storefront, never expose digital_file_url or other internal fields.
+      const PUBLIC_PRODUCT_COLS =
+        "id, shop_id, name, description, price, compare_price, image_url, video_url, " +
+        "stock_quantity, stock_unit, is_available, type, category, duration_minutes, " +
+        "booking_required, is_digital, digital_delivery_text, average_rating, total_reviews, " +
+        "created_at, updated_at, delete_at, nafdac_number";
+      let productsQuery = supabase
+        .from("products")
+        .select(isOwnerView ? "*" : PUBLIC_PRODUCT_COLS)
+        .eq("shop_id", shopData.id)
+        .order("created_at", { ascending: false });
+      if (!isOwnerView) productsQuery = productsQuery.eq("is_available", true);
       const { data: productsData, error: productsError } = await productsQuery;
       if (productsError) throw productsError;
-      const productsList = (productsData || []).map(p => ({
+      const productsList = ((productsData || []) as any[]).map((p: any) => ({
         ...p,
         type: (p.type || 'product') as 'product' | 'service',
         booking_required: p.booking_required ?? false

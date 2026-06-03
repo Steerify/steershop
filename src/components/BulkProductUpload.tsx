@@ -92,6 +92,8 @@ export const BulkProductUpload = ({ open, onClose, shopId, onSuccess }: BulkProd
       if (error) throw error;
 
       if (data?.products && Array.isArray(data.products)) {
+        const returned = data.products.length;
+        const expected = uploadedUrls.length;
         setDrafts(
           data.products.map((p: any, i: number) => ({
             name: p.name || `Product ${i + 1}`,
@@ -102,6 +104,13 @@ export const BulkProductUpload = ({ open, onClose, shopId, onSuccess }: BulkProd
           }))
         );
         setStep("review");
+        if (returned < expected) {
+          toast({
+            title: "Partial AI result",
+            description: `${returned} of ${expected} images returned suggestions. Review and add the missing ones manually.`,
+            variant: "destructive",
+          });
+        }
       } else {
         throw new Error("Invalid response from AI");
       }

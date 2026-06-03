@@ -197,3 +197,27 @@ Every P0 and P1 ordered by risk:
 - **KYC server-side validation** — `KYCLevel{1,2}Form` currently update `profiles` directly. Routing through a server edge function with validation requires new function `kyc-submit` and form refactor. Tracked for next sprint.
 - **`admin_security_alerts` / `admin_mutation_rate_limits` wiring** — confirm edge functions log to them; if not, add logging.
 - All P2 items (10 of them) — non-blocking polish.
+
+---
+
+## ✅ 2026-06-03 — P2 FIX PASS + KYC review
+
+### Done (this loop)
+- **[P2-1]** `product.service.ts` — fire-and-forget `index-now` calls now log via `.catch`/error callbacks instead of swallowing errors.
+- **[P2-2]** `order.service.ts:updateOrderStatus` — added status-regression guard (cannot move completed/cancelled back; cannot regress earlier in the lifecycle except to `cancelled`).
+- **[P2-3]** `Bookings.tsx` — secondary `loadBookings()` now toggles `isLoading`, removing the empty→populated flicker.
+- **[P2-4]** `StorefrontCustomizer` — added `onSaved` callback so MyStore can refetch after save (no more stale preview until refresh).
+- **[P2-5]** `AdminDashboard` — `getAnalytics` failures now surface a toast instead of silently showing 0.
+- **[P2-6]** `ShopStorefront.tsx` — non-owner storefront fetches an explicit column list; `digital_file_url` and other internal fields are no longer sent to public visitors.
+- **[P2-7]** `BulkProductUpload.tsx` — partial AI responses now surface a toast warning when fewer products are returned than images uploaded.
+- **[P2-8]** `AdminConcierge.tsx` — completed `SLOT_LABELS` / `SLOTS` for all 13 `ConciergeSlot` values and replaced `String.replaceAll` (ES2021-only) with `split/join` to match the project's TS target.
+- **[KYC]** Confirmed both `KYCLevel1Form` and `KYCLevel2Form` already route through the `verify-identity` edge function, which uses the service role to update `profiles` (BVN + bank verification). The only direct client read on `profiles` is the non-sensitive `bvn_verified`/`verified_bank_account_name` status check. **No further KYC server-side rewrite needed.**
+
+### Intentionally NOT changed
+- **Subscription.tsx history timestamps** — already formatted via `date-fns format()` (audit was stale).
+- **AdminShops profiles N+1** — actually uses `.in("id", ownerIds)` (single batch query); audit was stale.
+- **Dashboard.tsx:478 `console.error`** — already followed by a user-facing toast; the log is intentional for support diagnostics, not a leak.
+- **Unused tables (`product_recommendations`, `customer_preferences`, `safebeauty_tiers`, `promoted_listings`, email log tables)** — kept for upcoming sprints; no removal without product sign-off.
+
+### Status
+All P0, P1, and actionable P2 findings are now resolved. Remaining items are product-direction decisions, not engineering defects.

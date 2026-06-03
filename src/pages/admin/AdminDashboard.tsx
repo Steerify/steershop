@@ -109,8 +109,13 @@ export default function AdminDashboard() {
         topVisitPages: analytics.topVisitPages,
         visitTrend: analytics.visitTrend,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching admin stats:", error);
+      toast({
+        title: "Could not load admin stats",
+        description: error?.message || "Stats may be stale or showing 0. Retry shortly.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoadingStats(false);
     }

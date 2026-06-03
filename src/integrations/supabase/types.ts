@@ -1094,6 +1094,7 @@ export type Database = {
           skipped_by: string | null
           slot: string
           status: string
+          target_group: string
         }
         Insert: {
           caption: string
@@ -1111,6 +1112,7 @@ export type Database = {
           skipped_by?: string | null
           slot: string
           status?: string
+          target_group?: string
         }
         Update: {
           caption?: string
@@ -1128,6 +1130,7 @@ export type Database = {
           skipped_by?: string | null
           slot?: string
           status?: string
+          target_group?: string
         }
         Relationships: [
           {

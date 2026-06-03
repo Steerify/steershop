@@ -17,6 +17,7 @@ interface StorefrontCustomizerProps {
   currentSecondaryColor?: string | null;
   currentFontStyle?: string | null;
   currentThemeMode?: string | null;
+  onSaved?: () => void;
 }
 
 const ACCENT_COLORS = [
@@ -126,6 +127,7 @@ export const StorefrontCustomizer = ({
   currentSecondaryColor,
   currentFontStyle,
   currentThemeMode,
+  onSaved,
 }: StorefrontCustomizerProps) => {
   const { toast } = useToast();
   const [accentColor, setAccentColor] = useState(normalizeColor(currentAccentColor, "#059669"));
@@ -241,6 +243,7 @@ export const StorefrontCustomizer = ({
 
       if (error) throw error;
       toast({ title: "Customizations saved!", description: autoDesignEnabled ? "AI autodesign applied and saved." : "Your storefront has been updated." });
+      onSaved?.();
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Failed to save", variant: "destructive" });
     } finally {
