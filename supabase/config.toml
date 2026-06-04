@@ -81,3 +81,5 @@ project_id = "hwkcqgmtinbgyjjgcgmp"
     verify_jwt = false
   [functions.smtp-verify]
     verify_jwt = false
+  [functions.admin-bootstrap]
+    verify_jwt = false
