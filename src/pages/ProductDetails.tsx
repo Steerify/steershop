@@ -19,6 +19,11 @@ import reviewService from "@/services/review.service";
 import { Shop, Product } from "@/types/api";
 
 // Types from @/types/api used instead
+interface ProductDetailCartItem {
+  product: Product & { stock_quantity?: number; stock_unit?: string };
+  quantity: number;
+}
+
 interface Review {
   id: string;
   rating: number;
@@ -196,25 +201,32 @@ const ProductDetails = () => {
   };
 
   const handleAddToCart = () => {
-    // Store cart in localStorage and redirect to shop
-    const cartKey = `cart_${shop?.id}`;
-    const existingCart = JSON.parse(localStorage.getItem(cartKey) || "[]");
+    if (!shop || !product || !slug) return;
+
+    // Store cart in localStorage so the storefront can hydrate it after navigation.
+    const cartKey = `cart_${shop.id}`;
+    const existingCart: ProductDetailCartItem[] = JSON.parse(localStorage.getItem(cartKey) || "[]");
+    const storefrontProduct = {
+      ...product,
+      stock_quantity: product.stock_quantity ?? product.inventory,
+      stock_unit: product.stockUnit || "units",
+    };
     
-    const existingItem = existingCart.find((item: any) => item.product.id === product?.id);
+    const existingItem = existingCart.find((item) => item.product.id === product.id);
     
     if (existingItem) {
-      existingItem.quantity = Math.min(existingItem.quantity + quantity, product?.inventory || 1);
+      existingItem.quantity = Math.min(existingItem.quantity + quantity, product.inventory || 1);
     } else {
-      existingCart.push({ product, quantity });
+      existingCart.push({ product: storefrontProduct, quantity });
     }
     
     localStorage.setItem(cartKey, JSON.stringify(existingCart));
     
     toast({
       title: "Added to Cart! 🛒",
-      description: `${quantity} x ${product?.name} added`,
+      description: `${quantity} x ${product.name} added`,
       action: (
-        <Button variant="outline" size="sm" onClick={() => navigate(`/shop/${slug}`)}>
+        <Button variant="outline" size="sm" onClick={() => navigate(`/shop/${slug}?cart=open`)}>
           View Cart
         </Button>
       ),
