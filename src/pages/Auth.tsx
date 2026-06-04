@@ -55,7 +55,7 @@ type AuthPersona = "default" | "merchant" | "shopper";
 type AuthTextField = {
   name: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (event: ChangeEvent<HTMLInputElement> | string) => void;
   onBlur: () => void;
   ref: (instance: HTMLInputElement | null) => void;
   disabled?: boolean;
@@ -64,13 +64,16 @@ type AuthTextField = {
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 
-const updateFieldValue = (field: AuthTextField, value: string) => {
-  field.onChange(value);
+const handleFieldChange = (
+  field: AuthTextField,
+  event: ChangeEvent<HTMLInputElement>,
+) => {
+  field.onChange(event);
 };
 
 const syncAutofillValue = (field: AuthTextField, value: string) => {
-  if (value !== field.value) {
-    updateFieldValue(field, value);
+  if (value && value !== field.value) {
+    field.onChange(value);
   }
 };
 
@@ -105,8 +108,7 @@ const PasswordInput = ({
           scheduleAutofillSync(field, input);
         }}
         autoComplete={autoComplete}
-        onChange={(event) => updateFieldValue(field, event.currentTarget.value)}
-        onInput={(event) => syncAutofillValue(field, event.currentTarget.value)}
+        onChange={(event) => handleFieldChange(field, event)}
         onFocus={(event: FocusEvent<HTMLInputElement>) => {
           scheduleAutofillSync(field, event.currentTarget);
         }}
@@ -175,8 +177,7 @@ const AuthIdentifierInput = ({
       field.ref(input);
       scheduleAutofillSync(field, input);
     }}
-    onChange={(event) => updateFieldValue(field, event.currentTarget.value)}
-    onInput={(event) => syncAutofillValue(field, event.currentTarget.value)}
+    onChange={(event) => handleFieldChange(field, event)}
     onFocus={(event: FocusEvent<HTMLInputElement>) => {
       scheduleAutofillSync(field, event.currentTarget);
     }}
