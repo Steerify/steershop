@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -9,7 +9,6 @@ interface GoogleSignInButtonProps {
   text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
   theme?: 'outline' | 'filled_blue' | 'filled_black';
   size?: 'large' | 'medium' | 'small';
-  width?: string;
 }
 
 interface CredentialResponse {
@@ -17,17 +16,21 @@ interface CredentialResponse {
   select_by: string;
 }
 
+// Google's button max width is 400px
+const GOOGLE_MAX_WIDTH = 400;
+const GOOGLE_MIN_WIDTH = 200;
+
 export const GoogleSignInButton = ({
   onSuccess,
   onError,
   text = 'continue_with',
   theme = 'outline',
   size = 'large',
-  width = '100%',
 }: GoogleSignInButtonProps) => {
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
-  const initializedRef = useRef(false);
   const navigate = useNavigate();
+  const [renderWidth, setRenderWidth] = useState<number>(0);
 
   const handleCredentialResponse = useCallback(async (response: CredentialResponse) => {
     try {
@@ -44,7 +47,6 @@ export const GoogleSignInButton = ({
       }
 
       if (data.user) {
-        // Check if this is a new Google user needing role selection
         const { data: profile } = await supabase
           .from('profiles')
           .select('needs_role_selection')
@@ -68,41 +70,53 @@ export const GoogleSignInButton = ({
     }
   }, [onSuccess, onError, navigate]);
 
+  // Measure parent width and observe resize
+  useEffect(() => {
+    if (!wrapperRef.current) return;
+    const el = wrapperRef.current;
+    const measure = () => {
+      const w = el.clientWidth;
+      if (w > 0) {
+        setRenderWidth(Math.max(GOOGLE_MIN_WIDTH, Math.min(GOOGLE_MAX_WIDTH, Math.floor(w))));
+      }
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Render (and re-render) Google button when width changes
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    
-    if (!clientId || !buttonRef.current || !window.google?.accounts?.id) {
+    if (!clientId || !buttonRef.current || !window.google?.accounts?.id || !renderWidth) {
       return;
     }
 
-    // Prevent re-initialization
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-
-    // Initialize Google Identity Services
     window.google.accounts.id.initialize({
       client_id: clientId,
       callback: handleCredentialResponse,
-      use_fedcm_for_prompt: false, // Disabled to avoid nonce mismatch with Supabase
+      use_fedcm_for_prompt: false,
     });
 
-    // Render the personalized button
+    // Clear previous render before re-rendering
+    buttonRef.current.innerHTML = '';
+
     window.google.accounts.id.renderButton(buttonRef.current, {
       type: 'standard',
       theme,
       size,
       text,
       shape: 'rectangular',
-      logo_alignment: 'left',
-      width: width === '100%' ? undefined : parseInt(width),
+      logo_alignment: 'center',
+      width: renderWidth,
     });
-  }, [handleCredentialResponse, text, theme, size, width]);
+  }, [handleCredentialResponse, text, theme, size, renderWidth]);
 
   return (
-    <div 
-      ref={buttonRef} 
-      className="google-sign-in-container w-full flex justify-center items-center [&>div]:!w-full [&>div>div]:!w-full [&>div>div>iframe]:!w-full"
-    />
+    <div ref={wrapperRef} className="w-full flex justify-center">
+      <div ref={buttonRef} className="google-sign-in-container" />
+    </div>
   );
 };
 
