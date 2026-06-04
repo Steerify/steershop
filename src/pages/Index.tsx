@@ -659,7 +659,7 @@ const Index = () => {
                       <span className="text-foreground font-extrabold">
                         <AnimatedCounter target={liveVendorCount} />+
                       </span>{" "}
-                      active merchants
+                      {vendorCountLabel}
                     </div>
                     <p className="text-[10px] text-muted-foreground">
                       Live storefronts in Lagos, Abuja & across Nigeria
