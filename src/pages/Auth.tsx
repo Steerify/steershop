@@ -57,7 +57,7 @@ type AuthPersona = "default" | "merchant" | "shopper";
 type AuthTextField = {
   name: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (event: ChangeEvent<HTMLInputElement> | string) => void;
   onBlur: () => void;
   ref: (instance: HTMLInputElement | null) => void;
   disabled?: boolean;
@@ -66,24 +66,18 @@ type AuthTextField = {
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 
-const useSyncedAuthField = (field: AuthTextField) => {
-  const [inputValue, setInputValue] = useState(field.value ?? "");
-  const inputValueRef = useRef(inputValue);
+const handleFieldChange = (
+  field: AuthTextField,
+  event: ChangeEvent<HTMLInputElement>,
+) => {
+  field.onChange(event);
+};
 
-  useEffect(() => {
-    const nextValue = field.value ?? "";
-    inputValueRef.current = nextValue;
-    setInputValue(nextValue);
-  }, [field.value]);
-
-  const updateValue = useCallback(
-    (nextValue: string) => {
-      inputValueRef.current = nextValue;
-      setInputValue(nextValue);
-      field.onChange(nextValue);
-    },
-    [field],
-  );
+const syncAutofillValue = (field: AuthTextField, value: string) => {
+  if (value && value !== field.value) {
+    field.onChange(value);
+  }
+};
 
   const syncAutofillValue = useCallback(
     (nextValue: string) => {
@@ -136,8 +130,7 @@ const PasswordInput = ({
           scheduleAutofillSync(input);
         }}
         autoComplete={autoComplete}
-        onChange={(event) => updateValue(event.currentTarget.value)}
-        onInput={(event) => updateValue(event.currentTarget.value)}
+        onChange={(event) => handleFieldChange(field, event)}
         onFocus={(event: FocusEvent<HTMLInputElement>) => {
           scheduleAutofillSync(event.currentTarget);
         }}
@@ -191,37 +184,28 @@ const AuthIdentifierInput = ({
 }: {
   field: AuthTextField;
   autoComplete: string;
-}) => {
-  const { inputValue, updateValue, scheduleAutofillSync } =
-    useSyncedAuthField(field);
-
-  return (
-    <Input
-      type="text"
-      name={field.name}
-      value={inputValue}
-      onBlur={field.onBlur}
-      disabled={field.disabled}
-      inputMode="email"
-      autoCapitalize="none"
-      autoCorrect="off"
-      spellCheck={false}
-      autoComplete={autoComplete}
-      enterKeyHint="next"
-      placeholder="email@example.com or 08012345678"
-      ref={(input) => {
-        field.ref(input);
-        scheduleAutofillSync(input);
-      }}
-      onChange={(event) => updateValue(event.currentTarget.value)}
-      onInput={(event) => updateValue(event.currentTarget.value)}
-      onFocus={(event: FocusEvent<HTMLInputElement>) => {
-        scheduleAutofillSync(event.currentTarget);
-      }}
-      className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base text-foreground caret-foreground pl-4"
-    />
-  );
-};
+}) => (
+  <Input
+    type="text"
+    inputMode="email"
+    autoCapitalize="none"
+    autoCorrect="off"
+    spellCheck={false}
+    autoComplete={autoComplete}
+    enterKeyHint="next"
+    placeholder="email@example.com or 08012345678"
+    {...field}
+    ref={(input) => {
+      field.ref(input);
+      scheduleAutofillSync(field, input);
+    }}
+    onChange={(event) => handleFieldChange(field, event)}
+    onFocus={(event: FocusEvent<HTMLInputElement>) => {
+      scheduleAutofillSync(field, event.currentTarget);
+    }}
+    className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base text-foreground caret-foreground pl-4"
+  />
+);
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NIGERIAN_PHONE_REGEX = /^(?:0\d{10}|234\d{10})$/;
