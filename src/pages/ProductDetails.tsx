@@ -30,6 +30,74 @@ interface Review {
   } | null;
 }
 
+interface StoredCartProduct {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  compare_price: number | null;
+  stock_quantity: number;
+  stock_unit?: string | null;
+  is_available: boolean;
+  image_url: string | null;
+  video_url: string | null;
+  average_rating: number;
+  total_reviews: number;
+  type: 'product' | 'service';
+  duration_minutes: number | null;
+  booking_required: boolean;
+}
+
+interface StoredCartItem {
+  product: StoredCartProduct;
+  quantity: number;
+}
+
+const getCartKey = (shopId: string) => `cart_${shopId}`;
+
+const parseStoredCart = (storedValue: string | null): unknown[] => {
+  if (!storedValue) return [];
+
+  try {
+    const parsed = JSON.parse(storedValue);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const isStoredCartItem = (item: unknown): item is StoredCartItem => {
+  if (!item || typeof item !== "object") return false;
+  const productId = (item as { product?: { id?: unknown } }).product?.id;
+  return typeof productId === "string";
+};
+
+const getProductStockQuantity = (product: Product) => product.stock_quantity ?? product.inventory ?? 0;
+
+const normalizeProductForCart = (product: Product): StoredCartProduct => ({
+  id: product.id,
+  name: product.name,
+  description: product.description || null,
+  price: product.price,
+  compare_price: product.comparePrice ?? null,
+  stock_quantity: getProductStockQuantity(product),
+  stock_unit: product.stockUnit || null,
+  is_available: product.is_available ?? true,
+  image_url: product.image_url || product.images?.[0]?.url || null,
+  video_url: product.video_url || null,
+  average_rating: product.averageRating ?? 0,
+  total_reviews: product.totalReviews ?? 0,
+  type: product.type || 'product',
+  duration_minutes: product.duration_minutes ?? null,
+  booking_required: product.booking_required ?? false,
+});
+
+const clampCartQuantity = (quantity: unknown, stockQuantity: number) => {
+  const parsedQuantity = Number(quantity);
+  const safeQuantity = Number.isFinite(parsedQuantity) ? Math.floor(parsedQuantity) : 1;
+  return Math.min(Math.max(safeQuantity, 1), stockQuantity);
+};
+
 const ProductDetails = () => {
   const { slug, productId } = useParams();
   const navigate = useNavigate();
@@ -196,23 +264,28 @@ const ProductDetails = () => {
   };
 
   const handleAddToCart = () => {
-    // Store cart in localStorage and redirect to shop
-    const cartKey = `cart_${shop?.id}`;
-    const existingCart = JSON.parse(localStorage.getItem(cartKey) || "[]");
-    
-    const existingItem = existingCart.find((item: any) => item.product.id === product?.id);
-    
+    if (!shop?.id || !product) return;
+
+    const cartKey = getCartKey(shop.id);
+    const cartProduct = normalizeProductForCart(product);
+    const existingCart = parseStoredCart(localStorage.getItem(cartKey)).filter(isStoredCartItem);
+    const existingItem = existingCart.find((item) => item.product.id === product.id);
+
     if (existingItem) {
-      existingItem.quantity = Math.min(existingItem.quantity + quantity, product?.inventory || 1);
+      existingItem.product = cartProduct;
+      existingItem.quantity = clampCartQuantity(existingItem.quantity + quantity, cartProduct.stock_quantity);
     } else {
-      existingCart.push({ product, quantity });
+      existingCart.push({
+        product: cartProduct,
+        quantity: clampCartQuantity(quantity, cartProduct.stock_quantity),
+      });
     }
-    
+
     localStorage.setItem(cartKey, JSON.stringify(existingCart));
     
     toast({
       title: "Added to Cart! 🛒",
-      description: `${quantity} x ${product?.name} added`,
+      description: `${quantity} x ${product.name} added`,
       action: (
         <Button variant="outline" size="sm" onClick={() => navigate(`/shop/${slug}`)}>
           View Cart
