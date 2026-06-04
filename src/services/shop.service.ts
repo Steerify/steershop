@@ -184,6 +184,7 @@ const shopService = {
         .select('shop_id, image_url')
         .in('shop_id', shopIds)
         .eq('is_available', true)
+        .is('delete_at', null)
         .not('image_url', 'is', null);
 
       const shopsWithImages = new Set(productsData?.map((p: any) => p.shop_id) || []);

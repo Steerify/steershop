@@ -303,6 +303,7 @@ const ShopStorefront = () => {
         .from("products")
         .select(isOwnerView ? "*" : PUBLIC_PRODUCT_COLS)
         .eq("shop_id", shopData.id)
+        .is("delete_at", null)
         .order("created_at", { ascending: false });
       if (!isOwnerView) productsQuery = productsQuery.eq("is_available", true);
       const { data: productsData, error: productsError } = await productsQuery;
