@@ -428,6 +428,7 @@ const HeroTextSlider = () => {
 /* ═══════════════════════════════════════════════════════ PAGE ═══ */
 const Index = () => {
   const [liveVendorCount, setLiveVendorCount] = useState<number>(0);
+  const [vendorCountLabel, setVendorCountLabel] = useState<string>("active merchants");
 
   useEffect(() => {
     let isMounted = true;
@@ -435,34 +436,43 @@ const Index = () => {
 
     const fetchVendorCount = async () => {
       try {
-        const { count, error } = await supabase
-          .from("profiles")
-          .select("id", { count: "exact", head: true })
-          .eq("role", "shop_owner");
-        
-        if (isMounted && !error && count !== null) {
-          setLiveVendorCount(count);
-        } else {
-          console.warn("Could not fetch merchant count:", error?.message);
+        // 1. Active merchants = distinct shop_id appearing in orders (real, transacting shops)
+        const { data: activeRows, error: activeErr } = await supabase
+          .from("orders")
+          .select("shop_id")
+          .not("shop_id", "is", null);
+
+        let activeCount = 0;
+        if (!activeErr && activeRows) {
+          activeCount = new Set(activeRows.map((r: any) => r.shop_id)).size;
         }
+
+        if (activeCount > 0) {
+          if (!isMounted) return;
+          setLiveVendorCount(activeCount);
+          setVendorCountLabel("active merchants");
+          return;
+        }
+
+        // 2. Fallback: approved (live) shops
+        const { count: approvedCount } = await supabase
+          .from("shops")
+          .select("id", { count: "exact", head: true })
+          .eq("is_active", true);
+
+        if (!isMounted) return;
+        setLiveVendorCount(approvedCount ?? 0);
+        setVendorCountLabel("approved shops");
       } catch (e) {
         console.error("Error fetching merchant count:", e);
       }
     };
     fetchVendorCount();
 
-    // Subscribe to all changes on profiles table to keep counts perfectly in sync
     channel = supabase
-      .channel('public:profiles-count-sync')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'profiles' },
-        (payload) => {
-          if (isMounted) {
-            fetchVendorCount();
-          }
-        }
-      )
+      .channel('public:merchants-count-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'shops' }, () => { if (isMounted) fetchVendorCount(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => { if (isMounted) fetchVendorCount(); })
       .subscribe();
 
     return () => {
