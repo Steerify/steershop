@@ -761,7 +761,7 @@ const Auth = () => {
 
               {/* Alternative Auth Methods */}
               <div className="space-y-4">
-                <div className="w-full min-h-[52px] rounded-full bg-background border border-border shadow-sm hover:bg-muted/50 transition-all [&>div]:w-full [&_iframe]:!w-full">
+                <div className="w-full">
                   <GoogleSignInButton 
                     text={activeTab === "login" ? "continue_with" : "signup_with"}
                   />
