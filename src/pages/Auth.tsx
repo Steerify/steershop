@@ -243,7 +243,7 @@ const Auth = () => {
           .single();
 
         // Admins skip onboarding/role-selection entirely
-        const isAdmin = user.role === "ADMIN" || profile?.role === "admin" || profile?.role === "ADMIN";
+        const isAdmin = (user.role as string) === "ADMIN" || profile?.role === "admin" || profile?.role === "ADMIN";
 
         if (profile?.needs_role_selection && !isAdmin) {
           navigate("/select-role", { replace: true });
@@ -761,10 +761,11 @@ const Auth = () => {
 
               {/* Alternative Auth Methods */}
               <div className="space-y-4">
-                <GoogleSignInButton 
-                  text={activeTab === "login" ? "continue_with" : "signup_with"}
-                  className="w-full min-h-[52px] rounded-full bg-background border-border shadow-sm hover:bg-muted/50 text-base font-semibold transition-all [&>svg]:w-5 [&>svg]:h-5" 
-                />
+                <div className="w-full min-h-[52px] rounded-full bg-background border border-border shadow-sm hover:bg-muted/50 transition-all [&>div]:w-full [&_iframe]:!w-full">
+                  <GoogleSignInButton 
+                    text={activeTab === "login" ? "continue_with" : "signup_with"}
+                  />
+                </div>
 
                 {activeTab === "login" && (
                   <div className="space-y-3 pt-2">
