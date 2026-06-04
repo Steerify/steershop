@@ -243,7 +243,7 @@ const Auth = () => {
           .single();
 
         // Admins skip onboarding/role-selection entirely
-        const isAdmin = (user.role as string) === "ADMIN" || profile?.role === "admin" || profile?.role === "ADMIN";
+        const isAdmin = (user.role as string) === "ADMIN" || (profile?.role as string) === "admin" || (profile?.role as string) === "ADMIN";
 
         if (profile?.needs_role_selection && !isAdmin) {
           navigate("/select-role", { replace: true });
