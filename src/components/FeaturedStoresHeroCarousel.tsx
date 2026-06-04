@@ -283,6 +283,7 @@ export const FeaturedStoresHeroCarousel = () => {
       }}
       className="group"
     >
+      <style>{`@keyframes fsh-fade-in{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:scale(1)}}`}</style>
       {/* header */}
       <div
         style={{
