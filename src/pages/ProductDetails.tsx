@@ -17,7 +17,6 @@ import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
 import reviewService from "@/services/review.service";
 import { Shop, Product } from "@/types/api";
-import { handleApiError } from "@/lib/api-error-handler";
 
 // Types from @/types/api used instead
 interface Review {
@@ -145,13 +144,24 @@ const ProductDetails = () => {
       const productResponse = await productService.getProductById(productId);
       if (!productResponse.success || !productResponse.data) {
         toast({
-          title: "Product Not Found",
-          description: "This product doesn't exist",
+          title: "Product Unavailable",
+          description: "This product is no longer available from this shop.",
           variant: "destructive",
         });
         navigate(`/shop/${slug}`);
         return;
       }
+
+      if (productResponse.data.shopId !== shopResponse.data.id || !productResponse.data.is_available) {
+        toast({
+          title: "Product Unavailable",
+          description: "This product is currently unavailable. Please browse other items from this shop.",
+          variant: "destructive",
+        });
+        navigate(`/shop/${slug}`);
+        return;
+      }
+
       setProduct(productResponse.data);
 
       // Load related products
@@ -173,8 +183,13 @@ const ProductDetails = () => {
         console.error("Failed to load reviews:", e);
       }
 
-    } catch (error: any) {
-      // Error already handled by services or handleApiError
+    } catch {
+      toast({
+        title: "Product Unavailable",
+        description: "This product is no longer available. Please browse other items from this shop.",
+        variant: "destructive",
+      });
+      if (slug) navigate(`/shop/${slug}`);
     } finally {
       setIsLoading(false);
     }

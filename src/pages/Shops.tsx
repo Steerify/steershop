@@ -156,7 +156,7 @@ const Shops = () => {
     const fetchStats = async () => {
       const [shopsRes, productsRes] = await Promise.all([
         supabase.from("shops").select("id", { count: "exact", head: true }).eq("is_active", true),
-        supabase.from("products").select("id", { count: "exact", head: true }).eq("is_available", true),
+        supabase.from("products").select("id", { count: "exact", head: true }).eq("is_available", true).is("delete_at", null),
       ]);
       setStats({ shops: shopsRes.count || 0, products: productsRes.count || 0 });
     };
@@ -241,7 +241,7 @@ const Shops = () => {
     // Fetch ALL available products/services (including those without images) for accurate counts
     const { data } = await supabase
       .from('products').select('shop_id, image_url, name, type')
-      .in('shop_id', newIds).eq('is_available', true).limit(200);
+      .in('shop_id', newIds).eq('is_available', true).is('delete_at', null).limit(200);
 
     if (data) {
       const grouped: Record<string, { image_url: string; name: string }[]> = {};

@@ -69,6 +69,7 @@ const DiscoveryHub = () => {
               .select('shop_id, image_url, name')
               .in('shop_id', shopIds)
               .eq('is_available', true)
+              .is('delete_at', null)
               .not('image_url', 'is', null)
               .limit(100);
             

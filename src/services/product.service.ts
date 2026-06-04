@@ -201,6 +201,7 @@ const productService = {
       .from('products')
       .select('*')
       .eq('id', id)
+      .is('delete_at', null)
       .single();
 
     if (error) {

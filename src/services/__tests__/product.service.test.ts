@@ -27,12 +27,14 @@ describe("productService", () => {
         is_available: true,
       };
 
+      const chain = {
+        eq: vi.fn().mockReturnThis(),
+        is: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: mockProduct, error: null }),
+      };
+
       (supabase.from as any).mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: mockProduct, error: null }),
-          }),
-        }),
+        select: vi.fn().mockReturnValue(chain),
       });
 
       const result = await productService.getProductById("prod-123");
@@ -41,15 +43,18 @@ describe("productService", () => {
       expect(result.data.id).toBe("prod-123");
       expect(result.data.price).toBe(1500);
       expect(result.data.images[0].url).toBe("http://example.com/img.jpg");
+      expect(chain.is).toHaveBeenCalledWith("delete_at", null);
     });
 
     it("throws error if product is not found", async () => {
+      const chain = {
+        eq: vi.fn().mockReturnThis(),
+        is: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: null, error: { message: "JSON object requested, multiple (or no) rows returned" } }),
+      };
+
       (supabase.from as any).mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: null, error: { message: "JSON object requested, multiple (or no) rows returned" } }),
-          }),
-        }),
+        select: vi.fn().mockReturnValue(chain),
       });
 
       await expect(productService.getProductById("invalid-id")).rejects.toThrow();
@@ -62,7 +67,9 @@ describe("productService", () => {
         range: vi.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
       });
       const chain = {
-        eq: vi.fn().mockReturnValue({ or: orSpy }),
+        eq: vi.fn().mockReturnThis(),
+        is: vi.fn().mockReturnThis(),
+        or: orSpy,
       };
       (supabase.from as any).mockReturnValue({
         select: vi.fn().mockReturnValue(chain),
@@ -85,6 +92,7 @@ describe("productService", () => {
 
       const chain = {
         eq: vi.fn().mockReturnThis(),
+        is: vi.fn().mockReturnThis(),
         range: vi.fn().mockReturnThis(),
         then: vi.fn().mockImplementation((callback) => {
           return Promise.resolve({ data: mockProducts, error: null, count: 1 }).then(callback);
@@ -97,7 +105,8 @@ describe("productService", () => {
 
       await productService.getProducts({ shopId: "shop-1" });
 
-      // Should have been called with is_available = true
+      // Should have been called with is_available = true and exclude soft-deleted products
+      expect(chain.is).toHaveBeenCalledWith("delete_at", null);
       expect(chain.eq).toHaveBeenCalledWith("is_available", true);
       expect(chain.eq).toHaveBeenCalledWith("shop_id", "shop-1");
     });
