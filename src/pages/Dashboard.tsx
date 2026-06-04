@@ -434,7 +434,7 @@ const Dashboard = () => {
                 <Clock className="w-4 h-4 text-white/80" />
                 <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Free Trial</span>
               </div>
-              <h3 className="text-white font-extrabold text-base">{daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining</h3>
+              <h3 className="text-white font-extrabold text-base">You have few days left</h3>
               <p className="text-white/90 text-xs mt-0.5">Upgrade now to keep your store live and accept orders.</p>
             </div>
             <Button size="sm" variant="outline" onClick={() => navigate('/pricing')} className="shrink-0 bg-white text-primary hover:bg-white/90 border-white font-bold shadow-lg">Upgrade Now</Button>
