@@ -95,6 +95,51 @@ interface CartItem {
   quantity: number;
 }
 
+const getCartKey = (shopId: string) => `cart_${shopId}`;
+
+const parseStoredCart = (storedValue: string | null): unknown[] => {
+  if (!storedValue) return [];
+
+  try {
+    const parsed = JSON.parse(storedValue);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const clampCartQuantity = (quantity: unknown, stockQuantity: number) => {
+  const parsedQuantity = Number(quantity);
+  const safeQuantity = Number.isFinite(parsedQuantity) ? Math.floor(parsedQuantity) : 1;
+  return Math.min(Math.max(safeQuantity, 1), stockQuantity);
+};
+
+const normalizeStoredCart = (storedValue: string | null, productsList: Product[]): CartItem[] => {
+  const productsById = new Map(productsList.map((product) => [product.id, product]));
+
+  return parseStoredCart(storedValue).reduce<CartItem[]>((items, storedItem) => {
+    if (!storedItem || typeof storedItem !== "object") return items;
+
+    const productId = (storedItem as { product?: { id?: unknown } }).product?.id;
+    if (typeof productId !== "string") return items;
+
+    const product = productsById.get(productId);
+    if (!product || !product.is_available || product.stock_quantity <= 0) return items;
+
+    items.push({
+      product,
+      quantity: clampCartQuantity((storedItem as { quantity?: unknown }).quantity, product.stock_quantity),
+    });
+
+    return items;
+  }, []);
+};
+
+const persistCart = (shopId: string | undefined, cartItems: CartItem[]) => {
+  if (!shopId) return;
+  localStorage.setItem(getCartKey(shopId), JSON.stringify(cartItems));
+};
+
 const ShopStorefront = () => {
   const { slug } = useParams();
   const { toast } = useToast();
@@ -334,6 +379,10 @@ const ShopStorefront = () => {
 
       setProducts(productsList);
       setFilteredProducts(productsList);
+
+      const hydratedCart = normalizeStoredCart(localStorage.getItem(getCartKey(shopData.id)), productsList);
+      setCart(hydratedCart);
+      persistCart(shopData.id, hydratedCart);
       
       const { count: ordersCount } = await supabase
         .from('orders').select('*', { count: 'exact', head: true })
@@ -347,14 +396,24 @@ const ShopStorefront = () => {
     }
   };
 
+  const updateAndPersistCart = (updater: (prevCart: CartItem[]) => CartItem[]) => {
+    setCart((prevCart) => {
+      const nextCart = updater(prevCart);
+      persistCart(shop?.id, nextCart);
+      return nextCart;
+    });
+  };
+
   const addToCart = (product: Product) => {
     setCartGlow(true);
     window.setTimeout(() => setCartGlow(false), 900);
 
-    setCart((prevCart) => {
+    let didAddItem = true;
+    updateAndPersistCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.product.id === product.id);
       if (existingItem) {
         if (existingItem.quantity >= product.stock_quantity) {
+          didAddItem = false;
           toast({
             title: "Maximum Stock Reached",
             description: `Only ${product.stock_quantity} ${product.stock_unit || "units"} available`,
@@ -368,17 +427,23 @@ const ShopStorefront = () => {
       }
       return [...prevCart, { product, quantity: 1 }];
     });
-    toast({ title: "Added to Cart", description: `${product.name} added to your cart` });
+    if (didAddItem) {
+      toast({ title: "Added to Cart", description: `${product.name} added to your cart` });
+    }
   };
 
   const updateCartQuantity = (productId: string, quantity: number) => {
-    if (quantity === 0) {
-      setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId));
-      return;
-    }
-    setCart((prevCart) =>
-      prevCart.map((item) => item.product.id === productId ? { ...item, quantity } : item)
-    );
+    updateAndPersistCart((prevCart) => {
+      if (quantity <= 0) {
+        return prevCart.filter((item) => item.product.id !== productId);
+      }
+
+      return prevCart.map((item) =>
+        item.product.id === productId
+          ? { ...item, quantity: clampCartQuantity(quantity, item.product.stock_quantity) }
+          : item
+      );
+    });
   };
 
   const getTotalAmount = () => cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
