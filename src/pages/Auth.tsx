@@ -1,6 +1,8 @@
 import {
   useState,
   useEffect,
+  useCallback,
+  useRef,
   type ChangeEvent,
   type FormEvent,
   type ReactNode,
@@ -77,12 +79,27 @@ const syncAutofillValue = (field: AuthTextField, value: string) => {
   }
 };
 
-const scheduleAutofillSync = (field: AuthTextField, input: HTMLInputElement | null) => {
-  if (!input) return;
+  const syncAutofillValue = useCallback(
+    (nextValue: string) => {
+      if (nextValue && nextValue !== inputValueRef.current) {
+        updateValue(nextValue);
+      }
+    },
+    [updateValue],
+  );
 
-  [0, 100, 500].forEach((delay) => {
-    window.setTimeout(() => syncAutofillValue(field, input.value), delay);
-  });
+  const scheduleAutofillSync = useCallback(
+    (input: HTMLInputElement | null) => {
+      if (!input) return;
+
+      [0, 100, 500].forEach((delay) => {
+        window.setTimeout(() => syncAutofillValue(input.value), delay);
+      });
+    },
+    [syncAutofillValue],
+  );
+
+  return { inputValue, updateValue, scheduleAutofillSync };
 };
 
 // Password input component with eye toggle (Redesigned)
@@ -96,21 +113,26 @@ const PasswordInput = ({
   autoComplete?: string;
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const { inputValue, updateValue, scheduleAutofillSync } =
+    useSyncedAuthField(field);
 
   return (
     <div className="relative">
       <Input
         type={showPassword ? "text" : "password"}
+        name={field.name}
+        value={inputValue}
+        onBlur={field.onBlur}
+        disabled={field.disabled}
         placeholder={placeholder}
-        {...field}
         ref={(input) => {
           field.ref(input);
-          scheduleAutofillSync(field, input);
+          scheduleAutofillSync(input);
         }}
         autoComplete={autoComplete}
         onChange={(event) => handleFieldChange(field, event)}
         onFocus={(event: FocusEvent<HTMLInputElement>) => {
-          scheduleAutofillSync(field, event.currentTarget);
+          scheduleAutofillSync(event.currentTarget);
         }}
         className="pr-10 min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base text-foreground caret-foreground"
       />
@@ -711,7 +733,7 @@ const Auth = () => {
             {/* Form Section */}
             <div className="space-y-6">
               {activeTab === "login" ? (
-                <Form {...loginForm}>
+                <Form key="login-form" {...loginForm}>
                   <form
                     onSubmit={loginForm.handleSubmit(onLoginSubmit)}
                     className="space-y-5"
@@ -777,7 +799,7 @@ const Auth = () => {
                   </form>
                 </Form>
               ) : (
-                <Form {...signupForm}>
+                <Form key="signup-form" {...signupForm}>
                   <form
                     onSubmit={signupForm.handleSubmit(onSignupSubmit)}
                     className="space-y-5"
