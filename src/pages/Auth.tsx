@@ -4,6 +4,7 @@ import {
   type ChangeEvent,
   type FormEvent,
   type ReactNode,
+  type FocusEvent,
 } from "react";
 import {
   Link,
@@ -51,13 +52,41 @@ import { cn } from "@/lib/utils";
 
 type AuthPersona = "default" | "merchant" | "shopper";
 
+type AuthTextField = {
+  name: string;
+  value: string;
+  onChange: (value: string) => void;
+  onBlur: () => void;
+  ref: (instance: HTMLInputElement | null) => void;
+  disabled?: boolean;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
+const syncAutofillValue = (field: AuthTextField, value: string) => {
+  if (value !== field.value) {
+    field.onChange(value);
+  }
+};
+
+const scheduleAutofillSync = (field: AuthTextField, input: HTMLInputElement | null) => {
+  if (!input) return;
+
+  [0, 100, 500].forEach((delay) => {
+    window.setTimeout(() => syncAutofillValue(field, input.value), delay);
+  });
+};
+
 // Password input component with eye toggle (Redesigned)
 const PasswordInput = ({
   field,
   placeholder,
+  autoComplete,
 }: {
-  field: any;
+  field: AuthTextField;
   placeholder?: string;
+  autoComplete?: string;
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -67,6 +96,15 @@ const PasswordInput = ({
         type={showPassword ? "text" : "password"}
         placeholder={placeholder}
         {...field}
+        ref={(input) => {
+          field.ref(input);
+          scheduleAutofillSync(field, input);
+        }}
+        autoComplete={autoComplete}
+        onInput={(event) => syncAutofillValue(field, event.currentTarget.value)}
+        onFocus={(event: FocusEvent<HTMLInputElement>) => {
+          scheduleAutofillSync(field, event.currentTarget);
+        }}
         className="pr-10 min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base"
       />
       <button
@@ -111,16 +149,47 @@ const InputWithIcon = ({
   </div>
 );
 
+const AuthIdentifierInput = ({
+  field,
+  autoComplete,
+}: {
+  field: AuthTextField;
+  autoComplete: string;
+}) => (
+  <Input
+    type="text"
+    inputMode="email"
+    autoCapitalize="none"
+    autoCorrect="off"
+    spellCheck={false}
+    autoComplete={autoComplete}
+    enterKeyHint="next"
+    placeholder="email@example.com or 08012345678"
+    {...field}
+    ref={(input) => {
+      field.ref(input);
+      scheduleAutofillSync(field, input);
+    }}
+    onInput={(event) => syncAutofillValue(field, event.currentTarget.value)}
+    onFocus={(event: FocusEvent<HTMLInputElement>) => {
+      scheduleAutofillSync(field, event.currentTarget);
+    }}
+    className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base pl-4"
+  />
+);
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const NIGERIAN_PHONE_REGEX = /^(?:\+234|234|0)\d{10}$/;
+const NIGERIAN_PHONE_REGEX = /^(?:0\d{10}|234\d{10})$/;
+
+const getPhoneDigits = (value: string) => value.replace(/\D/g, "");
 
 const isValidEmail = (value: string) => EMAIL_REGEX.test(value.trim());
 const isValidPhone = (value: string) =>
-  NIGERIAN_PHONE_REGEX.test(value.replace(/\s+/g, ""));
+  NIGERIAN_PHONE_REGEX.test(getPhoneDigits(value));
 const normalizeIdentifier = (value: string) => {
   const normalized = value.trim();
   if (isValidPhone(normalized)) {
-    const digits = normalized.replace(/\D/g, "");
+    const digits = getPhoneDigits(normalized);
     if (digits.startsWith("0")) return `+234${digits.slice(1)}`;
     if (digits.startsWith("234")) return `+${digits}`;
     return `+${digits}`;
@@ -250,7 +319,7 @@ const Auth = () => {
           return;
         }
 
-        let defaultPath = getDashboardPath(user.role);
+        const defaultPath = getDashboardPath(user.role);
         const redirectPath =
           returnUrl ||
           locationState?.from?.pathname ||
@@ -342,8 +411,8 @@ const Auth = () => {
           });
         }
       }
-    } catch (error: any) {
-      setAuthError(error.message || "Please try again");
+    } catch (error: unknown) {
+      setAuthError(getErrorMessage(error, "Please try again"));
     } finally {
       setIsLoading(false);
     }
@@ -372,8 +441,8 @@ const Auth = () => {
           description: "Successfully logged in",
         });
       }
-    } catch (error: any) {
-      setAuthError(error.message || "Invalid credentials");
+    } catch (error: unknown) {
+      setAuthError(getErrorMessage(error, "Invalid credentials"));
     } finally {
       setIsLoading(false);
     }
@@ -456,7 +525,7 @@ const Auth = () => {
         setShowForgotPassword(false);
         setForgotEmail("");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         toast({
           title: "Invalid Email",
@@ -466,7 +535,7 @@ const Auth = () => {
       } else {
         toast({
           title: "Invalid Email",
-          description: error.message || "Please enter a valid email address.",
+          description: getErrorMessage(error, "Please enter a valid email address."),
           variant: "destructive",
         });
       }
@@ -549,6 +618,11 @@ const Auth = () => {
                 <Label className="text-sm font-semibold text-foreground ml-1">Email Address</Label>
                 <Input
                   type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   placeholder="name@company.com"
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
@@ -593,6 +667,7 @@ const Auth = () => {
                 {/* Pill Tab Toggle */}
                 <div className="flex items-center p-1 bg-muted/60 rounded-full border border-border/40 shadow-sm self-start sm:self-auto">
                   <button
+                    type="button"
                     onClick={() => setActiveTab("login")}
                     className={cn(
                       "px-5 py-2 rounded-full text-[14px] font-semibold transition-all duration-300",
@@ -604,6 +679,7 @@ const Auth = () => {
                     Login
                   </button>
                   <button
+                    type="button"
                     onClick={() => setActiveTab("signup")}
                     className={cn(
                       "px-5 py-2 rounded-full text-[14px] font-semibold transition-all duration-300",
@@ -642,10 +718,9 @@ const Auth = () => {
                             Email Address or Phone
                           </FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="name@company.com"
-                              {...field}
-                              className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base pl-4"
+                            <AuthIdentifierInput
+                              field={field}
+                              autoComplete="username"
                             />
                           </FormControl>
                           <FormMessage />
@@ -671,7 +746,11 @@ const Auth = () => {
                             </button>
                           </div>
                           <FormControl>
-                            <PasswordInput field={field} placeholder="••••••••" />
+                            <PasswordInput
+                              field={field}
+                              placeholder="••••••••"
+                              autoComplete="current-password"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -705,10 +784,9 @@ const Auth = () => {
                             Email Address or Phone
                           </FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="name@company.com"
-                              {...field}
-                              className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base pl-4"
+                            <AuthIdentifierInput
+                              field={field}
+                              autoComplete="username"
                             />
                           </FormControl>
                           <FormMessage />
@@ -725,7 +803,11 @@ const Auth = () => {
                             Password
                           </FormLabel>
                           <FormControl>
-                            <PasswordInput field={field} placeholder="••••••••" />
+                            <PasswordInput
+                              field={field}
+                              placeholder="••••••••"
+                              autoComplete="new-password"
+                            />
                           </FormControl>
                           <p className="text-[13px] text-muted-foreground ml-1 mt-1.5">
                             At least 8 characters
@@ -775,6 +857,11 @@ const Auth = () => {
                     <div className="relative flex items-center">
                       <Input
                         type="email"
+                        autoComplete="email"
+                        inputMode="email"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
                         value={magicLinkEmail}
                         onChange={(e) => setMagicLinkEmail(e.target.value)}
                         placeholder="Enter email for magic link"
