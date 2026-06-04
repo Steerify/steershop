@@ -109,6 +109,24 @@ export const FeaturedStoresHeroCarousel = () => {
     return () => mql.removeEventListener("change", handler);
   }, []);
 
+  // Rotate product photo within each slide every 3.5s when shop has 2+ products
+  useEffect(() => {
+    if (slides.length === 0) return;
+    const rotatable = slides.filter(s => s.products.length >= 2);
+    if (rotatable.length === 0) return;
+    const interval = setInterval(() => {
+      setProductIdxByShop(prev => {
+        const next = { ...prev };
+        for (const s of rotatable) {
+          const cur = prev[s.id] ?? 0;
+          next[s.id] = (cur + 1) % s.products.length;
+        }
+        return next;
+      });
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [slides]);
+
   /* ── fetch ── */
   useEffect(() => {
     (async () => {
