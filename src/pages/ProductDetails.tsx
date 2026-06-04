@@ -19,6 +19,11 @@ import reviewService from "@/services/review.service";
 import { Shop, Product } from "@/types/api";
 
 // Types from @/types/api used instead
+interface ProductDetailCartItem {
+  product: Product & { stock_quantity?: number; stock_unit?: string };
+  quantity: number;
+}
+
 interface Review {
   id: string;
   rating: number;
@@ -287,7 +292,7 @@ const ProductDetails = () => {
       title: "Added to Cart! 🛒",
       description: `${quantity} x ${product.name} added`,
       action: (
-        <Button variant="outline" size="sm" onClick={() => navigate(`/shop/${slug}`)}>
+        <Button variant="outline" size="sm" onClick={() => navigate(`/shop/${slug}?cart=open`)}>
           View Cart
         </Button>
       ),

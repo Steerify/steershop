@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -142,6 +142,8 @@ const persistCart = (shopId: string | undefined, cartItems: CartItem[]) => {
 
 const ShopStorefront = () => {
   const { slug } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [shop, setShop] = useState<Shop | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -164,6 +166,8 @@ const ShopStorefront = () => {
   const headerCartRef = useRef<HTMLDivElement>(null);
   const [showFloatingBar, setShowFloatingBar] = useState(false);
   const [cartGlow, setCartGlow] = useState(false);
+  const [isCartHydrated, setIsCartHydrated] = useState(false);
+  const cartOpenHandledRef = useRef(false);
   const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('storefront');
 
   const handleTourCallback = (data: CallBackProps) => {
@@ -174,6 +178,52 @@ const ShopStorefront = () => {
   };
 
   useEffect(() => { loadShopData(); }, [slug]);
+
+  useEffect(() => {
+    setIsCartHydrated(false);
+    cartOpenHandledRef.current = false;
+
+    if (!shop?.id) {
+      setCart([]);
+      return;
+    }
+
+    try {
+      const savedCart = JSON.parse(localStorage.getItem(`cart_${shop.id}`) || "[]");
+      setCart(Array.isArray(savedCart) ? savedCart : []);
+    } catch (error) {
+      console.error("Failed to hydrate cart:", error);
+      setCart([]);
+    } finally {
+      setIsCartHydrated(true);
+    }
+  }, [shop?.id]);
+
+  useEffect(() => {
+    if (!shop?.id || !isCartHydrated) return;
+    localStorage.setItem(`cart_${shop.id}`, JSON.stringify(cart));
+  }, [cart, isCartHydrated, shop?.id]);
+
+  useEffect(() => {
+    if (!isCartHydrated || cartOpenHandledRef.current) return;
+
+    const searchParams = new URLSearchParams(location.search);
+    const hasCartOpenIntent = searchParams.get("cart") === "open" || location.hash === "#cart";
+    if (!hasCartOpenIntent || cart.length === 0) return;
+
+    setIsCheckoutOpen(true);
+    cartOpenHandledRef.current = true;
+
+    searchParams.delete("cart");
+    navigate(
+      {
+        pathname: location.pathname,
+        search: searchParams.toString() ? `?${searchParams.toString()}` : "",
+        hash: location.hash === "#cart" ? "" : location.hash,
+      },
+      { replace: true }
+    );
+  }, [cart.length, isCartHydrated, location.hash, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     const target = headerCartRef.current;
