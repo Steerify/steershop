@@ -73,11 +73,27 @@ const handleFieldChange = (
   field.onChange(event);
 };
 
-const syncAutofillValue = (field: AuthTextField, value: string) => {
-  if (value && value !== field.value) {
-    field.onChange(value);
-  }
-};
+const useSyncedAuthField = (field: AuthTextField) => {
+  const [inputValue, setInputValue] = useState(field.value ?? "");
+  const inputValueRef = useRef(inputValue);
+
+  useEffect(() => {
+    const nextValue = field.value ?? "";
+
+    if (nextValue !== inputValueRef.current) {
+      inputValueRef.current = nextValue;
+      setInputValue(nextValue);
+    }
+  }, [field.value]);
+
+  const updateValue = useCallback(
+    (nextValue: string) => {
+      inputValueRef.current = nextValue;
+      setInputValue(nextValue);
+      field.onChange(nextValue);
+    },
+    [field],
+  );
 
   const syncAutofillValue = useCallback(
     (nextValue: string) => {
@@ -130,7 +146,7 @@ const PasswordInput = ({
           scheduleAutofillSync(input);
         }}
         autoComplete={autoComplete}
-        onChange={(event) => handleFieldChange(field, event)}
+        onChange={(event) => updateValue(event.currentTarget.value)}
         onFocus={(event: FocusEvent<HTMLInputElement>) => {
           scheduleAutofillSync(event.currentTarget);
         }}
@@ -184,28 +200,36 @@ const AuthIdentifierInput = ({
 }: {
   field: AuthTextField;
   autoComplete: string;
-}) => (
-  <Input
-    type="text"
-    inputMode="email"
-    autoCapitalize="none"
-    autoCorrect="off"
-    spellCheck={false}
-    autoComplete={autoComplete}
-    enterKeyHint="next"
-    placeholder="email@example.com or 08012345678"
-    {...field}
-    ref={(input) => {
-      field.ref(input);
-      scheduleAutofillSync(field, input);
-    }}
-    onChange={(event) => handleFieldChange(field, event)}
-    onFocus={(event: FocusEvent<HTMLInputElement>) => {
-      scheduleAutofillSync(field, event.currentTarget);
-    }}
-    className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base text-foreground caret-foreground pl-4"
-  />
-);
+}) => {
+  const { inputValue, updateValue, scheduleAutofillSync } =
+    useSyncedAuthField(field);
+
+  return (
+    <Input
+      type="text"
+      name={field.name}
+      value={inputValue}
+      onBlur={field.onBlur}
+      disabled={field.disabled}
+      inputMode="email"
+      autoCapitalize="none"
+      autoCorrect="off"
+      spellCheck={false}
+      autoComplete={autoComplete}
+      enterKeyHint="next"
+      placeholder="email@example.com or 08012345678"
+      ref={(input) => {
+        field.ref(input);
+        scheduleAutofillSync(input);
+      }}
+      onChange={(event) => updateValue(event.currentTarget.value)}
+      onFocus={(event: FocusEvent<HTMLInputElement>) => {
+        scheduleAutofillSync(event.currentTarget);
+      }}
+      className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base text-foreground caret-foreground pl-4"
+    />
+  );
+};
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NIGERIAN_PHONE_REGEX = /^(?:0\d{10}|234\d{10})$/;
