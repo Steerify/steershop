@@ -209,7 +209,7 @@ export const FeaturedStoresHeroCarousel = () => {
 
         const prodsByShop = (allProds || []).reduce((acc: any, p) => {
           if (!acc[p.shop_id]) acc[p.shop_id] = [];
-          if (acc[p.shop_id].length < 2) acc[p.shop_id].push(p);
+          if (acc[p.shop_id].length < 6) acc[p.shop_id].push(p);
           return acc;
         }, {});
 
