@@ -64,9 +64,13 @@ type AuthTextField = {
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 
+const updateFieldValue = (field: AuthTextField, value: string) => {
+  field.onChange(value);
+};
+
 const syncAutofillValue = (field: AuthTextField, value: string) => {
   if (value !== field.value) {
-    field.onChange(value);
+    updateFieldValue(field, value);
   }
 };
 
@@ -101,11 +105,12 @@ const PasswordInput = ({
           scheduleAutofillSync(field, input);
         }}
         autoComplete={autoComplete}
+        onChange={(event) => updateFieldValue(field, event.currentTarget.value)}
         onInput={(event) => syncAutofillValue(field, event.currentTarget.value)}
         onFocus={(event: FocusEvent<HTMLInputElement>) => {
           scheduleAutofillSync(field, event.currentTarget);
         }}
-        className="pr-10 min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base"
+        className="pr-10 min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base text-foreground caret-foreground"
       />
       <button
         type="button"
@@ -170,11 +175,12 @@ const AuthIdentifierInput = ({
       field.ref(input);
       scheduleAutofillSync(field, input);
     }}
+    onChange={(event) => updateFieldValue(field, event.currentTarget.value)}
     onInput={(event) => syncAutofillValue(field, event.currentTarget.value)}
     onFocus={(event: FocusEvent<HTMLInputElement>) => {
       scheduleAutofillSync(field, event.currentTarget);
     }}
-    className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base pl-4"
+    className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base text-foreground caret-foreground pl-4"
   />
 );
 
@@ -627,7 +633,7 @@ const Auth = () => {
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
                   required
-                  className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base pl-4"
+                  className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base text-foreground caret-foreground pl-4"
                 />
               </div>
               <Button
