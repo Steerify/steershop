@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
 import { PageWrapper } from "@/components/PageWrapper";
 import { FeatureDiscoveryPopup } from "@/components/FeatureDiscoveryPopup";
 import logo from "@/assets/steersolo-logo.jpg";
@@ -607,6 +607,7 @@ const Dashboard = () => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const isWizardOpen = !isLoading && !shopData && rbac.isEntrepreneur(user);
+  const hasRevenueTrend = chartData.some(point => point.revenue > 0);
 
   if (isWizardOpen) {
     return (
@@ -820,6 +821,73 @@ const Dashboard = () => {
             ))}
           </div>
         )}
+
+        <Card className="overflow-hidden rounded-2xl border-border/50 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-base font-extrabold">Revenue Trend</CardTitle>
+              <p className="text-xs text-muted-foreground">Paid order revenue over the last 7 days</p>
+            </div>
+            <div className="rounded-xl bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-400">
+              <TrendingUp className="h-4 w-4" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {hasRevenueTrend ? (
+              <div className="h-56 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 8, left: -16, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="dashboardRevenueGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border" />
+                    <XAxis
+                      dataKey="date"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                      tickFormatter={(value) => `₦${Number(value).toLocaleString()}`}
+                    />
+                    <Tooltip
+                      formatter={(value) => [`₦${Number(value).toLocaleString()}`, 'Revenue']}
+                      labelFormatter={(label) => `${label}`}
+                      contentStyle={{
+                        borderRadius: '0.75rem',
+                        border: '1px solid hsl(var(--border))',
+                        background: 'hsl(var(--card))',
+                        color: 'hsl(var(--card-foreground))',
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={3}
+                      fill="url(#dashboardRevenueGradient)"
+                      dot={{ r: 3, strokeWidth: 2, fill: 'hsl(var(--card))' }}
+                      activeDot={{ r: 5 }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="flex min-h-56 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/30 px-6 text-center">
+                <DollarSign className="mb-3 h-9 w-9 rounded-full bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-400" />
+                <p className="max-w-sm text-sm font-semibold text-foreground">
+                  No paid sales yet — your revenue trend will appear here after your first paid order.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* ── Urgent task (single, most important) ── */}
         {urgentTasks.length > 0 && (
