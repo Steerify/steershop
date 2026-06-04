@@ -460,77 +460,100 @@ export const FeaturedStoresHeroCarousel = () => {
                       </div>
                     </div>
 
-                    {/* Products */}
-                    {shop.products.length > 0 && (
-                      <div style={{ 
-                        padding: "0 14px 14px", 
-                        display: "flex", 
-                        gap: 10,
-                        justifyContent: shop.products.length === 1 ? "center" : "flex-start" 
-                      }}>
-                        {shop.products.map((p) => {
-                          const imgUrl = resolveUrl(p.image_url);
-                          const hasImg = !!imgUrl && !brokenProductImgs.current.has(p.id);
-                          return (
-                            <div
-                              key={p.id}
-                              style={{
-                                flex: shop.products.length === 1 ? "0 1 280px" : 1, 
-                                borderRadius: 14, 
-                                overflow: "hidden",
-                                background: "rgba(0,0,0,0.25)",
-                                border: "1px solid rgba(255,255,255,0.08)",
-                                display: "flex", flexDirection: "column",
-                                minWidth: 0,
-                              }}
-                            >
-                              {/* Product image */}
-                              <div style={{ height: isMobile ? 130 : 180, overflow: "hidden", flexShrink: 0 }}>
-                                {hasImg ? (
-                                  <img
-                                    src={imgUrl!}
-                                    alt={p.name}
-                                    style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s ease" }}
-                                    loading={idx === 0 ? "eager" : "lazy"}
-                                    {...(idx === 0 ? { fetchPriority: "high" } as any : {})}
-                                    onError={() => { brokenProductImgs.current.add(p.id); }}
-                                    onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.08)")}
-                                    onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                                  />
-                                ) : (
-                                  <div
-                                    style={{
-                                      width: "100%", height: "100%",
-                                      display: "flex", alignItems: "center", justifyContent: "center",
-                                      background: "rgba(255,255,255,0.04)",
-                                    }}
-                                  >
-                                    <ShoppingBag style={{ width: 28, height: 28, color: "rgba(255,255,255,0.2)" }} />
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Product info */}
-                              <div style={{ padding: "8px 10px 10px" }}>
-                                <p
+                    {/* Single rotating product photo */}
+                    {shop.products.length > 0 && (() => {
+                      const pIdx = (productIdxByShop[shop.id] ?? 0) % shop.products.length;
+                      const p = shop.products[pIdx];
+                      const imgUrl = resolveUrl(p.image_url);
+                      const hasImg = !!imgUrl && !brokenProductImgs.current.has(p.id);
+                      const showDots = shop.products.length >= 2;
+                      return (
+                        <div style={{ padding: "0 14px 14px" }}>
+                          <div
+                            style={{
+                              borderRadius: 16,
+                              overflow: "hidden",
+                              background: "rgba(0,0,0,0.25)",
+                              border: "1px solid rgba(255,255,255,0.08)",
+                              display: "flex",
+                              flexDirection: "column",
+                              position: "relative",
+                            }}
+                          >
+                            <div style={{ height: isMobile ? 220 : 300, overflow: "hidden", position: "relative" }}>
+                              {hasImg ? (
+                                <img
+                                  key={p.id}
+                                  src={imgUrl!}
+                                  alt={p.name}
                                   style={{
-                                    fontSize: "0.72rem", fontWeight: 600, color: "rgba(255,255,255,0.9)",
-                                    margin: "0 0 3px", overflow: "hidden", textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                    animation: "fsh-fade-in .5s ease",
+                                  }}
+                                  loading={idx === 0 ? "eager" : "lazy"}
+                                  {...(idx === 0 ? { fetchPriority: "high" } as any : {})}
+                                  onError={() => { brokenProductImgs.current.add(p.id); }}
+                                />
+                              ) : (
+                                <div
+                                  style={{
+                                    width: "100%", height: "100%",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    background: "rgba(255,255,255,0.04)",
                                   }}
                                 >
-                                  {p.name}
-                                </p>
-                                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#00d97e", margin: 0 }}>
-                                  {fmt(p.price)}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })}
+                                  <ShoppingBag style={{ width: 36, height: 36, color: "rgba(255,255,255,0.2)" }} />
+                                </div>
+                              )}
 
-                      </div>
-                    )}
+                              {showDots && (
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    bottom: 8,
+                                    left: 0,
+                                    right: 0,
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    gap: 4,
+                                  }}
+                                >
+                                  {shop.products.map((_, i) => (
+                                    <span
+                                      key={i}
+                                      style={{
+                                        width: i === pIdx ? 14 : 5,
+                                        height: 4,
+                                        borderRadius: 9999,
+                                        background: i === pIdx ? "#00d97e" : "rgba(255,255,255,0.45)",
+                                        transition: "all .3s ease",
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            <div style={{ padding: "10px 12px 12px" }}>
+                              <p
+                                style={{
+                                  fontSize: "0.82rem", fontWeight: 700, color: "rgba(255,255,255,0.95)",
+                                  margin: "0 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                                }}
+                              >
+                                {p.name}
+                              </p>
+                              <p style={{ fontSize: "0.78rem", fontWeight: 800, color: "#00d97e", margin: 0 }}>
+                                {fmt(p.price)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
 
                     {/* Footer CTA */}
                     <div
