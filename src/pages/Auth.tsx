@@ -1,6 +1,8 @@
 import {
   useState,
   useEffect,
+  useCallback,
+  useRef,
   type ChangeEvent,
   type FormEvent,
   type ReactNode,
@@ -64,22 +66,46 @@ type AuthTextField = {
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 
-const updateFieldValue = (field: AuthTextField, value: string) => {
-  field.onChange(value);
-};
+const useSyncedAuthField = (field: AuthTextField) => {
+  const [inputValue, setInputValue] = useState(field.value ?? "");
+  const inputValueRef = useRef(inputValue);
 
-const syncAutofillValue = (field: AuthTextField, value: string) => {
-  if (value !== field.value) {
-    updateFieldValue(field, value);
-  }
-};
+  useEffect(() => {
+    const nextValue = field.value ?? "";
+    inputValueRef.current = nextValue;
+    setInputValue(nextValue);
+  }, [field.value]);
 
-const scheduleAutofillSync = (field: AuthTextField, input: HTMLInputElement | null) => {
-  if (!input) return;
+  const updateValue = useCallback(
+    (nextValue: string) => {
+      inputValueRef.current = nextValue;
+      setInputValue(nextValue);
+      field.onChange(nextValue);
+    },
+    [field],
+  );
 
-  [0, 100, 500].forEach((delay) => {
-    window.setTimeout(() => syncAutofillValue(field, input.value), delay);
-  });
+  const syncAutofillValue = useCallback(
+    (nextValue: string) => {
+      if (nextValue && nextValue !== inputValueRef.current) {
+        updateValue(nextValue);
+      }
+    },
+    [updateValue],
+  );
+
+  const scheduleAutofillSync = useCallback(
+    (input: HTMLInputElement | null) => {
+      if (!input) return;
+
+      [0, 100, 500].forEach((delay) => {
+        window.setTimeout(() => syncAutofillValue(input.value), delay);
+      });
+    },
+    [syncAutofillValue],
+  );
+
+  return { inputValue, updateValue, scheduleAutofillSync };
 };
 
 // Password input component with eye toggle (Redesigned)
@@ -93,22 +119,27 @@ const PasswordInput = ({
   autoComplete?: string;
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const { inputValue, updateValue, scheduleAutofillSync } =
+    useSyncedAuthField(field);
 
   return (
     <div className="relative">
       <Input
         type={showPassword ? "text" : "password"}
+        name={field.name}
+        value={inputValue}
+        onBlur={field.onBlur}
+        disabled={field.disabled}
         placeholder={placeholder}
-        {...field}
         ref={(input) => {
           field.ref(input);
-          scheduleAutofillSync(field, input);
+          scheduleAutofillSync(input);
         }}
         autoComplete={autoComplete}
-        onChange={(event) => updateFieldValue(field, event.currentTarget.value)}
-        onInput={(event) => syncAutofillValue(field, event.currentTarget.value)}
+        onChange={(event) => updateValue(event.currentTarget.value)}
+        onInput={(event) => updateValue(event.currentTarget.value)}
         onFocus={(event: FocusEvent<HTMLInputElement>) => {
-          scheduleAutofillSync(field, event.currentTarget);
+          scheduleAutofillSync(event.currentTarget);
         }}
         className="pr-10 min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base text-foreground caret-foreground"
       />
@@ -160,29 +191,37 @@ const AuthIdentifierInput = ({
 }: {
   field: AuthTextField;
   autoComplete: string;
-}) => (
-  <Input
-    type="text"
-    inputMode="email"
-    autoCapitalize="none"
-    autoCorrect="off"
-    spellCheck={false}
-    autoComplete={autoComplete}
-    enterKeyHint="next"
-    placeholder="email@example.com or 08012345678"
-    {...field}
-    ref={(input) => {
-      field.ref(input);
-      scheduleAutofillSync(field, input);
-    }}
-    onChange={(event) => updateFieldValue(field, event.currentTarget.value)}
-    onInput={(event) => syncAutofillValue(field, event.currentTarget.value)}
-    onFocus={(event: FocusEvent<HTMLInputElement>) => {
-      scheduleAutofillSync(field, event.currentTarget);
-    }}
-    className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base text-foreground caret-foreground pl-4"
-  />
-);
+}) => {
+  const { inputValue, updateValue, scheduleAutofillSync } =
+    useSyncedAuthField(field);
+
+  return (
+    <Input
+      type="text"
+      name={field.name}
+      value={inputValue}
+      onBlur={field.onBlur}
+      disabled={field.disabled}
+      inputMode="email"
+      autoCapitalize="none"
+      autoCorrect="off"
+      spellCheck={false}
+      autoComplete={autoComplete}
+      enterKeyHint="next"
+      placeholder="email@example.com or 08012345678"
+      ref={(input) => {
+        field.ref(input);
+        scheduleAutofillSync(input);
+      }}
+      onChange={(event) => updateValue(event.currentTarget.value)}
+      onInput={(event) => updateValue(event.currentTarget.value)}
+      onFocus={(event: FocusEvent<HTMLInputElement>) => {
+        scheduleAutofillSync(event.currentTarget);
+      }}
+      className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base text-foreground caret-foreground pl-4"
+    />
+  );
+};
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NIGERIAN_PHONE_REGEX = /^(?:0\d{10}|234\d{10})$/;
@@ -710,7 +749,7 @@ const Auth = () => {
             {/* Form Section */}
             <div className="space-y-6">
               {activeTab === "login" ? (
-                <Form {...loginForm}>
+                <Form key="login-form" {...loginForm}>
                   <form
                     onSubmit={loginForm.handleSubmit(onLoginSubmit)}
                     className="space-y-5"
@@ -776,7 +815,7 @@ const Auth = () => {
                   </form>
                 </Form>
               ) : (
-                <Form {...signupForm}>
+                <Form key="signup-form" {...signupForm}>
                   <form
                     onSubmit={signupForm.handleSubmit(onSignupSubmit)}
                     className="space-y-5"
