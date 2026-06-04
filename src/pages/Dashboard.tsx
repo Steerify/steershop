@@ -604,6 +604,8 @@ const Dashboard = () => {
   }
 
   const firstName = (profile?.full_name && profile.full_name.trim()) ? profile.full_name.trim().split(' ')[0] : (user?.email?.split('@')[0] || 'there');
+  const shopDisplayName = shopFullData?.shop_name || shopFullData?.name || shopData?.name || "Your Store";
+  const shouldShowShopLogo = Boolean(shopData && shopFullData?.logo_url);
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const isWizardOpen = !isLoading && !shopData && rbac.isEntrepreneur(user);
@@ -626,9 +628,18 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-sm">
-                <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
-              </div>
+              {shouldShowShopLogo ? (
+                <ShopAvatar
+                  name={shopDisplayName}
+                  logoUrl={shopFullData?.logo_url}
+                  className="w-8 h-8 rounded-xl shrink-0 shadow-sm ring-2 ring-primary/20"
+                  initialsClassName="text-xs"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-sm shrink-0">
+                  <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+                </div>
+              )}
               <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent hidden sm:block">
                 SteerSolo
               </span>

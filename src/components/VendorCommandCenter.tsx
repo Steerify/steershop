@@ -18,6 +18,7 @@ import productService from "@/services/product.service";
 import orderService from "@/services/order.service";
 import { payoutService } from "@/services/payout.service";
 import { Badge } from "@/components/ui/badge";
+import { ShopAvatar } from "@/components/ShopAvatar";
 
 export const VendorCommandCenter = () => {
   const { user } = useAuth();
@@ -114,9 +115,12 @@ export const VendorCommandCenter = () => {
           {/* Top row: name + live badge + CTAs */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 border-b border-border/40 bg-muted/20">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-sm">
-                <Store className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <ShopAvatar
+                name={shop.shop_name || shop.name || "Store"}
+                logoUrl={shop.logo_url}
+                className="w-10 h-10 rounded-xl shrink-0 shadow-sm ring-1 ring-border"
+                initialsClassName="text-sm"
+              />
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="font-extrabold text-base text-foreground truncate">{shop.shop_name}</p>
