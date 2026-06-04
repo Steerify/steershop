@@ -376,8 +376,11 @@ const ShopStorefront = () => {
       setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId));
       return;
     }
+
     setCart((prevCart) =>
-      prevCart.map((item) => item.product.id === productId ? { ...item, quantity } : item)
+      prevCart.map((item) =>
+        item.product.id === productId ? { ...item, quantity } : item
+      )
     );
   };
 
