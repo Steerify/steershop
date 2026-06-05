@@ -991,8 +991,10 @@ const Auth = () => {
         )}
         </div>
         {/* /Form Card */}
+        </div>
+        {/* /Form Column */}
       </div>
-      {/* /Card Container */}
+      {/* /Two-column Layout */}
     </div>
   );
 };
