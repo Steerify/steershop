@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { FirstVisitIntro } from "@/components/FirstVisitIntro";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
