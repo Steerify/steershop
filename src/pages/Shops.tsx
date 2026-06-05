@@ -423,6 +423,17 @@ const Shops = () => {
 
   return (
     <PageThemeShell header={<Navbar />} footer={<Footer />} className="bg-background">
+      <FirstVisitIntro
+        storageKey="shops"
+        title="Welcome to the SteerSolo Marketplace"
+        description="A curated directory of verified Nigerian merchants — beauty, fashion, food, gadgets and more — all in one place."
+        bullets={[
+          "Filter by category, city, and SafeBeauty tier",
+          "Beauty shops show NAFDAC verification status",
+          "Every order is escrow-protected until you confirm delivery",
+        ]}
+        ctaLabel="Start browsing"
+      />
       <Helmet>
         <title>SteerSolo Marketplace Nigeria | Discover Trusted Online Stores</title>
         <meta
