@@ -1424,9 +1424,10 @@ const Index = () => {
       </div>
     </section>
 
-    <CollectionsSection />
-    <ShopperDiscovery />
+    {/* Removed CollectionsSection + ShopperDiscovery — duplicated §11 buyer marketplace content.
+        Kept DiscoveryLinks for SEO/city-category indexing. */}
     <DiscoveryLinks />
+
 
     {/* ══════════════════════════════════════════════════════
         §15  FINAL CTA — Clean Style
