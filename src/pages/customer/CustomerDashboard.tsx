@@ -273,6 +273,17 @@ const CustomerDashboard = () => {
 
   return (
     <SidebarProvider>
+      <FirstVisitIntro
+        storageKey="customer-dashboard"
+        title="Welcome to SteerSolo"
+        description="Track your orders, save favorites, and earn rewards as you shop verified Nigerian stores."
+        bullets={[
+          "Orders: see status and download invoices",
+          "Wishlist: save items for later from any shop",
+          "Rewards: earn points on every order and redeem prizes",
+        ]}
+        ctaLabel="Start shopping"
+      />
       <div className="min-h-screen flex w-full bg-gradient-to-br from-primary/12 via-background to-accent/10 relative">
         <AdirePattern variant="dots" className="fixed inset-0 opacity-5 pointer-events-none" />
         <CustomerSidebar />
