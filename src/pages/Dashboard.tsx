@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { FirstVisitIntro } from "@/components/FirstVisitIntro";
 import { useTheme } from "next-themes";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
