@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { FirstVisitIntro } from "@/components/FirstVisitIntro";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Store, MapPin, Sparkles, ArrowRight, ChevronRight, Filter, ShoppingBag } from "lucide-react";
