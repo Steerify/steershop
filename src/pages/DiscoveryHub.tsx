@@ -99,6 +99,17 @@ const DiscoveryHub = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <FirstVisitIntro
+        storageKey="discovery-hub"
+        title="Discovery Hub"
+        description="See what's trending across Nigeria — top shops, hot products, and merchants gaining momentum right now."
+        bullets={[
+          "Trending shops update based on real orders and reviews",
+          "Featured stores rotate so new merchants get a fair shot",
+          "Filter by city to discover sellers near you",
+        ]}
+        ctaLabel="Explore the hub"
+      />
       <Helmet>
         <title>{title}</title>
         <meta name="description" content={description} />
