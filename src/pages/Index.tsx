@@ -19,8 +19,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { Footer } from "@/components/Footer";
-import { ShopperDiscovery } from "@/components/ShopperDiscovery";
-import { CollectionsSection } from "@/components/CollectionsSection";
+// Removed unused ShopperDiscovery + CollectionsSection imports after homepage declutter.
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 import { Helmet } from "react-helmet-async";
 import { FeaturedStoresHeroCarousel } from "@/components/FeaturedStoresHeroCarousel";
