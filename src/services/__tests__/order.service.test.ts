@@ -9,6 +9,9 @@ vi.mock("@/integrations/supabase/client", () => ({
     auth: {
       getUser: vi.fn(),
     },
+    functions: {
+      invoke: vi.fn().mockResolvedValue({ data: null, error: null }),
+    },
   },
 }));
 
@@ -45,6 +48,24 @@ describe("orderService", () => {
         if (table === "order_items") {
           return {
             insert: vi.fn().mockResolvedValue({ error: null }),
+          };
+        }
+        if (table === "shops") {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: { shop_name: 'Shop', owner_id: '123', whatsapp_number: '123' }, error: null }),
+              }),
+            }),
+          };
+        }
+        if (table === "profiles") {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: { email: 'test@example.com', full_name: 'Test' }, error: null }),
+              }),
+            }),
           };
         }
       });

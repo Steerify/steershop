@@ -44,6 +44,7 @@ describe("shopService Logic", () => {
             select: vi.fn().mockReturnThis(),
             in: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
+            is: vi.fn().mockReturnThis(),
             not: vi.fn().mockResolvedValue({ data: mockProducts, error: null }),
           };
         }
