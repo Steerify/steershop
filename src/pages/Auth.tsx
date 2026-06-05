@@ -604,10 +604,50 @@ const Auth = () => {
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-accent/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-      {/* Card Container */}
-      <div className="w-full max-w-[500px] relative z-10">
-        {/* Top Nav: Back Home */}
-        <div className="flex items-center justify-between mb-6">
+      {/* Two-column layout: brand panel (desktop only) + form card */}
+      <div className="w-full max-w-6xl relative z-10 grid md:grid-cols-[1fr_500px] lg:grid-cols-[1.1fr_500px] gap-8 lg:gap-16 items-center">
+        {/* Brand Panel — desktop only */}
+        <aside className="hidden md:flex flex-col gap-8 px-2">
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-[15px] font-medium text-muted-foreground hover:text-foreground transition-colors w-fit"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back Home
+          </Link>
+          <div>
+            <p className="text-[11px] font-bold tracking-[0.25em] text-primary uppercase mb-4">
+              SteerSolo · Nigeria
+            </p>
+            <h2 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-foreground leading-[1.05] mb-5">
+              Sell with the<br />trust your<br />buyers expect.
+            </h2>
+            <p className="text-[15px] text-muted-foreground max-w-md leading-relaxed">
+              Join verified Nigerian merchants running real businesses on WhatsApp, Instagram, and TikTok — with escrow-protected payments and SafeBeauty verification built in.
+            </p>
+          </div>
+          <ul className="space-y-3 text-sm">
+            {[
+              { t: "SafeBeauty verified merchants", d: "NAFDAC-checked beauty products only" },
+              { t: "Escrow-protected payments", d: "Buyers pay, funds held until delivery" },
+              { t: "NGN-native, Nigeria-first", d: "Built for Naira and local logistics" },
+            ].map((b) => (
+              <li key={b.t} className="flex items-start gap-3">
+                <span className="mt-1.5 inline-block w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                <div>
+                  <div className="font-semibold text-foreground">{b.t}</div>
+                  <div className="text-muted-foreground text-[13px]">{b.d}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-muted-foreground italic">
+            "SteerSolo made my business look professional from day one."
+          </p>
+        </aside>
+
+        <div className="w-full max-w-[500px] mx-auto md:mx-0">
+        {/* Top Nav: Back Home — mobile only (desktop has it in the brand panel) */}
+        <div className="flex md:hidden items-center justify-between mb-6">
           <Link
             to="/"
             className="flex items-center gap-2 text-[15px] font-medium text-muted-foreground hover:text-foreground transition-colors"
