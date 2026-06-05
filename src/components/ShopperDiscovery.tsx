@@ -12,7 +12,7 @@ export const ShopperDiscovery = () => {
     const fetchStats = async () => {
       const [shopsRes, productsRes] = await Promise.all([
         supabase.from("shops").select("id", { count: "exact", head: true }).eq("is_active", true),
-        supabase.from("products").select("id", { count: "exact", head: true }).eq("is_available", true),
+        supabase.from("products").select("id", { count: "exact", head: true }).eq("is_available", true).is("delete_at", null),
       ]);
       setShopCount(shopsRes.count ?? 0);
       setProductCount(productsRes.count ?? 0);

@@ -221,6 +221,7 @@ export const FeaturedStoresHeroCarousel = () => {
           .select("id, name, price, image_url, shop_id")
           .in("shop_id", shopIds)
           .eq("is_available", true)
+          .is("delete_at", null)
           .not("image_url", "is", null)
           .order("created_at", { ascending: false });
 

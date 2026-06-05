@@ -58,7 +58,9 @@ const Callback = () => {
             return;
           }
 
-          if (profile?.needs_role_selection) {
+          const isAdmin = profile?.role === 'admin' || profile?.role === 'ADMIN';
+
+          if (profile?.needs_role_selection && !isAdmin) {
             navigate("/select-role");
             return;
           }

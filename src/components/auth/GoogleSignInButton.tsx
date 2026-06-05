@@ -49,11 +49,13 @@ export const GoogleSignInButton = ({
       if (data.user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('needs_role_selection')
+          .select('needs_role_selection, role')
           .eq('id', data.user.id)
           .single();
 
-        if (profile?.needs_role_selection) {
+        const isAdmin = profile?.role === 'admin' || profile?.role === 'ADMIN';
+
+        if (profile?.needs_role_selection && !isAdmin) {
           toast.success('Welcome! Please select your account type.');
           navigate('/select-role');
           return;

@@ -100,7 +100,10 @@ export const SubscriptionExpiryDialog = ({
     try {
       const { error } = await supabase
         .from('products')
-        .update({ is_available: false })
+        .update({ 
+          is_available: false,
+          delete_at: new Date().toISOString()
+        })
         .eq('id', productId);
       if (error) throw error;
       setProducts(prev => prev.filter(p => p.id !== productId));

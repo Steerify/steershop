@@ -58,7 +58,7 @@ export const SocialProofStats = () => {
       try {
         const [shopsResult, productsResult, salesResult, ratingsResult, ordersResult] = await Promise.all([
           supabase.from("shops").select("id", { count: "exact" }).eq("is_active", true),
-          supabase.from("products").select("id", { count: "exact" }).eq("is_available", true),
+          supabase.from("products").select("id", { count: "exact" }).eq("is_available", true).is("delete_at", null),
           supabase.from("orders").select("total_amount").eq("payment_status", "paid"),
           supabase.from("reviews").select("rating"),
           supabase.from("orders").select("id", { count: "exact" }).eq("status", "completed"),
