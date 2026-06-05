@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { FirstVisitIntro } from "@/components/FirstVisitIntro";
 import { useTheme } from "next-themes";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -620,6 +621,18 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/3">
+      <FirstVisitIntro
+        storageKey="merchant-dashboard"
+        title="Welcome to your dashboard"
+        description="This is your command center. Add products, track orders, manage payouts, and grow your shop — all from here."
+        bullets={[
+          "Products: add and manage your catalog (limit depends on your plan)",
+          "Orders: process incoming orders and update statuses",
+          "Marketing: run smart ads and concierge campaigns",
+          "Subscription: upgrade anytime to unlock more products and features",
+        ]}
+        ctaLabel="Let's go"
+      />
       {/* ─── Top Navigation ──────────────────────────────── */}
       <nav className="bg-card/95 backdrop-blur-xl border-b border-border/60 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-3">
