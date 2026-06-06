@@ -58,7 +58,7 @@ const Callback = () => {
             return;
           }
 
-          const isAdmin = profile?.role === 'admin' || profile?.role === 'ADMIN';
+          const isAdmin = (profile?.role as string) === 'admin' || (profile?.role as string) === 'ADMIN';
 
           if (profile?.needs_role_selection && !isAdmin) {
             navigate("/select-role");
