@@ -33,7 +33,7 @@ export const GoogleOneTap = () => {
           .eq('id', data.user.id)
           .single();
 
-        const isAdmin = profile?.role === 'admin' || profile?.role === 'ADMIN';
+        const isAdmin = (profile?.role as string) === 'admin' || (profile?.role as string) === 'ADMIN';
 
         if (profile?.needs_role_selection && !isAdmin) {
           toast.success('Welcome! Please select your account type.');
