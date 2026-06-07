@@ -61,9 +61,10 @@ serve(async (req) => {
         if (!profile?.email) continue;
         
         try {
+          const fromEmail = Deno.env.get("SMTP_FROM_EMAIL") || "SteerSolo <no-reply@steersolo.com>";
           await resend.emails.send({
-            from: "SteerSolo <mail@steersolo.com>",
-            replyTo: "mail@steersolo.com",
+            from: fromEmail,
+            replyTo: "no-reply@steersolo.com",
             to: [profile.email],
             subject: `⚠️ Action Required: Your shop "${shop.shop_name}" has been hidden`,
             html: `

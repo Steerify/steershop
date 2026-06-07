@@ -84,9 +84,10 @@ serve(async (req) => {
         const subscriptionType = user.is_subscribed ? 'subscription' : 'trial';
         
         // Send email
+        const fromEmail = Deno.env.get("SMTP_FROM_EMAIL") || "SteerSolo <no-reply@steersolo.com>";
         const emailResponse = await resend.emails.send({
-          from: "SteerSolo <mail@steersolo.com>",
-          replyTo: "mail@steersolo.com",
+          from: fromEmail,
+          replyTo: "no-reply@steersolo.com",
           to: [user.email],
           subject: `⏰ Your ${subscriptionType} expires in 3 days - ${shopName}`,
           html: `
