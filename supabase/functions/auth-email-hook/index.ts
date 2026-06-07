@@ -1,6 +1,5 @@
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
-import { createClient } from 'npm:@supabase/supabase-js@2'
 import { getTransporter, getDefaultFromEmail } from '../_shared/smtp.ts'
 
 // Import existing SteerSolo templates
@@ -30,7 +29,7 @@ interface SupabaseAuthWebhookPayload {
   user: {
     id: string;
     email: string;
-    user_metadata: any;
+    user_metadata: Record<string, unknown>;
   };
   email_data: {
     token: string;
@@ -43,7 +42,17 @@ interface SupabaseAuthWebhookPayload {
   };
 }
 
-const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
+interface AuthEmailTemplateProps {
+  siteName: string
+  siteUrl: string
+  recipient: string
+  confirmationUrl: string
+  token: string
+  email: string
+  newEmail: string
+}
+
+const EMAIL_TEMPLATES: Record<string, React.ComponentType<AuthEmailTemplateProps>> = {
   signup: SignupEmail,
   invite: InviteEmail,
   magiclink: MagicLinkEmail,
@@ -138,13 +147,16 @@ async function handleWebhook(req: Request): Promise<Response> {
     })
   }
 
-  // 2. Admin & Onboarding logic strictly for 'signup'
+  // 2. Admin-only logic for 'signup'. Do not send supplemental user-facing
+  // onboarding emails here; signup users should only receive the verification
+  // email from this auth hook. The onboarding welcome is queued after email
+  // confirmation by a database trigger.
   if (emailType === 'signup') {
     try {
       const metadata = payload.user.user_metadata || {}
-      const role = metadata.role || 'unknown'
+      const role = typeof metadata.role === 'string' && metadata.role ? metadata.role : 'unknown'
       const fullName = typeof metadata.full_name === 'string' ? metadata.full_name.trim() : 'Not provided'
-      const phone = metadata.phone || 'Not provided'
+      const phone = typeof metadata.phone === 'string' && metadata.phone ? metadata.phone : 'Not provided'
       
       const adminSubject = `New signup on SteerSolo: ${recipientEmail}`
       const adminHtml = `
@@ -161,7 +173,6 @@ async function handleWebhook(req: Request): Promise<Response> {
         </div>
       `
       
-      // Admin Notification
       await transporter.sendMail({
         from: SENDER_EMAIL,
         to: ADMIN_SIGNUP_EMAIL,
@@ -170,35 +181,8 @@ async function handleWebhook(req: Request): Promise<Response> {
         text: `New Signup: ${recipientEmail} | Role: ${role}`,
       })
       console.log('Admin signup alert sent successfully')
-      
-      // Onboarding Welcome
-      const onboardingSubject = role === 'shop_owner' 
-        ? 'Welcome to SteerSolo — Complete your onboarding' 
-        : 'Welcome to SteerSolo — Start exploring stores'
-      const onboardingCtaUrl = role === 'shop_owner' ? `${siteUrl}/onboarding` : `${siteUrl}/shops`
-      const onboardingHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; padding: 16px;">
-          <h2 style="margin: 0 0 10px; color: #123C72;">Welcome to SteerSolo, ${fullName === 'Not provided' ? 'there' : fullName} 👋</h2>
-          <p style="margin: 0 0 14px; color: #475467;">
-            Your account is ready. ${role === 'shop_owner' ? 'Complete your onboarding to start selling.' : 'You can now browse trusted stores.'}
-          </p>
-          <a href="${onboardingCtaUrl}" style="display:inline-block;background:#123C72;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">
-            ${role === 'shop_owner' ? 'Complete Onboarding' : 'Explore Stores'}
-          </a>
-        </div>
-      `
-      
-      await transporter.sendMail({
-        from: SENDER_EMAIL,
-        to: recipientEmail,
-        subject: onboardingSubject,
-        html: onboardingHtml,
-        text: `Welcome! Next step: ${onboardingCtaUrl}`,
-      })
-      console.log('Onboarding welcome email sent successfully')
-      
     } catch (e) {
-      console.error('Non-blocking error sending supplemental signup emails:', e)
+      console.error('Non-blocking error sending admin signup alert:', e)
     }
   }
 
