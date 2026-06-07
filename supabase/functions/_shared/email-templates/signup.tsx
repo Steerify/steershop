@@ -21,6 +21,7 @@ interface SignupEmailProps {
   siteUrl: string
   recipient: string
   confirmationUrl: string
+  token: string
 }
 
 const LOGO_URL = 'https://hwkcqgmtinbgyjjgcgmp.supabase.co/storage/v1/object/public/email-assets/steersolo-logo.jpg'
@@ -30,6 +31,7 @@ export const SignupEmail = ({
   siteUrl,
   recipient,
   confirmationUrl,
+  token,
 }: SignupEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
@@ -52,12 +54,10 @@ export const SignupEmail = ({
           <Link href={`mailto:${recipient}`} style={link}>
             {recipient}
           </Link>
-          ) to get started:
+          ) by entering the following 6-digit code:
         </Text>
-        <Section style={buttonSection}>
-          <Button style={button} href={confirmationUrl}>
-            Verify My Email
-          </Button>
+        <Section style={codeSection}>
+          <Text style={codeText}>{token}</Text>
         </Section>
         <Text style={footer}>
           If you didn't create an account, you can safely ignore this email.
@@ -90,15 +90,19 @@ const text = {
   margin: '0 0 20px',
 }
 const link = { color: 'hsl(215, 65%, 25%)', textDecoration: 'underline' }
-const buttonSection = { textAlign: 'center' as const, margin: '28px 0' }
-const button = {
-  backgroundColor: 'hsl(215, 65%, 25%)',
-  color: '#ffffff',
-  fontSize: '15px',
-  fontWeight: 'bold' as const,
+const codeSection = {
+  background: '#f4f4f5',
   borderRadius: '12px',
-  padding: '14px 28px',
-  textDecoration: 'none',
+  padding: '24px',
+  textAlign: 'center' as const,
+  margin: '28px 0',
+}
+const codeText = {
+  fontSize: '32px',
+  fontWeight: 'bold' as const,
+  letterSpacing: '8px',
+  color: 'hsl(220, 45%, 15%)',
+  margin: '0',
 }
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
 const footerBrand = { fontSize: '12px', color: 'hsl(220, 15%, 45%)', margin: '8px 0 0', fontStyle: 'italic' as const }

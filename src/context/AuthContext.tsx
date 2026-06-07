@@ -30,6 +30,13 @@ interface AuthContextType {
   signUp: (
     data: SignUpData,
   ) => Promise<{ error: string | null; user?: AppUser }>;
+  verifyOtp: (
+    identifier: string,
+    token: string,
+  ) => Promise<{ error: string | null }>;
+  resendOtp: (
+    identifier: string,
+  ) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
@@ -246,6 +253,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const verifyOtp = async (identifier: string, token: string) => {
+    try {
+      const isEmail = identifier.includes("@");
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: isEmail ? identifier : undefined,
+        phone: !isEmail ? identifier : undefined,
+        token,
+        type: isEmail ? "signup" : "sms",
+      });
+      if (error) return { error: error.message };
+
+      if (data.user) {
+        const appUser = await fetchUserProfile(data.user);
+        if (appUser) setUser(appUser);
+      }
+      return { error: null };
+    } catch (err: any) {
+      return { error: err.message || "An error occurred during verification" };
+    }
+  };
+
+  const resendOtp = async (identifier: string) => {
+    try {
+      const isEmail = identifier.includes("@");
+      const { error } = await supabase.auth.resend({
+        email: isEmail ? identifier : undefined,
+        phone: !isEmail ? identifier : undefined,
+        type: isEmail ? "signup" : "sms",
+      });
+      if (error) return { error: error.message };
+      return { error: null };
+    } catch (err: any) {
+      return { error: err.message || "An error occurred while resending code" };
+    }
+  };
+
   const signInWithGoogle = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -292,6 +335,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         isLoading,
         signIn,
         signUp,
+        verifyOtp,
+        resendOtp,
         signInWithGoogle,
         signOut,
         resetPassword,

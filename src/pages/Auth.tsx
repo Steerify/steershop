@@ -28,6 +28,8 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
+  RefreshCw,
+  CheckCircle,
 } from "lucide-react";
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
@@ -36,6 +38,7 @@ import logoDark from "@/assets/steersolo-logo-dark.jpg";
 import { useTheme } from "next-themes";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import {
   Form,
   FormControl,
@@ -318,6 +321,8 @@ const Auth = () => {
   const {
     signIn,
     signUp,
+    verifyOtp,
+    resendOtp,
     resetPassword,
     user,
     isLoading: authLoading,
@@ -329,7 +334,15 @@ const Auth = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
-  const [magicLinkEmail, setMagicLinkEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
 
   const returnUrl = useAppSelector((state) => state.ui.returnUrl);
   const lastRoute = useAppSelector((state) => state.ui.lastRoute);
@@ -501,23 +514,11 @@ const Auth = () => {
     }
   };
 
-  const handleMagicLinkLogin = async () => {
-    const email = (magicLinkEmail || loginForm.getValues("identifier") || "")
-      .trim()
-      .toLowerCase();
-    if (!email || !isValidEmail(email)) {
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 6) {
       toast({
-        title: "Enter a valid email",
-        description: "We need a verified email to send a secure login link.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (isDisposableEmail(email)) {
-      toast({
-        title: "Use a real inbox",
-        description: "Disposable email services may block magic links.",
+        title: "Invalid Code",
+        description: "Please enter the complete 6-digit code",
         variant: "destructive",
       });
       return;
@@ -525,20 +526,55 @@ const Auth = () => {
 
     setIsLoading(true);
     setAuthError(null);
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-      });
 
-      if (error) {
-        setAuthError(error.message);
+    try {
+      const result = await verifyOtp(registeredEmail, otp);
+
+      if (result.error) {
+        setAuthError(result.error);
+        toast({
+          title: "Verification Failed",
+          description: result.error,
+          variant: "destructive",
+        });
       } else {
         toast({
-          title: "Magic link sent",
-          description: "Check your email and tap the login link to continue.",
+          title: "Account Verified!",
+          description: "Your account has been verified successfully.",
+        });
+        // App automatically handles redirect via `user` check effect
+      }
+    } catch (error: unknown) {
+      setAuthError(getErrorMessage(error, "Verification failed"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (cooldown > 0) return;
+    setIsLoading(true);
+    try {
+      const result = await resendOtp(registeredEmail);
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else {
+        setCooldown(60);
+        toast({
+          title: "Code Sent",
+          description: "A new verification code has been sent.",
         });
       }
+    } catch (error: unknown) {
+      toast({
+        title: "Error",
+        description: getErrorMessage(error, "Failed to resend code"),
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -625,30 +661,78 @@ const Auth = () => {
               <Mail className="w-10 h-10 text-primary" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-2xl font-bold text-foreground">Check Your Email</h3>
+              <h3 className="text-2xl font-bold text-foreground">Check Your Inbox</h3>
               <p className="text-muted-foreground">
-                We've sent a verification link to
+                We've sent a 6-digit code to
               </p>
               <p className="font-semibold text-foreground text-lg">
                 {registeredEmail}
               </p>
             </div>
-            <div className="bg-muted/50 rounded-2xl p-6 text-sm text-muted-foreground space-y-3">
-              <p>Click the link in the email to activate your account.</p>
-              <p className="text-[13px]">
-                Check your spam folder if you don't see it within a few minutes.
-              </p>
+            
+            <div className="flex flex-col items-center space-y-4 pt-4">
+              <InputOTP
+                maxLength={6}
+                value={otp}
+                onChange={(value) => setOtp(value)}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
             </div>
+
             <Button
-              variant="outline"
-              onClick={() => {
-                setShowEmailVerification(false);
-                setActiveTab("login");
-              }}
-              className="w-full min-h-[52px] rounded-full text-base font-semibold"
+              onClick={handleVerifyOtp}
+              className="w-full min-h-[52px] rounded-full font-semibold text-base"
+              disabled={isLoading || otp.length !== 6}
             >
-              Back to Login
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Verify Account
+                </>
+              )}
             </Button>
+
+            <div className="flex items-center justify-between mt-4">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowEmailVerification(false);
+                  setActiveTab("login");
+                }}
+                className="text-muted-foreground"
+              >
+                Back to Login
+              </Button>
+
+              <Button
+                variant="ghost"
+                onClick={handleResendOtp}
+                disabled={cooldown > 0 || isLoading}
+                className="text-muted-foreground"
+              >
+                {cooldown > 0 ? (
+                  `Resend in ${cooldown}s`
+                ) : (
+                  <>
+                    <RefreshCw className="mr-1 h-3 w-3" />
+                    Resend Code
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         ) : showForgotPassword ? (
           <div className="space-y-6">
@@ -894,49 +978,12 @@ const Auth = () => {
                 </div>
               </div>
 
-              {/* Alternative Auth Methods */}
               <div className="space-y-4">
                 <div className="w-full">
                   <GoogleSignInButton 
                     text={activeTab === "login" ? "continue_with" : "signup_with"}
                   />
                 </div>
-
-                {activeTab === "login" && (
-                  <div className="space-y-3 pt-2">
-                    <p className="text-center text-[13px] font-medium text-muted-foreground">
-                      Prefer a magic link?
-                    </p>
-                    <div className="relative flex items-center">
-                      <Input
-                        type="email"
-                        autoComplete="email"
-                        inputMode="email"
-                        autoCapitalize="none"
-                        autoCorrect="off"
-                        spellCheck={false}
-                        value={magicLinkEmail}
-                        onChange={(e) => setMagicLinkEmail(e.target.value)}
-                        placeholder="Enter email for magic link"
-                        className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-[14px] pl-4 pr-12"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 rounded-xl text-muted-foreground hover:text-foreground h-9 w-9"
-                        onClick={handleMagicLinkLogin}
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Mail className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Footer text */}
