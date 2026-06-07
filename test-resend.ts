@@ -19,8 +19,8 @@ async function sendTestEmail() {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'SteerSolo <onboarding@resend.dev>',
-        to: 'steerifygroup@gmail.com',
+        from: 'SteerSolo <no-reply@steersolo.com>',
+        to: 'okechukwuchukwufulumnanya10@gmail.com',
         subject: 'Test Email from SteerSolo (Resend)',
         html: '<strong>It works!</strong><br><p>This is a test email triggered by your AI assistant.</p>'
       })

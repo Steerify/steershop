@@ -13,7 +13,7 @@ import { ReauthenticationEmail } from "./_shared/email-templates/reauthenticatio
 const resend = new Resend(Deno.env.get("RESEND_API_KEY") || "re_bn6nU67z_MpmejFcumyPi5eLzva2UKMG6");
 
 const RECIPIENT = "okechukwuchukwufulumnanya10@gmail.com";
-const FROM = "SteerSolo <onboarding@resend.dev>";
+const FROM = "SteerSolo <no-reply@steersolo.com>";
 
 const testEmailTemplates = async () => {
   const templateProps = {
