@@ -60,7 +60,8 @@ async function handleWebhook(req: Request): Promise<Response> {
   const webhookSecret = Deno.env.get('WEBHOOK_SECRET')
   const reqSecret = req.headers.get('x-webhook-secret')
 
-  if (!webhookSecret || reqSecret !== webhookSecret) {
+  // If a secret is configured, enforce it; otherwise allow requests (dev mode)
+  if (webhookSecret && reqSecret !== webhookSecret) {
     console.error('Unauthorized: Invalid or missing x-webhook-secret')
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
