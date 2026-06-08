@@ -663,56 +663,24 @@ const Auth = () => {
             <div className="space-y-2">
               <h3 className="text-2xl font-bold text-foreground">Check Your Inbox</h3>
               <p className="text-muted-foreground">
-                We've sent a 6-digit code to
+                We've sent a verification link to
               </p>
               <p className="font-semibold text-foreground text-lg">
                 {registeredEmail}
               </p>
-            </div>
-            
-            <div className="flex flex-col items-center space-y-4 pt-4">
-              <InputOTP
-                maxLength={6}
-                value={otp}
-                onChange={(value) => setOtp(value)}
-              >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
+              <p className="text-sm text-muted-foreground mt-4">
+                Please click the link in the email to verify your account.
+              </p>
             </div>
 
-            <Button
-              onClick={handleVerifyOtp}
-              className="w-full min-h-[52px] rounded-full font-semibold text-base"
-              disabled={isLoading || otp.length !== 6}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Verify Account
-                </>
-              )}
-            </Button>
-
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 pt-4">
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={() => {
                   setShowEmailVerification(false);
                   setActiveTab("login");
                 }}
-                className="text-muted-foreground"
+                className="w-full sm:w-auto min-h-[44px] px-8 rounded-full font-semibold"
               >
                 Back to Login
               </Button>
@@ -721,14 +689,14 @@ const Auth = () => {
                 variant="ghost"
                 onClick={handleResendOtp}
                 disabled={cooldown > 0 || isLoading}
-                className="text-muted-foreground"
+                className="w-full sm:w-auto min-h-[44px] px-8 rounded-full font-semibold text-muted-foreground"
               >
                 {cooldown > 0 ? (
-                  `Resend in ${cooldown}s`
+                  `Resend Link in ${cooldown}s`
                 ) : (
                   <>
-                    <RefreshCw className="mr-1 h-3 w-3" />
-                    Resend Code
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Resend Link
                   </>
                 )}
               </Button>
