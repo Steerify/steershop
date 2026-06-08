@@ -4,7 +4,6 @@ import * as React from 'npm:react@18.3.1'
 
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
@@ -16,6 +15,8 @@ import {
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
+import { styles } from './shared-styles.ts'
+
 interface SignupEmailProps {
   siteName: string
   siteUrl: string
@@ -24,7 +25,8 @@ interface SignupEmailProps {
   token: string
 }
 
-const LOGO_URL = 'https://hwkcqgmtinbgyjjgcgmp.supabase.co/storage/v1/object/public/email-assets/steersolo-logo.jpg'
+// TODO: Replace this URL with the URL of the newly uploaded Neon Green 'S' logo
+const LOGO_URL = 'https://steersolo.com/email-logo.jpg'
 
 export const SignupEmail = ({
   siteName,
@@ -36,33 +38,33 @@ export const SignupEmail = ({
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Welcome to SteerSolo — verify your email to get started!</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Section style={logoSection}>
-          <Img src={LOGO_URL} width="120" alt="SteerSolo" style={logo} />
+    <Body style={styles.main}>
+      <Container style={styles.container}>
+        <Section style={styles.headerSection}>
+          <Img src={LOGO_URL} alt="SteerSolo" style={styles.logo} />
         </Section>
-        <Heading style={h1}>Welcome aboard! 🎉</Heading>
-        <Text style={text}>
+        <Heading style={styles.h1}>Welcome aboard! 🎉</Heading>
+        <Text style={styles.text}>
           You're one step away from launching your WhatsApp-powered online store on{' '}
-          <Link href={siteUrl} style={link}>
-            <strong>SteerSolo</strong>
+          <Link href={siteUrl} style={styles.link}>
+            SteerSolo
           </Link>
           .
         </Text>
-        <Text style={text}>
+        <Text style={styles.mutedText}>
           Please verify your email (
-          <Link href={`mailto:${recipient}`} style={link}>
+          <Link href={`mailto:${recipient}`} style={styles.link}>
             {recipient}
           </Link>
           ) by entering the following 6-digit code:
         </Text>
-        <Section style={codeSection}>
-          <Text style={codeText}>{token}</Text>
+        <Section style={styles.codeSection}>
+          <Text style={styles.codeText}>{token}</Text>
         </Section>
-        <Text style={footer}>
+        <Text style={styles.footer}>
           If you didn't create an account, you can safely ignore this email.
         </Text>
-        <Text style={footerBrand}>
+        <Text style={styles.footerBrand}>
           SteerSolo — Launch your online store in minutes 🚀
         </Text>
       </Container>
@@ -71,38 +73,3 @@ export const SignupEmail = ({
 )
 
 export default SignupEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: "'Poppins', 'Inter', Arial, sans-serif" }
-const container = { padding: '30px 25px', maxWidth: '560px', margin: '0 auto' }
-const logoSection = { marginBottom: '24px' }
-const logo = { borderRadius: '8px' }
-const h1 = {
-  fontSize: '24px',
-  fontWeight: 'bold' as const,
-  color: 'hsl(220, 45%, 15%)',
-  margin: '0 0 16px',
-  fontFamily: "'Poppins', Arial, sans-serif",
-}
-const text = {
-  fontSize: '15px',
-  color: 'hsl(220, 15%, 45%)',
-  lineHeight: '1.6',
-  margin: '0 0 20px',
-}
-const link = { color: 'hsl(215, 65%, 25%)', textDecoration: 'underline' }
-const codeSection = {
-  background: '#f4f4f5',
-  borderRadius: '12px',
-  padding: '24px',
-  textAlign: 'center' as const,
-  margin: '28px 0',
-}
-const codeText = {
-  fontSize: '32px',
-  fontWeight: 'bold' as const,
-  letterSpacing: '8px',
-  color: 'hsl(220, 45%, 15%)',
-  margin: '0',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
-const footerBrand = { fontSize: '12px', color: 'hsl(220, 15%, 45%)', margin: '8px 0 0', fontStyle: 'italic' as const }

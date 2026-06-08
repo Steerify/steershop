@@ -16,6 +16,8 @@ import {
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
+import { styles } from './shared-styles.ts'
+
 interface EmailChangeEmailProps {
   siteName: string
   email: string
@@ -23,7 +25,8 @@ interface EmailChangeEmailProps {
   confirmationUrl: string
 }
 
-const LOGO_URL = 'https://hwkcqgmtinbgyjjgcgmp.supabase.co/storage/v1/object/public/email-assets/steersolo-logo.jpg'
+// TODO: Replace this URL with the URL of the newly uploaded Neon Green 'S' logo
+const LOGO_URL = 'https://steersolo.com/email-logo.jpg'
 
 export const EmailChangeEmail = ({
   siteName,
@@ -34,32 +37,32 @@ export const EmailChangeEmail = ({
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Confirm your email change on SteerSolo</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Section style={logoSection}>
-          <Img src={LOGO_URL} width="120" alt="SteerSolo" style={logo} />
+    <Body style={styles.main}>
+      <Container style={styles.container}>
+        <Section style={styles.headerSection}>
+          <Img src={LOGO_URL} alt="SteerSolo" style={styles.logo} />
         </Section>
-        <Heading style={h1}>Confirm your email change</Heading>
-        <Text style={text}>
+        <Heading style={styles.h1}>Confirm your email change</Heading>
+        <Text style={styles.text}>
           You requested to change your email from{' '}
-          <Link href={`mailto:${email}`} style={link}>
+          <Link href={`mailto:${email}`} style={styles.link}>
             {email}
           </Link>{' '}
           to{' '}
-          <Link href={`mailto:${newEmail}`} style={link}>
+          <Link href={`mailto:${newEmail}`} style={styles.link}>
             {newEmail}
           </Link>
           .
         </Text>
-        <Section style={buttonSection}>
-          <Button style={button} href={confirmationUrl}>
+        <Section style={styles.buttonSection}>
+          <Button style={styles.button} href={confirmationUrl}>
             Confirm Email Change
           </Button>
         </Section>
-        <Text style={footer}>
+        <Text style={styles.footer}>
           If you didn't request this change, please secure your account immediately.
         </Text>
-        <Text style={footerBrand}>
+        <Text style={styles.footerBrand}>
           SteerSolo — Launch your online store in minutes 🚀
         </Text>
       </Container>
@@ -68,34 +71,3 @@ export const EmailChangeEmail = ({
 )
 
 export default EmailChangeEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: "'Poppins', 'Inter', Arial, sans-serif" }
-const container = { padding: '30px 25px', maxWidth: '560px', margin: '0 auto' }
-const logoSection = { marginBottom: '24px' }
-const logo = { borderRadius: '8px' }
-const h1 = {
-  fontSize: '24px',
-  fontWeight: 'bold' as const,
-  color: 'hsl(220, 45%, 15%)',
-  margin: '0 0 16px',
-  fontFamily: "'Poppins', Arial, sans-serif",
-}
-const text = {
-  fontSize: '15px',
-  color: 'hsl(220, 15%, 45%)',
-  lineHeight: '1.6',
-  margin: '0 0 20px',
-}
-const link = { color: 'hsl(215, 65%, 25%)', textDecoration: 'underline' }
-const buttonSection = { textAlign: 'center' as const, margin: '28px 0' }
-const button = {
-  backgroundColor: 'hsl(215, 65%, 25%)',
-  color: '#ffffff',
-  fontSize: '15px',
-  fontWeight: 'bold' as const,
-  borderRadius: '12px',
-  padding: '14px 28px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
-const footerBrand = { fontSize: '12px', color: 'hsl(220, 15%, 45%)', margin: '8px 0 0', fontStyle: 'italic' as const }

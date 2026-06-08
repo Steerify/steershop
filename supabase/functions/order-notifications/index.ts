@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getTransporter, getDefaultFromEmail } from "../_shared/smtp.ts";
+import { buildEmailHtml } from "../_shared/email-html.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -107,19 +108,19 @@ serve(async (req) => {
               const links = digitalItems
                 .map(
                   (i: any) =>
-                    `<li style="margin:6px 0"><strong>${i.products.name}</strong> — <a href="${i.products.digital_file_url}" style="color:#1d4ed8">Download</a></li>`,
+                    `<li><strong>${i.products.name}</strong> — <a href="${i.products.digital_file_url}">Download</a></li>`,
                 )
                 .join("");
               digitalItemsHtml = `
-                <div style="margin:20px 0;padding:20px;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:12px">
-                  <h3 style="margin:0 0 8px;color:#065f46">✅ Your downloads</h3>
-                  <ul style="margin:0;padding-left:18px">${links}</ul>
+                <div class="download-box">
+                  <h3>✅ Your downloads</h3>
+                  <ul style="padding-left:0">${links}</ul>
                 </div>`;
             } else {
               digitalItemsHtml = `
-                <div style="margin:20px 0;padding:20px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px">
-                  <h3 style="margin:0 0 8px;color:#b45309">🔒 Downloads pending payment</h3>
-                  <p style="margin:0;color:#4b5563;font-size:13px">Files unlock as soon as your payment is confirmed.</p>
+                <div class="pending-box">
+                  <h3>🔒 Downloads pending payment</h3>
+                  <p>Files unlock as soon as your payment is confirmed.</p>
                 </div>`;
             }
           }
@@ -131,12 +132,20 @@ serve(async (req) => {
 
     const shortId = orderId.slice(0, 8).toUpperCase();
     const formattedAmount = `₦${Number(totalAmount || 0).toLocaleString()}`;
-    const itemsHtml = (items || [])
+    const itemsTableRows = (items || [])
       .map(
         (item) =>
-          `<tr><td style="padding:8px;border-bottom:1px solid #eee">${item.name}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:center">${item.quantity}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right">₦${Number(item.price * item.quantity).toLocaleString()}</td></tr>`,
+          `<tr><td>${item.name}</td><td style="text-align:center">${item.quantity}</td><td>₦${Number(item.price * item.quantity).toLocaleString()}</td></tr>`,
       )
       .join("");
+    const itemsTable = `
+      <table class="items-table">
+        <thead><tr><th>Item</th><th style="text-align:center">Qty</th><th>Amount</th></tr></thead>
+        <tbody>${itemsTableRows}</tbody>
+        <tfoot><tr class="total-row"><td colspan="2">Total</td><td>${formattedAmount}</td></tr></tfoot>
+      </table>`;
+
+    const orderIdBanner = `<div class="order-id">Order <strong>#${shortId}</strong></div>`;
 
     let customerSubject = "";
     let customerBodyHtml = "";
@@ -145,50 +154,54 @@ serve(async (req) => {
 
     if (eventType === "order_placed" || eventType === "order_paid") {
       const isPaidEvt = eventType === "order_paid";
+
       customerSubject = isPaidEvt
         ? `Payment Confirmed — Order #${shortId}`
         : `Order Received #${shortId} - ${shopName || "SteerSolo"}`;
-      customerBodyHtml = `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-          <div style="background:${isPaidEvt ? "#16a34a" : "#0f3460"};color:white;padding:20px;text-align:center;border-radius:8px 8px 0 0">
-            <h1 style="margin:0">${isPaidEvt ? "Payment Confirmed ✅" : "Order Received 🛒"}</h1>
-          </div>
-          <div style="padding:24px;background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px">
-            <p>Hi ${customerName || "Valued Customer"},</p>
-            <p>${isPaidEvt ? "Your payment for this order is confirmed and held safely." : `Thanks for your order from <strong>${shopName || "SteerSolo"}</strong>.`}</p>
-            <p><strong>Order ID:</strong> #${shortId}</p>
-            <table style="width:100%;border-collapse:collapse;margin:16px 0">
-              <thead><tr style="background:#f9fafb"><th style="padding:8px;text-align:left">Item</th><th style="padding:8px;text-align:center">Qty</th><th style="padding:8px;text-align:right">Amount</th></tr></thead>
-              <tbody>${itemsHtml}</tbody>
-              <tfoot><tr><td colspan="2" style="padding:8px;font-weight:bold">Total</td><td style="padding:8px;text-align:right;font-weight:bold">${formattedAmount}</td></tr></tfoot>
-            </table>
-            ${digitalItemsHtml}
-            <p style="color:#6b7280;font-size:12px;margin-top:24px">SteerSolo · Automated email — do not reply.</p>
-          </div>
-        </div>`;
+
+      customerBodyHtml = buildEmailHtml({
+        headerClass: isPaidEvt ? "header-paid" : "header-accent",
+        badge: {
+          text: isPaidEvt ? "Payment Confirmed" : "Order Received",
+          class: isPaidEvt ? "badge-green" : "badge-blue",
+        },
+        title: isPaidEvt ? "Payment Confirmed ✅" : "Order Received 🛒",
+        body: `
+          ${orderIdBanner}
+          <p>Hi <strong>${customerName || "Valued Customer"}</strong>,</p>
+          <p>${isPaidEvt
+            ? "Your payment is confirmed and held safely in escrow. The seller has been notified."
+            : `Thanks for your order from <strong>${shopName || "SteerSolo"}</strong>. The seller will confirm it shortly.`
+          }</p>
+          ${itemsTable}
+          ${digitalItemsHtml}`,
+      });
 
       ownerSubject = isPaidEvt
         ? `💰 Paid Order #${shortId} - ${formattedAmount}`
         : `🛒 New Order #${shortId} - ${formattedAmount}`;
-      ownerBodyHtml = `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-          <div style="background:${isPaidEvt ? "#16a34a" : "#f97316"};color:white;padding:20px;text-align:center;border-radius:8px 8px 0 0">
-            <h1 style="margin:0">${isPaidEvt ? "Payment Received 💰" : "New Order Received 🎉"}</h1>
-          </div>
-          <div style="padding:24px;background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px">
-            <p>Hey there,</p>
-            <p>${isPaidEvt ? "Funds are held in escrow and will release after the buyer confirms delivery." : `New order on <strong>${shopName || "your shop"}</strong>.`}</p>
-            <p><strong>Order ID:</strong> #${shortId}</p>
-            <p><strong>Customer:</strong> ${customerName || "N/A"}</p>
-            <p><strong>Email:</strong> ${customerEmail || "N/A"}</p>
-            <table style="width:100%;border-collapse:collapse;margin:16px 0">
-              <thead><tr style="background:#f9fafb"><th style="padding:8px;text-align:left">Item</th><th style="padding:8px;text-align:center">Qty</th><th style="padding:8px;text-align:right">Amount</th></tr></thead>
-              <tbody>${itemsHtml}</tbody>
-              <tfoot><tr><td colspan="2" style="padding:8px;font-weight:bold">Total</td><td style="padding:8px;text-align:right;font-weight:bold">${formattedAmount}</td></tr></tfoot>
-            </table>
-            <p>Log in to your SteerSolo dashboard to process this order.</p>
-          </div>
-        </div>`;
+
+      ownerBodyHtml = buildEmailHtml({
+        headerClass: isPaidEvt ? "header-paid" : "header-accent",
+        badge: {
+          text: isPaidEvt ? "Funds in Escrow" : "New Order",
+          class: isPaidEvt ? "badge-green" : "badge-amber",
+        },
+        title: isPaidEvt ? "Payment Received 💰" : "New Order Received 🎉",
+        body: `
+          ${orderIdBanner}
+          <p>${isPaidEvt
+            ? "Funds are held in escrow and will be released once the buyer confirms delivery."
+            : `New order on <strong>${shopName || "your shop"}</strong>.`
+          }</p>
+          <p><strong>Customer:</strong> ${customerName || "N/A"}</p>
+          <p><strong>Email:</strong> ${customerEmail || "N/A"}</p>
+          ${itemsTable}
+          <div class="cta-wrap">
+            <a href="https://steersolo.com/dashboard" class="cta">Go to Dashboard →</a>
+          </div>`,
+      });
+
     } else if (eventType === "status_update") {
       const statusLabel = (statusUpdate || "").replace(/_/g, " ");
       customerSubject = `Order #${shortId} - ${statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}`;
@@ -202,28 +215,30 @@ serve(async (req) => {
       };
       const isDelivered = statusUpdate === "delivered";
       const reviewHtml = isDelivered && shopSlug
-        ? `<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:24px 0;text-align:center">
-             <h3 style="margin:0 0 8px;color:#92400e">How did we do? ⭐</h3>
-             <a href="https://steersolo.com/shop/${shopSlug}" style="display:inline-block;background:#d97706;color:#fff;padding:10px 20px;font-weight:bold;text-decoration:none;border-radius:6px">Leave a Review</a>
+        ? `<div class="review-box">
+             <h3>How did we do? ⭐</h3>
+             <a href="https://steersolo.com/shop/${shopSlug}" class="review-btn">Leave a Review</a>
            </div>`
         : "";
-      customerBodyHtml = `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-          <div style="background:#2563eb;color:white;padding:20px;text-align:center;border-radius:8px 8px 0 0">
-            <h1 style="margin:0">Order Update 📦</h1>
+
+      customerBodyHtml = buildEmailHtml({
+        headerClass: "header-accent",
+        badge: { text: "Order Update", class: "badge-blue" },
+        title: "Order Update 📦",
+        body: `
+          ${orderIdBanner}
+          <p>Hi <strong>${customerName || "Valued Customer"}</strong>,</p>
+          <p>Your order from <strong>${shopName || "SteerSolo"}</strong>:</p>
+          <div class="status-box">
+            <div class="status-label">Status</div>
+            <div class="status-value">${statusLabel.toUpperCase()}</div>
           </div>
-          <div style="padding:24px;background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px">
-            <p>Hi ${customerName || "Valued Customer"},</p>
-            <p><strong>Order #${shortId}</strong> from <strong>${shopName || "SteerSolo"}</strong></p>
-            <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:16px;margin:16px 0">
-              <p style="margin:0;font-weight:bold">Status: ${statusLabel.toUpperCase()}</p>
-              <p style="margin:8px 0 0;color:#374151">${statusMessages[statusUpdate] || "Status updated."}</p>
-            </div>
-            <p>Amount: <strong>${formattedAmount}</strong></p>
-            ${digitalItemsHtml}
-            ${reviewHtml}
-          </div>
-        </div>`;
+          <p>${statusMessages[statusUpdate] || "Your order status has been updated."}</p>
+          <p><strong>Amount:</strong> ${formattedAmount}</p>
+          ${digitalItemsHtml}
+          ${reviewHtml}`,
+      });
+
     } else {
       return new Response(JSON.stringify({ error: "Unknown event type" }), {
         status: 400,

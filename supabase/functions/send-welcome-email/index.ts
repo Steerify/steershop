@@ -62,72 +62,192 @@ serve(async (req) => {
 
     const emailHtml = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to SteerSolo</title>
   <style>
-    body { font-family: 'Roboto', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
-    .container { max-width: 560px; margin: 0 auto; padding: 30px 25px; }
-    .logo { border-radius: 8px; margin-bottom: 24px; }
-    h1 { font-family: 'Poppins', Arial, sans-serif; font-size: 24px; font-weight: bold; color: hsl(220, 45%, 15%); margin: 0 0 16px; }
-    p { font-size: 15px; color: hsl(220, 15%, 45%); line-height: 1.6; margin: 0 0 16px; }
-    .section { background: hsl(215, 65%, 97%); border-radius: 12px; padding: 20px; margin: 20px 0; }
-    .section h3 { font-size: 16px; color: hsl(220, 45%, 15%); margin: 0 0 12px; }
-    .step { display: flex; gap: 12px; margin-bottom: 12px; }
-    .step-num { width: 28px; height: 28px; background: hsl(215, 65%, 25%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; flex-shrink: 0; }
-    .step-text { font-size: 14px; color: hsl(220, 15%, 35%); }
-    .cta { display: inline-block; background: hsl(215, 65%, 25%); color: hsl(40, 20%, 98%); font-size: 15px; font-weight: bold; border-radius: 12px; padding: 14px 28px; text-decoration: none; margin: 20px 0; }
-    .store-link { background: hsl(145, 60%, 95%); border: 1px solid hsl(145, 60%, 80%); border-radius: 8px; padding: 12px 16px; font-family: monospace; font-size: 14px; color: hsl(145, 60%, 25%); word-break: break-all; }
-    .footer { font-size: 12px; color: #999; margin-top: 30px; }
-    .footer-brand { font-size: 12px; color: hsl(220, 15%, 45%); margin-top: 8px; font-style: italic; }
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Poppins', Arial, sans-serif;
+      background-color: #0b101c;
+      color: #f5f4f2;
+      padding: 40px 0;
+    }
+    .wrapper {
+      max-width: 580px;
+      margin: 0 auto;
+      background: #101623;
+      border-radius: 16px;
+      border: 1px solid #1f2937;
+      overflow: hidden;
+      box-shadow: 0 8px 32px -8px rgba(102, 230, 19, 0.12), 0 2px 8px rgba(0,0,0,0.4);
+    }
+    /* ── Header with Adire dot pattern ── */
+    .header {
+      background: linear-gradient(135deg, #0b101c 0%, #0d1a12 60%, #0e1f0a 100%);
+      padding: 36px 32px 28px;
+      text-align: center;
+      position: relative;
+      border-bottom: 1px solid #1f2937;
+      /* Adire-inspired concentric dot pattern */
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(102,230,19,0.07) 2px, transparent 2px),
+        radial-gradient(circle at 80% 80%, rgba(102,230,19,0.05) 2px, transparent 2px),
+        radial-gradient(circle at 50% 50%, rgba(102,230,19,0.04) 1.5px, transparent 1.5px),
+        linear-gradient(135deg, #0b101c 0%, #0d1a12 60%, #0e1f0a 100%);
+      background-size: 30px 30px, 30px 30px, 20px 20px, 100% 100%;
+    }
+    .logo { width: 72px; height: auto; margin: 0 auto 16px; display: block; }
+    .header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #f5f4f2;
+      margin: 0;
+      line-height: 1.3;
+    }
+    .header h1 span { color: #66e613; }
+    /* ── Body ── */
+    .body { padding: 32px; }
+    p { font-size: 15px; color: #d1d5db; line-height: 1.7; margin-bottom: 20px; }
+    strong { color: #f5f4f2; }
+    /* ── Step checklist ── */
+    .checklist {
+      background: #0b101c;
+      border: 1px solid #1f2937;
+      border-left: 3px solid #66e613;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 24px 0;
+    }
+    .checklist h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #66e613;
+      margin: 0 0 18px;
+      letter-spacing: 0.5px;
+    }
+    .step { display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start; }
+    .step:last-child { margin-bottom: 0; }
+    .step-num {
+      min-width: 28px;
+      height: 28px;
+      background: #66e613;
+      color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .step-text { font-size: 14px; color: #9ca3af; line-height: 1.6; padding-top: 4px; }
+    .step-text strong { color: #f5f4f2; }
+    /* ── Store link ── */
+    .store-link-wrap { margin: 24px 0; }
+    .store-link-label { font-size: 13px; color: #9ca3af; margin-bottom: 8px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+    .store-link {
+      background: #0b101c;
+      border: 1px dashed #66e613;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      color: #66e613;
+      word-break: break-all;
+    }
+    /* ── CTA ── */
+    .cta-wrap { text-align: center; margin: 28px 0 24px; }
+    .cta {
+      display: inline-block;
+      background: #66e613;
+      color: #000;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 12px;
+      padding: 16px 36px;
+      text-decoration: none;
+      letter-spacing: 0.3px;
+    }
+    /* ── Pro tips ── */
+    .tips {
+      background: #0b101c;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 24px 0;
+    }
+    .tips h3 { font-size: 14px; font-weight: 600; color: #f5f4f2; margin: 0 0 14px; }
+    .tip { font-size: 14px; color: #9ca3af; margin-bottom: 10px; padding-left: 8px; border-left: 2px solid #1f2937; }
+    .tip:last-child { margin-bottom: 0; }
+    /* ── Footer ── */
+    .footer {
+      border-top: 1px solid #1f2937;
+      padding: 20px 32px;
+      text-align: center;
+    }
+    .footer p { font-size: 12px; color: #6b7280; margin: 0 0 6px; }
+    .footer .brand { color: #66e613; font-style: italic; font-size: 12px; margin: 0; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <img src="https://hwkcqgmtinbgyjjgcgmp.supabase.co/storage/v1/object/public/email-assets/steersolo-logo.jpg" width="120" alt="SteerSolo" class="logo" />
-    
-    <h1>Welcome to SteerSolo, ${name}! 🎉</h1>
-    
-    <p>Your store <strong>${shopName}</strong> has been created! Here's a quick guide to get you selling fast.</p>
-
-    <div class="section">
-      <h3>📋 Your Quick Start Checklist</h3>
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-text"><strong>Add products</strong> — Upload photos, set prices, and write descriptions. Products with photos sell 5x more!</div>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-text"><strong>Set up payments</strong> — Connect Paystack or add your bank details so customers can pay you instantly.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-text"><strong>Share your store link</strong> — Post it on WhatsApp Status, Instagram bio, and Facebook. One link does it all!</div>
-      </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-text"><strong>Track orders</strong> — Your dashboard shows real-time orders, revenue, and customer activity.</div>
-      </div>
+  <div class="wrapper">
+    <div class="header">
+      <img src="https://steersolo.com/email-logo.jpg" alt="SteerSolo" class="logo" />
+      <h1>Welcome to <span>SteerSolo</span>, ${name}! 🎉</h1>
     </div>
 
-    <p><strong>🔗 Your store link:</strong></p>
-    <div class="store-link">${storeLink}</div>
+    <div class="body">
+      <p>Your store <strong>${shopName}</strong> is live! Here's your quick-start guide to getting your first sale.</p>
 
-    <div style="text-align: center;">
-      <a href="https://steersolo.com/dashboard" class="cta">Go to My Dashboard →</a>
+      <div class="checklist">
+        <h3>📋 Your Quick-Start Checklist</h3>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text"><strong>Add products</strong> — Upload photos, set prices, write descriptions. Products with photos sell 5× more!</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text"><strong>Set up payments</strong> — Connect Paystack or add your bank details so customers can pay instantly.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text"><strong>Share your store link</strong> — Post it on WhatsApp Status, Instagram bio, and Facebook. One link does it all!</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text"><strong>Track orders</strong> — Your dashboard shows real-time orders, revenue, and customer activity.</div>
+        </div>
+      </div>
+
+      <div class="store-link-wrap">
+        <p class="store-link-label">🔗 Your store link</p>
+        <div class="store-link">${storeLink}</div>
+      </div>
+
+      <div class="cta-wrap">
+        <a href="https://steersolo.com/dashboard" class="cta">Go to My Dashboard →</a>
+      </div>
+
+      <div class="tips">
+        <h3>💡 Pro Tips</h3>
+        <div class="tip">Use the <strong>AI Description Generator</strong> to write product descriptions in seconds</div>
+        <div class="tip">Create marketing posters with our <strong>built-in Poster Editor</strong></div>
+        <div class="tip">Upgrade to Growth or Pro to unlock unlimited products and AI tools</div>
+        <div class="tip">Join our <strong>WhatsApp community</strong> for tips from other vendors</div>
+      </div>
+
+      <p>Need help? Reply to this email or visit our <a href="https://steersolo.com/faq" style="color:#66e613;text-decoration:none;">FAQ page</a>.</p>
     </div>
 
-    <div class="section">
-      <h3>💡 Pro Tips</h3>
-      <p style="margin: 0 0 8px; font-size: 14px;">• Use the <strong>AI Description Generator</strong> to write product descriptions in seconds</p>
-      <p style="margin: 0 0 8px; font-size: 14px;">• Create marketing posters with our <strong>built-in Poster Editor</strong></p>
-      <p style="margin: 0 0 8px; font-size: 14px;">• Upgrade to Growth or Pro to unlock unlimited products and AI tools</p>
-      <p style="margin: 0; font-size: 14px;">• Join our <strong>WhatsApp community</strong> for tips from other vendors</p>
+    <div class="footer">
+      <p>You're receiving this because you created a store on SteerSolo.</p>
+      <p class="brand">SteerSolo — Launch your WhatsApp-powered online store in minutes 🚀</p>
     </div>
-
-    <p>Need help? Reply to this email or visit our <a href="https://steersolo.com/faq" style="color: hsl(215, 65%, 25%);">FAQ page</a>.</p>
-
-    <p class="footer">You're receiving this because you created a store on SteerSolo.</p>
-    <p class="footer-brand">SteerSolo — Launch your WhatsApp-powered online store in minutes 🚀</p>
   </div>
 </body>
 </html>`;
