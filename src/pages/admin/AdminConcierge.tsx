@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
+import { supabase } from "@/integrations/supabase/client";
+
 const SLOT_LABELS: Record<ConciergeSlot, string> = {
   morning_pick: "Morning Pick",
   new_arrivals: "New Arrivals",
@@ -124,7 +126,7 @@ export default function AdminConcierge() {
       setMetrics(m);
     } catch (e: any) {
       toast({
-        title: "Could not load queue",
+        title: "Could not load posts",
         description: e?.message ?? String(e),
         variant: "destructive",
       });
@@ -135,6 +137,21 @@ export default function AdminConcierge() {
 
   useEffect(() => {
     load(tab);
+
+    // Subscribe to new posts being generated in the background
+    const channel = conciergeService.subscribeToNewPosts((payload) => {
+      if (payload.new && payload.new.status === tab) {
+        setPosts((prev) => [payload.new as ConciergePost, ...prev]);
+        toast({
+          title: "New Post Generated",
+          description: "A new post was just generated and added to the pending section.",
+        });
+      }
+    });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
@@ -144,7 +161,7 @@ export default function AdminConcierge() {
       await conciergeService.generateNow(slot);
       toast({
         title: "Post generated",
-        description: slot ? `New ${SLOT_LABELS[slot]} added to queue` : "New post added to queue",
+        description: slot ? `New ${SLOT_LABELS[slot]} added to pending section` : "New post added to pending section",
       });
       await load("pending");
       setTab("pending");

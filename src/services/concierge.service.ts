@@ -117,6 +117,21 @@ const conciergeService = {
       clicks_7d: events.filter((e) => e.event === "click").length,
     };
   },
+
+  subscribeToNewPosts(callback: (payload: any) => void) {
+    return supabase
+      .channel('marketing_queue_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'marketing_queue',
+        },
+        callback
+      )
+      .subscribe();
+  },
 };
 
 export default conciergeService;
