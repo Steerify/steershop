@@ -138,6 +138,7 @@ const MyStore = () => {
   const [showDraftBanner, setShowDraftBanner] = useState(false);
   const [isGeneratingSEO, setIsGeneratingSEO] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [activeTab, setActiveTab] = useState("store-info");
 
   // Unsaved changes warning
   useUnsavedChanges(isDirty);
@@ -312,10 +313,39 @@ const MyStore = () => {
     const parsed = shopSchema.safeParse(formData);
     if (!parsed.success) {
       const errs: Record<string, string> = {};
+      let firstErrorField: string | null = null;
+      
       parsed.error.errors.forEach((e) => {
-        if (e.path[0]) errs[e.path[0] as string] = e.message;
+        if (e.path[0]) {
+          const field = e.path[0] as string;
+          errs[field] = e.message;
+          if (!firstErrorField) firstErrorField = field;
+        }
       });
       setErrors(errs);
+      
+      toast({ title: "Please fill missing fields", description: "Some required information is missing or invalid.", variant: "destructive" });
+
+      // Determine which tab the error is in
+      const paymentFields = ['bank_account_name', 'bank_name', 'bank_account_number', 'paystack_public_key', 'enable_paystack', 'enable_bank_transfer'];
+      
+      if (firstErrorField && paymentFields.includes(firstErrorField)) {
+        setActiveTab("payment-setup");
+      } else {
+        setActiveTab("store-info");
+      }
+
+      // Scroll to the error element after a short delay to allow tab switch
+      setTimeout(() => {
+        if (firstErrorField) {
+          const el = document.getElementById(firstErrorField);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.focus({ preventScroll: true });
+          }
+        }
+      }, 150);
+      
       return;
     }
 
@@ -490,7 +520,7 @@ const MyStore = () => {
           className="mb-4"
         />
 
-        <Tabs defaultValue="store-info" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 mb-6">
             <TabsTrigger value="store-info">Store Info</TabsTrigger>
             <TabsTrigger value="payment-setup">Payment Setup</TabsTrigger>

@@ -193,7 +193,6 @@
         hsl(215 65% 25% / 0.035) 42px,
         hsl(215 65% 25% / 0.035) 43px
       );
-    background-attachment: fixed;
   }
 
   #root {
