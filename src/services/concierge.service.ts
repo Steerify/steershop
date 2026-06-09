@@ -46,12 +46,17 @@ export interface ConciergeMetrics {
 
 const conciergeService = {
   async listPosts(status?: ConciergeStatus, limit = 50): Promise<ConciergePost[]> {
-    const q = supabase
+    // Build the full query chain — Supabase builder is immutable so each
+    // method MUST be chained inline; storing intermediate references and
+    // calling .eq() on them separately silently drops the filter.
+    let q = supabase
       .from("marketing_queue" as any)
       .select("*")
       .order("created_at", { ascending: false })
       .limit(limit);
-    if (status) q.eq("status", status);
+
+    if (status) q = q.eq("status", status) as any;
+
     const { data, error } = await q;
     if (error) throw error;
     return (data || []) as unknown as ConciergePost[];
@@ -79,19 +84,19 @@ const conciergeService = {
   },
 
   async markSent(postId: string): Promise<void> {
-    const { data, error } = await supabase.functions.invoke("concierge-mark-sent", {
-      body: { post_id: postId, action: "sent" },
-    });
+    const { error } = await supabase
+      .from("marketing_queue" as any)
+      .update({ status: "sent", sent_at: new Date().toISOString() })
+      .eq("id", postId);
     if (error) throw error;
-    if (data?.error) throw new Error(data.error);
   },
 
   async skip(postId: string): Promise<void> {
-    const { data, error } = await supabase.functions.invoke("concierge-mark-sent", {
-      body: { post_id: postId, action: "skipped" },
-    });
+    const { error } = await supabase
+      .from("marketing_queue" as any)
+      .update({ status: "skipped", skipped_at: new Date().toISOString() })
+      .eq("id", postId);
     if (error) throw error;
-    if (data?.error) throw new Error(data.error);
   },
 
   async metrics(): Promise<ConciergeMetrics> {
@@ -118,16 +123,17 @@ const conciergeService = {
     };
   },
 
-  subscribeToNewPosts(callback: (payload: any) => void) {
+  subscribeToChanges(callback: (payload: any) => void) {
     return supabase
-      .channel('marketing_queue_changes')
+      .channel('marketing_queue_realtime')
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'marketing_queue',
-        },
+        { event: 'INSERT', schema: 'public', table: 'marketing_queue' },
+        callback
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'marketing_queue' },
         callback
       )
       .subscribe();

@@ -138,14 +138,27 @@ export default function AdminConcierge() {
   useEffect(() => {
     load(tab);
 
-    // Subscribe to new posts being generated in the background
-    const channel = conciergeService.subscribeToNewPosts((payload) => {
-      if (payload.new && payload.new.status === tab) {
-        setPosts((prev) => [payload.new as ConciergePost, ...prev]);
-        toast({
-          title: "New Post Generated",
-          description: "A new post was just generated and added to the pending section.",
-        });
+    // Real-time: new posts arrive instantly; status changes reflect immediately
+    // without a full reload.
+    const channel = conciergeService.subscribeToChanges((payload) => {
+      if (payload.eventType === 'INSERT') {
+        // Only inject if it belongs to the currently viewed status tab
+        if (payload.new?.status === tab) {
+          setPosts((prev) => [payload.new as ConciergePost, ...prev]);
+          toast({
+            title: "✨ New post generated",
+            description: `A ${TARGET_LABELS[payload.new.target_group as TargetGroup]?.label ?? payload.new.target_group} post just landed in Pending.`,
+          });
+        }
+      } else if (payload.eventType === 'UPDATE') {
+        const updated = payload.new as ConciergePost;
+        // If the post's status no longer matches the current tab, remove it
+        // so it disappears in real-time (e.g. marking sent removes from pending)
+        setPosts((prev) =>
+          prev
+            .filter((p) => !(p.id === updated.id && updated.status !== tab))
+            .map((p) => (p.id === updated.id ? updated : p))
+        );
       }
     });
 
