@@ -1,7 +1,7 @@
 # Script to deploy the auth-email-hook edge function
 
 Write-Host "Deploying the Supabase Edge Function..."
-npx supabase functions deploy auth-email-hook
+npx supabase functions deploy auth-email-hook --project-ref hwkcqgmtinbgyjjgcgmp --no-verify-jwt
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "Deployment successful!" -ForegroundColor Green

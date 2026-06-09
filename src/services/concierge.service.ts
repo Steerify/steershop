@@ -62,10 +62,18 @@ const conciergeService = {
     if (slot) body.slot = slot;
     if (group) body.group = group;
 
-    const { data, error } = await supabase.functions.invoke("concierge-generate", {
-      body,
+    const res = await fetch("/api/concierge-generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
-    if (error) throw error;
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Generation failed: ${res.status} ${errorText}`);
+    }
+    
+    const data = await res.json();
     if (!data?.ok) throw new Error(data?.error || "Generation failed");
     return data.posts as ConciergePost[];
   },
