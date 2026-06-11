@@ -26,7 +26,7 @@ interface AdPackage {
   features: string[];
 }
 
-const TRAFFIC_PACKAGES: AdPackage[] = [
+const BUSINESS_PACKAGES: AdPackage[] = [
   {
     id: "spark",
     name: "Spark Plan",
@@ -84,7 +84,7 @@ const TRAFFIC_PACKAGES: AdPackage[] = [
   },
 ];
 
-const FOLLOW_PACKAGES: AdPackage[] = [
+const SOCIAL_PACKAGES: AdPackage[] = [
   {
     id: "starter",
     name: "Starter Growth",
@@ -142,7 +142,7 @@ export default function AdsLanding() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"traffic" | "followers">("traffic");
+  const [activeTab, setActiveTab] = useState<"business" | "social">("business");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [myShop, setMyShop] = useState<any>(null);
@@ -201,15 +201,15 @@ export default function AdsLanding() {
     }));
   };
 
-  const currentPackages = activeTab === "traffic" ? TRAFFIC_PACKAGES : FOLLOW_PACKAGES;
+  const currentPackages = activeTab === "business" ? BUSINESS_PACKAGES : SOCIAL_PACKAGES;
   const selectedPackage = currentPackages.find(p => p.id === formData.packageId) || currentPackages[0];
 
   // Auto-switch packageId when switching tabs
-  const handleTabChange = (tab: "traffic" | "followers") => {
+  const handleTabChange = (tab: "business" | "social") => {
     setActiveTab(tab);
     setFormData(prev => ({
       ...prev,
-      packageId: tab === "traffic" ? "spark" : "starter",
+      packageId: tab === "business" ? "spark" : "starter",
     }));
   };
 
@@ -431,22 +431,22 @@ export default function AdsLanding() {
               <div className="flex justify-center">
                 <div className="bg-muted p-1 rounded-2xl flex gap-1 border">
                   <button 
-                    onClick={() => handleTabChange("traffic")}
+                    onClick={() => handleTabChange("business")}
                     className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                      activeTab === "traffic" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                      activeTab === "business" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <Megaphone className="w-3.5 h-3.5 inline mr-1.5" />
-                    Drive Store Sales
+                    Business Advertising
                   </button>
                   <button 
-                    onClick={() => handleTabChange("followers")}
+                    onClick={() => handleTabChange("social")}
                     className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                      activeTab === "followers" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                      activeTab === "social" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <Users className="w-3.5 h-3.5 inline mr-1.5" />
-                    Follower Growth
+                    Social Media Advertising
                   </button>
                 </div>
               </div>
@@ -506,6 +506,20 @@ export default function AdsLanding() {
                       </div>
                     </div>
                   </Card>
+
+{/* Regulatory Compliance */}
+<Card className="rounded-3xl border-border/80 bg-neutral-900 text-white p-5 sm:p-6 shadow-md relative overflow-hidden mt-4">
+  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+  <div className="flex gap-4 items-start relative z-10">
+    <ShieldCheck className="w-8 h-8 text-primary shrink-0 mt-0.5" />
+    <div className="space-y-1">
+      <h4 className="font-extrabold text-sm uppercase tracking-wide">Regulatory & Compliance</h4>
+      <p className="text-xs text-neutral-400 leading-relaxed">
+        All advertising spend is subject to platform fees and local advertising regulations. Management fees include a 30% profit margin to cover operating costs and ensure sustainable service delivery. Refunds are provided per the Growth Protection policy detailed above.
+      </p>
+    </div>
+  </div>
+</Card>
                 </div>
 
                 {/* Intake Form */}
