@@ -43,6 +43,7 @@ import {
 } from "@/utils/autoCategorize";
 import { Button } from "@/components/ui/button";
 import { PageThemeShell } from "@/components/PageThemeShell";
+import { ProductMediaCard } from "@/components/ProductMediaCard";
 
 const VERIFIED_NOTICE_KEY = "steersolo_verified_notice_dismissed";
 
@@ -259,8 +260,9 @@ const Shops = () => {
         .limit(600);
 
       const counts: Record<string, number> = {};
-      data?.forEach((o: any) => {
-        counts[o.shop_id] = (counts[o.shop_id] || 0) + 1;
+      data?.forEach((order: { shop_id: string | null }) => {
+        if (!order.shop_id) return;
+        counts[order.shop_id] = (counts[order.shop_id] || 0) + 1;
       });
       const rankedIds = Object.entries(counts)
         .sort((a, b) => b[1] - a[1])
@@ -274,12 +276,12 @@ const Shops = () => {
           .in("id", topIds)
           .eq("is_active", true);
 
-        const ordered = (tShops || [])
-          .sort((a: any, b: any) => topIds.indexOf(a.id) - topIds.indexOf(b.id))
+        const ordered = ((tShops || []) as Shop[])
+          .sort((a, b) => topIds.indexOf(a.id) - topIds.indexOf(b.id))
           .slice(0, 5);
 
         if (ordered.length > 0) {
-          setTrendingShops(ordered as any);
+          setTrendingShops(ordered);
           return;
         }
       }
@@ -291,7 +293,7 @@ const Shops = () => {
         .eq("is_active", true)
         .order("created_at", { ascending: false })
         .limit(5);
-      setTrendingShops((fallback || []) as any);
+      setTrendingShops((fallback || []) as Shop[]);
     };
     fetchTrending();
   }, []);
@@ -358,7 +360,7 @@ const Shops = () => {
           return;
         }
 
-        let filtered = response.data || [];
+        const filtered = response.data || [];
 
         const totalPages = response.meta?.totalPages || 1;
         const hasMore = page < totalPages;
@@ -766,7 +768,7 @@ const Shops = () => {
 
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
-                  {trendingShops.slice(0, 3).map((shop: any) => (
+                  {trendingShops.slice(0, 3).map(shop => (
                     <Link
                       key={shop.id}
                       to={`/shop/${shop.shop_slug || shop.id}`}
@@ -887,7 +889,7 @@ const Shops = () => {
             </h2>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            {trendingShops.slice(0, 5).map((shop: any) => (
+            {trendingShops.slice(0, 5).map(shop => (
               <Link
                 key={shop.id}
                 to={`/shop/${shop.shop_slug || shop.id}`}
@@ -989,29 +991,23 @@ const Shops = () => {
                         style={{ contentVisibility: "auto" }}
                       >
                       {/* Image */}
-                      <div className="relative aspect-square overflow-hidden bg-muted">
-                        {product.image_url || product.images?.[0]?.url ? (
-                          <img
-                            src={product.image_url || product.images?.[0]?.url}
-                            alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-                            <Package className="w-10 h-10 text-muted-foreground/50" />
-                          </div>
-                        )}
+                      <ProductMediaCard
+                        imageUrl={product.image_url || product.images?.[0]?.url}
+                        videoUrl={product.video_url}
+                        alt={product.name}
+                        className="aspect-square min-h-[140px] bg-muted sm:min-h-0"
+                      >
                         <div className="absolute top-2 right-2">
                           <div
                             className={`
-                            text-xs font-semibold px-2 py-0.5 rounded-lg
-                            ${product.is_available ? "bg-emerald-500/90 text-white" : "bg-red-500/90 text-white"}
+                            rounded-lg px-2 py-0.5 text-xs font-semibold shadow-sm ring-1 ring-white/30 backdrop-blur-sm
+                            ${product.is_available ? "bg-emerald-500/95 text-white" : "bg-red-500/95 text-white"}
                           `}
                           >
                             {product.is_available ? "In Stock" : "Out"}
                           </div>
                         </div>
-                      </div>
+                      </ProductMediaCard>
                       {/* Info */}
                       <div className="p-3 flex flex-col flex-1">
                         <h3 className="text-sm font-semibold line-clamp-2 group-hover:text-accent transition-colors mb-2 leading-snug">

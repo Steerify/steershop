@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Play } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Package, Play } from "lucide-react";
 
 interface ProductMediaCardProps {
   imageUrl?: string | null;
@@ -13,6 +13,15 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [imageUrl]);
+
+  useEffect(() => {
+    setVideoFailed(false);
+  }, [videoUrl]);
 
   const handleMouseEnter = () => {
     if (videoFailed || isHovered) return;
@@ -35,11 +44,23 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
     setIsHovered(false);
   };
 
+  const effectiveImageUrl = imageFailed ? null : imageUrl;
   // If video failed, treat as image-only
   const effectiveVideoUrl = videoFailed ? null : videoUrl;
 
+  const fallback = (
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-primary/10 via-accent/10 to-emerald-500/10 px-3 text-center">
+      <div className="rounded-2xl bg-background/70 p-3 shadow-sm ring-1 ring-border/50 backdrop-blur-sm">
+        <Package className="h-7 w-7 text-primary/70 sm:h-8 sm:w-8" />
+      </div>
+      <span className="text-[11px] font-medium leading-tight text-muted-foreground sm:text-xs">
+        Product image unavailable
+      </span>
+    </div>
+  );
+
   // Has video + image — show image by default, play video on hover
-  if (effectiveVideoUrl && imageUrl) {
+  if (effectiveVideoUrl && effectiveImageUrl) {
     return (
       <div
         className={`relative overflow-hidden ${className}`}
@@ -47,10 +68,13 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
         onMouseLeave={handleMouseLeave}
       >
         <img
-          src={imageUrl}
+          src={effectiveImageUrl}
           alt={alt}
           data-testid="product-media-image"
           className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
+          loading="lazy"
+          decoding="async"
+          onError={() => setImageFailed(true)}
         />
         <video
           ref={videoRef}
@@ -103,23 +127,27 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
   }
 
   // Image only
-  if (imageUrl) {
+  if (effectiveImageUrl) {
     return (
       <div className={`relative overflow-hidden ${className}`}>
         <img
-          src={imageUrl}
+          src={effectiveImageUrl}
           alt={alt}
           data-testid="product-media-image"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
+          decoding="async"
+          onError={() => setImageFailed(true)}
         />
         {children}
       </div>
     );
   }
 
-  // No media
+  // No media or failed media
   return (
     <div className={`relative overflow-hidden ${className}`}>
+      {fallback}
       {children}
     </div>
   );
