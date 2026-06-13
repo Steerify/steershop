@@ -222,24 +222,15 @@ const initializePaystackPayment = (config: {
   }
 };
 
-// Enhanced WhatsApp function with deep link and web link fallback
-const openWhatsAppWithOrderDetails = (
+// Payment proof still requires the buyer to attach a screenshot manually, but
+// the order details themselves are generated server-side and sent separately.
+const openWhatsAppForPaymentProof = (
   shopWhatsappNumber: string,
-  orderDetails: {
+  proofDetails: {
     orderId: string;
     customerName: string;
-    customerEmail: string;
-    customerPhone: string;
-    deliveryAddress: string;
-    deliveryCity: string;
-    deliveryState: string;
-    cart: CartItem[];
     totalAmount: number;
-    shippingFee?: number;
-    paymentReference?: string;
     shopName: string;
-    paymentMethod: string;
-    requiresProof?: boolean;
     isDigital?: boolean;
   },
 ) => {
@@ -257,76 +248,20 @@ const openWhatsAppWithOrderDetails = (
       : `+234${cleaned.replace(/^0+/, "")}`;
   }
   const phoneNumber = cleaned;
-
-  const orderSummary = orderDetails.cart
-    .map(
-      item =>
-        `• ${item.product.name} x ${item.quantity} - ₦${(item.product.price * item.quantity).toLocaleString()}`,
-    )
-    .join("%0A");
-
-  const deliveryAddressStr = orderDetails.isDigital
-    ? "Digital Product (Instant Online Access)"
-    : `${orderDetails.deliveryAddress}, ${orderDetails.deliveryCity}, ${orderDetails.deliveryState}`;
-
-  let message = "";
-
-  if (orderDetails.requiresProof) {
-    // Bank transfer proof submission message
-    message =
-      `🧾 *PAYMENT PROOF SUBMISSION*%0A%0A` +
-      `Hello ${orderDetails.shopName},%0A%0A` +
-      `I have made a bank transfer payment for my order. Please find my payment proof attached.%0A%0A` +
-      `*📋 ORDER DETAILS:*%0A` +
-      `Order ID: ${orderDetails.orderId}%0A` +
-      `Amount Paid: ₦${orderDetails.totalAmount.toLocaleString()}%0A%0A` +
-      `*📦 ORDER ITEMS:*%0A` +
-      `${orderSummary}%0A%0A` +
-      `*👤 CUSTOMER INFO:*%0A` +
-      `Name: ${orderDetails.customerName}%0A` +
-      `Phone: ${orderDetails.customerPhone}%0A` +
-      `Email: ${orderDetails.customerEmail}%0A` +
-      `Delivery Address: ${deliveryAddressStr}%0A%0A` +
-      `⚠️ *PLEASE ATTACH YOUR PAYMENT SCREENSHOT TO THIS MESSAGE*`;
-  } else if (orderDetails.paymentMethod === "delivery_before") {
-    // Pay after service message
-    message =
-      `📦 *ORDER REQUEST - PAY ON DELIVERY*%0A%0A` +
-      `Hello ${orderDetails.shopName},%0A%0A` +
-      `I would like to place an order and pay upon delivery. Please confirm if you can fulfill this order:%0A%0A` +
-      `*📦 ORDER ITEMS:*%0A` +
-      `${orderSummary}%0A%0A` +
-      `*💰 TOTAL AMOUNT:*%0A` +
-      `₦${orderDetails.totalAmount.toLocaleString()}%0A%0A` +
-      `*📋 PAYMENT STATUS:*%0A` +
-      `⚠️ UNPAID - Will pay on delivery%0A%0A` +
-      `*👤 CUSTOMER INFO:*%0A` +
-      `Name: ${orderDetails.customerName}%0A` +
-      `Phone: ${orderDetails.customerPhone}%0A` +
-      `Email: ${orderDetails.customerEmail}%0A` +
-      `Delivery Address: ${deliveryAddressStr}%0A%0A` +
-      `Order ID: ${orderDetails.orderId}%0A%0A` +
-      `Please confirm availability and delivery timeline.`;
-  } else {
-    // Paystack payment success message
-    message =
-      `🎉 *PAYMENT SUCCESSFUL*%0A%0A` +
-      `Hello ${orderDetails.shopName},%0A%0A` +
-      `I have completed my order and payment. Here are the details:%0A%0A` +
-      `*📦 ORDER ITEMS:*%0A` +
-      `${orderSummary}%0A%0A` +
-      `*💰 PAYMENT DETAILS:*%0A` +
-      `Total: ₦${orderDetails.totalAmount.toLocaleString()}%0A` +
-      `Reference: ${orderDetails.paymentReference || "N/A"}%0A` +
-      `Status: ✅ PAID%0A%0A` +
-      `*👤 CUSTOMER INFO:*%0A` +
-      `Name: ${orderDetails.customerName}%0A` +
-      `Phone: ${orderDetails.customerPhone}%0A` +
-      `Email: ${orderDetails.customerEmail}%0A` +
-      `Delivery Address: ${deliveryAddressStr}%0A%0A` +
-      `Order ID: ${orderDetails.orderId}%0A%0A` +
-      `Please confirm delivery timeline.`;
-  }
+  const deliveryType = proofDetails.isDigital
+    ? "Digital order"
+    : "Physical delivery";
+  const message =
+    `🧾 *PAYMENT PROOF SUBMISSION*%0A%0A` +
+    `Hello ${proofDetails.shopName},%0A%0A` +
+    `SteerSolo has already sent my full order details to you automatically.%0A` +
+    `I'm sending only my payment proof here for easy matching.%0A%0A` +
+    `*📋 REFERENCE:*%0A` +
+    `Order ID: ${proofDetails.orderId}%0A` +
+    `Customer: ${proofDetails.customerName}%0A` +
+    `Amount Paid: ₦${proofDetails.totalAmount.toLocaleString()}%0A` +
+    `Delivery Type: ${deliveryType}%0A%0A` +
+    `⚠️ *PLEASE ATTACH YOUR PAYMENT SCREENSHOT TO THIS MESSAGE*`;
 
   // Create deep link and web link
   const deepLink = `whatsapp://send?phone=${phoneNumber.replace("+", "")}&text=${message}`;
@@ -378,8 +313,9 @@ const CheckoutDialog = ({
     delivery_city: checkoutDraft?.deliveryCity || "",
     delivery_state: checkoutDraft?.deliveryState || "",
   });
-  
-  const isCartOnlyDigital = cart.length > 0 && cart.every(item => item.product.is_digital);
+
+  const isCartOnlyDigital =
+    cart.length > 0 && cart.every(item => item.product.is_digital);
 
   useEffect(() => {
     if (isOpen && isCartOnlyDigital) {
@@ -504,9 +440,10 @@ const CheckoutDialog = ({
         setDefaultPickupAddress(
           (addresses?.[0] as ShopPickupAddress | undefined) || null,
         );
-        const shopConfig = (shopSettings.data || null) as
-          | { uses_own_logistics?: boolean | null; own_logistics_note?: string | null }
-          | null;
+        const shopConfig = (shopSettings.data || null) as {
+          uses_own_logistics?: boolean | null;
+          own_logistics_note?: string | null;
+        } | null;
         setShopUsesOwnLogistics(Boolean(shopConfig?.uses_own_logistics));
         setShopOwnLogisticsNote(shopConfig?.own_logistics_note || "");
       } catch (error) {
@@ -614,25 +551,38 @@ const CheckoutDialog = ({
     extra?: Record<string, any>,
   ) => {
     try {
-      await supabase.functions.invoke("order-notifications", {
-        body: {
-          orderId,
-          eventType,
-          shopId: shop.id,
-          shopName: shop.shop_name,
-          customerEmail: formData.customer_email,
-          customerName: formData.customer_name,
-          totalAmount: effectiveTotal,
-          items: cart.map(item => ({
-            name: item.product.name,
-            quantity: item.quantity,
-            price: item.product.price,
-          })),
-          ...extra,
+      const { data, error } = await supabase.functions.invoke(
+        "order-notifications",
+        {
+          body: {
+            orderId,
+            eventType,
+            shopId: shop.id,
+            shopName: shop.shop_name,
+            customerEmail: formData.customer_email,
+            customerName: formData.customer_name,
+            totalAmount: effectiveTotal,
+            items: cart.map(item => ({
+              name: item.product.name,
+              quantity: item.quantity,
+              price: item.product.price,
+            })),
+            ...extra,
+          },
         },
-      });
+      );
+      if (error) throw error;
+      return data as {
+        whatsapp?: {
+          sent?: boolean;
+          mode?: string;
+          fallbackUrl?: string | null;
+          error?: string;
+        } | null;
+      } | null;
     } catch (e) {
       console.error("Notification failed (non-blocking):", e);
+      return null;
     }
   };
 
@@ -756,7 +706,16 @@ const CheckoutDialog = ({
     }
   };
 
-  const handleDeliveryBeforeService = async (orderId: string) => {
+  const handleDeliveryBeforeService = async (
+    orderId: string,
+    notificationResult?: {
+      whatsapp?: {
+        sent?: boolean;
+        mode?: string;
+        fallbackUrl?: string | null;
+      } | null;
+    } | null,
+  ) => {
     try {
       const { error: updateError } = await supabase
         .from("orders")
@@ -768,29 +727,27 @@ const CheckoutDialog = ({
 
       if (updateError) throw updateError;
 
-      const whatsappOpened = openWhatsAppWithOrderDetails(
-        shop.whatsapp_number || "",
-        {
-          orderId,
-          customerName: formData.customer_name,
-          customerEmail: formData.customer_email,
-          customerPhone: formData.customer_phone,
-          deliveryAddress: formData.delivery_address,
-          deliveryCity: formData.delivery_city,
-          deliveryState: formData.delivery_state,
-          cart,
-          totalAmount: effectiveTotal,
-          shippingFee: selectedRate?.price,
-          shopName: shop.shop_name,
-          paymentMethod: "delivery_before",
-          isDigital: isCartOnlyDigital,
-        },
-      );
-
-      if (whatsappOpened) {
+      const fallbackUrl = notificationResult?.whatsapp?.fallbackUrl;
+      if (fallbackUrl) {
+        window.open(fallbackUrl, "_blank", "noopener,noreferrer");
         toast({
-          title: "Order Request Sent! 📦",
-          description: "WhatsApp opened for you to discuss with the seller.",
+          title: "Order request created",
+          description:
+            "Your order was saved and WhatsApp opened with the system-generated order reference.",
+          duration: 6000,
+        });
+      } else if (notificationResult?.whatsapp?.sent) {
+        toast({
+          title: "Order request sent",
+          description:
+            "Your order was saved and the seller received the full order details automatically.",
+          duration: 6000,
+        });
+      } else {
+        toast({
+          title: "Order request submitted",
+          description:
+            "Your order was saved. The seller can review it in SteerSolo.",
           duration: 6000,
         });
       }
@@ -870,7 +827,9 @@ const CheckoutDialog = ({
         customer_name: formData.customer_name,
         customer_email: formData.customer_email,
         customer_phone: formData.customer_phone,
-        delivery_address: isCartOnlyDigital ? "Digital Delivery" : formData.delivery_address,
+        delivery_address: isCartOnlyDigital
+          ? "Digital Delivery"
+          : formData.delivery_address,
         delivery_city: isCartOnlyDigital ? "Digital" : formData.delivery_city,
         delivery_state: isCartOnlyDigital ? "Digital" : formData.delivery_state,
         total_amount: effectiveTotal,
@@ -917,7 +876,8 @@ const CheckoutDialog = ({
         setIsProcessing(false);
         toast({
           title: "Item unavailable",
-          description: stockError.message || "One of your items is out of stock.",
+          description:
+            stockError.message || "One of your items is out of stock.",
           variant: "destructive",
         });
         return;
@@ -930,7 +890,7 @@ const CheckoutDialog = ({
             order_id: orderId,
             shop_id: shop.id,
             rate_id: selectedRate.rate_id,
-            provider: "sendbox",
+            provider: (selectedRate as any).provider || "terminal",
             pickup_address: formatPickupAddress(defaultPickupAddress),
             delivery_address: {
               name: formData.customer_name,
@@ -942,6 +902,8 @@ const CheckoutDialog = ({
             },
             delivery_fee: selectedRate.price,
             weight_kg: cart.length * 0.5,
+            carrier_name: selectedRate.carrier,
+            carrier_logo: selectedRate.carrier_logo,
           });
         } catch (shippingError) {
           console.error(
@@ -968,13 +930,13 @@ const CheckoutDialog = ({
         paymentChoice === "pay_before" &&
         ((paymentMethod || shop.payment_method) === "paystack" ||
           (shop.payment_method === "both" && paymentMethod === "paystack"));
-      if (!willTriggerPaystack) {
-        sendOrderNotification(orderId, "order_placed");
-      }
+      const notificationResult = !willTriggerPaystack
+        ? await sendOrderNotification(orderId, "order_placed")
+        : null;
 
       // Handle payment choice
       if (paymentChoice === "delivery_before") {
-        await handleDeliveryBeforeService(orderId);
+        await handleDeliveryBeforeService(orderId, notificationResult);
       } else {
         // Determine which payment method to use
         const effectivePaymentMethod = paymentMethod || shop.payment_method;
@@ -1010,20 +972,11 @@ const CheckoutDialog = ({
   const handleSendProofViaWhatsApp = () => {
     if (!currentOrderId) return;
 
-    openWhatsAppWithOrderDetails(shop.whatsapp_number || "", {
+    openWhatsAppForPaymentProof(shop.whatsapp_number || "", {
       orderId: currentOrderId,
       customerName: formData.customer_name,
-      customerEmail: formData.customer_email,
-      customerPhone: formData.customer_phone,
-      deliveryAddress: formData.delivery_address,
-      deliveryCity: formData.delivery_city,
-      deliveryState: formData.delivery_state,
-      cart,
       totalAmount: effectiveTotal,
-      shippingFee: selectedRate?.price,
       shopName: shop.shop_name,
-      paymentMethod: "pay_before",
-      requiresProof: true,
       isDigital: isCartOnlyDigital,
     });
 
@@ -1417,13 +1370,18 @@ const CheckoutDialog = ({
 
               {shopUsesOwnLogistics && !isCartOnlyDigital && (
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
-                  <p className="font-medium text-primary">Vendor-managed delivery</p>
+                  <p className="font-medium text-primary">
+                    Vendor-managed delivery
+                  </p>
                   <p className="text-muted-foreground">
-                    This store handles logistics directly. Delivery fee and timeline will be confirmed by the vendor after order placement.
+                    This store handles logistics directly. Delivery fee and
+                    timeline will be confirmed by the vendor after order
+                    placement.
                   </p>
                   {shopOwnLogisticsNote && (
                     <p className="mt-2 text-muted-foreground">
-                      <span className="font-medium">Vendor note:</span> {shopOwnLogisticsNote}
+                      <span className="font-medium">Vendor note:</span>{" "}
+                      {shopOwnLogisticsNote}
                     </p>
                   )}
                 </div>
@@ -1881,12 +1839,12 @@ const CheckoutDialog = ({
                     {proofSent ? (
                       <>
                         <Check className="w-4 h-4 mr-2" />
-                        WhatsApp Opened - Attach Your Screenshot
+                        Proof Thread Opened - Attach Screenshot
                       </>
                     ) : (
                       <>
                         <MessageCircle className="w-4 h-4 mr-2" />
-                        Send Payment Proof via WhatsApp
+                        Open WhatsApp Proof Thread
                       </>
                     )}
                   </Button>
@@ -1912,8 +1870,9 @@ const CheckoutDialog = ({
 
                 {!proofSent && (
                   <p className="text-xs text-muted-foreground text-center">
-                    You must send payment proof via WhatsApp before completing
-                    the order
+                    Order details are already generated from SteerSolo. You only
+                    need to attach your payment screenshot before completing the
+                    order.
                   </p>
                 )}
               </div>

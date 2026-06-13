@@ -2,7 +2,15 @@ import { useEffect, useState, useMemo } from "react";
 import { FirstVisitIntro } from "@/components/FirstVisitIntro";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Store, MapPin, Sparkles, ArrowRight, ChevronRight, Filter, ShoppingBag } from "lucide-react";
+import {
+  Store,
+  MapPin,
+  Sparkles,
+  ArrowRight,
+  ChevronRight,
+  Filter,
+  ShoppingBag,
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -22,15 +30,18 @@ const DiscoveryHub = () => {
 
   // Parse hubSlug: e.g., "fashion-in-lagos"
   const { categorySlug, city } = useMemo(() => {
-    if (!hubSlug) return { categorySlug: 'all', city: 'Nigeria' };
-    const parts = hubSlug.split('-in-');
+    if (!hubSlug) return { categorySlug: "all", city: "Nigeria" };
+    const parts = hubSlug.split("-in-");
     if (parts.length === 2) {
-      return { 
-        categorySlug: parts[0], 
-        city: parts[1].split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') 
+      return {
+        categorySlug: parts[0],
+        city: parts[1]
+          .split("-")
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" "),
       };
     }
-    return { categorySlug: hubSlug, city: 'Nigeria' };
+    return { categorySlug: hubSlug, city: "Nigeria" };
   }, [hubSlug]);
 
   const categoryLabel = getCategoryLabel(categorySlug);
@@ -40,23 +51,29 @@ const DiscoveryHub = () => {
       setIsLoading(true);
       try {
         // Fetch all active shops
-        const response = await shopService.getShops(1, 50, { activeOnly: true });
+        const response = await shopService.getShops(1, 50, {
+          activeOnly: true,
+        });
         if (response.success && response.data) {
           let filtered = response.data;
 
           // Filter by category (using autoCategorize for now, which is robust)
-          if (categorySlug !== 'all') {
+          if (categorySlug !== "all") {
             filtered = filtered.filter(s => {
-              const cat = autoCategorize(s.name || s.shop_name || '', s.description || '');
+              const cat = autoCategorize(
+                s.name || s.shop_name || "",
+                s.description || "",
+              );
               return cat === categorySlug;
             });
           }
 
           // Filter by city/state
-          if (city !== 'Nigeria') {
-            filtered = filtered.filter(s => 
-              s.state?.toLowerCase().includes(city.toLowerCase()) || 
-              s.city?.toLowerCase().includes(city.toLowerCase())
+          if (city !== "Nigeria") {
+            filtered = filtered.filter(
+              s =>
+                s.state?.toLowerCase().includes(city.toLowerCase()) ||
+                s.city?.toLowerCase().includes(city.toLowerCase()),
             );
           }
 
@@ -66,14 +83,14 @@ const DiscoveryHub = () => {
           if (filtered.length > 0) {
             const shopIds = filtered.map(s => s.id);
             const { data: productData } = await supabase
-              .from('products')
-              .select('shop_id, image_url, name')
-              .in('shop_id', shopIds)
-              .eq('is_available', true)
-              .is('delete_at', null)
-              .not('image_url', 'is', null)
+              .from("products")
+              .select("shop_id, image_url, name")
+              .in("shop_id", shopIds)
+              .eq("is_available", true)
+              .is("delete_at", null)
+              .not("image_url", "is", null)
               .limit(100);
-            
+
             if (productData) {
               const grouped: Record<string, any[]> = {};
               productData.forEach(p => {
@@ -113,48 +130,119 @@ const DiscoveryHub = () => {
       <Helmet>
         <title>{title}</title>
         <meta name="description" content={description} />
-        <meta name="keywords" content={`${categorySlug} ${city}, buy ${categoryLabel} ${city}, best shops ${city}, steersolo discover, ${city} marketplace`} />
-        <link rel="canonical" href={`https://steersolo.com/discover/${hubSlug}`} />
+        <meta
+          name="keywords"
+          content={`${categorySlug} ${city}, buy ${categoryLabel} ${city}, best shops ${city}, steersolo discover, ${city} marketplace`}
+        />
+        <link
+          rel="canonical"
+          href={`https://steersolo.com/discover/${hubSlug}`}
+        />
       </Helmet>
 
       <Navbar />
 
       <main className="flex-1 pt-24 pb-20">
         {/* Hub Hero */}
-        <section className="bg-card border-b border-border/40 py-12 mb-10">
+        <section className="mb-10">
           <div className="container mx-auto px-4">
-            <nav className="flex items-center gap-2 text-xs text-muted-foreground mb-6 overflow-x-auto whitespace-nowrap">
-              <Link to="/" className="hover:text-primary transition-colors">Home</Link>
-              <ChevronRight className="w-3 h-3" />
-              <Link to="/shops" className="hover:text-primary transition-colors">Marketplace</Link>
-              <ChevronRight className="w-3 h-3" />
-              <span className="text-foreground font-medium">{categoryLabel} in {city}</span>
-            </nav>
-
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-              <div className="max-w-2xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-wider mb-4">
-                  <Sparkles className="w-3 h-3" />
-                  Curated Collection
-                </div>
-                <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
-                  The Best <span className="text-primary">{categoryLabel}</span> Stores in <span className="text-accent">{city}</span>
-                </h1>
-                <p className="text-muted-foreground text-lg leading-relaxed">
-                  Supporting {shops.length} verified local entrepreneurs providing high-quality products and services across {city}.
-                </p>
-              </div>
-
-              <div className="flex flex-col items-center gap-3 p-6 bg-background border border-primary/20 rounded-2xl shadow-xl shadow-primary/5">
-                <div className="text-center">
-                  <p className="text-sm font-bold text-foreground">Are you a merchant in {city}?</p>
-                  <p className="text-xs text-muted-foreground mb-3">Join our community and reach more customers.</p>
-                </div>
-                <Link to="/auth/entrepreneur" className="w-full">
-                  <Button className="w-full rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90">
-                    Register Your Shop <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
+            <div className="rounded-[2rem] border border-border/50 bg-card/90 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.06)] p-5 sm:p-7 lg:p-8">
+              <nav className="flex items-center gap-2 text-xs text-muted-foreground mb-6 overflow-x-auto whitespace-nowrap">
+                <Link to="/" className="hover:text-primary transition-colors">
+                  Home
                 </Link>
+                <ChevronRight className="w-3 h-3" />
+                <Link
+                  to="/shops"
+                  className="hover:text-primary transition-colors"
+                >
+                  Marketplace
+                </Link>
+                <ChevronRight className="w-3 h-3" />
+                <span className="text-foreground font-medium">
+                  {categoryLabel} in {city}
+                </span>
+              </nav>
+
+              <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                <div className="max-w-2xl">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+                    <Sparkles className="w-3 h-3" />
+                    Curated Collection
+                  </div>
+                  <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4 leading-[1.05]">
+                    Discover{" "}
+                    <span className="text-primary">{categoryLabel}</span> stores
+                    in <span className="text-accent">{city}</span>
+                  </h1>
+                  <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
+                    A cleaner category browsing experience with trusted Nigerian
+                    merchants, product previews, and a consistent mobile-first
+                    layout.
+                  </p>
+
+                  <div className="mt-6 flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2 rounded-2xl border border-border/50 bg-background/70 px-4 py-2 text-sm">
+                      <Store className="w-4 h-4 text-primary" />
+                      <span className="font-semibold">{shops.length}</span>
+                      <span className="text-muted-foreground">stores</span>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-2xl border border-border/50 bg-background/70 px-4 py-2 text-sm">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      <span className="font-semibold">{city}</span>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-2xl border border-border/50 bg-background/70 px-4 py-2 text-sm">
+                      <Filter className="w-4 h-4 text-primary" />
+                      <span className="font-semibold">{categoryLabel}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                  <div className="rounded-3xl border border-border/50 bg-background/75 p-5">
+                    <p className="text-sm font-bold text-foreground">
+                      Are you a merchant in {city}?
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Join this category hub and show up with the same polished
+                      storefront experience.
+                    </p>
+                    <Link to="/auth/entrepreneur" className="block mt-4">
+                      <Button className="w-full rounded-2xl bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                        Register Your Shop{" "}
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </Link>
+                  </div>
+
+                  <div className="rounded-3xl border border-border/50 bg-background/75 p-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                      What to expect
+                    </p>
+                    <div className="mt-3 space-y-3 text-sm">
+                      <div className="flex items-start gap-2">
+                        <Sparkles className="w-4 h-4 text-accent mt-0.5" />
+                        <span>
+                          Preview top shops and compare styles quickly.
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Store className="w-4 h-4 text-primary mt-0.5" />
+                        <span>
+                          Consistent card layout across category and storefront
+                          pages.
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <ShoppingBag className="w-4 h-4 text-emerald-600 mt-0.5" />
+                        <span>
+                          Responsive browsing across mobile, tablet, and
+                          desktop.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -168,7 +256,7 @@ const DiscoveryHub = () => {
               </div>
               <h2 className="text-xl font-bold">Recommended Merchants</h2>
             </div>
-            
+
             <div className="hidden sm:flex items-center gap-3">
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border bg-muted/50 text-xs text-muted-foreground">
                 <MapPin className="w-3 h-3" />
@@ -184,7 +272,10 @@ const DiscoveryHub = () => {
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="bg-card border border-border/60 rounded-2xl overflow-hidden animate-pulse">
+                <div
+                  key={i}
+                  className="bg-card border border-border/60 rounded-2xl overflow-hidden animate-pulse"
+                >
                   <div className="h-32 bg-muted" />
                   <div className="p-4 pt-8">
                     <div className="h-4 w-3/4 bg-muted rounded mb-2" />
@@ -216,9 +307,12 @@ const DiscoveryHub = () => {
               <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center mb-6">
                 <ShoppingBag className="w-10 h-10 text-muted-foreground" />
               </div>
-              <h3 className="text-2xl font-bold mb-2">No {categoryLabel} shops yet in {city}</h3>
+              <h3 className="text-2xl font-bold mb-2">
+                No {categoryLabel} shops yet in {city}
+              </h3>
               <p className="text-muted-foreground max-w-md mx-auto mb-8">
-                We're currently expanding our network in {city}. Be the first {categoryLabel} merchant to join and claim this spot!
+                We're currently expanding our network in {city}. Be the first{" "}
+                {categoryLabel} merchant to join and claim this spot!
               </p>
               <Link to="/auth/entrepreneur">
                 <Button size="lg" className="rounded-2xl px-8 bg-primary">
@@ -231,12 +325,34 @@ const DiscoveryHub = () => {
 
         {/* SEO Discovery Links */}
         <section className="container mx-auto px-4 mt-20 pt-10 border-t border-border/40">
-          <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-6">Other Popular Hubs</h3>
+          <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-6">
+            Other Popular Hubs
+          </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link to="/discover/fashion-in-lagos" className="text-sm hover:text-primary transition-colors">Fashion in Lagos</Link>
-            <Link to="/discover/food-drinks-in-abuja" className="text-sm hover:text-primary transition-colors">Food in Abuja</Link>
-            <Link to="/discover/electronics-in-ph" className="text-sm hover:text-primary transition-colors">Tech in Port Harcourt</Link>
-            <Link to="/discover/skincare-in-lagos" className="text-sm hover:text-primary transition-colors">Skincare in Lagos</Link>
+            <Link
+              to="/discover/fashion-in-lagos"
+              className="text-sm hover:text-primary transition-colors"
+            >
+              Fashion in Lagos
+            </Link>
+            <Link
+              to="/discover/food-drinks-in-abuja"
+              className="text-sm hover:text-primary transition-colors"
+            >
+              Food in Abuja
+            </Link>
+            <Link
+              to="/discover/electronics-in-ph"
+              className="text-sm hover:text-primary transition-colors"
+            >
+              Tech in Port Harcourt
+            </Link>
+            <Link
+              to="/discover/skincare-in-lagos"
+              className="text-sm hover:text-primary transition-colors"
+            >
+              Skincare in Lagos
+            </Link>
           </div>
         </section>
       </main>

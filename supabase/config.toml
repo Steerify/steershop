@@ -31,6 +31,8 @@ project_id = "hwkcqgmtinbgyjjgcgmp"
     verify_jwt = false
   [functions.logistics-webhook]
     verify_jwt = false
+  [functions.logistics-cancel]
+    verify_jwt = false
   [functions.marketing-ai-assist]
     verify_jwt = false
   [functions.migrate-images]

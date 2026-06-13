@@ -25,15 +25,143 @@ interface BookDeliveryRequest {
   delivery_fee: number;
   weight_kg?: number;
   dimensions?: { length: number; width: number; height: number };
+  is_cod?: boolean;
+  carrier_name?: string;
+  carrier_logo?: string;
+  metadata?: Record<string, any>;
 }
 
+const TERMINAL_API_KEY = Deno.env.get('TERMINAL_API_KEY');
+const TERMINAL_BASE_URL = 'https://api.terminal.africa/v1';
 const SENDBOX_API_KEY = Deno.env.get('SENDBOX_API_KEY');
 const SENDBOX_BASE_URL = 'https://live.sendbox.co/shipping';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+interface TerminalBookingResult {
+  success: boolean;
+  shipment_id?: string;
+  tracking_code?: string;
+  label_url?: string;
+  error?: string;
+}
+
+async function bookTerminalDelivery(
+  pickup: DeliveryAddress,
+  delivery: DeliveryAddress,
+  rateId: string,
+  isCod: boolean,
+  codAmount: number,
+  metadata: Record<string, any>
+): Promise<TerminalBookingResult> {
+  if (!TERMINAL_API_KEY) {
+    return { success: false, error: 'Terminal API key not configured' };
+  }
+
+  const formatAddress = (addr: DeliveryAddress) => ({
+    name: addr.name,
+    phone: addr.phone,
+    address_line_1: addr.address,
+    city: addr.city,
+    state: addr.state,
+    country: addr.country || 'NG',
+  });
+
+  try {
+    const response = await fetch(`${TERMINAL_BASE_URL}/shipments`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${TERMINAL_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        rate_id: rateId,
+        origin: formatAddress(pickup),
+        destination: formatAddress(delivery),
+        metadata: {
+          ...metadata,
+          is_cod: isCod,
+        },
+        is_cod: isCod,
+        cod_amount: isCod ? codAmount : undefined,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Terminal booking error:', response.status, data);
+      return { success: false, error: data?.message || 'Booking failed' };
+    }
+
+    return {
+      success: true,
+      shipment_id: data?.data?.id || data?.id,
+      tracking_code: data?.data?.tracking_number || data?.tracking_number,
+      label_url: data?.data?.label_url || data?.label_url,
+    };
+  } catch (error: any) {
+    console.error('Terminal booking error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+async function bookSendboxDelivery(
+  pickup: DeliveryAddress,
+  delivery: DeliveryAddress,
+  weight: number,
+  metadata: Record<string, any>
+): Promise<TerminalBookingResult> {
+  if (!SENDBOX_API_KEY) {
+    return { success: false, error: 'Sendbox API key not configured' };
+  }
+
+  const formatAddress = (addr: DeliveryAddress) => ({
+    name: addr.name,
+    street: addr.address,
+    city: addr.city,
+    state: addr.state,
+    country: addr.country || 'NG',
+    phone: addr.phone,
+  });
+
+  try {
+    const response = await fetch(`${SENDBOX_BASE_URL}/shipments`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Sendbox ${SENDBOX_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        origin: formatAddress(pickup),
+        destination: formatAddress(delivery),
+        weight: weight,
+        channel_code: 'api',
+        service_type: 'local',
+        ...metadata,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Sendbox booking error:', response.status, data);
+      return { success: false, error: data?.message || 'Booking failed' };
+    }
+
+    return {
+      success: true,
+      shipment_id: data?.data?.code || data?.data?.id,
+      tracking_code: data?.data?.tracking_code || data?.tracking_code,
+      label_url: data?.data?.label_url,
+    };
+  } catch (error: any) {
+    console.error('Sendbox booking error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -58,7 +186,11 @@ serve(async (req: Request) => {
     }
 
     const body: BookDeliveryRequest = await req.json();
-    const { order_id, shop_id, rate_id, provider, pickup_address, delivery_address, delivery_fee, weight_kg, dimensions } = body;
+    const { 
+      order_id, shop_id, rate_id, provider, pickup_address, delivery_address, 
+      delivery_fee, weight_kg, dimensions, is_cod = false, carrier_name, 
+      carrier_logo, metadata 
+    } = body;
 
     // Verify the caller owns the shop they're booking for.
     const { data: shopRow, error: shopLookupErr } = await supabase
@@ -72,46 +204,58 @@ serve(async (req: Request) => {
       });
     }
 
+    // Get order for COD amount
+    const { data: orderRow } = await supabase
+      .from('orders')
+      .select('total_amount')
+      .eq('id', order_id)
+      .single();
+
     let providerShipmentId = null;
     let providerTrackingCode = null;
     let estimatedDeliveryDate = null;
+    let labelUrl = null;
 
-    if (provider === 'sendbox' && SENDBOX_API_KEY) {
-      const mapAddress = (addr: DeliveryAddress) => ({
-        name: addr.name,
-        street: addr.address,
-        city: addr.city,
-        state: addr.state,
-        country: addr.country || 'NG',
-        phone: addr.phone
-      });
+    if (provider === 'terminal' && TERMINAL_API_KEY) {
+      const bookingResult = await bookTerminalDelivery(
+        pickup_address,
+        delivery_address,
+        rate_id || '',
+        is_cod,
+        orderRow?.total_amount || 0,
+        { order_id, shop_id, ...metadata }
+      );
 
-      const payload = {
-        origin: mapAddress(pickup_address),
-        destination: mapAddress(delivery_address),
-        weight: weight_kg || 1,
-        channel_code: 'api',
-        service_type: 'local'
-      };
+      if (bookingResult.success) {
+        providerShipmentId = bookingResult.shipment_id;
+        providerTrackingCode = bookingResult.tracking_code;
+        labelUrl = bookingResult.label_url;
+        estimatedDeliveryDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+      } else {
+        // Fall through to manual booking if Terminal fails
+        console.warn('Terminal booking failed, falling back to manual:', bookingResult.error);
+      }
+    }
 
-      const shipmentRes = await fetch(`${SENDBOX_BASE_URL}/shipments`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Sendbox ${SENDBOX_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      
-      const shipmentData = await shipmentRes.json();
-      if (shipmentData.data) {
-        providerShipmentId = shipmentData.data.code || shipmentData.data.tracking_code;
-        providerTrackingCode = shipmentData.data.tracking_code || shipmentData.data.code;
+    if (provider === 'sendbox' && SENDBOX_API_KEY && !providerShipmentId) {
+      const bookingResult = await bookSendboxDelivery(
+        pickup_address,
+        delivery_address,
+        weight_kg || 1,
+        { order_id, shop_id, ...metadata }
+      );
+
+      if (bookingResult.success) {
+        providerShipmentId = bookingResult.shipment_id;
+        providerTrackingCode = bookingResult.tracking_code;
+        labelUrl = bookingResult.label_url;
         estimatedDeliveryDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
       }
     }
 
     // Create delivery order in database
+    const deliveryStatus = providerShipmentId ? 'confirmed' : 'pending';
+    
     const { data: deliveryOrder, error: insertError } = await supabase
       .from('delivery_orders')
       .insert({
@@ -125,8 +269,14 @@ serve(async (req: Request) => {
         delivery_fee,
         weight_kg: weight_kg || null,
         dimensions: dimensions || null,
-        status: providerShipmentId ? 'confirmed' : 'pending',
+        status: deliveryStatus,
         estimated_delivery_date: estimatedDeliveryDate,
+        rate_id: rate_id || null,
+        carrier_name: carrier_name || null,
+        carrier_logo: carrier_logo || null,
+        label_url: labelUrl || null,
+        is_cod: is_cod,
+        metadata: metadata || {},
       })
       .select()
       .single();
@@ -136,23 +286,31 @@ serve(async (req: Request) => {
     }
 
     // Create initial tracking event
+    const trackingDescription = provider === 'manual'
+      ? 'Delivery booked manually'
+      : providerShipmentId
+        ? `Delivery booked with ${provider}${carrier_name ? ` (${carrier_name})` : ''}`
+        : `Booking failed, marked as pending`;
+
     await supabase.from('delivery_tracking_events').insert({
       delivery_order_id: deliveryOrder.id,
-      status: 'confirmed',
-      description: provider === 'manual' 
-        ? 'Delivery booked manually' 
-        : `Delivery booked with ${provider}`,
+      status: deliveryStatus,
+      description: trackingDescription,
+      notify_vendor: true,
+      notify_customer: providerShipmentId ? true : false,
     });
 
     // Update order status to processing if it was confirmed
-    await supabase
-      .from('orders')
-      .update({ 
-        status: 'processing',
-        processing_at: new Date().toISOString(),
-      })
-      .eq('id', order_id)
-      .eq('status', 'confirmed');
+    if (deliveryStatus === 'confirmed') {
+      await supabase
+        .from('orders')
+        .update({ 
+          status: 'processing',
+          processing_at: new Date().toISOString(),
+        })
+        .eq('id', order_id)
+        .eq('status', 'confirmed');
+    }
 
     return new Response(
       JSON.stringify({
@@ -160,6 +318,8 @@ serve(async (req: Request) => {
         delivery_order_id: deliveryOrder.id,
         tracking_code: providerTrackingCode,
         estimated_delivery: estimatedDeliveryDate,
+        label_url: labelUrl,
+        status: deliveryStatus,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -11,7 +11,9 @@ export interface SmtpMailOptions {
 
 export function getDefaultFromEmail(): string {
   // If using Resend without a verified domain, you might need to use onboarding@resend.dev to test
-  return (process.env[] || "SteerSolo <no-reply@steersolo.com>").trim();
+  return (
+    process.env.SMTP_FROM_EMAIL || "SteerSolo <no-reply@steersolo.com>"
+  ).trim();
 }
 
 /**
@@ -21,7 +23,9 @@ export function getDefaultFromEmail(): string {
  */
 export async function getTransporter() {
   // Use environment variable if available, otherwise use the provided standard key
-  const resendApiKey = (process.env[] || "re_bn6nU67z_MpmejFcumyPi5eLzva2UKMG6").trim();
+  const resendApiKey = (
+    process.env.RESEND_API_KEY || "re_bn6nU67z_MpmejFcumyPi5eLzva2UKMG6"
+  ).trim();
 
   // 1. Professional Resend API Transport
   if (resendApiKey) {
@@ -30,8 +34,8 @@ export async function getTransporter() {
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${resendApiKey}`,
-            "Content-Type": "application/json"
+            Authorization: `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             from: options.from || getDefaultFromEmail(),
@@ -40,7 +44,7 @@ export async function getTransporter() {
             html: options.html,
             text: options.text,
             reply_to: options.replyTo,
-          })
+          }),
         });
 
         if (!res.ok) {
@@ -50,15 +54,15 @@ export async function getTransporter() {
         }
         const data = await res.json();
         return { messageId: data.id };
-      }
+      },
     };
   }
 
   // 2. Standard SMTP Fallback
-  const host = (process.env[] || "").trim();
-  const port = Number((process.env[] || "465").trim());
-  const user = process.env[]?.trim();
-  const pass = process.env[]?.trim();
+  const host = (process.env.SMTP_HOST || "").trim();
+  const port = Number((process.env.SMTP_PORT || "465").trim());
+  const user = process.env.SMTP_USER?.trim();
+  const pass = process.env.SMTP_PASS?.trim();
 
   if (host && user && pass) {
     const primaryTransporter = nodemailer.createTransport({
@@ -67,7 +71,7 @@ export async function getTransporter() {
       secure: port === 465,
       auth: { user, pass },
     });
-    
+
     try {
       await primaryTransporter.verify();
       return primaryTransporter;
@@ -77,12 +81,17 @@ export async function getTransporter() {
     }
   }
 
-  throw new Error("No email service configured. Please set RESEND_API_KEY in your Supabase project secrets to handle emails professionally.");
+  throw new Error(
+    "No email service configured. Please set RESEND_API_KEY in your Supabase project secrets to handle emails professionally.",
+  );
 }
 
 export function normalizeRecipients(to: string | string[] | unknown): string[] {
   if (Array.isArray(to)) {
-    return to.filter((recipient): recipient is string => typeof recipient === "string" && recipient.trim().length > 0);
+    return to.filter(
+      (recipient): recipient is string =>
+        typeof recipient === "string" && recipient.trim().length > 0,
+    );
   }
   if (typeof to === "string" && to.trim().length > 0) {
     return [to];
@@ -107,7 +116,7 @@ export async function sendSmtpEmail(options: SmtpMailOptions) {
       html: options.html,
       text: options.text,
     });
-    
+
     return info;
   } catch (error) {
     console.error("Email sending failed", error);

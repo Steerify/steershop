@@ -4,9 +4,22 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Input } from "@/components/ui/input";
 import {
-  Search, Store, Package, Sparkles, BadgeCheck, ShieldCheck,
-  X, TrendingUp, Grid3X3, MapPin, SlidersHorizontal, ChevronRight,
-  Star, ShoppingBag, Flame, ArrowRight
+  Search,
+  Store,
+  Package,
+  Sparkles,
+  BadgeCheck,
+  ShieldCheck,
+  X,
+  TrendingUp,
+  Grid3X3,
+  MapPin,
+  SlidersHorizontal,
+  ChevronRight,
+  Star,
+  ShoppingBag,
+  Flame,
+  ArrowRight,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -17,26 +30,36 @@ import { useDebounce } from "@/hooks/use-debounce";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
 import { Shop, Product } from "@/types/api";
-import { MarketplaceFilters, CATEGORIES } from "@/components/MarketplaceFilters";
+import {
+  MarketplaceFilters,
+  CATEGORIES,
+} from "@/components/MarketplaceFilters";
 import { ShopCardEnhanced } from "@/components/ShopCardEnhanced";
 import { supabase } from "@/integrations/supabase/client";
-import { autoCategorize, getCategoryLabel, BEAUTY_SUBCATEGORIES } from "@/utils/autoCategorize";
+import {
+  autoCategorize,
+  getCategoryLabel,
+  BEAUTY_SUBCATEGORIES,
+} from "@/utils/autoCategorize";
 import { Button } from "@/components/ui/button";
 import { PageThemeShell } from "@/components/PageThemeShell";
 
 const VERIFIED_NOTICE_KEY = "steersolo_verified_notice_dismissed";
 
 const normalizeCategoryValue = (category?: string | null) => {
-  if (!category) return '';
+  if (!category) return "";
   const normalized = category.trim().toLowerCase();
-  if (normalized.includes('fashion')) return 'fashion';
-  if (normalized.includes('beauty') || normalized.includes('health')) return 'beauty-health';
-  if (normalized.includes('electronic')) return 'electronics';
-  if (normalized.includes('food')) return 'food-drinks';
-  if (normalized.includes('home')) return 'home-living';
-  if (normalized.includes('art') || normalized.includes('craft')) return 'art-craft';
-  if (normalized.includes('service') || normalized.includes('consult')) return 'services';
-  return normalized.replace(/&/g, '').replace(/\s+/g, '-');
+  if (normalized.includes("fashion")) return "fashion";
+  if (normalized.includes("beauty") || normalized.includes("health"))
+    return "beauty-health";
+  if (normalized.includes("electronic")) return "electronics";
+  if (normalized.includes("food")) return "food-drinks";
+  if (normalized.includes("home")) return "home-living";
+  if (normalized.includes("art") || normalized.includes("craft"))
+    return "art-craft";
+  if (normalized.includes("service") || normalized.includes("consult"))
+    return "services";
+  return normalized.replace(/&/g, "").replace(/\s+/g, "-");
 };
 const StatChip = ({
   icon: Icon,
@@ -49,7 +72,9 @@ const StatChip = ({
   label: string;
   color: string;
 }) => (
-  <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm ${color}`}>
+  <div
+    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm ${color}`}
+  >
     <Icon className="w-3.5 h-3.5 flex-shrink-0" />
     <span className="font-bold tabular-nums">{value}</span>
     <span className="opacity-70 text-xs hidden sm:inline">{label}</span>
@@ -58,7 +83,7 @@ const StatChip = ({
 /* ─── Verified Seller Notice ─── */
 const VerifiedSellerNotice = () => {
   const [dismissed, setDismissed] = useState(
-    () => localStorage.getItem(VERIFIED_NOTICE_KEY) === "true"
+    () => localStorage.getItem(VERIFIED_NOTICE_KEY) === "true",
   );
   if (dismissed) return null;
   return (
@@ -67,8 +92,8 @@ const VerifiedSellerNotice = () => {
         <div className="flex items-center gap-2 text-sm">
           <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
           <span className="text-foreground/80 text-xs sm:text-sm">
-            For your safety, look for the{" "}
-            <strong>SteerSolo Safe</strong> badge when choosing a seller.
+            For your safety, look for the <strong>SteerSolo Safe</strong> badge
+            when choosing a seller.
           </span>
         </div>
         <button
@@ -116,14 +141,15 @@ const ProductCardSkeleton = () => (
   </div>
 );
 
-
 /* ══════════════════════════════════════════════════════
    MAIN SHOPS PAGE
 ══════════════════════════════════════════════════════ */
 const Shops = () => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [trendingShops, setTrendingShops] = useState<Shop[]>([]);
-  const [businessPlanShopIds, setBusinessPlanShopIds] = useState<Set<string>>(new Set());
+  const [businessPlanShopIds, setBusinessPlanShopIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [productResults, setProductResults] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -134,16 +160,22 @@ const Shops = () => {
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
   const [loadingMoreShops, setLoadingMoreShops] = useState(false);
   const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
-  const [searchType, setSearchType] = useState<'all' | 'shops' | 'products'>('all');
+  const [searchType, setSearchType] = useState<"all" | "shops" | "products">(
+    "all",
+  );
   const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedSort, setSelectedSort] = useState('newest');
-  const [selectedState, setSelectedState] = useState('All Locations');
-  const [selectedCity, setSelectedCity] = useState('');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [shopProducts, setShopProducts] = useState<Record<string, { image_url: string; name: string }[]>>({});
-  const [shopProductCounts, setShopProductCounts] = useState<Record<string, number>>({});
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedSort, setSelectedSort] = useState("newest");
+  const [selectedState, setSelectedState] = useState("All Locations");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [shopProducts, setShopProducts] = useState<
+    Record<string, { image_url: string; name: string }[]>
+  >({});
+  const [shopProductCounts, setShopProductCounts] = useState<
+    Record<string, number>
+  >({});
   const [stats, setStats] = useState({ shops: 0, products: 0 });
   const [searchFocused, setSearchFocused] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -156,25 +188,55 @@ const Shops = () => {
   useEffect(() => {
     const fetchStats = async () => {
       const [shopsRes, productsRes] = await Promise.all([
-        supabase.from("shops").select("id", { count: "exact", head: true }).eq("is_active", true),
-        supabase.from("products").select("id", { count: "exact", head: true }).eq("is_available", true).is("delete_at", null),
+        supabase
+          .from("shops")
+          .select("id", { count: "exact", head: true })
+          .eq("is_active", true),
+        supabase
+          .from("products")
+          .select("id", { count: "exact", head: true })
+          .eq("is_available", true)
+          .is("delete_at", null),
       ]);
-      setStats({ shops: shopsRes.count || 0, products: productsRes.count || 0 });
+      setStats({
+        shops: shopsRes.count || 0,
+        products: productsRes.count || 0,
+      });
     };
 
     const fetchBusinessPlanShops = async () => {
       const { data: businessProfiles } = await supabase
-        .from('profiles').select('id, subscription_plan_id').not('subscription_plan_id', 'is', null).limit(1000);
+        .from("profiles")
+        .select("id, subscription_plan_id")
+        .not("subscription_plan_id", "is", null)
+        .limit(1000);
       if (businessProfiles?.length) {
-        const planIds = [...new Set(businessProfiles.map(p => p.subscription_plan_id).filter(Boolean))];
+        const planIds = [
+          ...new Set(
+            businessProfiles.map(p => p.subscription_plan_id).filter(Boolean),
+          ),
+        ];
         const { data: plans } = await supabase
-          .from('subscription_plans').select('id, slug').in('id', planIds as string[]).eq('slug', 'business');
+          .from("subscription_plans")
+          .select("id, slug")
+          .in("id", planIds as string[])
+          .eq("slug", "business");
         if (plans?.length) {
           const businessPlanIds = new Set(plans.map(p => p.id));
-          const ownerIds = businessProfiles.filter(p => p.subscription_plan_id && businessPlanIds.has(p.subscription_plan_id)).map(p => p.id);
+          const ownerIds = businessProfiles
+            .filter(
+              p =>
+                p.subscription_plan_id &&
+                businessPlanIds.has(p.subscription_plan_id),
+            )
+            .map(p => p.id);
           if (ownerIds.length) {
-            const { data: bizShops } = await supabase.from('shops').select('id').in('owner_id', ownerIds);
-            if (bizShops) setBusinessPlanShopIds(new Set(bizShops.map(s => s.id)));
+            const { data: bizShops } = await supabase
+              .from("shops")
+              .select("id")
+              .in("owner_id", ownerIds);
+            if (bizShops)
+              setBusinessPlanShopIds(new Set(bizShops.map(s => s.id)));
           }
         }
       }
@@ -185,17 +247,21 @@ const Shops = () => {
 
     // Fetch trending shops (top 5 by orders in the last 30 days, with fallback)
     const fetchTrending = async () => {
-      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const since = new Date(
+        Date.now() - 30 * 24 * 60 * 60 * 1000,
+      ).toISOString();
       const { data } = await supabase
-        .from('orders')
-        .select('shop_id, created_at')
-        .not('shop_id', 'is', null)
-        .gte('created_at', since)
-        .order('created_at', { ascending: false })
+        .from("orders")
+        .select("shop_id, created_at")
+        .not("shop_id", "is", null)
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
         .limit(600);
 
       const counts: Record<string, number> = {};
-      data?.forEach((o: any) => { counts[o.shop_id] = (counts[o.shop_id] || 0) + 1; });
+      data?.forEach((o: any) => {
+        counts[o.shop_id] = (counts[o.shop_id] || 0) + 1;
+      });
       const rankedIds = Object.entries(counts)
         .sort((a, b) => b[1] - a[1])
         .map(([id]) => id);
@@ -203,10 +269,10 @@ const Shops = () => {
       if (rankedIds.length > 0) {
         const topIds = rankedIds.slice(0, 5);
         const { data: tShops } = await supabase
-          .from('shops')
-          .select('*')
-          .in('id', topIds)
-          .eq('is_active', true);
+          .from("shops")
+          .select("*")
+          .in("id", topIds)
+          .eq("is_active", true);
 
         const ordered = (tShops || [])
           .sort((a: any, b: any) => topIds.indexOf(a.id) - topIds.indexOf(b.id))
@@ -220,10 +286,10 @@ const Shops = () => {
 
       // Fallback: show first 5 active stores by recency so section is never empty.
       const { data: fallback } = await supabase
-        .from('shops')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
+        .from("shops")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
         .limit(5);
       setTrendingShops((fallback || []) as any);
     };
@@ -241,8 +307,12 @@ const Shops = () => {
 
     // Fetch ALL available products/services (including those without images) for accurate counts
     const { data } = await supabase
-      .from('products').select('shop_id, image_url, name, type')
-      .in('shop_id', newIds).eq('is_available', true).is('delete_at', null).limit(200);
+      .from("products")
+      .select("shop_id, image_url, name, type")
+      .in("shop_id", newIds)
+      .eq("is_available", true)
+      .is("delete_at", null)
+      .limit(200);
 
     if (data) {
       const grouped: Record<string, { image_url: string; name: string }[]> = {};
@@ -253,7 +323,8 @@ const Shops = () => {
         // Only add to image previews if the product has an image
         if (p.image_url) {
           if (!grouped[p.shop_id]) grouped[p.shop_id] = [];
-          if (grouped[p.shop_id].length < 3) grouped[p.shop_id].push({ image_url: p.image_url, name: p.name });
+          if (grouped[p.shop_id].length < 3)
+            grouped[p.shop_id].push({ image_url: p.image_url, name: p.name });
         }
       });
       setShopProducts(prev => ({ ...prev, ...grouped }));
@@ -262,89 +333,153 @@ const Shops = () => {
   }, []);
 
   /* ─── Fetch Shops ─── */
-  const fetchShops = useCallback(async (page = 1, reset = false, searchTerm = '') => {
-    try {
-      if (reset) { setIsLoading(true); setHasMoreShops(true); } else setLoadingMoreShops(true);
-      const response = await shopService.getShops(page, ITEMS_PER_PAGE, { 
-        verified: showVerifiedOnly || undefined, 
-        activeOnly: true, 
-        searchTerm: searchTerm.trim() || undefined,
-        category: selectedCategory !== 'all' && selectedCategory !== 'beauty' ? selectedCategory : undefined,
-        city: selectedCity.trim() || undefined,
-        state: selectedState !== 'All Locations' ? selectedState : undefined,
-      });
-      
-      if (!response.success) { 
-        setHasMoreShops(false); 
-        if (reset) setShops([]); 
-        return; 
-      }
-      
-      let filtered = response.data || [];
-      
-      const totalPages = response.meta?.totalPages || 1;
-      const hasMore = page < totalPages;
-      setHasMoreShops(hasMore);
-      setShops(prev => {
-        if (reset) return filtered;
-        const ids = new Set(prev.map(s => s.id));
-        return [...prev, ...filtered.filter(s => !ids.has(s.id))];
-      });
-      fetchShopPreviews(filtered.map(s => s.id));
-      setShopsPage(page);
+  const fetchShops = useCallback(
+    async (page = 1, reset = false, searchTerm = "") => {
+      try {
+        if (reset) {
+          setIsLoading(true);
+          setHasMoreShops(true);
+        } else setLoadingMoreShops(true);
+        const response = await shopService.getShops(page, ITEMS_PER_PAGE, {
+          verified: showVerifiedOnly || undefined,
+          activeOnly: true,
+          searchTerm: searchTerm.trim() || undefined,
+          category:
+            selectedCategory !== "all" && selectedCategory !== "beauty"
+              ? selectedCategory
+              : undefined,
+          city: selectedCity.trim() || undefined,
+          state: selectedState !== "All Locations" ? selectedState : undefined,
+        });
 
-      // Auto-fetch if we aggressively filtered out shops and didn't fill the page
-      if (filtered.length < 4 && hasMore) {
-        setTimeout(() => {
-          const sentinel = document.getElementById('shops-sentinel');
-          if (sentinel && sentinel.getBoundingClientRect().top < window.innerHeight + 500) {
-            // Sentinel is visible, fetch next page
-            fetchShops(page + 1, false, searchTerm);
-          }
-        }, 500);
+        if (!response.success) {
+          setHasMoreShops(false);
+          if (reset) setShops([]);
+          return;
+        }
+
+        let filtered = response.data || [];
+
+        const totalPages = response.meta?.totalPages || 1;
+        const hasMore = page < totalPages;
+        setHasMoreShops(hasMore);
+        setShops(prev => {
+          if (reset) return filtered;
+          const ids = new Set(prev.map(s => s.id));
+          return [...prev, ...filtered.filter(s => !ids.has(s.id))];
+        });
+        fetchShopPreviews(filtered.map(s => s.id));
+        setShopsPage(page);
+
+        // Auto-fetch if we aggressively filtered out shops and didn't fill the page
+        if (filtered.length < 4 && hasMore) {
+          setTimeout(() => {
+            const sentinel = document.getElementById("shops-sentinel");
+            if (
+              sentinel &&
+              sentinel.getBoundingClientRect().top < window.innerHeight + 500
+            ) {
+              // Sentinel is visible, fetch next page
+              fetchShops(page + 1, false, searchTerm);
+            }
+          }, 500);
+        }
+      } catch (e) {
+        console.error(e);
+        setHasMoreShops(false);
+        if (reset) setShops([]);
+      } finally {
+        setIsLoading(false);
+        setLoadingMoreShops(false);
       }
-    } catch (e) {
-      console.error(e); setHasMoreShops(false); if (reset) setShops([]);
-    } finally { setIsLoading(false); setLoadingMoreShops(false); }
-  }, [showVerifiedOnly, selectedCategory, selectedCity, selectedState, fetchShopPreviews]);
+    },
+    [
+      showVerifiedOnly,
+      selectedCategory,
+      selectedCity,
+      selectedState,
+      fetchShopPreviews,
+    ],
+  );
 
   /* ─── Category + Sort ─── */
   const shopCategories = useMemo(() => {
     const cats: Record<string, string> = {};
-    shops.forEach(shop => { cats[shop.id] = normalizeCategoryValue(shop.category) || autoCategorize(shop.name || shop.shop_name || '', shop.description || ''); });
+    shops.forEach(shop => {
+      cats[shop.id] =
+        normalizeCategoryValue(shop.category) ||
+        autoCategorize(
+          shop.name || shop.shop_name || "",
+          shop.description || "",
+        );
+    });
     return cats;
   }, [shops]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    Object.values(shopCategories).forEach(cat => { counts[cat] = (counts[cat] || 0) + 1; });
+    Object.values(shopCategories).forEach(cat => {
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
     return counts;
   }, [shopCategories]);
 
   const sortedShops = useMemo(() => {
     let filtered = [...shops];
-    if (selectedCategory !== 'all') {
-      if (selectedCategory === 'beauty') {
-        filtered = filtered.filter(s => BEAUTY_SUBCATEGORIES.includes(shopCategories[s.id]));
+    if (selectedCategory !== "all") {
+      if (selectedCategory === "beauty") {
+        filtered = filtered.filter(s =>
+          BEAUTY_SUBCATEGORIES.includes(shopCategories[s.id]),
+        );
       } else {
-        filtered = filtered.filter(s => shopCategories[s.id] === selectedCategory);
+        filtered = filtered.filter(
+          s => shopCategories[s.id] === selectedCategory,
+        );
       }
     }
     switch (selectedSort) {
-      case 'rating': filtered.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0)); break;
-      case 'name': filtered.sort((a, b) => (a.name || a.shop_name || '').localeCompare(b.name || b.shop_name || '')); break;
+      case "rating":
+        filtered.sort(
+          (a, b) => (b.average_rating || 0) - (a.average_rating || 0),
+        );
+        break;
+      case "name":
+        filtered.sort((a, b) =>
+          (a.name || a.shop_name || "").localeCompare(
+            b.name || b.shop_name || "",
+          ),
+        );
+        break;
     }
-    filtered.sort((a, b) => (businessPlanShopIds.has(b.id) ? 1 : 0) - (businessPlanShopIds.has(a.id) ? 1 : 0));
+    filtered.sort(
+      (a, b) =>
+        (businessPlanShopIds.has(b.id) ? 1 : 0) -
+        (businessPlanShopIds.has(a.id) ? 1 : 0),
+    );
     return filtered;
-  }, [shops, selectedSort, businessPlanShopIds, selectedCategory, shopCategories]);
+  }, [
+    shops,
+    selectedSort,
+    businessPlanShopIds,
+    selectedCategory,
+    shopCategories,
+  ]);
 
   // Scroll to top of results whenever a filter changes
   useEffect(() => {
     if (!isLoading) {
-      const el = document.getElementById('marketplace-results');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const el = document.getElementById("marketplace-results");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, [selectedCategory, selectedSort, selectedState, selectedCity, showVerifiedOnly, minPrice, maxPrice]);
+  }, [
+    selectedCategory,
+    selectedSort,
+    selectedState,
+    selectedCity,
+    showVerifiedOnly,
+    minPrice,
+    maxPrice,
+  ]);
 
   // Filter product results by price range when set
   const priceFilteredProducts = useMemo(() => {
@@ -358,72 +493,160 @@ const Shops = () => {
   }, [productResults, minPrice, maxPrice]);
 
   /* ─── Search Products ─── */
-  const searchProducts = useCallback(async (page = 1, reset = false) => {
-    if (!debouncedSearchQuery.trim()) { if (reset) setProductResults([]); return; }
-    try {
-      if (reset) { setIsSearching(true); setHasMoreProducts(true); } else setLoadingMoreProducts(true);
-      const response = await productService.searchProducts({ query: debouncedSearchQuery, page, limit: ITEMS_PER_PAGE });
-      if (!response.success || !response.data) { setHasMoreProducts(false); if (reset) setProductResults([]); return; }
-      const results = response.data;
-      const totalPages = response.meta?.totalPages || 1;
-      setHasMoreProducts(page < totalPages && results.length > 0);
-      setProductResults(prev => {
-        if (reset) return results;
-        const ids = new Set(prev.map(p => p.id));
-        return [...prev, ...results.filter(p => !ids.has(p.id))];
-      });
-      setProductsPage(page);
-    } catch (e) { console.error(e); setHasMoreProducts(false); if (reset) setProductResults([]); }
-    finally { setIsSearching(false); setLoadingMoreProducts(false); }
-  }, [debouncedSearchQuery]);
+  const searchProducts = useCallback(
+    async (page = 1, reset = false) => {
+      if (!debouncedSearchQuery.trim()) {
+        if (reset) setProductResults([]);
+        return;
+      }
+      try {
+        if (reset) {
+          setIsSearching(true);
+          setHasMoreProducts(true);
+        } else setLoadingMoreProducts(true);
+        const response = await productService.searchProducts({
+          query: debouncedSearchQuery,
+          page,
+          limit: ITEMS_PER_PAGE,
+        });
+        if (!response.success || !response.data) {
+          setHasMoreProducts(false);
+          if (reset) setProductResults([]);
+          return;
+        }
+        const results = response.data;
+        const totalPages = response.meta?.totalPages || 1;
+        setHasMoreProducts(page < totalPages && results.length > 0);
+        setProductResults(prev => {
+          if (reset) return results;
+          const ids = new Set(prev.map(p => p.id));
+          return [...prev, ...results.filter(p => !ids.has(p.id))];
+        });
+        setProductsPage(page);
+      } catch (e) {
+        console.error(e);
+        setHasMoreProducts(false);
+        if (reset) setProductResults([]);
+      } finally {
+        setIsSearching(false);
+        setLoadingMoreProducts(false);
+      }
+    },
+    [debouncedSearchQuery],
+  );
 
   /* ─── Main Effect ─── */
   useEffect(() => {
     if (debouncedSearchQuery.trim()) {
-      setIsSearching(true); setSearchType('all');
-      setShopsPage(1); setProductsPage(1); setHasMoreShops(true); setHasMoreProducts(true);
-      Promise.all([fetchShops(1, true, debouncedSearchQuery), searchProducts(1, true)]).finally(() => setIsSearching(false));
+      setIsSearching(true);
+      setSearchType("all");
+      setShopsPage(1);
+      setProductsPage(1);
+      setHasMoreShops(true);
+      setHasMoreProducts(true);
+      Promise.all([
+        fetchShops(1, true, debouncedSearchQuery),
+        searchProducts(1, true),
+      ]).finally(() => setIsSearching(false));
     } else {
-      setProductResults([]); setSearchType('all'); setShopsPage(1); setProductsPage(1);
-      fetchShops(1, true, '');
+      setProductResults([]);
+      setSearchType("all");
+      setShopsPage(1);
+      setProductsPage(1);
+      fetchShops(1, true, "");
     }
-  }, [debouncedSearchQuery, fetchShops, searchProducts, showVerifiedOnly, selectedCategory, selectedCity, selectedState]);
+  }, [
+    debouncedSearchQuery,
+    fetchShops,
+    searchProducts,
+    showVerifiedOnly,
+    selectedCategory,
+    selectedCity,
+    selectedState,
+  ]);
 
-  const handleSearchTypeChange = (type: 'all' | 'shops' | 'products') => {
+  const handleSearchTypeChange = (type: "all" | "shops" | "products") => {
     setSearchType(type);
-    setShopsPage(1); setProductsPage(1); setHasMoreShops(true); setHasMoreProducts(true);
-    if (!debouncedSearchQuery.trim()) { if (type === 'shops' || type === 'all') fetchShops(1, true); if (type === 'products') setProductResults([]); return; }
-    if (type === 'shops') { setProductResults([]); fetchShops(1, true, debouncedSearchQuery); }
-    else if (type === 'products') { setShops([]); searchProducts(1, true); }
-    else { setShops([]); setProductResults([]); Promise.all([fetchShops(1, true, debouncedSearchQuery), searchProducts(1, true)]); }
+    setShopsPage(1);
+    setProductsPage(1);
+    setHasMoreShops(true);
+    setHasMoreProducts(true);
+    if (!debouncedSearchQuery.trim()) {
+      if (type === "shops" || type === "all") fetchShops(1, true);
+      if (type === "products") setProductResults([]);
+      return;
+    }
+    if (type === "shops") {
+      setProductResults([]);
+      fetchShops(1, true, debouncedSearchQuery);
+    } else if (type === "products") {
+      setShops([]);
+      searchProducts(1, true);
+    } else {
+      setShops([]);
+      setProductResults([]);
+      Promise.all([
+        fetchShops(1, true, debouncedSearchQuery),
+        searchProducts(1, true),
+      ]);
+    }
   };
 
   const loadMore = useCallback(() => {
-    if (searchType === 'shops' && hasMoreShops && !loadingMoreShops) fetchShops(shopsPage + 1, false, debouncedSearchQuery);
-    else if (searchType === 'products' && hasMoreProducts && !loadingMoreProducts) searchProducts(productsPage + 1, false);
-    else if (searchType === 'all') {
-      if (hasMoreShops && !loadingMoreShops) fetchShops(shopsPage + 1, false, debouncedSearchQuery);
-      if (hasMoreProducts && !loadingMoreProducts) searchProducts(productsPage + 1, false);
+    if (searchType === "shops" && hasMoreShops && !loadingMoreShops)
+      fetchShops(shopsPage + 1, false, debouncedSearchQuery);
+    else if (
+      searchType === "products" &&
+      hasMoreProducts &&
+      !loadingMoreProducts
+    )
+      searchProducts(productsPage + 1, false);
+    else if (searchType === "all") {
+      if (hasMoreShops && !loadingMoreShops)
+        fetchShops(shopsPage + 1, false, debouncedSearchQuery);
+      if (hasMoreProducts && !loadingMoreProducts)
+        searchProducts(productsPage + 1, false);
     }
-  }, [searchType, hasMoreShops, hasMoreProducts, loadingMoreShops, loadingMoreProducts, shopsPage, productsPage, fetchShops, searchProducts, debouncedSearchQuery]);
+  }, [
+    searchType,
+    hasMoreShops,
+    hasMoreProducts,
+    loadingMoreShops,
+    loadingMoreProducts,
+    shopsPage,
+    productsPage,
+    fetchShops,
+    searchProducts,
+    debouncedSearchQuery,
+  ]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting && !isSearching && !isLoading) loadMore(); },
-      { threshold: 0.1, rootMargin: "100px" }
+      ([e]) => {
+        if (e.isIntersecting && !isSearching && !isLoading) loadMore();
+      },
+      { threshold: 0.1, rootMargin: "100px" },
     );
     observerRef.current = observer;
     if (sentinelRef.current) observer.observe(sentinelRef.current);
-    return () => { observerRef.current?.disconnect(); };
+    return () => {
+      observerRef.current?.disconnect();
+    };
   }, [loadMore, isSearching, isLoading]);
 
   const hasSearchQuery = debouncedSearchQuery.trim();
-  const showProducts = hasSearchQuery && (searchType === 'all' || searchType === 'products');
-  const showShops = !hasSearchQuery || searchType === 'all' || searchType === 'shops';
+  const showProducts =
+    hasSearchQuery && (searchType === "all" || searchType === "products");
+  const showShops =
+    !hasSearchQuery || searchType === "all" || searchType === "shops";
   const displayedProducts = priceFilteredProducts ?? productResults;
 
   return (
-    <PageThemeShell header={<Navbar />} footer={<Footer />} className="bg-background">
+    <PageThemeShell
+      header={<Navbar />}
+      footer={<Footer />}
+      className="bg-background"
+    >
       <FirstVisitIntro
         storageKey="shops"
         title="Welcome to the SteerSolo Marketplace"
@@ -436,7 +659,9 @@ const Shops = () => {
         ctaLabel="Start browsing"
       />
       <Helmet>
-        <title>SteerSolo Marketplace Nigeria | Discover Trusted Online Stores</title>
+        <title>
+          SteerSolo Marketplace Nigeria | Discover Trusted Online Stores
+        </title>
         <meta
           name="description"
           content="Browse SteerSolo Marketplace Nigeria to discover trusted online stores for fashion, beauty, food, gadgets, and services."
@@ -457,89 +682,159 @@ const Shops = () => {
 
       {/* ══════════ HERO ══════════ */}
       <section className="relative pt-24 pb-12 sm:pt-32 sm:pb-20 overflow-hidden">
-        {/* Subtle background glow */}
-        <div className="absolute inset-x-0 top-0 h-[500px] bg-gradient-to-b from-accent/5 via-primary/5 to-background pointer-events-none" />
-        
-        <div className="relative z-10 container mx-auto px-4 text-center">
-          
-          {/* Eyebrow */}
-          <div className="flex justify-center mb-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-background border border-border/50 shadow-sm rounded-full text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              <Sparkles className="w-3.5 h-3.5 text-accent" />
-              <span>Nigeria's Online Shopping Mall</span>
-            </div>
-          </div>
+        <div className="absolute inset-x-0 top-0 h-[540px] bg-gradient-to-b from-emerald-950/5 via-primary/5 to-background pointer-events-none" />
 
-          {/* Headline */}
-          <div className="max-w-3xl mx-auto mb-8">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-foreground mb-6 leading-[1.1]">
-              One Mall, <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">Endless Shops</span>
-            </h1>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto font-medium">
-              Browse hundreds of verified Nigerian businesses — fashion, food, electronics, services and more.
-            </p>
-          </div>
-
-          {/* Stats Row */}
-          <div className="flex items-center justify-center gap-3 sm:gap-5 flex-wrap mb-10">
-            <StatChip icon={Store} value={stats.shops.toLocaleString()} label="Shops" color="text-foreground border-border/50 bg-card/50 backdrop-blur-sm" />
-            <StatChip icon={Package} value={stats.products.toLocaleString()} label="Products" color="text-foreground border-border/50 bg-card/50 backdrop-blur-sm" />
-            <StatChip icon={BadgeCheck} value="Verified" label="Sellers" color="text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm" />
-          </div>
-
-          {/* ── Search Bar ── */}
-          <div className="relative max-w-2xl mx-auto group">
-            <div className={`
-              relative flex items-center bg-card/80 backdrop-blur-xl border rounded-[2rem] shadow-xl transition-all duration-300
-              ${searchFocused ? 'border-accent/40 shadow-accent/10 shadow-2xl ring-4 ring-accent/5 scale-[1.02]' : 'border-border/60 hover:border-border'}
-            `}>
-              <Search className={`absolute left-5 w-5 h-5 transition-colors ${searchFocused ? 'text-accent' : 'text-muted-foreground'}`} />
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search shops, products, services…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
-                className="w-full bg-transparent pl-12 pr-12 h-16 text-base sm:text-lg focus:outline-none placeholder:text-muted-foreground/50 font-medium rounded-[2rem]"
-              />
-              {(isSearching || isLoading) ? (
-                <div className="absolute right-5">
-                  <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+        <div className="relative z-10 container mx-auto px-4">
+          <div className="rounded-[2rem] border border-border/50 bg-card/85 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.06)] p-5 sm:p-7 lg:p-8">
+            <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+              <div>
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-background border border-border/50 shadow-sm rounded-full text-xs font-bold uppercase tracking-wider text-muted-foreground mb-5">
+                  <Sparkles className="w-3.5 h-3.5 text-accent" />
+                  <span>Nigeria's Online Shopping Mall</span>
                 </div>
-              ) : searchQuery ? (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-4 w-8 h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/20 transition-colors"
-                >
-                  <X className="w-4 h-4 text-muted-foreground" />
-                </button>
-              ) : null}
-            </div>
 
-            {/* Dynamic Categories under search bar */}
-            {!searchQuery && (
-              <div className="flex items-center gap-2 mt-4 flex-nowrap sm:flex-wrap overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] justify-start sm:justify-center px-4 sm:px-0">
-                <span className="text-xs text-muted-foreground mr-1 flex-shrink-0">Popular:</span>
-                {CATEGORIES.filter(c => c.group === 'main').map(cat => (
-                  <button
-                    key={cat.value}
-                    onClick={() => { setSelectedCategory(cat.value); setShopsPage(1); }}
-                    className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-                      selectedCategory === cat.value
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-card border border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground'
-                    }`}
+                <div className="max-w-3xl mb-7">
+                  <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-foreground mb-5 leading-[1.05]">
+                    Shop trusted stores with a
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">
+                      mobile-first marketplace
+                    </span>
+                  </h1>
+                  <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl font-medium">
+                    Browse verified Nigerian businesses, compare products
+                    quickly, and move from discovery to checkout without the
+                    clutter.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 sm:gap-5 flex-wrap mb-8">
+                  <StatChip
+                    icon={Store}
+                    value={stats.shops.toLocaleString()}
+                    label="Shops"
+                    color="text-foreground border-border/50 bg-background/70 backdrop-blur-sm"
+                  />
+                  <StatChip
+                    icon={Package}
+                    value={stats.products.toLocaleString()}
+                    label="Products"
+                    color="text-foreground border-border/50 bg-background/70 backdrop-blur-sm"
+                  />
+                  <StatChip
+                    icon={BadgeCheck}
+                    value="Verified"
+                    label="Sellers"
+                    color="text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm"
+                  />
+                </div>
+
+                <div className="relative max-w-2xl group">
+                  <div
+                    className={`
+                    relative flex items-center bg-background/90 backdrop-blur-xl border rounded-[2rem] shadow-xl transition-all duration-300
+                    ${searchFocused ? "border-accent/40 shadow-accent/10 shadow-2xl ring-4 ring-accent/5 scale-[1.02]" : "border-border/60 hover:border-border"}
+                  `}
                   >
-                    {cat.label}
-                    {categoryCounts && cat.value !== 'all' && cat.value !== 'beauty' && categoryCounts[cat.value] !== undefined && (
-                      <span className="ml-1 opacity-60">({categoryCounts[cat.value]})</span>
-                    )}
-                  </button>
-                ))}
+                    <Search
+                      className={`absolute left-5 w-5 h-5 transition-colors ${searchFocused ? "text-accent" : "text-muted-foreground"}`}
+                    />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder="Search shops, products, services…"
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      onFocus={() => setSearchFocused(true)}
+                      onBlur={() => setSearchFocused(false)}
+                      className="w-full bg-transparent pl-12 pr-12 h-16 text-base sm:text-lg focus:outline-none placeholder:text-muted-foreground/50 font-medium rounded-[2rem]"
+                    />
+                    {isSearching || isLoading ? (
+                      <div className="absolute right-5">
+                        <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : searchQuery ? (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-4 w-8 h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/20 transition-colors"
+                      >
+                        <X className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
               </div>
-            )}
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
+                  {trendingShops.slice(0, 3).map((shop: any) => (
+                    <Link
+                      key={shop.id}
+                      to={`/shop/${shop.shop_slug || shop.id}`}
+                      className="group flex items-center gap-3 rounded-2xl border border-border/50 bg-background/80 p-3 hover:border-primary/25 hover:shadow-md transition-all"
+                    >
+                      <div className="h-16 w-16 overflow-hidden rounded-2xl bg-muted flex-shrink-0">
+                        {shop.logo_url ? (
+                          <img
+                            src={shop.logo_url}
+                            alt={shop.shop_name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-primary/10">
+                            <Store className="w-6 h-6 text-primary" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
+                          {shop.shop_name || shop.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {[shop.city, shop.state, shop.country]
+                            .filter(Boolean)
+                            .join(", ") || "Nigeria"}
+                        </p>
+                        <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                          Browse store
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+
+                {!searchQuery && (
+                  <div className="flex items-center gap-2 flex-nowrap sm:flex-wrap overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    <span className="text-xs text-muted-foreground mr-1 flex-shrink-0">
+                      Popular:
+                    </span>
+                    {CATEGORIES.filter(c => c.group === "main").map(cat => (
+                      <button
+                        key={cat.value}
+                        onClick={() => {
+                          setSelectedCategory(cat.value);
+                          setShopsPage(1);
+                        }}
+                        className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                          selectedCategory === cat.value
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-background border border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground"
+                        }`}
+                      >
+                        {cat.label}
+                        {categoryCounts &&
+                          cat.value !== "all" &&
+                          cat.value !== "beauty" &&
+                          categoryCounts[cat.value] !== undefined && (
+                            <span className="ml-1 opacity-60">
+                              ({categoryCounts[cat.value]})
+                            </span>
+                          )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -547,15 +842,27 @@ const Shops = () => {
       {/* ══════════ FILTERS ══════════ */}
       <MarketplaceFilters
         selectedCategory={selectedCategory}
-        onCategoryChange={(c) => { setSelectedCategory(c); setShopsPage(1); }}
+        onCategoryChange={c => {
+          setSelectedCategory(c);
+          setShopsPage(1);
+        }}
         selectedSort={selectedSort}
         onSortChange={setSelectedSort}
         selectedState={selectedState}
-        onStateChange={(s) => { setSelectedState(s); setShopsPage(1); }}
+        onStateChange={s => {
+          setSelectedState(s);
+          setShopsPage(1);
+        }}
         selectedCity={selectedCity}
-        onCityChange={(city) => { setSelectedCity(city); setShopsPage(1); }}
+        onCityChange={city => {
+          setSelectedCity(city);
+          setShopsPage(1);
+        }}
         showVerifiedOnly={showVerifiedOnly}
-        onVerifiedChange={(v) => { setShowVerifiedOnly(v); setShopsPage(1); }}
+        onVerifiedChange={v => {
+          setShowVerifiedOnly(v);
+          setShopsPage(1);
+        }}
         categoryCounts={categoryCounts}
         minPrice={minPrice}
         maxPrice={maxPrice}
@@ -575,7 +882,9 @@ const Shops = () => {
             <div className="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center">
               <Flame className="w-3.5 h-3.5 text-accent" />
             </div>
-            <h2 className="font-display text-base sm:text-lg font-bold">Trending Stores</h2>
+            <h2 className="font-display text-base sm:text-lg font-bold">
+              Trending Stores
+            </h2>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {trendingShops.slice(0, 5).map((shop: any) => (
@@ -586,7 +895,11 @@ const Shops = () => {
               >
                 <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted mb-2">
                   {shop.logo_url ? (
-                    <img src={shop.logo_url} alt={shop.shop_name} className="w-full h-full object-cover" />
+                    <img
+                      src={shop.logo_url}
+                      alt={shop.shop_name}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-primary/10">
                       <Store className="w-5 h-5 text-primary" />
@@ -597,7 +910,9 @@ const Shops = () => {
                   {shop.shop_name || shop.name}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {[shop.city, shop.state, shop.country].filter(Boolean).join(", ") || 'Nigeria'}
+                  {[shop.city, shop.state, shop.country]
+                    .filter(Boolean)
+                    .join(", ") || "Nigeria"}
                 </p>
               </Link>
             ))}
@@ -606,25 +921,32 @@ const Shops = () => {
       )}
 
       {/* ══════════ MAIN CONTENT ══════════ */}
-      <main id="marketplace-results" className="flex-1 container mx-auto px-4 pb-20 mt-4">
+      <main
+        id="marketplace-results"
+        className="flex-1 container mx-auto px-4 pb-20 mt-4"
+      >
         <div className="max-w-7xl mx-auto">
-
           {/* ── Search Type Tabs ── */}
           {hasSearchQuery && (
             <div className="flex gap-2 mb-6 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              {(['all', 'shops', 'products'] as const).map(type => (
+              {(["all", "shops", "products"] as const).map(type => (
                 <button
                   key={type}
                   onClick={() => handleSearchTypeChange(type)}
                   className={`
                     px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0
-                    ${searchType === type
-                      ? 'bg-foreground text-background shadow-sm'
-                      : 'bg-card border border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground'
+                    ${
+                      searchType === type
+                        ? "bg-foreground text-background shadow-sm"
+                        : "bg-card border border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground"
                     }
                   `}
                 >
-                  {type === 'all' ? `All (${shops.length + displayedProducts.length})` : type === 'shops' ? `Shops (${shops.length})` : `Products (${displayedProducts.length})`}
+                  {type === "all"
+                    ? `All (${shops.length + displayedProducts.length})`
+                    : type === "shops"
+                      ? `Shops (${shops.length})`
+                      : `Products (${displayedProducts.length})`}
                 </button>
               ))}
             </div>
@@ -640,17 +962,22 @@ const Shops = () => {
                   </div>
                   <h2 className="font-display text-lg sm:text-xl font-bold">
                     Products
-                    <span className="ml-2 text-sm font-normal text-muted-foreground">({productResults.length} results)</span>
+                    <span className="ml-2 text-sm font-normal text-muted-foreground">
+                      ({productResults.length} results)
+                    </span>
                   </h2>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                 {displayedProducts.map((product, index) => (
-                  <Link key={`${product.id}-${index}`} to={`/shop/${product.shop_slug || 'shop'}`}>
-                    <div 
+                  <Link
+                    key={`${product.id}-${index}`}
+                    to={`/shop/${product.shop_slug || "shop"}`}
+                  >
+                    <div
                       className="group bg-card border border-border/40 hover:border-border/80 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col"
-                      style={{ contentVisibility: 'auto' }}
+                      style={{ contentVisibility: "auto" }}
                     >
                       {/* Image */}
                       <div className="relative aspect-square overflow-hidden bg-muted">
@@ -666,11 +993,13 @@ const Shops = () => {
                           </div>
                         )}
                         <div className="absolute top-2 right-2">
-                          <div className={`
+                          <div
+                            className={`
                             text-xs font-semibold px-2 py-0.5 rounded-lg
-                            ${product.is_available ? 'bg-emerald-500/90 text-white' : 'bg-red-500/90 text-white'}
-                          `}>
-                            {product.is_available ? 'In Stock' : 'Out'}
+                            ${product.is_available ? "bg-emerald-500/90 text-white" : "bg-red-500/90 text-white"}
+                          `}
+                          >
+                            {product.is_available ? "In Stock" : "Out"}
                           </div>
                         </div>
                       </div>
@@ -681,7 +1010,7 @@ const Shops = () => {
                         </h3>
                         <div className="mt-auto flex items-center justify-between">
                           <span className="text-base font-bold gradient-text tabular-nums">
-                            ₦{product.price?.toLocaleString() || '0'}
+                            ₦{product.price?.toLocaleString() || "0"}
                           </span>
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Store className="w-3 h-3" />
@@ -696,104 +1025,138 @@ const Shops = () => {
 
               {loadingMoreProducts && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
-                  {Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={i} />)}
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <ProductCardSkeleton key={i} />
+                  ))}
                 </div>
               )}
             </div>
           )}
 
           {/* ── Shops Section ── */}
-          {showShops && !(hasSearchQuery && searchType === "all" && sortedShops.length === 0 && productResults.length > 0) && (
-            <div>
-              {/* Section Header */}
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Store className="w-4 h-4 text-primary" />
+          {showShops &&
+            !(
+              hasSearchQuery &&
+              searchType === "all" &&
+              sortedShops.length === 0 &&
+              productResults.length > 0
+            ) && (
+              <div>
+                {/* Section Header */}
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Store className="w-4 h-4 text-primary" />
+                    </div>
+                    <h2 className="font-display text-lg sm:text-xl font-bold">
+                      {hasSearchQuery ? "Shop Results" : "All Shops"}
+                      <span className="ml-2 text-sm font-normal text-muted-foreground">
+                        {hasSearchQuery
+                          ? `(${shops.length} found)`
+                          : `(${stats.shops} total)`}
+                      </span>
+                    </h2>
                   </div>
-                  <h2 className="font-display text-lg sm:text-xl font-bold">
-                    {hasSearchQuery ? 'Shop Results' : 'All Shops'}
-                    <span className="ml-2 text-sm font-normal text-muted-foreground">
-                      {hasSearchQuery ? `(${shops.length} found)` : `(${stats.shops} total)`}
-                    </span>
-                  </h2>
-                </div>
-                {selectedState !== 'All Locations' && (
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted rounded-xl px-3 py-1.5">
-                    <MapPin className="w-3.5 h-3.5" />
-                    {selectedState}
-                    <button onClick={() => setSelectedState('All Locations')} className="ml-1 hover:text-destructive transition-colors">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Grid */}
-              {(isLoading || isSearching) && !shops.length ? (
-                <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                  {Array.from({ length: 6 }).map((_, i) => <ShopCardSkeleton key={i} />)}
-                </div>
-              ) : sortedShops.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center mb-5 shadow-inner">
-                    <Store className="w-9 h-9 text-muted-foreground" />
-                  </div>
-                  <h3 className="font-display text-xl font-semibold mb-2">
-                    {hasSearchQuery ? "No shops found" : selectedState !== 'All Locations' ? `No shops in ${selectedState}` : "No active shops"}
-                  </h3>
-                  <p className="text-muted-foreground text-sm max-w-xs">
-                    {hasSearchQuery ? `No shops found for "${debouncedSearchQuery}". Try different keywords.` : "Try adjusting your filters or check back later."}
-                  </p>
-                  {(hasSearchQuery || selectedState !== 'All Locations') && (
-                    <Button
-                      variant="outline"
-                      className="mt-5 rounded-xl"
-                      onClick={() => { setSearchQuery(""); setSelectedState("All Locations"); }}
-                    >
-                      Clear Filters
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                    {sortedShops.map((shop, index) => (
-                      <ShopCardEnhanced
-                        key={`${shop.id}-${index}`}
-                        shop={shop}
-                        productPreviews={shopProducts[shop.id] || []}
-                        productCount={shopProductCounts[shop.id] || 0}
-                        index={index}
-                        isBusinessPlan={businessPlanShopIds.has(shop.id)}
-                        displayCategory={getCategoryLabel(shopCategories[shop.id] || 'other')}
-                      />
-                    ))}
-                  </div>
-
-                  {loadingMoreShops && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                      {Array.from({ length: 3 }).map((_, i) => <ShopCardSkeleton key={i} />)}
+                  {selectedState !== "All Locations" && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted rounded-xl px-3 py-1.5">
+                      <MapPin className="w-3.5 h-3.5" />
+                      {selectedState}
+                      <button
+                        onClick={() => setSelectedState("All Locations")}
+                        className="ml-1 hover:text-destructive transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   )}
-                </>
-              )}
-            </div>
-          )}
+                </div>
+
+                {/* Grid */}
+                {(isLoading || isSearching) && !shops.length ? (
+                  <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <ShopCardSkeleton key={i} />
+                    ))}
+                  </div>
+                ) : sortedShops.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center mb-5 shadow-inner">
+                      <Store className="w-9 h-9 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-display text-xl font-semibold mb-2">
+                      {hasSearchQuery
+                        ? "No shops found"
+                        : selectedState !== "All Locations"
+                          ? `No shops in ${selectedState}`
+                          : "No active shops"}
+                    </h3>
+                    <p className="text-muted-foreground text-sm max-w-xs">
+                      {hasSearchQuery
+                        ? `No shops found for "${debouncedSearchQuery}". Try different keywords.`
+                        : "Try adjusting your filters or check back later."}
+                    </p>
+                    {(hasSearchQuery || selectedState !== "All Locations") && (
+                      <Button
+                        variant="outline"
+                        className="mt-5 rounded-xl"
+                        onClick={() => {
+                          setSearchQuery("");
+                          setSelectedState("All Locations");
+                        }}
+                      >
+                        Clear Filters
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                      {sortedShops.map((shop, index) => (
+                        <ShopCardEnhanced
+                          key={`${shop.id}-${index}`}
+                          shop={shop}
+                          productPreviews={shopProducts[shop.id] || []}
+                          productCount={shopProductCounts[shop.id] || 0}
+                          index={index}
+                          isBusinessPlan={businessPlanShopIds.has(shop.id)}
+                          displayCategory={getCategoryLabel(
+                            shopCategories[shop.id] || "other",
+                          )}
+                        />
+                      ))}
+                    </div>
+
+                    {loadingMoreShops && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <ShopCardSkeleton key={i} />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
           {/* ── Searching Indicator ── */}
           {isSearching && !isLoading && (
             <div className="flex justify-center py-10">
               <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border/60">
                 <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                <span className="text-sm text-muted-foreground">Searching for <strong>"{debouncedSearchQuery}"</strong>…</span>
+                <span className="text-sm text-muted-foreground">
+                  Searching for <strong>"{debouncedSearchQuery}"</strong>…
+                </span>
               </div>
             </div>
           )}
 
           {/* ── Infinite Scroll Sentinel ── */}
           {(hasMoreShops || hasMoreProducts) && !isSearching && (
-            <div id="shops-sentinel" ref={sentinelRef} className="h-10 mt-8 flex items-center justify-center">
+            <div
+              id="shops-sentinel"
+              ref={sentinelRef}
+              className="h-10 mt-8 flex items-center justify-center"
+            >
               {(loadingMoreShops || loadingMoreProducts) && (
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
@@ -804,35 +1167,47 @@ const Shops = () => {
           )}
 
           {/* ── End of Results ── */}
-          {!hasMoreShops && !hasMoreProducts && (shops.length > 0 || productResults.length > 0) && (
-            <div className="text-center py-12 mt-4 border-t border-border/50">
-              <p className="text-muted-foreground text-sm">
-                You've seen all {debouncedSearchQuery ? 'results' : 'shops'} — that's everything! 🎉
-              </p>
-            </div>
-          )}
+          {!hasMoreShops &&
+            !hasMoreProducts &&
+            (shops.length > 0 || productResults.length > 0) && (
+              <div className="text-center py-12 mt-4 border-t border-border/50">
+                <p className="text-muted-foreground text-sm">
+                  You've seen all {debouncedSearchQuery ? "results" : "shops"} —
+                  that's everything! 🎉
+                </p>
+              </div>
+            )}
 
           {/* ── No Results ── */}
-          {!isLoading && !isSearching && shops.length === 0 && productResults.length === 0 && hasSearchQuery && (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center mb-5 shadow-inner">
-                <Search className="w-9 h-9 text-muted-foreground" />
+          {!isLoading &&
+            !isSearching &&
+            shops.length === 0 &&
+            productResults.length === 0 &&
+            hasSearchQuery && (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center mb-5 shadow-inner">
+                  <Search className="w-9 h-9 text-muted-foreground" />
+                </div>
+                <h3 className="font-display text-xl font-semibold mb-2">
+                  No results found
+                </h3>
+                <p className="text-muted-foreground text-sm max-w-xs mb-5">
+                  Nothing matched "<strong>{debouncedSearchQuery}</strong>". Try
+                  different keywords.
+                </p>
+                <Button
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => setSearchQuery("")}
+                >
+                  Clear Search
+                </Button>
               </div>
-              <h3 className="font-display text-xl font-semibold mb-2">No results found</h3>
-              <p className="text-muted-foreground text-sm max-w-xs mb-5">
-                Nothing matched "<strong>{debouncedSearchQuery}</strong>". Try different keywords.
-              </p>
-              <Button variant="outline" className="rounded-xl" onClick={() => setSearchQuery("")}>
-                Clear Search
-              </Button>
-            </div>
-          )}
+            )}
         </div>
       </main>
-
     </PageThemeShell>
   );
 };
-
 
 export default Shops;

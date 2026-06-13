@@ -4,10 +4,31 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { DeleteAccountDialog } from "@/components/auth/DeleteAccountDialog";
-import { ShopStatusBadge, getShopStatusFromProfile } from "@/components/ShopStatusBadge";
-import { ArrowLeft, User, Shield, Bell, Key, Store, ExternalLink, ShieldCheck, CreditCard, Sparkles } from "lucide-react";
+import {
+  ShopStatusBadge,
+  getShopStatusFromProfile,
+} from "@/components/ShopStatusBadge";
+import { LogisticsSettings } from "@/components/settings/LogisticsSettings";
+import {
+  ArrowLeft,
+  User,
+  Shield,
+  Bell,
+  Key,
+  Store,
+  ExternalLink,
+  ShieldCheck,
+  CreditCard,
+  Sparkles,
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { UserRole } from "@/types/api";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,13 +50,15 @@ const Settings = () => {
   const { user, resetPassword } = useAuth();
   const { toast } = useToast();
   const [shop, setShop] = useState<ShopData | null>(null);
-  const [subscription, setSubscription] = useState<ProfileSubscription | null>(null);
+  const [subscription, setSubscription] = useState<ProfileSubscription | null>(
+    null,
+  );
   const [newsletterSub, setNewsletterSub] = useState(true);
   const [interests, setInterests] = useState<string[]>([]);
   const [isUpdatingPrefs, setIsUpdatingPrefs] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
-  const isEntrepreneur = user?.role === 'ENTREPRENEUR';
+  const isEntrepreneur = user?.role === "ENTREPRENEUR";
 
   useEffect(() => {
     if (!user || !isEntrepreneur) return;
@@ -49,7 +72,9 @@ const Settings = () => {
           .maybeSingle(),
         supabase
           .from("profiles")
-          .select("is_subscribed, subscription_expires_at, newsletter_subscription, shopping_interests")
+          .select(
+            "is_subscribed, subscription_expires_at, newsletter_subscription, shopping_interests",
+          )
           .eq("id", user.id)
           .single(),
       ]);
@@ -73,15 +98,18 @@ const Settings = () => {
     if (error) {
       toast({ title: "Error", description: error, variant: "destructive" });
     } else {
-      toast({ title: "Password reset email sent", description: "Check your inbox for the reset link." });
+      toast({
+        title: "Password reset email sent",
+        description: "Check your inbox for the reset link.",
+      });
     }
   };
 
   const handleToggleInterest = (interest: string) => {
-    setInterests(prev => 
-      prev.includes(interest) 
-        ? prev.filter(i => i !== interest) 
-        : [...prev, interest]
+    setInterests(prev =>
+      prev.includes(interest)
+        ? prev.filter(i => i !== interest)
+        : [...prev, interest],
     );
   };
 
@@ -90,17 +118,24 @@ const Settings = () => {
     setIsUpdatingPrefs(true);
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({
           newsletter_subscription: newsletterSub,
-          shopping_interests: interests
+          shopping_interests: interests,
         })
-        .eq('id', user.id);
-      
+        .eq("id", user.id);
+
       if (error) throw error;
-      toast({ title: "Preferences saved!", description: "Your style profile has been updated." });
+      toast({
+        title: "Preferences saved!",
+        description: "Your style profile has been updated.",
+      });
     } catch (err: any) {
-      toast({ title: "Error saving preferences", description: err.message, variant: "destructive" });
+      toast({
+        title: "Error saving preferences",
+        description: err.message,
+        variant: "destructive",
+      });
     } finally {
       setIsUpdatingPrefs(false);
     }
@@ -108,16 +143,18 @@ const Settings = () => {
 
   if (!user) return null;
 
-  const shopStatus = subscription ? getShopStatusFromProfile(subscription) : null;
+  const shopStatus = subscription
+    ? getShopStatusFromProfile(subscription)
+    : null;
 
   return (
     <PageWrapper patternVariant="dots" patternOpacity={0.4}>
       <div className="container mx-auto py-8 px-4 sm:px-6 pb-28 md:pb-10 max-w-2xl relative z-10">
         <div className="mb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate(-1)} 
+            <Button
+              variant="ghost"
+              onClick={() => navigate(-1)}
               className="mb-4 hover:bg-primary/10 -ml-2"
             >
               <ArrowLeft className="w-4 h-4 mr-2" /> Back
@@ -144,17 +181,25 @@ const Settings = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase font-semibold">Name</p>
-                  <p className="font-medium">{user.firstName} {user.lastName}</p>
+                  <p className="text-xs text-muted-foreground uppercase font-semibold">
+                    Name
+                  </p>
+                  <p className="font-medium">
+                    {user.firstName} {user.lastName}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase font-semibold">Email</p>
+                  <p className="text-xs text-muted-foreground uppercase font-semibold">
+                    Email
+                  </p>
                   <p className="font-medium">{user.email}</p>
                 </div>
               </div>
               <Separator />
               <div>
-                <p className="text-xs text-muted-foreground uppercase font-semibold">Account Type</p>
+                <p className="text-xs text-muted-foreground uppercase font-semibold">
+                  Account Type
+                </p>
                 <p className="font-medium capitalize">{user.role}</p>
               </div>
             </CardContent>
@@ -168,20 +213,30 @@ const Settings = () => {
                   <Store className="w-5 h-5 text-primary" />
                   <CardTitle className="text-lg">Shop Settings</CardTitle>
                 </div>
-                <CardDescription>Manage your store and identity</CardDescription>
+                <CardDescription>
+                  Manage your store and identity
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Link to="/my-store" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors">
+                <Link
+                  to="/my-store"
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
+                >
                   <div className="flex items-center gap-2">
                     <Store className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm font-medium">Manage Store</span>
                   </div>
                   <ExternalLink className="w-4 h-4 text-muted-foreground" />
                 </Link>
-                <Link to="/identity-verification" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors">
+                <Link
+                  to="/identity-verification"
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
+                >
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Identity Verification</span>
+                    <span className="text-sm font-medium">
+                      Identity Verification
+                    </span>
                   </div>
                   <ExternalLink className="w-4 h-4 text-muted-foreground" />
                 </Link>
@@ -194,7 +249,9 @@ const Settings = () => {
                   >
                     <div className="flex items-center gap-2">
                       <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">View Public Store</span>
+                      <span className="text-sm font-medium">
+                        View Public Store
+                      </span>
                     </div>
                     <ExternalLink className="w-4 h-4 text-muted-foreground" />
                   </a>
@@ -229,6 +286,10 @@ const Settings = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Logistics Settings - Entrepreneurs only */}
+          {isEntrepreneur && shop && <LogisticsSettings shopId={shop.id} />}
+
           {/* Style & Social Preferences */}
           <Card className="card-spotify shadow-sm">
             <CardHeader className="pb-3">
@@ -236,17 +297,21 @@ const Settings = () => {
                 <Sparkles className="w-5 h-5 text-primary" />
                 <CardTitle className="text-lg">Style & Social</CardTitle>
               </div>
-              <CardDescription>Tailor your SteerSolo experience</CardDescription>
+              <CardDescription>
+                Tailor your SteerSolo experience
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold">The SteerSolo Edit</p>
-                  <p className="text-xs text-muted-foreground">Receive fashion drops and social trends via email</p>
+                  <p className="text-xs text-muted-foreground">
+                    Receive fashion drops and social trends via email
+                  </p>
                 </div>
-                <Button 
-                  variant={newsletterSub ? "default" : "outline"} 
-                  size="sm" 
+                <Button
+                  variant={newsletterSub ? "default" : "outline"}
+                  size="sm"
                   onClick={() => setNewsletterSub(!newsletterSub)}
                 >
                   {newsletterSub ? "Subscribed" : "Subscribe"}
@@ -254,9 +319,20 @@ const Settings = () => {
               </div>
 
               <div className="space-y-3">
-                <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Your Shopping Interests</p>
+                <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
+                  Your Shopping Interests
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  {["Fashion", "Beauty", "Electronics", "Home", "Food", "Services", "Art", "Health"].map((interest) => (
+                  {[
+                    "Fashion",
+                    "Beauty",
+                    "Electronics",
+                    "Home",
+                    "Food",
+                    "Services",
+                    "Art",
+                    "Health",
+                  ].map(interest => (
                     <button
                       key={interest}
                       onClick={() => handleToggleInterest(interest)}
@@ -272,8 +348,8 @@ const Settings = () => {
                 </div>
               </div>
 
-              <Button 
-                className="w-full bg-gradient-to-r from-primary to-accent text-white" 
+              <Button
+                className="w-full bg-gradient-to-r from-primary to-accent text-white"
                 onClick={savePreferences}
                 disabled={isUpdatingPrefs}
               >
@@ -289,7 +365,9 @@ const Settings = () => {
                 <Shield className="w-5 h-5 text-primary" />
                 <CardTitle className="text-lg">Security</CardTitle>
               </div>
-              <CardDescription>Manage password and authentication</CardDescription>
+              <CardDescription>
+                Manage password and authentication
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
@@ -311,7 +389,14 @@ const Settings = () => {
                   <Bell className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm">Notifications</span>
                 </div>
-                <Button variant="ghost" size="sm" disabled className="opacity-50">Manage</Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled
+                  className="opacity-50"
+                >
+                  Manage
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -319,7 +404,9 @@ const Settings = () => {
           {/* Danger Zone */}
           <Card className="card-spotify border-destructive/20 bg-destructive/5 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg text-destructive">Danger Zone</CardTitle>
+              <CardTitle className="text-lg text-destructive">
+                Danger Zone
+              </CardTitle>
               <CardDescription>
                 Permanent actions affecting your account
               </CardDescription>
@@ -332,7 +419,8 @@ const Settings = () => {
                     Permanently delete your account and all associated data.
                     {isEntrepreneur && (
                       <span className="block mt-1 text-destructive font-medium">
-                        This will also delete your store, products, orders, and customer data.
+                        This will also delete your store, products, orders, and
+                        customer data.
                       </span>
                     )}
                   </p>
