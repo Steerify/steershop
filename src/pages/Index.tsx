@@ -16,6 +16,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import Navbar from "@/components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { Footer } from "@/components/Footer";
@@ -298,8 +299,8 @@ const AnimatedCounter = ({ target }: { target: number }) => {
   const [count, setCount] = useState(target > 20 ? target - 20 : 0);
 
   useEffect(() => {
-    let start = target > 20 ? target - 20 : 0;
-    if (start === count && start === target) return;
+    const start = target > 20 ? target - 20 : 0;
+    if (start === target) return;
     
     // Animate up to the target
     const duration = 1000; // 1 second animation duration
@@ -328,9 +329,9 @@ const HeroTextSlider = () => {
   const [index, setIndex] = useState(0);
   const phrases = [
     {
-      eyebrow: "For WhatsApp · Instagram · TikTok merchants",
-      h1: "Create your store in 60s.<br />Get buyers with<br /><em style='font-style:normal;color:hsl(var(--accent-bright))'>Steerify Ads.</em>",
-      p: "The complete sales system for Nigerian social commerce. Launch a gorgeous storefront, automate checkouts, and flood your store with customers using our managed Facebook, Instagram & TikTok ads.",
+      eyebrow: "For solo sellers on WhatsApp · Instagram · TikTok",
+      h1: "Launch a professional store.<br />Show prices clearly.<br /><em style='font-style:normal;color:hsl(var(--accent-bright))'>Keep customers on WhatsApp.</em>",
+      p: "SteerSolo gives you a storefront, product catalog, orders, and Paystack-ready payments while WhatsApp stays your customer relationship channel.",
       cta1: {
         label: "Claim your free store",
         link: "/auth/signup",
@@ -339,20 +340,21 @@ const HeroTextSlider = () => {
       cta2: { label: "See a demo store", link: "/demo" },
     },
     {
-      eyebrow: "For the Savvy Nigerian Shopper",
-      h1: "Shop verified brands<br />with 100% confidence.<br /><em style='font-style:normal;color:hsl(var(--primary))'>No more 'What I Ordered' drama.</em>",
-      p: "Browse thousands of authentic products from verified Nigerian stores. Secure checkout, real reviews, and direct WhatsApp tracking for every order.",
+      eyebrow: "For Nigerian shoppers",
+      h1: "Find trusted stores.<br />See prices upfront.<br /><em style='font-style:normal;color:hsl(var(--primary))'>Buy without guesswork.</em>",
+      p: "Discover Nigerian stores with visible prices, clear catalogs, and direct paths to order or pay.",
       cta1: { label: "Explore Marketplace", link: "/shops", icon: ShoppingBag },
-      cta2: { label: "Sign up for Free", link: "/shopper-signup" },
+      cta2: { label: "Sign up for free", link: "/shopper-signup" },
     },
   ];
+  const phraseCount = phrases.length;
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setIndex(prev => (prev + 1) % phrases.length);
+      setIndex(prev => (prev + 1) % phraseCount);
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [phraseCount]);
 
   return (
     <div className="relative overflow-hidden">
@@ -431,7 +433,7 @@ const Index = () => {
 
   useEffect(() => {
     let isMounted = true;
-    let channel: any = null;
+    let channel: RealtimeChannel | null = null;
 
     const fetchVendorCount = async () => {
       try {
@@ -443,7 +445,7 @@ const Index = () => {
 
         let activeCount = 0;
         if (!activeErr && activeRows) {
-          activeCount = new Set(activeRows.map((r: any) => r.shop_id)).size;
+          activeCount = new Set(activeRows.map(r => r.shop_id)).size;
         }
 
         if (activeCount > 0) {
@@ -483,10 +485,10 @@ const Index = () => {
   }, []);
 
   const DYNAMIC_STATS = [
-    { v: "$10.17B", l: "Nigeria beauty market 2025" },
-    { v: "95%", l: "Nigerians on WhatsApp" },
-    { v: "67%", l: "Online beauty items likely counterfeit" },
-        { v: `${liveVendorCount.toLocaleString()}`, l: "Verified merchants live on SteerSolo" },
+    { v: "Fast", l: "Professional storefront launch" },
+    { v: "Clear", l: "Catalogs with visible prices" },
+    { v: "Direct", l: "Orders flow into WhatsApp" },
+    { v: `${liveVendorCount.toLocaleString()}`, l: "Verified merchants live on SteerSolo" },
   ];
 
   return (
@@ -507,15 +509,15 @@ const Index = () => {
 
     <Helmet>
       <title>
-        SteerSolo - Verified Beauty & Social Commerce
+        SteerSolo - Professional Stores for Nigerian Solo Sellers
       </title>
       <meta
         name="description"
-        content="Turn your WhatsApp, Instagram, and TikTok audience into a trusted storefront. The Daily Selling System for Nigerian social commerce merchants. Shop verified Nigerian brands with confidence."
+        content="Launch a professional SteerSolo storefront with visible prices, WhatsApp order flow, Paystack payment support, and marketplace discovery for trusted Nigerian stores."
       />
       <meta
         name="keywords"
-        content="social commerce nigeria, sell on whatsapp nigeria, instagram store nigeria, verified beauty brands nigeria, steersolo, ecommerce nigeria"
+        content="social commerce nigeria, sell on whatsapp nigeria, instagram store nigeria, online storefront nigeria, paystack store, steersolo, ecommerce nigeria"
       />
       <link rel="canonical" href="https://steersolo.com" />
 
@@ -524,11 +526,11 @@ const Index = () => {
       <meta property="og:url" content="https://steersolo.com" />
       <meta
         property="og:title"
-        content="SteerSolo - Nigeria's Verified Beauty & Social Commerce"
+        content="SteerSolo - Professional Stores for Nigerian Solo Sellers"
       />
       <meta
         property="og:description"
-        content="Turn your social audience into a trusted storefront. The standard for verified Nigerian merchants."
+        content="Create a professional storefront with clear prices, WhatsApp ordering, Paystack payment support, and discovery for trusted Nigerian stores."
       />
       <meta property="og:image" content="https://steersolo.com/og-image.png" />
       <meta property="og:site_name" content="SteerSolo" />
@@ -539,11 +541,11 @@ const Index = () => {
       <meta name="twitter:url" content="https://steersolo.com" />
       <meta
         name="twitter:title"
-        content="SteerSolo - Nigeria's Verified Beauty & Social Commerce"
+        content="SteerSolo - Professional Stores for Nigerian Solo Sellers"
       />
       <meta
         name="twitter:description"
-        content="Turn your social audience into a trusted storefront. The standard for verified Nigerian merchants."
+        content="Create a professional storefront with clear prices, WhatsApp ordering, Paystack payment support, and discovery for trusted Nigerian stores."
       />
       <meta name="twitter:image" content="https://steersolo.com/og-image.png" />
       <meta name="twitter:site" content="@steersolo" />
@@ -733,11 +735,11 @@ const Index = () => {
       >
         {Array(2)
           .fill([
-            "Nigeria's Only Verified Beauty Marketplace",
-            "Real Products · Real Sellers · Real Results",
-            "Full Identity Verification",
+            "Professional Storefronts for Nigerian Solo Sellers",
+            "Visible Prices · Direct Orders · Real Stores",
+            "WhatsApp Stays Your Customer Channel",
             "Works on WhatsApp · Instagram · TikTok",
-            "SteerSolo Safe — Your Standard for Trust",
+            "Trusted Discovery for Nigerian Shoppers",
           ])
           .flat()
           .map((t, i) => (
@@ -753,123 +755,72 @@ const Index = () => {
     </div>
 
     {/* ══════════════════════════════════════════════════════
-        §3  PAIN MIRROR — Clean & Simple
+        §3  CLEAR VALUE BLOCKS — Concise SteerSolo promise
     ══════════════════════════════════════════════════════ */}
     <section className="py-24 bg-secondary/30">
       <div className="mx-auto max-w-screen-xl px-4">
         <div className="text-center mb-16">
           <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">
-            Sound familiar?
+            Built for clearer commerce
           </p>
           <h2 className="text-foreground font-black text-4xl md:text-[56px] leading-[0.95] tracking-tight m-0">
-            SteerSolo removes 3 questions<br />
-            <span className="text-primary">
-              from the minds of your customers.
-            </span>
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            {
-              q: '"What do you sell?"',
-              b: "Buyers hate guessing. SteerSolo gives you a beautiful catalog that shows exactly what you offer, instantly.",
-              icon: "🛍️",
-            },
-            {
-              q: '"How much is it?"',
-              b: "Hide-and-seek pricing kills sales. Clear prices and discounts build urgent trust and convert faster.",
-              icon: "💰",
-            },
-            {
-              q: '"How do I pay?"',
-              b: "No more sending account numbers manually. Secure checkout is built-in.",
-              icon: "💳",
-            },
-          ].map(p => (
-            <div
-              key={p.q}
-              className="p-8 rounded-[2rem] bg-card border border-border/40 shadow-sm hover:shadow-elegant transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between overflow-hidden"
-            >
-              <div>
-                <span className="text-4xl mb-6 inline-block select-none">{p.icon}</span>
-                <p className="text-foreground font-black text-2xl mb-3 tracking-tight">
-                  {p.q}
-                </p>
-                <p className="text-muted-foreground text-[15px] leading-relaxed">
-                  {p.b}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="bg-primary/5 rounded-3xl p-6 md:p-8 mt-12 border border-primary/20 text-center shadow-sm">
-          <p className="text-foreground font-bold text-xl md:text-2xl flex items-center justify-center gap-2 m-0">
-            <span className="text-2xl md:text-3xl">💬</span> And the best part?
-          </p>
-          <p className="text-primary font-black text-2xl md:text-4xl mt-3 tracking-tight">
-            Every order goes straight to your WhatsApp!
-          </p>
-        </div>
-      </div>
-    </section>
-
-    {/* ══════════════════════════════════════════════════════
-        §4  PLATFORM BREAKDOWN — Clean Card Style
-    ══════════════════════════════════════════════════════ */}
-    <section className="py-24 bg-background">
-      <div className="mx-auto max-w-screen-xl px-4">
-        <div className="text-center mb-16">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">
-            The platforms you're already on
-          </p>
-          <h2 className="text-foreground font-black text-4xl md:text-[56px] leading-[0.95] tracking-tight m-0">
-            Supercharge your social presence.
-            <br />
-            <span className="text-primary">
-              Turn every view into a seamless sale.
-            </span>
+            SteerSolo helps sellers look ready<br />
+            <span className="text-primary">and helps buyers decide faster.</span>
           </h2>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {PLATFORMS.map(pl => (
+          {[
+            {
+              label: "What SteerSolo stands for",
+              accent: "text-primary",
+              items: [
+                "Trust between real Nigerian stores and shoppers",
+                "Clarity through visible products, prices, and buying steps",
+                "Speed from storefront visit to order confirmation",
+                "Independence for solo sellers building on their own terms",
+              ],
+            },
+            {
+              label: "What you get",
+              accent: "text-accent",
+              items: [
+                "A shareable storefront link for every bio and status",
+                "A product catalog with clear prices and availability",
+                "WhatsApp order flow that keeps conversations familiar",
+                "Paystack/payment support plus marketplace discovery",
+              ],
+            },
+            {
+              label: "Why it converts",
+              accent: "text-primary",
+              items: [
+                "Fewer repetitive DMs asking what is available",
+                "Fewer pricing questions before buyers commit",
+                "More confidence because the buying path is obvious",
+                "More serious orders from shoppers who already understand the offer",
+              ],
+            },
+          ].map((block, idx) => (
             <div
-              key={pl.name}
-              className="group relative overflow-hidden rounded-[32px] border border-border/40 bg-card p-8 shadow-sm transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 hover:shadow-elegant flex flex-col"
+              key={block.label}
+              className="lift rounded-[2rem] bg-card border border-border/40 p-8 shadow-sm"
             >
-              <div className="mb-8 flex items-center justify-between">
-                <div 
-                  className="flex h-16 w-16 items-center justify-center rounded-2xl shadow-sm transition-transform duration-500 group-hover:scale-110"
-                  style={{ background: pl.dotBg }}
-                >
-                  <PlatformLogo platform={pl} />
-                </div>
-                <div className="text-right">
-                  <span
-                    className="text-[11px] px-3 py-1.5 rounded-full font-extrabold select-none whitespace-nowrap"
-                    style={{ background: pl.dotBg, color: pl.dot }}
-                  >
-                    {pl.stat}
-                  </span>
-                  <p className="text-[10px] text-muted-foreground font-semibold mt-1 uppercase tracking-wider">
-                    {pl.statSub}
-                  </p>
-                </div>
+              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary font-black">
+                {idx + 1}
               </div>
-              
-              <h3 className="text-[24px] font-black tracking-tight text-foreground mb-4">
-                {pl.name}
+              <h3 className={cn("text-2xl font-black tracking-tight mb-5", block.accent)}>
+                {block.label}
               </h3>
-              
-              <div className="space-y-4 flex-1">
-                <p className="text-muted-foreground text-[15px] leading-relaxed">
-                  <strong className="text-foreground">The issue:</strong> {pl.problem}
-                </p>
-                <p className="text-muted-foreground text-[15px] leading-relaxed">
-                  <strong className="text-emerald-600 dark:text-emerald-400">The fix:</strong> {pl.fix}
-                </p>
+              <div className="space-y-4">
+                {block.items.map(item => (
+                  <div key={item} className="flex items-start gap-3">
+                    <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                    <p className="m-0 text-sm leading-6 text-muted-foreground">
+                      {item}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
