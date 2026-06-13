@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck, ChevronLeft, ChevronRight, Share2, Shield, Truck, Clock } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck, ChevronLeft, ChevronRight, Share2, Shield, Truck, Clock, Expand } from "lucide-react";
 import { WishlistButton } from "@/components/WishlistButton";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { ProductRating } from "@/components/ProductRating";
 import { ProductReviewForm } from "@/components/ProductReviewForm";
+import { ProductMediaLightbox } from "@/components/ProductMediaLightbox";
 import { format } from "date-fns";
 import shopService from "@/services/shop.service";
 import productService from "@/services/product.service";
@@ -113,6 +114,7 @@ const ProductDetails = () => {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
   const relatedScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -410,6 +412,14 @@ const ProductDetails = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {productSeo}
       <Navbar />
+      <ProductMediaLightbox
+        isOpen={isMediaViewerOpen}
+        onClose={() => setIsMediaViewerOpen(false)}
+        imageUrl={product.image_url || product.images?.[0]?.url || null}
+        videoUrl={product.video_url || null}
+        posterUrl={product.images?.[0]?.url || null}
+        alt={product.name}
+      />
 
       <div className="flex-1 container mx-auto px-3 sm:px-4 pt-20 sm:pt-24 pb-24 sm:pb-16">
         {/* Breadcrumb — desktop only */}
@@ -437,11 +447,15 @@ const ProductDetails = () => {
           {/* Product Media */}
           <div className="relative">
             {product.video_url ? (
-              <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-xl">
+              <button
+                type="button"
+                className="group relative aspect-square w-full overflow-hidden rounded-2xl bg-muted text-left shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                onClick={() => setIsMediaViewerOpen(true)}
+                aria-label={`Open media viewer for ${product.name}`}
+              >
                 <video
                   src={product.video_url}
                   className="w-full h-full object-cover"
-                  controls
                   autoPlay
                   muted
                   loop
@@ -465,15 +479,26 @@ const ProductDetails = () => {
                     background-position: center;
                   }
                 `}</style>
-              </div>
+                <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-background/85 p-2 text-foreground opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                  <Expand className="h-5 w-5" />
+                </span>
+              </button>
             ) : product.images && product.images.length > 0 ? (
-              <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-xl">
+              <button
+                type="button"
+                className="group relative aspect-square w-full overflow-hidden rounded-2xl bg-muted text-left shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                onClick={() => setIsMediaViewerOpen(true)}
+                aria-label={`Open image viewer for ${product.name}`}
+              >
                 <img
                   src={product.images[0].url}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
-              </div>
+                <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-background/85 p-2 text-foreground opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                  <Expand className="h-5 w-5" />
+                </span>
+              </button>
             ) : (
               <div className="aspect-square rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center relative overflow-hidden">
                 <AdirePattern variant="geometric" className="text-primary" opacity={0.2} />
