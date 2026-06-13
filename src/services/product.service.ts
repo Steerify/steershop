@@ -44,7 +44,7 @@ type ProductSearchRow = {
   is_digital?: boolean | null;
   digital_file_url?: string | null;
   digital_delivery_text?: string | null;
-  shops?: { shop_slug?: string | null } | null;
+  shops?: { shop_slug?: string | null } | { shop_slug?: string | null }[] | null;
 };
 
 export interface CreateProductRequest {
@@ -332,6 +332,7 @@ const productService = {
       `, { count: 'exact' })
       .eq('is_available', true)
       .is('delete_at', null)
+      .not('shops.shop_slug', 'is', null)
       .or(`name.ilike."%${term}%",description.ilike."%${term}%"`)
       .range(from, to);
 
@@ -341,6 +342,9 @@ const productService = {
     }
 
     // Map to Product type with shop_slug and image_url for display
+    const getShopSlug = (shops: ProductSearchRow['shops']) =>
+      Array.isArray(shops) ? shops[0]?.shop_slug : shops?.shop_slug;
+
     const mappedProducts = ((products || []) as ProductSearchRow[]).map((p) => ({
       id: p.id,
       shopId: p.shop_id,
@@ -353,7 +357,7 @@ const productService = {
       stock_quantity: p.stock_quantity,
       images: p.image_url ? [{ url: p.image_url, alt: p.name, position: 0 }] : [],
       image_url: p.image_url,
-      shop_slug: p.shops?.shop_slug,
+      shop_slug: getShopSlug(p.shops) || undefined,
       is_available: p.is_available,
       type: p.type as 'product' | 'service' | undefined,
       averageRating: p.average_rating ? Number(p.average_rating) : undefined,

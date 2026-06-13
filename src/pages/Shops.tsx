@@ -970,15 +970,24 @@ const Shops = () => {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                {displayedProducts.map((product, index) => (
-                  <Link
-                    key={`${product.id}-${index}`}
-                    to={`/shop/${product.shop_slug || "shop"}`}
-                  >
-                    <div
-                      className="group bg-card border border-border/40 hover:border-border/80 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col"
-                      style={{ contentVisibility: "auto" }}
+                {displayedProducts.map((product, index) => {
+                  if (!product.shop_slug) {
+                    console.warn(
+                      "Product search result is missing shop_slug",
+                      product.id,
+                    );
+                    return null;
+                  }
+
+                  return (
+                    <Link
+                      key={`${product.id}-${index}`}
+                      to={`/shop/${product.shop_slug}/product/${product.id}`}
                     >
+                      <div
+                        className="group bg-card border border-border/40 hover:border-border/80 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col"
+                        style={{ contentVisibility: "auto" }}
+                      >
                       {/* Image */}
                       <div className="relative aspect-square overflow-hidden bg-muted">
                         {product.image_url || product.images?.[0]?.url ? (
@@ -1018,9 +1027,10 @@ const Shops = () => {
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
 
               {loadingMoreProducts && (
