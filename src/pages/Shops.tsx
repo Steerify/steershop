@@ -988,7 +988,6 @@ const Shops = () => {
                     >
                       <div
                         className="group bg-card border border-border/40 hover:border-border/80 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col"
-                        style={{ contentVisibility: "auto" }}
                       >
                       {/* Image */}
                       <ProductMediaCard

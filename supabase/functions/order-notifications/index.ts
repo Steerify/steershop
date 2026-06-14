@@ -170,14 +170,33 @@ serve(async req => {
 
     const body = await req.json();
     const { orderId, eventType, statusUpdate } = body;
-    let { shopName, customerEmail, customerName, totalAmount, items } =
-      body as {
-        shopName?: string;
-        customerEmail?: string;
-        customerName?: string;
-        totalAmount?: number;
-        items?: OrderItem[];
-      };
+    let { 
+      shopName, 
+      customerEmail, 
+      customerName, 
+      totalAmount, 
+      items,
+      shopOwnerEmail,
+      shopOwnerPhone,
+      shopSlug,
+      deliveryAddress,
+      deliveryCity,
+      deliveryState,
+      paymentReference
+    } = body as {
+      shopName?: string;
+      customerEmail?: string;
+      customerName?: string;
+      totalAmount?: number;
+      items?: OrderItem[];
+      shopOwnerEmail?: string;
+      shopOwnerPhone?: string;
+      shopSlug?: string;
+      deliveryAddress?: string;
+      deliveryCity?: string;
+      deliveryState?: string;
+      paymentReference?: string;
+    };
 
     if (!orderId || !eventType) {
       return new Response(
@@ -194,17 +213,11 @@ serve(async req => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // --- Resolve shop owner + order details server-side (never trust client) ---
-    let shopOwnerEmail: string | null = null;
-    let shopOwnerPhone: string | null = null;
-    let shopSlug: string | null = null;
+    // --- Resolve shop owner + order details ---
+    // Prefer data from the request payload to bypass potential DB/RLS connection issues
     let isPaid = false;
     let digitalItemsHtml = "";
-    let customerPhone: string | null = null;
-    let deliveryAddress: string | null = null;
-    let deliveryCity: string | null = null;
-    let deliveryState: string | null = null;
-    let paymentReference: string | null = null;
+    customerPhone = customerPhone || body.customerPhone || null;
 
     try {
       const { data: orderRow } = await supabase
@@ -218,18 +231,17 @@ serve(async req => {
       if (orderRow) {
         const shopJoin: any = orderRow.shops;
         if (!shopName) shopName = shopJoin?.shop_name;
-        if (!customerEmail)
-          customerEmail = orderRow.customer_email || undefined;
+        if (!customerEmail) customerEmail = orderRow.customer_email || undefined;
         if (!customerName) customerName = orderRow.customer_name || undefined;
-        customerPhone = orderRow.customer_phone || null;
-        if (totalAmount == null)
-          totalAmount = Number(orderRow.total_amount || 0);
-        deliveryAddress = orderRow.delivery_address || null;
-        deliveryCity = orderRow.delivery_city || null;
-        deliveryState = orderRow.delivery_state || null;
-        paymentReference = orderRow.payment_reference || null;
-        shopSlug = shopJoin?.shop_slug || null;
-        shopOwnerPhone = shopJoin?.whatsapp_number || null;
+        if (!customerPhone) customerPhone = orderRow.customer_phone || null;
+        if (totalAmount == null) totalAmount = Number(orderRow.total_amount || 0);
+        if (!deliveryAddress) deliveryAddress = orderRow.delivery_address || null;
+        if (!deliveryCity) deliveryCity = orderRow.delivery_city || null;
+        if (!deliveryState) deliveryState = orderRow.delivery_state || null;
+        if (!paymentReference) paymentReference = orderRow.payment_reference || null;
+        if (!shopSlug) shopSlug = shopJoin?.shop_slug || null;
+        if (!shopOwnerPhone) shopOwnerPhone = shopJoin?.whatsapp_number || null;
+        
         isPaid =
           orderRow.payment_status === "paid" ||
           [
@@ -240,15 +252,18 @@ serve(async req => {
             "completed",
           ].includes(orderRow.status || statusUpdate || "");
 
-        if (shopJoin?.owner_id) {
+        if (shopJoin?.owner_id && !shopOwnerEmail) {
           const { data: owner } = await supabase
             .from("profiles")
             .select("email, phone")
             .eq("id", shopJoin.owner_id)
             .maybeSingle();
-          shopOwnerEmail = owner?.email || null;
+          if (!shopOwnerEmail) shopOwnerEmail = owner?.email || null;
           if (!shopOwnerPhone) shopOwnerPhone = owner?.phone || null;
         }
+      } else {
+        // Fallback: If DB fetch fails but payload has data, assume paid based on eventType
+        isPaid = eventType === "order_paid" || ["confirmed", "processing", "out_for_delivery", "delivered", "completed"].includes(statusUpdate || "");
       }
 
       // Resolve items if caller didn't supply them

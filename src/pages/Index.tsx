@@ -357,7 +357,7 @@ const HeroTextSlider = () => {
   }, [phraseCount]);
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative" style={{ isolation: "isolate" }}>
       <style>{`
         @keyframes slideIn {
           from { opacity: 0; transform: translateX(30px); }
@@ -366,17 +366,19 @@ const HeroTextSlider = () => {
         .animate-slide-in {
           animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
+        .hero-phrase-hidden {
+          display: none !important;
+          visibility: hidden !important;
+        }
       `}</style>
       {phrases.map((phrase, i) => (
         <div
           key={i}
-          className={cn(
-            "transition-all duration-700",
-            i === index ? "block animate-slide-in" : "hidden",
-          )}
+          className={i === index ? "animate-slide-in" : "hero-phrase-hidden"}
+          aria-hidden={i !== index}
         >
           {/* Aligned Escrow Pill & Eyebrow Badge Row */}
-          <div className="flex flex-wrap items-center gap-3 mb-6">
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md text-emerald-600 dark:text-emerald-400 text-xs font-semibold select-none">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 dark:bg-emerald-400 opacity-75"></span>
@@ -400,12 +402,12 @@ const HeroTextSlider = () => {
             dangerouslySetInnerHTML={{ __html: phrase.h1 }}
           />
 
-          <p className="text-base sm:text-lg text-muted-foreground font-medium max-w-lg mb-8 leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground font-medium max-w-lg mx-auto mb-8 leading-relaxed">
             {phrase.p}
           </p>
 
           {/* CTAs with Premium Hover & Scale Effects */}
-          <div className="flex flex-wrap gap-4 mb-2">
+          <div className="flex flex-wrap justify-center gap-4 mb-2">
             <Link to={phrase.cta1.link}>
               <button className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl font-bold text-base text-primary-foreground bg-primary shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:scale-95 transition-all duration-300 transform">
                 {phrase.cta1.label}
@@ -627,7 +629,7 @@ const Index = () => {
       <div className="mx-auto max-w-screen-xl px-4 relative z-10">
         <div className="flex flex-col lg:flex-row items-center gap-10 pb-24">
           {/* ── TEXT ── */}
-          <div style={{ flex: "1 1 420px", maxWidth: 560 }} className="f1">
+          <div className="flex-1 max-w-2xl mx-auto text-center f1">
             <div style={{ minHeight: 280 }}>
               <HeroTextSlider />
             </div>
@@ -698,9 +700,6 @@ const Index = () => {
               </div>
             </div>
           </div>
-
-          {/* ── FEATURED STORES CAROUSEL ── */}
-          <FeaturedStoresHeroCarousel />
         </div>
 
         {/* ── STAT STRIP ── */}
@@ -753,6 +752,29 @@ const Index = () => {
           ))}
       </div>
     </div>
+
+    {/* ══════════════════════════════════════════════════════
+        §2.5  FEATURED STORES — Dedicated Full-Width Section
+    ══════════════════════════════════════════════════════ */}
+    <section className="py-20 bg-background relative overflow-hidden border-b border-border/40">
+      <div className="absolute top-0 right-0 w-1/3 h-1/2 bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="mx-auto max-w-screen-xl px-4 relative z-10">
+        <div className="text-center mb-12">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-accent mb-4">
+            Curated Excellence
+          </p>
+          <h2 className="text-3xl md:text-5xl font-black tracking-tight text-foreground mb-5">
+            Discover Trending <span className="text-primary">SteerSolo Stores</span>
+          </h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Shop directly from Nigeria's top-rated social merchants. Verified profiles, secure payments, and instant WhatsApp ordering.
+          </p>
+        </div>
+        <div className="w-full">
+           <FeaturedStoresHeroCarousel />
+        </div>
+      </div>
+    </section>
 
     {/* ══════════════════════════════════════════════════════
         §3  CLEAR VALUE BLOCKS — Concise SteerSolo promise

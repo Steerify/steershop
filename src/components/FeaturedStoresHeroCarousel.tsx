@@ -46,11 +46,10 @@ const SlideSkeletons = () => (
     {[1, 2].map((i) => (
       <div
         key={i}
-        className="flex-shrink-0 w-full"
-        style={{ scrollSnapAlign: "start" }}
+        className="flex-shrink-0 w-full snap-start"
         aria-hidden
       >
-        <div className="h-full animate-pulse" style={{ borderRadius: 24, background: "rgba(255,255,255,0.07)", minHeight: 380 }} />
+        <div className="h-full animate-pulse bg-muted rounded-2xl min-h-[380px]" />
       </div>
     ))}
   </>
@@ -275,89 +274,41 @@ export const FeaturedStoresHeroCarousel = () => {
   return (
     <div
       ref={containerRef}
-      style={{
-        position: "relative",
-        width: "100%",
-        flexShrink: 0,
-        maxWidth: 520,
-        margin: "0 auto",
-      }}
-      className="group"
+      className="relative w-full flex-shrink-0 mx-auto group"
     >
       <style>{`@keyframes fsh-fade-in{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:scale(1)}}`}</style>
+      
       {/* header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 12,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Sparkles style={{ width: 14, height: 14, color: "rgba(255,255,255,0.55)" }} />
-          <span
-            style={{
-              fontSize: "0.68rem",
-              fontWeight: 700,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              color: "rgba(255,255,255,0.45)",
-            }}
-          >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="text-[0.68rem] font-bold tracking-[0.22em] uppercase text-muted-foreground">
             Featured Stores
           </span>
         </div>
         {slides.length > 1 && (
-          <div style={{ display: "flex", gap: 6 }}>
+          <div className="flex gap-1.5">
             <button
               onClick={prev}
               aria-label="Previous store"
-              style={{
-                width: 28, height: 28, borderRadius: "50%",
-                background: "rgba(255,255,255,0.1)",
-                border: "1px solid rgba(255,255,255,0.15)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", transition: "background .2s",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.2)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
+              className="w-7 h-7 rounded-full bg-background/10 border border-border/50 flex items-center justify-center cursor-pointer transition-colors hover:bg-background/20"
             >
-              <ChevronLeft style={{ width: 14, height: 14, color: "#fff" }} />
+              <ChevronLeft className="w-3.5 h-3.5 text-foreground" />
             </button>
             <button
               onClick={next}
               aria-label="Next store"
-              style={{
-                width: 28, height: 28, borderRadius: "50%",
-                background: "rgba(255,255,255,0.1)",
-                border: "1px solid rgba(255,255,255,0.15)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", transition: "background .2s",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.2)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
+              className="w-7 h-7 rounded-full bg-background/10 border border-border/50 flex items-center justify-center cursor-pointer transition-colors hover:bg-background/20"
             >
-              <ChevronRight style={{ width: 14, height: 14, color: "#fff" }} />
+              <ChevronRight className="w-3.5 h-3.5 text-foreground" />
             </button>
           </div>
         )}
       </div>
 
       {/* embla viewport */}
-      <div
-        ref={emblaRef}
-        style={{
-          overflow: "hidden",
-          borderRadius: 20,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            WebkitOverflowScrolling: "touch",
-          }}
-        >
+      <div ref={emblaRef} className="overflow-hidden rounded-xl">
+        <div className="flex touch-pan-y">
           {loading ? (
             <SlideSkeletons />
           ) : (
@@ -368,245 +319,137 @@ export const FeaturedStoresHeroCarousel = () => {
               return (
                 <div
                   key={shop.id}
-                  style={{
-                    flex: "0 0 100%",
-                    minWidth: 0,
-                    transition: "opacity .4s ease",
-                    opacity: idx === activeIdx ? 1 : 0.25,
-                    padding: "4px", // slight padding to avoid clipping shadows
-                  }}
+                  className={cn(
+                    "min-w-0 transition-opacity duration-300 p-1",
+                    isMobile ? "flex-[0_0_100%]" : "flex-[0_0_min(100%,360px)]"
+                  )}
                 >
-                <Link
-                  to={`/shop/${shop.shop_slug}`}
-                  style={{ textDecoration: "none", display: "block" }}
-                >
-                  <div
-                    style={{
-                      borderRadius: 20,
-                      overflow: "hidden",
-                      background: "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.12)",
-                      backdropFilter: "blur(10px)",
-                      boxShadow: "0 24px 48px rgba(0,0,0,0.35)",
-                      transition: "transform .3s ease, box-shadow .3s ease",
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-4px)";
-                      e.currentTarget.style.boxShadow = "0 32px 60px rgba(0,0,0,0.45)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow = "0 24px 48px rgba(0,0,0,0.35)";
-                    }}
-                  >
-                    {/* Badge moved to top */}
-                    <div style={{ padding: isMobile ? "12px 14px 0" : "16px 18px 0", display: "flex", justifyContent: "flex-end" }}>
-                      <div style={{ flexShrink: 0 }}>
-                        <SafeBeautyBadge tier={shop.products.length === 1 ? 'listed' : shop.tier} showTooltip={false} />
-                        {shop.products.length === 1 && (
-                          <div style={{ 
-                            marginTop: 4, 
-                            fontSize: '0.55rem', 
-                            fontWeight: 800, 
-                            color: '#a855f7', 
-                            textAlign: 'right',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em'
-                          }}>
-                            Single Product
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Store header */}
-                    <div style={{ padding: isMobile ? "8px 14px 10px" : "10px 18px 12px", display: "flex", alignItems: "flex-start", gap: isMobile ? 10 : 12 }}>
-                      {/* Logo */}
-                      <div
-                        style={{
-                          width: isMobile ? 44 : 56, height: isMobile ? 44 : 56, borderRadius: isMobile ? 12 : 16, overflow: "hidden",
-                          background: "rgba(255,255,255,0.1)", flexShrink: 0,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          border: "1px solid rgba(255,255,255,0.15)",
-                        }}
-                      >
-                        {hasLogo ? (
-                          <img
-                            src={logoUrl!}
-                            alt={shop.shop_name}
-                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                            loading={idx === 0 ? "eager" : "lazy"}
-                            {...(idx === 0 ? { fetchPriority: "high" } as any : {})}
-                            onError={() => { brokenLogos.current.add(shop.id); }}
-                          />
-                        ) : (
-                          <Store style={{ width: 22, height: 22, color: "rgba(255,255,255,0.5)" }} />
-                        )}
-                      </div>
-
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-                          <h3
-                            style={{
-                              fontWeight: 800, fontSize: isMobile ? "0.95rem" : "1.1rem", color: "#fff",
-                              margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                            }}
-                          >
-                            {shop.shop_name}
-                          </h3>
+                  <Link to={`/shop/${shop.shop_slug}`} className="block no-underline">
+                    <div className="rounded-xl overflow-hidden bg-card border border-border/50 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+                      {/* Store header */}
+                      <div className={cn("flex items-center gap-3", isMobile ? "p-3 pb-2.5" : "p-3.5 pb-3")}>
+                        {/* Logo */}
+                        <div className={cn("flex-shrink-0 overflow-hidden bg-muted/50 border border-border/50 flex items-center justify-center", isMobile ? "w-11 h-11 rounded-xl" : "w-14 h-14 rounded-xl")}>
+                          {hasLogo ? (
+                            <img
+                              src={logoUrl!}
+                              alt={shop.shop_name}
+                              className="w-full h-full object-cover"
+                              loading={idx === 0 ? "eager" : "lazy"}
+                              onError={() => { brokenLogos.current.add(shop.id); }}
+                            />
+                          ) : (
+                            <Store className="w-5 h-5 text-muted-foreground" />
+                          )}
                         </div>
-                        <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.4 }}>
-                          {shop.tagline || shop.description?.slice(0, 60) || "Verified SteerSolo store"}
-                        </p>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <h3 className="font-extrabold text-card-foreground truncate text-sm sm:text-base">
+                              {shop.shop_name}
+                            </h3>
+                          </div>
+                          <p className="text-[0.72rem] text-muted-foreground m-0 leading-tight">
+                            {shop.tagline || shop.description?.slice(0, 60) || "Verified SteerSolo store"}
+                          </p>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Single rotating product photo */}
-                    {shop.products.length > 0 && (() => {
-                      const pIdx = (productIdxByShop[shop.id] ?? 0) % shop.products.length;
-                      const p = shop.products[pIdx];
-                      const imgUrl = resolveUrl(p.image_url);
-                      const hasImg = !!imgUrl && !brokenProductImgs.current.has(p.id);
-                      const showDots = shop.products.length >= 2;
-                      return (
-                        <div style={{ padding: "0 14px 14px" }}>
-                          <div
-                            style={{
-                              borderRadius: 16,
-                              overflow: "hidden",
-                              background: "rgba(0,0,0,0.25)",
-                              border: "1px solid rgba(255,255,255,0.08)",
-                              display: "flex",
-                              flexDirection: "column",
-                              position: "relative",
-                            }}
-                          >
-                            <div style={{ height: isMobile ? 220 : 300, overflow: "hidden", position: "relative" }}>
-                              {hasImg ? (
-                                <img
-                                  key={p.id}
-                                  src={imgUrl!}
-                                  alt={p.name}
-                                  style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                    animation: "fsh-fade-in .5s ease",
-                                  }}
-                                  loading={idx === 0 ? "eager" : "lazy"}
-                                  {...(idx === 0 ? { fetchPriority: "high" } as any : {})}
-                                  onError={() => { brokenProductImgs.current.add(p.id); }}
-                                />
-                              ) : (
-                                <div
-                                  style={{
-                                    width: "100%", height: "100%",
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    background: "rgba(255,255,255,0.04)",
-                                  }}
-                                >
-                                  <ShoppingBag style={{ width: 36, height: 36, color: "rgba(255,255,255,0.2)" }} />
+                      {/* Single rotating product photo */}
+                      {shop.products.length > 0 && (() => {
+                        const pIdx = (productIdxByShop[shop.id] ?? 0) % shop.products.length;
+                        const p = shop.products[pIdx];
+                        const imgUrl = resolveUrl(p.image_url);
+                        const hasImg = !!imgUrl && !brokenProductImgs.current.has(p.id);
+                        const showDots = shop.products.length >= 2;
+                        return (
+                          <div className="px-3.5 pb-3.5">
+                            <div className="rounded-lg overflow-hidden bg-black/25 border border-border/30 flex flex-col relative">
+                              <div className={cn("overflow-hidden relative", isMobile ? "h-[220px]" : "h-[300px]")}>
+                                {hasImg ? (
+                                  <img
+                                    key={p.id}
+                                    src={imgUrl!}
+                                    alt={p.name}
+                                    className="w-full h-full object-cover animate-[fsh-fade-in_0.5s_ease]"
+                                    loading={idx === 0 ? "eager" : "lazy"}
+                                    onError={() => { brokenProductImgs.current.add(p.id); }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-muted/30">
+                                    <ShoppingBag className="w-9 h-9 text-muted-foreground/30" />
+                                  </div>
+                                )}
+
+                                {/* Badge overlay — bottom-left corner of image */}
+                                <div className="absolute bottom-2 left-2.5 z-[2]">
+                                  <SafeBeautyBadge tier={shop.products.length === 1 ? 'listed' : shop.tier} showTooltip={false} />
                                 </div>
-                              )}
 
-                              {showDots && (
-                                <div
-                                  style={{
-                                    position: "absolute",
-                                    bottom: 8,
-                                    left: 0,
-                                    right: 0,
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    gap: 4,
-                                  }}
-                                >
-                                  {shop.products.map((_, i) => (
-                                    <span
-                                      key={i}
-                                      style={{
-                                        width: i === pIdx ? 14 : 5,
-                                        height: 4,
-                                        borderRadius: 9999,
-                                        background: i === pIdx ? "#00d97e" : "rgba(255,255,255,0.45)",
-                                        transition: "all .3s ease",
-                                      }}
-                                    />
-                                  ))}
-                                </div>
-                              )}
-                            </div>
+                                {showDots && (
+                                  <div className="absolute bottom-2.5 left-0 right-0 flex justify-center gap-1">
+                                    {shop.products.map((_, i) => (
+                                      <span
+                                        key={i}
+                                        className={cn(
+                                          "h-1 rounded-full transition-all duration-300",
+                                          i === pIdx 
+                                            ? "w-3.5 bg-[#00d97e]" 
+                                            : "w-1.5 bg-foreground/45"
+                                        )}
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
 
-                            <div style={{ padding: "10px 12px 12px" }}>
-                              <p
-                                style={{
-                                  fontSize: "0.82rem", fontWeight: 700, color: "rgba(255,255,255,0.95)",
-                                  margin: "0 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                                }}
-                              >
-                                {p.name}
-                              </p>
-                              <p style={{ fontSize: "0.78rem", fontWeight: 800, color: "#00d97e", margin: 0 }}>
-                                {fmt(p.price)}
-                              </p>
+                              <div className="p-3 pb-2.5">
+                                <p className="text-[0.82rem] font-bold text-card-foreground m-0 mb-1 truncate">
+                                  {p.name}
+                                </p>
+                                {/* Updated price color - darker on light mode, bright on dark mode */}
+                                <p className="text-[0.78rem] font-extrabold text-emerald-600 dark:text-emerald-400 m-0">
+                                  {fmt(p.price)}
+                                </p>
+                              </div>
                             </div>
                           </div>
+                        );
+                      })()}
+
+                      {/* Footer CTA */}
+                      <div className="px-4 py-2.5 border-t border-border/30 flex items-center justify-between">
+                        <span className="text-[0.72rem] text-muted-foreground">
+                          {shop.state ? `📍 ${shop.state}` : "Nigeria"}
+                        </span>
+                        <div className="flex items-center gap-1 text-[0.72rem] font-bold text-muted-foreground/80">
+                          Visit Store
+                          <ArrowRight className="w-3 h-3" />
                         </div>
-                      );
-                    })()}
-
-
-                    {/* Footer CTA */}
-                    <div
-                      style={{
-                        padding: "10px 18px 14px",
-                        borderTop: "1px solid rgba(255,255,255,0.06)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)" }}>
-                        {shop.state ? `📍 ${shop.state}` : "Nigeria"}
-                      </span>
-                      <div
-                        style={{
-                          display: "flex", alignItems: "center", gap: 5,
-                          fontSize: "0.72rem", fontWeight: 700, color: "rgba(255,255,255,0.65)",
-                        }}
-                      >
-                        Visit Store
-                        <ArrowRight style={{ width: 12, height: 12 }} />
                       </div>
                     </div>
-                  </div>
-                </Link>
-              </div>
-            );
-          })
-        )}
+                  </Link>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
       {/* Dot indicators */}
       {slides.length > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 5, marginTop: 14 }}>
+        <div className="flex justify-center gap-1.5 mt-3.5">
           {slides.map((_, i) => (
             <button
               key={i}
               onClick={() => scrollTo(i)}
               aria-label={`Go to store ${i + 1}`}
-              style={{
-                width: i === activeIdx ? (isMobile ? 14 : 20) : (isMobile ? 5 : 6),
-                height: isMobile ? 3 : 5,
-                borderRadius: 9999,
-                background: i === activeIdx ? "#00d97e" : "rgba(255,255,255,0.2)",
-                border: "none",
-                cursor: "pointer",
-                transition: "all .3s ease",
-                padding: 0,
-              }}
+              className={cn(
+                "rounded-full border-none cursor-pointer transition-all duration-300 p-0",
+                i === activeIdx 
+                  ? cn("bg-[#00d97e]", isMobile ? "w-3.5 h-[3px]" : "w-5 h-[5px]")
+                  : cn("bg-muted-foreground/20", isMobile ? "w-1.5 h-[3px]" : "w-1.5 h-[5px]")
+              )}
             />
           ))}
         </div>

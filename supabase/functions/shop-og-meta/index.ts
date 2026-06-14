@@ -50,8 +50,9 @@ function formatPrice(price: number): string {
 
 function generateProductPageHTML(shop: any, product: any, shopUrl: string): Response {
   const shopName = escapeHtml(shop.shop_name || 'Shop');
-  const productName = escapeHtml(product.name || 'Product');
-  const description = escapeHtml(product.description || `${product.name} available at ${shop.shop_name} on SteerSolo`);
+  const baseProductName = product.name || 'Product';
+  const productName = escapeHtml(product.price ? `${baseProductName} - ${formatPrice(product.price)}` : baseProductName);
+  const description = escapeHtml(product.description || `${baseProductName} available at ${shop.shop_name} on SteerSolo`);
   const imageUrl = product.image_url || shop.logo_url || DEFAULT_IMAGE;
   const productUrl = `${shopUrl}/product/${product.id}`;
 

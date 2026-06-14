@@ -27,7 +27,7 @@ export const ShopCardEnhanced = ({ shop, productPreviews = [], productCount = 0,
     <Link to={`/shop/${shop.slug || shop.shop_slug}`}>
       <div
         className="group relative flex flex-col h-full bg-card hover:bg-card/80 border border-border/40 hover:border-border/80 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 animate-fade-up"
-        style={{ animationDelay: `${index * 0.05}s`, contentVisibility: 'auto' }}
+        style={{ animationDelay: `${index * 0.05}s` }}
       >
         {/* Header */}
         <div className="p-5 pb-3">

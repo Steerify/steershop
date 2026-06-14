@@ -148,10 +148,7 @@ async function handleWebhook(req: Request): Promise<Response> {
     })
   }
 
-  // 2. Admin-only logic for 'signup'. Do not send supplemental user-facing
-  // onboarding emails here; signup users should only receive the verification
-  // email from this auth hook. The onboarding welcome is queued after email
-  // confirmation by a database trigger.
+  // 2. Admin-only logic for 'signup'.
   if (emailType === 'signup') {
     try {
       const metadata = payload.user.user_metadata || {}

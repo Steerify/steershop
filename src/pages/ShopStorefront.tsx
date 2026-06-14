@@ -1442,7 +1442,6 @@ const ShopStorefront = () => {
                     className="group min-h-0 flex flex-col animate-fade-up"
                     style={{
                       animationDelay: `${index * 0.04}s`,
-                      contentVisibility: "auto",
                     }}
                     data-tour={index === 0 ? "product-card" : undefined}
                   >
