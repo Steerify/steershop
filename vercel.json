@@ -18,11 +18,5 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/concierge-generate",
-      "schedule": "*/30 * * * *"
-    }
   ]
 }
