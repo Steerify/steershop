@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface ShopAvatarProps {
@@ -9,6 +9,12 @@ interface ShopAvatarProps {
 }
 
 export const ShopAvatar = ({ name, logoUrl, className, initialsClassName }: ShopAvatarProps) => {
+  const [hasImageError, setHasImageError] = useState(false);
+
+  useEffect(() => {
+    setHasImageError(false);
+  }, [logoUrl]);
+
   const getInitials = (shopName: string) => {
     if (!shopName) return "?";
     const parts = shopName.trim().split(/\s+/);
@@ -16,7 +22,7 @@ export const ShopAvatar = ({ name, logoUrl, className, initialsClassName }: Shop
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
-  if (logoUrl) {
+  if (logoUrl && !hasImageError) {
     return (
       <div className={cn("relative overflow-hidden bg-muted", className)}>
         <img
@@ -25,6 +31,7 @@ export const ShopAvatar = ({ name, logoUrl, className, initialsClassName }: Shop
           className="w-full h-full object-cover select-none"
           draggable={false}
           onContextMenu={(e) => e.preventDefault()}
+          onError={() => setHasImageError(true)}
         />
       </div>
     );
