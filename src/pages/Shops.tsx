@@ -20,6 +20,9 @@ import {
   ShoppingBag,
   Flame,
   ArrowRight,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -179,6 +182,8 @@ const Shops = () => {
   >({});
   const [stats, setStats] = useState({ shops: 0, products: 0 });
   const [searchFocused, setSearchFocused] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [detailZoom, setDetailZoom] = useState(1);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -642,6 +647,32 @@ const Shops = () => {
   const showShops =
     !hasSearchQuery || searchType === "all" || searchType === "shops";
   const displayedProducts = priceFilteredProducts ?? productResults;
+  const formatProductPrice = useCallback((price?: number | null) => `₦${Number(price || 0).toLocaleString()}`, []);
+  const openProductDetail = useCallback((product: Product) => {
+    setSelectedProduct(product);
+    setDetailZoom(1);
+  }, []);
+  const closeProductDetail = useCallback(() => {
+    setSelectedProduct(null);
+    setDetailZoom(1);
+  }, []);
+  const zoomIn = useCallback(() => setDetailZoom(z => Math.min(3, Number((z + 0.25).toFixed(2)))), []);
+  const zoomOut = useCallback(() => setDetailZoom(z => Math.max(1, Number((z - 0.25).toFixed(2)))), []);
+
+  useEffect(() => {
+    if (!selectedProduct) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeProductDetail();
+      if (event.key === "+" || event.key === "=") zoomIn();
+      if (event.key === "-" || event.key === "_") zoomOut();
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [closeProductDetail, selectedProduct, zoomIn, zoomOut]);
 
   return (
     <PageThemeShell
@@ -982,13 +1013,16 @@ const Shops = () => {
                   }
 
                   return (
-                    <Link
+                    <button
                       key={`${product.id}-${index}`}
-                      to={`/shop/${product.shop_slug}/product/${product.id}`}
+                      type="button"
+                      onClick={() => openProductDetail(product)}
+                      title={`${product.name} — ${formatProductPrice(product.price)}`}
+                      aria-label={`Open ${product.name} details, price ${formatProductPrice(product.price)}`}
+                      className="text-left focus:outline-none focus-visible:ring-4 focus-visible:ring-accent/30 rounded-3xl"
                     >
                       <div
-                        className="group bg-card border border-border/40 hover:border-border/80 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col"
-                        style={{ contentVisibility: "auto" }}
+                        className="group bg-card border border-border/40 hover:border-border/80 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col h-full"
                       >
                       {/* Image */}
                       <ProductMediaCard
@@ -1015,16 +1049,17 @@ const Shops = () => {
                         </h3>
                         <div className="mt-auto flex items-center justify-between">
                           <span className="text-base font-bold gradient-text tabular-nums">
-                            ₦{product.price?.toLocaleString() || "0"}
+                            {formatProductPrice(product.price)}
                           </span>
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Store className="w-3 h-3" />
-                            <span className="hidden sm:inline">View</span>
+                            <Maximize2 className="w-3 h-3" />
+                            <span className="hidden sm:inline">Quick view</span>
                           </div>
                         </div>
                       </div>
                       </div>
-                    </Link>
+                    </button>
                   );
                 })}
               </div>
@@ -1212,6 +1247,74 @@ const Shops = () => {
             )}
         </div>
       </main>
+
+      {selectedProduct && (
+        <div
+          className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${selectedProduct.name} product detail`}
+        >
+          <div className="absolute inset-0 flex flex-col">
+            <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-card/80 px-4 py-3 shadow-sm sm:px-6">
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Product detail</p>
+                <h2 className="truncate text-lg font-black text-foreground sm:text-2xl">{selectedProduct.name}</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={zoomOut} className="rounded-full border border-border bg-background p-2 shadow-sm transition hover:bg-muted" aria-label="Zoom out">
+                  <ZoomOut className="h-5 w-5" />
+                </button>
+                <span className="hidden min-w-14 text-center text-xs font-bold text-muted-foreground sm:inline">{Math.round(detailZoom * 100)}%</span>
+                <button type="button" onClick={zoomIn} className="rounded-full border border-border bg-background p-2 shadow-sm transition hover:bg-muted" aria-label="Zoom in">
+                  <ZoomIn className="h-5 w-5" />
+                </button>
+                <button type="button" onClick={closeProductDetail} className="rounded-full bg-foreground p-2 text-background shadow-sm transition hover:opacity-90" aria-label="Close product detail">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[minmax(0,1fr)_380px]">
+              <div className="flex min-h-0 items-center justify-center overflow-auto bg-muted/30 p-4 touch-pan-x touch-pan-y sm:p-8">
+                <div className="transition-transform duration-200 ease-out" style={{ transform: `scale(${detailZoom})`, transformOrigin: "center" }}>
+                  <ProductMediaCard
+                    imageUrl={selectedProduct.image_url || selectedProduct.images?.[0]?.url}
+                    videoUrl={selectedProduct.video_url}
+                    alt={selectedProduct.name}
+                    className="h-[68vh] w-[min(86vw,820px)] rounded-[2rem] bg-muted shadow-2xl ring-1 ring-border/60"
+                  />
+                </div>
+              </div>
+
+              <aside className="overflow-y-auto border-t border-border/60 bg-card p-5 lg:border-l lg:border-t-0 sm:p-6">
+                <div className="mb-5 flex items-center justify-between gap-3">
+                  <p className="text-3xl font-black text-primary tabular-nums">{formatProductPrice(selectedProduct.price)}</p>
+                  <Badge className={selectedProduct.is_available ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}>
+                    {selectedProduct.is_available ? "In Stock" : "Out of Stock"}
+                  </Badge>
+                </div>
+                {selectedProduct.description && (
+                  <div className="mb-6">
+                    <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">Description</h3>
+                    <p className="whitespace-pre-line text-sm leading-7 text-foreground/80">{selectedProduct.description}</p>
+                  </div>
+                )}
+                <Link
+                  to={`/shop/${selectedProduct.shop_slug}/product/${selectedProduct.id}`}
+                  title={`${selectedProduct.name} — ${formatProductPrice(selectedProduct.price)}`}
+                  aria-label={`View ${selectedProduct.name} product page, price ${formatProductPrice(selectedProduct.price)}`}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 font-bold text-primary-foreground shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+                >
+                  View product page · {formatProductPrice(selectedProduct.price)}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <p className="mt-4 text-center text-xs text-muted-foreground">Use + / - keys or the controls to zoom. Pinch and pan are supported on touch screens.</p>
+              </aside>
+            </div>
+          </div>
+        </div>
+      )}
     </PageThemeShell>
   );
 };

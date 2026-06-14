@@ -52,7 +52,6 @@ import { SalesMilestonePopup } from "@/components/SalesMilestonePopup";
 import { StructuredSellingChallenge } from "@/components/StructuredSellingChallenge";
 import { SubscriptionExpiryDialog } from "@/components/SubscriptionExpiryDialog";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ShopAvatar } from "@/components/ShopAvatar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { VendorSetupWizard } from "@/components/VendorSetupWizard";
@@ -96,6 +95,7 @@ type DashboardOrderSummary = {
 };
 
 type UrgentTask = { id: string; label: string; icon: LucideIcon; color: string; action: () => void };
+type DashboardTool = { icon: LucideIcon; label: string; description: string; path?: string; action?: () => void; color: string; textColor: string; group: string };
 
 // ─── Main Dashboard Component ──────────────────────────────────────────────────
 const Dashboard = () => {
@@ -124,7 +124,6 @@ const Dashboard = () => {
   const [hasNoShop, setHasNoShop] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "actions" | "wallet">("overview");
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
-  const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(true);
   const [urgentTasks, setUrgentTasks] = useState<UrgentTask[]>([]);
 
   // Tour state
@@ -565,27 +564,27 @@ const Dashboard = () => {
 
 
 
-  // ─── Primary Quick Actions (always visible) ────────────────────────────────
-  const PrimaryQuickActions = [
-    shopData 
-      ? { icon: Store, label: "My Store", description: "Setup & customize", path: "/my-store", color: "from-primary/20 to-primary/10", textColor: "text-primary" }
-      : { icon: Store, label: "Create Online Shop", description: "Launch your store", path: "/dashboard", color: "from-green-500/20 to-green-500/10", textColor: "text-green-600" },
-    { icon: Package, label: "Products", description: "Manage catalog", path: "/products", color: "from-accent/20 to-accent/10", textColor: "text-accent" },
-    { icon: ShoppingCart, label: "Orders", description: "View & manage", path: "/orders", color: "from-primary/15 to-primary/8", textColor: "text-primary" },
-    { icon: Megaphone, label: "Marketing", description: "Create with AI", path: "/marketing", color: "from-accent/15 to-accent/8", textColor: "text-accent" },
-    { icon: Wallet, label: "Wallet", description: "Earnings & payouts", path: "/dashboard", color: "from-[hsl(42,90%,55%)]/20 to-[hsl(42,90%,55%)]/10", textColor: "text-[hsl(42,80%,35%)]" },
+  // ─── Dashboard tools (shown as a simple linear list; no cron or collapsible UI) ──
+  const PrimaryQuickActions: DashboardTool[] = [
+    shopData
+      ? { icon: Store, label: "My Store", description: "Setup, branding, payment and shop settings", path: "/my-store", color: "from-primary/20 to-primary/10", textColor: "text-primary", group: "Storefront" }
+      : { icon: Store, label: "Create Online Shop", description: "Launch your public storefront", path: "/dashboard", color: "from-green-500/20 to-green-500/10", textColor: "text-green-600", group: "Storefront" },
+    { icon: Package, label: "Products", description: "Add products, set prices and manage inventory", path: "/products", color: "from-accent/20 to-accent/10", textColor: "text-accent", group: "Selling" },
+    { icon: ShoppingCart, label: "Orders", description: "Process orders and update fulfilment", path: "/orders", color: "from-primary/15 to-primary/8", textColor: "text-primary", group: "Selling" },
+    { icon: Users, label: "Customers", description: "View buyer records and relationship history", path: "/customers", color: "from-primary/15 to-primary/8", textColor: "text-primary", group: "Customers" },
+    { icon: Wallet, label: "Wallet & Payouts", description: "Track earnings and request withdrawals", action: () => setIsPayoutDialogOpen(true), color: "from-[hsl(42,90%,55%)]/20 to-[hsl(42,90%,55%)]/10", textColor: "text-[hsl(42,80%,35%)]", group: "Money" },
   ];
 
-  // ─── More Tools (shown in collapsible) ─────────────────────────────────────
-  const QuickActions = [
+  const QuickActions: DashboardTool[] = [
     ...PrimaryQuickActions,
-    { icon: Truck, label: "Delivery", description: "Shipping & logistics", path: "/orders", color: "from-primary/12 to-primary/6", textColor: "text-primary" },
-    { icon: CalendarCheck, label: "Bookings", description: "Appointments", path: "/bookings", color: "from-accent/12 to-accent/6", textColor: "text-accent" },
-    { icon: Sparkles, label: "Ads Assistant", description: "AI ad generator", path: "/ads-assistant", color: "from-primary/20 to-accent/10", textColor: "text-primary" },
-    { icon: BookOpen, label: "Tutorials", description: "Learn & earn points", path: "/courses", color: "from-accent/15 to-accent/8", textColor: "text-accent" },
-    { icon: Users, label: "Customers", description: "Customer records", path: "/customers", color: "from-primary/15 to-primary/8", textColor: "text-primary" },
-    { icon: Crown, label: "Ambassador", description: "Refer & earn", path: "/ambassador", color: "from-[hsl(42,90%,55%)]/20 to-[hsl(42,90%,55%)]/10", textColor: "text-[hsl(42,80%,35%)]" },
-    { icon: Share2, label: "Invite Merchants", description: "Grow community", path: "/merchant-invite", color: "from-primary/20 to-primary/10", textColor: "text-primary" },
+    { icon: Megaphone, label: "Marketing", description: "Create campaigns and growth assets", path: "/marketing", color: "from-accent/15 to-accent/8", textColor: "text-accent", group: "Growth" },
+    { icon: Sparkles, label: "Ads Assistant", description: "Generate ads and captions with AI", path: "/ads-assistant", color: "from-primary/20 to-accent/10", textColor: "text-primary", group: "Growth" },
+    { icon: Truck, label: "Delivery", description: "Manage shipping and logistics from orders", path: "/orders", color: "from-primary/12 to-primary/6", textColor: "text-primary", group: "Operations" },
+    { icon: CalendarCheck, label: "Bookings", description: "Manage appointments and service slots", path: "/bookings", color: "from-accent/12 to-accent/6", textColor: "text-accent", group: "Operations" },
+    { icon: BookOpen, label: "Tutorials", description: "Learn selling skills and earn points", path: "/courses", color: "from-accent/15 to-accent/8", textColor: "text-accent", group: "Learning" },
+    { icon: Crown, label: "Ambassador", description: "Refer sellers and track rewards", path: "/ambassador", color: "from-[hsl(42,90%,55%)]/20 to-[hsl(42,90%,55%)]/10", textColor: "text-[hsl(42,80%,35%)]", group: "Community" },
+    { icon: Share2, label: "Invite Merchants", description: "Invite vendors to join SteerSolo", path: "/merchant-invite", color: "from-primary/20 to-primary/10", textColor: "text-primary", group: "Community" },
+    { icon: Settings, label: "Settings", description: "Update profile, security and preferences", path: "/settings", color: "from-muted to-muted/60", textColor: "text-muted-foreground", group: "Account" },
   ];
 
   if (isLoading) {
@@ -717,9 +716,13 @@ const Dashboard = () => {
                       <Separator className="my-1" />
                       {QuickActions.map((action) => (
                         <button
-                          key={action.path + action.label}
+                          key={`${action.group}-${action.label}`}
                           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-muted transition-colors text-left"
-                          onClick={() => { navigate(action.path); setIsMobileMenuOpen(false); }}
+                          onClick={() => {
+                            if (action.action) action.action();
+                            else if (action.path) navigate(action.path);
+                            setIsMobileMenuOpen(false);
+                          }}
                         >
                           <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${action.color} flex items-center justify-center shrink-0`}>
                             <action.icon className={`w-4 h-4 ${action.textColor}`} />
@@ -756,6 +759,48 @@ const Dashboard = () => {
         
         {/* Merchant Command Center for Entrepreneurs */}
         {rbac.isEntrepreneur(user) && <VendorCommandCenter />}
+
+        {/* All tools: linear access to every important vendor function */}
+        {rbac.isEntrepreneur(user) && (
+          <Card className="overflow-hidden rounded-2xl border-border/50 shadow-sm" data-tour="all-tools">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <CardTitle className="text-base font-extrabold">All tools</CardTitle>
+                  <p className="text-xs text-muted-foreground">Everything important for running your shop, shown in one simple linear list.</p>
+                </div>
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">{QuickActions.length} tools</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border/50">
+                {QuickActions.map((tool) => (
+                  <button
+                    key={`${tool.group}-${tool.label}`}
+                    type="button"
+                    onClick={() => {
+                      if (tool.action) tool.action();
+                      else if (tool.path) navigate(tool.path);
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/40 sm:px-5"
+                  >
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${tool.color}`}>
+                      <tool.icon className={`h-4 w-4 ${tool.textColor}`} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-bold text-foreground">{tool.label}</p>
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{tool.group}</span>
+                      </div>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{tool.description}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Contextual Banner */}
         {getContextualBanner()}

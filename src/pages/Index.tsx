@@ -329,9 +329,9 @@ const HeroTextSlider = () => {
   const [index, setIndex] = useState(0);
   const phrases = [
     {
-      eyebrow: "For solo sellers on WhatsApp · Instagram · TikTok",
-      h1: "Launch a professional store.<br />Show prices clearly.<br /><em style='font-style:normal;color:hsl(var(--accent-bright))'>Keep customers on WhatsApp.</em>",
-      p: "SteerSolo gives you a storefront, product catalog, orders, and Paystack-ready payments while WhatsApp stays your customer relationship channel.",
+      eyebrow: "Trust · clarity · speed for social sellers",
+      h1: "Turn chats into orders.<br />Display prices upfront.<br /><em style='font-style:normal;color:hsl(var(--accent-bright))'>Sell confidently from one link.</em>",
+      p: "SteerSolo turns your WhatsApp, Instagram, and TikTok attention into a professional storefront with clear catalogs, visible prices, secure payments, and orders that still flow back to WhatsApp.",
       cta1: {
         label: "Claim your free store",
         link: "/auth/signup",
@@ -341,8 +341,8 @@ const HeroTextSlider = () => {
     },
     {
       eyebrow: "For Nigerian shoppers",
-      h1: "Find trusted stores.<br />See prices upfront.<br /><em style='font-style:normal;color:hsl(var(--primary))'>Buy without guesswork.</em>",
-      p: "Discover Nigerian stores with visible prices, clear catalogs, and direct paths to order or pay.",
+      h1: "Discover real stores.<br />Compare prices fast.<br /><em style='font-style:normal;color:hsl(var(--primary))'>Buy with fewer doubts.</em>",
+      p: "Browse Nigerian merchants with product details, pricing, availability, and straightforward checkout paths before you ever need to ask a DM question.",
       cta1: { label: "Explore Marketplace", link: "/shops", icon: ShoppingBag },
       cta2: { label: "Sign up for free", link: "/shopper-signup" },
     },
@@ -700,7 +700,16 @@ const Index = () => {
           </div>
 
           {/* ── FEATURED STORES CAROUSEL ── */}
-          <FeaturedStoresHeroCarousel />
+          <div className="w-full lg:flex-1 f2">
+            <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-md">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-accent">Featured stores</p>
+                <p className="text-sm font-semibold text-foreground/90">Start with trusted sellers customers are already viewing.</p>
+              </div>
+              <Link to="/shops" className="hidden rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground transition hover:scale-105 sm:inline-flex">Browse all</Link>
+            </div>
+            <FeaturedStoresHeroCarousel />
+          </div>
         </div>
 
         {/* ── STAT STRIP ── */}
