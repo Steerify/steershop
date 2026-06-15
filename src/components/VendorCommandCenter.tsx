@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Loader2, Store, PackagePlus, Share2, ArrowRight, CheckCircle2,
   Copy, ExternalLink, Activity, Sparkles, ShieldCheck, Lock, Unlock,
-  Clock, Coins, Award, Info, HelpCircle, ChevronRight, ShoppingCart
+  Clock, Coins, Award, Info, HelpCircle, ChevronRight, ShoppingCart, Megaphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -161,11 +161,11 @@ export const VendorCommandCenter = () => {
           </div>
 
           {/* Primary Action Bar */}
-           <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 px-4 py-3 bg-muted/10 border-t border-border/40">
-             <Button size="sm" className="w-full sm:w-auto text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm h-9" asChild>
+            <div className="flex flex-wrap gap-2 px-4 py-3 bg-muted/10 border-t border-border/40">
+             <Button size="sm" className="whitespace-nowrap text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm h-9" asChild>
                <Link to="/products"><PackagePlus className="w-3.5 h-3.5 mr-1.5" />Add Product</Link>
              </Button>
-             <Button size="sm" variant="outline" className="w-full sm:w-auto text-xs font-bold rounded-xl shadow-sm h-9" asChild>
+             <Button size="sm" variant="outline" className="whitespace-nowrap text-xs font-bold rounded-xl shadow-sm h-9" asChild>
                <Link to="/orders"><ShoppingCart className="w-3.5 h-3.5 mr-1.5" />Orders</Link>
              </Button>
              <Button size="sm" variant="outline" className="w-full sm:w-auto text-xs font-bold rounded-xl shadow-sm h-9" onClick={() => setIsBulkUploadOpen(true)}>
