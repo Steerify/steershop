@@ -38,6 +38,7 @@ import {
 import { WishlistButton } from "@/components/WishlistButton";
 import { openWhatsAppContact } from "@/utils/whatsapp";
 import { ProductMediaCard } from "@/components/ProductMediaCard";
+import { Download } from "lucide-react";
 import { getCategoryLabel } from "@/utils/autoCategorize";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -111,6 +112,7 @@ interface Product {
   type: "product" | "service";
   duration_minutes: number | null;
   booking_required: boolean;
+  is_digital?: boolean;
 }
 
 interface CartItem {
@@ -922,9 +924,9 @@ const ShopStorefront = () => {
           {/* Banner — edge-to-edge on mobile per design system, contained on desktop */}
           <div className="relative h-36 sm:h-52 md:h-64 overflow-hidden sm:container sm:mx-auto sm:px-4 sm:mt-2">
             <div className="absolute inset-0 sm:rounded-[2rem] overflow-hidden bg-muted shadow-sm">
-              {shop.banner_url ? (
+              {shop.banner_url || shop.logo_url ? (
                 <img
-                  src={shop.banner_url}
+                  src={shop.banner_url || shop.logo_url}
                   alt={`${shop.shop_name} banner`}
                   className="w-full h-full object-cover opacity-90"
                 />
@@ -1463,6 +1465,8 @@ const ShopStorefront = () => {
                           <div className="absolute inset-0 flex items-center justify-center">
                             {product.type === "service" ? (
                               <Briefcase className="w-8 h-8 text-muted-foreground/30" />
+                            ) : product.is_digital ? (
+                              <Download className="w-8 h-8 text-muted-foreground/30" />
                             ) : (
                               <Package className="w-8 h-8 text-muted-foreground/30" />
                             )}
@@ -1496,6 +1500,16 @@ const ShopStorefront = () => {
                             </div>
                           </div>
                         )}
+
+                      {/* Digital Product Badge */}
+                      {product.is_digital && (
+                        <div className="absolute top-3 right-14 z-10 sm:right-3 sm:group-hover:right-14 transition-all duration-300">
+                          <div className="bg-purple-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
+                            <Download className="w-3 h-3" />
+                            Digital
+                          </div>
+                        </div>
+                      )}
 
                       {/* Quick Add Overlay */}
                       <div className="absolute inset-x-3 bottom-3 z-20 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 translate-y-1 sm:group-hover:translate-y-0">
@@ -1564,6 +1578,33 @@ const ShopStorefront = () => {
                               ₦{Number(product.compare_price).toLocaleString()}
                             </span>
                           )}
+                      </div>
+                      <div className="flex justify-between items-center mt-2 pt-2 border-t border-border/50">
+                        <div className="flex flex-col">
+                          {product.is_digital ? (
+                            <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1">
+                              <Download className="w-3 h-3" /> Instant Access
+                            </span>
+                          ) : (
+                            <span
+                              className={`text-xs font-semibold ${
+                                product.stock_quantity > 0
+                                  ? "text-emerald-600 dark:text-emerald-400"
+                                  : "text-destructive"
+                              }`}
+                            >
+                              {product.stock_quantity > 0
+                                ? "In Stock"
+                                : "Out of Stock"}
+                            </span>
+                          )}
+                          {!product.is_digital && (
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                              {product.stock_quantity}{" "}
+                              {product.stock_unit || "Units"}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

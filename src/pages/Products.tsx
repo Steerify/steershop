@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle, Sparkles, Check, Copy, Megaphone, TrendingUp, Video, AlertTriangle, X } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Loader2, Package, Clock, Briefcase, CalendarCheck, AlertCircle, Sparkles, Check, Copy, Megaphone, TrendingUp, Video, AlertTriangle, X, Download } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { ImageUpload } from "@/components/ImageUpload";
 import { VideoUpload } from "@/components/VideoUpload";
+import { DigitalFileUpload } from "@/components/DigitalFileUpload";
 import { z } from "zod";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Switch } from "@/components/ui/switch";
@@ -57,7 +58,7 @@ const productSchema = z.object({
   description: z.string().trim().max(1000, "Description must be less than 1000 characters").optional(),
   price: z.number().min(0.01, "Price must be greater than 0").max(10000000, "Price is too high"),
   inventory: z.number().int().min(0, "Stock/slots cannot be negative"),
-  type: z.enum(["product", "service"]),
+  type: z.enum(["product", "service", "digital"]),
   duration_minutes: z.number().int().min(0).optional(),
   booking_required: z.boolean().optional(),
   is_available: z.boolean(),
@@ -117,13 +118,15 @@ const Products = () => {
     comparePrice: "",
     inventory: "",
     is_available: true,
-    type: "product" as "product" | "service",
+    type: "product" as "product" | "service" | "digital",
     duration_minutes: "",
     booking_required: false,
     category: "general",
     nafdac_number: "",
     stockUnit: "units",
     customStockUnit: "",
+    digital_file_url: "",
+    digital_delivery_text: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -212,6 +215,8 @@ const Products = () => {
       nafdac_number: "",
       stockUnit: "units",
       customStockUnit: "",
+      digital_file_url: "",
+      digital_delivery_text: "",
     });
     setImageUrl("");
     setVideoUrl("");
@@ -261,6 +266,10 @@ const Products = () => {
       setEditingProduct(product);
       const normalizedStockUnit = (product.stockUnit || "units").toLowerCase();
       const isPresetStockUnit = PRODUCT_STOCK_UNITS.includes(normalizedStockUnit as typeof PRODUCT_STOCK_UNITS[number]);
+      // Determine type including digital
+      let determinedType = product.type || "product";
+      if (product.is_digital) determinedType = "digital";
+      
       setFormData({
         name: product.name,
         description: product.description || "",
@@ -268,13 +277,15 @@ const Products = () => {
         comparePrice: product.comparePrice ? product.comparePrice.toString() : "",
         inventory: product.inventory.toString(),
         is_available: product.is_available ?? true,
-        type: product.type || "product",
+        type: determinedType as "product" | "service" | "digital",
         duration_minutes: product.duration_minutes?.toString() || "",
         booking_required: product.booking_required ?? false,
         category: (product as any).category || "general",
         nafdac_number: (product as any).nafdac_number || "",
         stockUnit: isPresetStockUnit ? normalizedStockUnit : "other",
         customStockUnit: isPresetStockUnit ? "" : normalizedStockUnit,
+        digital_file_url: product.digital_file_url || "",
+        digital_delivery_text: product.digital_delivery_text || "",
       });
       setImageUrl(product.images?.[0]?.url || "");
       setVideoUrl(product.video_url || "");
@@ -360,10 +371,19 @@ const Products = () => {
       return;
     }
 
-    if (formData.type !== "service" && !normalizedStockUnit) {
+    if (formData.type !== "service" && formData.type !== "digital" && !normalizedStockUnit) {
       toast({
         title: "Missing stock unit",
         description: "Add a unit like pieces, pairs, cartons, or meters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.type === "digital" && !formData.digital_file_url) {
+      toast({
+        title: "Missing digital file",
+        description: "Please upload the digital product file.",
         variant: "destructive",
       });
       return;
@@ -395,6 +415,7 @@ const Products = () => {
     try {
       const images = imageUrl ? [{ url: imageUrl, alt: formData.name, position: 1 }] : [];
 
+      const isDigital = formData.type === "digital";
       const productData = {
         shopId: shop.id,
         categoryId: "default-category",
@@ -405,14 +426,18 @@ const Products = () => {
         comparePrice: parsedComparePrice,
         inventory: parsedInventory,
         images: images,
-        type: formData.type,
+        // Backend typically uses 'product' for both physical and digital if using `is_digital` flag
+        type: isDigital ? "product" : formData.type,
         duration_minutes: parsedDuration,
         booking_required: formData.booking_required,
         is_available: formData.is_available,
         video_url: videoUrl || undefined,
         category: formData.category,
         nafdac_number: formData.nafdac_number || undefined,
-        stockUnit: formData.type === "service" ? "slots" : normalizedStockUnit,
+        stockUnit: formData.type === "service" ? "slots" : (isDigital ? "downloads" : normalizedStockUnit),
+        is_digital: isDigital,
+        digital_file_url: isDigital ? formData.digital_file_url : null,
+        digital_delivery_text: isDigital ? formData.digital_delivery_text : null,
       };
 
       if (editingProduct) {
@@ -843,8 +868,8 @@ const Products = () => {
             )}
 
             {/* Type Toggle */}
-            <div className="flex items-center justify-center gap-4 p-4 bg-muted/50 rounded-lg" data-tour="item-type-toggle">
-              <Label className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg transition-all ${formData.type === 'product' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
+            <div className="flex items-center justify-center gap-2 sm:gap-4 p-4 bg-muted/50 rounded-lg" data-tour="item-type-toggle">
+              <Label className={`flex items-center gap-2 cursor-pointer px-3 sm:px-4 py-2 rounded-lg transition-all text-xs sm:text-sm ${formData.type === 'product' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
                 <input 
                   type="radio" 
                   name="type" 
@@ -853,10 +878,22 @@ const Products = () => {
                   onChange={() => setFormData({ ...formData, type: 'product', booking_required: false })}
                   className="sr-only"
                 />
-                <Package className="w-4 h-4" />
-                Product
+                <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                Physical
               </Label>
-              <Label className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg transition-all ${formData.type === 'service' ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'}`}>
+              <Label className={`flex items-center gap-2 cursor-pointer px-3 sm:px-4 py-2 rounded-lg transition-all text-xs sm:text-sm ${formData.type === 'digital' ? 'bg-purple-600 text-white dark:bg-purple-500' : 'hover:bg-muted'}`}>
+                <input 
+                  type="radio" 
+                  name="type" 
+                  value="digital" 
+                  checked={formData.type === 'digital'}
+                  onChange={() => setFormData({ ...formData, type: 'digital', booking_required: false })}
+                  className="sr-only"
+                />
+                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                Digital
+              </Label>
+              <Label className={`flex items-center gap-2 cursor-pointer px-3 sm:px-4 py-2 rounded-lg transition-all text-xs sm:text-sm ${formData.type === 'service' ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'}`}>
                 <input 
                   type="radio" 
                   name="type" 
@@ -865,7 +902,7 @@ const Products = () => {
                   onChange={() => setFormData({ ...formData, type: 'service' })}
                   className="sr-only"
                 />
-                <Briefcase className="w-4 h-4" />
+                <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Service
               </Label>
             </div>
@@ -965,7 +1002,7 @@ const Products = () => {
                   />
                   {errors.inventory && <p className="text-sm text-destructive">{errors.inventory}</p>}
                 </div>
-                {formData.type !== 'service' && (
+                {formData.type !== 'service' && formData.type !== 'digital' && (
                   <div className="space-y-2">
                     <Label htmlFor="stock-unit">Unit *</Label>
                     <select
@@ -984,7 +1021,7 @@ const Products = () => {
                   </div>
                 )}
               </div>
-              {formData.type !== 'service' && formData.stockUnit === 'other' && (
+              {formData.type !== 'service' && formData.type !== 'digital' && formData.stockUnit === 'other' && (
                 <div className="space-y-2">
                   <Label htmlFor="custom-stock-unit">Custom unit *</Label>
                   <Input
@@ -995,6 +1032,30 @@ const Products = () => {
                   />
                 </div>
               )}
+
+            {/* Digital-specific fields */}
+            {formData.type === 'digital' && (
+              <div className="space-y-4 p-4 bg-purple-500/5 rounded-lg border border-purple-500/20">
+                <div className="space-y-2">
+                  <Label>Digital File (Max 25MB) *</Label>
+                  <DigitalFileUpload
+                    value={formData.digital_file_url}
+                    onChange={(url) => setFormData({ ...formData, digital_file_url: url })}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">This file will be securely delivered to buyers after successful payment.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="digital_delivery_text">Delivery Instructions / Access Key (Optional)</Label>
+                  <Textarea
+                    id="digital_delivery_text"
+                    value={formData.digital_delivery_text}
+                    onChange={(e) => setFormData({ ...formData, digital_delivery_text: e.target.value })}
+                    placeholder="e.g. Thanks for your purchase! Use this password to unzip the file: MySecret"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Service-specific fields */}
             {formData.type === 'service' && (

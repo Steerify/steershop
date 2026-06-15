@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck, ChevronLeft, ChevronRight, Share2, Shield, Truck, Clock, Expand } from "lucide-react";
+import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck, ChevronLeft, ChevronRight, Share2, Shield, Truck, Clock, Expand, Download } from "lucide-react";
 import { WishlistButton } from "@/components/WishlistButton";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -52,6 +52,7 @@ interface StoredCartProduct {
   type: 'product' | 'service';
   duration_minutes: number | null;
   booking_required: boolean;
+  is_digital?: boolean;
 }
 
 interface StoredCartItem {
@@ -96,6 +97,7 @@ const normalizeProductForCart = (product: Product): StoredCartProduct => ({
   type: product.type || 'product',
   duration_minutes: product.duration_minutes ?? null,
   booking_required: product.booking_required ?? false,
+  is_digital: product.is_digital ?? false,
 });
 
 const clampCartQuantity = (quantity: unknown, stockQuantity: number) => {
@@ -502,7 +504,13 @@ const ProductDetails = () => {
             ) : (
               <div className="aspect-square rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center relative overflow-hidden">
                 <AdirePattern variant="geometric" className="text-primary" opacity={0.2} />
-                <Package className="w-24 h-24 text-muted-foreground relative z-10" />
+                {product.is_digital ? (
+                  <Download className="w-24 h-24 text-muted-foreground relative z-10" />
+                ) : product.type === "service" ? (
+                  <Briefcase className="w-24 h-24 text-muted-foreground relative z-10" />
+                ) : (
+                  <Package className="w-24 h-24 text-muted-foreground relative z-10" />
+                )}
               </div>
             )}
           </div>
@@ -522,7 +530,14 @@ const ProductDetails = () => {
 
             {/* Product Name & Rating */}
             <div>
-              <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 leading-tight break-words">{product.name}</h1>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold leading-tight break-words">{product.name}</h1>
+                {product.is_digital && (
+                  <Badge className="w-fit bg-purple-600/90 text-white border-none py-1.5 px-3">
+                    <Download className="w-3 h-3 mr-1.5" /> Digital Product
+                  </Badge>
+                )}
+              </div>
               <ProductRating
                 rating={product.averageRating || 0}
                 totalReviews={product.totalReviews || 0}
@@ -557,12 +572,18 @@ const ProductDetails = () => {
                   -{Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}% OFF
                 </Badge>
               )}
-              <Badge
-                variant={product.inventory > 0 ? "default" : "destructive"}
-                className={product.inventory > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
-              >
-                {product.inventory > 0 ? `${product.inventory} ${product.stockUnit || "units"} in stock` : "Out of stock"}
-              </Badge>
+              {product.is_digital ? (
+                <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                  <Download className="w-3 h-3 mr-1" /> Instant Access
+                </Badge>
+              ) : (
+                <Badge
+                  variant={product.inventory > 0 ? "default" : "destructive"}
+                  className={product.inventory > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
+                >
+                  {product.inventory > 0 ? `${product.inventory} ${product.stockUnit || "units"} in stock` : "Out of stock"}
+                </Badge>
+              )}
             </div>
 
             {/* Description */}
@@ -650,10 +671,17 @@ const ProductDetails = () => {
                 <BadgeCheck className="w-4 h-4 text-accent flex-shrink-0" />
                 <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Verified Seller</span>
               </div>
-              <div className="flex items-center gap-2 min-w-0">
-                <Truck className="w-4 h-4 text-primary flex-shrink-0" />
-                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Fast Delivery</span>
-              </div>
+              {product.is_digital ? (
+                <div className="flex items-center gap-2 min-w-0">
+                  <Download className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Instant Download</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 min-w-0">
+                  <Truck className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Fast Delivery</span>
+                </div>
+              )}
               <div className="flex items-center gap-2 min-w-0">
                 <Star className="w-4 h-4 text-accent flex-shrink-0" />
                 <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Top Rated</span>
@@ -787,7 +815,13 @@ const ProductDetails = () => {
                       </div>
                     ) : (
                       <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-                        <Package className="w-12 h-12 text-muted-foreground" />
+                        {relProduct.is_digital ? (
+                          <Download className="w-12 h-12 text-muted-foreground" />
+                        ) : relProduct.type === 'service' ? (
+                          <Briefcase className="w-12 h-12 text-muted-foreground" />
+                        ) : (
+                          <Package className="w-12 h-12 text-muted-foreground" />
+                        )}
                       </div>
                     )}
                     <CardContent className="p-4">

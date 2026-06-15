@@ -341,7 +341,7 @@ const HeroTextSlider = () => {
     },
     {
       eyebrow: "For Nigerian shoppers",
-      h1: "Find trusted stores.<br />See prices upfront.<br /><em style='font-style:normal;color:hsl(var(--primary))'>Buy without guesswork.</em>",
+      h1: "Find trusted stores.<br />See prices upfront.<br /><em style='font-style:normal;color:hsl(var(--accent-bright))'>Buy without guesswork.</em>",
       p: "Discover Nigerian stores with visible prices, clear catalogs, and direct paths to order or pay.",
       cta1: { label: "Explore Marketplace", link: "/shops", icon: ShoppingBag },
       cta2: { label: "Sign up for free", link: "/shopper-signup" },

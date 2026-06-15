@@ -362,10 +362,9 @@ const CheckoutDialog = ({
     [shop.shop_name, shop.whatsapp_number],
   );
 
-  const effectiveTotal = Math.max(
-    0,
-    totalAmount + (selectedRate?.price || 0) - couponDiscount,
-  );
+  const subtotalAfterDiscount = Math.max(0, totalAmount - couponDiscount);
+  const taxAmount = subtotalAfterDiscount * 0.075; // 7.5% VAT
+  const effectiveTotal = subtotalAfterDiscount + taxAmount + (selectedRate?.price || 0);
   const paystackFee = calculatePaystackFee(effectiveTotal);
   const totalWithFee = effectiveTotal + paystackFee;
 
@@ -1138,6 +1137,10 @@ const CheckoutDialog = ({
                 <span className="text-sm text-muted-foreground">Subtotal:</span>
                 <span className="text-sm">₦{totalAmount.toLocaleString()}</span>
               </div>
+              <div className="flex justify-between items-center text-muted-foreground">
+                <span className="text-sm">Tax (7.5% VAT):</span>
+                <span className="text-sm">₦{Math.round(taxAmount).toLocaleString()}</span>
+              </div>
               {selectedRate && (
                 <div className="flex justify-between items-center text-muted-foreground">
                   <span className="text-sm">
@@ -1234,13 +1237,13 @@ const CheckoutDialog = ({
                 </div>
               )}
 
-              {/* Step 2: Delivery Details */}
+              {/* Step 2: Delivery / User Details */}
               <div className="bg-card/50 backdrop-blur border border-primary/10 rounded-2xl p-5 shadow-sm space-y-4">
                 <h3 className="font-bold mb-4 text-lg flex items-center gap-2 text-primary">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">
                     2
                   </span>
-                  Delivery Details
+                  {isCartOnlyDigital ? "Your Details" : "Delivery Details"}
                 </h3>
                 <div className="space-y-1.5 sm:space-y-2">
                   <Label htmlFor="customer_name" className="text-sm">
@@ -1304,68 +1307,72 @@ const CheckoutDialog = ({
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <Label htmlFor="delivery_city" className="text-sm">
-                      City *
-                    </Label>
-                    <Input
-                      id="delivery_city"
-                      value={formData.delivery_city}
-                      onChange={e =>
-                        handleFormChange("delivery_city", e.target.value)
-                      }
-                      placeholder="E.g. Ikeja"
-                      className={`min-h-[44px] ${errors.delivery_city ? "border-destructive" : ""}`}
-                    />
-                    {errors.delivery_city && (
-                      <p className="text-xs sm:text-sm text-destructive">
-                        {errors.delivery_city}
-                      </p>
-                    )}
-                  </div>
+                {!isCartOnlyDigital && (
+                  <>
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                      <div className="space-y-1.5 sm:space-y-2">
+                        <Label htmlFor="delivery_city" className="text-sm">
+                          City *
+                        </Label>
+                        <Input
+                          id="delivery_city"
+                          value={formData.delivery_city}
+                          onChange={e =>
+                            handleFormChange("delivery_city", e.target.value)
+                          }
+                          placeholder="E.g. Ikeja"
+                          className={`min-h-[44px] ${errors.delivery_city ? "border-destructive" : ""}`}
+                        />
+                        {errors.delivery_city && (
+                          <p className="text-xs sm:text-sm text-destructive">
+                            {errors.delivery_city}
+                          </p>
+                        )}
+                      </div>
 
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <Label htmlFor="delivery_state" className="text-sm">
-                      State *
-                    </Label>
-                    <Input
-                      id="delivery_state"
-                      value={formData.delivery_state}
-                      onChange={e =>
-                        handleFormChange("delivery_state", e.target.value)
-                      }
-                      placeholder="E.g. Lagos"
-                      className={`min-h-[44px] ${errors.delivery_state ? "border-destructive" : ""}`}
-                    />
-                    {errors.delivery_state && (
-                      <p className="text-xs sm:text-sm text-destructive">
-                        {errors.delivery_state}
-                      </p>
-                    )}
-                  </div>
-                </div>
+                      <div className="space-y-1.5 sm:space-y-2">
+                        <Label htmlFor="delivery_state" className="text-sm">
+                          State *
+                        </Label>
+                        <Input
+                          id="delivery_state"
+                          value={formData.delivery_state}
+                          onChange={e =>
+                            handleFormChange("delivery_state", e.target.value)
+                          }
+                          placeholder="E.g. Lagos"
+                          className={`min-h-[44px] ${errors.delivery_state ? "border-destructive" : ""}`}
+                        />
+                        {errors.delivery_state && (
+                          <p className="text-xs sm:text-sm text-destructive">
+                            {errors.delivery_state}
+                          </p>
+                        )}
+                      </div>
+                    </div>
 
-                <div className="space-y-1.5 sm:space-y-2">
-                  <Label htmlFor="delivery_address" className="text-sm">
-                    Delivery Address *
-                  </Label>
-                  <Textarea
-                    id="delivery_address"
-                    value={formData.delivery_address}
-                    onChange={e =>
-                      handleFormChange("delivery_address", e.target.value)
-                    }
-                    placeholder="Enter your full street address including landmarks"
-                    rows={3}
-                    className={`min-h-[80px] ${errors.delivery_address ? "border-destructive" : ""}`}
-                  />
-                  {errors.delivery_address && (
-                    <p className="text-xs sm:text-sm text-destructive">
-                      {errors.delivery_address}
-                    </p>
-                  )}
-                </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label htmlFor="delivery_address" className="text-sm">
+                        Delivery Address *
+                      </Label>
+                      <Textarea
+                        id="delivery_address"
+                        value={formData.delivery_address}
+                        onChange={e =>
+                          handleFormChange("delivery_address", e.target.value)
+                        }
+                        placeholder="Enter your full street address including landmarks"
+                        rows={3}
+                        className={`min-h-[80px] ${errors.delivery_address ? "border-destructive" : ""}`}
+                      />
+                      {errors.delivery_address && (
+                        <p className="text-xs sm:text-sm text-destructive">
+                          {errors.delivery_address}
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
 
               {shopUsesOwnLogistics && !isCartOnlyDigital && (
