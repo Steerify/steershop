@@ -57,6 +57,7 @@ import { ShopAvatar } from "@/components/ShopAvatar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { VendorSetupWizard } from "@/components/VendorSetupWizard";
 import { VendorCommandCenter } from "@/components/VendorCommandCenter";
+import { AdirePattern } from "@/components/patterns/AdirePattern";
 
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -407,7 +408,10 @@ const Dashboard = () => {
     if (subscriptionStatus === 'expired') {
       return (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-destructive to-[hsl(0,70%,38%)] p-5 shadow-lg min-h-[110px] flex items-center">
+          <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.12] pointer-events-none" />
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="absolute -bottom-6 -left-4 w-20 h-20 rounded-full bg-white/5" />
+          <div className="absolute top-1/2 right-1/3 w-10 h-10 rounded-full bg-white/5" />
           <div className="relative z-10 flex items-center justify-between gap-3 w-full">
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -427,8 +431,10 @@ const Dashboard = () => {
     if (subscriptionStatus === 'trial') {
       return (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(215,65%,18%)] via-primary to-[hsl(145,58%,30%)] p-5 shadow-lg min-h-[110px] flex items-center">
+          <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.12] pointer-events-none" />
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
           <div className="absolute -bottom-6 -left-2 w-16 h-16 rounded-full bg-white/5" />
+          <div className="absolute top-2 left-1/2 w-8 h-8 rounded-full bg-white/5" />
           <div className="relative z-10 flex items-center justify-between gap-3 w-full">
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -448,7 +454,9 @@ const Dashboard = () => {
     if (shopData && productsCount === 0) {
       return (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-[hsl(215,65%,38%)] p-5 shadow-lg min-h-[110px] flex items-center">
+          <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.12] pointer-events-none" />
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="absolute -bottom-5 -left-3 w-16 h-16 rounded-full bg-white/5" />
           <div className="relative z-10 flex items-center justify-between gap-3 w-full">
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -468,8 +476,10 @@ const Dashboard = () => {
     if (shopData && totalSales === 0) {
       return (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-accent p-5 shadow-lg min-h-[110px] flex items-center">
+          <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.12] pointer-events-none" />
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
           <div className="absolute -bottom-4 -left-2 w-16 h-16 rounded-full bg-white/5" />
+          <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full bg-white/5" />
           <div className="relative z-10 w-full">
             <div className="flex items-center gap-2 mb-1">
               <Share2 className="w-4 h-4 text-white/80" />
@@ -502,8 +512,10 @@ const Dashboard = () => {
     if (shopData && (productsCount >= 5 || hasLowTraffic)) {
       return (
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-purple-900 to-indigo-900 border border-indigo-500/30 p-6 shadow-xl min-h-[120px] flex items-center group transition-all duration-300 hover:shadow-indigo-500/10">
+          <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.1] pointer-events-none" />
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
           <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-4 left-1/3 w-10 h-10 rounded-full bg-indigo-400/5" />
           
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
             <div className="space-y-1.5 max-w-2xl">
@@ -541,7 +553,10 @@ const Dashboard = () => {
     // Active & selling — join community banner
     return (
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#075E54] to-[hsl(145,65%,30%)] p-5 shadow-lg min-h-[110px] flex items-center">
+        <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.12] pointer-events-none" />
         <div className="absolute -top-5 -right-5 w-28 h-28 rounded-full bg-white/10" />
+        <div className="absolute -bottom-5 -left-4 w-20 h-20 rounded-full bg-white/5" />
+        <div className="absolute top-2 right-1/3 w-8 h-8 rounded-full bg-white/5" />
         <div className="relative z-10 flex items-center justify-between gap-3 w-full">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -620,7 +635,12 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/3">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/3 relative overflow-hidden">
+      {/* Dotted background — same as login page */}
+      <AdirePattern variant="dots" className="fixed inset-0 opacity-[0.045] pointer-events-none z-0" />
+      {/* Corner blur orbs */}
+      <div className="fixed top-0 right-0 w-80 h-80 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl pointer-events-none z-0" />
+      <div className="fixed bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-accent/10 to-transparent rounded-full blur-3xl pointer-events-none z-0" />
       <FirstVisitIntro
         storageKey="merchant-dashboard"
         title="Welcome to your dashboard"
