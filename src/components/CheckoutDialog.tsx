@@ -364,7 +364,8 @@ const CheckoutDialog = ({
 
   const subtotalAfterDiscount = Math.max(0, totalAmount - couponDiscount);
   const taxAmount = subtotalAfterDiscount * 0.075; // 7.5% VAT
-  const effectiveTotal = subtotalAfterDiscount + taxAmount + (selectedRate?.price || 0);
+  const effectiveTotal =
+    subtotalAfterDiscount + taxAmount + (selectedRate?.price || 0);
   const paystackFee = calculatePaystackFee(effectiveTotal);
   const totalWithFee = effectiveTotal + paystackFee;
 
@@ -1139,7 +1140,9 @@ const CheckoutDialog = ({
               </div>
               <div className="flex justify-between items-center text-muted-foreground">
                 <span className="text-sm">Tax (7.5% VAT):</span>
-                <span className="text-sm">₦{Math.round(taxAmount).toLocaleString()}</span>
+                <span className="text-sm">
+                  ₦{Math.round(taxAmount).toLocaleString()}
+                </span>
               </div>
               {selectedRate && (
                 <div className="flex justify-between items-center text-muted-foreground">
@@ -1396,17 +1399,30 @@ const CheckoutDialog = ({
 
               {/* Shipping Rates Selection */}
               {(shippingRates.length > 0 || isFetchingRates) && (
-                <div className="space-y-2 sm:space-y-3 pt-2">
-                  <Label className="text-sm flex items-center justify-between">
-                    <span>Delivery Method</span>
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold text-foreground">
+                      <div className="flex items-center gap-2">
+                        <Truck className="w-4 h-4 text-primary" />
+                        Choose Delivery Method
+                      </div>
+                    </Label>
                     {isFetchingRates && (
-                      <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Finding best rates...
+                      </div>
                     )}
-                  </Label>
+                  </div>
 
                   {isFetchingRates ? (
-                    <div className="p-4 border rounded-lg text-sm text-muted-foreground flex items-center justify-center bg-muted/30">
-                      Calculating real-time rates...
+                    <div className="bg-muted/50 border border-border rounded-xl p-6 flex items-center justify-center">
+                      <div className="text-center space-y-2">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+                        <p className="text-sm text-muted-foreground">
+                          Calculating real-time delivery rates...
+                        </p>
+                      </div>
                     </div>
                   ) : (
                     <RadioGroup
@@ -1415,43 +1431,84 @@ const CheckoutDialog = ({
                         const rate = shippingRates.find(r => r.rate_id === val);
                         if (rate) setSelectedRate(rate);
                       }}
-                      className="space-y-2"
+                      className="space-y-3"
                     >
                       {shippingRates.map(rate => (
                         <div
                           key={rate.rate_id}
-                          className={`flex items-start justify-between p-3 border rounded-lg cursor-pointer transition-colors ${selectedRate?.rate_id === rate.rate_id ? "border-primary bg-primary/5" : "hover:bg-muted"}`}
+                          className={`relative flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                            selectedRate?.rate_id === rate.rate_id
+                              ? "border-primary bg-gradient-to-r from-primary/10 to-accent/5 shadow-md"
+                              : "border-border hover:border-primary/50 hover:bg-muted/30"
+                          }`}
                           onClick={() => setSelectedRate(rate)}
                         >
-                          <div className="flex items-center gap-3">
-                            <RadioGroupItem
-                              value={rate.rate_id}
-                              id={rate.rate_id}
-                            />
-                            <div>
+                          <div className="flex items-center gap-4 flex-1">
+                            <div className="flex-shrink-0">
+                              <RadioGroupItem
+                                value={rate.rate_id}
+                                id={rate.rate_id}
+                                className="text-primary"
+                              />
+                            </div>
+                            <div className="flex-1">
                               <Label
                                 htmlFor={rate.rate_id}
-                                className="font-medium cursor-pointer flex items-center gap-2"
+                                className="font-semibold cursor-pointer flex items-center gap-3"
                               >
                                 {rate.carrier_logo ? (
-                                  <img
-                                    src={rate.carrier_logo}
-                                    alt={rate.carrier}
-                                    className="h-4 object-contain"
-                                  />
+                                  <div className="w-8 h-8 bg-white rounded-lg border border-border flex items-center justify-center overflow-hidden">
+                                    <img
+                                      src={rate.carrier_logo}
+                                      alt={rate.carrier}
+                                      className="h-5 w-auto object-contain"
+                                      onError={e => {
+                                        (
+                                          e.target as HTMLImageElement
+                                        ).style.display = "none";
+                                        (
+                                          e.target as HTMLImageElement
+                                        ).parentElement
+                                          ?.querySelector(".fallback-icon")
+                                          ?.classList.remove("hidden");
+                                      }}
+                                    />
+                                    <Truck className="w-4 h-4 text-muted-foreground fallback-icon hidden" />
+                                  </div>
                                 ) : (
-                                  <Truck className="w-4 h-4" />
+                                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                                    <Truck className="w-4 h-4 text-primary" />
+                                  </div>
                                 )}
-                                {rate.carrier}
+                                <div>
+                                  <div className="text-sm font-semibold text-foreground">
+                                    {rate.carrier}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                    <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
+                                    {rate.estimated_days} day
+                                    {rate.estimated_days > 1 ? "s" : ""}{" "}
+                                    delivery · {rate.service_type || "Standard"}
+                                  </div>
+                                </div>
                               </Label>
-                              <span className="text-xs text-muted-foreground block mt-0.5">
-                                Estimated: {rate.estimated_days} days
-                              </span>
                             </div>
                           </div>
-                          <div className="font-semibold">
-                            ₦{rate.price.toLocaleString()}
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-primary">
+                              ₦{rate.price.toLocaleString()}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {rate.provider === "terminal"
+                                ? "SteerSolo Logistics"
+                                : "Partner Carrier"}
+                            </div>
                           </div>
+                          {selectedRate?.rate_id === rate.rate_id && (
+                            <div className="absolute top-2 right-2">
+                              <CheckCircle className="w-5 h-5 text-primary" />
+                            </div>
+                          )}
                         </div>
                       ))}
                     </RadioGroup>

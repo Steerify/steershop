@@ -2,40 +2,53 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-terminal-signature, x-terminal-timestamp',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-terminal-signature, x-terminal-timestamp",
 };
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const TERMINAL_WEBHOOK_SECRET = Deno.env.get('TERMINAL_WEBHOOK_SECRET');
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const TERMINAL_WEBHOOK_SECRET = Deno.env.get("TERMINAL_WEBHOOK_SECRET");
 
 // Status mapping from Terminal Africa to our statuses
 const STATUS_MAP: Record<string, string> = {
-  'pending': 'pending',
-  'confirmed': 'confirmed',
-  'picked-up': 'picked_up',
-  'picked_up': 'picked_up',
-  'in-transit': 'in_transit',
-  'in_transit': 'in_transit',
-  'out-for-delivery': 'out_for_delivery',
-  'out_for_delivery': 'out_for_delivery',
-  'delivered': 'delivered',
-  'cancelled': 'cancelled',
-  'failed': 'failed',
-  'return': 'returned',
+  pending: "pending",
+  confirmed: "confirmed",
+  "picked-up": "picked_up",
+  picked_up: "picked_up",
+  "in-transit": "in_transit",
+  in_transit: "in_transit",
+  "out-for-delivery": "out_for_delivery",
+  out_for_delivery: "out_for_delivery",
+  delivered: "delivered",
+  cancelled: "cancelled",
+  failed: "failed",
+  return: "returned",
 };
 
 // Key statuses that should trigger customer/vendor notifications
-const NOTIFY_STATUSES = ['picked_up', 'out_for_delivery', 'delivered', 'failed', 'cancelled'];
+const NOTIFY_STATUSES = [
+  "picked_up",
+  "out_for_delivery",
+  "delivered",
+  "failed",
+  "cancelled",
+];
 
 /**
  * Verify Terminal Africa webhook signature
  * Terminal sends: x-terminal-signature = HMAC-SHA256(timestamp + "." + rawBody, secret)
  */
-function verifyTerminalSignature(timestamp: string, signature: string, rawBody: string): boolean {
+async function verifyTerminalSignature(
+  timestamp: string,
+  signature: string,
+  rawBody: string,
+): Promise<boolean> {
   if (!TERMINAL_WEBHOOK_SECRET) {
-    console.warn('TERMINAL_WEBHOOK_SECRET not configured - skipping signature verification');
+    console.warn(
+      "TERMINAL_WEBHOOK_SECRET not configured - skipping signature verification",
+    );
     return true; // Allow in development if no secret configured
   }
 
@@ -45,50 +58,57 @@ function verifyTerminalSignature(timestamp: string, signature: string, rawBody: 
     const messageData = encoder.encode(`${timestamp}.${rawBody}`);
 
     // Use Web Crypto API for HMAC
-    const cryptoKey = crypto.subtle.importKey(
-      'raw',
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
       keyData,
-      { name: 'HMAC', hash: 'SHA-256' },
+      { name: "HMAC", hash: "SHA-256" },
       false,
-      ['sign']
+      ["sign"],
     );
 
-    const signatureBuffer = crypto.subtle.sign('HMAC', await cryptoKey, messageData);
-    
+    const signatureBuffer = await crypto.subtle.sign(
+      "HMAC",
+      cryptoKey,
+      messageData,
+    );
+
     // Convert to hex string
     const signatureArray = new Uint8Array(signatureBuffer);
     const expectedSignature = Array.from(signatureArray)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
 
     return signature === expectedSignature;
   } catch (error) {
-    console.error('Signature verification error:', error);
+    console.error("Signature verification error:", error);
     return false;
   }
 }
 
 serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const rawBody = await req.text();
-    const signature = req.headers.get('x-terminal-signature') || '';
-    const timestamp = req.headers.get('x-terminal-timestamp') || '';
+    const signature = req.headers.get("x-terminal-signature") || "";
+    const timestamp = req.headers.get("x-terminal-timestamp") || "";
 
     // Verify Terminal signature
-    if (signature && !verifyTerminalSignature(timestamp, signature, rawBody)) {
-      console.error('Invalid Terminal webhook signature');
-      return new Response(
-        JSON.stringify({ error: 'Invalid signature' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (
+      signature &&
+      !(await verifyTerminalSignature(timestamp, signature, rawBody))
+    ) {
+      console.error("Invalid Terminal webhook signature");
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const body = JSON.parse(rawBody);
-    console.log('Webhook received:', JSON.stringify(body));
+    console.log("Webhook received:", JSON.stringify(body));
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -98,14 +118,14 @@ serve(async (req: Request) => {
 
     // Find the delivery order
     let deliveryOrder = null;
-    
+
     // Try by provider_shipment_id first (most reliable for Terminal)
     if (data.shipment_id || data.id) {
       const shipmentId = data.shipment_id || data.id;
       const { data: order } = await supabase
-        .from('delivery_orders')
-        .select('*')
-        .eq('provider_shipment_id', shipmentId)
+        .from("delivery_orders")
+        .select("*")
+        .eq("provider_shipment_id", shipmentId)
         .maybeSingle();
       deliveryOrder = order;
     }
@@ -113,9 +133,9 @@ serve(async (req: Request) => {
     // Try by order_id in metadata
     if (!deliveryOrder && data.metadata?.order_id) {
       const { data: order } = await supabase
-        .from('delivery_orders')
-        .select('*')
-        .eq('order_id', data.metadata.order_id)
+        .from("delivery_orders")
+        .select("*")
+        .eq("order_id", data.metadata.order_id)
         .maybeSingle();
       deliveryOrder = order;
     }
@@ -123,35 +143,35 @@ serve(async (req: Request) => {
     // Try by provider_tracking_code
     if (!deliveryOrder && data.tracking_number) {
       const { data: order } = await supabase
-        .from('delivery_orders')
-        .select('*')
-        .eq('provider_tracking_code', data.tracking_number)
+        .from("delivery_orders")
+        .select("*")
+        .eq("provider_tracking_code", data.tracking_number)
         .maybeSingle();
       deliveryOrder = order;
     }
 
     if (!deliveryOrder) {
-      console.log('Delivery order not found for webhook');
+      console.log("Delivery order not found for webhook");
       return new Response(
-        JSON.stringify({ success: true, message: 'Delivery order not found' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: true, message: "Delivery order not found" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     // Map status
-    const rawStatus = data.status || event?.replace('shipment.', '');
+    const rawStatus = data.status || event?.replace("shipment.", "");
     const mappedStatus = STATUS_MAP[rawStatus] || rawStatus;
 
     // Build updates
     const updates: Record<string, any> = { status: mappedStatus };
-    
-    if (mappedStatus === 'picked_up') {
+
+    if (mappedStatus === "picked_up") {
       updates.picked_up_at = new Date().toISOString();
     }
-    if (mappedStatus === 'delivered') {
+    if (mappedStatus === "delivered") {
       updates.delivered_at = new Date().toISOString();
     }
-    if (mappedStatus === 'cancelled') {
+    if (mappedStatus === "cancelled") {
       updates.cancelled_at = new Date().toISOString();
     }
 
@@ -167,15 +187,17 @@ serve(async (req: Request) => {
 
     // Update delivery order
     await supabase
-      .from('delivery_orders')
+      .from("delivery_orders")
       .update(updates)
-      .eq('id', deliveryOrder.id);
+      .eq("id", deliveryOrder.id);
 
     // Create tracking event with notification flags
     const shouldNotifyVendor = NOTIFY_STATUSES.includes(mappedStatus);
-    const shouldNotifyCustomer = NOTIFY_STATUSES.includes(mappedStatus) && ['delivered', 'out_for_delivery'].includes(mappedStatus);
+    const shouldNotifyCustomer =
+      NOTIFY_STATUSES.includes(mappedStatus) &&
+      ["delivered", "out_for_delivery"].includes(mappedStatus);
 
-    await supabase.from('delivery_tracking_events').insert({
+    await supabase.from("delivery_tracking_events").insert({
       delivery_order_id: deliveryOrder.id,
       status: mappedStatus,
       description: data.description || `Status updated to ${mappedStatus}`,
@@ -186,60 +208,74 @@ serve(async (req: Request) => {
     });
 
     // Update related order status
-    if (mappedStatus === 'delivered') {
+    if (mappedStatus === "delivered") {
       await supabase
-        .from('orders')
+        .from("orders")
         .update({
-          status: 'delivered',
+          status: "delivered",
           delivered_at: new Date().toISOString(),
         })
-        .eq('id', deliveryOrder.order_id);
+        .eq("id", deliveryOrder.order_id);
 
       // Queue delivery confirmation notification
-      await queueDeliveryNotification(supabase, deliveryOrder.order_id, 'delivered');
+      await queueDeliveryNotification(
+        supabase,
+        deliveryOrder.order_id,
+        "delivered",
+      );
     }
 
-    if (mappedStatus === 'out_for_delivery') {
+    if (mappedStatus === "out_for_delivery") {
       await supabase
-        .from('orders')
+        .from("orders")
         .update({
-          status: 'out_for_delivery',
+          status: "out_for_delivery",
           out_for_delivery_at: new Date().toISOString(),
         })
-        .eq('id', deliveryOrder.order_id);
+        .eq("id", deliveryOrder.order_id);
 
-      await queueDeliveryNotification(supabase, deliveryOrder.order_id, 'out_for_delivery');
+      await queueDeliveryNotification(
+        supabase,
+        deliveryOrder.order_id,
+        "out_for_delivery",
+      );
     }
 
-    if (mappedStatus === 'failed') {
+    if (mappedStatus === "failed") {
       await supabase
-        .from('orders')
+        .from("orders")
         .update({
-          status: 'failed',
+          status: "failed",
         })
-        .eq('id', deliveryOrder.order_id);
+        .eq("id", deliveryOrder.order_id);
 
-      await queueDeliveryNotification(supabase, deliveryOrder.order_id, 'failed');
+      await queueDeliveryNotification(
+        supabase,
+        deliveryOrder.order_id,
+        "failed",
+      );
     }
 
     // Queue notifications asynchronously
     if (shouldNotifyVendor || shouldNotifyCustomer) {
       // Notifications are queued via the trigger, actual email sending handled by process-email-queue
-      console.log(`Notification queued - vendor: ${shouldNotifyVendor}, customer: ${shouldNotifyCustomer}`);
+      console.log(
+        `Notification queued - vendor: ${shouldNotifyVendor}, customer: ${shouldNotifyCustomer}`,
+      );
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Webhook processed' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ success: true, message: "Webhook processed" }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error: any) {
-    console.error('Webhook error:', error);
+    console.error("Webhook error:", error);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
-      { 
+      {
         status: 200, // Return 200 to prevent webhook retries for our own errors
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   }
 });
@@ -248,15 +284,16 @@ serve(async (req: Request) => {
  * Queue a delivery notification email via the email queue
  */
 async function queueDeliveryNotification(
-  supabase: any, 
-  orderId: string, 
-  eventType: 'picked_up' | 'out_for_delivery' | 'delivered' | 'failed'
+  supabase: any,
+  orderId: string,
+  eventType: "picked_up" | "out_for_delivery" | "delivered" | "failed",
 ) {
   try {
     // Get order and customer details
     const { data: order } = await supabase
-      .from('orders')
-      .select(`
+      .from("orders")
+      .select(
+        `
         *,
         customer:profiles!orders_customer_id_fkey (
           email,
@@ -266,51 +303,65 @@ async function queueDeliveryNotification(
           shop_name,
           owner_id
         )
-      `)
-      .eq('id', orderId)
+      `,
+      )
+      .eq("id", orderId)
       .single();
 
     if (!order) return;
 
     const customerEmail = order.customer?.email;
-    const customerName = order.customer?.full_name || 'Customer';
+    const customerName = order.customer?.full_name || "Customer";
     const shopName = order.shop?.shop_name;
 
     // Queue customer notification
     if (customerEmail) {
       const subjectLines: Record<string, string> = {
-        'picked_up': `📦 Your order from ${shopName} has been picked up!`,
-        'out_for_delivery': `🚚 Your order from ${shopName} is out for delivery!`,
-        'delivered': `✅ Your order from ${shopName} has been delivered!`,
-        'failed': `⚠️ Issue with your order from ${shopName}`,
+        picked_up: `📦 Your order from ${shopName} has been picked up!`,
+        out_for_delivery: `🚚 Your order from ${shopName} is out for delivery!`,
+        delivered: `✅ Your order from ${shopName} has been delivered!`,
+        failed: `⚠️ Issue with your order from ${shopName}`,
       };
 
-      const emailBody = getDeliveryEmailTemplate(eventType, customerName, shopName, order);
+      const emailBody = getDeliveryEmailTemplate(
+        eventType,
+        customerName,
+        shopName,
+        order,
+      );
 
-      await supabase.rpc('pgmq_send', {
-        queue_name: 'transactional_emails',
-        msg: {
-          to: customerEmail,
-          subject: subjectLines[eventType],
-          html: emailBody,
-          label: `delivery_${eventType}`,
-          metadata: { order_id: orderId }
-        }
-      }).catch(() => {
-        // Fallback: just log it
-        console.log(`Would send ${eventType} email to ${customerEmail}`);
-      });
+      await supabase
+        .rpc("pgmq_send", {
+          queue_name: "transactional_emails",
+          msg: {
+            to: customerEmail,
+            subject: subjectLines[eventType],
+            html: emailBody,
+            label: `delivery_${eventType}`,
+            metadata: { order_id: orderId },
+          },
+        })
+        .catch(() => {
+          // Fallback: just log it
+          console.log(`Would send ${eventType} email to ${customerEmail}`);
+        });
     }
   } catch (error) {
-    console.error('Error queuing delivery notification:', error);
+    console.error("Error queuing delivery notification:", error);
   }
 }
 
-function getDeliveryEmailTemplate(eventType: string, customerName: string, shopName: string, order: any): string {
-  const baseStyles = 'font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;';
-  
+function getDeliveryEmailTemplate(
+  eventType: string,
+  customerName: string,
+  shopName: string,
+  order: any,
+): string {
+  const baseStyles =
+    "font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;";
+
   const templates: Record<string, { subject: string; body: string }> = {
-    'picked_up': {
+    picked_up: {
       subject: `📦 Your order has been picked up!`,
       body: `
         <div style="${baseStyles}">
@@ -319,9 +370,9 @@ function getDeliveryEmailTemplate(eventType: string, customerName: string, shopN
           <p>Track your package using the tracking details in your order confirmation email.</p>
           <p>We'll notify you when it's out for delivery!</p>
         </div>
-      `
+      `,
     },
-    'out_for_delivery': {
+    out_for_delivery: {
       subject: `🚚 Your order is out for delivery!`,
       body: `
         <div style="${baseStyles}">
@@ -329,9 +380,9 @@ function getDeliveryEmailTemplate(eventType: string, customerName: string, shopN
           <p>Your order from <strong>${shopName}</strong> is out for delivery today!</p>
           <p>Please ensure someone is available to receive the package. The delivery person may call you before arriving.</p>
         </div>
-      `
+      `,
     },
-    'delivered': {
+    delivered: {
       subject: `✅ Your order has been delivered!`,
       body: `
         <div style="${baseStyles}">
@@ -339,9 +390,9 @@ function getDeliveryEmailTemplate(eventType: string, customerName: string, shopN
           <p>Your order from <strong>${shopName}</strong> has been delivered!</p>
           <p>We hope you enjoy your purchase. If you have any issues, please contact the seller.</p>
         </div>
-      `
+      `,
     },
-    'failed': {
+    failed: {
       subject: `⚠️ Issue with your delivery`,
       body: `
         <div style="${baseStyles}">
@@ -349,9 +400,9 @@ function getDeliveryEmailTemplate(eventType: string, customerName: string, shopN
           <p>There was an issue delivering your order from <strong>${shopName}</strong>.</p>
           <p>The seller has been notified and will reach out to resolve this. Please check your WhatsApp for updates.</p>
         </div>
-      `
-    }
+      `,
+    },
   };
 
-  return templates[eventType]?.body || templates['picked_up'].body;
+  return templates[eventType]?.body || templates["picked_up"].body;
 }

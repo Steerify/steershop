@@ -17,6 +17,9 @@ import {
   MapPin,
   RefreshCw,
   Loader2,
+  Building2,
+  Map,
+  DollarSign,
 } from "lucide-react";
 import { format } from "date-fns";
 import deliveryService, { DeliveryOrder, TrackingEvent } from "@/services/delivery.service";
@@ -105,9 +108,12 @@ export const DeliveryTracking = ({ orderId, isShopOwner = false }: DeliveryTrack
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <Card className="shadow-md border-border/50">
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center space-y-3">
+            <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
+            <p className="text-sm text-muted-foreground">Loading delivery details...</p>
+          </div>
         </CardContent>
       </Card>
     );
@@ -120,65 +126,81 @@ export const DeliveryTracking = ({ orderId, isShopOwner = false }: DeliveryTrack
   const statusConfig = STATUS_CONFIG[delivery.status] || STATUS_CONFIG.pending;
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="shadow-md border-border/50">
+      <CardHeader className="pb-3 border-b border-border/30 bg-gradient-to-r from-primary/5 to-accent/5">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Truck className="w-5 h-5" />
+          <CardTitle className="text-xl font-bold flex items-center gap-2">
+            <Truck className="w-6 h-6 text-primary" />
             Delivery Tracking
           </CardTitle>
           <Button
             variant="ghost"
             size="sm"
             onClick={loadDelivery}
-            className="h-8 w-8 p-0"
+            className="h-9 w-9 p-0 hover:bg-primary/10"
           >
             <RefreshCw className="w-4 h-4" />
           </Button>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="pt-6 space-y-6">
         {/* Current Status */}
-        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-full ${statusConfig.color} flex items-center justify-center text-white`}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 bg-gradient-to-r from-muted/50 to-background rounded-xl border border-border/30">
+          <div className="flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-2xl ${statusConfig.color} flex items-center justify-center text-white shadow-md`}>
               {statusConfig.icon}
             </div>
             <div>
-              <p className="font-medium">{statusConfig.label}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="font-semibold text-lg">{statusConfig.label}</p>
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                <Building2 className="w-3.5 h-3.5" />
                 via {delivery.provider === 'manual' ? 'Manual Booking' : delivery.provider}
               </p>
             </div>
           </div>
           
           {delivery.provider_tracking_code && (
-            <Badge variant="outline" className="font-mono">
+            <Badge variant="outline" className="font-mono text-sm px-3 py-1.5 bg-primary/5 border-primary/30">
               {delivery.provider_tracking_code}
             </Badge>
           )}
         </div>
 
         {/* Delivery Info */}
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-muted-foreground">Delivery Fee</p>
-            <p className="font-medium">₦{delivery.delivery_fee?.toLocaleString()}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+          <div className="p-4 bg-muted/30 rounded-lg">
+            <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1 flex items-center gap-1">
+              <DollarSign className="w-3.5 h-3.5" />
+              Delivery Fee
+            </p>
+            <p className="font-semibold text-lg">₦{delivery.delivery_fee?.toLocaleString()}</p>
           </div>
           {delivery.estimated_delivery_date && (
-            <div>
-              <p className="text-muted-foreground">Est. Delivery</p>
-              <p className="font-medium">
+            <div className="p-4 bg-muted/30 rounded-lg">
+              <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1 flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" />
+                Est. Delivery
+              </p>
+              <p className="font-semibold text-lg">
                 {format(new Date(delivery.estimated_delivery_date), 'MMM dd, yyyy')}
               </p>
+            </div>
+          )}
+          {delivery.carrier_name && (
+            <div className="p-4 bg-muted/30 rounded-lg">
+              <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1 flex items-center gap-1">
+                <Truck className="w-3.5 h-3.5" />
+                Carrier
+              </p>
+              <p className="font-semibold text-lg">{delivery.carrier_name}</p>
             </div>
           )}
         </div>
 
         {/* Update Status (Shop Owner Only) */}
         {isShopOwner && delivery.provider === 'manual' && delivery.status !== 'delivered' && delivery.status !== 'cancelled' && (
-          <div className="flex gap-2 pt-2 border-t">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border/30">
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger className="flex-1">
                 <SelectValue placeholder="Update status..." />
@@ -201,28 +223,33 @@ export const DeliveryTracking = ({ orderId, isShopOwner = false }: DeliveryTrack
               onClick={handleUpdateStatus} 
               disabled={!selectedStatus || isUpdating}
               size="sm"
+              className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white"
             >
-              {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Update"}
+              {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
+              {isUpdating ? "Updating..." : "Update Status"}
             </Button>
           </div>
         )}
 
         {/* Timeline */}
         {events.length > 0 && (
-          <div className="pt-2 border-t">
-            <p className="text-sm font-medium mb-3">Tracking History</p>
-            <div className="space-y-3">
+          <div className="pt-4 border-t border-border/30">
+            <div className="flex items-center gap-2 mb-4">
+              <Map className="w-4.5 h-4.5 text-primary" />
+              <p className="text-sm font-semibold">Tracking History</p>
+            </div>
+            <div className="space-y-4">
               {events.map((event, index) => (
-                <div key={event.id} className="flex gap-3">
+                <div key={event.id} className="flex gap-4">
                   <div className="flex flex-col items-center">
-                    <div className={`w-2 h-2 rounded-full ${index === 0 ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
+                    <div className={`w-3.5 h-3.5 rounded-full ${index === 0 ? 'bg-primary shadow-md shadow-primary/20' : 'bg-muted-foreground/30'}`} />
                     {index < events.length - 1 && (
-                      <div className="w-0.5 h-full bg-muted-foreground/20 my-1" />
+                      <div className="w-0.5 h-full bg-muted-foreground/20 my-2" />
                     )}
                   </div>
-                  <div className="flex-1 pb-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium">
+                  <div className="flex-1 pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                      <p className="text-sm font-semibold">
                         {STATUS_CONFIG[event.status]?.label || event.status}
                       </p>
                       <span className="text-xs text-muted-foreground">
@@ -230,13 +257,13 @@ export const DeliveryTracking = ({ orderId, isShopOwner = false }: DeliveryTrack
                       </span>
                     </div>
                     {event.description && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                         {event.description}
                       </p>
                     )}
                     {event.location && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3" />
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
+                        <MapPin className="w-3.5 h-3.5" />
                         {event.location}
                       </p>
                     )}
