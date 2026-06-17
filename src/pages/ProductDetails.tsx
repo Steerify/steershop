@@ -134,11 +134,24 @@ const ProductDetails = () => {
   const [shop, setShop] = useState<Shop | null>(null);
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [allStoreProducts, setAllStoreProducts] = useState<Product[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
   const relatedScrollRef = useRef<HTMLDivElement>(null);
+  const rotationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Number of products to show per view based on screen size
+  const getProductsPerView = () => {
+    if (window.innerWidth < 640) return 1; // xs
+    if (window.innerWidth < 1024) return 2; // sm-md
+    if (window.innerWidth < 1280) return 3; // lg
+    return 4; // xl+
+  };
+
+  const [productsPerView, setProductsPerView] = useState(getProductsPerView());
 
   useEffect(() => {
     loadProductData();
@@ -330,13 +343,13 @@ const ProductDetails = () => {
 
       setProduct(productResponse.data);
 
-      // Load related products
+      // Load all store products (excluding current product)
       const relatedResponse = await productService.getProducts({
         shopId: shopResponse.data.id,
-        limit: 4,
+        limit: 100, // Get all available products
       });
       if (relatedResponse.success) {
-        setRelatedProducts(
+        setAllStoreProducts(
           relatedResponse.data.filter(p => p.id !== productId),
         );
       }
@@ -462,6 +475,60 @@ const ProductDetails = () => {
       "_blank",
     );
   };
+
+  // Calculate total pages
+  const totalPages = Math.ceil(allStoreProducts.length / productsPerView);
+
+  // Get current products to display
+  const getCurrentProducts = () => {
+    const start = currentPage * productsPerView;
+    const end = start + productsPerView;
+    return allStoreProducts.slice(start, end);
+  };
+
+  // Navigate to next page
+  const goToNextPage = () => {
+    setCurrentPage(prev => (prev + 1) % totalPages);
+  };
+
+  // Navigate to previous page
+  const goToPrevPage = () => {
+    setCurrentPage(prev => (prev - 1 + totalPages) % totalPages);
+  };
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const newPerView = getProductsPerView();
+      if (newPerView !== productsPerView) {
+        setProductsPerView(newPerView);
+        setCurrentPage(0); // Reset to first page on resize
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [productsPerView]);
+
+  // Auto-rotation effect
+  useEffect(() => {
+    if (allStoreProducts.length <= productsPerView) return; // Don't rotate if not enough products
+
+    const startRotation = () => {
+      rotationIntervalRef.current = setInterval(() => {
+        if (!isPaused) {
+          goToNextPage();
+        }
+      }, 4000); // 4 second interval
+    };
+
+    startRotation();
+
+    return () => {
+      if (rotationIntervalRef.current) {
+        clearInterval(rotationIntervalRef.current);
+      }
+    };
+  }, [allStoreProducts.length, productsPerView, isPaused]);
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -951,47 +1018,58 @@ const ProductDetails = () => {
         </div>
 
         {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div>
+        {allStoreProducts.length > 0 && (
+          <div
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            onTouchStart={() => setIsPaused(true)}
+            onTouchEnd={() => setIsPaused(false)}
+          >
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="font-display text-2xl font-bold">
                 More from {shop.name}
               </h2>
-              <div className="hidden sm:flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full"
-                  onClick={() => scrollRelatedProducts("left")}
-                  aria-label="Scroll related products left"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full"
-                  onClick={() => scrollRelatedProducts("right")}
-                  aria-label="Scroll related products right"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
+              {allStoreProducts.length > productsPerView && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={() => {
+                      goToPrevPage();
+                      setIsPaused(true);
+                      setTimeout(() => setIsPaused(false), 5000); // Resume after 5 seconds
+                    }}
+                    aria-label="Previous products"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={() => {
+                      goToNextPage();
+                      setIsPaused(true);
+                      setTimeout(() => setIsPaused(false), 5000); // Resume after 5 seconds
+                    }}
+                    aria-label="Next products"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
-            <div
-              ref={relatedScrollRef}
-              className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scroll-smooth"
-            >
-              {relatedProducts.map(relProduct => (
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {getCurrentProducts().map(relProduct => (
                 <Link
                   key={relProduct.id}
                   to={`/shop/${slug}/product/${relProduct.id}`}
                   onClick={() =>
                     window.scrollTo({ top: 0, behavior: "smooth" })
                   }
-                  className="min-w-[70%] sm:min-w-[48%] lg:min-w-[30%] xl:min-w-[24%] snap-start"
                 >
                   <Card className="card-african h-full overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1">
                     {relProduct.images && relProduct.images.length > 0 ? (

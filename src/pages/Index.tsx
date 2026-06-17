@@ -268,7 +268,7 @@ const HeroTextSlider = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 dark:bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-600 dark:bg-emerald-500"></span>
               </span>
-              🔒 Paystack Secured Escrow Enabled
+              🔒 Mediuspay Escrow & Paystack Secured Payments
             </div>
 
             <span className="text-border text-xs hidden sm:inline">|</span>
@@ -1252,6 +1252,87 @@ const Index = () => {
                   )}
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* --------------------------
+        §6.5: OFFICIAL PARTNERS - Strategic Partnerships
+      --------------------------- */}
+        <section className="bg-background py-20 border-b border-border/40">
+          <div className="mx-auto max-w-screen-xl px-4">
+            <div className="text-center mb-16">
+              <p className="text-primary font-bold text-xs uppercase tracking-[0.3em] mb-4">
+                Our Official Partners
+              </p>
+              <h2 className="text-2xl md:text-4xl font-extrabold text-foreground mb-4 tracking-tight">
+                Trusted by industry leaders
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base">
+                We partner with the best in Nigerian fintech and commerce to
+                deliver secure, reliable, and efficient services to our
+                merchants and shoppers.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 items-center justify-items-center">
+              {/* Mediuspay Partner Card */}
+              <a
+                href="https://mediuspay.com.ng"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full max-w-sm group"
+              >
+                <div className="lift rounded-3xl p-8 flex flex-col items-center gap-5 bg-card border border-border/40 shadow-sm hover:border-primary/30 hover:bg-primary/5 transition-all duration-300">
+                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-2xl font-black shadow-lg group-hover:scale-105 transition-transform">
+                    🔒
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-xl font-extrabold text-foreground mb-2 tracking-tight">
+                      Mediuspay
+                    </h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Official escrow partner — secure, automated escrow for all
+                      SteerSolo orders
+                    </p>
+                  </div>
+                </div>
+              </a>
+              {/* Paystack Partner Card */}
+              <a
+                href="https://paystack.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full max-w-sm group"
+              >
+                <div className="lift rounded-3xl p-8 flex flex-col items-center gap-5 bg-card border border-border/40 shadow-sm hover:border-primary/30 hover:bg-primary/5 transition-all duration-300">
+                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center text-white text-2xl font-black shadow-lg group-hover:scale-105 transition-transform">
+                    ₦
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-xl font-extrabold text-foreground mb-2 tracking-tight">
+                      Paystack
+                    </h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Secure payment processing for Nigerian merchants and
+                      shoppers
+                    </p>
+                  </div>
+                </div>
+              </a>
+              {/* Placeholder for future partners */}
+              <div className="w-full max-w-sm rounded-3xl p-8 flex flex-col items-center gap-5 bg-muted/30 border border-border/20">
+                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-gray-600 text-2xl font-black">
+                  +
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-extrabold text-muted-foreground mb-2 tracking-tight">
+                    Coming Soon
+                  </h3>
+                  <p className="text-xs text-muted-foreground/70 leading-relaxed">
+                    More amazing partners joining our ecosystem
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </section>

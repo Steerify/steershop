@@ -55,7 +55,7 @@ const HowItWorksPage = () => {
       step: 3,
       icon: CreditCard,
       title: "Pay Securely",
-      description: "Pay with card, bank transfer, or USSD. All payments secured by Paystack."
+      description: "Pay with card, bank transfer, or USSD. All payments secured by Paystack and Mediuspay escrow."
     },
     {
       step: 4,
