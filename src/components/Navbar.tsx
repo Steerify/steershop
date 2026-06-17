@@ -3,17 +3,32 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserRole } from "@/types/api";
-import { 
-  User, Menu, X, Gift, Moon, Sun, Star, Home,
-  Heart, Flag, Ghost, Egg, Sparkles, Store, MessageSquare, CalendarDays, Tag, Megaphone
+import {
+  User,
+  Menu,
+  X,
+  Gift,
+  Moon,
+  Sun,
+  Star,
+  Home,
+  Heart,
+  Flag,
+  Ghost,
+  Egg,
+  Sparkles,
+  Store,
+  MessageSquare,
+  CalendarDays,
+  Tag,
+  Megaphone,
 } from "lucide-react";
 import { AdireAccent } from "./patterns/AdirePattern";
-import logoLight from "@/assets/steersolo-logo.jpg";
 import logoDark from "@/assets/steersolo-logo-dark.jpg";
 import { useTheme } from "next-themes";
 import { ShopAvatar } from "./ShopAvatar";
 import { useAuth } from "@/context/AuthContext";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -27,8 +42,8 @@ import { cn } from "@/lib/utils";
 interface Celebration {
   name: string;
   startDate: string; // MM-DD
-  endDate: string;   // MM-DD
-  type: 'christian' | 'muslim' | 'general' | 'cultural';
+  endDate: string; // MM-DD
+  type: "christian" | "muslim" | "general" | "cultural";
   vibe: string;
   ctaLabel: string;
   ctaHref: string;
@@ -36,13 +51,69 @@ interface Celebration {
 
 // --- Configuration ---
 const CELEBRATIONS: Celebration[] = [
-  { name: "Christmas", startDate: "12-20", endDate: "12-27", type: 'christian', vibe: "Festive gifting season", ctaLabel: "Holiday-ready shops", ctaHref: "/shops" },
-  { name: "New Year", startDate: "12-31", endDate: "01-02", type: 'general', vibe: "Fresh goals, fresh products", ctaLabel: "Start selling stronger", ctaHref: "/auth/signup" },
-  { name: "Eid al-Fitr", startDate: "04-09", endDate: "04-11", type: 'muslim', vibe: "Celebrate with trusted merchants", ctaLabel: "View Eid specials", ctaHref: "/shops" },
-  { name: "Valentine's Day", startDate: "02-14", endDate: "02-14", type: 'general', vibe: "Love-inspired gifting", ctaLabel: "Discover gift shops", ctaHref: "/shops" },
-  { name: "Independence Day", startDate: "10-01", endDate: "10-01", type: 'cultural', vibe: "Naija-made excellence", ctaLabel: "Support local brands", ctaHref: "/shops" },
-  { name: "Halloween", startDate: "10-31", endDate: "10-31", type: 'general', vibe: "Bold looks, spooky vibes", ctaLabel: "See trending stores", ctaHref: "/shops" },
-  { name: "Easter", startDate: "04-07", endDate: "04-07", type: 'christian', vibe: "Seasonal deals and joy", ctaLabel: "Shop Easter picks", ctaHref: "/shops" }
+  {
+    name: "Christmas",
+    startDate: "12-20",
+    endDate: "12-27",
+    type: "christian",
+    vibe: "Festive gifting season",
+    ctaLabel: "Holiday-ready shops",
+    ctaHref: "/shops",
+  },
+  {
+    name: "New Year",
+    startDate: "12-31",
+    endDate: "01-02",
+    type: "general",
+    vibe: "Fresh goals, fresh products",
+    ctaLabel: "Start selling stronger",
+    ctaHref: "/auth/signup",
+  },
+  {
+    name: "Eid al-Fitr",
+    startDate: "04-09",
+    endDate: "04-11",
+    type: "muslim",
+    vibe: "Celebrate with trusted merchants",
+    ctaLabel: "View Eid specials",
+    ctaHref: "/shops",
+  },
+  {
+    name: "Valentine's Day",
+    startDate: "02-14",
+    endDate: "02-14",
+    type: "general",
+    vibe: "Love-inspired gifting",
+    ctaLabel: "Discover gift shops",
+    ctaHref: "/shops",
+  },
+  {
+    name: "Independence Day",
+    startDate: "10-01",
+    endDate: "10-01",
+    type: "cultural",
+    vibe: "Naija-made excellence",
+    ctaLabel: "Support local brands",
+    ctaHref: "/shops",
+  },
+  {
+    name: "Halloween",
+    startDate: "10-31",
+    endDate: "10-31",
+    type: "general",
+    vibe: "Bold looks, spooky vibes",
+    ctaLabel: "See trending stores",
+    ctaHref: "/shops",
+  },
+  {
+    name: "Easter",
+    startDate: "04-07",
+    endDate: "04-07",
+    type: "christian",
+    vibe: "Seasonal deals and joy",
+    ctaLabel: "Shop Easter picks",
+    ctaHref: "/shops",
+  },
 ];
 
 // --- Static Decorations ---
@@ -57,8 +128,12 @@ const SantaHat = () => (
 
 const FireworkFlare = () => (
   <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-xl">
-    <div className="absolute top-1 right-1 text-yellow-400 opacity-80"><Sparkles size={14} /></div>
-    <div className="absolute bottom-1 left-1 text-orange-400 opacity-80"><Star size={12} /></div>
+    <div className="absolute top-1 right-1 text-yellow-400 opacity-80">
+      <Sparkles size={14} />
+    </div>
+    <div className="absolute bottom-1 left-1 text-orange-400 opacity-80">
+      <Star size={12} />
+    </div>
     <div className="absolute inset-0 border-2 border-yellow-400/20 rounded-xl"></div>
   </div>
 );
@@ -69,13 +144,25 @@ const CelebrationBadge = ({ celebration }: { celebration: Celebration }) => {
   let bgColor = "bg-primary/10";
   let Icon = Sparkles;
 
-  if (n.includes("valentine")) { color = "text-pink-500"; bgColor = "bg-pink-500/10"; Icon = Heart; }
-  else if (celebration.type === 'muslim') { color = "text-emerald-500"; bgColor = "bg-emerald-500/10"; Icon = Moon; }
-  else if (n.includes("independence")) { color = "text-green-600"; bgColor = "bg-green-600/10"; Icon = Flag; }
+  if (n.includes("valentine")) {
+    color = "text-pink-500";
+    bgColor = "bg-pink-500/10";
+    Icon = Heart;
+  } else if (celebration.type === "muslim") {
+    color = "text-emerald-500";
+    bgColor = "bg-emerald-500/10";
+    Icon = Moon;
+  } else if (n.includes("independence")) {
+    color = "text-green-600";
+    bgColor = "bg-green-600/10";
+    Icon = Flag;
+  }
 
   return (
     <div className="absolute -top-1 -right-1 z-30">
-      <div className={`flex items-center justify-center w-5 h-5 rounded-full border border-background shadow-sm backdrop-blur-md ${bgColor} ${color}`}>
+      <div
+        className={`flex items-center justify-center w-5 h-5 rounded-full border border-background shadow-sm backdrop-blur-md ${bgColor} ${color}`}
+      >
         <Icon className="w-3 h-3" />
       </div>
     </div>
@@ -91,7 +178,9 @@ interface NavbarProps {
 
 const Navbar = ({ shopBranding }: NavbarProps = {}) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeCelebrations, setActiveCelebrations] = useState<Celebration[]>([]);
+  const [activeCelebrations, setActiveCelebrations] = useState<Celebration[]>(
+    [],
+  );
   const [showCelebrationHint, setShowCelebrationHint] = useState(false);
   const [showRestoredBanner, setShowRestoredBanner] = useState(false);
   const [daysRemaining, setDaysRemaining] = useState(0);
@@ -120,8 +209,8 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
     const currentYear = today.getFullYear();
 
     const active = CELEBRATIONS.filter(c => {
-      const [sM, sD] = c.startDate.split('-').map(Number);
-      const [eM, eD] = c.endDate.split('-').map(Number);
+      const [sM, sD] = c.startDate.split("-").map(Number);
+      const [eM, eD] = c.endDate.split("-").map(Number);
       const start = new Date(currentYear, sM - 1, sD);
       let end = new Date(currentYear, eM - 1, eD);
       if (end < start) end.setFullYear(currentYear + 1);
@@ -131,8 +220,8 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
     setActiveCelebrations(active);
 
     if (active.length > 0) {
-      const [sM, sD] = active[0].startDate.split('-').map(Number);
-      const [eM, eD] = active[0].endDate.split('-').map(Number);
+      const [sM, sD] = active[0].startDate.split("-").map(Number);
+      const [eM, eD] = active[0].endDate.split("-").map(Number);
       const start = new Date(currentYear, sM - 1, sD);
       let end = new Date(currentYear, eM - 1, eD);
       if (end < start) end.setFullYear(currentYear + 1);
@@ -140,7 +229,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
       setDaysRemaining(Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24))));
 
       const dismissedKey = `season_banner_dismissed_${active[0].name}_${currentYear}`;
-      const dismissed = localStorage.getItem(dismissedKey) === 'true';
+      const dismissed = localStorage.getItem(dismissedKey) === "true";
       setShowCelebrationHint(!dismissed);
     }
   }, []);
@@ -151,11 +240,14 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
   const dismissCelebrationHint = () => {
     if (!primary) return;
     const year = new Date().getFullYear();
-    localStorage.setItem(`season_banner_dismissed_${primary.name}_${year}`, 'true');
+    localStorage.setItem(
+      `season_banner_dismissed_${primary.name}_${year}`,
+      "true",
+    );
     setShowCelebrationHint(false);
   };
 
-  const logo = theme === 'dark' ? logoDark : logoLight;
+  const logo = logoDark;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
@@ -175,7 +267,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                   size="sm"
                   variant="ghost"
                   className="h-7 text-white hover:bg-white/15 text-xs px-3 rounded-full"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate("/dashboard")}
                 >
                   ← Back to Dashboard
                 </Button>
@@ -199,37 +291,50 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm font-medium">
               <Sparkles className="w-4 h-4" />
               <span className="font-semibold">{primary.name} Season</span>
-              <span className="text-white/80 hidden sm:inline">• {primary.vibe}</span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px]">
-                <CalendarDays className="w-3 h-3" /> {daysRemaining === 0 ? 'Today only' : `${daysRemaining} day${daysRemaining > 1 ? 's' : ''} left`}
+              <span className="text-white/80 hidden sm:inline">
+                • {primary.vibe}
               </span>
-              <Link to={primary.ctaHref} className="underline underline-offset-2 font-semibold hover:text-white/80 transition-colors">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px]">
+                <CalendarDays className="w-3 h-3" />{" "}
+                {daysRemaining === 0
+                  ? "Today only"
+                  : `${daysRemaining} day${daysRemaining > 1 ? "s" : ""} left`}
+              </span>
+              <Link
+                to={primary.ctaHref}
+                className="underline underline-offset-2 font-semibold hover:text-white/80 transition-colors"
+              >
                 {primary.ctaLabel}
               </Link>
-              <button onClick={dismissCelebrationHint} className="rounded-md px-1.5 py-0.5 hover:bg-white/15 transition-colors" aria-label="Dismiss celebration banner">
+              <button
+                onClick={dismissCelebrationHint}
+                className="rounded-md px-1.5 py-0.5 hover:bg-white/15 transition-colors"
+                aria-label="Dismiss celebration banner"
+              >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         </div>
       )}
-      
+
       {/* Floating Pill Navbar Container */}
       <div className="px-2 sm:px-4 md:px-6 pt-3 sm:pt-4 transition-all duration-300">
         <div className="max-w-[1200px] mx-auto relative pointer-events-auto">
-          <div className={cn(
-            "bg-card/85 backdrop-blur-2xl border transition-all duration-500 shadow-sm sm:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.1)] rounded-[2rem]",
-            user?.role === 'ENTREPRENEUR' 
-              ? "border-indigo-600/30 shadow-[0_4px_20px_rgba(79,70,229,0.15)]" 
-              : "border-border/60"
-          )}>
+          <div
+            className={cn(
+              "bg-card/85 backdrop-blur-2xl border transition-all duration-500 shadow-sm sm:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.1)] rounded-[2rem]",
+              user?.role === "ENTREPRENEUR"
+                ? "border-indigo-600/30 shadow-[0_4px_20px_rgba(79,70,229,0.15)]"
+                : "border-border/60",
+            )}
+          >
             <div className="px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between">
-              
               {/* Logo Section */}
               <div className="flex items-center gap-3 group relative">
                 <div
-                  className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden shadow-sm ring-1 ring-border group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-[1.03] relative select-none ${theme === 'dark' ? '' : 'bg-white'}`}
-                  onContextMenu={(e) => e.preventDefault()}
+                  className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden shadow-sm ring-1 ring-border group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-[1.03] relative select-none ${theme === "dark" ? "" : "bg-white"}`}
+                  onContextMenu={e => e.preventDefault()}
                   aria-label="Brand logo"
                 >
                   {shopBranding ? (
@@ -245,14 +350,16 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                       alt="SteerSolo"
                       className="w-full h-full object-cover"
                       draggable={false}
-                      onContextMenu={(e) => e.preventDefault()}
+                      onContextMenu={e => e.preventDefault()}
                     />
                   )}
-                  
+
                   {/* Visual Effects (Non-animated) */}
                   {!shopBranding && isNewYear && <FireworkFlare />}
                   {!shopBranding && isChristmas && <SantaHat />}
-                  {!shopBranding && !isChristmas && primary && <CelebrationBadge celebration={primary} />}
+                  {!shopBranding && !isChristmas && primary && (
+                    <CelebrationBadge celebration={primary} />
+                  )}
                 </div>
 
                 {/* Updated typography to match index page */}
@@ -260,7 +367,11 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                   {shopBranding?.name || "SteerSolo"}
                   {!shopBranding && primary && (
                     <span className="ml-1.5 text-base inline-block text-primary">
-                      {isChristmas ? "🎄" : <Sparkles className="inline w-4 h-4" />}
+                      {isChristmas ? (
+                        "🎄"
+                      ) : (
+                        <Sparkles className="inline w-4 h-4" />
+                      )}
                     </span>
                   )}
                 </span>
@@ -273,8 +384,8 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                   { label: "Pricing", href: "/pricing" },
                   { label: "Steerify Ads", href: "/ads" },
                   { label: "About", href: "/about" },
-                ].map((item) => (
-                  <Link 
+                ].map(item => (
+                  <Link
                     key={item.label}
                     to={item.href}
                     className="text-[13px] font-semibold text-foreground/70 hover:text-primary transition-colors tracking-wide"
@@ -291,11 +402,13 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    onClick={() =>
+                      setTheme(theme === "dark" ? "light" : "dark")
+                    }
                     className="rounded-full w-9 h-9 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors border border-transparent hover:border-border/50"
                     aria-label="Toggle theme"
                   >
-                    {theme === 'dark' ? (
+                    {theme === "dark" ? (
                       <Sun className="h-4 w-4 text-yellow-500" />
                     ) : (
                       <Moon className="h-4 w-4" />
@@ -307,46 +420,78 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                     <DropdownMenuTrigger asChild>
                       <button className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full hover:bg-muted/50 border border-transparent hover:border-border/50 transition-all">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-bold shadow-sm ring-1 ring-white/20">
-                          {(user?.firstName || user?.email || 'U')[0].toUpperCase()}
+                          {(user?.firstName ||
+                            user?.email ||
+                            "U")[0].toUpperCase()}
                         </div>
                         <div className="hidden lg:block text-left">
-                          <p className="text-[11px] font-bold leading-none mb-0.5">{user?.firstName || 'User'}</p>
-                          <Badge 
-                            variant="outline" 
+                          <p className="text-[11px] font-bold leading-none mb-0.5">
+                            {user?.firstName || "User"}
+                          </p>
+                          <Badge
+                            variant="outline"
                             className={cn(
                               "text-[8px] h-3 px-1.5 border-none",
-                              user?.role === 'ENTREPRENEUR' 
-                                ? "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400" 
-                                : "bg-emerald-600/10 text-emerald-600 dark:text-emerald-400"
+                              user?.role === "ENTREPRENEUR"
+                                ? "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400"
+                                : "bg-emerald-600/10 text-emerald-600 dark:text-emerald-400",
                             )}
                           >
-                            {user?.role === 'ENTREPRENEUR' ? 'Merchant Mode' : 'Shopper Mode'}
+                            {user?.role === "ENTREPRENEUR"
+                              ? "Merchant Mode"
+                              : "Shopper Mode"}
                           </Badge>
                         </div>
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 mt-2 rounded-2xl p-1 shadow-xl border-border/60">
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-56 mt-2 rounded-2xl p-1 shadow-xl border-border/60"
+                    >
                       <DropdownMenuLabel className="px-3 py-2.5">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Signed in as</p>
-                        <p className="text-sm font-bold truncate">{user.email}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                          Signed in as
+                        </p>
+                        <p className="text-sm font-bold truncate">
+                          {user.email}
+                        </p>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator className="bg-border/60" />
                       <DropdownMenuItem asChild>
-                        <Link to={user?.role === 'ENTREPRENEUR' ? "/dashboard" : "/shopper"} className="flex items-center gap-3 cursor-pointer rounded-xl px-3 py-2.5">
+                        <Link
+                          to={
+                            user?.role === "ENTREPRENEUR"
+                              ? "/dashboard"
+                              : "/shopper"
+                          }
+                          className="flex items-center gap-3 cursor-pointer rounded-xl px-3 py-2.5"
+                        >
                           <User className="w-4 h-4 text-muted-foreground" />
-                          <span className="font-semibold text-sm">{user?.role === 'ENTREPRENEUR' ? "Merchant Dashboard" : "My Orders"}</span>
+                          <span className="font-semibold text-sm">
+                            {user?.role === "ENTREPRENEUR"
+                              ? "Merchant Dashboard"
+                              : "My Orders"}
+                          </span>
                         </Link>
                       </DropdownMenuItem>
-                      {user?.role === 'ENTREPRENEUR' && (
+                      {user?.role === "ENTREPRENEUR" && (
                         <DropdownMenuItem asChild>
-                          <Link to="/my-store" className="flex items-center gap-3 cursor-pointer rounded-xl px-3 py-2.5">
+                          <Link
+                            to="/my-store"
+                            className="flex items-center gap-3 cursor-pointer rounded-xl px-3 py-2.5"
+                          >
                             <Store className="w-4 h-4 text-muted-foreground" />
-                            <span className="font-semibold text-sm">Manage My Store</span>
+                            <span className="font-semibold text-sm">
+                              Manage My Store
+                            </span>
                           </Link>
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator className="bg-border/60" />
-                      <DropdownMenuItem onClick={() => signOut()} className="flex items-center gap-3 cursor-pointer rounded-xl px-3 py-2.5 text-destructive focus:text-destructive focus:bg-destructive/10">
+                      <DropdownMenuItem
+                        onClick={() => signOut()}
+                        className="flex items-center gap-3 cursor-pointer rounded-xl px-3 py-2.5 text-destructive focus:text-destructive focus:bg-destructive/10"
+                      >
                         <X className="w-4 h-4" />
                         <span className="font-bold text-sm">Logout</span>
                       </DropdownMenuItem>
@@ -355,12 +500,19 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                 ) : (
                   <>
                     <Link to="/shopper">
-                      <Button variant="ghost" size="sm" className="h-9 px-4 rounded-full text-[13px] font-semibold hover:bg-muted text-muted-foreground hover:text-foreground">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 px-4 rounded-full text-[13px] font-semibold hover:bg-muted text-muted-foreground hover:text-foreground"
+                      >
                         Login
                       </Button>
                     </Link>
                     <Link to="/auth/login?tab=signup">
-                      <Button size="sm" className="h-9 px-5 rounded-full text-[13px] font-bold shadow-md hover:shadow-lg transition-all bg-primary text-primary-foreground hover:bg-primary/90">
+                      <Button
+                        size="sm"
+                        className="h-9 px-5 rounded-full text-[13px] font-bold shadow-md hover:shadow-lg transition-all bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
                         Get Started
                       </Button>
                     </Link>
@@ -374,79 +526,140 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    onClick={() =>
+                      setTheme(theme === "dark" ? "light" : "dark")
+                    }
                     className="rounded-full w-9 h-9 hover:bg-muted text-muted-foreground"
                     aria-label="Toggle theme"
                   >
-                    {theme === 'dark' ? (
+                    {theme === "dark" ? (
                       <Sun className="h-4 w-4 text-yellow-500" />
                     ) : (
                       <Moon className="h-4 w-4" />
                     )}
                   </Button>
                 )}
-                <button 
-                  className="p-2 rounded-full hover:bg-muted text-foreground transition-colors relative" 
+                <button
+                  className="p-2 rounded-full hover:bg-muted text-foreground transition-colors relative"
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
                 >
                   {activeCelebrations.length > 0 && (
                     <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background"></div>
                   )}
-                  {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                  {isMobileMenuOpen ? (
+                    <X className="w-5 h-5" />
+                  ) : (
+                    <Menu className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
           </div>
 
           {/* Floating Mobile Menu */}
-          <div className={`md:hidden absolute top-full left-0 right-0 mt-3 bg-card/95 backdrop-blur-2xl border border-border/60 rounded-[2rem] shadow-xl overflow-hidden transition-all duration-400 origin-top ${isMobileMenuOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0 pointer-events-none"}`}>
+          <div
+            className={`md:hidden absolute top-full left-0 right-0 mt-3 bg-card/95 backdrop-blur-2xl border border-border/60 rounded-[2rem] shadow-xl overflow-hidden transition-all duration-400 origin-top ${isMobileMenuOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0 pointer-events-none"}`}
+          >
             <div className="px-5 py-6 space-y-1 font-display">
-              <Link to="/shops" className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link
+                to="/shops"
+                className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 <Store className="w-5 h-5 text-muted-foreground" />
                 Marketplace
               </Link>
-              <Link to="/pricing" className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link
+                to="/pricing"
+                className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 <Tag className="w-5 h-5 text-muted-foreground" />
                 Pricing
               </Link>
-              <Link to="/ads" className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link
+                to="/ads"
+                className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 <Megaphone className="w-5 h-5 text-muted-foreground" />
                 Steerify Ads
               </Link>
-              <Link to="/about" className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link
+                to="/about"
+                className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 <Star className="w-5 h-5 text-muted-foreground" />
                 About
               </Link>
               <div className="h-px bg-border/60 my-2" />
-              <Link to="/feedback" className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link
+                to="/feedback"
+                className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 <MessageSquare className="w-5 h-5 text-muted-foreground" />
                 Feedback
               </Link>
-              <Link to="/ambassador-program" className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link
+                to="/ambassador-program"
+                className="flex items-center gap-4 py-3.5 px-2 rounded-xl hover:bg-muted/50 text-foreground transition-colors font-semibold"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 <Gift className="w-5 h-5 text-muted-foreground" />
                 Ambassador Program
               </Link>
-              
+
               <div className="pt-6 mt-2 border-t border-border/60 space-y-3">
                 {user ? (
                   <>
-                    <Link to={user?.role === 'ENTREPRENEUR' ? "/dashboard" : "/shopper"} onClick={() => setIsMobileMenuOpen(false)}>
+                    <Link
+                      to={
+                        user?.role === "ENTREPRENEUR"
+                          ? "/dashboard"
+                          : "/shopper"
+                      }
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
                       <Button className="w-full h-12 rounded-full font-bold shadow-md bg-primary text-primary-foreground">
-                        {user?.role === 'ENTREPRENEUR' ? "Merchant Dashboard" : "My Orders"}
+                        {user?.role === "ENTREPRENEUR"
+                          ? "Merchant Dashboard"
+                          : "My Orders"}
                       </Button>
                     </Link>
-                    <Button variant="outline" className="w-full h-12 rounded-full font-bold border-border/60" onClick={() => { signOut(); setIsMobileMenuOpen(false); }}>
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 rounded-full font-bold border-border/60"
+                      onClick={() => {
+                        signOut();
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
                       Logout
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Link to="/shopper" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full h-12 rounded-full font-bold border-border/60">Login</Button>
+                    <Link
+                      to="/shopper"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Button
+                        variant="outline"
+                        className="w-full h-12 rounded-full font-bold border-border/60"
+                      >
+                        Login
+                      </Button>
                     </Link>
-                    <Link to="/auth/login?tab=signup" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button className="w-full h-12 rounded-full font-bold shadow-md bg-primary text-primary-foreground">Get Started</Button>
+                    <Link
+                      to="/auth/login?tab=signup"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Button className="w-full h-12 rounded-full font-bold shadow-md bg-primary text-primary-foreground">
+                        Get Started
+                      </Button>
                     </Link>
                   </>
                 )}

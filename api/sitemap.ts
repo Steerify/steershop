@@ -34,28 +34,12 @@ export default async function handler(req: Request) {
     // Fetch all active shops with owner subscription info and featured flag
     const { data: shops } = await supabase
       .from('shops')
-      .select('id, shop_slug, updated_at, logo_url, owner_id, is_featured, payment_method, bank_name, bank_account_name, bank_account_number, paystack_public_key')
-      .eq('is_active', true);
+      .select('id, shop_slug, updated_at, logo_url, owner_id, is_featured, city, state, category, description, average_rating, total_reviews')
+      .eq('is_active', true)
+      .order('updated_at', { ascending: false });
 
-    const hasCompletePaymentSetup = (shop: any) => {
-      const method = shop.payment_method;
-      if (!method) return false;
-      const hasBank = !!(shop.bank_name && shop.bank_account_name && shop.bank_account_number);
-      const hasPaystack = !!shop.paystack_public_key;
-      if (method === 'bank_transfer') return hasBank;
-      if (method === 'paystack') return hasPaystack;
-      if (method === 'both') return hasBank && hasPaystack;
-      return false;
-    };
-
-    const { data: productShopRows } = await supabase
-      .from('products')
-      .select('shop_id')
-      .eq('is_available', true)
-      .not('image_url', 'is', null);
-
-    const shopsWithProductImages = new Set((productShopRows || []).map((p: any) => p.shop_id));
-    const eligibleShops = (shops || []).filter((shop: any) => hasCompletePaymentSetup(shop) && shopsWithProductImages.has(shop.id));
+    // Now include ALL active shops, not just those with payment setup and products
+    const eligibleShops = (shops || []);
 
     // Fetch owner plan info for premium gating
     const ownerPlanMap: Record<string, string> = {};

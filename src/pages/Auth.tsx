@@ -33,12 +33,15 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
-import logoLight from "@/assets/steersolo-logo.jpg";
 import logoDark from "@/assets/steersolo-logo-dark.jpg";
 import { useTheme } from "next-themes";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import {
   Form,
   FormControl,
@@ -111,7 +114,7 @@ const useSyncedAuthField = (field: AuthTextField) => {
     (input: HTMLInputElement | null) => {
       if (!input) return;
 
-      [0, 100, 500].forEach((delay) => {
+      [0, 100, 500].forEach(delay => {
         window.setTimeout(() => syncAutofillValue(input.value), delay);
       });
     },
@@ -144,12 +147,12 @@ const PasswordInput = ({
         onBlur={field.onBlur}
         disabled={field.disabled}
         placeholder={placeholder}
-        ref={(input) => {
+        ref={input => {
           field.ref(input);
           scheduleAutofillSync(input);
         }}
         autoComplete={autoComplete}
-        onChange={(event) => updateValue(event.currentTarget.value)}
+        onChange={event => updateValue(event.currentTarget.value)}
         onFocus={(event: FocusEvent<HTMLInputElement>) => {
           scheduleAutofillSync(event.currentTarget);
         }}
@@ -221,11 +224,11 @@ const AuthIdentifierInput = ({
       autoComplete={autoComplete}
       enterKeyHint="next"
       placeholder="email@example.com or 08012345678"
-      ref={(input) => {
+      ref={input => {
         field.ref(input);
         scheduleAutofillSync(input);
       }}
-      onChange={(event) => updateValue(event.currentTarget.value)}
+      onChange={event => updateValue(event.currentTarget.value)}
       onFocus={(event: FocusEvent<HTMLInputElement>) => {
         scheduleAutofillSync(event.currentTarget);
       }}
@@ -257,7 +260,7 @@ const identifierSchema = z
   .string()
   .trim()
   .min(1, "Email or phone is required")
-  .refine((value) => isValidEmail(value) || isValidPhone(value), {
+  .refine(value => isValidEmail(value) || isValidPhone(value), {
     message: "Enter a valid email or Nigerian phone number",
   });
 
@@ -291,32 +294,31 @@ const isDisposableEmail = (email: string) => {
 };
 
 const Auth = () => {
-  const { theme } = useTheme();
-  const logo = theme === "dark" ? logoDark : logoLight;
+  const logo = logoDark;
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const { type } = useParams();
-  
+
   const isVendorSignupPath = location.pathname === "/merchant-signup";
   const isShopperSignupPath = location.pathname === "/shopper-signup";
-  
+
   const persona: AuthPersona = location.pathname.startsWith("/merchant")
     ? "merchant"
     : location.pathname.startsWith("/shopper")
       ? "shopper"
       : "default";
-      
+
   const defaultTab =
     isVendorSignupPath || isShopperSignupPath
       ? "signup"
       : type === "signup"
         ? "signup"
         : searchParams.get("tab") || "login";
-        
+
   const navigate = useNavigate();
   const { toast } = useToast();
   const dispatch = useAppDispatch();
-  
+
   const [activeTab, setActiveTab] = useState(defaultTab);
   const {
     signIn,
@@ -327,7 +329,7 @@ const Auth = () => {
     user,
     isLoading: authLoading,
   } = useAuth();
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -344,8 +346,8 @@ const Auth = () => {
     }
   }, [cooldown]);
 
-  const returnUrl = useAppSelector((state) => state.ui.returnUrl);
-  const lastRoute = useAppSelector((state) => state.ui.lastRoute);
+  const returnUrl = useAppSelector(state => state.ui.returnUrl);
+  const lastRoute = useAppSelector(state => state.ui.lastRoute);
   const locationState = location.state as {
     from?: { pathname: string };
   } | null;
@@ -378,7 +380,10 @@ const Auth = () => {
           .single();
 
         // Admins skip onboarding/role-selection entirely
-        const isAdmin = (user.role as string) === "ADMIN" || (profile?.role as string) === "admin" || (profile?.role as string) === "ADMIN";
+        const isAdmin =
+          (user.role as string) === "ADMIN" ||
+          (profile?.role as string) === "admin" ||
+          (profile?.role as string) === "ADMIN";
 
         if (profile?.needs_role_selection && !isAdmin) {
           navigate("/select-role", { replace: true });
@@ -439,7 +444,7 @@ const Auth = () => {
 
       if (isEmail && isDisposableEmail(normalizedIdentifier)) {
         setAuthError(
-          "Please use a real email provider (e.g. Gmail/Outlook). Disposable inboxes often block verification emails."
+          "Please use a real email provider (e.g. Gmail/Outlook). Disposable inboxes often block verification emails.",
         );
         return;
       }
@@ -496,7 +501,7 @@ const Auth = () => {
         const normalizedError = result.error.toLowerCase();
         if (normalizedError.includes("invalid login credentials")) {
           setAuthError(
-            "Invalid credentials. If you just signed up, verify your account first, then try again."
+            "Invalid credentials. If you just signed up, verify your account first, then try again.",
           );
         } else {
           setAuthError(result.error);
@@ -593,7 +598,8 @@ const Auth = () => {
       if (isDisposableEmail(emailValidation)) {
         toast({
           title: "Use a real inbox",
-          description: "Disposable inboxes may not receive password reset emails.",
+          description:
+            "Disposable inboxes may not receive password reset emails.",
           variant: "destructive",
         });
         return;
@@ -624,7 +630,10 @@ const Auth = () => {
       } else {
         toast({
           title: "Invalid Email",
-          description: getErrorMessage(error, "Please enter a valid email address."),
+          description: getErrorMessage(
+            error,
+            "Please enter a valid email address.",
+          ),
           variant: "destructive",
         });
       }
@@ -636,7 +645,10 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 font-sans px-4 sm:px-6 py-6 sm:py-10 relative overflow-hidden">
       {/* Background pattern */}
-      <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.06] pointer-events-none" />
+      <AdirePattern
+        variant="dots"
+        className="absolute inset-0 opacity-[0.06] pointer-events-none"
+      />
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-accent/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
@@ -654,316 +666,336 @@ const Auth = () => {
 
         {/* Form Card */}
         <div className="bg-card/95 backdrop-blur-xl rounded-3xl border border-border/60 shadow-2xl p-6 sm:p-8 md:p-10">
-        
-        {showEmailVerification ? (
-          <div className="text-center space-y-6 py-8">
-            <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-              <Mail className="w-10 h-10 text-primary" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-2xl font-bold text-foreground">Check Your Inbox</h3>
-              <p className="text-muted-foreground">
-                We've sent a verification link to
-              </p>
-              <p className="font-semibold text-foreground text-lg">
-                {registeredEmail}
-              </p>
-              <p className="text-sm text-muted-foreground mt-4">
-                Please click the link in the email to verify your account.
-              </p>
-            </div>
+          {showEmailVerification ? (
+            <div className="text-center space-y-6 py-8">
+              <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                <Mail className="w-10 h-10 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold text-foreground">
+                  Check Your Inbox
+                </h3>
+                <p className="text-muted-foreground">
+                  We've sent a verification link to
+                </p>
+                <p className="font-semibold text-foreground text-lg">
+                  {registeredEmail}
+                </p>
+                <p className="text-sm text-muted-foreground mt-4">
+                  Please click the link in the email to verify your account.
+                </p>
+              </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowEmailVerification(false);
-                  setActiveTab("login");
-                }}
-                className="w-full sm:w-auto min-h-[44px] px-8 rounded-full font-semibold"
-              >
-                Back to Login
-              </Button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowEmailVerification(false);
+                    setActiveTab("login");
+                  }}
+                  className="w-full sm:w-auto min-h-[44px] px-8 rounded-full font-semibold"
+                >
+                  Back to Login
+                </Button>
 
+                <Button
+                  variant="ghost"
+                  onClick={handleResendOtp}
+                  disabled={cooldown > 0 || isLoading}
+                  className="w-full sm:w-auto min-h-[44px] px-8 rounded-full font-semibold text-muted-foreground"
+                >
+                  {cooldown > 0 ? (
+                    `Resend Link in ${cooldown}s`
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Resend Link
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : showForgotPassword ? (
+            <div className="space-y-6">
               <Button
                 variant="ghost"
-                onClick={handleResendOtp}
-                disabled={cooldown > 0 || isLoading}
-                className="w-full sm:w-auto min-h-[44px] px-8 rounded-full font-semibold text-muted-foreground"
+                onClick={() => setShowForgotPassword(false)}
+                className="mb-2 px-0 hover:bg-transparent text-muted-foreground hover:text-foreground"
               >
-                {cooldown > 0 ? (
-                  `Resend Link in ${cooldown}s`
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Resend Link
-                  </>
-                )}
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to login
               </Button>
-            </div>
-          </div>
-        ) : showForgotPassword ? (
-          <div className="space-y-6">
-            <Button
-              variant="ghost"
-              onClick={() => setShowForgotPassword(false)}
-              className="mb-2 px-0 hover:bg-transparent text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to login
-            </Button>
-            <div className="mb-6">
-              <h3 className="text-3xl font-bold tracking-tight text-foreground mb-2">Reset Password</h3>
-              <p className="text-[15px] text-muted-foreground">
-                Enter your email for a reset link
-              </p>
-            </div>
-            <form onSubmit={handleForgotPassword} className="space-y-5">
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold text-foreground ml-1">Email Address</Label>
-                <Input
-                  type="email"
-                  autoComplete="email"
-                  inputMode="email"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  placeholder="name@company.com"
-                  value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
-                  required
-                  className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base text-foreground caret-foreground pl-4"
-                />
+              <div className="mb-6">
+                <h3 className="text-3xl font-bold tracking-tight text-foreground mb-2">
+                  Reset Password
+                </h3>
+                <p className="text-[15px] text-muted-foreground">
+                  Enter your email for a reset link
+                </p>
               </div>
-              <Button
-                type="submit"
-                className="w-full min-h-[52px] rounded-full bg-primary text-primary-foreground font-semibold text-base mt-2"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                ) : (
-                  <Mail className="mr-2 h-5 w-5" />
-                )}
-                Send Reset Link
-              </Button>
-            </form>
-          </div>
-        ) : (
-          <>
-            {/* Header Section */}
-            <div className="mb-8 sm:mb-10">
-              <div className="flex items-center gap-2 mb-3">
-                <img
-                  src={logo}
-                  alt="SteerSolo"
-                  className="w-5 h-5 rounded-[4px] object-cover ring-1 ring-border shadow-sm"
-                />
-                <span className="text-[11px] font-bold tracking-[0.25em] text-muted-foreground uppercase">
-                  Steersolo
-                </span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 sm:gap-4">
-                <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-[1.05] whitespace-pre-line">
-                  {activeTab === "login" ? "Welcome\nback" : "Get\nstarted"}
-                </h1>
-
-                {/* Pill Tab Toggle */}
-                <div className="flex items-center p-1 bg-muted/60 rounded-full border border-border/40 shadow-sm self-start sm:self-auto">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("login")}
-                    className={cn(
-                      "px-5 py-2 rounded-full text-[14px] font-semibold transition-all duration-300",
-                      activeTab === "login"
-                        ? "bg-background shadow-sm text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    Login
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("signup")}
-                    className={cn(
-                      "px-5 py-2 rounded-full text-[14px] font-semibold transition-all duration-300",
-                      activeTab === "signup"
-                        ? "bg-background shadow-sm text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    Sign up
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {authError && (
-              <Alert variant="destructive" className="mb-6 rounded-2xl">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{authError}</AlertDescription>
-              </Alert>
-            )}
-
-            {/* Form Section */}
-            <div className="space-y-6">
-              {activeTab === "login" ? (
-                <Form key="login-form" {...loginForm}>
-                  <form
-                    onSubmit={loginForm.handleSubmit(onLoginSubmit)}
-                    className="space-y-5"
-                  >
-                    <FormField
-                      control={loginForm.control}
-                      name="identifier"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1.5">
-                          <FormLabel className="text-sm font-semibold text-foreground ml-1">
-                            Email Address or Phone
-                          </FormLabel>
-                          <FormControl>
-                            <AuthIdentifierInput
-                              field={field}
-                              autoComplete="username"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={loginForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1.5">
-                          <div className="flex justify-between items-center ml-1">
-                            <FormLabel className="text-sm font-semibold text-foreground">
-                              Password
-                            </FormLabel>
-                            <button
-                              type="button"
-                              onClick={() => setShowForgotPassword(true)}
-                              className="text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              Forgot password?
-                            </button>
-                          </div>
-                          <FormControl>
-                            <PasswordInput
-                              field={field}
-                              placeholder="••••••••"
-                              autoComplete="current-password"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Button
-                      type="submit"
-                      className="w-full min-h-[52px] rounded-full bg-foreground hover:bg-foreground/90 text-background font-semibold text-base mt-4 transition-all"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      ) : null}
-                      Sign in
-                    </Button>
-                  </form>
-                </Form>
-              ) : (
-                <Form key="signup-form" {...signupForm}>
-                  <form
-                    onSubmit={signupForm.handleSubmit(onSignupSubmit)}
-                    className="space-y-5"
-                  >
-                    <FormField
-                      control={signupForm.control}
-                      name="identifier"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1.5">
-                          <FormLabel className="text-sm font-semibold text-foreground ml-1">
-                            Email Address or Phone
-                          </FormLabel>
-                          <FormControl>
-                            <AuthIdentifierInput
-                              field={field}
-                              autoComplete="username"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={signupForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1.5">
-                          <FormLabel className="text-sm font-semibold text-foreground ml-1">
-                            Password
-                          </FormLabel>
-                          <FormControl>
-                            <PasswordInput
-                              field={field}
-                              placeholder="••••••••"
-                              autoComplete="new-password"
-                            />
-                          </FormControl>
-                          <p className="text-[13px] text-muted-foreground ml-1 mt-1.5">
-                            At least 8 characters
-                          </p>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Button
-                      type="submit"
-                      className="w-full min-h-[52px] rounded-full bg-foreground hover:bg-foreground/90 text-background font-semibold text-base mt-4 transition-all"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      ) : null}
-                      Create account
-                    </Button>
-                  </form>
-                </Form>
-              )}
-
-              {/* OR Divider */}
-              <div className="relative py-2">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border/60"></div>
-                </div>
-                <div className="relative flex justify-center text-[11px] font-bold tracking-widest uppercase">
-                  <span className="bg-background px-4 text-muted-foreground">Or</span>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="w-full">
-                  <GoogleSignInButton 
-                    text={activeTab === "login" ? "continue_with" : "signup_with"}
+              <form onSubmit={handleForgotPassword} className="space-y-5">
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-foreground ml-1">
+                    Email Address
+                  </Label>
+                  <Input
+                    type="email"
+                    autoComplete="email"
+                    inputMode="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder="name@company.com"
+                    value={forgotEmail}
+                    onChange={e => setForgotEmail(e.target.value)}
+                    required
+                    className="min-h-[52px] rounded-2xl bg-background border-border shadow-sm text-base text-foreground caret-foreground pl-4"
                   />
                 </div>
+                <Button
+                  type="submit"
+                  className="w-full min-h-[52px] rounded-full bg-primary text-primary-foreground font-semibold text-base mt-2"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  ) : (
+                    <Mail className="mr-2 h-5 w-5" />
+                  )}
+                  Send Reset Link
+                </Button>
+              </form>
+            </div>
+          ) : (
+            <>
+              {/* Header Section */}
+              <div className="mb-8 sm:mb-10">
+                <div className="flex items-center gap-2 mb-3">
+                  <img
+                    src={logo}
+                    alt="SteerSolo"
+                    className="w-5 h-5 rounded-[4px] object-cover ring-1 ring-border shadow-sm"
+                  />
+                  <span className="text-[11px] font-bold tracking-[0.25em] text-muted-foreground uppercase">
+                    Steersolo
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 sm:gap-4">
+                  <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-[1.05] whitespace-pre-line">
+                    {activeTab === "login" ? "Welcome\nback" : "Get\nstarted"}
+                  </h1>
+
+                  {/* Pill Tab Toggle */}
+                  <div className="flex items-center p-1 bg-muted/60 rounded-full border border-border/40 shadow-sm self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("login")}
+                      className={cn(
+                        "px-5 py-2 rounded-full text-[14px] font-semibold transition-all duration-300",
+                        activeTab === "login"
+                          ? "bg-background shadow-sm text-foreground"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      Login
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("signup")}
+                      className={cn(
+                        "px-5 py-2 rounded-full text-[14px] font-semibold transition-all duration-300",
+                        activeTab === "signup"
+                          ? "bg-background shadow-sm text-foreground"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      Sign up
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              {/* Footer text */}
-              <p className="text-center text-[13px] text-muted-foreground pt-6 pb-4">
-                By continuing, you agree to our{" "}
-                <Link to="/terms" className="underline hover:text-foreground transition-colors">terms</Link>{" "}
-                and{" "}
-                <Link to="/privacy" className="underline hover:text-foreground transition-colors">privacy policy</Link>.
-              </p>
-            </div>
-          </>
-        )}
+              {authError && (
+                <Alert variant="destructive" className="mb-6 rounded-2xl">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{authError}</AlertDescription>
+                </Alert>
+              )}
+
+              {/* Form Section */}
+              <div className="space-y-6">
+                {activeTab === "login" ? (
+                  <Form key="login-form" {...loginForm}>
+                    <form
+                      onSubmit={loginForm.handleSubmit(onLoginSubmit)}
+                      className="space-y-5"
+                    >
+                      <FormField
+                        control={loginForm.control}
+                        name="identifier"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1.5">
+                            <FormLabel className="text-sm font-semibold text-foreground ml-1">
+                              Email Address or Phone
+                            </FormLabel>
+                            <FormControl>
+                              <AuthIdentifierInput
+                                field={field}
+                                autoComplete="username"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={loginForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1.5">
+                            <div className="flex justify-between items-center ml-1">
+                              <FormLabel className="text-sm font-semibold text-foreground">
+                                Password
+                              </FormLabel>
+                              <button
+                                type="button"
+                                onClick={() => setShowForgotPassword(true)}
+                                className="text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                Forgot password?
+                              </button>
+                            </div>
+                            <FormControl>
+                              <PasswordInput
+                                field={field}
+                                placeholder="••••••••"
+                                autoComplete="current-password"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button
+                        type="submit"
+                        className="w-full min-h-[52px] rounded-full bg-foreground hover:bg-foreground/90 text-background font-semibold text-base mt-4 transition-all"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        ) : null}
+                        Sign in
+                      </Button>
+                    </form>
+                  </Form>
+                ) : (
+                  <Form key="signup-form" {...signupForm}>
+                    <form
+                      onSubmit={signupForm.handleSubmit(onSignupSubmit)}
+                      className="space-y-5"
+                    >
+                      <FormField
+                        control={signupForm.control}
+                        name="identifier"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1.5">
+                            <FormLabel className="text-sm font-semibold text-foreground ml-1">
+                              Email Address or Phone
+                            </FormLabel>
+                            <FormControl>
+                              <AuthIdentifierInput
+                                field={field}
+                                autoComplete="username"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={signupForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1.5">
+                            <FormLabel className="text-sm font-semibold text-foreground ml-1">
+                              Password
+                            </FormLabel>
+                            <FormControl>
+                              <PasswordInput
+                                field={field}
+                                placeholder="••••••••"
+                                autoComplete="new-password"
+                              />
+                            </FormControl>
+                            <p className="text-[13px] text-muted-foreground ml-1 mt-1.5">
+                              At least 8 characters
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button
+                        type="submit"
+                        className="w-full min-h-[52px] rounded-full bg-foreground hover:bg-foreground/90 text-background font-semibold text-base mt-4 transition-all"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        ) : null}
+                        Create account
+                      </Button>
+                    </form>
+                  </Form>
+                )}
+
+                {/* OR Divider */}
+                <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-border/60"></div>
+                  </div>
+                  <div className="relative flex justify-center text-[11px] font-bold tracking-widest uppercase">
+                    <span className="bg-background px-4 text-muted-foreground">
+                      Or
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="w-full">
+                    <GoogleSignInButton
+                      text={
+                        activeTab === "login" ? "continue_with" : "signup_with"
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Footer text */}
+                <p className="text-center text-[13px] text-muted-foreground pt-6 pb-4">
+                  By continuing, you agree to our{" "}
+                  <Link
+                    to="/terms"
+                    className="underline hover:text-foreground transition-colors"
+                  >
+                    terms
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    to="/privacy"
+                    className="underline hover:text-foreground transition-colors"
+                  >
+                    privacy policy
+                  </Link>
+                  .
+                </p>
+              </div>
+            </>
+          )}
         </div>
         {/* /Form Card */}
       </div>

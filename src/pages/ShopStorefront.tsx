@@ -315,16 +315,39 @@ const ShopStorefront = () => {
     if (!shop) return null;
     const shopUrl = `https://steersolo.com/shop/${shop.shop_slug}`;
     const imageUrl = shop.logo_url || shop.banner_url || "";
+
+    // Determine the right schema type based on category
+    let schemaType = "Store";
+    if (shop.category) {
+      const lowerCategory = shop.category.toLowerCase();
+      if (lowerCategory.includes("beauty") || lowerCategory.includes("health"))
+        schemaType = "BeautySalon";
+      else if (
+        lowerCategory.includes("food") ||
+        lowerCategory.includes("drink")
+      )
+        schemaType = "FoodEstablishment";
+      else if (lowerCategory.includes("fashion")) schemaType = "ClothingStore";
+      else if (lowerCategory.includes("electronics"))
+        schemaType = "ElectronicsStore";
+    }
+
     const data: any = {
       "@context": "https://schema.org",
-      "@type": "Store",
+      "@type": schemaType,
       name: shop.shop_name,
+      alternateName: shop.shop_slug,
       description:
+        shop.seo_description ||
         shop.description ||
-        `Shop ${shop.category ? `${getCategoryLabel(shop.category)} ` : ""}at ${shop.shop_name}${shop.city ? ` in ${shop.city}` : ""} on SteerSolo`,
+        `Shop ${shopCategoryLabel ? `${shopCategoryLabel} ` : ""}at ${shop.shop_name}${shop.city ? ` in ${shop.city}` : ""}${shop.state ? `, ${shop.state}` : ""} on SteerSolo - Nigeria's trusted social commerce marketplace`,
       url: shopUrl,
       image: imageUrl || undefined,
+      logo: shop.logo_url || undefined,
       category: shopCategoryLabel || undefined,
+      keywords:
+        shop.seo_keywords?.join(", ") ||
+        `${shop.shop_name}, ${shopCategoryLabel || "shop"}, ${shop.city || ""}, ${shop.state || "Nigeria"}, buy ${shop.shop_name} products, social commerce, steersolo, nigerian marketplace`,
       numberOfEmployees: "1-10",
       address: {
         "@type": "PostalAddress",
@@ -339,6 +362,8 @@ const ShopStorefront = () => {
           "@type": "AggregateRating",
           ratingValue: shop.average_rating,
           reviewCount: shop.total_reviews,
+          bestRating: 5,
+          worstRating: 1,
         },
       }),
       "@id": shopUrl,
@@ -347,12 +372,18 @@ const ShopStorefront = () => {
         "@type": "WebSite",
         name: "SteerSolo",
         url: "https://steersolo.com",
+        potentialAction: {
+          "@type": "SearchAction",
+          target: "https://steersolo.com/shops?search={search_term}",
+          "query-input": "required name=search_term",
+        },
       },
       potentialAction: {
         "@type": "SearchAction",
         target: `${shopUrl}?search={search_term}`,
         "query-input": "required name=search_term",
       },
+      priceRange: "₦₦",
     };
 
     if (shop.whatsapp_number) {
@@ -374,7 +405,7 @@ const ShopStorefront = () => {
     if (products.length > 0) {
       data.hasOfferCatalog = {
         "@type": "OfferCatalog",
-        name: `${shop.shop_name} Products`,
+        name: `${shop.shop_name} Products & Services`,
         itemListElement: products.slice(0, 20).map((p, i) => ({
           "@type": "ListItem",
           position: i + 1,
@@ -391,7 +422,22 @@ const ShopStorefront = () => {
               availability: p.is_available
                 ? "https://schema.org/InStock"
                 : "https://schema.org/OutOfStock",
+              url: `${shopUrl}/product/${p.id}`,
+              seller: {
+                "@type": "Organization",
+                name: shop.shop_name,
+                url: shopUrl,
+              },
             },
+            ...(p.average_rating > 0 && {
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: p.average_rating,
+                reviewCount: p.total_reviews,
+                bestRating: 5,
+                worstRating: 1,
+              },
+            }),
           },
         })),
       };
@@ -404,12 +450,28 @@ const ShopStorefront = () => {
         {
           "@type": "ListItem",
           position: 1,
-          name: "Marketplace",
-          item: "https://steersolo.com/shops",
+          name: "Home",
+          item: "https://steersolo.com",
         },
         {
           "@type": "ListItem",
           position: 2,
+          name: "Marketplace",
+          item: "https://steersolo.com/shops",
+        },
+        ...(shopCategoryLabel
+          ? [
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: shopCategoryLabel,
+                item: `https://steersolo.com/shops?category=${encodeURIComponent(shopCategoryLabel)}`,
+              },
+            ]
+          : []),
+        {
+          "@type": "ListItem",
+          position: shopCategoryLabel ? 4 : 3,
           name: shop.shop_name,
           item: shopUrl,
         },
@@ -836,7 +898,7 @@ const ShopStorefront = () => {
     shop?.seo_description ||
     shop?.description ||
     (shop
-      ? `Shop ${shopCategoryLabel ? `${shopCategoryLabel} ` : ""}at ${shop.shop_name}${shop.city ? ` in ${shop.city}` : ""}${shop.state ? `, ${shop.state}` : ""} on SteerSolo`
+      ? `Discover ${shop.shop_name} on SteerSolo - Nigeria's trusted social commerce marketplace. Shop ${shopCategoryLabel ? `${shopCategoryLabel} products` : "products"}${shop.city ? ` in ${shop.city},` : ""}${shop.state ? ` ${shop.state},` : ""} Nigeria. Verified seller${shop.whatsapp_number ? " with WhatsApp support" : ""}.`
       : "");
 
   return (
@@ -851,35 +913,63 @@ const ShopStorefront = () => {
     >
       {shop && (
         <Helmet>
-          <title>{`${shop.shop_name} | SteerSolo Store`}</title>
+          <title>{`${shop.shop_name} | ${shopCategoryLabel ? `${shopCategoryLabel} in ` : ""}${shop.city ? `${shop.city}, ` : ""}${shop.state || "Nigeria"} | SteerSolo`}</title>
           <meta name="description" content={metaDescription} />
           <meta
             name="keywords"
             content={
               shop.seo_keywords?.length
                 ? shop.seo_keywords.join(", ")
-                : `${shop.shop_name}, ${shopCategoryLabel || "shop"}, ${shop.city || ""}, ${shop.state || "Nigeria"}, buy ${shop.shop_name} products, social commerce, steersolo`
+                : `${shop.shop_name}, ${shopCategoryLabel || "shop"}, ${shop.city || ""}, ${shop.state || "Nigeria"}, buy ${shop.shop_name} products, social commerce, steersolo, nigerian marketplace, online shop nigeria`
             }
           />
 
-          <meta property="og:title" content={shop.shop_name} />
+          {/* Open Graph Tags for Social Media */}
+          <meta
+            property="og:title"
+            content={`${shop.shop_name} | ${shopCategoryLabel ? `${shopCategoryLabel} in ` : ""}${shop.city ? `${shop.city}, ` : ""}${shop.state || "Nigeria"}`}
+          />
           <meta property="og:description" content={metaDescription} />
           <meta property="og:url" content={shopUrl} />
-          <meta property="og:type" content="business.business" />
+          <meta property="og:type" content="website" />
           <meta property="og:site_name" content="SteerSolo" />
           <meta property="og:locale" content="en_NG" />
 
-          {shop.logo_url || shop.banner_url ? (
+          {shop.logo_url && (
+            <meta property="og:image" content={shop.logo_url} />
+          )}
+          {shop.banner_url && (
             <meta
-              property="og:image"
-              content={shop.logo_url || shop.banner_url || ""}
+              property="og:image:alt"
+              content={`${shop.shop_name} banner`}
             />
-          ) : null}
+          )}
+
+          {/* Twitter/X Card Tags */}
           <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content={shop.shop_name} />
+          <meta
+            name="twitter:title"
+            content={`${shop.shop_name} | ${shopCategoryLabel ? `${shopCategoryLabel} in ` : ""}${shop.city ? `${shop.city}, ` : ""}${shop.state || "Nigeria"}`}
+          />
           <meta name="twitter:description" content={metaDescription} />
           <meta name="twitter:site" content="@steersolo" />
+          <meta name="twitter:creator" content="@steersolo" />
+          {shop.logo_url && (
+            <meta name="twitter:image" content={shop.logo_url} />
+          )}
+
+          {/* Additional SEO Tags */}
           <link rel="canonical" href={shopUrl} />
+          <meta
+            name="robots"
+            content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+          />
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+          />
+          <meta name="theme-color" content={shop.accent_color || "#0F172A"} />
+
           {schemaData && (
             <script type="application/ld+json">
               {JSON.stringify(schemaData)}
@@ -1113,40 +1203,40 @@ const ShopStorefront = () => {
         </section>
 
         <section className="container mx-auto px-4 pb-6">
-          <div className="rounded-[2rem] border border-border/50 bg-card/90 backdrop-blur-xl shadow-[0_14px_40px_rgba(0,0,0,0.05)] p-4 sm:p-6 md:p-7">
-            <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="space-y-4">
+          <div className="rounded-2xl sm:rounded-[2rem] border border-border/50 bg-card/90 backdrop-blur-xl shadow-[0_14px_40px_rgba(0,0,0,0.05)] p-3 sm:p-4 md:p-7">
+            <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                       Store Experience
                     </p>
-                    <h2 className="mt-1 text-xl sm:text-2xl font-display font-bold tracking-tight">
+                    <h2 className="mt-0.5 text-base sm:text-xl md:text-2xl font-display font-bold tracking-tight">
                       Shop with confidence
                     </h2>
                   </div>
                   {shopCategoryLabel && (
-                    <Badge className="rounded-full bg-primary/10 text-primary border-primary/15">
+                    <Badge className="rounded-full bg-primary/10 text-primary border-primary/15 text-xs px-2 py-0.5">
                       {shopCategoryLabel}
                     </Badge>
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {storefrontHighlights.map(highlight => (
                     <div
                       key={highlight.title}
-                      className="rounded-2xl border border-border/50 bg-background/80 px-4 py-4 shadow-sm"
+                      className="rounded-xl sm:rounded-2xl border border-border/50 bg-background/80 px-3 py-3 sm:px-4 sm:py-4 shadow-sm"
                     >
                       <div className="flex items-center gap-2">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                          <highlight.icon className="w-4 h-4" />
+                        <div className="flex h-8 sm:h-10 w-8 sm:w-10 items-center justify-center rounded-xl sm:rounded-2xl bg-primary/10 text-primary">
+                          <highlight.icon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold">
+                          <p className="text-xs sm:text-sm font-semibold">
                             {highlight.title}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">
                             {highlight.subtitle}
                           </p>
                         </div>
@@ -1157,13 +1247,13 @@ const ShopStorefront = () => {
               </div>
 
               {quickCategoryChips.length > 1 && (
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                      <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                         Categories
                       </p>
-                      <h3 className="mt-1 text-lg sm:text-xl font-display font-bold tracking-tight">
+                      <h3 className="mt-0.5 text-sm sm:text-lg md:text-xl font-display font-bold tracking-tight">
                         Browse faster
                       </h3>
                     </div>
@@ -1171,14 +1261,14 @@ const ShopStorefront = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="rounded-full"
+                        className="rounded-full text-xs h-8 px-3"
                         onClick={() => setCategoryFilter("all")}
                       >
                         View all
                       </Button>
                     )}
                   </div>
-                  <div className="flex gap-3 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  <div className="flex gap-2.5 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {quickCategoryChips.map(chip => {
                       const isActive = categoryFilter === chip.key;
                       return (
@@ -1186,13 +1276,13 @@ const ShopStorefront = () => {
                           key={chip.key}
                           type="button"
                           onClick={() => setCategoryFilter(chip.key)}
-                          className={`min-w-[88px] flex-shrink-0 rounded-2xl border px-3 py-3 text-center transition-all ${
+                          className={`min-w-[70px] sm:min-w-[88px] flex-shrink-0 rounded-xl sm:rounded-2xl border px-2.5 sm:px-3 py-2.5 sm:py-3 text-center transition-all ${
                             isActive
                               ? "border-primary bg-primary/8 shadow-sm"
                               : "border-border/50 bg-background/70 hover:border-primary/30 hover:bg-primary/5"
                           }`}
                         >
-                          <div className="mx-auto mb-2 h-14 w-14 overflow-hidden rounded-full bg-muted">
+                          <div className="mx-auto mb-1.5 sm:mb-2 h-10 sm:h-14 w-10 sm:w-14 overflow-hidden rounded-full bg-muted">
                             {chip.imageUrl ? (
                               <img
                                 src={chip.imageUrl}
@@ -1201,11 +1291,11 @@ const ShopStorefront = () => {
                               />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center">
-                                <Package className="w-5 h-5 text-muted-foreground/50" />
+                                <Package className="w-4 sm:w-5 h-4 sm:h-5 text-muted-foreground/50" />
                               </div>
                             )}
                           </div>
-                          <p className="line-clamp-2 text-xs font-semibold leading-tight">
+                          <p className="line-clamp-2 text-[10px] sm:text-xs font-semibold leading-tight">
                             {chip.label}
                           </p>
                         </button>

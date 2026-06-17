@@ -5,7 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Store, ShoppingCart, Star, Package, Minus, Plus, MessageSquare, BadgeCheck, ChevronLeft, ChevronRight, Share2, Shield, Truck, Clock, Expand, Download } from "lucide-react";
+import {
+  ArrowLeft,
+  Store,
+  ShoppingCart,
+  Star,
+  Package,
+  Minus,
+  Plus,
+  MessageSquare,
+  BadgeCheck,
+  ChevronLeft,
+  ChevronRight,
+  Share2,
+  Shield,
+  Truck,
+  Clock,
+  Expand,
+  Download,
+} from "lucide-react";
 import { WishlistButton } from "@/components/WishlistButton";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -49,7 +67,7 @@ interface StoredCartProduct {
   video_url: string | null;
   average_rating: number;
   total_reviews: number;
-  type: 'product' | 'service';
+  type: "product" | "service";
   duration_minutes: number | null;
   booking_required: boolean;
   is_digital?: boolean;
@@ -79,7 +97,8 @@ const isStoredCartItem = (item: unknown): item is StoredCartItem => {
   return typeof productId === "string";
 };
 
-const getProductStockQuantity = (product: Product) => product.stock_quantity ?? product.inventory ?? 0;
+const getProductStockQuantity = (product: Product) =>
+  product.stock_quantity ?? product.inventory ?? 0;
 
 const normalizeProductForCart = (product: Product): StoredCartProduct => ({
   id: product.id,
@@ -94,7 +113,7 @@ const normalizeProductForCart = (product: Product): StoredCartProduct => ({
   video_url: product.video_url || null,
   average_rating: product.averageRating ?? 0,
   total_reviews: product.totalReviews ?? 0,
-  type: product.type || 'product',
+  type: product.type || "product",
   duration_minutes: product.duration_minutes ?? null,
   booking_required: product.booking_required ?? false,
   is_digital: product.is_digital ?? false,
@@ -102,7 +121,9 @@ const normalizeProductForCart = (product: Product): StoredCartProduct => ({
 
 const clampCartQuantity = (quantity: unknown, stockQuantity: number) => {
   const parsedQuantity = Number(quantity);
-  const safeQuantity = Number.isFinite(parsedQuantity) ? Math.floor(parsedQuantity) : 1;
+  const safeQuantity = Number.isFinite(parsedQuantity)
+    ? Math.floor(parsedQuantity)
+    : 1;
   return Math.min(Math.max(safeQuantity, 1), stockQuantity);
 };
 
@@ -127,78 +148,142 @@ const ProductDetails = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [productId]);
 
-  const productSeo = product && shop ? (
-    <Helmet>
-      <title>{`${product.name} | ${shop.shop_name || shop.name || 'Shop'} | SteerSolo`}</title>
-      <meta name="description" content={product.description || `${product.name} available at ${shop.shop_name || shop.name || 'Shop'} on SteerSolo.`} />
-      <meta name="keywords" content={`${product.name}, ${shop.shop_name || shop.name}, buy ${product.name} online, nigeria beauty, steersolo`} />
-      
-      <meta property="og:title" content={`${product.name} - ${shop.shop_name || shop.name}`} />
-      <meta property="og:description" content={product.description || `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`} />
-      <meta property="og:url" content={`https://steersolo.com/shop/${slug}/product/${product.id}`} />
-      <meta property="og:type" content="product" />
-      <meta property="og:site_name" content="SteerSolo" />
-      <meta property="og:locale" content="en_NG" />
-      
-      {(product.image_url || product.images?.[0]?.url) && (
-        <meta property="og:image" content={product.image_url || product.images?.[0]?.url} />
-      )}
-    
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={`${product.name} - ${shop.shop_name || shop.name}`} />
-      <meta name="twitter:description" content={product.description || `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`} />
-      
-      <link rel="canonical" href={`https://steersolo.com/shop/${slug}/product/${product.id}`} />
-      
-      <script type="application/ld+json">
-        {JSON.stringify([
-          {
-            "@context": "https://schema.org",
-            "@type": "Product",
-            "name": product.name,
-            "description": product.description || `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`,
-            "image": product.image_url || (product.images?.[0]?.url) || undefined,
-            "url": `https://steersolo.com/shop/${slug}/product/${product.id}`,
-            "sku": product.id,
-            "brand": { "@type": "Brand", "name": shop.shop_name || shop.name },
-            "offers": {
-              "@type": "Offer",
-              "url": `https://steersolo.com/shop/${slug}/product/${product.id}`,
-              "price": product.price,
-              "priceCurrency": "NGN",
-              "availability": (product.inventory || product.is_available) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-              "seller": { "@type": "Organization", "name": shop.shop_name || shop.name, "url": `https://steersolo.com/shop/${slug}` }
-            },
-            ...((product.averageRating || product.totalReviews) && {
-              "aggregateRating": {
-                "@type": "AggregateRating",
-                "ratingValue": product.averageRating,
-                "reviewCount": product.totalReviews
-              }
-            }),
-            ...(reviews.length > 0 && {
-              "review": reviews.map(r => ({
-                "@type": "Review",
-                "reviewRating": { "@type": "Rating", "ratingValue": r.rating },
-                "author": { "@type": "Person", "name": r.customer_name || "Verified Customer" },
-                "reviewBody": r.comment || "",
-                "datePublished": r.created_at
-              }))
-            })
-          },
-          {
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            "itemListElement": [
-              { "@type": "ListItem", "position": 1, "name": "Marketplace", "item": "https://steersolo.com/shops" },
-              { "@type": "ListItem", "position": 2, "name": shop.shop_name || shop.name, "item": `https://steersolo.com/shop/${slug}` },
-              { "@type": "ListItem", "position": 3, "name": product.name, "item": `https://steersolo.com/shop/${slug}/product/${product.id}` }
-            ]
+  const productSeo =
+    product && shop ? (
+      <Helmet>
+        <title>{`${product.name} | ${shop.shop_name || shop.name || "Shop"} | Buy in ${shop.city || shop.state || "Nigeria"} | SteerSolo`}</title>
+        <meta
+          name="description"
+          content={
+            product.description ||
+            `Buy ${product.name} from ${shop.shop_name || shop.name || "Shop"} on SteerSolo - Nigeria's trusted social commerce marketplace${shop.city ? ` in ${shop.city}` : ""}${shop.state ? `, ${shop.state}` : ""}.`
           }
-        ])}
-      </script>
-    </Helmet>
-  ) : null;
+        />
+        <meta
+          name="keywords"
+          content={`${product.name}, ${shop.shop_name || shop.name}, buy ${product.name} online, ${(product as any).category || "product"}, nigeria, steersolo, online shopping, social commerce`}
+        />
+
+        <meta
+          property="og:title"
+          content={`${product.name} - ${shop.shop_name || shop.name}`}
+        />
+        <meta
+          property="og:description"
+          content={
+            product.description ||
+            `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`
+          }
+        />
+        <meta
+          property="og:url"
+          content={`https://steersolo.com/shop/${slug}/product/${product.id}`}
+        />
+        <meta property="og:type" content="product" />
+        <meta property="og:site_name" content="SteerSolo" />
+        <meta property="og:locale" content="en_NG" />
+
+        {(product.image_url || product.images?.[0]?.url) && (
+          <meta
+            property="og:image"
+            content={product.image_url || product.images?.[0]?.url}
+          />
+        )}
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+          name="twitter:title"
+          content={`${product.name} - ${shop.shop_name || shop.name}`}
+        />
+        <meta
+          name="twitter:description"
+          content={
+            product.description ||
+            `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`
+          }
+        />
+
+        <link
+          rel="canonical"
+          href={`https://steersolo.com/shop/${slug}/product/${product.id}`}
+        />
+
+        <script type="application/ld+json">
+          {JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "Product",
+              name: product.name,
+              description:
+                product.description ||
+                `${product.name} available at ${shop.shop_name || shop.name} on SteerSolo.`,
+              image: product.image_url || product.images?.[0]?.url || undefined,
+              url: `https://steersolo.com/shop/${slug}/product/${product.id}`,
+              sku: product.id,
+              brand: { "@type": "Brand", name: shop.shop_name || shop.name },
+              offers: {
+                "@type": "Offer",
+                url: `https://steersolo.com/shop/${slug}/product/${product.id}`,
+                price: product.price,
+                priceCurrency: "NGN",
+                availability:
+                  product.inventory || product.is_available
+                    ? "https://schema.org/InStock"
+                    : "https://schema.org/OutOfStock",
+                seller: {
+                  "@type": "Organization",
+                  name: shop.shop_name || shop.name,
+                  url: `https://steersolo.com/shop/${slug}`,
+                },
+              },
+              ...((product.averageRating || product.totalReviews) && {
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: product.averageRating,
+                  reviewCount: product.totalReviews,
+                },
+              }),
+              ...(reviews.length > 0 && {
+                review: reviews.map(r => ({
+                  "@type": "Review",
+                  reviewRating: { "@type": "Rating", ratingValue: r.rating },
+                  author: {
+                    "@type": "Person",
+                    name: r.customer_name || "Verified Customer",
+                  },
+                  reviewBody: r.comment || "",
+                  datePublished: r.created_at,
+                })),
+              }),
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                {
+                  "@type": "ListItem",
+                  position: 1,
+                  name: "Marketplace",
+                  item: "https://steersolo.com/shops",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: shop.shop_name || shop.name,
+                  item: `https://steersolo.com/shop/${slug}`,
+                },
+                {
+                  "@type": "ListItem",
+                  position: 3,
+                  name: product.name,
+                  item: `https://steersolo.com/shop/${slug}/product/${product.id}`,
+                },
+              ],
+            },
+          ])}
+        </script>
+      </Helmet>
+    ) : null;
 
   const loadProductData = async () => {
     try {
@@ -229,10 +314,14 @@ const ProductDetails = () => {
         return;
       }
 
-      if (productResponse.data.shopId !== shopResponse.data.id || !productResponse.data.is_available) {
+      if (
+        productResponse.data.shopId !== shopResponse.data.id ||
+        !productResponse.data.is_available
+      ) {
         toast({
           title: "Product Unavailable",
-          description: "This product is currently unavailable. Please browse other items from this shop.",
+          description:
+            "This product is currently unavailable. Please browse other items from this shop.",
           variant: "destructive",
         });
         navigate(`/shop/${slug}`);
@@ -242,12 +331,14 @@ const ProductDetails = () => {
       setProduct(productResponse.data);
 
       // Load related products
-      const relatedResponse = await productService.getProducts({ 
+      const relatedResponse = await productService.getProducts({
         shopId: shopResponse.data.id,
-        limit: 4 
+        limit: 4,
       });
       if (relatedResponse.success) {
-        setRelatedProducts(relatedResponse.data.filter(p => p.id !== productId));
+        setRelatedProducts(
+          relatedResponse.data.filter(p => p.id !== productId),
+        );
       }
 
       // Load reviews with verification data
@@ -259,11 +350,11 @@ const ProductDetails = () => {
       } catch (e) {
         console.error("Failed to load reviews:", e);
       }
-
     } catch {
       toast({
         title: "Product Unavailable",
-        description: "This product is no longer available. Please browse other items from this shop.",
+        description:
+          "This product is no longer available. Please browse other items from this shop.",
         variant: "destructive",
       });
       if (slug) navigate(`/shop/${slug}`);
@@ -277,12 +368,19 @@ const ProductDetails = () => {
 
     const cartKey = getCartKey(shop.id);
     const cartProduct = normalizeProductForCart(product);
-    const existingCart = parseStoredCart(localStorage.getItem(cartKey)).filter(isStoredCartItem);
-    const existingItem = existingCart.find((item) => item.product.id === product.id);
+    const existingCart = parseStoredCart(localStorage.getItem(cartKey)).filter(
+      isStoredCartItem,
+    );
+    const existingItem = existingCart.find(
+      item => item.product.id === product.id,
+    );
 
     if (existingItem) {
       existingItem.product = cartProduct;
-      existingItem.quantity = clampCartQuantity(existingItem.quantity + quantity, cartProduct.stock_quantity);
+      existingItem.quantity = clampCartQuantity(
+        existingItem.quantity + quantity,
+        cartProduct.stock_quantity,
+      );
     } else {
       existingCart.push({
         product: cartProduct,
@@ -291,19 +389,21 @@ const ProductDetails = () => {
     }
 
     localStorage.setItem(cartKey, JSON.stringify(existingCart));
-    
+
     toast({
       title: "Added to Cart! 🛒",
       description: `${quantity} x ${product.name} added`,
       action: (
-        <Button variant="outline" size="sm" onClick={() => navigate(`/shop/${slug}?cart=open`)}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate(`/shop/${slug}?cart=open`)}
+        >
           View Cart
         </Button>
       ),
     });
   };
-
-
 
   const handleShareProduct = async () => {
     if (!product || !slug) return;
@@ -346,18 +446,21 @@ const ProductDetails = () => {
       toast({
         title: "Inquiry Unavailable",
         description: "This seller hasn't provided a WhatsApp number yet.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
-    const shopName = shop.shop_name || shop.name || 'Shop';
+    const shopName = shop.shop_name || shop.name || "Shop";
     const productUrl = `${window.location.origin}/shop/${slug}/product/${product.id}`;
     const message = `Hi ${shopName}, I'm interested in "${product.name}" I saw on SteerSolo. Is it available? \n\nLink: ${productUrl}`;
-    
+
     // Clean phone number: remove +, space, dash
-    const cleanPhone = shop.whatsapp_number.replace(/[+\s-]/g, '');
-    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+    const cleanPhone = shop.whatsapp_number.replace(/[+\s-]/g, "");
+    window.open(
+      `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`,
+      "_blank",
+    );
   };
 
   const renderStars = (rating: number) => {
@@ -371,7 +474,10 @@ const ProductDetails = () => {
 
   const scrollRelatedProducts = (direction: "left" | "right") => {
     if (!relatedScrollRef.current) return;
-    const amount = Math.min(360, Math.round(relatedScrollRef.current.clientWidth * 0.9));
+    const amount = Math.min(
+      360,
+      Math.round(relatedScrollRef.current.clientWidth * 0.9),
+    );
     relatedScrollRef.current.scrollBy({
       left: direction === "left" ? -amount : amount,
       behavior: "smooth",
@@ -396,8 +502,12 @@ const ProductDetails = () => {
         <Navbar />
         <div className="flex-1 container mx-auto px-4 pt-32 text-center">
           <Package className="w-20 h-20 mx-auto mb-6 text-muted-foreground" />
-          <h1 className="font-display text-2xl font-bold mb-2">Product Not Found</h1>
-          <p className="text-muted-foreground mb-6">This product doesn't exist or is not available</p>
+          <h1 className="font-display text-2xl font-bold mb-2">
+            Product Not Found
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            This product doesn't exist or is not available
+          </p>
           <Link to="/shops">
             <Button className="bg-gradient-to-r from-accent to-primary">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -426,11 +536,17 @@ const ProductDetails = () => {
       <div className="flex-1 container mx-auto px-3 sm:px-4 pt-20 sm:pt-24 pb-24 sm:pb-16">
         {/* Breadcrumb — desktop only */}
         <div className="mb-6 hidden sm:flex items-center gap-2 text-sm">
-          <Link to="/shops" className="text-muted-foreground hover:text-foreground transition-colors">
+          <Link
+            to="/shops"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
             Shops
           </Link>
           <span className="text-muted-foreground">/</span>
-          <Link to={`/shop/${slug}`} className="text-muted-foreground hover:text-foreground transition-colors">
+          <Link
+            to={`/shop/${slug}`}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
             {shop.name}
           </Link>
           <span className="text-muted-foreground">/</span>
@@ -439,9 +555,15 @@ const ProductDetails = () => {
 
         {/* Back button */}
         <Link to={`/shop/${slug}`} className="inline-block mb-4 sm:mb-6">
-          <Button variant="ghost" size="sm" className="hover:bg-muted -ml-2 sm:ml-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:bg-muted -ml-2 sm:ml-0"
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            <span className="truncate max-w-[200px] sm:max-w-none">Back to {shop.name}</span>
+            <span className="truncate max-w-[200px] sm:max-w-none">
+              Back to {shop.name}
+            </span>
           </Button>
         </Link>
 
@@ -463,20 +585,20 @@ const ProductDetails = () => {
                   loop
                   playsInline
                   poster={product.images?.[0]?.url || undefined}
-                  onError={(e) => {
+                  onError={e => {
                     console.error("Video failed to load:", product.video_url);
                     const target = e.target as HTMLVideoElement;
                     // If video fails completely and we have an image, we could fallback,
                     // but for now let's just ensure it doesn't show a black box if poster is available.
-                    target.style.display = 'none'; // hide broken video
+                    target.style.display = "none"; // hide broken video
                     if (target.parentElement) {
-                      target.parentElement.classList.add('fallback-to-poster');
+                      target.parentElement.classList.add("fallback-to-poster");
                     }
                   }}
                 />
                 <style>{`
                   .fallback-to-poster {
-                    background-image: url('${product.images?.[0]?.url || ''}');
+                    background-image: url('${product.images?.[0]?.url || ""}');
                     background-size: cover;
                     background-position: center;
                   }
@@ -503,7 +625,11 @@ const ProductDetails = () => {
               </button>
             ) : (
               <div className="aspect-square rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center relative overflow-hidden">
-                <AdirePattern variant="geometric" className="text-primary" opacity={0.2} />
+                <AdirePattern
+                  variant="geometric"
+                  className="text-primary"
+                  opacity={0.2}
+                />
                 {product.is_digital ? (
                   <Download className="w-24 h-24 text-muted-foreground relative z-10" />
                 ) : product.type === "service" ? (
@@ -518,20 +644,27 @@ const ProductDetails = () => {
           {/* Product Info */}
           <div className="space-y-5 sm:space-y-6">
             {/* Shop Info */}
-            <Link to={`/shop/${slug}`} className="inline-flex items-center gap-3 p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
+            <Link
+              to={`/shop/${slug}`}
+              className="inline-flex items-center gap-3 p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors"
+            >
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
                 <Store className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
                 <p className="font-medium">{shop.name}</p>
-                <p className="text-xs text-muted-foreground">View all products</p>
+                <p className="text-xs text-muted-foreground">
+                  View all products
+                </p>
               </div>
             </Link>
 
             {/* Product Name & Rating */}
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold leading-tight break-words">{product.name}</h1>
+                <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold leading-tight break-words">
+                  {product.name}
+                </h1>
                 {product.is_digital && (
                   <Badge className="w-fit bg-purple-600/90 text-white border-none py-1.5 px-3">
                     <Download className="w-3 h-3 mr-1.5" /> Digital Product
@@ -549,11 +682,16 @@ const ProductDetails = () => {
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3 text-amber-600 dark:text-amber-400">
                 <Clock className="w-5 h-5 shrink-0 mt-0.5 animate-pulse" />
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider">Limited Time Listing</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider">
+                    Limited Time Listing
+                  </p>
                   <p className="text-xs font-semibold mt-0.5 leading-normal">
                     This offering is scheduled to automatically delete on{" "}
                     <span className="font-bold underline">
-                      {format(new Date(product.delete_at), "eeee, MMMM dd 'at' hh:mm a")}
+                      {format(
+                        new Date(product.delete_at),
+                        "eeee, MMMM dd 'at' hh:mm a",
+                      )}
                     </span>
                     . Secure it now before it's gone permanently!
                   </p>
@@ -564,12 +702,22 @@ const ProductDetails = () => {
             {/* Price */}
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               {product.comparePrice && product.comparePrice > product.price && (
-                <span className="text-lg sm:text-2xl text-muted-foreground line-through">₦{product.comparePrice.toLocaleString()}</span>
+                <span className="text-lg sm:text-2xl text-muted-foreground line-through">
+                  ₦{product.comparePrice.toLocaleString()}
+                </span>
               )}
-              <span className="text-2xl sm:text-3xl md:text-4xl font-bold gradient-text break-all">₦{product.price.toLocaleString()}</span>
+              <span className="text-2xl sm:text-3xl md:text-4xl font-bold gradient-text break-all">
+                ₦{product.price.toLocaleString()}
+              </span>
               {product.comparePrice && product.comparePrice > product.price && (
                 <Badge variant="destructive">
-                  -{Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}% OFF
+                  -
+                  {Math.round(
+                    ((product.comparePrice - product.price) /
+                      product.comparePrice) *
+                      100,
+                  )}
+                  % OFF
                 </Badge>
               )}
               {product.is_digital ? (
@@ -579,9 +727,15 @@ const ProductDetails = () => {
               ) : (
                 <Badge
                   variant={product.inventory > 0 ? "default" : "destructive"}
-                  className={product.inventory > 0 ? "bg-accent/10 text-accent border-accent/20" : ""}
+                  className={
+                    product.inventory > 0
+                      ? "bg-accent/10 text-accent border-accent/20"
+                      : ""
+                  }
                 >
-                  {product.inventory > 0 ? `${product.inventory} ${product.stockUnit || "units"} in stock` : "Out of stock"}
+                  {product.inventory > 0
+                    ? `${product.inventory} ${product.stockUnit || "units"} in stock`
+                    : "Out of stock"}
                 </Badge>
               )}
             </div>
@@ -608,11 +762,15 @@ const ProductDetails = () => {
                     >
                       <Minus className="w-4 h-4" />
                     </Button>
-                    <span className="w-12 text-center font-medium">{quantity}</span>
+                    <span className="w-12 text-center font-medium">
+                      {quantity}
+                    </span>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setQuantity(Math.min(product.inventory, quantity + 1))}
+                      onClick={() =>
+                        setQuantity(Math.min(product.inventory, quantity + 1))
+                      }
                       disabled={quantity >= product.inventory}
                     >
                       <Plus className="w-4 h-4" />
@@ -634,7 +792,9 @@ const ProductDetails = () => {
                 disabled={product.inventory === 0}
               >
                 <ShoppingCart className="w-5 h-5 mr-2" />
-                <span className="truncate">Add to Cart · ₦{(product.price * quantity).toLocaleString()}</span>
+                <span className="truncate">
+                  Add to Cart · ₦{(product.price * quantity).toLocaleString()}
+                </span>
               </Button>
               <div className="flex gap-2 sm:gap-3">
                 <Button
@@ -657,7 +817,11 @@ const ProductDetails = () => {
                 >
                   <Share2 className="w-5 h-5" />
                 </Button>
-                <WishlistButton productId={product.id} size="sm" className="h-12 w-12 flex-shrink-0" />
+                <WishlistButton
+                  productId={product.id}
+                  size="sm"
+                  className="h-12 w-12 flex-shrink-0"
+                />
               </div>
             </div>
 
@@ -665,26 +829,36 @@ const ProductDetails = () => {
             <div className="grid grid-cols-2 gap-2 sm:gap-4 py-4 border-y border-border/50">
               <div className="flex items-center gap-2 min-w-0">
                 <Shield className="w-4 h-4 text-primary flex-shrink-0" />
-                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Secure Checkout</span>
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">
+                  Secure Checkout
+                </span>
               </div>
               <div className="flex items-center gap-2 min-w-0">
                 <BadgeCheck className="w-4 h-4 text-accent flex-shrink-0" />
-                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Verified Seller</span>
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">
+                  Verified Seller
+                </span>
               </div>
               {product.is_digital ? (
                 <div className="flex items-center gap-2 min-w-0">
                   <Download className="w-4 h-4 text-primary flex-shrink-0" />
-                  <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Instant Download</span>
+                  <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">
+                    Instant Download
+                  </span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 min-w-0">
                   <Truck className="w-4 h-4 text-primary flex-shrink-0" />
-                  <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Fast Delivery</span>
+                  <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">
+                    Fast Delivery
+                  </span>
                 </div>
               )}
               <div className="flex items-center gap-2 min-w-0">
                 <Star className="w-4 h-4 text-accent flex-shrink-0" />
-                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">Top Rated</span>
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">
+                  Top Rated
+                </span>
               </div>
             </div>
 
@@ -703,8 +877,13 @@ const ProductDetails = () => {
         <div className="mb-12">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6 text-center sm:text-left">
             <MessageSquare className="w-5 h-5 text-accent self-center sm:self-auto" />
-            <h2 className="font-display text-2xl font-bold">Customer Reviews</h2>
-            <Badge variant="outline" className="sm:ml-2 self-center sm:self-auto">
+            <h2 className="font-display text-2xl font-bold">
+              Customer Reviews
+            </h2>
+            <Badge
+              variant="outline"
+              className="sm:ml-2 self-center sm:self-auto"
+            >
               {product.totalReviews || 0} reviews
             </Badge>
           </div>
@@ -714,7 +893,9 @@ const ProductDetails = () => {
               <CardContent className="py-12 text-center">
                 <Star className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="font-semibold mb-2">No reviews yet</h3>
-                <p className="text-muted-foreground mb-4">Be the first to review this product!</p>
+                <p className="text-muted-foreground mb-4">
+                  Be the first to review this product!
+                </p>
                 <div className="mx-auto max-w-xs">
                   <ProductReviewForm
                     productId={product.id}
@@ -726,7 +907,7 @@ const ProductDetails = () => {
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {reviews.map((review) => (
+              {reviews.map(review => (
                 <Card key={review.id} className="card-african">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
@@ -739,15 +920,19 @@ const ProductDetails = () => {
                             <CardTitle className="text-sm font-medium">
                               {review.customer_name || "Anonymous"}
                             </CardTitle>
-                            {review.reviewer?.kyc_level != null && review.reviewer.kyc_level >= 2 && (
-                              <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 text-xs px-1.5 py-0">
-                                <BadgeCheck className="w-3 h-3 mr-0.5" />
-                                Verified
-                              </Badge>
-                            )}
+                            {review.reviewer?.kyc_level != null &&
+                              review.reviewer.kyc_level >= 2 && (
+                                <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 text-xs px-1.5 py-0">
+                                  <BadgeCheck className="w-3 h-3 mr-0.5" />
+                                  Verified
+                                </Badge>
+                              )}
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(review.created_at), "MMM dd, yyyy")}
+                            {format(
+                              new Date(review.created_at),
+                              "MMM dd, yyyy",
+                            )}
                           </p>
                         </div>
                       </div>
@@ -769,7 +954,9 @@ const ProductDetails = () => {
         {relatedProducts.length > 0 && (
           <div>
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="font-display text-2xl font-bold">More from {shop.name}</h2>
+              <h2 className="font-display text-2xl font-bold">
+                More from {shop.name}
+              </h2>
               <div className="hidden sm:flex items-center gap-2">
                 <Button
                   type="button"
@@ -797,11 +984,13 @@ const ProductDetails = () => {
               ref={relatedScrollRef}
               className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scroll-smooth"
             >
-              {relatedProducts.map((relProduct) => (
+              {relatedProducts.map(relProduct => (
                 <Link
                   key={relProduct.id}
                   to={`/shop/${slug}/product/${relProduct.id}`}
-                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                  onClick={() =>
+                    window.scrollTo({ top: 0, behavior: "smooth" })
+                  }
                   className="min-w-[70%] sm:min-w-[48%] lg:min-w-[30%] xl:min-w-[24%] snap-start"
                 >
                   <Card className="card-african h-full overflow-hidden group hover:border-accent/50 transition-all duration-300 hover:-translate-y-1">
@@ -817,7 +1006,7 @@ const ProductDetails = () => {
                       <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
                         {relProduct.is_digital ? (
                           <Download className="w-12 h-12 text-muted-foreground" />
-                        ) : relProduct.type === 'service' ? (
+                        ) : relProduct.type === "service" ? (
                           <Briefcase className="w-12 h-12 text-muted-foreground" />
                         ) : (
                           <Package className="w-12 h-12 text-muted-foreground" />
@@ -825,8 +1014,12 @@ const ProductDetails = () => {
                       </div>
                     )}
                     <CardContent className="p-4">
-                      <h3 className="font-semibold line-clamp-1 mb-1">{relProduct.name}</h3>
-                      <p className="text-lg font-bold gradient-text">₦{relProduct.price.toLocaleString()}</p>
+                      <h3 className="font-semibold line-clamp-1 mb-1">
+                        {relProduct.name}
+                      </h3>
+                      <p className="text-lg font-bold gradient-text">
+                        ₦{relProduct.price.toLocaleString()}
+                      </p>
                     </CardContent>
                   </Card>
                 </Link>

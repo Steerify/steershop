@@ -1,4 +1,13 @@
-import { Home, ShoppingBag, Sparkles, GraduationCap, LogOut, Users, Settings, Heart } from "lucide-react";
+import {
+  Home,
+  ShoppingBag,
+  Sparkles,
+  GraduationCap,
+  LogOut,
+  Users,
+  Settings,
+  Heart,
+} from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -14,7 +23,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import logoLight from "@/assets/steersolo-logo.jpg";
 import logoDark from "@/assets/steersolo-logo-dark.jpg";
 import { useTheme } from "next-themes";
 
@@ -33,8 +41,7 @@ export function CustomerSidebar() {
   const { toast } = useToast();
   const { signOut } = useAuth();
   const collapsed = state === "collapsed";
-  const { theme } = useTheme();
-  const logo = theme === 'dark' ? logoDark : logoLight;
+  const logo = logoDark;
 
   const handleLogout = async () => {
     try {
@@ -54,7 +61,9 @@ export function CustomerSidebar() {
   };
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-primary/10 text-primary font-medium border-l-2 border-primary" : "hover:bg-muted/50";
+    isActive
+      ? "bg-primary/10 text-primary font-medium border-l-2 border-primary"
+      : "hover:bg-muted/50";
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
@@ -63,7 +72,11 @@ export function CustomerSidebar() {
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-primary/20">
-              <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+              <img
+                src={logo}
+                alt="SteerSolo"
+                className="w-full h-full object-cover"
+              />
             </div>
             {!collapsed && (
               <span className="font-heading font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -81,7 +94,7 @@ export function CustomerSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {items.map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
@@ -92,7 +105,10 @@ export function CustomerSidebar() {
                 </SidebarMenuItem>
               ))}
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive">
+                <SidebarMenuButton
+                  onClick={handleLogout}
+                  className="hover:bg-destructive/10 hover:text-destructive"
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   {!collapsed && <span>Logout</span>}
                 </SidebarMenuButton>

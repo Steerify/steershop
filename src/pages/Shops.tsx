@@ -67,18 +67,28 @@ const StatChip = ({
   value,
   label,
   color,
+  size = "default",
 }: {
   icon: React.ElementType;
   value: string | number;
   label: string;
   color: string;
+  size?: "default" | "small";
 }) => (
   <div
-    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm ${color}`}
+    className={`flex items-center gap-1.5 rounded-xl border ${
+      size === "small" ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-sm"
+    } ${color}`}
   >
-    <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+    <Icon
+      className={`flex-shrink-0 ${
+        size === "small" ? "w-3 h-3" : "w-3.5 h-3.5"
+      }`}
+    />
     <span className="font-bold tabular-nums">{value}</span>
-    <span className="opacity-70 text-xs hidden sm:inline">{label}</span>
+    <span className="opacity-70 text-[0.65rem] sm:text-xs hidden sm:inline">
+      {label}
+    </span>
   </div>
 );
 /* ─── Verified Seller Notice ─── */
@@ -687,58 +697,61 @@ const Shops = () => {
         <div className="absolute inset-x-0 top-0 h-[540px] bg-gradient-to-b from-emerald-950/5 via-primary/5 to-background pointer-events-none" />
 
         <div className="relative z-10 container mx-auto px-4">
-          <div className="rounded-[2rem] border border-border/50 bg-card/85 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.06)] p-5 sm:p-7 lg:p-8">
-            <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-[2rem] border border-border/50 bg-card/85 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.06)] p-4 sm:p-6 lg:p-8">
+            <div className="grid items-center gap-6 lg:grid-cols-[1.1fr_0.9fr]">
               <div>
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-background border border-border/50 shadow-sm rounded-full text-xs font-bold uppercase tracking-wider text-muted-foreground mb-5">
-                  <Sparkles className="w-3.5 h-3.5 text-accent" />
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-background border border-border/50 shadow-sm rounded-full text-[0.7rem] font-bold uppercase tracking-wider text-muted-foreground mb-4">
+                  <Sparkles className="w-3 h-3 text-accent" />
                   <span>Nigeria's Online Shopping Mall</span>
                 </div>
 
-                <div className="max-w-3xl mb-7">
-                  <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-foreground mb-5 leading-[1.05]">
+                <div className="max-w-3xl mb-5">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-foreground mb-3 sm:mb-4 leading-[1.05]">
                     Shop trusted stores with a
                     <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">
                       mobile-first marketplace
                     </span>
                   </h1>
-                  <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl font-medium">
+                  <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl font-medium">
                     Browse verified Nigerian businesses, compare products
                     quickly, and move from discovery to checkout without the
                     clutter.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 sm:gap-5 flex-wrap mb-8">
+                <div className="flex items-center gap-2 sm:gap-4 flex-wrap mb-6">
                   <StatChip
                     icon={Store}
                     value={stats.shops.toLocaleString()}
                     label="Shops"
                     color="text-foreground border-border/50 bg-background/70 backdrop-blur-sm"
+                    size="small"
                   />
                   <StatChip
                     icon={Package}
                     value={stats.products.toLocaleString()}
                     label="Products"
                     color="text-foreground border-border/50 bg-background/70 backdrop-blur-sm"
+                    size="small"
                   />
                   <StatChip
                     icon={BadgeCheck}
                     value="Verified"
                     label="Sellers"
                     color="text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm"
+                    size="small"
                   />
                 </div>
 
                 <div className="relative max-w-2xl group">
                   <div
                     className={`
-                    relative flex items-center bg-background/90 backdrop-blur-xl border rounded-[2rem] shadow-xl transition-all duration-300
-                    ${searchFocused ? "border-accent/40 shadow-accent/10 shadow-2xl ring-4 ring-accent/5 scale-[1.02]" : "border-border/60 hover:border-border"}
+                    relative flex items-center bg-background/90 backdrop-blur-xl border rounded-2xl shadow-xl transition-all duration-300
+                    ${searchFocused ? "border-accent/40 shadow-accent/10 shadow-2xl ring-4 ring-accent/5 scale-[1.01]" : "border-border/60 hover:border-border"}
                   `}
                   >
                     <Search
-                      className={`absolute left-5 w-5 h-5 transition-colors ${searchFocused ? "text-accent" : "text-muted-foreground"}`}
+                      className={`absolute left-4 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${searchFocused ? "text-accent" : "text-muted-foreground"}`}
                     />
                     <input
                       ref={searchInputRef}
@@ -748,33 +761,33 @@ const Shops = () => {
                       onChange={e => setSearchQuery(e.target.value)}
                       onFocus={() => setSearchFocused(true)}
                       onBlur={() => setSearchFocused(false)}
-                      className="w-full bg-transparent pl-12 pr-12 h-16 text-base sm:text-lg focus:outline-none placeholder:text-muted-foreground/50 font-medium rounded-[2rem]"
+                      className="w-full bg-transparent pl-10 sm:pl-12 pr-10 sm:pr-12 h-12 sm:h-16 text-sm sm:text-base focus:outline-none placeholder:text-muted-foreground/50 font-medium rounded-2xl"
                     />
                     {isSearching || isLoading ? (
-                      <div className="absolute right-5">
-                        <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                      <div className="absolute right-4 sm:right-5">
+                        <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
                       </div>
                     ) : searchQuery ? (
                       <button
                         onClick={() => setSearchQuery("")}
-                        className="absolute right-4 w-8 h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/20 transition-colors"
+                        className="absolute right-3 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/20 transition-colors"
                       >
-                        <X className="w-4 h-4 text-muted-foreground" />
+                        <X className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                       </button>
                     ) : null}
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-2.5">
                   {trendingShops.slice(0, 3).map(shop => (
                     <Link
                       key={shop.id}
                       to={`/shop/${shop.shop_slug || shop.id}`}
-                      className="group flex items-center gap-3 rounded-2xl border border-border/50 bg-background/80 p-3 hover:border-primary/25 hover:shadow-md transition-all"
+                      className="group flex items-center gap-2.5 rounded-2xl border border-border/50 bg-background/80 p-2.5 hover:border-primary/25 hover:shadow-md transition-all"
                     >
-                      <div className="h-16 w-16 overflow-hidden rounded-2xl bg-muted flex-shrink-0">
+                      <div className="h-12 w-12 sm:h-16 sm:w-16 overflow-hidden rounded-xl sm:rounded-2xl bg-muted flex-shrink-0">
                         {shop.logo_url ? (
                           <img
                             src={shop.logo_url}
@@ -783,20 +796,20 @@ const Shops = () => {
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-primary/10">
-                            <Store className="w-6 h-6 text-primary" />
+                            <Store className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                           </div>
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
+                        <p className="text-xs sm:text-sm font-semibold truncate group-hover:text-primary transition-colors">
                           {shop.shop_name || shop.name}
                         </p>
-                        <p className="text-xs text-muted-foreground truncate">
+                        <p className="text-[0.7rem] sm:text-xs text-muted-foreground truncate">
                           {[shop.city, shop.state, shop.country]
                             .filter(Boolean)
                             .join(", ") || "Nigeria"}
                         </p>
-                        <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                        <p className="mt-0.5 text-[0.7rem] sm:text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                           Browse store
                         </p>
                       </div>
@@ -986,42 +999,42 @@ const Shops = () => {
                       key={`${product.id}-${index}`}
                       to={`/shop/${product.shop_slug}/product/${product.id}`}
                     >
-                      <div
-                        className="group bg-card border border-border/40 hover:border-border/80 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col"
-                      >
-                      {/* Image */}
-                      <ProductMediaCard
-                        imageUrl={product.image_url || product.images?.[0]?.url}
-                        videoUrl={product.video_url}
-                        alt={product.name}
-                        className="aspect-square min-h-[140px] bg-muted sm:min-h-0"
-                      >
-                        <div className="absolute top-2 right-2">
-                          <div
-                            className={`
+                      <div className="group bg-card border border-border/40 hover:border-border/80 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col">
+                        {/* Image */}
+                        <ProductMediaCard
+                          imageUrl={
+                            product.image_url || product.images?.[0]?.url
+                          }
+                          videoUrl={product.video_url}
+                          alt={product.name}
+                          className="aspect-square min-h-[140px] bg-muted sm:min-h-0"
+                        >
+                          <div className="absolute top-2 right-2">
+                            <div
+                              className={`
                             rounded-lg px-2 py-0.5 text-xs font-semibold shadow-sm ring-1 ring-white/30 backdrop-blur-sm
                             ${product.is_available ? "bg-emerald-500/95 text-white" : "bg-red-500/95 text-white"}
                           `}
-                          >
-                            {product.is_available ? "In Stock" : "Out"}
+                            >
+                              {product.is_available ? "In Stock" : "Out"}
+                            </div>
+                          </div>
+                        </ProductMediaCard>
+                        {/* Info */}
+                        <div className="p-3 flex flex-col flex-1">
+                          <h3 className="text-sm font-semibold line-clamp-2 group-hover:text-accent transition-colors mb-2 leading-snug">
+                            {product.name}
+                          </h3>
+                          <div className="mt-auto flex items-center justify-between">
+                            <span className="text-base font-bold gradient-text tabular-nums">
+                              ₦{product.price?.toLocaleString() || "0"}
+                            </span>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Store className="w-3 h-3" />
+                              <span className="hidden sm:inline">View</span>
+                            </div>
                           </div>
                         </div>
-                      </ProductMediaCard>
-                      {/* Info */}
-                      <div className="p-3 flex flex-col flex-1">
-                        <h3 className="text-sm font-semibold line-clamp-2 group-hover:text-accent transition-colors mb-2 leading-snug">
-                          {product.name}
-                        </h3>
-                        <div className="mt-auto flex items-center justify-between">
-                          <span className="text-base font-bold gradient-text tabular-nums">
-                            ₦{product.price?.toLocaleString() || "0"}
-                          </span>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Store className="w-3 h-3" />
-                            <span className="hidden sm:inline">View</span>
-                          </div>
-                        </div>
-                      </div>
                       </div>
                     </Link>
                   );

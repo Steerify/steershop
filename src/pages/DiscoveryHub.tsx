@@ -146,95 +146,98 @@ const DiscoveryHub = () => {
         {/* Hub Hero */}
         <section className="mb-10">
           <div className="container mx-auto px-4">
-            <div className="rounded-[2rem] border border-border/50 bg-card/90 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.06)] p-5 sm:p-7 lg:p-8">
-              <nav className="flex items-center gap-2 text-xs text-muted-foreground mb-6 overflow-x-auto whitespace-nowrap">
+            <div className="rounded-2xl sm:rounded-[2rem] border border-border/50 bg-card/90 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.06)] p-4 sm:p-5 lg:p-8">
+              <nav className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground mb-4 overflow-x-auto whitespace-nowrap">
                 <Link to="/" className="hover:text-primary transition-colors">
                   Home
                 </Link>
-                <ChevronRight className="w-3 h-3" />
+                <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 <Link
                   to="/shops"
                   className="hover:text-primary transition-colors"
                 >
                   Marketplace
                 </Link>
-                <ChevronRight className="w-3 h-3" />
+                <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 <span className="text-foreground font-medium">
                   {categoryLabel} in {city}
                 </span>
               </nav>
 
-              <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
                 <div className="max-w-2xl">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-wider mb-4">
-                    <Sparkles className="w-3 h-3" />
+                  <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary/10 text-primary rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-3">
+                    <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                     Curated Collection
                   </div>
-                  <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4 leading-[1.05]">
+                  <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold tracking-tight mb-3 sm:mb-4 leading-[1.05]">
                     Discover{" "}
                     <span className="text-primary">{categoryLabel}</span> stores
                     in <span className="text-accent">{city}</span>
                   </h1>
-                  <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
+                  <p className="text-muted-foreground text-sm sm:text-base md:text-lg leading-relaxed">
                     A cleaner category browsing experience with trusted Nigerian
                     merchants, product previews, and a consistent mobile-first
                     layout.
                   </p>
 
-                  <div className="mt-6 flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2 rounded-2xl border border-border/50 bg-background/70 px-4 py-2 text-sm">
-                      <Store className="w-4 h-4 text-primary" />
+                  <div className="mt-4 sm:mt-6 flex flex-wrap items-center gap-2.5">
+                    <div className="flex items-center gap-2 rounded-xl sm:rounded-2xl border border-border/50 bg-background/70 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm">
+                      <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                       <span className="font-semibold">{shops.length}</span>
                       <span className="text-muted-foreground">stores</span>
                     </div>
-                    <div className="flex items-center gap-2 rounded-2xl border border-border/50 bg-background/70 px-4 py-2 text-sm">
-                      <MapPin className="w-4 h-4 text-primary" />
+                    <div className="flex items-center gap-2 rounded-xl sm:rounded-2xl border border-border/50 bg-background/70 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm">
+                      <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                       <span className="font-semibold">{city}</span>
                     </div>
-                    <div className="flex items-center gap-2 rounded-2xl border border-border/50 bg-background/70 px-4 py-2 text-sm">
-                      <Filter className="w-4 h-4 text-primary" />
+                    <div className="flex items-center gap-2 rounded-xl sm:rounded-2xl border border-border/50 bg-background/70 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm">
+                      <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                       <span className="font-semibold">{categoryLabel}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                  <div className="rounded-3xl border border-border/50 bg-background/75 p-5">
-                    <p className="text-sm font-bold text-foreground">
+                <div className="grid gap-2.5 sm:gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                  <div className="rounded-2xl sm:rounded-3xl border border-border/50 bg-background/75 p-4 sm:p-5">
+                    <p className="text-xs sm:text-sm font-bold text-foreground">
                       Are you a merchant in {city}?
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-[10px] sm:text-xs text-muted-foreground">
                       Join this category hub and show up with the same polished
                       storefront experience.
                     </p>
-                    <Link to="/auth/entrepreneur" className="block mt-4">
-                      <Button className="w-full rounded-2xl bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                    <Link
+                      to="/auth/entrepreneur"
+                      className="block mt-3 sm:mt-4"
+                    >
+                      <Button className="w-full rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-accent hover:opacity-90 text-xs sm:text-sm">
                         Register Your Shop{" "}
-                        <ArrowRight className="w-4 h-4 ml-2" />
+                        <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
                       </Button>
                     </Link>
                   </div>
 
-                  <div className="rounded-3xl border border-border/50 bg-background/75 p-5">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  <div className="rounded-2xl sm:rounded-3xl border border-border/50 bg-background/75 p-4 sm:p-5">
+                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                       What to expect
                     </p>
-                    <div className="mt-3 space-y-3 text-sm">
+                    <div className="mt-2.5 sm:mt-3 space-y-2.5 sm:space-y-3 text-xs sm:text-sm">
                       <div className="flex items-start gap-2">
-                        <Sparkles className="w-4 h-4 text-accent mt-0.5" />
+                        <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent mt-0.5" />
                         <span>
                           Preview top shops and compare styles quickly.
                         </span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <Store className="w-4 h-4 text-primary mt-0.5" />
+                        <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary mt-0.5" />
                         <span>
                           Consistent card layout across category and storefront
                           pages.
                         </span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <ShoppingBag className="w-4 h-4 text-emerald-600 mt-0.5" />
+                        <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 mt-0.5" />
                         <span>
                           Responsive browsing across mobile, tablet, and
                           desktop.
