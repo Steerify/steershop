@@ -1,9 +1,15 @@
 // src/services/upload.service.ts
 import { supabase } from '@/integrations/supabase/client';
+import { withRetry } from '@/integrations/supabase/client-wrapper';
 
 export interface UploadResponse {
   url: string;
   publicId?: string;
+}
+
+// --- Utility types for cancellation ---
+export interface UploadController {
+  abort: () => void;
 }
 
 // Convert WebP to JPEG using Canvas API
@@ -50,8 +56,14 @@ export const uploadService = {
   uploadImage: async (
     file: File,
     folder: 'shop-images' | 'product-images' = 'product-images',
-    onProgress?: (progress: number) => void
+    onProgress?: (progress: number) => void,
+    controller?: UploadController
   ): Promise<UploadResponse> => {
+    const abortController = new AbortController();
+    if (controller) {
+      (controller as any).abort = () => abortController.abort();
+    }
+    
     // Validate file size (5MB max)
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
@@ -67,7 +79,7 @@ export const uploadService = {
     onProgress?.(5);
 
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await withRetry(() => supabase.auth.getUser());
     if (authError || !user) {
       throw new Error('Please log in to upload images');
     }
@@ -75,11 +87,9 @@ export const uploadService = {
     onProgress?.(10);
 
     // Get user's shop for file path organization
-    const { data: shop, error: shopError } = await supabase
-      .from('shops')
-      .select('id')
-      .eq('owner_id', user.id)
-      .maybeSingle();
+    const { data: shop, error: shopError } = await withRetry(() => 
+      supabase.from('shops').select('id').eq('owner_id', user.id).maybeSingle()
+    );
 
     if (shopError) {
       console.error('Error fetching shop:', shopError);
@@ -121,45 +131,52 @@ export const uploadService = {
 
     onProgress?.(30);
 
-    // Upload to Supabase Storage
-    const { data, error: uploadError } = await supabase.storage
-      .from(folder)
-      .upload(filePath, fileToUpload, {
-        cacheControl: '3600',
-        upsert: false
-      });
+    // Upload to Supabase Storage with retries
+    let lastUploadError: any;
+    for (let attempt = 0; attempt <= 3; attempt++) {
+      try {
+        if (abortController.signal.aborted) {
+          throw new Error('Upload cancelled');
+        }
+        
+        const { data, error: uploadError } = await supabase.storage
+          .from(folder)
+          .upload(filePath, fileToUpload, {
+            cacheControl: '3600',
+            upsert: false,
+            signal: abortController.signal
+          });
 
-    onProgress?.(80);
+        if (uploadError) throw uploadError;
+        
+        onProgress?.(80);
 
-    if (uploadError) {
-      console.error('Supabase upload error:', uploadError);
-      throw new Error(uploadError.message || 'Failed to upload image');
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage.from(folder).getPublicUrl(data.path);
+        onProgress?.(100);
+
+        return { url: publicUrl, publicId: data.path };
+      } catch (err: any) {
+        lastUploadError = err;
+        if (attempt === 3 || err?.message?.includes('cancelled')) {
+          break;
+        }
+        console.warn(`[Upload] Retry ${attempt + 1}/3 after error:`, err.message);
+        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+      }
     }
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from(folder)
-      .getPublicUrl(data.path);
-
-    onProgress?.(100);
-
-    return {
-      url: publicUrl,
-      publicId: data.path,
-    };
+    
+    console.error('Supabase upload error:', lastUploadError);
+    throw new Error(lastUploadError?.message || 'Failed to upload image');
   },
 
   deleteImage: async (publicId: string, folder: 'shop-images' | 'product-images' = 'product-images'): Promise<void> => {
     if (!publicId) return;
 
     try {
-      const { error } = await supabase.storage
-        .from(folder)
-        .remove([publicId]);
-
-      if (error) {
-        console.error('Failed to delete image:', error);
-      }
+      await withRetry(() => 
+        supabase.storage.from(folder).remove([publicId])
+      );
     } catch (error) {
       console.error('Error deleting image:', error);
     }
@@ -168,8 +185,14 @@ export const uploadService = {
   uploadFile: async (
     file: File,
     bucket: string = 'digital-products',
-    onProgress?: (progress: number) => void
+    onProgress?: (progress: number) => void,
+    controller?: UploadController
   ): Promise<UploadResponse> => {
+    const abortController = new AbortController();
+    if (controller) {
+      (controller as any).abort = () => abortController.abort();
+    }
+    
     // Validate file size (25MB max)
     const maxSize = 25 * 1024 * 1024;
     if (file.size > maxSize) {
@@ -179,7 +202,7 @@ export const uploadService = {
     onProgress?.(5);
 
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await withRetry(() => supabase.auth.getUser());
     if (authError || !user) {
       throw new Error('Please log in to upload files');
     }
@@ -187,11 +210,9 @@ export const uploadService = {
     onProgress?.(15);
 
     // Get user's shop for file path organization
-    const { data: shop, error: shopError } = await supabase
-      .from('shops')
-      .select('id')
-      .eq('owner_id', user.id)
-      .maybeSingle();
+    const { data: shop, error: shopError } = await withRetry(() => 
+      supabase.from('shops').select('id').eq('owner_id', user.id).maybeSingle()
+    );
 
     if (shopError) {
       console.error('Error fetching shop:', shopError);
@@ -211,32 +232,43 @@ export const uploadService = {
 
     onProgress?.(35);
 
-    // Upload to Supabase Storage
-    const { data, error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
+    // Upload to Supabase Storage with retries
+    let lastUploadError: any;
+    for (let attempt = 0; attempt <= 3; attempt++) {
+      try {
+        if (abortController.signal.aborted) {
+          throw new Error('Upload cancelled');
+        }
+        
+        const { data, error: uploadError } = await supabase.storage
+          .from(bucket)
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false,
+            signal: abortController.signal
+          });
 
-    onProgress?.(80);
+        if (uploadError) throw uploadError;
+        
+        onProgress?.(80);
 
-    if (uploadError) {
-      console.error('Supabase file upload error:', uploadError);
-      throw new Error(uploadError.message || 'Failed to upload file');
+        // Get public URL (will be unguessable due to filepath uniqueId prefix)
+        const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(data.path);
+        onProgress?.(100);
+
+        return { url: publicUrl, publicId: data.path };
+      } catch (err: any) {
+        lastUploadError = err;
+        if (attempt === 3 || err?.message?.includes('cancelled')) {
+          break;
+        }
+        console.warn(`[Digital File Upload] Retry ${attempt + 1}/3 after error:`, err.message);
+        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+      }
     }
-
-    // Get public URL (will be unguessable due to filepath uniqueId prefix)
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(data.path);
-
-    onProgress?.(100);
-
-    return {
-      url: publicUrl,
-      publicId: data.path,
-    };
+    
+    console.error('Supabase file upload error:', lastUploadError);
+    throw new Error(lastUploadError?.message || 'Failed to upload file');
   },
 
   // Helper to compress image before upload (optional)

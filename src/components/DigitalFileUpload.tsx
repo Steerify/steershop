@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Upload, FileText, Check, AlertCircle, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { uploadService } from "@/services/upload.service";
+import { uploadService, type UploadController } from "@/services/upload.service";
 import { useToast } from "@/hooks/use-toast";
 
 interface DigitalFileUploadProps {
@@ -18,6 +18,7 @@ export const DigitalFileUpload = ({
 }: DigitalFileUploadProps) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadControllerRef = useRef<UploadController | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -38,8 +39,18 @@ export const DigitalFileUpload = ({
     setIsDragging(true);
   };
 
-  const handleDragLeave = () => {
+  const handleDragLeave = useCallback(() => {
     setIsDragging(false);
+  }, []);
+
+  const handleCancelUpload = () => {
+    if (uploadControllerRef.current) {
+      uploadControllerRef.current.abort();
+    }
+    setIsUploading(false);
+    setFileName("");
+    setFileSize("");
+    setUploadProgress(0);
   };
 
   const processFile = async (file: File) => {
@@ -60,9 +71,13 @@ export const DigitalFileUpload = ({
     setFileSize(formatBytes(file.size));
 
     try {
+      // Create an upload controller for cancellation
+      const controller: UploadController = { abort: () => {} };
+      uploadControllerRef.current = controller;
+      
       const res = await uploadService.uploadFile(file, 'digital-products', (progress) => {
         setUploadProgress(progress);
-      });
+      }, controller);
       
       onChange(res.url);
       if (onFileNameChange) {
@@ -74,16 +89,24 @@ export const DigitalFileUpload = ({
         description: `${file.name} is uploaded and secured.`,
       });
     } catch (error: any) {
-      console.error("Digital file upload failed:", error);
-      toast({
-        title: "Upload Failed",
-        description: error.message || "Something went wrong uploading your file.",
-        variant: "destructive",
-      });
+      if (error?.message?.includes('cancelled')) {
+        toast({
+          title: "Upload Cancelled",
+          description: "You cancelled the file upload.",
+        });
+      } else {
+        console.error("Digital file upload failed:", error);
+        toast({
+          title: "Upload Failed",
+          description: error.message || "Something went wrong uploading your file.",
+          variant: "destructive",
+        });
+      }
       setFileName("");
       setFileSize("");
     } finally {
       setIsUploading(false);
+      uploadControllerRef.current = null;
     }
   };
 
@@ -104,9 +127,13 @@ export const DigitalFileUpload = ({
   };
 
   const handleClear = () => {
+    if (isUploading) {
+      handleCancelUpload();
+    }
     onChange("");
     setFileName("");
     setFileSize("");
+    setUploadProgress(0);
     if (onFileNameChange) {
       onFileNameChange("");
     }
@@ -165,7 +192,7 @@ export const DigitalFileUpload = ({
           </div>
         </div>
       ) : isUploading ? (
-        <div className="border border-border/80 rounded-2xl p-6 bg-background/50 space-y-4 animate-pulse">
+        <div className="border border-border/80 rounded-2xl p-6 bg-background/50 space-y-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
               <Loader2 className="w-5 h-5 text-primary animate-spin" />
@@ -177,7 +204,7 @@ export const DigitalFileUpload = ({
             <Button
               size="icon"
               variant="ghost"
-              onClick={handleClear}
+              onClick={handleCancelUpload}
               className="text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full h-8 w-8 shrink-0"
             >
               <X className="w-4 h-4" />
@@ -190,6 +217,9 @@ export const DigitalFileUpload = ({
             </div>
             <Progress value={uploadProgress} className="h-2 bg-muted rounded-full" />
           </div>
+          <p className="text-xs text-muted-foreground">
+            You can cancel the upload at any time
+          </p>
         </div>
       ) : (
         <div className="border border-green-500/20 bg-green-500/5 rounded-2xl p-4 flex items-center justify-between gap-4 transition-all duration-300">
