@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, Package, Clock, CheckCircle2, Award, GraduationCap, ArrowRight, Store, ChevronDown, ChevronUp, Gift } from "lucide-react";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
-import logo from "@/assets/steersolo-logo.jpg";
+import logo from "@/assets/steersolo-logo.png";
 import Joyride, { CallBackProps, STATUS } from "react-joyride";
 import { useTour } from "@/hooks/useTour";
 import { TourTooltip } from "@/components/tours/TourTooltip";

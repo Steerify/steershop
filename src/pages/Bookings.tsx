@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, CalendarCheck, Clock, CheckCircle, XCircle, MessageCircle, User, Phone, Mail, Calendar, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { PageWrapper } from "@/components/PageWrapper";
-import logo from "@/assets/steersolo-logo.jpg";
+import logo from "@/assets/steersolo-logo.png";
 
 interface Booking {
   id: string;

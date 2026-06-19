@@ -47,7 +47,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { PageWrapper } from "@/components/PageWrapper";
-import logo from "@/assets/steersolo-logo.jpg";
+import logo from "@/assets/steersolo-logo.png";
 import Joyride, { CallBackProps, STATUS } from "react-joyride";
 import { useTour } from "@/hooks/useTour";
 import { TourTooltip } from "@/components/tours/TourTooltip";

@@ -27,7 +27,7 @@ import subscriptionService, {
   SubscriptionPlan,
 } from "@/services/subscription.service";
 import { supabase } from "@/integrations/supabase/client";
-import logo from "@/assets/steersolo-logo.jpg";
+import logo from "@/assets/steersolo-logo.png";
 import heroBackground from "@/assets/hero-auth.png";
 import { PageThemeShell } from "@/components/PageThemeShell";
 

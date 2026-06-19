@@ -14,7 +14,7 @@ import { format } from "date-fns";
 import { OrderReviewPrompt } from "@/components/OrderReviewPrompt";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import { OrderTimeline } from "@/components/OrderTimeline";
-import logo from "@/assets/steersolo-logo.jpg";
+import logo from "@/assets/steersolo-logo.png";
 
 const CustomerOrders = () => {
   const navigate = useNavigate();

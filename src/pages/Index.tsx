@@ -772,7 +772,7 @@ const Index = () => {
           />
 
           <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="flex flex-col lg:flex-row items-center gap-10 pb-24">
+            <div className="flex flex-col lg:flex-row items-center gap-10 pb-32 sm:pb-24">
               {/* ── TEXT (Attention & Interest) ── */}
               <div className="flex-1 max-w-2xl mx-auto text-center f1">
                 <div className="min-h-[380px] sm:min-h-[420px] md:min-h-[460px] relative">
@@ -785,16 +785,20 @@ const Index = () => {
                     <div className="inline-flex items-center gap-3">
                       <div className="flex -space-x-2 shrink-0">
                         {shopAvatars.length > 0 ? (
-                          shopAvatars.map((shop, index) => (
-                            <img
-                              key={shop.id}
-                              src={shop.logo_url || ""}
-                              alt={shop.shop_name}
-                              className="w-8 h-8 rounded-full border-2 border-background object-cover"
-                              loading="lazy"
-                              style={{ zIndex: shopAvatars.length - index }}
-                            />
-                          ))
+                          // Shuffle array and take first 3
+                          [...shopAvatars]
+                            .sort(() => Math.random() - 0.5)
+                            .slice(0, 3)
+                            .map((shop, index) => (
+                              <img
+                                key={shop.id}
+                                src={shop.logo_url || ""}
+                                alt={shop.shop_name}
+                                className="w-8 h-8 rounded-full border-2 border-background object-cover"
+                                loading="lazy"
+                                style={{ zIndex: 3 - index }}
+                              />
+                            ))
                         ) : (
                           <>
                             <img
