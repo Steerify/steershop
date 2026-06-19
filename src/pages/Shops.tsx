@@ -44,6 +44,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { PageThemeShell } from "@/components/PageThemeShell";
 import { ProductMediaCard } from "@/components/ProductMediaCard";
+import heroBackground from "@/assets/hero-background.png";
 
 const VERIFIED_NOTICE_KEY = "steersolo_verified_notice_dismissed";
 
@@ -76,17 +77,15 @@ const StatChip = ({
   size?: "default" | "small";
 }) => (
   <div
-    className={`flex items-center gap-1.5 rounded-xl border ${
-      size === "small" ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-sm"
+    className={`flex items-center gap-2 rounded-xl border ${
+      size === "small" ? "px-3 py-2 text-xs" : "px-4 py-3 text-sm"
     } ${color}`}
   >
     <Icon
-      className={`flex-shrink-0 ${
-        size === "small" ? "w-3 h-3" : "w-3.5 h-3.5"
-      }`}
+      className={`flex-shrink-0 ${size === "small" ? "w-4 h-4" : "w-5 h-5"}`}
     />
     <span className="font-bold tabular-nums">{value}</span>
-    <span className="opacity-70 text-[0.65rem] sm:text-xs hidden sm:inline">
+    <span className="opacity-60 text-xs sm:text-sm hidden sm:inline">
       {label}
     </span>
   </div>
@@ -98,11 +97,11 @@ const VerifiedSellerNotice = () => {
   );
   if (dismissed) return null;
   return (
-    <div className="bg-emerald-500/8 border-b border-emerald-500/15">
-      <div className="container mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-sm">
-          <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-          <span className="text-foreground/80 text-xs sm:text-sm">
+    <div className="bg-emerald-500/5 border-b border-emerald-500/10">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 text-sm">
+          <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+          <span className="text-foreground/80 text-sm">
             For your safety, look for the <strong>SteerSolo Safe</strong> badge
             when choosing a seller.
           </span>
@@ -112,9 +111,9 @@ const VerifiedSellerNotice = () => {
             setDismissed(true);
             localStorage.setItem(VERIFIED_NOTICE_KEY, "true");
           }}
-          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-muted transition-colors flex-shrink-0"
+          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors flex-shrink-0"
         >
-          <X className="w-3.5 h-3.5 text-muted-foreground" />
+          <X className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
     </div>
@@ -123,38 +122,38 @@ const VerifiedSellerNotice = () => {
 
 /* ─── Skeleton Cards ─── */
 const ShopCardSkeleton = () => (
-  <div className="bg-card border border-border/60 rounded-2xl overflow-hidden">
-    <Skeleton className="w-full h-32" />
-    <div className="p-4">
-      <div className="flex items-start gap-3 -mt-8 mb-3">
-        <Skeleton className="w-14 h-14 rounded-xl ring-4 ring-card flex-shrink-0" />
-        <div className="flex-1 pt-6">
-          <Skeleton className="h-4 w-3/4 mb-1.5" />
+  <div className="bg-card border border-border/40 rounded-2xl overflow-hidden">
+    <Skeleton className="w-full h-36" />
+    <div className="p-5">
+      <div className="flex items-start gap-3 -mt-10 mb-4">
+        <Skeleton className="w-16 h-16 rounded-2xl ring-4 ring-card flex-shrink-0" />
+        <div className="flex-1 pt-8">
+          <Skeleton className="h-4 w-3/4 mb-2" />
           <Skeleton className="h-3 w-full" />
         </div>
       </div>
       <div className="flex gap-2 mt-3">
-        <Skeleton className="flex-1 h-20 rounded-xl" />
-        <Skeleton className="flex-1 h-20 rounded-xl" />
-        <Skeleton className="flex-1 h-20 rounded-xl" />
+        <Skeleton className="flex-1 h-24 rounded-xl" />
+        <Skeleton className="flex-1 h-24 rounded-xl" />
+        <Skeleton className="flex-1 h-24 rounded-xl" />
       </div>
     </div>
   </div>
 );
 
 const ProductCardSkeleton = () => (
-  <div className="bg-card border border-border/60 rounded-2xl overflow-hidden">
+  <div className="bg-card border border-border/40 rounded-2xl overflow-hidden">
     <Skeleton className="w-full aspect-square" />
-    <div className="p-3">
+    <div className="p-4">
       <Skeleton className="h-4 w-3/4 mb-2" />
       <Skeleton className="h-5 w-1/2" />
     </div>
   </div>
 );
 
-/* ══════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════
    MAIN SHOPS PAGE
-══════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════ */
 const Shops = () => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [trendingShops, setTrendingShops] = useState<Shop[]>([]);
@@ -190,8 +189,8 @@ const Shops = () => {
   const [stats, setStats] = useState({ shops: 0, products: 0 });
   const [searchFocused, setSearchFocused] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const ITEMS_PER_PAGE = 12;
 
@@ -296,7 +295,7 @@ const Shops = () => {
         }
       }
 
-      // Fallback: show first 5 active stores by recency so section is never empty.
+      // Fallback: show first 5 active shops by recency so section is never empty.
       const { data: fallback } = await supabase
         .from("shops")
         .select("*")
@@ -693,222 +692,185 @@ const Shops = () => {
       <VerifiedSellerNotice />
 
       {/* ══════════ HERO ══════════ */}
-      <section className="relative pt-24 pb-12 sm:pt-32 sm:pb-20 overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-[540px] bg-gradient-to-b from-emerald-950/5 via-primary/5 to-background pointer-events-none" />
+      <section className="relative pt-28 pb-16 sm:pt-36 sm:pb-24 overflow-hidden">
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroBackground})` }}
+        />
+        <div className="absolute inset-0 bg-background/80" />
 
-        <div className="relative z-10 container mx-auto px-4">
-          <div className="rounded-[2rem] border border-border/50 bg-card/85 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.06)] p-4 sm:p-6 lg:p-8">
-            <div className="grid items-center gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-background border border-border/50 shadow-sm rounded-full text-[0.7rem] font-bold uppercase tracking-wider text-muted-foreground mb-4">
-                  <Sparkles className="w-3 h-3 text-accent" />
-                  <span>Nigeria's Online Shopping Mall</span>
-                </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-4xl mx-auto text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/5 border border-primary/10 rounded-full text-xs font-bold uppercase tracking-wider text-primary mb-6">
+              <Sparkles className="w-4 h-4" />
+              Nigeria's Online Shopping Mall
+            </div>
 
-                <div className="max-w-3xl mb-5">
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-foreground mb-3 sm:mb-4 leading-[1.05]">
-                    Shop trusted stores with a
-                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">
-                      mobile-first marketplace
-                    </span>
-                  </h1>
-                  <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl font-medium">
-                    Browse verified Nigerian businesses, compare products
-                    quickly, and move from discovery to checkout without the
-                    clutter.
-                  </p>
-                </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-primary mb-4 leading-tight">
+              Shop trusted stores with a
+              <span className="block text-primary mt-1">
+                mobile-first marketplace
+              </span>
+            </h1>
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto font-medium">
+              Browse verified Nigerian businesses, compare products quickly, and
+              move from discovery to checkout without the clutter.
+            </p>
+          </div>
 
-                <div className="flex items-center gap-2 sm:gap-4 flex-wrap mb-6">
-                  <StatChip
-                    icon={Store}
-                    value={stats.shops.toLocaleString()}
-                    label="Shops"
-                    color="text-foreground border-border/50 bg-background/70 backdrop-blur-sm"
-                    size="small"
-                  />
-                  <StatChip
-                    icon={Package}
-                    value={stats.products.toLocaleString()}
-                    label="Products"
-                    color="text-foreground border-border/50 bg-background/70 backdrop-blur-sm"
-                    size="small"
-                  />
-                  <StatChip
-                    icon={BadgeCheck}
-                    value="Verified"
-                    label="Sellers"
-                    color="text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm"
-                    size="small"
-                  />
-                </div>
+          <div className="max-w-2xl mx-auto mb-12">
+            <div className="flex items-center justify-center gap-3 sm:gap-4 flex-wrap mb-8">
+              <StatChip
+                icon={Store}
+                value={stats.shops.toLocaleString()}
+                label="Shops"
+                color="text-foreground border-border/40 bg-card"
+                size="small"
+              />
+              <StatChip
+                icon={Package}
+                value={stats.products.toLocaleString()}
+                label="Products"
+                color="text-foreground border-border/40 bg-card"
+                size="small"
+              />
+              <StatChip
+                icon={BadgeCheck}
+                value="Verified"
+                label="Sellers"
+                color="text-emerald-700 dark:text-emerald-300 border-emerald-500/15 bg-emerald-500/5"
+                size="small"
+              />
+            </div>
 
-                <div className="relative max-w-2xl group">
-                  <div
-                    className={`
-                    relative flex items-center bg-background/90 backdrop-blur-xl border rounded-2xl shadow-xl transition-all duration-300
-                    ${searchFocused ? "border-accent/40 shadow-accent/10 shadow-2xl ring-4 ring-accent/5 scale-[1.01]" : "border-border/60 hover:border-border"}
-                  `}
+            <div className="relative group">
+              <div
+                className={`
+                  relative flex items-center bg-card border rounded-2xl shadow-md transition-all duration-300
+                  ${searchFocused ? "border-accent/30 shadow-accent/10 shadow-lg ring-4 ring-accent/5 scale-[1.01]" : "border-border/50 hover:border-border/70"}
+                `}
+              >
+                <Search
+                  className={`absolute left-5 w-5 h-5 transition-colors ${searchFocused ? "text-accent" : "text-muted-foreground"}`}
+                />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search shops, products, services…"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setSearchFocused(false)}
+                  className="w-full bg-transparent pl-14 pr-14 h-14 sm:h-16 text-sm sm:text-base focus:outline-none placeholder:text-muted-foreground/50 font-medium rounded-2xl"
+                />
+                {isSearching || isLoading ? (
+                  <div className="absolute right-5">
+                    <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : searchQuery ? (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-4 w-9 h-9 flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/10 transition-colors"
                   >
-                    <Search
-                      className={`absolute left-4 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${searchFocused ? "text-accent" : "text-muted-foreground"}`}
-                    />
-                    <input
-                      ref={searchInputRef}
-                      type="text"
-                      placeholder="Search shops, products, services…"
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      onFocus={() => setSearchFocused(true)}
-                      onBlur={() => setSearchFocused(false)}
-                      className="w-full bg-transparent pl-10 sm:pl-12 pr-10 sm:pr-12 h-12 sm:h-16 text-sm sm:text-base focus:outline-none placeholder:text-muted-foreground/50 font-medium rounded-2xl"
-                    />
-                    {isSearching || isLoading ? (
-                      <div className="absolute right-4 sm:right-5">
-                        <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    ) : searchQuery ? (
-                      <button
-                        onClick={() => setSearchQuery("")}
-                        className="absolute right-3 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/20 transition-colors"
-                      >
-                        <X className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-2.5">
-                  {trendingShops.slice(0, 3).map(shop => (
-                    <Link
-                      key={shop.id}
-                      to={`/shop/${shop.shop_slug || shop.id}`}
-                      className="group flex items-center gap-2.5 rounded-2xl border border-border/50 bg-background/80 p-2.5 hover:border-primary/25 hover:shadow-md transition-all"
-                    >
-                      <div className="h-12 w-12 sm:h-16 sm:w-16 overflow-hidden rounded-xl sm:rounded-2xl bg-muted flex-shrink-0">
-                        {shop.logo_url ? (
-                          <img
-                            src={shop.logo_url}
-                            alt={shop.shop_name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-primary/10">
-                            <Store className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs sm:text-sm font-semibold truncate group-hover:text-primary transition-colors">
-                          {shop.shop_name || shop.name}
-                        </p>
-                        <p className="text-[0.7rem] sm:text-xs text-muted-foreground truncate">
-                          {[shop.city, shop.state, shop.country]
-                            .filter(Boolean)
-                            .join(", ") || "Nigeria"}
-                        </p>
-                        <p className="mt-0.5 text-[0.7rem] sm:text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                          Browse store
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-
-                {!searchQuery && (
-                  <div className="flex items-center gap-2 flex-nowrap sm:flex-wrap overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                    <span className="text-xs text-muted-foreground mr-1 flex-shrink-0">
-                      Popular:
-                    </span>
-                    {CATEGORIES.filter(c => c.group === "main").map(cat => (
-                      <button
-                        key={cat.value}
-                        onClick={() => {
-                          setSelectedCategory(cat.value);
-                          setShopsPage(1);
-                        }}
-                        className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-                          selectedCategory === cat.value
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-background border border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground"
-                        }`}
-                      >
-                        {cat.label}
-                        {categoryCounts &&
-                          cat.value !== "all" &&
-                          cat.value !== "beauty" &&
-                          categoryCounts[cat.value] !== undefined && (
-                            <span className="ml-1 opacity-60">
-                              ({categoryCounts[cat.value]})
-                            </span>
-                          )}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                    <X className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
+
+          {!searchQuery && (
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <span className="text-xs text-muted-foreground mr-2">
+                Popular:
+              </span>
+              {CATEGORIES.filter(c => c.group === "main").map(cat => (
+                <button
+                  key={cat.value}
+                  onClick={() => {
+                    setSelectedCategory(cat.value);
+                    setShopsPage(1);
+                  }}
+                  className={`px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
+                    selectedCategory === cat.value
+                      ? "bg-accent text-white shadow-md"
+                      : "bg-white/90 dark:bg-gray-900/90 border border-border/50 text-primary hover:border-accent/30 hover:text-accent"
+                  }`}
+                >
+                  {cat.label}
+                  {categoryCounts &&
+                    cat.value !== "all" &&
+                    cat.value !== "beauty" &&
+                    categoryCounts[cat.value] !== undefined && (
+                      <span className="ml-1.5 opacity-60">
+                        ({categoryCounts[cat.value]})
+                      </span>
+                    )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       {/* ══════════ FILTERS ══════════ */}
-      <MarketplaceFilters
-        selectedCategory={selectedCategory}
-        onCategoryChange={c => {
-          setSelectedCategory(c);
-          setShopsPage(1);
-        }}
-        selectedSort={selectedSort}
-        onSortChange={setSelectedSort}
-        selectedState={selectedState}
-        onStateChange={s => {
-          setSelectedState(s);
-          setShopsPage(1);
-        }}
-        selectedCity={selectedCity}
-        onCityChange={city => {
-          setSelectedCity(city);
-          setShopsPage(1);
-        }}
-        showVerifiedOnly={showVerifiedOnly}
-        onVerifiedChange={v => {
-          setShowVerifiedOnly(v);
-          setShopsPage(1);
-        }}
-        categoryCounts={categoryCounts}
-        minPrice={minPrice}
-        maxPrice={maxPrice}
-        onMinPriceChange={setMinPrice}
-        onMaxPriceChange={setMaxPrice}
-      />
+      <div className="container mx-auto px-4 mb-8">
+        <MarketplaceFilters
+          selectedCategory={selectedCategory}
+          onCategoryChange={c => {
+            setSelectedCategory(c);
+            setShopsPage(1);
+          }}
+          selectedSort={selectedSort}
+          onSortChange={setSelectedSort}
+          selectedState={selectedState}
+          onStateChange={s => {
+            setSelectedState(s);
+            setShopsPage(1);
+          }}
+          selectedCity={selectedCity}
+          onCityChange={city => {
+            setSelectedCity(city);
+            setShopsPage(1);
+          }}
+          showVerifiedOnly={showVerifiedOnly}
+          onVerifiedChange={v => {
+            setShowVerifiedOnly(v);
+            setShopsPage(1);
+          }}
+          categoryCounts={categoryCounts}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          onMinPriceChange={setMinPrice}
+          onMaxPriceChange={setMaxPrice}
+        />
+      </div>
 
       {/* ══════════ TOP SELLER BANNER ══════════ */}
-      <div className="container mx-auto px-4 mt-5 mb-2">
+      <div className="container mx-auto px-4 mb-8">
         <TopSellerBanner />
       </div>
 
       {/* ══════════ TRENDING STORES ══════════ */}
       {trendingShops.length > 0 && !debouncedSearchQuery.trim() && (
-        <div className="container mx-auto px-4 mt-4 mb-2">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center">
-              <Flame className="w-3.5 h-3.5 text-accent" />
+        <div className="container mx-auto px-4 mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
+              <Flame className="w-4 h-4 text-accent" />
             </div>
-            <h2 className="font-display text-base sm:text-lg font-bold">
+            <h2 className="font-display text-lg sm:text-xl font-bold">
               Trending Stores
             </h2>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex gap-4 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden">
             {trendingShops.slice(0, 5).map(shop => (
               <Link
                 key={shop.id}
                 to={`/shop/${shop.shop_slug || shop.id}`}
-                className="flex-shrink-0 w-40 sm:w-48 bg-card border border-border/60 rounded-xl p-3 hover:border-accent/40 hover:shadow-md transition-all group"
+                className="flex-shrink-0 w-48 sm:w-56 bg-card border border-border/50 rounded-2xl p-4 hover:border-accent/30 hover:shadow-lg transition-all group"
               >
-                <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted mb-2">
+                <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted mb-3">
                   {shop.logo_url ? (
                     <img
                       src={shop.logo_url}
@@ -917,11 +879,11 @@ const Shops = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-primary/10">
-                      <Store className="w-5 h-5 text-primary" />
+                      <Store className="w-6 h-6 text-primary" />
                     </div>
                   )}
                 </div>
-                <p className="text-sm font-semibold truncate group-hover:text-accent transition-colors">
+                <p className="text-sm font-semibold truncate group-hover:text-accent transition-colors mb-1">
                   {shop.shop_name || shop.name}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
@@ -938,22 +900,22 @@ const Shops = () => {
       {/* ══════════ MAIN CONTENT ══════════ */}
       <main
         id="marketplace-results"
-        className="flex-1 container mx-auto px-4 pb-20 mt-4"
+        className="flex-1 container mx-auto px-4 pb-24"
       >
         <div className="max-w-7xl mx-auto">
           {/* ── Search Type Tabs ── */}
           {hasSearchQuery && (
-            <div className="flex gap-2 mb-6 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="flex gap-2 mb-8 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
               {(["all", "shops", "products"] as const).map(type => (
                 <button
                   key={type}
                   onClick={() => handleSearchTypeChange(type)}
                   className={`
-                    px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0
+                    px-5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0
                     ${
                       searchType === type
-                        ? "bg-foreground text-background shadow-sm"
-                        : "bg-card border border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground"
+                        ? "bg-accent text-white shadow-md"
+                        : "bg-white/90 dark:bg-gray-900/90 border border-border/50 text-primary hover:border-accent/30 hover:text-accent"
                     }
                   `}
                 >
@@ -969,10 +931,10 @@ const Shops = () => {
 
           {/* ── Product Results ── */}
           {showProducts && displayedProducts.length > 0 && (
-            <div className="mb-10 animate-fade-up">
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
+            <div className="mb-12 animate-fade-up">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
                     <Package className="w-4 h-4 text-accent" />
                   </div>
                   <h2 className="font-display text-lg sm:text-xl font-bold">
@@ -984,7 +946,7 @@ const Shops = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
                 {displayedProducts.map((product, index) => {
                   if (!product.shop_slug) {
                     console.warn(
@@ -999,7 +961,7 @@ const Shops = () => {
                       key={`${product.id}-${index}`}
                       to={`/shop/${product.shop_slug}/product/${product.id}`}
                     >
-                      <div className="group bg-card border border-border/40 hover:border-border/80 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 flex flex-col">
+                      <div className="group bg-card border border-border/40 hover:border-border/70 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col">
                         {/* Image */}
                         <ProductMediaCard
                           imageUrl={
@@ -1007,30 +969,30 @@ const Shops = () => {
                           }
                           videoUrl={product.video_url}
                           alt={product.name}
-                          className="aspect-square min-h-[140px] bg-muted sm:min-h-0"
+                          className="aspect-square min-h-[150px] bg-muted sm:min-h-0"
                         >
-                          <div className="absolute top-2 right-2">
+                          <div className="absolute top-3 right-3">
                             <div
                               className={`
-                            rounded-lg px-2 py-0.5 text-xs font-semibold shadow-sm ring-1 ring-white/30 backdrop-blur-sm
-                            ${product.is_available ? "bg-emerald-500/95 text-white" : "bg-red-500/95 text-white"}
-                          `}
+                              rounded-lg px-3 py-1 text-xs font-semibold shadow-sm ring-1 ring-white/30 backdrop-blur-sm
+                              ${product.is_available ? "bg-emerald-500/95 text-white" : "bg-red-500/95 text-white"}
+                            `}
                             >
                               {product.is_available ? "In Stock" : "Out"}
                             </div>
                           </div>
                         </ProductMediaCard>
                         {/* Info */}
-                        <div className="p-3 flex flex-col flex-1">
+                        <div className="p-4 flex flex-col flex-1">
                           <h3 className="text-sm font-semibold line-clamp-2 group-hover:text-accent transition-colors mb-2 leading-snug">
                             {product.name}
                           </h3>
                           <div className="mt-auto flex items-center justify-between">
-                            <span className="text-base font-bold gradient-text tabular-nums">
+                            <span className="text-base font-bold text-accent-forest tabular-nums">
                               ₦{product.price?.toLocaleString() || "0"}
                             </span>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Store className="w-3 h-3" />
+                              <Store className="w-3.5 h-3.5" />
                               <span className="hidden sm:inline">View</span>
                             </div>
                           </div>
@@ -1042,7 +1004,7 @@ const Shops = () => {
               </div>
 
               {loadingMoreProducts && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <ProductCardSkeleton key={i} />
                   ))}
@@ -1061,9 +1023,9 @@ const Shops = () => {
             ) && (
               <div>
                 {/* Section Header */}
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
                       <Store className="w-4 h-4 text-primary" />
                     </div>
                     <h2 className="font-display text-lg sm:text-xl font-bold">
@@ -1076,14 +1038,14 @@ const Shops = () => {
                     </h2>
                   </div>
                   {selectedState !== "All Locations" && (
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted rounded-xl px-3 py-1.5">
-                      <MapPin className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted rounded-xl px-3 py-2">
+                      <MapPin className="w-4 h-4" />
                       {selectedState}
                       <button
                         onClick={() => setSelectedState("All Locations")}
                         className="ml-1 hover:text-destructive transition-colors"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
                   )}
@@ -1091,15 +1053,15 @@ const Shops = () => {
 
                 {/* Grid */}
                 {(isLoading || isSearching) && !shops.length ? (
-                  <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                  <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
                     {Array.from({ length: 6 }).map((_, i) => (
                       <ShopCardSkeleton key={i} />
                     ))}
                   </div>
                 ) : sortedShops.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center mb-5 shadow-inner">
-                      <Store className="w-9 h-9 text-muted-foreground" />
+                  <div className="flex flex-col items-center justify-center py-24 text-center">
+                    <div className="w-24 h-24 rounded-3xl bg-muted flex items-center justify-center mb-6 shadow-inner">
+                      <Store className="w-10 h-10 text-muted-foreground" />
                     </div>
                     <h3 className="font-display text-xl font-semibold mb-2">
                       {hasSearchQuery
@@ -1108,7 +1070,7 @@ const Shops = () => {
                           ? `No shops in ${selectedState}`
                           : "No active shops"}
                     </h3>
-                    <p className="text-muted-foreground text-sm max-w-xs">
+                    <p className="text-muted-foreground text-sm max-w-xs mb-6">
                       {hasSearchQuery
                         ? `No shops found for "${debouncedSearchQuery}". Try different keywords.`
                         : "Try adjusting your filters or check back later."}
@@ -1116,7 +1078,7 @@ const Shops = () => {
                     {(hasSearchQuery || selectedState !== "All Locations") && (
                       <Button
                         variant="outline"
-                        className="mt-5 rounded-xl"
+                        className="rounded-xl"
                         onClick={() => {
                           setSearchQuery("");
                           setSelectedState("All Locations");
@@ -1128,7 +1090,7 @@ const Shops = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                    <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
                       {sortedShops.map((shop, index) => (
                         <ShopCardEnhanced
                           key={`${shop.id}-${index}`}
@@ -1145,7 +1107,7 @@ const Shops = () => {
                     </div>
 
                     {loadingMoreShops && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
                         {Array.from({ length: 3 }).map((_, i) => (
                           <ShopCardSkeleton key={i} />
                         ))}
@@ -1158,8 +1120,8 @@ const Shops = () => {
 
           {/* ── Searching Indicator ── */}
           {isSearching && !isLoading && (
-            <div className="flex justify-center py-10">
-              <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border/60">
+            <div className="flex justify-center py-12">
+              <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-card border border-border/50">
                 <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
                 <span className="text-sm text-muted-foreground">
                   Searching for <strong>"{debouncedSearchQuery}"</strong>…
@@ -1173,7 +1135,7 @@ const Shops = () => {
             <div
               id="shops-sentinel"
               ref={sentinelRef}
-              className="h-10 mt-8 flex items-center justify-center"
+              className="h-12 mt-10 flex items-center justify-center"
             >
               {(loadingMoreShops || loadingMoreProducts) && (
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
@@ -1188,7 +1150,7 @@ const Shops = () => {
           {!hasMoreShops &&
             !hasMoreProducts &&
             (shops.length > 0 || productResults.length > 0) && (
-              <div className="text-center py-12 mt-4 border-t border-border/50">
+              <div className="text-center py-16 mt-8 border-t border-border/40">
                 <p className="text-muted-foreground text-sm">
                   You've seen all {debouncedSearchQuery ? "results" : "shops"} —
                   that's everything! 🎉
@@ -1202,14 +1164,14 @@ const Shops = () => {
             shops.length === 0 &&
             productResults.length === 0 &&
             hasSearchQuery && (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center mb-5 shadow-inner">
-                  <Search className="w-9 h-9 text-muted-foreground" />
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="w-24 h-24 rounded-3xl bg-muted flex items-center justify-center mb-6 shadow-inner">
+                  <Search className="w-10 h-10 text-muted-foreground" />
                 </div>
                 <h3 className="font-display text-xl font-semibold mb-2">
                   No results found
                 </h3>
-                <p className="text-muted-foreground text-sm max-w-xs mb-5">
+                <p className="text-muted-foreground text-sm max-w-xs mb-6">
                   Nothing matched "<strong>{debouncedSearchQuery}</strong>". Try
                   different keywords.
                 </p>

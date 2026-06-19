@@ -149,12 +149,12 @@ const CelebrationBadge = ({ celebration }: { celebration: Celebration }) => {
     bgColor = "bg-pink-500/10";
     Icon = Heart;
   } else if (celebration.type === "muslim") {
-    color = "text-emerald-500";
-    bgColor = "bg-emerald-500/10";
+    color = "text-accent";
+    bgColor = "bg-accent/10";
     Icon = Moon;
   } else if (n.includes("independence")) {
-    color = "text-green-600";
-    bgColor = "bg-green-600/10";
+    color = "text-primary";
+    bgColor = "bg-primary/10";
     Icon = Flag;
   }
 
@@ -331,7 +331,23 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
           >
             <div className="px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between">
               {/* Logo Section */}
-              <div className="flex items-center gap-3 group relative">
+              <Link
+                to={(() => {
+                  const path = location.pathname;
+                  // If on dashboard routes, stay there
+                  if (
+                    path.startsWith("/dashboard") ||
+                    path.startsWith("/admin") ||
+                    path.startsWith("/shopper") ||
+                    path.startsWith("/customer")
+                  ) {
+                    return path; // Stay on current dashboard
+                  }
+                  // Otherwise go home
+                  return "/";
+                })()}
+                className="flex items-center gap-3 group relative"
+              >
                 <div
                   className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden shadow-sm ring-1 ring-border group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-[1.03] relative select-none ${theme === "dark" ? "" : "bg-white"}`}
                   onContextMenu={e => e.preventDefault()}
@@ -375,7 +391,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                     </span>
                   )}
                 </span>
-              </div>
+              </Link>
 
               {/* Desktop Nav - Updated typography */}
               <div className="hidden lg:flex items-center gap-6 font-display absolute left-1/2 -translate-x-1/2">
@@ -434,7 +450,7 @@ const Navbar = ({ shopBranding }: NavbarProps = {}) => {
                               "text-[8px] h-3 px-1.5 border-none",
                               user?.role === "ENTREPRENEUR"
                                 ? "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400"
-                                : "bg-emerald-600/10 text-emerald-600 dark:text-emerald-400",
+                                : "bg-primary/10 text-primary dark:text-accent",
                             )}
                           >
                             {user?.role === "ENTREPRENEUR"

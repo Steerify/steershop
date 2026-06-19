@@ -1,16 +1,40 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Sparkles, Check, Zap, Crown, HelpCircle, Clock, Users, TrendingUp, ShieldCheck } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Sparkles,
+  Check,
+  Zap,
+  Crown,
+  HelpCircle,
+  Clock,
+  Users,
+  TrendingUp,
+  ShieldCheck,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { SubscriptionCard } from "@/components/SubscriptionCard";
-import subscriptionService, { SubscriptionPlan } from "@/services/subscription.service";
+import subscriptionService, {
+  SubscriptionPlan,
+} from "@/services/subscription.service";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/steersolo-logo.jpg";
+import heroBackground from "@/assets/hero-auth.png";
 import { PageThemeShell } from "@/components/PageThemeShell";
 
-const planProfiles: Record<string, { bestFor: string; outcome: string; timeSaved: string }> = {
+const planProfiles: Record<
+  string,
+  { bestFor: string; outcome: string; timeSaved: string }
+> = {
   starter: {
     bestFor: "Testing the Daily Selling System",
     outcome: "Launch your first store in 10 minutes",
@@ -53,17 +77,17 @@ const Pricing = () => {
 
       if (user) {
         const { data: profile } = await supabase
-          .from('profiles')
-          .select('subscription_plan_id')
-          .eq('id', user.id)
+          .from("profiles")
+          .select("subscription_plan_id")
+          .eq("id", user.id)
           .single();
-        
+
         if (profile?.subscription_plan_id) {
           setCurrentPlanId(profile.subscription_plan_id);
         }
       }
     } catch (error) {
-      console.error('Error loading pricing data:', error);
+      console.error("Error loading pricing data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -72,23 +96,23 @@ const Pricing = () => {
   const faqs = [
     {
       q: "What happens after my free trial?",
-      a: "Your store automatically moves to the free Starter plan (up to 5 products). To unlock more products and features, choose a paid plan."
+      a: "Your store automatically moves to the free Starter plan (up to 5 products). To unlock more products and features, choose a paid plan.",
     },
     {
       q: "Can I change plans later?",
-      a: "Yes! You can upgrade or downgrade at any time. The difference will be prorated."
+      a: "Yes! You can upgrade or downgrade at any time. The difference will be prorated.",
     },
     {
       q: "Is there a setup fee?",
-      a: "No setup fees! However, we offer a premium 'Done-For-You' store setup service if you need help getting started."
+      a: "No setup fees! However, we offer a premium 'Done-For-You' store setup service if you need help getting started.",
     },
     {
       q: "How do payments work?",
-      a: "We use Paystack for secure payments. You can pay with cards, bank transfer, or USSD."
+      a: "We use Paystack for secure payments. You can pay with cards, bank transfer, or USSD.",
     },
     {
       q: "What if I don't get results?",
-      a: "We're confident SteerSolo will help you grow. Complete your setup milestones and start receiving orders — our support team is here to help every step of the way."
+      a: "We're confident SteerSolo will help you grow. Complete your setup milestones and start receiving orders — our support team is here to help every step of the way.",
     },
   ];
 
@@ -100,16 +124,20 @@ const Pricing = () => {
           <div className="container mx-auto px-4 py-3 sm:py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => navigate(-1)}
                   className="mr-2"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-primary/20">
-                  <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+                  <img
+                    src={logo}
+                    alt="SteerSolo"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <span className="text-xl sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   SteerSolo
@@ -120,6 +148,15 @@ const Pricing = () => {
         </nav>
       }
     >
+      {/* Hero Background Image — bigger & dimmer */}
+      <div className="absolute inset-0 scale-110 origin-center opacity-20">
+        <img
+          src={heroBackground}
+          alt=""
+          className="w-full h-full object-cover"
+          aria-hidden="true"
+        />
+      </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
         {/* Hero Section — ROI-first */}
@@ -128,7 +165,8 @@ const Pricing = () => {
             Start Free. Upgrade When You Grow.
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
-            Your free store is forever. Paid plans pay for themselves — choose the one that matches your stage.
+            Your free store is forever. Paid plans pay for themselves — choose
+            the one that matches your stage.
           </p>
 
           {/* ROI highlights */}
@@ -175,13 +213,12 @@ const Pricing = () => {
         {/* Subscription Cards */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-pulse text-muted-foreground">Loading plans...</div>
+            <div className="animate-pulse text-muted-foreground">
+              Loading plans...
+            </div>
           </div>
         ) : (
-          <SubscriptionCard 
-            plans={plans} 
-            currentPlanId={currentPlanId}
-          />
+          <SubscriptionCard plans={plans} currentPlanId={currentPlanId} />
         )}
 
         {/* Steerify Ads Cross-Promotion Banner */}
@@ -196,12 +233,15 @@ const Pricing = () => {
                 Want more customers, not just a better store?
               </h2>
               <p className="text-xs text-neutral-400 max-w-xl leading-relaxed">
-                Steerify Ads promotes your store and social media across Facebook, Instagram, TikTok, Google, and our growing WhatsApp marketplace daily. 
-                Plans start from <span className="text-white font-bold">₦12,000/month</span> (management fee only). You control your budget.
+                Steerify Ads promotes your store and social media across
+                Facebook, Instagram, TikTok, Google, and our growing WhatsApp
+                marketplace daily. Plans start from{" "}
+                <span className="text-white font-bold">₦12,000/month</span>{" "}
+                (management fee only). You control your budget.
               </p>
             </div>
-            <Button 
-              onClick={() => navigate('/ads')} 
+            <Button
+              onClick={() => navigate("/ads")}
               className="bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-widest px-6 py-4 h-auto rounded-xl active:scale-[0.98] transition-all whitespace-nowrap shrink-0"
             >
               Get More Customers
@@ -219,7 +259,9 @@ const Pricing = () => {
                 We're Here to Help You Succeed
               </h3>
               <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-                Complete your setup milestones and start receiving orders. Our support team is with you every step of the way — reach out anytime on WhatsApp.
+                Complete your setup milestones and start receiving orders. Our
+                support team is with you every step of the way — reach out
+                anytime on WhatsApp.
               </p>
             </CardContent>
           </Card>
@@ -232,20 +274,22 @@ const Pricing = () => {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="w-5 h-5 text-primary" />
-                  <span className="text-sm font-medium text-primary uppercase tracking-wide">Premium Service</span>
+                  <span className="text-sm font-medium text-primary uppercase tracking-wide">
+                    Premium Service
+                  </span>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-heading font-bold mb-2">
                   Done-For-You Store Setup
                 </h3>
                 <p className="text-muted-foreground">
-                  Too busy to set up your store? Let our experts create a professional storefront for you. 
-                  Starting at just ₦5,000.
+                  Too busy to set up your store? Let our experts create a
+                  professional storefront for you. Starting at just ₦5,000.
                 </p>
               </div>
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="bg-gradient-to-r from-primary to-accent hover:opacity-90 whitespace-nowrap"
-                onClick={() => navigate('/setup-service')}
+                onClick={() => navigate("/setup-service")}
               >
                 Learn More
               </Button>
@@ -282,12 +326,13 @@ const Pricing = () => {
               Ready to break the WhatsApp chaos?
             </h3>
             <p className="text-muted-foreground mb-6">
-              Join thousands of Nigerian entrepreneurs building their Daily Selling System.
+              Join thousands of Nigerian entrepreneurs building their Daily
+              Selling System.
             </p>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
-              onClick={() => navigate('/auth/signup')}
+              onClick={() => navigate("/auth/signup")}
             >
               Start Free Forever
             </Button>

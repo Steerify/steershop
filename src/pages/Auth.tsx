@@ -34,6 +34,7 @@ import {
 import { z } from "zod";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logoDark from "@/assets/steersolo-logo-dark.jpg";
+import heroAuthImage from "@/assets/hero-auth1.png";
 import { useTheme } from "next-themes";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -643,7 +644,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 font-sans px-4 sm:px-6 py-6 sm:py-10 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col lg:flex-row items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 font-sans px-4 sm:px-6 py-6 sm:py-10 relative overflow-hidden">
       {/* Background pattern */}
       <AdirePattern
         variant="dots"
@@ -651,6 +652,15 @@ const Auth = () => {
       />
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-accent/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+      {/* Hero Image (Desktop) */}
+      <div className="hidden lg:flex flex-1 max-w-[600px] items-center justify-center p-8">
+        <img
+          src={heroAuthImage}
+          alt="SteerSolo - Professional Stores for Nigerian Solo Sellers"
+          className="w-full h-auto max-h-[80vh] object-contain drop-shadow-2xl"
+        />
+      </div>
 
       {/* Card Container */}
       <div className="w-full max-w-[500px] relative z-10">
@@ -672,7 +682,7 @@ const Auth = () => {
                 <Mail className="w-10 h-10 text-primary" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-2xl font-bold text-foreground">
+                <h3 className="text-2xl font-bold text-primary">
                   Check Your Inbox
                 </h3>
                 <p className="text-muted-foreground">
@@ -726,7 +736,7 @@ const Auth = () => {
                 Back to login
               </Button>
               <div className="mb-6">
-                <h3 className="text-3xl font-bold tracking-tight text-foreground mb-2">
+                <h3 className="text-3xl font-bold tracking-tight text-primary mb-2">
                   Reset Password
                 </h3>
                 <p className="text-[15px] text-muted-foreground">
@@ -754,7 +764,7 @@ const Auth = () => {
                 </div>
                 <Button
                   type="submit"
-                  className="w-full min-h-[52px] rounded-full bg-primary text-primary-foreground font-semibold text-base mt-2"
+                  className="w-full min-h-[52px] rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base mt-2"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -782,7 +792,7 @@ const Auth = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 sm:gap-4">
-                  <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-[1.05] whitespace-pre-line">
+                  <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-primary leading-[1.05] whitespace-pre-line">
                     {activeTab === "login" ? "Welcome\nback" : "Get\nstarted"}
                   </h1>
 
@@ -881,7 +891,7 @@ const Auth = () => {
 
                       <Button
                         type="submit"
-                        className="w-full min-h-[52px] rounded-full bg-foreground hover:bg-foreground/90 text-background font-semibold text-base mt-4 transition-all"
+                        className="w-full min-h-[52px] rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base mt-4 transition-all"
                         disabled={isLoading}
                       >
                         {isLoading ? (
@@ -941,7 +951,7 @@ const Auth = () => {
 
                       <Button
                         type="submit"
-                        className="w-full min-h-[52px] rounded-full bg-foreground hover:bg-foreground/90 text-background font-semibold text-base mt-4 transition-all"
+                        className="w-full min-h-[52px] rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base mt-4 transition-all"
                         disabled={isLoading}
                       >
                         {isLoading ? (

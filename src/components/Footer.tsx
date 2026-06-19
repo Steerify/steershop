@@ -2,13 +2,27 @@ import { Link } from "react-router-dom";
 import { Twitter, Instagram, Mail, Heart, MessageCircle } from "lucide-react";
 import { AdirePattern, AdireAccent } from "./patterns/AdirePattern";
 import NoticeBadge from "@/components/NoticeBadge";
-import logoDark from "@/assets/steersolo-logo-dark.jpg";
+import steersoloLogo from "@/assets/steersolo-logo.png";
+import heroBackground from "@/assets/hero-background.png";
 import { useTheme } from "next-themes";
 
 export const Footer = () => {
-  const logo = logoDark;
+  const logo = steersoloLogo;
   return (
-    <footer className="relative bg-[#0f295c] text-white overflow-hidden">
+    <footer className="relative bg-brand-forest-deep text-[hsl(35,30%,96%)] overflow-hidden">
+      {/* Hero Background Image */}
+      <div className="absolute inset-0 opacity-20">
+        <img
+          src={heroBackground}
+          alt=""
+          className="w-full h-full object-cover"
+          aria-hidden="true"
+        />
+      </div>
+
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-brand-forest-deep/80" />
+
       {/* Adire Pattern Overlay */}
       <AdirePattern variant="circles" className="text-white" opacity={0.1} />
 
@@ -21,7 +35,7 @@ export const Footer = () => {
           <div className="col-span-2 sm:col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
               <div
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden shadow-lg ring-2 ring-gold/30 flex-shrink-0 select-none"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden shadow-lg ring-2 ring-accent/30 flex-shrink-0 select-none"
                 onContextMenu={e => e.preventDefault()}
                 aria-label="SteerSolo logo"
               >
@@ -35,7 +49,7 @@ export const Footer = () => {
               </div>
               <Link
                 to="/"
-                className="font-heading text-xl sm:text-2xl font-bold text-gold"
+                className="font-heading text-xl sm:text-2xl font-bold text-accent-text"
               >
                 SteerSolo
               </Link>
@@ -49,7 +63,7 @@ export const Footer = () => {
                 href="https://instagram.com/steerifygroup"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-accent/20 hover:text-accent transition-colors"
                 aria-label="Instagram"
               >
                 <Instagram className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -58,7 +72,7 @@ export const Footer = () => {
                 href="https://x.com/SteerifyGroup"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-accent/20 hover:text-accent transition-colors"
                 aria-label="X (Twitter)"
               >
                 <Twitter className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -68,7 +82,7 @@ export const Footer = () => {
                   const webLink = "https://www.threads.net/@steerifygroup";
                   window.open(webLink, "_blank", "noopener,noreferrer");
                 }}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-accent/20 hover:text-accent transition-colors"
                 aria-label="Threads"
               >
                 <svg
@@ -81,7 +95,7 @@ export const Footer = () => {
               </button>
               <a
                 href="mailto:steerifygroup@gmail.com"
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-accent/20 hover:text-accent transition-colors"
                 aria-label="Email"
               >
                 <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -90,7 +104,7 @@ export const Footer = () => {
                 href="https://wa.me/2349161922351"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-accent/20 hover:text-accent transition-colors"
                 aria-label="WhatsApp"
               >
                 <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -100,14 +114,14 @@ export const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-heading font-semibold text-sm sm:text-lg mb-3 sm:mb-4 text-gold">
+            <h4 className="font-heading font-semibold text-sm sm:text-lg mb-3 sm:mb-4 text-accent-text">
               Quick Links
             </h4>
             <ul className="space-y-2 sm:space-y-3">
               <li>
                 <Link
                   to="/shops"
-                  className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm"
+                  className="text-white/80 hover:text-accent transition-colors text-xs sm:text-sm"
                 >
                   Browse Shops
                 </Link>
@@ -115,7 +129,7 @@ export const Footer = () => {
               <li>
                 <Link
                   to="/merchant"
-                  className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm"
+                  className="text-white/80 hover:text-accent transition-colors text-xs sm:text-sm"
                 >
                   Start Selling
                 </Link>
@@ -123,7 +137,7 @@ export const Footer = () => {
               <li>
                 <Link
                   to="/ads"
-                  className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm"
+                  className="text-white/80 hover:text-accent transition-colors text-xs sm:text-sm"
                 >
                   Steerify Ads
                 </Link>
@@ -131,7 +145,7 @@ export const Footer = () => {
               <li>
                 <Link
                   to="/about"
-                  className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm"
+                  className="text-white/80 hover:text-accent transition-colors text-xs sm:text-sm"
                 >
                   About Us
                 </Link>
@@ -139,7 +153,7 @@ export const Footer = () => {
               <li>
                 <Link
                   to="/brand"
-                  className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm"
+                  className="text-white/80 hover:text-accent transition-colors text-xs sm:text-sm"
                 >
                   Brand
                 </Link>
@@ -147,7 +161,7 @@ export const Footer = () => {
               <li>
                 <Link
                   to="/updates"
-                  className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm"
+                  className="text-white/80 hover:text-accent transition-colors text-xs sm:text-sm"
                 >
                   Updates
                 </Link>
@@ -155,7 +169,7 @@ export const Footer = () => {
               <li>
                 <Link
                   to="/ambassador-program"
-                  className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm"
+                  className="text-white/80 hover:text-accent transition-colors text-xs sm:text-sm"
                 >
                   Ambassador Program
                 </Link>
@@ -163,7 +177,7 @@ export const Footer = () => {
               <li>
                 <Link
                   to="/insights"
-                  className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm"
+                  className="text-white/80 hover:text-accent transition-colors text-xs sm:text-sm"
                 >
                   Insights
                 </Link>
@@ -171,7 +185,7 @@ export const Footer = () => {
               <li>
                 <Link
                   to="/feedback"
-                  className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm"
+                  className="text-white/80 hover:text-accent transition-colors text-xs sm:text-sm"
                 >
                   Contact
                 </Link>
@@ -181,14 +195,14 @@ export const Footer = () => {
 
           {/* Support */}
           <div>
-            <h4 className="font-heading font-semibold text-sm sm:text-lg mb-3 sm:mb-4 text-gold">
+            <h4 className="font-heading font-semibold text-sm sm:text-lg mb-3 sm:mb-4 text-accent-text">
               Support
             </h4>
             <ul className="space-y-2 sm:space-y-3">
               <li>
                 <Link
                   to="/feedback"
-                  className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm"
+                  className="text-white/80 hover:text-accent transition-colors text-xs sm:text-sm"
                 >
                   Help Center
                 </Link>
@@ -196,7 +210,7 @@ export const Footer = () => {
               <li>
                 <Link
                   to="/faq"
-                  className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm"
+                  className="text-white/80 hover:text-accent transition-colors text-xs sm:text-sm"
                 >
                   FAQs
                 </Link>
@@ -204,7 +218,7 @@ export const Footer = () => {
               <li>
                 <Link
                   to="/feedback"
-                  className="text-white/80 hover:text-gold transition-colors text-xs sm:text-sm"
+                  className="text-white/80 hover:text-accent transition-colors text-xs sm:text-sm"
                 >
                   Report Issue
                 </Link>
@@ -214,7 +228,7 @@ export const Footer = () => {
 
           {/* Legal */}
           <div>
-            <h4 className="font-heading font-semibold text-sm sm:text-lg mb-3 sm:mb-4 text-gold">
+            <h4 className="font-heading font-semibold text-sm sm:text-lg mb-3 sm:mb-4 text-accent-text">
               Legal
             </h4>
             <ul className="space-y-2 sm:space-y-3">

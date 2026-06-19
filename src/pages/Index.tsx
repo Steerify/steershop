@@ -28,9 +28,12 @@ import { Footer } from "@/components/Footer";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 import { Helmet } from "react-helmet-async";
 import { FeaturedStoresHeroCarousel } from "@/components/FeaturedStoresHeroCarousel";
+import { ShopAvatars } from "@/components/ShopAvatars";
 import whatsappLogo from "@/assets/social/whatsapp-logo.svg";
 import instagramLogo from "@/assets/social/instagram-logo.svg";
 import tiktokLogo from "@/assets/social/tiktok-logo.svg";
+import heroBackground from "@/assets/hero-background.png";
+import homepageFeature from "@/assets/homepage-feature.png";
 
 // Hero images (realistic Nigerian merchant imagery)
 const P = {
@@ -214,8 +217,17 @@ const HeroTextSlider = () => {
   const phrases = [
     {
       eyebrow: "For solo sellers on WhatsApp · Instagram · TikTok",
-      h1: "You have customers out there, give them a store to buy from",
-      p: "SteerSolo gives you a professional storefront, clear product catalog, secure payments, and verified orders delivered right to your WhatsApp — keep the conversation, lose the chaos.",
+      h1: (
+        <>
+          Everything you need to{" "}
+          <span className="relative inline-block">
+            sell better
+            <span className="absolute -bottom-1 left-0 w-full h-2 bg-gradient-to-r from-primary to-accent rounded-full opacity-80"></span>
+          </span>{" "}
+          online
+        </>
+      ),
+      p: "From Storefronts to Marketplace Visibility, Steersolo helps you grow with ease and confidence.",
       cta1: {
         label: "Start your free store",
         link: "/auth/signup",
@@ -225,7 +237,7 @@ const HeroTextSlider = () => {
     },
     {
       eyebrow: "For Nigerian shoppers",
-      h1: "Find trusted stores.\nSee prices upfront.\nBuy with confidence.",
+      h1: "Find trusted stores,\nSee prices upfront,\nand Buy with confidence.",
       p: "Discover verified Nigerian merchants with clear catalogs, visible prices, and a secure path to order — all in one place.",
       cta1: { label: "Explore Marketplace", link: "/shops", icon: ShoppingBag },
       cta2: { label: "Sign up for free", link: "/shopper-signup" },
@@ -247,26 +259,29 @@ const HeroTextSlider = () => {
           from { opacity: 0; transform: translateX(30px); }
           to { opacity: 1; transform: translateX(0); }
         }
+        @keyframes fadeOut {
+          from { opacity: 1; transform: translateX(0); }
+          to { opacity: 0; transform: translateX(-30px); }
+        }
         .animate-slide-in {
           animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-        .hero-phrase-hidden {
-          display: none !important;
-          visibility: hidden !important;
+        .animate-fade-out {
+          animation: fadeOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       `}</style>
       {phrases.map((phrase, i) => (
         <div
           key={i}
-          className={i === index ? "animate-slide-in" : "hero-phrase-hidden"}
+          className={`absolute inset-0 ${i === index ? "opacity-100 animate-slide-in pointer-events-auto" : "opacity-0 animate-fade-out pointer-events-none"}`}
           aria-hidden={i !== index}
         >
           {/* Aligned Escrow Pill & Eyebrow Badge Row */}
           <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md text-emerald-600 dark:text-emerald-400 text-xs font-semibold select-none">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 backdrop-blur-md text-primary dark:text-accent text-xs font-semibold select-none">
               <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 dark:bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-600 dark:bg-emerald-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent"></span>
               </span>
               🔒 Mediuspay Escrow & Paystack Secured Payments
             </div>
@@ -282,15 +297,15 @@ const HeroTextSlider = () => {
           </div>
 
           <h1 className="font-extrabold text-foreground leading-[1.05] mb-5 text-3xl sm:text-4xl lg:text-6xl tracking-tighter whitespace-pre-line">
-            {phrase.h1}
+            {typeof phrase.h1 === "string" ? phrase.h1 : phrase.h1}
           </h1>
 
-          <p className="text-base sm:text-lg text-muted-foreground font-medium max-w-lg mx-auto mb-8 leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground font-medium max-w-2xl mx-auto mb-8 leading-relaxed">
             {phrase.p}
           </p>
 
           {/* CTAs with Premium Hover & Scale Effects */}
-          <div className="flex flex-wrap justify-center gap-4 mb-2">
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
             <Link to={phrase.cta1.link}>
               <button className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl font-bold text-base text-primary-foreground bg-gradient-to-r from-primary to-accent shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:scale-[0.98] transition-all duration-300">
                 {phrase.cta1.label}
@@ -350,7 +365,7 @@ const DiscoveryLinks = () => {
   ];
 
   return (
-    <section className="py-16 md:py-24 bg-background relative overflow-hidden">
+    <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-background relative overflow-hidden">
       {/* Decorative blur elements */}
       <div className="absolute top-0 -left-1/4 w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full pointer-events-none animate-pulse-soft" />
       <div
@@ -509,12 +524,15 @@ const Index = () => {
   const [liveVendorCount, setLiveVendorCount] = useState<number>(0);
   const [vendorCountLabel, setVendorCountLabel] =
     useState<string>("active merchants");
+  const [shopAvatars, setShopAvatars] = useState<
+    { id: string; shop_name: string; logo_url: string | null }[]
+  >([]);
 
   useEffect(() => {
     let isMounted = true;
     let channel: RealtimeChannel | null = null;
 
-    const fetchVendorCount = async () => {
+    const fetchData = async () => {
       try {
         // 1. Active merchants = distinct shop_id appearing in orders (real, transacting shops)
         const { data: activeRows, error: activeErr } = await supabase
@@ -531,23 +549,34 @@ const Index = () => {
           if (!isMounted) return;
           setLiveVendorCount(activeCount);
           setVendorCountLabel("active merchants");
-          return;
+        } else {
+          // 2. Fallback: approved (live) shops
+          const { count: approvedCount } = await supabase
+            .from("shops")
+            .select("id", { count: "exact", head: true })
+            .eq("is_active", true);
+
+          if (!isMounted) return;
+          setLiveVendorCount(approvedCount ?? 0);
+          setVendorCountLabel("approved shops");
         }
 
-        // 2. Fallback: approved (live) shops
-        const { count: approvedCount } = await supabase
-          .from("shops")
-          .select("id", { count: "exact", head: true })
-          .eq("is_active", true);
+        // 3. Load shop avatars
+        const { data: shopsData } = await supabase
+          .from("shops_public")
+          .select("id, shop_name, logo_url")
+          .eq("is_active", true)
+          .not("logo_url", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(5);
 
         if (!isMounted) return;
-        setLiveVendorCount(approvedCount ?? 0);
-        setVendorCountLabel("approved shops");
+        if (shopsData) setShopAvatars(shopsData as any);
       } catch (e) {
-        console.error("Error fetching merchant count:", e);
+        console.error("Error fetching data:", e);
       }
     };
-    fetchVendorCount();
+    fetchData();
 
     channel = supabase
       .channel("public:merchants-count-sync")
@@ -555,14 +584,14 @@ const Index = () => {
         "postgres_changes",
         { event: "*", schema: "public", table: "shops" },
         () => {
-          if (isMounted) fetchVendorCount();
+          if (isMounted) fetchData();
         },
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "orders" },
         () => {
-          if (isMounted) fetchVendorCount();
+          if (isMounted) fetchData();
         },
       )
       .subscribe();
@@ -693,12 +722,22 @@ const Index = () => {
         §1: HERO - Attention Grabber
       --------------------------- */}
       <main id="main-content">
-        <section className="bg-brand-hero relative overflow-hidden min-h-[92vh] pt-24">
+        <section className="bg-brand-hero relative overflow-hidden min-h-[90vh] sm:min-h-[92vh] pt-20 sm:pt-24">
+          {/* Full-width background image (more prominent!) */}
+          <div className="absolute inset-0 z-0">
+            <img
+              src={heroBackground}
+              alt=""
+              className="w-full h-full object-cover opacity-40"
+              aria-hidden="true"
+            />
+            {/* Dark gradient overlay to ensure text readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-brand-forest-deep/80 via-brand-forest-deep/60 to-brand-forest-deep"></div>
+          </div>
           {/* subtle adire diagonal texture */}
           <div
+            className="absolute inset-0 z-1"
             style={{
-              position: "absolute",
-              inset: 0,
               pointerEvents: "none",
               opacity: 0.035,
               backgroundImage:
@@ -707,8 +746,8 @@ const Index = () => {
           />
           {/* accent glow — bottom right */}
           <div
+            className="absolute z-1"
             style={{
-              position: "absolute",
               bottom: "-10%",
               right: "-5%",
               width: "55%",
@@ -720,8 +759,8 @@ const Index = () => {
           />
           {/* soft indigo glow — top left */}
           <div
+            className="absolute z-1"
             style={{
-              position: "absolute",
               top: "-10%",
               left: "-5%",
               width: "40%",
@@ -732,38 +771,53 @@ const Index = () => {
             }}
           />
 
-          <div className="mx-auto max-w-screen-xl px-4 relative z-10">
+          <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="flex flex-col lg:flex-row items-center gap-10 pb-24">
               {/* ── TEXT (Attention & Interest) ── */}
               <div className="flex-1 max-w-2xl mx-auto text-center f1">
-                <div style={{ minHeight: 280 }}>
+                <div className="min-h-[380px] sm:min-h-[420px] md:min-h-[460px] relative">
                   <HeroTextSlider />
                 </div>
 
                 {/* ── Social Proof (Desire) ── */}
-                <div className="mt-8 p-5 rounded-[2rem] bg-card/40 border border-border/50 backdrop-blur-xl shadow-xl space-y-4 animate-fade-up f3">
+                <div className="mt-12 p-5 rounded-[2rem] bg-card/40 border border-border/50 backdrop-blur-xl shadow-xl space-y-4 animate-fade-up f3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-4">
                     <div className="inline-flex items-center gap-3">
                       <div className="flex -space-x-2 shrink-0">
-                        <img
-                          src={P.av1}
-                          alt="Merchant 1"
-                          className="w-8 h-8 rounded-full border-2 border-background object-cover"
-                        />
-                        <img
-                          src={P.av2}
-                          alt="Merchant 2"
-                          className="w-8 h-8 rounded-full border-2 border-background object-cover"
-                        />
-                        <img
-                          src={P.av3}
-                          alt="Merchant 3"
-                          className="w-8 h-8 rounded-full border-2 border-background object-cover"
-                        />
+                        {shopAvatars.length > 0 ? (
+                          shopAvatars.map((shop, index) => (
+                            <img
+                              key={shop.id}
+                              src={shop.logo_url || ""}
+                              alt={shop.shop_name}
+                              className="w-8 h-8 rounded-full border-2 border-background object-cover"
+                              loading="lazy"
+                              style={{ zIndex: shopAvatars.length - index }}
+                            />
+                          ))
+                        ) : (
+                          <>
+                            <img
+                              src={P.av1}
+                              alt="Merchant 1"
+                              className="w-8 h-8 rounded-full border-2 border-background object-cover"
+                            />
+                            <img
+                              src={P.av2}
+                              alt="Merchant 2"
+                              className="w-8 h-8 rounded-full border-2 border-background object-cover"
+                            />
+                            <img
+                              src={P.av3}
+                              alt="Merchant 3"
+                              className="w-8 h-8 rounded-full border-2 border-background object-cover"
+                            />
+                          </>
+                        )}
                       </div>
                       <div>
                         <div className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse" />
                           <span className="text-foreground font-extrabold">
                             <AnimatedCounter target={liveVendorCount} />+
                           </span>{" "}
@@ -775,7 +829,7 @@ const Index = () => {
                       </div>
                     </div>
                     <div className="flex items-center shrink-0">
-                      <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                      <span className="text-[9px] text-primary dark:text-accent font-bold uppercase tracking-widest bg-accent/10 border border-accent/20 px-2.5 py-0.5 rounded-full">
                         Live
                       </span>
                     </div>
@@ -803,7 +857,7 @@ const Index = () => {
                         key={t}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-background/50 hover:bg-background transition-all duration-300 border border-border/50"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-primary dark:text-accent shrink-0">
                           <I className="w-4 h-4" />
                         </div>
                         <div>
@@ -879,9 +933,9 @@ const Index = () => {
         {/* --------------------------
         §2.5: FEATURED STORES
       --------------------------- */}
-        <section className="py-20 bg-background relative overflow-hidden border-y border-border/40">
+        <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-background relative overflow-hidden border-y border-border/40">
           <div className="absolute top-0 right-0 w-1/3 h-1/2 bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
-          <div className="mx-auto max-w-screen-xl px-4 relative z-10">
+          <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="text-center mb-12">
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-accent mb-4">
                 Curated Excellence
@@ -905,8 +959,8 @@ const Index = () => {
         {/* --------------------------
         §3: PAIN POINT - Problem Identification
       --------------------------- */}
-        <section className="py-16 md:py-24 bg-secondary/30">
-          <div className="mx-auto max-w-screen-xl px-4">
+        <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-secondary/30">
+          <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-10 md:mb-16">
               <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">
                 The problem we solve
@@ -951,11 +1005,11 @@ const Index = () => {
                         {platform.problem}
                       </p>
                     </div>
-                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/10 border border-emerald-200 dark:border-emerald-900/30 rounded-lg">
-                      <p className="text-xs text-emerald-800 dark:text-emerald-200 font-semibold mb-1">
+                    <div className="p-3 bg-accent/5 dark:bg-accent/10 border border-accent/20 rounded-lg">
+                      <p className="text-xs text-primary dark:text-accent font-semibold mb-1">
                         The Solution
                       </p>
-                      <p className="text-xs text-emerald-700/80 dark:text-emerald-200/80 leading-relaxed">
+                      <p className="text-xs text-primary/80 dark:text-accent/80 leading-relaxed">
                         {platform.fix}
                       </p>
                     </div>
@@ -998,11 +1052,11 @@ const Index = () => {
                       {platform.problem}
                     </p>
                   </div>
-                  <div className="p-4 bg-emerald-50 dark:bg-emerald-950/10 border border-emerald-200 dark:border-emerald-900/30 rounded-xl">
-                    <p className="text-sm text-emerald-800 dark:text-emerald-200 font-semibold mb-1">
+                  <div className="p-4 bg-accent/5 dark:bg-accent/10 border border-accent/20 rounded-xl">
+                    <p className="text-sm text-primary dark:text-accent font-semibold mb-1">
                       The Solution
                     </p>
-                    <p className="text-sm text-emerald-700/80 dark:text-emerald-200/80 leading-relaxed">
+                    <p className="text-sm text-primary/80 dark:text-accent/80 leading-relaxed">
                       {platform.fix}
                     </p>
                   </div>
@@ -1015,7 +1069,7 @@ const Index = () => {
         {/* --------------------------
         §4: HOW IT WORKS - Solution Steps
       --------------------------- */}
-        <section className="py-16 md:py-24 bg-background">
+        <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-background">
           <div className="mx-auto mt-8 sm:mt-12 max-w-6xl px-4 md:px-6">
             <div className="grid gap-8 md:gap-12 lg:grid-cols-[0.88fr_1.12fr] lg:items-start">
               <div className="max-w-xl text-center md:text-left">
@@ -1025,7 +1079,7 @@ const Index = () => {
                 <h2 className="font-black leading-[0.95] tracking-tight text-foreground text-2xl md:text-4xl md:text-[56px]">
                   Simple enough to understand in seconds
                 </h2>
-                <p className="mt-3 md:mt-5 max-w-md mx-auto md:mx-0 text-sm md:text-[18px] leading-6 md:leading-8 text-muted-foreground">
+                <p className="mt-3 md:mt-5 max-w-lg mx-auto md:mx-0 text-sm md:text-[18px] leading-6 md:leading-8 text-muted-foreground">
                   Launch your store in minutes, share your link everywhere, and
                   watch the orders roll in. We handle payments, security, and
                   order tracking — you focus on what you do best.
@@ -1075,8 +1129,8 @@ const Index = () => {
           <div className="flex flex-col lg:flex-row">
             <div className="img-zoom flex-1 overflow-hidden h-[250px] md:h-[320px] lg:h-auto bg-muted/20">
               <img
-                src={P.storefront}
-                alt="Online storefront"
+                src={homepageFeature}
+                alt="SteerSolo storefront in action"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -1124,21 +1178,21 @@ const Index = () => {
         {/* --------------------------
         §6: TRUST BADGES - Social Proof
       --------------------------- */}
-        <section className="bg-secondary/30 py-16 md:py-24 md:py-32 relative overflow-hidden">
+        <section className="bg-secondary/30 py-12 sm:py-16 md:py-20 lg:py-24 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-[0.03]">
             <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[50%] bg-primary blur-[120px] rounded-full" />
-            <div className="absolute bottom-[-10%] right-[-5%] w-[50%] h-[60%] bg-emerald-500 blur-[120px] rounded-full" />
+            <div className="absolute bottom-[-10%] right-[-5%] w-[50%] h-[60%] bg-accent blur-[120px] rounded-full" />
           </div>
 
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="text-center mb-12 md:mb-16 md:mb-20">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center mb-10 sm:mb-12 md:mb-16 lg:mb-20">
               <p className="text-primary font-bold text-xs uppercase tracking-[0.3em] mb-4">
                 The Trust Layer
               </p>
               <h2 className="text-2xl md:text-4xl md:text-6xl font-extrabold text-foreground mb-4 md:mb-6 tracking-tight leading-tight">
                 SteerSolo Safe — our Trust Layer
                 <br />
-                <span className="text-emerald-600 dark:text-emerald-400">
+                <span className="text-primary dark:text-accent">
                   for verified Nigerian merchants.
                 </span>
               </h2>
@@ -1157,7 +1211,7 @@ const Index = () => {
                     className={cn(
                       "flex-shrink-0 w-[85%] snap-start group relative p-6 rounded-[1.5rem] border transition-all duration-500 hover:-translate-y-1 overflow-hidden flex flex-col justify-between min-h-[220px]",
                       badge.top
-                        ? "bg-gradient-to-br from-emerald-500 to-teal-600 border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.3)] animate-pulse-soft"
+                        ? "bg-gradient-to-br from-accent to-accent-muted border-accent shadow-[0_0_25px_rgba(170,240,60,0.3)] animate-pulse-soft"
                         : "bg-card border-border/40 hover:bg-card/90 hover:border-border/80 shadow-sm",
                     )}
                   >
@@ -1210,7 +1264,7 @@ const Index = () => {
                   className={cn(
                     "group relative p-8 rounded-[2.5rem] border transition-all duration-500 hover:-translate-y-2 overflow-hidden flex flex-col justify-between min-h-[300px]",
                     badge.top
-                      ? "bg-gradient-to-br from-emerald-500 to-teal-600 border-emerald-400 shadow-[0_0_35px_rgba(16,185,129,0.3)] animate-pulse-soft"
+                      ? "bg-gradient-to-br from-accent to-accent-muted border-accent shadow-[0_0_35px_rgba(170,240,60,0.3)] animate-pulse-soft"
                       : "bg-card border-border/40 hover:bg-card/90 hover:border-border/80 shadow-sm",
                   )}
                 >
@@ -1257,91 +1311,10 @@ const Index = () => {
         </section>
 
         {/* --------------------------
-        §6.5: OFFICIAL PARTNERS - Strategic Partnerships
-      --------------------------- */}
-        <section className="bg-background py-20 border-b border-border/40">
-          <div className="mx-auto max-w-screen-xl px-4">
-            <div className="text-center mb-16">
-              <p className="text-primary font-bold text-xs uppercase tracking-[0.3em] mb-4">
-                Our Official Partners
-              </p>
-              <h2 className="text-2xl md:text-4xl font-extrabold text-foreground mb-4 tracking-tight">
-                Trusted by industry leaders
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base">
-                We partner with the best in Nigerian fintech and commerce to
-                deliver secure, reliable, and efficient services to our
-                merchants and shoppers.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 items-center justify-items-center">
-              {/* Mediuspay Partner Card */}
-              <a
-                href="https://mediuspay.com.ng"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full max-w-sm group"
-              >
-                <div className="lift rounded-3xl p-8 flex flex-col items-center gap-5 bg-card border border-border/40 shadow-sm hover:border-primary/30 hover:bg-primary/5 transition-all duration-300">
-                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-2xl font-black shadow-lg group-hover:scale-105 transition-transform">
-                    🔒
-                  </div>
-                  <div className="text-center">
-                    <h3 className="text-xl font-extrabold text-foreground mb-2 tracking-tight">
-                      Mediuspay
-                    </h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Official escrow partner — secure, automated escrow for all
-                      SteerSolo orders
-                    </p>
-                  </div>
-                </div>
-              </a>
-              {/* Paystack Partner Card */}
-              <a
-                href="https://paystack.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full max-w-sm group"
-              >
-                <div className="lift rounded-3xl p-8 flex flex-col items-center gap-5 bg-card border border-border/40 shadow-sm hover:border-primary/30 hover:bg-primary/5 transition-all duration-300">
-                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center text-white text-2xl font-black shadow-lg group-hover:scale-105 transition-transform">
-                    ₦
-                  </div>
-                  <div className="text-center">
-                    <h3 className="text-xl font-extrabold text-foreground mb-2 tracking-tight">
-                      Paystack
-                    </h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Secure payment processing for Nigerian merchants and
-                      shoppers
-                    </p>
-                  </div>
-                </div>
-              </a>
-              {/* Placeholder for future partners */}
-              <div className="w-full max-w-sm rounded-3xl p-8 flex flex-col items-center gap-5 bg-muted/30 border border-border/20">
-                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-gray-600 text-2xl font-black">
-                  +
-                </div>
-                <div className="text-center">
-                  <h3 className="text-xl font-extrabold text-muted-foreground mb-2 tracking-tight">
-                    Coming Soon
-                  </h3>
-                  <p className="text-xs text-muted-foreground/70 leading-relaxed">
-                    More amazing partners joining our ecosystem
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* --------------------------
         §7: TESTIMONIALS - Social Proof
       --------------------------- */}
-        <section className="bg-background py-24 border-y border-border/40">
-          <div className="mx-auto max-w-screen-xl px-4">
+        <section className="bg-background py-12 sm:py-16 md:py-20 lg:py-24 border-y border-border/40">
+          <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-14">
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary mb-4">
                 Merchant stories
@@ -1360,7 +1333,7 @@ const Index = () => {
                     {[1, 2, 3, 4, 5].map(s => (
                       <Star
                         key={s}
-                        className="w-4 h-4 fill-accent text-accent"
+                        className="w-4 h-4 fill-accent-text text-accent-text"
                       />
                     ))}
                   </div>
@@ -1391,11 +1364,11 @@ const Index = () => {
         {/* --------------------------
         §8: BUYER MARKETPLACE - Dual Audience
       --------------------------- */}
-        <section className="py-24 bg-background relative overflow-hidden">
-          <div className="mx-auto max-w-screen-xl px-4">
+        <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-background relative overflow-hidden">
+          <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row items-start gap-16">
               <div className="flex-1 min-w-[320px]">
-                <p className="text-xs font-bold uppercase tracking-widest text-accent mb-4">
+                <p className="text-xs font-bold uppercase tracking-widest text-accent-text mb-4">
                   The SteerSolo Safe Marketplace
                 </p>
                 <h2 className="text-foreground font-extrabold mb-6 text-3xl sm:text-4xl lg:text-5xl leading-tight">
@@ -1476,8 +1449,8 @@ const Index = () => {
         {/* --------------------------
         §9: DONE-FOR-YOU SETUP - Premium Offer
       --------------------------- */}
-        <section className="py-16 bg-transparent relative overflow-hidden">
-          <div className="mx-auto max-w-screen-xl px-4 relative z-10">
+        <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-transparent relative overflow-hidden">
+          <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#060b19] via-[#0A1128] to-[#120c24] border border-indigo-500/25 p-8 md:p-12 shadow-2xl group transition-all duration-300 hover:shadow-[0_0_50px_rgba(99,102,241,0.15)]">
               <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
               <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
@@ -1550,7 +1523,7 @@ const Index = () => {
         {/* --------------------------
         §11: FINAL CTA - Call to Action
       --------------------------- */}
-        <section className="bg-primary relative overflow-hidden py-28 text-center border-y border-border/40">
+        <section className="bg-primary relative overflow-hidden py-12 sm:py-16 md:py-20 lg:py-24 text-center border-y border-border/40">
           <div
             className="absolute inset-0 pointer-events-none opacity-[0.03]"
             style={{

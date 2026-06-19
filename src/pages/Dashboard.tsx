@@ -15,16 +15,66 @@ import subscriptionService from "@/services/subscription.service";
 import { payoutService } from "@/services/payout.service";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Store, Package, ShoppingCart, TrendingUp, Users,
-  Settings, LogOut, Share2, MapPin,
-  Megaphone, Target, ArrowRight, Clock,
-  CheckCircle, AlertCircle, DollarSign, CalendarCheck, Menu, X,
-  HelpCircle, Search, Shield, BookOpen, Banknote, Wallet, Crown, MessageCircle, Truck, BadgeCheck, Sparkles,
-  BarChart2, Home, Bell, ChevronUp, ChevronDown, ChevronRight, Zap, Star, TrendingDown, ExternalLink, Sun, Moon, type LucideIcon
+  Store,
+  Package,
+  ShoppingCart,
+  TrendingUp,
+  Users,
+  Settings,
+  LogOut,
+  Share2,
+  MapPin,
+  Megaphone,
+  Target,
+  ArrowRight,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  DollarSign,
+  CalendarCheck,
+  Menu,
+  X,
+  HelpCircle,
+  Search,
+  Shield,
+  BookOpen,
+  Banknote,
+  Wallet,
+  Crown,
+  MessageCircle,
+  Truck,
+  BadgeCheck,
+  Sparkles,
+  BarChart2,
+  Home,
+  Bell,
+  ChevronUp,
+  ChevronDown,
+  ChevronRight,
+  Zap,
+  Star,
+  TrendingDown,
+  ExternalLink,
+  Sun,
+  Moon,
+  type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { format, eachDayOfInterval, subMonths, differenceInDays } from "date-fns";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
+import {
+  format,
+  eachDayOfInterval,
+  subMonths,
+  differenceInDays,
+} from "date-fns";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 import { PageWrapper } from "@/components/PageWrapper";
 import { FeatureDiscoveryPopup } from "@/components/FeatureDiscoveryPopup";
 import logo from "@/assets/steersolo-logo.jpg";
@@ -37,11 +87,7 @@ import { StrokeMyShop } from "@/components/ai/StrokeMyShop";
 import { ProfileCompletionChecklist } from "@/components/ProfileCompletionChecklist";
 import { ShopStatusBadge } from "@/components/ShopStatusBadge";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PayoutRequestDialog } from "@/components/PayoutRequestDialog";
@@ -52,13 +98,17 @@ import { SalesMilestonePopup } from "@/components/SalesMilestonePopup";
 import { StructuredSellingChallenge } from "@/components/StructuredSellingChallenge";
 import { SubscriptionExpiryDialog } from "@/components/SubscriptionExpiryDialog";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { ShopAvatar } from "@/components/ShopAvatar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { VendorSetupWizard } from "@/components/VendorSetupWizard";
 import { VendorCommandCenter } from "@/components/VendorCommandCenter";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
-
+import heroBackground2 from "@/assets/hero-background2.png";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -96,7 +146,13 @@ type DashboardOrderSummary = {
   total_amount?: number | string | null;
 };
 
-type UrgentTask = { id: string; label: string; icon: LucideIcon; color: string; action: () => void };
+type UrgentTask = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  color: string;
+  action: () => void;
+};
 
 // ─── Main Dashboard Component ──────────────────────────────────────────────────
 const Dashboard = () => {
@@ -108,36 +164,54 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [daysRemaining, setDaysRemaining] = useState<number>(0);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'trial' | 'expired' | 'free'>('trial');
+  const [subscriptionStatus, setSubscriptionStatus] = useState<
+    "active" | "trial" | "expired" | "free"
+  >("trial");
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalSales, setTotalSales] = useState(0);
   const [chartData, setChartData] = useState<DashboardChartPoint[]>([]);
   const [activeOffer, setActiveOffer] = useState<DashboardOffer | null>(null);
-  const [shopData, setShopData] = useState<{ id: string; name: string } | null>(null);
+  const [shopData, setShopData] = useState<{ id: string; name: string } | null>(
+    null,
+  );
   const [shopFullData, setShopFullData] = useState<DashboardShop | null>(null);
   const [productsCount, setProductsCount] = useState(0);
   const [hasProductWithImage, setHasProductWithImage] = useState(false);
   const [userBadges, setUserBadges] = useState<DashboardBadge[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [pendingOrders, setPendingOrders] = useState(0);
-  const [payoutBalance, setPayoutBalance] = useState({ totalRevenue: 0, totalWithdrawn: 0, totalPending: 0, availableBalance: 0 });
+  const [payoutBalance, setPayoutBalance] = useState({
+    totalRevenue: 0,
+    totalWithdrawn: 0,
+    totalPending: 0,
+    availableBalance: 0,
+  });
   const [isPayoutDialogOpen, setIsPayoutDialogOpen] = useState(false);
   const [hasNoShop, setHasNoShop] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "actions" | "wallet">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "actions" | "wallet">(
+    "overview",
+  );
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(true);
   const [urgentTasks, setUrgentTasks] = useState<UrgentTask[]>([]);
 
   // Tour state
-  const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('dashboard');
+  const { hasSeenTour, isRunning, startTour, endTour, resetTour } =
+    useTour("dashboard");
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleTourCallback = (data: CallBackProps) => {
     const { status } = data;
-    if ([STATUS.FINISHED, STATUS.SKIPPED].some((completeStatus) => completeStatus === status)) {
+    if (
+      [STATUS.FINISHED, STATUS.SKIPPED].some(
+        completeStatus => completeStatus === status,
+      )
+    ) {
       endTour(status === STATUS.FINISHED);
     }
   };
@@ -147,19 +221,25 @@ const Dashboard = () => {
   // stuck on "trial".
   useEffect(() => {
     const verifyPayment = async () => {
-      const subscriptionParam = searchParams.get('subscription');
-      const reference = searchParams.get('reference') || localStorage.getItem('paystack_reference');
+      const subscriptionParam = searchParams.get("subscription");
+      const reference =
+        searchParams.get("reference") ||
+        localStorage.getItem("paystack_reference");
 
-      if (subscriptionParam !== 'verify' || !reference || !user) return;
+      if (subscriptionParam !== "verify" || !reference || !user) return;
 
       setIsSubscribing(true);
       try {
         // Step 1: try direct verify (fast path)
         const result = await subscriptionService.verifyPayment(reference);
         if (result.success) {
-          toast({ title: "Payment Successful! 🎉", description: "Your subscription has been activated. Welcome to SteerSolo!" });
-          setSubscriptionStatus('active');
-          localStorage.removeItem('paystack_reference');
+          toast({
+            title: "Payment Successful! 🎉",
+            description:
+              "Your subscription has been activated. Welcome to SteerSolo!",
+          });
+          setSubscriptionStatus("active");
+          localStorage.removeItem("paystack_reference");
           loadData();
           return;
         }
@@ -169,14 +249,17 @@ const Dashboard = () => {
         for (let i = 0; i < 10; i++) {
           await new Promise(r => setTimeout(r, 2000));
           const { data: prof } = await supabase
-            .from('profiles')
-            .select('is_subscribed, subscription_expires_at')
-            .eq('id', user.id)
+            .from("profiles")
+            .select("is_subscribed, subscription_expires_at")
+            .eq("id", user.id)
             .single();
           if (prof?.is_subscribed) {
-            toast({ title: "Payment Confirmed! 🎉", description: "Your subscription is now active." });
-            setSubscriptionStatus('active');
-            localStorage.removeItem('paystack_reference');
+            toast({
+              title: "Payment Confirmed! 🎉",
+              description: "Your subscription is now active.",
+            });
+            setSubscriptionStatus("active");
+            localStorage.removeItem("paystack_reference");
             loadData();
             return;
           }
@@ -184,29 +267,34 @@ const Dashboard = () => {
 
         toast({
           title: "Still confirming your payment",
-          description: "Your payment is being processed. Refresh in a moment — if the issue persists, contact support with reference " + reference,
+          description:
+            "Your payment is being processed. Refresh in a moment — if the issue persists, contact support with reference " +
+            reference,
           variant: "destructive",
         });
       } catch (error) {
-        console.error('Payment verification error:', error);
+        console.error("Payment verification error:", error);
         toast({
           title: "Verification error",
-          description: "We couldn't confirm your payment automatically. Please refresh in a moment.",
+          description:
+            "We couldn't confirm your payment automatically. Please refresh in a moment.",
           variant: "destructive",
         });
       } finally {
         setIsSubscribing(false);
-        navigate('/dashboard', { replace: true });
+        navigate("/dashboard", { replace: true });
       }
     };
     verifyPayment();
   }, [searchParams, user]);
 
-
   useEffect(() => {
     if (!isAuthLoading) {
       if (user) loadData();
-      else { setIsLoading(false); navigate("/auth/login"); }
+      else {
+        setIsLoading(false);
+        navigate("/auth/login");
+      }
     }
   }, [user, isAuthLoading]);
 
@@ -217,14 +305,14 @@ const Dashboard = () => {
 
       // CORE FETCH: Run profile and shop check in parallel for speed
       const [profileRes, shopRes] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', user.id).single(),
-        shopService.getShopByOwner(user.id)
+        supabase.from("profiles").select("*").eq("id", user.id).single(),
+        shopService.getShopByOwner(user.id),
       ]);
 
       // 1. Process Profile
       if (profileRes.error) {
-        console.error('Error fetching profile:', profileRes.error);
-        setProfile({ full_name: user.email?.split('@')[0] || 'User' });
+        console.error("Error fetching profile:", profileRes.error);
+        setProfile({ full_name: user.email?.split("@")[0] || "User" });
       } else {
         const p = profileRes.data;
         setProfile(p);
@@ -233,31 +321,35 @@ const Dashboard = () => {
           const now = new Date();
           const daysLeft = differenceInDays(expiresAt, now);
           setDaysRemaining(Math.max(0, daysLeft));
-          if (p.is_subscribed && expiresAt > now) setSubscriptionStatus('active');
-          else if (!p.is_subscribed && expiresAt > now) setSubscriptionStatus('trial');
+          if (p.is_subscribed && expiresAt > now)
+            setSubscriptionStatus("active");
+          else if (!p.is_subscribed && expiresAt > now)
+            setSubscriptionStatus("trial");
         } else {
-          setSubscriptionStatus('trial');
+          setSubscriptionStatus("trial");
           setDaysRemaining(15);
         }
       }
 
       // 2. Check for Shop - EARLY EXIT if no shop found
       const shops = shopRes.data;
-      const primaryShop = (Array.isArray(shops) ? shops[0] : shops) as DashboardShop | null;
+      const primaryShop = (
+        Array.isArray(shops) ? shops[0] : shops
+      ) as DashboardShop | null;
 
       if (!primaryShop) {
         setHasNoShop(true);
         setShopData(null);
         // Instant exit for new users to trigger Setup Wizard
         setIsLoading(false);
-        return; 
+        return;
       }
 
       const { data: defaultAddress } = await supabase
-        .from('shop_addresses')
-        .select('id')
-        .eq('shop_id', primaryShop.id)
-        .eq('is_default', true)
+        .from("shop_addresses")
+        .select("id")
+        .eq("shop_id", primaryShop.id)
+        .eq("is_default", true)
         .maybeSingle();
 
       const shopWithCompletion = {
@@ -266,58 +358,84 @@ const Dashboard = () => {
       };
 
       // 3. Populate Dashboard Data (only if shop exists)
-      setShopData({ id: primaryShop.id, name: primaryShop.shop_name || primaryShop.name });
+      setShopData({
+        id: primaryShop.id,
+        name: primaryShop.shop_name || primaryShop.name,
+      });
       setShopFullData(shopWithCompletion);
 
       if (!primaryShop.is_active) {
-        setSubscriptionStatus('trial');
+        setSubscriptionStatus("trial");
       }
 
       // Parallel fetch for dashboard secondary data
-      const [productsRes, ordersRes, badgesRes, offersRes, balance] = await Promise.all([
-        productService.getProducts({ shopId: primaryShop.id }),
-        orderService.getOrders({ shopId: primaryShop.id }),
-        subscriptionService.getUserBadges(user.id),
-        offerService.getOffers(),
-        payoutService.getBalance(primaryShop.id).catch(() => null)
-      ]);
+      const [productsRes, ordersRes, badgesRes, offersRes, balance] =
+        await Promise.all([
+          productService.getProducts({ shopId: primaryShop.id }),
+          orderService.getOrders({ shopId: primaryShop.id }),
+          subscriptionService.getUserBadges(user.id),
+          offerService.getOffers(),
+          payoutService.getBalance(primaryShop.id).catch(() => null),
+        ]);
 
       // 4. Process Secondary Data
       const productsList = productsRes.data || [];
       setProductsCount(productsList.length);
-      setHasProductWithImage(productsList.some(p => !!p.image_url && p.is_available));
+      setHasProductWithImage(
+        productsList.some(p => !!p.image_url && p.is_available),
+      );
 
       const allOrders = ordersRes.data || [];
-      const pending = (allOrders as DashboardOrderSummary[]).filter(o => o.payment_status !== 'paid' && o.order_status !== 'completed').length;
+      const pending = (allOrders as DashboardOrderSummary[]).filter(
+        o => o.payment_status !== "paid" && o.order_status !== "completed",
+      ).length;
       setPendingOrders(pending);
 
       // Process Chart Data
       const last7Days = eachDayOfInterval({
         start: subMonths(new Date(), 0).setDate(new Date().getDate() - 6),
-        end: new Date()
+        end: new Date(),
       });
-      const paidOrders = (allOrders as DashboardOrderSummary[]).filter(o => o.payment_status === 'paid');
+      const paidOrders = (allOrders as DashboardOrderSummary[]).filter(
+        o => o.payment_status === "paid",
+      );
       const dailyData = last7Days.map(day => {
-        const dateStr = format(day, 'yyyy-MM-dd');
-        const dayPaidOrders = paidOrders.filter(o => o.created_at && format(new Date(o.created_at), 'yyyy-MM-dd') === dateStr);
+        const dateStr = format(day, "yyyy-MM-dd");
+        const dayPaidOrders = paidOrders.filter(
+          o =>
+            o.created_at &&
+            format(new Date(o.created_at), "yyyy-MM-dd") === dateStr,
+        );
         return {
-          date: format(day, 'EEE'),
-          revenue: dayPaidOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0),
-          sales: dayPaidOrders.length
+          date: format(day, "EEE"),
+          revenue: dayPaidOrders.reduce(
+            (sum, o) => sum + (parseFloat(String(o.total_amount)) || 0),
+            0,
+          ),
+          sales: dayPaidOrders.length,
         };
       });
 
       setChartData(dailyData);
-      setTotalRevenue(paidOrders.reduce((sum, o) => sum + (parseFloat(String(o.total_amount)) || 0), 0));
+      setTotalRevenue(
+        paidOrders.reduce(
+          (sum, o) => sum + (parseFloat(String(o.total_amount)) || 0),
+          0,
+        ),
+      );
       setTotalSales(paidOrders.length);
       if (balance) setPayoutBalance(balance);
 
       if (badgesRes.success && badgesRes.data) {
-        setUserBadges(badgesRes.data.map(ub => ub.badges).filter(Boolean) as any);
+        setUserBadges(
+          badgesRes.data.map(ub => ub.badges).filter(Boolean) as any,
+        );
       }
 
       if (offersRes.success && offersRes.data) {
-        const entOffer = offersRes.data.find(o => o.target_audience === 'entrepreneurs' && o.is_active);
+        const entOffer = offersRes.data.find(
+          o => o.target_audience === "entrepreneurs" && o.is_active,
+        );
         if (entOffer) setActiveOffer(entOffer);
       }
 
@@ -325,53 +443,56 @@ const Dashboard = () => {
       const tasks = [];
       if (pending > 0) {
         tasks.push({
-          id: 'orders',
-          label: `${pending} Pending Order${pending !== 1 ? 's' : ''}`,
+          id: "orders",
+          label: `${pending} Pending Order${pending !== 1 ? "s" : ""}`,
           icon: ShoppingCart,
-          color: 'bg-amber-500/10 text-amber-600',
-          action: () => navigate('/orders')
+          color: "bg-amber-500/10 text-amber-600",
+          action: () => navigate("/orders"),
         });
       }
-      if (subscriptionStatus === 'expired') {
+      if (subscriptionStatus === "expired") {
         tasks.push({
-          id: 'subscription',
-          label: 'Subscription Expired',
+          id: "subscription",
+          label: "Subscription Expired",
           icon: Shield,
-          color: 'bg-destructive/10 text-destructive',
-          action: () => navigate('/pricing')
+          color: "bg-destructive/10 text-destructive",
+          action: () => navigate("/pricing"),
         });
-      } else if (daysRemaining < 3 && subscriptionStatus !== 'free') {
+      } else if (daysRemaining < 3 && subscriptionStatus !== "free") {
         tasks.push({
-          id: 'subscription-near',
-          label: `Subscription expires in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}`,
+          id: "subscription-near",
+          label: `Subscription expires in ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""}`,
           icon: Clock,
-          color: 'bg-orange-500/10 text-orange-600',
-          action: () => navigate('/pricing')
+          color: "bg-orange-500/10 text-orange-600",
+          action: () => navigate("/pricing"),
         });
       }
       if (productsList.length === 0) {
         tasks.push({
-          id: 'products',
-          label: 'Add your first product',
+          id: "products",
+          label: "Add your first product",
           icon: Package,
-          color: 'bg-primary/10 text-primary',
-          action: () => navigate('/products')
+          color: "bg-primary/10 text-primary",
+          action: () => navigate("/products"),
         });
       }
       if (primaryShop && !primaryShop.is_active) {
         tasks.push({
-          id: 'approval',
-          label: 'Awaiting Shop Approval',
+          id: "approval",
+          label: "Awaiting Shop Approval",
           icon: Store,
-          color: 'bg-blue-500/10 text-blue-600',
-          action: () => navigate('/my-store')
+          color: "bg-blue-500/10 text-blue-600",
+          action: () => navigate("/my-store"),
         });
       }
       setUrgentTasks(tasks);
-
     } catch (error) {
       console.error("Error loading dashboard data:", error);
-      toast({ title: "Error", description: "Failed to load dashboard data", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -380,16 +501,31 @@ const Dashboard = () => {
   const handleSubscribe = async () => {
     setIsSubscribing(true);
     try {
-      const result = await subscriptionService.initializePayment('growth', 'monthly');
+      const result = await subscriptionService.initializePayment(
+        "growth",
+        "monthly",
+      );
       if (result.success && result.authorization_url) {
-        localStorage.setItem('paystack_reference', result.reference || '');
-        toast({ title: "Redirecting to Payment", description: "You'll be redirected to Paystack to complete your payment..." });
+        localStorage.setItem("paystack_reference", result.reference || "");
+        toast({
+          title: "Redirecting to Payment",
+          description:
+            "You'll be redirected to Paystack to complete your payment...",
+        });
         window.location.href = result.authorization_url;
       } else {
-        toast({ title: "Payment Error", description: result.error || "Failed to initialize payment.", variant: "destructive" });
+        toast({
+          title: "Payment Error",
+          description: result.error || "Failed to initialize payment.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      toast({ title: "Error", description: "Something went wrong. Please try again.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubscribing(false);
     }
@@ -405,10 +541,13 @@ const Dashboard = () => {
   // Priority: expired → trial → no-products → first-sale → active → default
   const getContextualBanner = (): React.ReactNode => {
     // Expired subscription — most urgent
-    if (subscriptionStatus === 'expired') {
+    if (subscriptionStatus === "expired") {
       return (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-destructive to-[hsl(0,70%,38%)] p-5 shadow-lg min-h-[110px] flex items-center">
-          <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.12] pointer-events-none" />
+          <AdirePattern
+            variant="dots"
+            className="absolute inset-0 opacity-[0.12] pointer-events-none"
+          />
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
           <div className="absolute -bottom-6 -left-4 w-20 h-20 rounded-full bg-white/5" />
           <div className="absolute top-1/2 right-1/3 w-10 h-10 rounded-full bg-white/5" />
@@ -416,22 +555,38 @@ const Dashboard = () => {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <AlertCircle className="w-4 h-4 text-white/80" />
-                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Subscription Expired</span>
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">
+                  Subscription Expired
+                </span>
               </div>
-              <h3 className="text-white font-extrabold text-base">Your store is hidden from customers</h3>
-              <p className="text-white/90 text-xs mt-0.5">Reactivate now to start getting orders again.</p>
+              <h3 className="text-white font-extrabold text-base">
+                Your store is hidden from customers
+              </h3>
+              <p className="text-white/90 text-xs mt-0.5">
+                Reactivate now to start getting orders again.
+              </p>
             </div>
-            <Button size="sm" variant="outline" onClick={() => navigate('/pricing')} className="shrink-0 bg-white text-destructive hover:bg-white/90 border-white font-bold shadow-lg">Reactivate →</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate("/pricing")}
+              className="shrink-0 bg-white text-destructive hover:bg-white/90 border-white font-bold shadow-lg"
+            >
+              Reactivate →
+            </Button>
           </div>
         </div>
       );
     }
 
     // Trial running out
-    if (subscriptionStatus === 'trial') {
+    if (subscriptionStatus === "trial") {
       return (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(215,65%,18%)] via-primary to-[hsl(145,58%,30%)] p-5 shadow-lg min-h-[110px] flex items-center">
-          <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.12] pointer-events-none" />
+          <AdirePattern
+            variant="dots"
+            className="absolute inset-0 opacity-[0.12] pointer-events-none"
+          />
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
           <div className="absolute -bottom-6 -left-2 w-16 h-16 rounded-full bg-white/5" />
           <div className="absolute top-2 left-1/2 w-8 h-8 rounded-full bg-white/5" />
@@ -439,12 +594,25 @@ const Dashboard = () => {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Clock className="w-4 h-4 text-white/80" />
-                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Free Trial</span>
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">
+                  Free Trial
+                </span>
               </div>
-              <h3 className="text-white font-extrabold text-base">You have few days left</h3>
-              <p className="text-white/90 text-xs mt-0.5">Upgrade now to keep your store live and accept orders.</p>
+              <h3 className="text-white font-extrabold text-base">
+                You have few days left
+              </h3>
+              <p className="text-white/90 text-xs mt-0.5">
+                Upgrade now to keep your store live and accept orders.
+              </p>
             </div>
-            <Button size="sm" variant="outline" onClick={() => navigate('/pricing')} className="shrink-0 bg-white text-primary hover:bg-white/90 border-white font-bold shadow-lg">Upgrade Now</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate("/pricing")}
+              className="shrink-0 bg-white text-primary hover:bg-white/90 border-white font-bold shadow-lg"
+            >
+              Upgrade Now
+            </Button>
           </div>
         </div>
       );
@@ -454,19 +622,35 @@ const Dashboard = () => {
     if (shopData && productsCount === 0) {
       return (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-[hsl(215,65%,38%)] p-5 shadow-lg min-h-[110px] flex items-center">
-          <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.12] pointer-events-none" />
+          <AdirePattern
+            variant="dots"
+            className="absolute inset-0 opacity-[0.12] pointer-events-none"
+          />
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
           <div className="absolute -bottom-5 -left-3 w-16 h-16 rounded-full bg-white/5" />
           <div className="relative z-10 flex items-center justify-between gap-3 w-full">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Package className="w-4 h-4 text-white/80" />
-                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Next Step</span>
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">
+                  Next Step
+                </span>
               </div>
-              <h3 className="text-white font-extrabold text-base">Add your first product 🛍️</h3>
-              <p className="text-white/90 text-xs mt-0.5">Your store is live — add products so customers can buy.</p>
+              <h3 className="text-white font-extrabold text-base">
+                Add your first product 🛍️
+              </h3>
+              <p className="text-white/90 text-xs mt-0.5">
+                Your store is live — add products so customers can buy.
+              </p>
             </div>
-            <Button size="sm" variant="outline" onClick={() => navigate('/products')} className="shrink-0 bg-white text-primary hover:bg-white/90 border-white font-bold shadow-lg">Add Product →</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate("/products")}
+              className="shrink-0 bg-white text-primary hover:bg-white/90 border-white font-bold shadow-lg"
+            >
+              Add Product →
+            </Button>
           </div>
         </div>
       );
@@ -476,47 +660,78 @@ const Dashboard = () => {
     if (shopData && totalSales === 0) {
       return (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-accent p-5 shadow-lg min-h-[110px] flex items-center">
-          <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.12] pointer-events-none" />
+          <AdirePattern
+            variant="dots"
+            className="absolute inset-0 opacity-[0.12] pointer-events-none"
+          />
           <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
           <div className="absolute -bottom-4 -left-2 w-16 h-16 rounded-full bg-white/5" />
           <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full bg-white/5" />
           <div className="relative z-10 w-full">
             <div className="flex items-center gap-2 mb-1">
               <Share2 className="w-4 h-4 text-white/80" />
-              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">First Sale Tips</span>
+              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">
+                First Sale Tips
+              </span>
             </div>
-            <h3 className="text-white font-extrabold text-base mb-1">Your first sale is 48h away 🚀</h3>
+            <h3 className="text-white font-extrabold text-base mb-1">
+              Your first sale is 48h away 🚀
+            </h3>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="border-white/40 text-white hover:bg-white/20 gap-1.5 text-xs h-8 font-semibold" onClick={() => {
-                const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
-                navigator.clipboard.writeText(url);
-                toast({ title: "Store link copied!" });
-              }}><ExternalLink className="w-3 h-3" />Copy Link</Button>
-              <Button size="sm" className="bg-white text-accent hover:bg-white/90 gap-1.5 text-xs h-8 font-semibold" onClick={() => {
-                const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
-                window.open(`https://wa.me/?text=${encodeURIComponent('Check out my store: ' + url)}`, '_blank');
-              }}><MessageCircle className="w-3 h-3" />Share on WhatsApp</Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-white/40 text-white hover:bg-white/20 gap-1.5 text-xs h-8 font-semibold"
+                onClick={() => {
+                  const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
+                  navigator.clipboard.writeText(url);
+                  toast({ title: "Store link copied!" });
+                }}
+              >
+                <ExternalLink className="w-3 h-3" />
+                Copy Link
+              </Button>
+              <Button
+                size="sm"
+                className="bg-white text-accent hover:bg-white/90 gap-1.5 text-xs h-8 font-semibold"
+                onClick={() => {
+                  const url = `${window.location.origin}/shop/${shopFullData?.shop_slug || shopData.id}`;
+                  window.open(
+                    `https://wa.me/?text=${encodeURIComponent("Check out my store: " + url)}`,
+                    "_blank",
+                  );
+                }}
+              >
+                <MessageCircle className="w-3 h-3" />
+                Share on WhatsApp
+              </Button>
             </div>
           </div>
         </div>
       );
     }
 
-    const daysActive = (shopFullData as any)?.created_at ? differenceInDays(new Date(), new Date((shopFullData as any).created_at)) : 0;
-    const hasLowTraffic = shopFullData?.total_views !== null && 
-                          shopFullData?.total_views !== undefined && 
-                          shopFullData.total_views < 50 && 
-                          productsCount >= 1;
+    const daysActive = (shopFullData as any)?.created_at
+      ? differenceInDays(new Date(), new Date((shopFullData as any).created_at))
+      : 0;
+    const hasLowTraffic =
+      shopFullData?.total_views !== null &&
+      shopFullData?.total_views !== undefined &&
+      shopFullData.total_views < 50 &&
+      productsCount >= 1;
 
     // Active & selling & eligible for Ads - show premium Steerify Ads banner
     if (shopData && (productsCount >= 5 || hasLowTraffic)) {
       return (
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-purple-900 to-indigo-900 border border-indigo-500/30 p-6 shadow-xl min-h-[120px] flex items-center group transition-all duration-300 hover:shadow-indigo-500/10">
-          <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.1] pointer-events-none" />
+          <AdirePattern
+            variant="dots"
+            className="absolute inset-0 opacity-[0.1] pointer-events-none"
+          />
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
           <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute top-4 left-1/3 w-10 h-10 rounded-full bg-indigo-400/5" />
-          
+
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
             <div className="space-y-1.5 max-w-2xl">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-wider text-indigo-300">
@@ -524,22 +739,20 @@ const Dashboard = () => {
                 Steerify Ads Recommendation
               </div>
               <h3 className="text-white font-extrabold text-lg sm:text-xl tracking-tight leading-tight">
-                {hasLowTraffic && productsCount < 5 
+                {hasLowTraffic && productsCount < 5
                   ? "Get more customers and drive traffic to your store! 📈"
-                  : "Launch your first conversion campaign in 60s 🚀"
-                }
+                  : "Launch your first conversion campaign in 60s 🚀"}
               </h3>
               <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed">
                 {hasLowTraffic && productsCount < 5
                   ? `Your store currently has ${shopFullData?.total_views || 0} views. Turn searchers into active buyers checking out directly on WhatsApp starting at just ₦12,000/month.`
-                  : `You listed ${productsCount} products. Expand your reach and get local buyers checking out directly on WhatsApp starting at just ₦12,000/month.`
-                }
+                  : `You listed ${productsCount} products. Expand your reach and get local buyers checking out directly on WhatsApp starting at just ₦12,000/month.`}
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3 shrink-0">
               <Button
-                onClick={() => navigate('/ads')}
+                onClick={() => navigate("/ads")}
                 className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 px-5 h-11 border-0 hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
                 Boost Sales <ArrowRight className="w-4 h-4 ml-2" />
@@ -553,7 +766,10 @@ const Dashboard = () => {
     // Active & selling — join community banner
     return (
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#075E54] to-[hsl(145,65%,30%)] p-5 shadow-lg min-h-[110px] flex items-center">
-        <AdirePattern variant="dots" className="absolute inset-0 opacity-[0.12] pointer-events-none" />
+        <AdirePattern
+          variant="dots"
+          className="absolute inset-0 opacity-[0.12] pointer-events-none"
+        />
         <div className="absolute -top-5 -right-5 w-28 h-28 rounded-full bg-white/10" />
         <div className="absolute -bottom-5 -left-4 w-20 h-20 rounded-full bg-white/5" />
         <div className="absolute top-2 right-1/3 w-8 h-8 rounded-full bg-white/5" />
@@ -561,46 +777,148 @@ const Dashboard = () => {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <MessageCircle className="w-4 h-4 text-white" />
-              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Community</span>
+              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">
+                Community
+              </span>
             </div>
-            <h3 className="text-white font-extrabold text-base leading-tight">Join 5,000+ merchants on WhatsApp</h3>
-            <p className="text-white/90 text-xs mt-0.5">Tips, support, buyer traffic & giveaways — free!</p>
+            <h3 className="text-white font-extrabold text-base leading-tight">
+              Join 5,000+ merchants on WhatsApp
+            </h3>
+            <p className="text-white/90 text-xs mt-0.5">
+              Tips, support, buyer traffic & giveaways — free!
+            </p>
           </div>
           <Button
             size="sm"
             variant="outline"
             className="shrink-0 font-bold shadow-lg gap-1.5 hover:opacity-90 bg-white text-[#075E54] border-white"
-            onClick={() => window.open('https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76', '_blank')}>
-            <MessageCircle className="w-3.5 h-3.5" />Join Now
+            onClick={() =>
+              window.open(
+                "https://chat.whatsapp.com/J5oedmlZGdfANA2ZnbaE76",
+                "_blank",
+              )
+            }
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+            Join Now
           </Button>
         </div>
       </div>
     );
   };
 
-
-
   // ─── Primary Quick Actions (always visible) ────────────────────────────────
   const PrimaryQuickActions = [
-    shopData 
-      ? { icon: Store, label: "My Store", description: "Setup & customize", path: "/my-store", color: "from-primary/20 to-primary/10", textColor: "text-primary" }
-      : { icon: Store, label: "Create Online Shop", description: "Launch your store", path: "/dashboard", color: "from-green-500/20 to-green-500/10", textColor: "text-green-600" },
-    { icon: Package, label: "Products", description: "Manage catalog", path: "/products", color: "from-accent/20 to-accent/10", textColor: "text-accent" },
-    { icon: ShoppingCart, label: "Orders", description: "View & manage", path: "/orders", color: "from-primary/15 to-primary/8", textColor: "text-primary" },
-    { icon: Megaphone, label: "Marketing", description: "Create with AI", path: "/marketing", color: "from-accent/15 to-accent/8", textColor: "text-accent" },
-    { icon: Wallet, label: "Wallet", description: "Earnings & payouts", path: "/dashboard", color: "from-[hsl(42,90%,55%)]/20 to-[hsl(42,90%,55%)]/10", textColor: "text-[hsl(42,80%,35%)]" },
+    shopData
+      ? {
+          icon: Store,
+          label: "My Store",
+          description: "Setup & customize",
+          path: "/my-store",
+          color: "from-primary/20 to-primary/10",
+          textColor: "text-primary",
+        }
+      : {
+          icon: Store,
+          label: "Create Online Shop",
+          description: "Launch your store",
+          path: "/dashboard",
+          color: "from-green-500/20 to-green-500/10",
+          textColor: "text-green-600",
+        },
+    {
+      icon: Package,
+      label: "Products",
+      description: "Manage catalog",
+      path: "/products",
+      color: "from-accent/20 to-accent/10",
+      textColor: "text-accent",
+    },
+    {
+      icon: ShoppingCart,
+      label: "Orders",
+      description: "View & manage",
+      path: "/orders",
+      color: "from-primary/15 to-primary/8",
+      textColor: "text-primary",
+    },
+    {
+      icon: Megaphone,
+      label: "Marketing",
+      description: "Create with AI",
+      path: "/marketing",
+      color: "from-accent/15 to-accent/8",
+      textColor: "text-accent",
+    },
+    {
+      icon: Wallet,
+      label: "Wallet",
+      description: "Earnings & payouts",
+      path: "/dashboard",
+      color: "from-[hsl(42,90%,55%)]/20 to-[hsl(42,90%,55%)]/10",
+      textColor: "text-[hsl(42,80%,35%)]",
+    },
   ];
 
   // ─── More Tools (shown in collapsible) ─────────────────────────────────────
   const QuickActions = [
     ...PrimaryQuickActions,
-    { icon: Truck, label: "Delivery", description: "Shipping & logistics", path: "/orders", color: "from-primary/12 to-primary/6", textColor: "text-primary" },
-    { icon: CalendarCheck, label: "Bookings", description: "Appointments", path: "/bookings", color: "from-accent/12 to-accent/6", textColor: "text-accent" },
-    { icon: Sparkles, label: "Ads Assistant", description: "AI ad generator", path: "/ads-assistant", color: "from-primary/20 to-accent/10", textColor: "text-primary" },
-    { icon: BookOpen, label: "Tutorials", description: "Learn & earn points", path: "/courses", color: "from-accent/15 to-accent/8", textColor: "text-accent" },
-    { icon: Users, label: "Customers", description: "Customer records", path: "/customers", color: "from-primary/15 to-primary/8", textColor: "text-primary" },
-    { icon: Crown, label: "Ambassador", description: "Refer & earn", path: "/ambassador", color: "from-[hsl(42,90%,55%)]/20 to-[hsl(42,90%,55%)]/10", textColor: "text-[hsl(42,80%,35%)]" },
-    { icon: Share2, label: "Invite Merchants", description: "Grow community", path: "/merchant-invite", color: "from-primary/20 to-primary/10", textColor: "text-primary" },
+    {
+      icon: Truck,
+      label: "Delivery",
+      description: "Shipping & logistics",
+      path: "/orders",
+      color: "from-primary/12 to-primary/6",
+      textColor: "text-primary",
+    },
+    {
+      icon: CalendarCheck,
+      label: "Bookings",
+      description: "Appointments",
+      path: "/bookings",
+      color: "from-accent/12 to-accent/6",
+      textColor: "text-accent",
+    },
+    {
+      icon: Sparkles,
+      label: "Ads Assistant",
+      description: "AI ad generator",
+      path: "/ads-assistant",
+      color: "from-primary/20 to-accent/10",
+      textColor: "text-primary",
+    },
+    {
+      icon: BookOpen,
+      label: "Tutorials",
+      description: "Learn & earn points",
+      path: "/courses",
+      color: "from-accent/15 to-accent/8",
+      textColor: "text-accent",
+    },
+    {
+      icon: Users,
+      label: "Customers",
+      description: "Customer records",
+      path: "/customers",
+      color: "from-primary/15 to-primary/8",
+      textColor: "text-primary",
+    },
+    {
+      icon: Crown,
+      label: "Ambassador",
+      description: "Refer & earn",
+      path: "/ambassador",
+      color: "from-[hsl(42,90%,55%)]/20 to-[hsl(42,90%,55%)]/10",
+      textColor: "text-[hsl(42,80%,35%)]",
+    },
+    {
+      icon: Share2,
+      label: "Invite Merchants",
+      description: "Grow community",
+      path: "/merchant-invite",
+      color: "from-primary/20 to-primary/10",
+      textColor: "text-primary",
+    },
   ];
 
   if (isLoading) {
@@ -609,35 +927,48 @@ const Dashboard = () => {
         <div className="flex flex-col items-center gap-4">
           <div className="relative w-16 h-16">
             <div className="absolute inset-0 rounded-2xl overflow-hidden">
-              <img src={logo} alt="Loading" className="w-full h-full object-cover" />
+              <img
+                src={logo}
+                alt="Loading"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="absolute inset-0 rounded-2xl border-2 border-primary/40 animate-ping" />
           </div>
-          <p className="text-muted-foreground text-sm animate-pulse">Loading your dashboard...</p>
+          <p className="text-muted-foreground text-sm animate-pulse">
+            Loading your dashboard...
+          </p>
         </div>
       </div>
     );
   }
 
-  const firstName = (profile?.full_name && profile.full_name.trim()) ? profile.full_name.trim().split(' ')[0] : (user?.email?.split('@')[0] || 'there');
+  const firstName =
+    profile?.full_name && profile.full_name.trim()
+      ? profile.full_name.trim().split(" ")[0]
+      : user?.email?.split("@")[0] || "there";
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const isWizardOpen = !isLoading && !shopData && rbac.isEntrepreneur(user);
   const hasRevenueTrend = chartData.some(point => point.revenue > 0);
 
   if (isWizardOpen) {
-    return (
-      <VendorSetupWizard 
-        open={true} 
-        onComplete={() => loadData()} 
-      />
-    );
+    return <VendorSetupWizard open={true} onComplete={() => loadData()} />;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/3 relative overflow-hidden">
+      {/* Hero Background Image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-20"
+        style={{ backgroundImage: `url(${heroBackground2})` }}
+      />
       {/* Dotted background — same as login page */}
-      <AdirePattern variant="dots" className="fixed inset-0 opacity-[0.045] pointer-events-none z-0" />
+      <AdirePattern
+        variant="dots"
+        className="fixed inset-0 opacity-[0.045] pointer-events-none z-0"
+      />
       {/* Corner blur orbs */}
       <div className="fixed top-0 right-0 w-80 h-80 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl pointer-events-none z-0" />
       <div className="fixed bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-accent/10 to-transparent rounded-full blur-3xl pointer-events-none z-0" />
@@ -660,7 +991,11 @@ const Dashboard = () => {
             {/* Logo */}
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-sm">
-                <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+                <img
+                  src={logo}
+                  alt="SteerSolo"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent hidden sm:block">
                 SteerSolo
@@ -669,25 +1004,32 @@ const Dashboard = () => {
 
             {/* Desktop Nav Actions */}
             <div className="hidden md:flex items-center gap-1.5">
-              {shopData && <StrokeMyShop shopId={shopData.id} shopName={shopData.name} />}
+              {shopData && (
+                <StrokeMyShop shopId={shopData.id} shopName={shopData.name} />
+              )}
               <NotificationBell audience="entrepreneurs" />
               {/* Dark Mode Toggle */}
               {mounted && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                   className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
                   aria-label="Toggle theme"
                 >
-                  {theme === 'dark' ? (
+                  {theme === "dark" ? (
                     <Sun className="h-5 w-5 text-yellow-500" />
                   ) : (
                     <Moon className="h-5 w-5" />
                   )}
                 </Button>
               )}
-              <Button variant="ghost" size="sm" onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive gap-1.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="hover:bg-destructive/10 hover:text-destructive gap-1.5"
+              >
                 <LogOut className="h-4 w-4" />
                 <span className="hidden lg:inline">Logout</span>
               </Button>
@@ -711,12 +1053,19 @@ const Dashboard = () => {
                           {firstName.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold truncate">{profile?.full_name || firstName}</p>
-                          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                          <p className="font-semibold truncate">
+                            {profile?.full_name || firstName}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {user?.email}
+                          </p>
                         </div>
                       </div>
                       <div className="mt-3">
-                        <ShopStatusBadge status={subscriptionStatus} daysRemaining={daysRemaining} />
+                        <ShopStatusBadge
+                          status={subscriptionStatus}
+                          daysRemaining={daysRemaining}
+                        />
                       </div>
                     </div>
 
@@ -725,36 +1074,71 @@ const Dashboard = () => {
                       {/* Theme Toggle */}
                       {mounted && (
                         <button
-                          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                          onClick={() =>
+                            setTheme(theme === "dark" ? "light" : "dark")
+                          }
                           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-muted transition-colors text-left"
                         >
                           <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                            {theme === 'dark' ? <Sun className="w-4 h-4 text-yellow-500" /> : <Moon className="w-4 h-4 text-muted-foreground" />}
+                            {theme === "dark" ? (
+                              <Sun className="w-4 h-4 text-yellow-500" />
+                            ) : (
+                              <Moon className="w-4 h-4 text-muted-foreground" />
+                            )}
                           </div>
-                          <span className="text-sm font-medium">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+                          <span className="text-sm font-medium">
+                            {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                          </span>
                         </button>
                       )}
                       <Separator className="my-1" />
-                      {QuickActions.map((action) => (
+                      {QuickActions.map(action => (
                         <button
                           key={action.path + action.label}
                           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-muted transition-colors text-left"
-                          onClick={() => { navigate(action.path); setIsMobileMenuOpen(false); }}
+                          onClick={() => {
+                            navigate(action.path);
+                            setIsMobileMenuOpen(false);
+                          }}
                         >
-                          <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${action.color} flex items-center justify-center shrink-0`}>
-                            <action.icon className={`w-4 h-4 ${action.textColor}`} />
+                          <div
+                            className={`w-8 h-8 rounded-lg bg-gradient-to-br ${action.color} flex items-center justify-center shrink-0`}
+                          >
+                            <action.icon
+                              className={`w-4 h-4 ${action.textColor}`}
+                            />
                           </div>
-                          <span className="text-sm font-medium">{action.label}</span>
+                          <span className="text-sm font-medium">
+                            {action.label}
+                          </span>
                         </button>
                       ))}
                       <Separator className="my-2" />
-                      <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-muted transition-colors" onClick={() => { navigate("/settings"); setIsMobileMenuOpen(false); }}>
-                        <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center"><Settings className="w-4 h-4 text-muted-foreground" /></div>
+                      <button
+                        className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-muted transition-colors"
+                        onClick={() => {
+                          navigate("/settings");
+                          setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                          <Settings className="w-4 h-4 text-muted-foreground" />
+                        </div>
                         <span className="text-sm font-medium">Settings</span>
                       </button>
-                      <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-destructive/10 transition-colors" onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}>
-                        <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center"><LogOut className="w-4 h-4 text-destructive" /></div>
-                        <span className="text-sm font-medium text-destructive">Logout</span>
+                      <button
+                        className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-destructive/10 transition-colors"
+                        onClick={() => {
+                          handleLogout();
+                          setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+                          <LogOut className="w-4 h-4 text-destructive" />
+                        </div>
+                        <span className="text-sm font-medium text-destructive">
+                          Logout
+                        </span>
                       </button>
                     </div>
 
@@ -773,7 +1157,6 @@ const Dashboard = () => {
 
       {/* ─── Main Content ─────────────────────────────────── */}
       <div className="container mx-auto px-4 py-3 pb-24 md:pb-8 max-w-7xl space-y-4">
-        
         {/* Merchant Command Center for Entrepreneurs */}
         {rbac.isEntrepreneur(user) && <VendorCommandCenter />}
 
@@ -805,20 +1188,38 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-sm font-medium mb-0.5">{greeting},</p>
-                  <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-1">{firstName}! 👋</h1>
+                  <p className="text-muted-foreground text-sm font-medium mb-0.5">
+                    {greeting},
+                  </p>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-1">
+                    {firstName}! 👋
+                  </h1>
                   <div className="flex items-center gap-2">
-                    {shopData && <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] uppercase tracking-wider">{shopData.name}</Badge>}
-                    <ShopStatusBadge status={subscriptionStatus} daysRemaining={daysRemaining} />
+                    {shopData && (
+                      <Badge
+                        variant="outline"
+                        className="bg-primary/5 text-primary border-primary/20 text-[10px] uppercase tracking-wider"
+                      >
+                        {shopData.name}
+                      </Badge>
+                    )}
+                    <ShopStatusBadge
+                      status={subscriptionStatus}
+                      daysRemaining={daysRemaining}
+                    />
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 {shopData && (
                   <Button
                     variant="outline"
-                    onClick={() => navigate(`/shop/${shopFullData?.shop_slug || shopData.id}`)}
+                    onClick={() =>
+                      navigate(
+                        `/shop/${shopFullData?.shop_slug || shopData.id}`,
+                      )
+                    }
                     className="rounded-xl font-bold border-border shadow-sm hover:bg-muted"
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
@@ -828,7 +1229,7 @@ const Dashboard = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => navigate('/settings')}
+                  onClick={() => navigate("/settings")}
                   className="rounded-full h-11 w-11 bg-muted/50"
                 >
                   <Settings className="h-5 w-5" />
@@ -840,16 +1241,42 @@ const Dashboard = () => {
 
         {/* ── Stats + Actions (non-entrepreneurs only, entrepreneurs get VendorCommandCenter) ── */}
         {!rbac.isEntrepreneur(user) && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" data-tour="stats-grid">
+          <div
+            className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+            data-tour="stats-grid"
+          >
             {[
-              { label: "Revenue", value: `₦${totalRevenue.toLocaleString()}`, color: "text-emerald-600 dark:text-emerald-400" },
-              { label: "Sales",   value: totalSales.toString(),                color: "text-primary" },
-              { label: "Products",value: productsCount.toString(),             color: "text-accent" },
-              { label: "Wallet",  value: `₦${payoutBalance.availableBalance.toLocaleString()}`, color: "text-amber-600 dark:text-amber-400" },
+              {
+                label: "Revenue",
+                value: `₦${totalRevenue.toLocaleString()}`,
+                color: "text-emerald-600 dark:text-emerald-400",
+              },
+              {
+                label: "Sales",
+                value: totalSales.toString(),
+                color: "text-primary",
+              },
+              {
+                label: "Products",
+                value: productsCount.toString(),
+                color: "text-accent",
+              },
+              {
+                label: "Wallet",
+                value: `₦${payoutBalance.availableBalance.toLocaleString()}`,
+                color: "text-amber-600 dark:text-amber-400",
+              },
             ].map(s => (
-              <div key={s.label} className="rounded-2xl border border-border/50 bg-card px-4 py-4">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{s.label}</p>
-                <p className={`text-2xl font-black tabular-nums ${s.color}`}>{s.value}</p>
+              <div
+                key={s.label}
+                className="rounded-2xl border border-border/50 bg-card px-4 py-4"
+              >
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                  {s.label}
+                </p>
+                <p className={`text-2xl font-black tabular-nums ${s.color}`}>
+                  {s.value}
+                </p>
               </div>
             ))}
           </div>
@@ -858,8 +1285,12 @@ const Dashboard = () => {
         <Card className="overflow-hidden rounded-2xl border-border/50 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div>
-              <CardTitle className="text-base font-extrabold">Revenue Trend</CardTitle>
-              <p className="text-xs text-muted-foreground">Paid order revenue over the last 7 days</p>
+              <CardTitle className="text-base font-extrabold">
+                Revenue Trend
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Paid order revenue over the last 7 days
+              </p>
             </div>
             <div className="rounded-xl bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-400">
               <TrendingUp className="h-4 w-4" />
@@ -869,34 +1300,66 @@ const Dashboard = () => {
             {hasRevenueTrend ? (
               <div className="h-56 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 8, left: -16, bottom: 0 }}>
+                  <AreaChart
+                    data={chartData}
+                    margin={{ top: 10, right: 8, left: -16, bottom: 0 }}
+                  >
                     <defs>
-                      <linearGradient id="dashboardRevenueGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                      <linearGradient
+                        id="dashboardRevenueGradient"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="hsl(var(--primary))"
+                          stopOpacity={0.35}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="hsl(var(--primary))"
+                          stopOpacity={0.02}
+                        />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      className="stroke-border"
+                    />
                     <XAxis
                       dataKey="date"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                      tick={{
+                        fontSize: 12,
+                        fill: "hsl(var(--muted-foreground))",
+                      }}
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                      tickFormatter={(value) => `₦${Number(value).toLocaleString()}`}
+                      tick={{
+                        fontSize: 12,
+                        fill: "hsl(var(--muted-foreground))",
+                      }}
+                      tickFormatter={value =>
+                        `₦${Number(value).toLocaleString()}`
+                      }
                     />
                     <Tooltip
-                      formatter={(value) => [`₦${Number(value).toLocaleString()}`, 'Revenue']}
-                      labelFormatter={(label) => `${label}`}
+                      formatter={value => [
+                        `₦${Number(value).toLocaleString()}`,
+                        "Revenue",
+                      ]}
+                      labelFormatter={label => `${label}`}
                       contentStyle={{
-                        borderRadius: '0.75rem',
-                        border: '1px solid hsl(var(--border))',
-                        background: 'hsl(var(--card))',
-                        color: 'hsl(var(--card-foreground))',
+                        borderRadius: "0.75rem",
+                        border: "1px solid hsl(var(--border))",
+                        background: "hsl(var(--card))",
+                        color: "hsl(var(--card-foreground))",
                       }}
                     />
                     <Area
@@ -905,7 +1368,7 @@ const Dashboard = () => {
                       stroke="hsl(var(--primary))"
                       strokeWidth={3}
                       fill="url(#dashboardRevenueGradient)"
-                      dot={{ r: 3, strokeWidth: 2, fill: 'hsl(var(--card))' }}
+                      dot={{ r: 3, strokeWidth: 2, fill: "hsl(var(--card))" }}
                       activeDot={{ r: 5 }}
                     />
                   </AreaChart>
@@ -915,7 +1378,8 @@ const Dashboard = () => {
               <div className="flex min-h-56 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/30 px-6 text-center">
                 <DollarSign className="mb-3 h-9 w-9 rounded-full bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-400" />
                 <p className="max-w-sm text-sm font-semibold text-foreground">
-                  No paid sales yet — your revenue trend will appear here after your first paid order.
+                  No paid sales yet — your revenue trend will appear here after
+                  your first paid order.
                 </p>
               </div>
             )}
@@ -928,11 +1392,18 @@ const Dashboard = () => {
             onClick={urgentTasks[0].action}
             className="w-full flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 px-4 py-3.5 text-left hover:bg-amber-500/10 transition-colors"
           >
-            <div className={`w-9 h-9 rounded-xl ${urgentTasks[0].color} flex items-center justify-center shrink-0`}>
-              {(() => { const T = urgentTasks[0].icon; return <T className="w-4 h-4" />; })()}
+            <div
+              className={`w-9 h-9 rounded-xl ${urgentTasks[0].color} flex items-center justify-center shrink-0`}
+            >
+              {(() => {
+                const T = urgentTasks[0].icon;
+                return <T className="w-4 h-4" />;
+              })()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-foreground truncate">{urgentTasks[0].label}</p>
+              <p className="text-sm font-bold text-foreground truncate">
+                {urgentTasks[0].label}
+              </p>
               <p className="text-xs text-muted-foreground">Tap to resolve</p>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -943,22 +1414,49 @@ const Dashboard = () => {
         {!rbac.isEntrepreneur(user) && (
           <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
             {[
-              { icon: Package, label: "Products",     sub: "Manage your catalog",     path: "/products" },
-              { icon: ShoppingCart, label: "Orders",  sub: "View & fulfil orders",    path: "/orders" },
-              { icon: Users,   label: "Customers",    sub: "Your buyer records",      path: "/customers" },
-              { icon: Wallet,  label: "Wallet",       sub: "Earnings & payouts",      action: () => setIsPayoutDialogOpen(true) },
-              { icon: Store,   label: "Store Settings",sub: "Customize your shop",    path: "/my-store" },
+              {
+                icon: Package,
+                label: "Products",
+                sub: "Manage your catalog",
+                path: "/products",
+              },
+              {
+                icon: ShoppingCart,
+                label: "Orders",
+                sub: "View & fulfil orders",
+                path: "/orders",
+              },
+              {
+                icon: Users,
+                label: "Customers",
+                sub: "Your buyer records",
+                path: "/customers",
+              },
+              {
+                icon: Wallet,
+                label: "Wallet",
+                sub: "Earnings & payouts",
+                action: () => setIsPayoutDialogOpen(true),
+              },
+              {
+                icon: Store,
+                label: "Store Settings",
+                sub: "Customize your shop",
+                path: "/my-store",
+              },
             ].map((item, i, arr) => (
               <button
                 key={item.label}
                 onClick={item.action ? item.action : () => navigate(item.path!)}
-                className={`flex items-center gap-3 w-full px-4 py-3.5 hover:bg-muted/40 transition-colors text-left ${i < arr.length - 1 ? 'border-b border-border/40' : ''}`}
+                className={`flex items-center gap-3 w-full px-4 py-3.5 hover:bg-muted/40 transition-colors text-left ${i < arr.length - 1 ? "border-b border-border/40" : ""}`}
               >
                 <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
                   <item.icon className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {item.label}
+                  </p>
                   <p className="text-xs text-muted-foreground">{item.sub}</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -980,7 +1478,7 @@ const Dashboard = () => {
         showProgress
         callback={handleTourCallback}
         tooltipComponent={TourTooltip}
-        styles={{ options: { zIndex: 10000, arrowColor: 'hsl(var(--card))' } }}
+        styles={{ options: { zIndex: 10000, arrowColor: "hsl(var(--card))" } }}
       />
       <FeatureDiscoveryPopup featureId="stroke_my_shop" />
 
@@ -1007,17 +1505,17 @@ const Dashboard = () => {
 
       {/* 30-Day Structured Selling Challenge Sheet */}
       <Sheet open={isChallengeOpen} onOpenChange={setIsChallengeOpen}>
-        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-3xl p-0">
+        <SheetContent
+          side="bottom"
+          className="max-h-[85vh] overflow-y-auto rounded-t-3xl p-0"
+        >
           <div className="p-4 sm:p-6">
             <StructuredSellingChallenge />
           </div>
         </SheetContent>
       </Sheet>
 
-      <VendorSetupWizard 
-        open={false} 
-        onComplete={() => loadData()} 
-      />
+      <VendorSetupWizard open={false} onComplete={() => loadData()} />
     </div>
   );
 };

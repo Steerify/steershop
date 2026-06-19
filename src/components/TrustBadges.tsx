@@ -27,7 +27,7 @@ export const TrustBadges = ({
     badges.push({
       icon: <Shield className="w-3 h-3" />,
       label: "Verified Seller",
-      className: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+      className: "bg-primary/10 text-primary border-primary/20",
     });
   }
 
@@ -35,7 +35,7 @@ export const TrustBadges = ({
     badges.push({
       icon: <MessageCircle className="w-3 h-3" />,
       label: "Quick Response",
-      className: "bg-green-500/10 text-green-600 border-green-500/20",
+      className: "bg-accent/10 text-accent border-accent/20",
     });
   }
 
@@ -43,13 +43,13 @@ export const TrustBadges = ({
     badges.push({
       icon: <Star className="w-3 h-3 fill-current" />,
       label: "Top Rated",
-      className: "bg-gold/10 text-gold border-gold/20",
+      className: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
     });
   } else if (averageRating >= 4.0 && totalReviews >= 3) {
     badges.push({
       icon: <Star className="w-3 h-3" />,
       label: "Highly Rated",
-      className: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+      className: "bg-yellow-600/10 text-yellow-700 border-yellow-600/20",
     });
   }
 
@@ -57,7 +57,7 @@ export const TrustBadges = ({
     badges.push({
       icon: <Award className="w-3 h-3" />,
       label: "Trusted Seller",
-      className: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+      className: "bg-accent/20 text-accent border-accent/30",
     });
   } else if (completedOrders >= 10) {
     badges.push({
