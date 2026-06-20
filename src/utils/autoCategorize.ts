@@ -33,32 +33,143 @@ const CATEGORY_LABELS: Record<string, string> = {
 // Beauty sub-categories that roll up to "beauty" parent
 const BEAUTY_SUBCATEGORIES = ['skincare', 'haircare', 'cosmetics', 'fragrances', 'natural-beauty', 'beauty-health'];
 
+// Main category priority order
+export const MAIN_CATEGORIES = [
+  'fashion',
+  'beauty',
+  'electronics',
+  'food-drinks',
+  'home-living',
+  'art-craft',
+  'services',
+  'other',
+];
+
+export interface CategorizationResult {
+  category: string;
+  confidence: number;
+  isFallback: boolean;
+}
+
 export function autoCategorize(name: string = '', description: string = ''): string {
-  const text = `${name} ${description}`.toLowerCase();
-  const scores = Object.entries(KEYWORD_MAP).map(([category, keywords]) => {
-    const score = keywords.reduce((acc, kw) => acc + (text.includes(kw) ? 1 : 0), 0);
-    return { category, score };
-  });
+  const result = autoCategorizeWithConfidence(name, description);
+  return result.category;
+}
 
-  const bestScore = Math.max(...scores.map(s => s.score));
-  if (bestScore <= 0) return 'other';
+export function autoCategorizeWithConfidence(
+  name: string = '',
+  description: string = ''
+): CategorizationResult {
+  try {
+    const text = `${name} ${description}`.toLowerCase().trim();
+    
+    // Handle empty inputs gracefully
+    if (!text) {
+      return {
+        category: 'other',
+        confidence: 0,
+        isFallback: true,
+      };
+    }
 
-  const bestMatches = scores.filter(s => s.score === bestScore).map(s => s.category);
-  const categoryPriority = [
-    'food-drinks',
-    'skincare',
-    'haircare',
-    'cosmetics',
-    'fragrances',
-    'natural-beauty',
-    'fashion',
-    'electronics',
-    'home-living',
-    'art-craft',
-    'services',
-  ];
+    const scores = Object.entries(KEYWORD_MAP).map(([category, keywords]) => {
+      const score = keywords.reduce((acc, kw) => acc + (text.includes(kw) ? 1 : 0), 0);
+      return { category, score };
+    });
 
-  return categoryPriority.find(category => bestMatches.includes(category)) || bestMatches[0] || 'other';
+    const bestScore = Math.max(...scores.map(s => s.score));
+    
+    if (bestScore <= 0) {
+      return {
+        category: 'other',
+        confidence: 0,
+        isFallback: true,
+      };
+    }
+
+    const bestMatches = scores.filter(s => s.score === bestScore).map(s => s.category);
+    const categoryPriority = [
+      'food-drinks',
+      'skincare',
+      'haircare',
+      'cosmetics',
+      'fragrances',
+      'natural-beauty',
+      'fashion',
+      'electronics',
+      'home-living',
+      'art-craft',
+      'services',
+    ];
+
+    const selectedCategory = categoryPriority.find(category => bestMatches.includes(category)) || bestMatches[0] || 'other';
+    
+    // Calculate confidence based on score distribution
+    const totalMatches = scores.reduce((sum, s) => sum + s.score, 0);
+    const confidence = totalMatches > 0 ? bestScore / totalMatches : 0;
+
+    return {
+      category: selectedCategory,
+      confidence,
+      isFallback: false,
+    };
+  } catch (error) {
+    console.error('Error in autoCategorize:', error);
+    // Graceful fallback
+    return {
+      category: 'other',
+      confidence: 0,
+      isFallback: true,
+    };
+  }
+}
+
+export function normalizeAndCategorize(category: string | null | undefined, name: string = '', description: string = ''): string {
+  try {
+    if (!category) {
+      return autoCategorize(name, description);
+    }
+
+    const normalized = normalizeCategoryValue(category);
+    
+    // If normalized to a valid category, use it
+    if (isValidCategory(normalized)) {
+      return normalized;
+    }
+
+    // Otherwise, try to auto-categorize
+    return autoCategorize(name, description);
+  } catch (error) {
+    console.error('Error in normalizeAndCategorize:', error);
+    return 'other';
+  }
+}
+
+export function normalizeCategoryValue(category?: string | null): string {
+  if (!category) return 'other';
+  const normalized = category.trim().toLowerCase();
+  if (normalized.includes('fashion')) return 'fashion';
+  if (normalized.includes('beauty') || normalized.includes('health')) {
+    // Check if it matches any beauty subcategory
+    if (normalized.includes('skincare')) return 'skincare';
+    if (normalized.includes('haircare') || normalized.includes('hair care')) return 'haircare';
+    if (normalized.includes('cosmetic') || normalized.includes('makeup')) return 'cosmetics';
+    if (normalized.includes('fragrance') || normalized.includes('perfume')) return 'fragrances';
+    if (normalized.includes('natural') || normalized.includes('organic')) return 'natural-beauty';
+    return 'beauty';
+  }
+  if (normalized.includes('electronic') || normalized.includes('tech')) return 'electronics';
+  if (normalized.includes('food') || normalized.includes('drink')) return 'food-drinks';
+  if (normalized.includes('home') || normalized.includes('living')) return 'home-living';
+  if (normalized.includes('art') || normalized.includes('craft')) return 'art-craft';
+  if (normalized.includes('service') || normalized.includes('consult')) return 'services';
+  return normalized.replace(/&/g, '').replace(/\s+/g, '-');
+}
+
+export function isValidCategory(category: string): boolean {
+  return Object.keys(CATEGORY_LABELS).includes(category) || 
+         ['beauty'].includes(category) ||
+         BEAUTY_SUBCATEGORIES.includes(category);
 }
 
 export function getCategoryLabel(slug: string): string {

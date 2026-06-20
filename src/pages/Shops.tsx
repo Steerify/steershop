@@ -35,11 +35,14 @@ import {
   CATEGORIES,
 } from "@/components/MarketplaceFilters";
 import { ShopCardEnhanced } from "@/components/ShopCardEnhanced";
+import { EmptyStateBlog } from "@/components/EmptyStateBlog";
 import { supabase } from "@/integrations/supabase/client";
 import {
   autoCategorize,
   getCategoryLabel,
   BEAUTY_SUBCATEGORIES,
+  normalizeAndCategorize,
+  normalizeCategoryValue,
 } from "@/utils/autoCategorize";
 import { Button } from "@/components/ui/button";
 import { PageThemeShell } from "@/components/PageThemeShell";
@@ -417,12 +420,11 @@ const Shops = () => {
   const shopCategories = useMemo(() => {
     const cats: Record<string, string> = {};
     shops.forEach(shop => {
-      cats[shop.id] =
-        normalizeCategoryValue(shop.category) ||
-        autoCategorize(
-          shop.name || shop.shop_name || "",
-          shop.description || "",
-        );
+      cats[shop.id] = normalizeAndCategorize(
+        shop.category,
+        shop.name || shop.shop_name || "",
+        shop.description || "",
+      );
     });
     return cats;
   }, [shops]);
@@ -1058,35 +1060,41 @@ const Shops = () => {
                     ))}
                   </div>
                 ) : sortedShops.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-24 text-center">
-                    <div className="w-24 h-24 rounded-3xl bg-muted flex items-center justify-center mb-6 shadow-inner">
-                      <Store className="w-10 h-10 text-muted-foreground" />
+                  // Show category-specific blog post when viewing a category with no shops
+                  selectedCategory !== "all" ? (
+                    <EmptyStateBlog category={selectedCategory} />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-24 text-center">
+                      <div className="w-24 h-24 rounded-3xl bg-muted flex items-center justify-center mb-6 shadow-inner">
+                        <Store className="w-10 h-10 text-muted-foreground" />
+                      </div>
+                      <h3 className="font-display text-xl font-semibold mb-2">
+                        {hasSearchQuery
+                          ? "No shops found"
+                          : selectedState !== "All Locations"
+                            ? `No shops in ${selectedState}`
+                            : "No active shops"}
+                      </h3>
+                      <p className="text-muted-foreground text-sm max-w-xs mb-6">
+                        {hasSearchQuery
+                          ? `No shops found for "${debouncedSearchQuery}". Try different keywords.`
+                          : "Try adjusting your filters or check back later."}
+                      </p>
+                      {(hasSearchQuery ||
+                        selectedState !== "All Locations") && (
+                        <Button
+                          variant="outline"
+                          className="rounded-xl"
+                          onClick={() => {
+                            setSearchQuery("");
+                            setSelectedState("All Locations");
+                          }}
+                        >
+                          Clear Filters
+                        </Button>
+                      )}
                     </div>
-                    <h3 className="font-display text-xl font-semibold mb-2">
-                      {hasSearchQuery
-                        ? "No shops found"
-                        : selectedState !== "All Locations"
-                          ? `No shops in ${selectedState}`
-                          : "No active shops"}
-                    </h3>
-                    <p className="text-muted-foreground text-sm max-w-xs mb-6">
-                      {hasSearchQuery
-                        ? `No shops found for "${debouncedSearchQuery}". Try different keywords.`
-                        : "Try adjusting your filters or check back later."}
-                    </p>
-                    {(hasSearchQuery || selectedState !== "All Locations") && (
-                      <Button
-                        variant="outline"
-                        className="rounded-xl"
-                        onClick={() => {
-                          setSearchQuery("");
-                          setSelectedState("All Locations");
-                        }}
-                      >
-                        Clear Filters
-                      </Button>
-                    )}
-                  </div>
+                  )
                 ) : (
                   <>
                     <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
