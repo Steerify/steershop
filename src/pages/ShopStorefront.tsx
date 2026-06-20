@@ -936,15 +936,26 @@ const ShopStorefront = () => {
           <meta property="og:site_name" content="SteerSolo" />
           <meta property="og:locale" content="en_NG" />
 
-          {shop.logo_url && (
-            <meta property="og:image" content={shop.logo_url} />
-          )}
-          {shop.banner_url && (
-            <meta
-              property="og:image:alt"
-              content={`${shop.shop_name} banner`}
-            />
-          )}
+          {/* Open Graph Image Tags */}
+          <meta
+            property="og:image"
+            content={
+              shop.logo_url || "https://steersolo.com/steersolo-logo.png"
+            }
+          />
+          <meta
+            property="og:image:secure_url"
+            content={
+              shop.logo_url || "https://steersolo.com/steersolo-logo.png"
+            }
+          />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta
+            property="og:image:alt"
+            content={`${shop.shop_name} official logo | SteerSolo`}
+          />
+          <meta property="og:image:type" content="image/png" />
 
           {/* Twitter/X Card Tags */}
           <meta name="twitter:card" content="summary_large_image" />
@@ -953,11 +964,18 @@ const ShopStorefront = () => {
             content={`${shop.shop_name} | ${shopCategoryLabel ? `${shopCategoryLabel} in ` : ""}${shop.city ? `${shop.city}, ` : ""}${shop.state || "Nigeria"}`}
           />
           <meta name="twitter:description" content={metaDescription} />
-          <meta name="twitter:site" content="@steersolo" />
-          <meta name="twitter:creator" content="@steersolo" />
-          {shop.logo_url && (
-            <meta name="twitter:image" content={shop.logo_url} />
-          )}
+          <meta name="twitter:site" content="@SteerifyGroup" />
+          <meta name="twitter:creator" content="@SteerifyGroup" />
+          <meta
+            name="twitter:image"
+            content={
+              shop.logo_url || "https://steersolo.com/steersolo-logo.png"
+            }
+          />
+          <meta
+            name="twitter:image:alt"
+            content={`${shop.shop_name} official logo | SteerSolo`}
+          />
 
           {/* Additional SEO Tags */}
           <link rel="canonical" href={shopUrl} />
@@ -970,6 +988,10 @@ const ShopStorefront = () => {
             content="width=device-width, initial-scale=1.0"
           />
           <meta name="theme-color" content={shop.accent_color || "#0F172A"} />
+
+          {/* Additional Meta Tags for Browser Display */}
+          <meta name="apple-mobile-web-app-title" content={shop.shop_name} />
+          <meta name="application-name" content={shop.shop_name} />
 
           {schemaData && (
             <script type="application/ld+json">

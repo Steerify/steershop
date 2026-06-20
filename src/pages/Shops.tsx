@@ -682,6 +682,10 @@ const Shops = () => {
           content="marketplace in nigeria, nigeria marketplace, steersolo marketplace, online marketplace nigeria, trusted stores nigeria"
         />
         <link rel="canonical" href="https://steersolo.com/shops" />
+
+        {/* Open Graph Tags */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="SteerSolo" />
         <meta property="og:title" content="SteerSolo Marketplace Nigeria" />
         <meta
           property="og:description"
@@ -692,11 +696,29 @@ const Shops = () => {
           property="og:image"
           content="https://steersolo.com/steersolo-logo.png"
         />
+        <meta
+          property="og:image:secure_url"
+          content="https://steersolo.com/steersolo-logo.png"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:alt" content="SteerSolo Official Logo" />
+
+        {/* Twitter Card Tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@SteerifyGroup" />
+        <meta name="twitter:creator" content="@SteerifyGroup" />
+        <meta name="twitter:title" content="SteerSolo Marketplace Nigeria" />
+        <meta
+          name="twitter:description"
+          content="Discover trusted Nigerian stores on SteerSolo Marketplace."
+        />
         <meta
           name="twitter:image"
           content="https://steersolo.com/steersolo-logo.png"
         />
+        <meta name="twitter:image:alt" content="SteerSolo Official Logo" />
       </Helmet>
       <VerifiedSellerNotice />
 

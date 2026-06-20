@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -44,7 +43,14 @@ import {
   Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { BulkProductUpload } from "@/components/BulkProductUpload";
@@ -55,7 +61,18 @@ import { payoutService } from "@/services/payout.service";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  Legend,
+} from "recharts";
 import { format, eachDayOfInterval, subDays, isToday } from "date-fns";
 
 interface Metric {
@@ -76,7 +93,8 @@ export const VendorCommandCenter = () => {
   const [loading, setLoading] = useState(true);
   const [isCopied, setIsCopied] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
-  const [activePeriod, setActivePeriod] = useState<'7d' | '30d' | '90d'>('7d');
+  const [activePeriod, setActivePeriod] = useState<"7d" | "30d" | "90d">("7d");
+  const [showHelp, setShowHelp] = useState(false);
 
   const [dashboardData, setDashboardData] = useState({
     todaySales: 0,
@@ -103,7 +121,7 @@ export const VendorCommandCenter = () => {
         const [productsRes, ordersRes, balanceRes] = await Promise.all([
           productService.getProducts({ shopId: shopData.id }),
           orderService.getOrders({ shopId: shopData.id }),
-          payoutService.getBalance(shopData.id).catch(() => null)
+          payoutService.getBalance(shopData.id).catch(() => null),
         ]);
 
         const productsList = productsRes.data || [];
@@ -111,44 +129,59 @@ export const VendorCommandCenter = () => {
 
         const allOrders = ordersRes.data || [];
         const todayStr = new Date().toISOString().split("T")[0];
-        
+
         let todaySales = 0;
         let activeOrdersCount = 0;
         let totalRevenue = 0;
         let pendingPayout = 0;
 
-        const daysToSubtract = activePeriod === '7d' ? 6 : activePeriod === '30d' ? 29 : 89;
+        const daysToSubtract =
+          activePeriod === "7d" ? 6 : activePeriod === "30d" ? 29 : 89;
         const startDate = subDays(new Date(), daysToSubtract);
-        
+
         const dateRange = eachDayOfInterval({
           start: startDate,
           end: new Date(),
         });
 
         const chartData = dateRange.map(date => {
-          const dateStr = format(date, 'yyyy-MM-dd');
-          const dayOrders = allOrders.filter((o: any) => 
-            o.created_at?.startsWith(dateStr) && o.payment_status === 'paid'
+          const dateStr = format(date, "yyyy-MM-dd");
+          const dayOrders = allOrders.filter(
+            (o: any) =>
+              o.created_at?.startsWith(dateStr) && o.payment_status === "paid",
           );
-          const dayRevenue = dayOrders.reduce((sum, o: any) => sum + (parseFloat(String(o.total_amount)) || 0), 0);
+          const dayRevenue = dayOrders.reduce(
+            (sum, o: any) => sum + (parseFloat(String(o.total_amount)) || 0),
+            0,
+          );
           return {
-            date: format(date, 'MMM d'),
+            date: format(date, "MMM d"),
             revenue: dayRevenue,
             orders: dayOrders.length,
           };
         });
 
         allOrders.forEach((o: any) => {
-          if (o.order_status !== "completed" && o.order_status !== "cancelled") {
+          if (
+            o.order_status !== "completed" &&
+            o.order_status !== "cancelled"
+          ) {
             activeOrdersCount++;
           }
-          if (o.payment_status === "paid" && o.created_at?.startsWith(todayStr)) {
+          if (
+            o.payment_status === "paid" &&
+            o.created_at?.startsWith(todayStr)
+          ) {
             todaySales += Number(o.total_amount || 0);
           }
           if (o.payment_status === "paid") {
             totalRevenue += Number(o.total_amount || 0);
           }
-          if (o.payment_status === "paid" && o.order_status !== "cancelled" && o.order_status !== "refunded") {
+          if (
+            o.payment_status === "paid" &&
+            o.order_status !== "cancelled" &&
+            o.order_status !== "refunded"
+          ) {
             pendingPayout += Number(o.total_amount || 0);
           }
         });
@@ -158,17 +191,24 @@ export const VendorCommandCenter = () => {
             ? ((allOrders.length / shopData.total_views) * 100).toFixed(1) + "%"
             : "0.0%";
 
-        const avgOrderValue = allOrders.length > 0 ? totalRevenue / allOrders.length : 0;
-        
+        const avgOrderValue =
+          allOrders.length > 0 ? totalRevenue / allOrders.length : 0;
+
         const productSalesMap = new Map();
         allOrders.forEach((order: any) => {
           if (order.items && Array.isArray(order.items)) {
             order.items.forEach((item: any) => {
-              const productName = item.name || item.product_name || 'Unknown Product';
-              const current = productSalesMap.get(productName) || { sales: 0, revenue: 0 };
+              const productName =
+                item.name || item.product_name || "Unknown Product";
+              const current = productSalesMap.get(productName) || {
+                sales: 0,
+                revenue: 0,
+              };
               productSalesMap.set(productName, {
                 sales: current.sales + (item.quantity || 1),
-                revenue: current.revenue + (parseFloat(String(item.price || 0)) * (item.quantity || 1)),
+                revenue:
+                  current.revenue +
+                  parseFloat(String(item.price || 0)) * (item.quantity || 1),
               });
             });
           }
@@ -209,40 +249,43 @@ export const VendorCommandCenter = () => {
     fetchShopData();
   }, [user, activePeriod]);
 
-  const metrics: Metric[] = useMemo(() => [
-    {
-      label: "Today's Sales",
-      value: `₦${dashboardData.todaySales.toLocaleString()}`,
-      change: "+12.5%",
-      positive: true,
-      icon: DollarSign,
-      color: "text-emerald-600 dark:text-emerald-400"
-    },
-    {
-      label: "Active Orders",
-      value: dashboardData.activeOrders.toString(),
-      change: "-3.2%",
-      positive: true,
-      icon: ShoppingCart,
-      color: "text-amber-600 dark:text-amber-400"
-    },
-    {
-      label: "Wallet Balance",
-      value: `₦${dashboardData.walletBalance.toLocaleString()}`,
-      change: "+8.1%",
-      positive: true,
-      icon: Wallet,
-      color: "text-blue-600 dark:text-blue-400"
-    },
-    {
-      label: "Store Views",
-      value: (shop?.total_views || 0).toString(),
-      change: "+24.3%",
-      positive: true,
-      icon: Eye,
-      color: "text-purple-600 dark:text-purple-400"
-    }
-  ], [dashboardData, shop]);
+  const metrics: Metric[] = useMemo(
+    () => [
+      {
+        label: "Today's Sales",
+        value: `₦${dashboardData.todaySales.toLocaleString()}`,
+        change: "+12.5%",
+        positive: true,
+        icon: DollarSign,
+        color: "text-emerald-600 dark:text-emerald-400",
+      },
+      {
+        label: "Active Orders",
+        value: dashboardData.activeOrders.toString(),
+        change: "-3.2%",
+        positive: true,
+        icon: ShoppingCart,
+        color: "text-amber-600 dark:text-amber-400",
+      },
+      {
+        label: "Wallet Balance",
+        value: `₦${dashboardData.walletBalance.toLocaleString()}`,
+        change: "+8.1%",
+        positive: true,
+        icon: Wallet,
+        color: "text-blue-600 dark:text-blue-400",
+      },
+      {
+        label: "Store Views",
+        value: (shop?.total_views || 0).toString(),
+        change: "+24.3%",
+        positive: true,
+        icon: Eye,
+        color: "text-purple-600 dark:text-purple-400",
+      },
+    ],
+    [dashboardData, shop],
+  );
 
   if (loading) {
     return (
@@ -258,56 +301,118 @@ export const VendorCommandCenter = () => {
     { id: 2, title: "Add Products", completed: productsCount > 0 },
     { id: 3, title: "Connect WhatsApp", completed: !!shop?.whatsapp_number },
   ];
-  const completedSteps = steps.filter((s) => s.completed).length;
+  const completedSteps = steps.filter(s => s.completed).length;
   const progress = Math.round((completedSteps / steps.length) * 100);
   const isSetupComplete = !!shop?.is_active && progress === 100;
 
-  const storeUrl = shop ? `${window.location.origin}/shop/${shop.shop_slug || shop.id}` : '';
+  const storeUrl = shop
+    ? `${window.location.origin}/shop/${shop.shop_slug || shop.id}`
+    : "";
 
   if (!isSetupComplete) {
     return (
       <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-background to-accent/5 overflow-hidden">
         <div className="px-4 pt-5 pb-4 text-center border-b border-border/40">
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Get started</p>
-          <h2 className="text-lg font-extrabold tracking-tight mb-0.5">Set up your store in 3 steps</h2>
+          <div className="flex justify-end mb-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs px-2"
+              onClick={() => setShowHelp(!showHelp)}
+            >
+              <HelpCircle className="w-3.5 h-3.5 mr-1" />
+              {showHelp ? "Hide Help" : "Need Help?"}
+            </Button>
+          </div>
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">
+            Get started
+          </p>
+          <h2 className="text-lg font-extrabold tracking-tight mb-0.5">
+            Set up your store in 3 steps
+          </h2>
           <div className="max-w-xs mx-auto mt-3 space-y-1.5">
             <div className="flex justify-between text-[10px] text-muted-foreground font-bold">
-              <span>Progress</span><span>{progress}%</span>
+              <span>Progress</span>
+              <span>{progress}%</span>
             </div>
             <Progress value={progress} className="h-1.5 bg-muted" />
           </div>
         </div>
 
+        {showHelp && (
+          <div className="px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+            <div className="flex items-start gap-2">
+              <Info className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <p className="text-xs font-bold text-blue-800 dark:text-blue-300">
+                  Quick Tips:
+                </p>
+                <ul className="text-[11px] text-blue-700 dark:text-blue-400 mt-1 space-y-0.5">
+                  <li>• Complete steps in order for the best experience</li>
+                  <li>• You can always edit your store later</li>
+                  <li>• Need help? Contact support</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="divide-y divide-border/40">
           {[
             {
-              num: "01", title: "Create your store", desc: "Name, location & payment details.",
-              done: !!shop, action: () => navigate("/my-store"), label: shop ? "Edit Store" : "Start Setup",
+              num: "01",
+              title: "Create your store",
+              desc: "Name, location & payment details.",
+              done: !!shop,
+              action: () => navigate("/my-store"),
+              label: shop ? "Edit Store" : "Start Setup",
             },
             {
-              num: "02", title: "Add products", desc: "Upload photos & set prices.",
-              done: productsCount > 0, action: () => navigate("/products"), label: "Add Products",
+              num: "02",
+              title: "Add products",
+              desc: "Upload photos & set prices.",
+              done: productsCount > 0,
+              action: () => navigate("/products"),
+              label: "Add Products",
               disabled: !shop,
             },
             {
-              num: "03", title: "Share your link", desc: "Connect WhatsApp & go live.",
-              done: !!shop?.whatsapp_number, action: () => navigate("/my-store"), label: shop?.whatsapp_number ? "Done ✓" : "Connect",
+              num: "03",
+              title: "Share your link",
+              desc: "Connect WhatsApp & go live.",
+              done: !!shop?.whatsapp_number,
+              action: () => navigate("/my-store"),
+              label: shop?.whatsapp_number ? "Done ✓" : "Connect",
               disabled: productsCount === 0,
             },
-          ].map((step) => (
+          ].map(step => (
             <div
               key={step.num}
-              className={`flex items-center gap-4 px-4 py-3.5 transition-colors ${step.disabled ? "opacity-40 pointer-events-none" : "hover:bg-muted/30"}`}
+              className={`flex items-center gap-4 px-4 py-3.5 transition-colors ${step.disabled ? "opacity-40" : "hover:bg-muted/30 cursor-pointer"}`}
+              onClick={() => !step.disabled && !step.done && step.action()}
             >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[11px] font-black border ${step.done ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400" : "bg-muted border-border text-muted-foreground"}`}>
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[11px] font-black border ${step.done ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400" : "bg-muted border-border text-muted-foreground"}`}
+              >
                 {step.done ? <CheckCircle2 className="w-4 h-4" /> : step.num}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground">{step.title}</p>
+                <p className="text-sm font-bold text-foreground">
+                  {step.title}
+                </p>
                 <p className="text-xs text-muted-foreground">{step.desc}</p>
               </div>
               {!step.done && (
-                <Button size="sm" variant="outline" className="shrink-0 h-8 rounded-xl text-xs font-bold" onClick={step.action}>
+                <Button
+                  size="sm"
+                  variant={step.disabled ? "outline" : "default"}
+                  className="shrink-0 h-9 rounded-xl text-xs font-bold relative z-10"
+                  onClick={e => {
+                    e.stopPropagation();
+                    if (!step.disabled) step.action();
+                  }}
+                  disabled={step.disabled}
+                >
                   {step.label} <ChevronRight className="w-3 h-3 ml-1" />
                 </Button>
               )}
@@ -320,7 +425,10 @@ export const VendorCommandCenter = () => {
             open={isBulkUploadOpen}
             onClose={() => setIsBulkUploadOpen(false)}
             shopId={shop.id}
-            onSuccess={() => { fetchShopData(); setIsBulkUploadOpen(false); }}
+            onSuccess={() => {
+              fetchShopData();
+              setIsBulkUploadOpen(false);
+            }}
           />
         )}
       </div>
@@ -338,13 +446,18 @@ export const VendorCommandCenter = () => {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <p className="font-extrabold text-base text-foreground truncate">{shop.shop_name}</p>
+                <p className="font-extrabold text-base text-foreground truncate">
+                  {shop.shop_name}
+                </p>
                 <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] uppercase font-black px-2 py-0.5 rounded-md">
                   Live
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground truncate hover:text-foreground transition-colors cursor-pointer" onClick={() => window.open(storeUrl, "_blank")}>
-                {storeUrl.replace(/^https?:\/\//, '')}
+              <p
+                className="text-xs text-muted-foreground truncate hover:text-foreground transition-colors cursor-pointer"
+                onClick={() => window.open(storeUrl, "_blank")}
+              >
+                {storeUrl.replace(/^https?:\/\//, "")}
               </p>
             </div>
           </div>
@@ -360,14 +473,21 @@ export const VendorCommandCenter = () => {
                 toast({ title: "Copied!", description: "Store link copied" });
               }}
             >
-              {isCopied ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mr-2" /> : <Copy className="w-4 h-4 text-muted-foreground mr-2" />}
+              {isCopied ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 mr-2" />
+              ) : (
+                <Copy className="w-4 h-4 text-muted-foreground mr-2" />
+              )}
               {isCopied ? "Copied" : "Copy Link"}
             </Button>
             <Button
               size="sm"
               className="h-9 rounded-xl font-bold bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground shadow-sm"
               onClick={() => {
-                window.open(`https://wa.me/?text=${encodeURIComponent('Check out my store: ' + storeUrl)}`, '_blank');
+                window.open(
+                  `https://wa.me/?text=${encodeURIComponent("Check out my store: " + storeUrl)}`,
+                  "_blank",
+                );
               }}
             >
               <MessageCircle className="w-4 h-4 mr-2" /> Share
@@ -378,22 +498,30 @@ export const VendorCommandCenter = () => {
         {/* Metrics Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-0">
           {metrics.map((metric, i) => (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className="px-4 sm:px-5 py-4 border-b md:border-b-0 md:border-r border-border/40 last:border-r-0"
             >
               <div className="flex items-center gap-2 mb-1">
                 <metric.icon className={`w-3.5 h-3.5 ${metric.color}`} />
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{metric.label}</p>
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                  {metric.label}
+                </p>
               </div>
-              <p className={`text-xl md:text-2xl font-black tabular-nums ${metric.color}`}>{metric.value}</p>
+              <p
+                className={`text-xl md:text-2xl font-black tabular-nums ${metric.color}`}
+              >
+                {metric.value}
+              </p>
               <div className="flex items-center gap-1 mt-1">
                 {metric.positive ? (
                   <TrendingUp className="w-3 h-3 text-emerald-500" />
                 ) : (
                   <TrendingDown className="w-3 h-3 text-red-500" />
                 )}
-                <span className={`text-[10px] font-medium ${metric.positive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                <span
+                  className={`text-[10px] font-medium ${metric.positive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}
+                >
                   {metric.change}
                 </span>
               </div>
@@ -411,15 +539,17 @@ export const VendorCommandCenter = () => {
             <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border/30">
               <div>
                 <CardTitle className="text-sm font-bold">Performance</CardTitle>
-                <CardDescription className="text-xs">Sales and order trends</CardDescription>
+                <CardDescription className="text-xs">
+                  Sales and order trends
+                </CardDescription>
               </div>
               <div className="flex items-center gap-1">
-                {(['7d', '30d', '90d'] as const).map((period) => (
+                {(["7d", "30d", "90d"] as const).map(period => (
                   <Button
                     key={period}
-                    variant={activePeriod === period ? 'default' : 'ghost'}
+                    variant={activePeriod === period ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 text-xs font-medium rounded-lg"
+                    className="h-8 text-xs font-medium rounded-lg relative z-10"
                     onClick={() => setActivePeriod(period)}
                   >
                     {period}
@@ -432,55 +562,93 @@ export const VendorCommandCenter = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={dashboardData.chartData}>
                     <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      <linearGradient
+                        id="colorRevenue"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="hsl(var(--primary))"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="hsl(var(--primary))"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
-                      <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
+                      <linearGradient
+                        id="colorOrders"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="hsl(var(--accent))"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="hsl(var(--accent))"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                    <XAxis 
-                      dataKey="date" 
-                      tick={{fontSize: 10, fill: 'hsl(var(--muted-foreground))'}} 
-                      axisLine={false} 
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--border))"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tick={{
+                        fontSize: 10,
+                        fill: "hsl(var(--muted-foreground))",
+                      }}
+                      axisLine={false}
                       tickLine={false}
                       minTickGap={30}
                     />
-                    <YAxis 
-                      tick={{fontSize: 10, fill: 'hsl(var(--muted-foreground))'}} 
-                      axisLine={false} 
+                    <YAxis
+                      tick={{
+                        fontSize: 10,
+                        fill: "hsl(var(--muted-foreground))",
+                      }}
+                      axisLine={false}
                       tickLine={false}
                     />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        borderColor: 'hsl(var(--border))',
-                        borderRadius: '0.5rem',
-                        fontSize: '12px'
-                      }} 
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        borderColor: "hsl(var(--border))",
+                        borderRadius: "0.5rem",
+                        fontSize: "12px",
+                      }}
                     />
-                    <Area 
-                      type="monotone" 
-                      dataKey="revenue" 
-                      stroke="hsl(var(--primary))" 
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="hsl(var(--primary))"
                       strokeWidth={2}
-                      fillOpacity={1} 
-                      fill="url(#colorRevenue)" 
+                      fillOpacity={1}
+                      fill="url(#colorRevenue)"
                       isAnimationActive={false}
                     />
-                    <Area 
-                      type="monotone" 
-                      dataKey="orders" 
-                      stroke="hsl(var(--accent))" 
+                    <Area
+                      type="monotone"
+                      dataKey="orders"
+                      stroke="hsl(var(--accent))"
                       strokeWidth={2}
-                      fillOpacity={1} 
-                      fill="url(#colorOrders)" 
+                      fillOpacity={1}
+                      fill="url(#colorOrders)"
                       isAnimationActive={false}
                     />
-                    <Legend wrapperStyle={{fontSize: '10px'}}/>
+                    <Legend wrapperStyle={{ fontSize: "10px" }} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -490,8 +658,12 @@ export const VendorCommandCenter = () => {
           {/* Top Products & Recent Orders Tabs */}
           <Tabs defaultValue="products" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="products" className="text-xs font-medium">Top Products</TabsTrigger>
-              <TabsTrigger value="orders" className="text-xs font-medium">Recent Orders</TabsTrigger>
+              <TabsTrigger value="products" className="text-xs font-medium">
+                Top Products
+              </TabsTrigger>
+              <TabsTrigger value="orders" className="text-xs font-medium">
+                Recent Orders
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="products" className="mt-2">
               <Card className="border border-border/50 overflow-hidden shadow-sm">
@@ -499,24 +671,35 @@ export const VendorCommandCenter = () => {
                   {dashboardData.topProducts.length > 0 ? (
                     <div className="space-y-3">
                       {dashboardData.topProducts.map((product, i) => (
-                        <div key={i} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
+                        <div
+                          key={i}
+                          className="flex items-center justify-between py-2 border-b border-border/30 last:border-0"
+                        >
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-xs font-bold">
                               #{i + 1}
                             </div>
                             <div className="min-w-0">
-                              <p className="text-sm font-medium truncate">{product.name}</p>
-                              <p className="text-xs text-muted-foreground">{product.sales} sold</p>
+                              <p className="text-sm font-medium truncate">
+                                {product.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {product.sales} sold
+                              </p>
                             </div>
                           </div>
-                          <p className="text-sm font-bold">₦{product.revenue.toLocaleString()}</p>
+                          <p className="text-sm font-bold">
+                            ₦{product.revenue.toLocaleString()}
+                          </p>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
                       <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p className="text-sm">No sales data yet. Start selling!</p>
+                      <p className="text-sm">
+                        No sales data yet. Start selling!
+                      </p>
                     </div>
                   )}
                 </CardContent>
@@ -528,14 +711,33 @@ export const VendorCommandCenter = () => {
                   {dashboardData.recentOrders.length > 0 ? (
                     <div className="space-y-3">
                       {dashboardData.recentOrders.map((order, i) => (
-                        <div key={i} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
+                        <div
+                          key={i}
+                          className="flex items-center justify-between py-2 border-b border-border/30 last:border-0"
+                        >
                           <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">Order #{order.id.substring(0, 8)}</p>
-                            <p className="text-xs text-muted-foreground">{format(new Date(order.created_at), 'MMM d, h:mm a')}</p>
+                            <p className="text-sm font-medium truncate">
+                              Order #{order.id.substring(0, 8)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {format(
+                                new Date(order.created_at),
+                                "MMM d, h:mm a",
+                              )}
+                            </p>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm font-bold">₦{Number(order.total_amount).toLocaleString()}</p>
-                            <Badge variant={order.payment_status === 'paid' ? 'default' : 'outline'} className="text-[10px] px-2 py-0.5 h-auto rounded">
+                            <p className="text-sm font-bold">
+                              ₦{Number(order.total_amount).toLocaleString()}
+                            </p>
+                            <Badge
+                              variant={
+                                order.payment_status === "paid"
+                                  ? "default"
+                                  : "outline"
+                              }
+                              className="text-[10px] px-2 py-0.5 h-auto rounded"
+                            >
                               {order.payment_status}
                             </Badge>
                           </div>
@@ -545,7 +747,9 @@ export const VendorCommandCenter = () => {
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
                       <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p className="text-sm">No orders yet. Keep sharing your store!</p>
+                      <p className="text-sm">
+                        No orders yet. Keep sharing your store!
+                      </p>
                     </div>
                   )}
                 </CardContent>
@@ -560,27 +764,74 @@ export const VendorCommandCenter = () => {
           <Card className="border border-border/50 overflow-hidden shadow-sm">
             <CardHeader className="pb-2 border-b border-border/30">
               <CardTitle className="text-sm font-bold">Quick Actions</CardTitle>
-              <CardDescription className="text-xs">Common tasks to manage your store</CardDescription>
+              <CardDescription className="text-xs">
+                Common tasks to manage your store
+              </CardDescription>
             </CardHeader>
             <CardContent className="pt-4">
               <div className="grid grid-cols-2 gap-2">
-                <Button size="sm" className="whitespace-nowrap text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm h-10" asChild>
-                  <Link to="/products"><PackagePlus className="w-4 h-4 mr-1.5" />Add Product</Link>
+                <Button
+                  size="sm"
+                  className="whitespace-nowrap text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm h-10 relative z-10"
+                  asChild
+                >
+                  <Link to="/products">
+                    <PackagePlus className="w-4 h-4 mr-1.5" />
+                    Add Product
+                  </Link>
                 </Button>
-                <Button size="sm" variant="outline" className="whitespace-nowrap text-xs font-bold rounded-xl shadow-sm h-10" asChild>
-                  <Link to="/orders"><ShoppingCart className="w-4 h-4 mr-1.5" />Orders</Link>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="whitespace-nowrap text-xs font-bold rounded-xl shadow-sm h-10 relative z-10"
+                  asChild
+                >
+                  <Link to="/orders">
+                    <ShoppingCart className="w-4 h-4 mr-1.5" />
+                    Orders
+                  </Link>
                 </Button>
-                <Button size="sm" variant="outline" className="text-xs font-bold rounded-xl shadow-sm h-10" onClick={() => setIsBulkUploadOpen(true)}>
-                  <Sparkles className="w-4 h-4 mr-1.5 text-accent" />AI Upload
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs font-bold rounded-xl shadow-sm h-10 relative z-10"
+                  onClick={() => setIsBulkUploadOpen(true)}
+                >
+                  <Sparkles className="w-4 h-4 mr-1.5 text-accent" />
+                  AI Upload
                 </Button>
-                <Button size="sm" variant="outline" className="text-xs font-bold rounded-xl shadow-sm h-10" asChild>
-                  <Link to="/my-store"><Store className="w-4 h-4 mr-1.5" />Store</Link>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs font-bold rounded-xl shadow-sm h-10 relative z-10"
+                  asChild
+                >
+                  <Link to="/my-store">
+                    <Store className="w-4 h-4 mr-1.5" />
+                    Store
+                  </Link>
                 </Button>
-                <Button size="sm" variant="outline" className="text-xs font-bold rounded-xl shadow-sm h-10" asChild>
-                  <Link to="/marketing"><Megaphone className="w-4 h-4 mr-1.5" />Marketing</Link>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs font-bold rounded-xl shadow-sm h-10 relative z-10"
+                  asChild
+                >
+                  <Link to="/marketing">
+                    <Megaphone className="w-4 h-4 mr-1.5" />
+                    Marketing
+                  </Link>
                 </Button>
-                <Button size="sm" variant="outline" className="text-xs font-bold rounded-xl shadow-sm h-10" asChild>
-                  <Link to="/ambassador"><Share2 className="w-4 h-4 mr-1.5" />Referral</Link>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs font-bold rounded-xl shadow-sm h-10 relative z-10"
+                  asChild
+                >
+                  <Link to="/ambassador">
+                    <Share2 className="w-4 h-4 mr-1.5" />
+                    Referral
+                  </Link>
                 </Button>
               </div>
             </CardContent>
@@ -593,7 +844,9 @@ export const VendorCommandCenter = () => {
                 <Sparkles className="w-4 h-4 text-accent" />
                 Insights
               </CardTitle>
-              <CardDescription className="text-xs">AI-powered tips for your store</CardDescription>
+              <CardDescription className="text-xs">
+                AI-powered tips for your store
+              </CardDescription>
             </CardHeader>
             <CardContent className="pt-4">
               <div className="space-y-3">
@@ -601,21 +854,29 @@ export const VendorCommandCenter = () => {
                   <Info className="w-4 h-4 text-blue-500 mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Add more products</p>
-                    <p className="text-xs text-muted-foreground">Stores with 5+ products get 3x more views</p>
+                    <p className="text-xs text-muted-foreground">
+                      Stores with 5+ products get 3x more views
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-background/60 border border-border/30">
                   <Zap className="w-4 h-4 text-yellow-500 mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">Run a marketing campaign</p>
-                    <p className="text-xs text-muted-foreground">Boost your sales by 2x with Steerify Ads</p>
+                    <p className="text-sm font-medium">
+                      Run a marketing campaign
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Boost your sales by 2x with Steerify Ads
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-background/60 border border-border/30">
                   <Target className="w-4 h-4 text-purple-500 mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Share on WhatsApp</p>
-                    <p className="text-xs text-muted-foreground">Share your store with your contacts for more visibility</p>
+                    <p className="text-xs text-muted-foreground">
+                      Share your store with your contacts for more visibility
+                    </p>
                   </div>
                 </div>
               </div>
@@ -630,15 +891,20 @@ export const VendorCommandCenter = () => {
                   <AlertCircle className="w-4 h-4 text-amber-500" />
                   Action Required
                 </CardTitle>
-                <CardDescription className="text-xs">You have {dashboardData.activeOrders} order{dashboardData.activeOrders > 1 ? 's' : ''} to fulfill</CardDescription>
+                <CardDescription className="text-xs">
+                  You have {dashboardData.activeOrders} order
+                  {dashboardData.activeOrders > 1 ? "s" : ""} to fulfill
+                </CardDescription>
               </CardHeader>
               <CardContent className="pt-4">
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="w-full text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-600 text-white shadow-sm"
                   asChild
                 >
-                  <Link to="/orders">View Orders <ChevronRight className="w-3 h-3 ml-1" /></Link>
+                  <Link to="/orders">
+                    View Orders <ChevronRight className="w-3 h-3 ml-1" />
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -651,7 +917,10 @@ export const VendorCommandCenter = () => {
           open={isBulkUploadOpen}
           onClose={() => setIsBulkUploadOpen(false)}
           shopId={shop.id}
-          onSuccess={() => { fetchShopData(); setIsBulkUploadOpen(false); }}
+          onSuccess={() => {
+            fetchShopData();
+            setIsBulkUploadOpen(false);
+          }}
         />
       )}
     </div>
