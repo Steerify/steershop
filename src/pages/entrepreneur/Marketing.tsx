@@ -23,7 +23,7 @@ import {
   Loader2,
   Crown,
 } from "lucide-react";
-import logo from "@/assets/steersolo-logo.jpg";
+import logo from "@/assets/steersolo-logo.png";
 
 interface UserPoster {
   id: string;

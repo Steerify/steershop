@@ -17,7 +17,7 @@ import { format } from "date-fns";
 import { PageWrapper } from "@/components/PageWrapper";
 import OrderApprovalDialog from "@/components/OrderApprovalDialog";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
-import logo from "@/assets/steersolo-logo.jpg";
+import logo from "@/assets/steersolo-logo.png";
 import Joyride, { CallBackProps, STATUS } from "react-joyride";
 import { useTour } from "@/hooks/useTour";
 import { TourTooltip } from "@/components/tours/TourTooltip";

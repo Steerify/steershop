@@ -10,7 +10,7 @@ import { ArrowLeft, Check, Sparkles, Clock, Palette, Package, MessageSquare, Loa
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import logo from "@/assets/steersolo-logo.jpg";
+import logo from "@/assets/steersolo-logo.png";
 import { PageThemeShell } from "@/components/PageThemeShell";
 
 const SetupService = () => {

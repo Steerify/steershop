@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
 import { format, differenceInDays } from "date-fns";
-import logo from "@/assets/steersolo-logo.jpg";
+import logo from "@/assets/steersolo-logo.png";
 import { PageThemeShell, themeCardClass } from "@/components/PageThemeShell";
 
 interface SubscriptionPlan {

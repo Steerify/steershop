@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import NoticeBadge from "@/components/NoticeBadge";
-import logo from "@/assets/steersolo-logo.jpg";
+import logo from "@/assets/steersolo-logo.png";
 import { UserRole } from "@/types/api";
 
 const RoleSelection = () => {

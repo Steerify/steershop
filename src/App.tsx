@@ -168,506 +168,495 @@ const queryClient = new QueryClient({
   },
 });
 
-import { HelmetProvider } from "react-helmet-async";
-
 const App = () => (
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <TooltipProvider>
-          <BrowserRouter
-            future={{
-              v7_startTransition: true,
-              v7_relativeSplatPath: true,
-            }}
-          >
-            <Toaster />
-            <Sonner />
-            <RouteThemeClass />
-            <VisitTracker />
-            <SessionExpiryModal />
-            <PlatformReviewPopup />
-            <ScrollToTop />
-            <ScrollRestoration />
-            <Suspense fallback={<PageLoadingSkeleton />}>
-              <ErrorBoundary>
-                <Routes>
-                  {/* Public routes */}
-                  <Route path="/" element={<Index />} />
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/auth/:type" element={<Auth />} />
-                  <Route path="/vendor" element={<Auth />} />
-                  <Route path="/shopper" element={<Auth />} />
-                  <Route path="/vendor-signup" element={<Auth />} />
-                  <Route path="/shopper-signup" element={<Auth />} />
-                  <Route path="/auth/callback" element={<Callback />} />
-                  {/* Add RoleSelection route - this is public but only accessible after signup */}
-                  <Route path="/select-role" element={<RoleSelection />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/shops" element={<Shops />} />
-                  <Route path="/marketplace-nigeria" element={<Shops />} />
-                  <Route path="/nigeria-marketplace" element={<Shops />} />
-                  <Route path="/shop/:slug" element={<ShopStorefront />} />
-                  <Route path="/discover/:hubSlug" element={<DiscoveryHub />} />
-                  <Route path="/s/:slug" element={<ShopStorefront />} />
-                  <Route
-                    path="/shop/:slug/product/:productId"
-                    element={<ProductDetails />}
-                  />
-                  <Route path="/demo" element={<DemoStoreFront />} />
-                  <Route path="/terms" element={<TermsOfService />} />
-                  <Route path="/privacy" element={<PrivacyPolicy />} />
-                  <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/ads" element={<AdsLanding />} />
-                  <Route path="/setup-service" element={<SetupService />} />
-                  <Route path="/feedback" element={<Feedback />} />
-                  <Route path="/faq" element={<FAQ />} />
-                  <Route path="/growth" element={<GrowthPage />} />
-                  <Route path="/brand" element={<BrandPage />} />
-                  <Route path="/updates" element={<UpdatesPage />} />
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <TooltipProvider>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
+          <Toaster />
+          <Sonner />
+          <RouteThemeClass />
+          <VisitTracker />
+          <SessionExpiryModal />
+          <PlatformReviewPopup />
+          <ScrollToTop />
+          <ScrollRestoration />
+          <Suspense fallback={<PageLoadingSkeleton />}>
+            <ErrorBoundary>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/:type" element={<Auth />} />
+                <Route path="/vendor" element={<Auth />} />
+                <Route path="/shopper" element={<Auth />} />
+                <Route path="/vendor-signup" element={<Auth />} />
+                <Route path="/shopper-signup" element={<Auth />} />
+                <Route path="/auth/callback" element={<Callback />} />
+                {/* Add RoleSelection route - this is public but only accessible after signup */}
+                <Route path="/select-role" element={<RoleSelection />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/shops" element={<Shops />} />
+                <Route path="/marketplace-nigeria" element={<Shops />} />
+                <Route path="/nigeria-marketplace" element={<Shops />} />
+                <Route path="/shop/:slug" element={<ShopStorefront />} />
+                <Route path="/discover/:hubSlug" element={<DiscoveryHub />} />
+                <Route path="/s/:slug" element={<ShopStorefront />} />
+                <Route
+                  path="/shop/:slug/product/:productId"
+                  element={<ProductDetails />}
+                />
+                <Route path="/demo" element={<DemoStoreFront />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/ads" element={<AdsLanding />} />
+                <Route path="/setup-service" element={<SetupService />} />
+                <Route path="/feedback" element={<Feedback />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/growth" element={<GrowthPage />} />
+                <Route path="/brand" element={<BrandPage />} />
+                <Route path="/updates" element={<UpdatesPage />} />
 
-                  {/* Feature pages */}
-                  <Route
-                    path="/features/whatsapp"
-                    element={<WhatsAppFeature />}
-                  />
-                  <Route path="/features/growth" element={<GrowthFeature />} />
-                  <Route path="/features/trust" element={<TrustFeature />} />
-                  <Route
-                    path="/features/payments"
-                    element={<PaymentsFeature />}
-                  />
-                  <Route path="/how-it-works" element={<HowItWorksPage />} />
-                  <Route path="/security" element={<SecurityPage />} />
+                {/* Feature pages */}
+                <Route
+                  path="/features/whatsapp"
+                  element={<WhatsAppFeature />}
+                />
+                <Route path="/features/growth" element={<GrowthFeature />} />
+                <Route path="/features/trust" element={<TrustFeature />} />
+                <Route
+                  path="/features/payments"
+                  element={<PaymentsFeature />}
+                />
+                <Route path="/how-it-works" element={<HowItWorksPage />} />
+                <Route path="/security" element={<SecurityPage />} />
 
-                  {/* SEO Landing Pages */}
-                  <Route
-                    path="/sell-on-whatsapp"
-                    element={<SellOnWhatsApp />}
-                  />
-                  <Route
-                    path="/sell-on-instagram"
-                    element={<SellOnInstagram />}
-                  />
-                  <Route
-                    path="/online-store-nigeria"
-                    element={<OnlineStoreNigeria />}
-                  />
-                  <Route
-                    path="/accept-payments-online"
-                    element={<AcceptPayments />}
-                  />
-                  <Route
-                    path="/small-business-tools"
-                    element={<SmallBusinessTools />}
-                  />
-                  <Route
-                    path="/sell-online-nigeria"
-                    element={<SellOnlineNigeria />}
-                  />
-                  <Route
-                    path="/whatsapp-store-builder-nigeria"
-                    element={<WhatsAppStoreBuilderNigeria />}
-                  />
-                  <Route
-                    path="/instagram-seller-tools-nigeria"
-                    element={<InstagramSellerToolsNigeria />}
-                  />
-                  <Route
-                    path="/online-marketplace-nigeria"
-                    element={<OnlineMarketplaceNigeria />}
-                  />
-                  <Route
-                    path="/accept-payments-on-whatsapp-nigeria"
-                    element={<AcceptPaymentsOnWhatsAppNigeria />}
-                  />
-                  <Route path="/insights" element={<Insights />} />
-                  <Route
-                    path="/insights/whatsapp-selling-nigeria"
-                    element={<WhatsappSellingNigeriaArticle />}
-                  />
-                  <Route
-                    path="/insights/marketplace-growth-playbook"
-                    element={<MarketplaceGrowthPlaybookArticle />}
-                  />
-                  <Route
-                    path="/insights/trusted-storefront-nigeria"
-                    element={<TrustedStorefrontNigeriaArticle />}
-                  />
-                  <Route
-                    path="/insights/trending-products-nigeria"
-                    element={<TrendingProductsNigeriaArticle />}
-                  />
-                  <Route
-                    path="/ambassador-program"
-                    element={<AmbassadorProgramPage />}
-                  />
-                  <Route
-                    path="/ambassador"
-                    element={
-                      <ProtectedRoute
-                        allowedRoles={["ENTREPRENEUR", "CUSTOMER"]}
-                      >
-                        <Ambassador />
-                      </ProtectedRoute>
-                    }
-                  />
+                {/* SEO Landing Pages */}
+                <Route path="/sell-on-whatsapp" element={<SellOnWhatsApp />} />
+                <Route
+                  path="/sell-on-instagram"
+                  element={<SellOnInstagram />}
+                />
+                <Route
+                  path="/online-store-nigeria"
+                  element={<OnlineStoreNigeria />}
+                />
+                <Route
+                  path="/accept-payments-online"
+                  element={<AcceptPayments />}
+                />
+                <Route
+                  path="/small-business-tools"
+                  element={<SmallBusinessTools />}
+                />
+                <Route
+                  path="/sell-online-nigeria"
+                  element={<SellOnlineNigeria />}
+                />
+                <Route
+                  path="/whatsapp-store-builder-nigeria"
+                  element={<WhatsAppStoreBuilderNigeria />}
+                />
+                <Route
+                  path="/instagram-seller-tools-nigeria"
+                  element={<InstagramSellerToolsNigeria />}
+                />
+                <Route
+                  path="/online-marketplace-nigeria"
+                  element={<OnlineMarketplaceNigeria />}
+                />
+                <Route
+                  path="/accept-payments-on-whatsapp-nigeria"
+                  element={<AcceptPaymentsOnWhatsAppNigeria />}
+                />
+                <Route path="/insights" element={<Insights />} />
+                <Route
+                  path="/insights/whatsapp-selling-nigeria"
+                  element={<WhatsappSellingNigeriaArticle />}
+                />
+                <Route
+                  path="/insights/marketplace-growth-playbook"
+                  element={<MarketplaceGrowthPlaybookArticle />}
+                />
+                <Route
+                  path="/insights/trusted-storefront-nigeria"
+                  element={<TrustedStorefrontNigeriaArticle />}
+                />
+                <Route
+                  path="/insights/trending-products-nigeria"
+                  element={<TrendingProductsNigeriaArticle />}
+                />
+                <Route
+                  path="/ambassador-program"
+                  element={<AmbassadorProgramPage />}
+                />
+                <Route
+                  path="/ambassador"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR", "CUSTOMER"]}>
+                      <Ambassador />
+                    </ProtectedRoute>
+                  }
+                />
 
-                  {/* Shop owner routes */}
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <Dashboard />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/my-store"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <MyStore />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/products"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <Products />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/orders"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <Orders />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/identity-verification"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <IdentityVerification />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/bookings"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <Bookings />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/settings"
-                    element={
-                      <ProtectedRoute
-                        allowedRoles={["ENTREPRENEUR", "CUSTOMER"]}
-                      >
-                        <Settings />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/subscription"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <Subscription />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/marketing"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <Marketing />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/marketing/editor/:id?"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <PosterEditor />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/marketing-services"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <MarketingServices />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/ads-assistant"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <AdsAssistant />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/google-business-profile"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <GoogleBusinessProfile />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/courses"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <EntrepreneurCourses />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/customers"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <Customers />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/vendor-invite"
-                    element={
-                      <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
-                        <VendorInvite />
-                      </ProtectedRoute>
-                    }
-                  />
+                {/* Shop owner routes */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/my-store"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <MyStore />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/products"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <Products />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/orders"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <Orders />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/identity-verification"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <IdentityVerification />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/bookings"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <Bookings />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/settings"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR", "CUSTOMER"]}>
+                      <Settings />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/subscription"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <Subscription />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/marketing"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <Marketing />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/marketing/editor/:id?"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <PosterEditor />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/marketing-services"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <MarketingServices />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/ads-assistant"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <AdsAssistant />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/google-business-profile"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <GoogleBusinessProfile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/courses"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <EntrepreneurCourses />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/customers"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <Customers />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/vendor-invite"
+                  element={
+                    <ProtectedRoute allowedRoles={["ENTREPRENEUR"]}>
+                      <VendorInvite />
+                    </ProtectedRoute>
+                  }
+                />
 
-                  {/* Customer routes */}
-                  <Route
-                    path="/customer_dashboard"
-                    element={
-                      <ProtectedRoute allowedRoles={["CUSTOMER"]}>
-                        <CustomerDashboard />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/customer/orders"
-                    element={
-                      <ProtectedRoute allowedRoles={["CUSTOMER"]}>
-                        <CustomerOrders />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/customer/courses"
-                    element={
-                      <ProtectedRoute allowedRoles={["CUSTOMER"]}>
-                        <CustomerCourses />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/customer/rewards"
-                    element={
-                      <ProtectedRoute allowedRoles={["CUSTOMER"]}>
-                        <CustomerRewards />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/customer/wishlist"
-                    element={
-                      <ProtectedRoute allowedRoles={["CUSTOMER"]}>
-                        <CustomerWishlist />
-                      </ProtectedRoute>
-                    }
-                  />
+                {/* Customer routes */}
+                <Route
+                  path="/customer_dashboard"
+                  element={
+                    <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+                      <CustomerDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/customer/orders"
+                  element={
+                    <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+                      <CustomerOrders />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/customer/courses"
+                  element={
+                    <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+                      <CustomerCourses />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/customer/rewards"
+                  element={
+                    <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+                      <CustomerRewards />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/customer/wishlist"
+                  element={
+                    <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+                      <CustomerWishlist />
+                    </ProtectedRoute>
+                  }
+                />
 
-                  {/* Admin routes */}
-                  <Route
-                    path="/admin"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminDashboard />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/shops"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminShops />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/products"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminProducts />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/orders"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminOrders />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/users"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminUsers />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/courses"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminCourses />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/prizes"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminPrizes />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/offers"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminOffers />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/referrals"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminReferrals />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/top-sellers"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminTopSeller />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/featured-shops"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminFeaturedShops />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/feedback"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminFeedback />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/activity-logs"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminActivityLogs />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/marketing"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminMarketingConsultations />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/earnings"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminPlatformEarnings />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/updates"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminPlatformUpdates />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/ads"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminAds />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/ux-audit"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminUXAudit />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/feature-phases"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminFeaturePhases />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/concierge"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminConcierge />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/logistics"
-                    element={
-                      <ProtectedRoute allowedRoles={["ADMIN"]}>
-                        <AdminLogistics />
-                      </ProtectedRoute>
-                    }
-                  />
+                {/* Admin routes */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/shops"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminShops />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/products"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminProducts />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/orders"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminOrders />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/users"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminUsers />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/courses"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminCourses />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/prizes"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminPrizes />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/offers"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminOffers />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/referrals"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminReferrals />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/top-sellers"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminTopSeller />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/featured-shops"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminFeaturedShops />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/feedback"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminFeedback />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/activity-logs"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminActivityLogs />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/marketing"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminMarketingConsultations />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/earnings"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminPlatformEarnings />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/updates"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminPlatformUpdates />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/ads"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminAds />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/ux-audit"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminUXAudit />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/feature-phases"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminFeaturePhases />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/concierge"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminConcierge />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/logistics"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminLogistics />
+                    </ProtectedRoute>
+                  }
+                />
 
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </ErrorBoundary>
-            </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
-  </HelmetProvider>
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </ErrorBoundary>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
 );
 
 export default App;

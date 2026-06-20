@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PageWrapper } from "@/components/PageWrapper";
 import { AdirePattern, AdireDivider, AdireAccent } from "@/components/patterns/AdirePattern";
-import logoLight from "@/assets/steersolo-logo.jpg";
+import logoLight from "@/assets/steersolo-logo.png";
 import logoDark from "@/assets/steersolo-logo-dark.jpg";
 
 const CopyButton = ({ text }: { text: string }) => {

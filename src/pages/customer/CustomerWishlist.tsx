@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Heart, Package, Trash2, ShoppingCart, ArrowRight, Loader2 } from "lucide-react";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
-import logo from "@/assets/steersolo-logo.jpg";
+import logo from "@/assets/steersolo-logo.png";
 
 const CustomerWishlist = () => {
   const navigate = useNavigate();

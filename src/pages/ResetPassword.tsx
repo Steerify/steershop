@@ -9,7 +9,7 @@ import { Loader2, Lock, CheckCircle } from "lucide-react";
 import { z } from "zod";
 import authService from "@/services/auth.service";
 import { supabase } from "@/integrations/supabase/client";
-import steersolologo from "@/assets/steersolo-logo.jpg";
+import steersolologo from "@/assets/steersolo-logo.png";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 
 const passwordSchema = z.object({
