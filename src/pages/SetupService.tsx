@@ -1,12 +1,27 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowLeft, Check, Sparkles, Clock, Palette, Package, MessageSquare, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Sparkles,
+  Clock,
+  Palette,
+  Package,
+  MessageSquare,
+  Loader2,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -18,45 +33,47 @@ const SetupService = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState<'info' | 'payment'>('info');
+  const [step, setStep] = useState<"info" | "payment">("info");
   const [formData, setFormData] = useState({
-    businessName: '',
-    businessDescription: '',
-    instagramHandle: '',
-    productsInfo: '',
-    contactPhone: '',
-    packageType: 'standard' as 'standard' | 'premium',
+    businessName: "",
+    businessDescription: "",
+    instagramHandle: "",
+    productsInfo: "",
+    contactPhone: "",
+    packageType: "standard" as "standard" | "premium",
   });
 
   const packages = {
     standard: {
-      name: 'Standard Setup',
+      name: "Standard Setup",
       price: 5000,
       priceKobo: 500000,
       features: [
-        'Professional store design',
-        'Up to 10 products uploaded',
-        'Logo placement',
-        'Basic SEO optimization',
-        'Delivery within 3 days',
+        "Professional store design",
+        "Up to 10 products uploaded",
+        "Logo placement",
+        "Basic SEO optimization",
+        "Delivery within 3 days",
       ],
     },
     premium: {
-      name: 'Premium Setup',
+      name: "Premium Setup",
       price: 10000,
       priceKobo: 1000000,
       features: [
-        'Everything in Standard',
-        'Custom banner design',
-        'Up to 30 products uploaded',
-        'Product descriptions written',
-        'Social media optimization',
-        'Priority delivery within 24 hours',
+        "Everything in Standard",
+        "Custom banner design",
+        "Up to 30 products uploaded",
+        "Product descriptions written",
+        "Social media optimization",
+        "Priority delivery within 24 hours",
       ],
     },
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -70,7 +87,7 @@ const SetupService = () => {
         description: "You need to be signed in to request setup service.",
         variant: "destructive",
       });
-      navigate('/auth/login');
+      navigate("/auth/login");
       return;
     }
 
@@ -89,28 +106,31 @@ const SetupService = () => {
       const selectedPackage = packages[formData.packageType];
 
       // Initialize payment via Paystack
-      const { data, error } = await supabase.functions.invoke('paystack-setup-service', {
-        body: {
-          business_name: formData.businessName,
-          business_description: formData.businessDescription,
-          instagram_handle: formData.instagramHandle,
-          products_info: formData.productsInfo,
-          contact_phone: formData.contactPhone,
-          package_type: formData.packageType,
-          amount: selectedPackage.priceKobo,
+      const { data, error } = await supabase.functions.invoke(
+        "paystack-setup-service",
+        {
+          body: {
+            business_name: formData.businessName,
+            business_description: formData.businessDescription,
+            instagram_handle: formData.instagramHandle,
+            products_info: formData.productsInfo,
+            contact_phone: formData.contactPhone,
+            package_type: formData.packageType,
+            amount: selectedPackage.priceKobo,
+          },
         },
-      });
+      );
 
       if (error) throw error;
 
       if (data?.authorization_url) {
-        localStorage.setItem('setup_reference', data.reference);
+        localStorage.setItem("setup_reference", data.reference);
         window.location.href = data.authorization_url;
       } else {
-        throw new Error('Failed to initialize payment');
+        throw new Error("Failed to initialize payment");
       }
     } catch (error) {
-      console.error('Setup service error:', error);
+      console.error("Setup service error:", error);
       toast({
         title: "Error",
         description: "Failed to process your request. Please try again.",
@@ -131,16 +151,20 @@ const SetupService = () => {
           <div className="container mx-auto px-4 py-3 sm:py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => navigate(-1)}
                   className="mr-2"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-primary/20">
-                  <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+                  <img
+                    src={logo}
+                    alt="SteerSolo"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <span className="text-xl sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   SteerSolo
@@ -151,7 +175,6 @@ const SetupService = () => {
         </nav>
       }
     >
-
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10 max-w-5xl">
         {/* Hero */}
         <div className="text-center mb-10 sm:mb-12">
@@ -163,24 +186,45 @@ const SetupService = () => {
             Done-For-You Store Setup
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Too busy to set up your store? Let our expert team create a professional, 
-            conversion-optimized storefront for your business.
+            Too busy to set up your store? Let our expert team create a
+            professional, conversion-optimized storefront for your business.
           </p>
         </div>
 
         {/* Process Steps */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-10 sm:mb-12">
           {[
-            { icon: MessageSquare, title: "Tell Us About You", desc: "Share your business details" },
-            { icon: Clock, title: "We Get To Work", desc: "Our team sets up your store" },
-            { icon: Palette, title: "Review & Approve", desc: "We show you the result" },
-            { icon: Package, title: "Go Live!", desc: "Your store is ready to sell" },
+            {
+              icon: MessageSquare,
+              title: "Tell Us About You",
+              desc: "Share your business details",
+            },
+            {
+              icon: Clock,
+              title: "We Get To Work",
+              desc: "Our team sets up your store",
+            },
+            {
+              icon: Palette,
+              title: "Review & Approve",
+              desc: "We show you the result",
+            },
+            {
+              icon: Package,
+              title: "Go Live!",
+              desc: "Your store is ready to sell",
+            },
           ].map((step, idx) => (
-            <div key={idx} className="text-center p-4 rounded-xl bg-card/50 border border-border/50">
+            <div
+              key={idx}
+              className="text-center p-4 rounded-xl bg-card/50 border border-border/50"
+            >
               <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center">
                 <step.icon className="w-6 h-6 text-primary" />
               </div>
-              <div className="text-xs text-muted-foreground mb-1">Step {idx + 1}</div>
+              <div className="text-xs text-muted-foreground mb-1">
+                Step {idx + 1}
+              </div>
               <h3 className="font-semibold text-sm">{step.title}</h3>
               <p className="text-xs text-muted-foreground mt-1">{step.desc}</p>
             </div>
@@ -192,8 +236,12 @@ const SetupService = () => {
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle className="font-heading">Tell Us About Your Business</CardTitle>
-                <CardDescription>We'll use this info to create your perfect store</CardDescription>
+                <CardTitle className="font-heading">
+                  Tell Us About Your Business
+                </CardTitle>
+                <CardDescription>
+                  We'll use this info to create your perfect store
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
@@ -208,7 +256,9 @@ const SetupService = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="businessDescription">What does your business sell?</Label>
+                  <Label htmlFor="businessDescription">
+                    What does your business sell?
+                  </Label>
                   <Textarea
                     id="businessDescription"
                     name="businessDescription"
@@ -221,7 +271,9 @@ const SetupService = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="instagramHandle">Instagram Handle (optional)</Label>
+                    <Label htmlFor="instagramHandle">
+                      Instagram Handle (optional)
+                    </Label>
                     <Input
                       id="instagramHandle"
                       name="instagramHandle"
@@ -257,14 +309,23 @@ const SetupService = () => {
                 {/* Package Selection */}
                 <div className="space-y-4">
                   <Label>Select Package</Label>
-                  <RadioGroup 
-                    value={formData.packageType} 
-                    onValueChange={(v) => setFormData(prev => ({ ...prev, packageType: v as 'standard' | 'premium' }))}
+                  <RadioGroup
+                    value={formData.packageType}
+                    onValueChange={v =>
+                      setFormData(prev => ({
+                        ...prev,
+                        packageType: v as "standard" | "premium",
+                      }))
+                    }
                     className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                   >
                     {Object.entries(packages).map(([key, pkg]) => (
                       <div key={key} className="relative">
-                        <RadioGroupItem value={key} id={key} className="peer sr-only" />
+                        <RadioGroupItem
+                          value={key}
+                          id={key}
+                          className="peer sr-only"
+                        />
                         <Label
                           htmlFor={key}
                           className="flex flex-col p-4 rounded-xl border-2 cursor-pointer transition-all peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 hover:border-primary/50"
@@ -275,7 +336,10 @@ const SetupService = () => {
                           </span>
                           <ul className="mt-3 space-y-1">
                             {pkg.features.slice(0, 3).map((f, i) => (
-                              <li key={i} className="text-xs text-muted-foreground flex items-center gap-1">
+                              <li
+                                key={i}
+                                className="text-xs text-muted-foreground flex items-center gap-1"
+                              >
                                 <Check className="w-3 h-3 text-green-500" />
                                 {f}
                               </li>
@@ -302,7 +366,9 @@ const SetupService = () => {
                   <p className="text-3xl font-heading font-bold text-primary mt-2">
                     ₦{selectedPackage.price.toLocaleString()}
                   </p>
-                  <p className="text-xs text-muted-foreground">One-time payment</p>
+                  <p className="text-xs text-muted-foreground">
+                    One-time payment
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -317,11 +383,15 @@ const SetupService = () => {
                   </ul>
                 </div>
 
-                <Button 
+                <Button
                   className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90"
                   size="lg"
                   onClick={handleSubmit}
-                  disabled={isLoading || !formData.businessName || !formData.contactPhone}
+                  disabled={
+                    isLoading ||
+                    !formData.businessName ||
+                    !formData.contactPhone
+                  }
                 >
                   {isLoading ? (
                     <>
@@ -334,7 +404,8 @@ const SetupService = () => {
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
-                  Secure payment via Paystack. We'll contact you within 24 hours to start.
+                  Secure payment via Paystack. We'll contact you within 24 hours
+                  to start.
                 </p>
               </CardContent>
             </Card>

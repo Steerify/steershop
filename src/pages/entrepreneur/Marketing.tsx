@@ -3,7 +3,13 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useNavigate } from "react-router-dom";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useMarketingAccess } from "@/hooks/useMarketingAccess";
@@ -40,7 +46,9 @@ const Marketing = () => {
   const [activeTab, setActiveTab] = useState("my-posters");
   const [myPosters, setMyPosters] = useState<UserPoster[]>([]);
   const [isLoadingPosters, setIsLoadingPosters] = useState(true);
-  const [shopData, setShopData] = useState<{ id: string; name: string } | null>(null);
+  const [shopData, setShopData] = useState<{ id: string; name: string } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (user) {
@@ -126,7 +134,9 @@ const Marketing = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <p className="text-sm font-medium">Auto Marketing Tool includes:</p>
+                <p className="text-sm font-medium">
+                  Auto Marketing Tool includes:
+                </p>
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li>✓ Poster templates library</li>
                   <li>✓ Lightweight canvas editor</li>
@@ -139,7 +149,11 @@ const Marketing = () => {
                   <Crown className="w-4 h-4 mr-2" />
                   Upgrade to Business
                 </Button>
-                <Button variant="outline" onClick={() => navigate("/dashboard")} className="w-full">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/dashboard")}
+                  className="w-full"
+                >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Dashboard
                 </Button>
@@ -159,12 +173,20 @@ const Marketing = () => {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/dashboard")}
+              >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg overflow-hidden">
-                  <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+                  <img
+                    src={logo}
+                    alt="SteerSolo"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <span className="font-heading font-bold text-lg sm:text-xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   Auto Marketing
@@ -174,7 +196,10 @@ const Marketing = () => {
 
             <div className="flex items-center gap-2">
               {access.isTrialActive && (
-                <Badge variant="outline" className="border-yellow-500 text-yellow-600">
+                <Badge
+                  variant="outline"
+                  className="border-yellow-500 text-yellow-600"
+                >
                   <Clock className="w-3 h-3 mr-1" />
                   {access.trialDaysRemaining}d trial
                 </Badge>
@@ -248,7 +273,7 @@ const Marketing = () => {
               </Card>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {myPosters.map((poster) => (
+                {myPosters.map(poster => (
                   <TemplateCard
                     key={poster.id}
                     template={{

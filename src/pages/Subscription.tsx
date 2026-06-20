@@ -1,10 +1,29 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Clock, CheckCircle, AlertCircle, Calendar, Crown, Zap, ArrowRight, Loader2, CreditCard, Gift, History } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Calendar,
+  Crown,
+  Zap,
+  ArrowRight,
+  Loader2,
+  CreditCard,
+  Gift,
+  History,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateSubscriptionStatus } from "@/utils/subscription";
@@ -70,17 +89,23 @@ const Subscription = () => {
         .order("display_order", { ascending: true });
 
       if (plansError) throw plansError;
-      
-      const parsedPlans = plansData?.map(plan => ({
-        ...plan,
-        features: typeof plan.features === 'string' ? JSON.parse(plan.features) : plan.features || []
-      })) || [];
-      
+
+      const parsedPlans =
+        plansData?.map(plan => ({
+          ...plan,
+          features:
+            typeof plan.features === "string"
+              ? JSON.parse(plan.features)
+              : plan.features || [],
+        })) || [];
+
       setAllPlans(parsedPlans);
 
       // Find current plan
       if (profileData?.subscription_plan_id) {
-        const plan = parsedPlans.find(p => p.id === profileData.subscription_plan_id);
+        const plan = parsedPlans.find(
+          p => p.id === profileData.subscription_plan_id,
+        );
         setCurrentPlan(plan || null);
       }
 
@@ -102,13 +127,13 @@ const Subscription = () => {
 
   const getEventIcon = (eventType: string) => {
     switch (eventType) {
-      case 'payment':
+      case "payment":
         return <CreditCard className="w-4 h-4 text-green-600" />;
-      case 'extension':
+      case "extension":
         return <Gift className="w-4 h-4 text-blue-600" />;
-      case 'activation':
+      case "activation":
         return <CheckCircle className="w-4 h-4 text-primary" />;
-      case 'plan_change':
+      case "plan_change":
         return <ArrowRight className="w-4 h-4 text-purple-600" />;
       default:
         return <History className="w-4 h-4 text-muted-foreground" />;
@@ -117,16 +142,16 @@ const Subscription = () => {
 
   const getEventTitle = (event: SubscriptionHistoryEvent) => {
     switch (event.event_type) {
-      case 'payment':
-        return `Payment - ${event.plan_name || 'Subscription'}`;
-      case 'extension':
-        return 'Subscription Extended';
-      case 'activation':
-        return `${event.plan_name || 'Subscription'} Activated`;
-      case 'plan_change':
+      case "payment":
+        return `Payment - ${event.plan_name || "Subscription"}`;
+      case "extension":
+        return "Subscription Extended";
+      case "activation":
+        return `${event.plan_name || "Subscription"} Activated`;
+      case "plan_change":
         return `Changed to ${event.plan_name}`;
       default:
-        return 'Subscription Update';
+        return "Subscription Update";
     }
   };
 
@@ -138,15 +163,22 @@ const Subscription = () => {
     );
   }
 
-  const subStatus = profile ? calculateSubscriptionStatus(profile) : { status: 'expired', daysRemaining: 0 };
-  const expiryDate = profile?.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
-  
+  const subStatus = profile
+    ? calculateSubscriptionStatus(profile)
+    : { status: "expired", daysRemaining: 0 };
+  const expiryDate = profile?.subscription_expires_at
+    ? new Date(profile.subscription_expires_at)
+    : null;
+
   // Convert kobo to Naira for display
   const formatPrice = (kobo: number) => (kobo / 100).toLocaleString();
-  
+
   // Use correct max days based on billing cycle
-  const maxDays = profile?.subscription_type === 'yearly' ? 365 : 30;
-  const progressPercentage = subStatus.daysRemaining > 0 ? Math.min((subStatus.daysRemaining / maxDays) * 100, 100) : 0;
+  const maxDays = profile?.subscription_type === "yearly" ? 365 : 30;
+  const progressPercentage =
+    subStatus.daysRemaining > 0
+      ? Math.min((subStatus.daysRemaining / maxDays) * 100, 100)
+      : 0;
 
   return (
     <PageThemeShell
@@ -156,11 +188,20 @@ const Subscription = () => {
           <div className="container mx-auto px-4 py-3 sm:py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3">
-                <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="mr-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/dashboard")}
+                  className="mr-2"
+                >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-md ring-2 ring-primary/20">
-                  <img src={logo} alt="SteerSolo" className="w-full h-full object-cover" />
+                  <img
+                    src={logo}
+                    alt="SteerSolo"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <span className="text-xl sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   Subscription
@@ -171,30 +212,43 @@ const Subscription = () => {
         </nav>
       }
     >
-
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-4xl">
         {/* Current Status Card */}
         <Card className={`mb-8 ${themeCardClass}`}>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-2xl font-heading">Your Subscription</CardTitle>
-                <CardDescription>Manage your SteerSolo subscription</CardDescription>
+                <CardTitle className="text-2xl font-heading">
+                  Your Subscription
+                </CardTitle>
+                <CardDescription>
+                  Manage your SteerSolo subscription
+                </CardDescription>
               </div>
               <Badge
                 variant="outline"
                 className={`text-lg py-2 px-4 ${
-                  subStatus.status === 'active'
-                    ? 'border-green-500 text-green-500 bg-green-500/10'
-                    : subStatus.status === 'trial'
-                    ? 'border-gold text-gold bg-gold/10'
-                    : 'border-destructive text-destructive bg-destructive/10'
+                  subStatus.status === "active"
+                    ? "border-green-500 text-green-500 bg-green-500/10"
+                    : subStatus.status === "trial"
+                      ? "border-gold text-gold bg-gold/10"
+                      : "border-destructive text-destructive bg-destructive/10"
                 }`}
               >
-                {subStatus.status === 'active' && <CheckCircle className="w-4 h-4 mr-2" />}
-                {subStatus.status === 'trial' && <Clock className="w-4 h-4 mr-2" />}
-                {subStatus.status === 'expired' && <AlertCircle className="w-4 h-4 mr-2" />}
-                {subStatus.status === 'active' ? 'Active' : subStatus.status === 'trial' ? 'Trial' : 'Expired'}
+                {subStatus.status === "active" && (
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                )}
+                {subStatus.status === "trial" && (
+                  <Clock className="w-4 h-4 mr-2" />
+                )}
+                {subStatus.status === "expired" && (
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                )}
+                {subStatus.status === "active"
+                  ? "Active"
+                  : subStatus.status === "trial"
+                    ? "Trial"
+                    : "Expired"}
               </Badge>
             </div>
           </CardHeader>
@@ -204,7 +258,10 @@ const Subscription = () => {
               <div className="flex items-center gap-3 mb-2">
                 <Crown className="w-5 h-5 text-primary" />
                 <span className="font-semibold text-lg">
-                  {currentPlan?.name || (subStatus.status === 'trial' ? 'Free Trial' : 'No Active Plan')}
+                  {currentPlan?.name ||
+                    (subStatus.status === "trial"
+                      ? "Free Trial"
+                      : "No Active Plan")}
                 </span>
               </div>
               {currentPlan && (
@@ -221,17 +278,22 @@ const Subscription = () => {
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">
-                      {subStatus.status === 'expired' ? 'Expired on' : 'Expires on'}
+                      {subStatus.status === "expired"
+                        ? "Expired on"
+                        : "Expires on"}
                     </span>
                   </div>
-                  <span className="font-medium">{format(expiryDate, "MMMM dd, yyyy")}</span>
+                  <span className="font-medium">
+                    {format(expiryDate, "MMMM dd, yyyy")}
+                  </span>
                 </div>
-                
+
                 {subStatus.daysRemaining > 0 && (
                   <>
                     <Progress value={progressPercentage} className="h-2" />
                     <p className="text-sm text-center text-muted-foreground">
-                      {subStatus.daysRemaining} day{subStatus.daysRemaining !== 1 ? 's' : ''} remaining
+                      {subStatus.daysRemaining} day
+                      {subStatus.daysRemaining !== 1 ? "s" : ""} remaining
                     </p>
                   </>
                 )}
@@ -241,7 +303,9 @@ const Subscription = () => {
             {/* Current Plan Features */}
             {currentPlan?.features && currentPlan.features.length > 0 && (
               <div className="space-y-2">
-                <p className="font-medium text-sm text-muted-foreground">Your plan includes:</p>
+                <p className="font-medium text-sm text-muted-foreground">
+                  Your plan includes:
+                </p>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {currentPlan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-center gap-2 text-sm">
@@ -255,22 +319,22 @@ const Subscription = () => {
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              {subStatus.status === 'expired' ? (
-                <Button 
+              {subStatus.status === "expired" ? (
+                <Button
                   className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90"
-                  onClick={() => navigate('/pricing')}
+                  onClick={() => navigate("/pricing")}
                 >
                   <Zap className="w-4 h-4 mr-2" />
                   Reactivate Subscription
                 </Button>
               ) : (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="flex-1"
-                  onClick={() => navigate('/pricing')}
+                  onClick={() => navigate("/pricing")}
                 >
                   <ArrowRight className="w-4 h-4 mr-2" />
-                  {currentPlan ? 'Change Plan' : 'View Plans'}
+                  {currentPlan ? "Change Plan" : "View Plans"}
                 </Button>
               )}
             </div>
@@ -284,26 +348,42 @@ const Subscription = () => {
               <History className="w-5 h-5" />
               Subscription History
             </CardTitle>
-            <CardDescription>Your payment and plan change history</CardDescription>
+            <CardDescription>
+              Your payment and plan change history
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {history.length === 0 ? (
-              <p className="text-muted-foreground text-center py-6">No subscription history yet</p>
+              <p className="text-muted-foreground text-center py-6">
+                No subscription history yet
+              </p>
             ) : (
               <div className="space-y-4">
-                {history.map((event) => (
-                  <div key={event.id} className="flex gap-4 p-4 rounded-lg border bg-muted/30">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      event.event_type === 'payment' ? 'bg-green-100' :
-                      event.event_type === 'extension' ? 'bg-blue-100' :
-                      event.event_type === 'activation' ? 'bg-primary/10' : 'bg-muted'
-                    }`}>
+                {history.map(event => (
+                  <div
+                    key={event.id}
+                    className="flex gap-4 p-4 rounded-lg border bg-muted/30"
+                  >
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        event.event_type === "payment"
+                          ? "bg-green-100"
+                          : event.event_type === "extension"
+                            ? "bg-blue-100"
+                            : event.event_type === "activation"
+                              ? "bg-primary/10"
+                              : "bg-muted"
+                      }`}
+                    >
                       {getEventIcon(event.event_type)}
                     </div>
                     <div className="flex-1">
                       <p className="font-medium">{getEventTitle(event)}</p>
                       <p className="text-sm text-muted-foreground">
-                        {format(new Date(event.created_at), "MMM dd, yyyy 'at' h:mm a")}
+                        {format(
+                          new Date(event.created_at),
+                          "MMM dd, yyyy 'at' h:mm a",
+                        )}
                       </p>
                       {event.amount && (
                         <p className="text-sm text-green-600 font-medium mt-1">
@@ -312,11 +392,17 @@ const Subscription = () => {
                       )}
                       {event.new_expiry_at && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          Valid until {format(new Date(event.new_expiry_at), "MMM dd, yyyy")}
+                          Valid until{" "}
+                          {format(
+                            new Date(event.new_expiry_at),
+                            "MMM dd, yyyy",
+                          )}
                         </p>
                       )}
                       {event.notes && (
-                        <p className="text-xs text-muted-foreground mt-1 italic">{event.notes}</p>
+                        <p className="text-xs text-muted-foreground mt-1 italic">
+                          {event.notes}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -329,36 +415,45 @@ const Subscription = () => {
         {/* Available Plans Preview */}
         <Card className={themeCardClass}>
           <CardHeader>
-            <CardTitle className="text-xl font-heading">Available Plans</CardTitle>
+            <CardTitle className="text-xl font-heading">
+              Available Plans
+            </CardTitle>
             <CardDescription>Compare plans and upgrade anytime</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {allPlans.map((plan) => (
-                <div 
-                  key={plan.id} 
+              {allPlans.map(plan => (
+                <div
+                  key={plan.id}
                   className={`p-4 rounded-lg border-2 transition-all ${
-                    currentPlan?.id === plan.id 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border hover:border-primary/50'
+                    currentPlan?.id === plan.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold">{plan.name}</h3>
                     {currentPlan?.id === plan.id && (
-                      <Badge variant="secondary" className="text-xs">Current</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        Current
+                      </Badge>
                     )}
                   </div>
                   <p className="text-2xl font-bold text-primary mb-1">
                     ₦{formatPrice(plan.price_monthly)}
-                    <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                    <span className="text-sm font-normal text-muted-foreground">
+                      /mo
+                    </span>
                   </p>
                   <p className="text-xs text-muted-foreground mb-3">
                     or ₦{formatPrice(plan.price_yearly)}/year (save 2 months)
                   </p>
                   <ul className="space-y-1">
                     {plan.features.slice(0, 3).map((feature, idx) => (
-                      <li key={idx} className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <li
+                        key={idx}
+                        className="flex items-center gap-1 text-xs text-muted-foreground"
+                      >
                         <CheckCircle className="w-3 h-3 text-green-500" />
                         {feature}
                       </li>
@@ -373,7 +468,7 @@ const Subscription = () => {
               ))}
             </div>
             <div className="mt-6 text-center">
-              <Button onClick={() => navigate('/pricing')}>
+              <Button onClick={() => navigate("/pricing")}>
                 View Full Plan Details
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>

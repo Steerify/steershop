@@ -688,6 +688,15 @@ const Shops = () => {
           content="Discover trusted Nigerian stores on SteerSolo Marketplace."
         />
         <meta property="og:url" content="https://steersolo.com/shops" />
+        <meta
+          property="og:image"
+          content="https://steersolo.com/steersolo-logo.png"
+        />
+        <meta property="og:image:type" content="image/png" />
+        <meta
+          name="twitter:image"
+          content="https://steersolo.com/steersolo-logo.png"
+        />
       </Helmet>
       <VerifiedSellerNotice />
 
@@ -779,38 +788,6 @@ const Shops = () => {
               </div>
             </div>
           </div>
-
-          {!searchQuery && (
-            <div className="flex items-center justify-center gap-2 flex-wrap">
-              <span className="text-xs text-muted-foreground mr-2">
-                Popular:
-              </span>
-              {CATEGORIES.filter(c => c.group === "main").map(cat => (
-                <button
-                  key={cat.value}
-                  onClick={() => {
-                    setSelectedCategory(cat.value);
-                    setShopsPage(1);
-                  }}
-                  className={`px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
-                    selectedCategory === cat.value
-                      ? "bg-accent text-white shadow-md"
-                      : "bg-white/90 dark:bg-gray-900/90 border border-border/50 text-primary hover:border-accent/30 hover:text-accent"
-                  }`}
-                >
-                  {cat.label}
-                  {categoryCounts &&
-                    cat.value !== "all" &&
-                    cat.value !== "beauty" &&
-                    categoryCounts[cat.value] !== undefined && (
-                      <span className="ml-1.5 opacity-60">
-                        ({categoryCounts[cat.value]})
-                      </span>
-                    )}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </section>
 
@@ -863,14 +840,14 @@ const Shops = () => {
               Trending Stores
             </h2>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden">
             {trendingShops.slice(0, 5).map(shop => (
               <Link
                 key={shop.id}
                 to={`/shop/${shop.shop_slug || shop.id}`}
-                className="flex-shrink-0 w-48 sm:w-56 bg-card border border-border/50 rounded-2xl p-4 hover:border-accent/30 hover:shadow-lg transition-all group"
+                className="flex-shrink-0 w-36 sm:w-48 bg-card border border-border/50 rounded-2xl p-3 hover:border-accent/30 hover:shadow-lg transition-all group"
               >
-                <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted mb-3">
+                <div className="w-10 h-10 rounded-xl overflow-hidden bg-muted mb-2">
                   {shop.logo_url ? (
                     <img
                       src={shop.logo_url}
@@ -879,11 +856,11 @@ const Shops = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-primary/10">
-                      <Store className="w-6 h-6 text-primary" />
+                      <Store className="w-5 h-5 text-primary" />
                     </div>
                   )}
                 </div>
-                <p className="text-sm font-semibold truncate group-hover:text-accent transition-colors mb-1">
+                <p className="text-sm font-semibold truncate group-hover:text-accent transition-colors mb-0.5">
                   {shop.shop_name || shop.name}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">

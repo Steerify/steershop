@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -12,7 +18,21 @@ import { revenueService } from "@/services/revenue.service";
 import deliveryService from "@/services/delivery.service";
 import { DeliveryTracking } from "@/components/delivery/DeliveryTracking";
 import { UnifiedDeliveryForm } from "@/components/delivery/UnifiedDeliveryForm";
-import { ArrowLeft, Loader2, ShoppingCart, Package, Clock, CheckCircle, XCircle, MessageCircle, ThumbsUp, Truck, Banknote, CalendarCheck, FileText } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  ShoppingCart,
+  Package,
+  Clock,
+  CheckCircle,
+  XCircle,
+  MessageCircle,
+  ThumbsUp,
+  Truck,
+  Banknote,
+  CalendarCheck,
+  FileText,
+} from "lucide-react";
 import { format } from "date-fns";
 import { PageWrapper } from "@/components/PageWrapper";
 import OrderApprovalDialog from "@/components/OrderApprovalDialog";
@@ -38,10 +58,13 @@ const Orders = () => {
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<any>(null);
   const [deliveryDialogOrder, setDeliveryDialogOrder] = useState<any>(null);
-  const [deliveryStatuses, setDeliveryStatuses] = useState<Record<string, string | null>>({});
+  const [deliveryStatuses, setDeliveryStatuses] = useState<
+    Record<string, string | null>
+  >({});
 
   // Tour state
-  const { hasSeenTour, isRunning, startTour, endTour, resetTour } = useTour('orders');
+  const { hasSeenTour, isRunning, startTour, endTour, resetTour } =
+    useTour("orders");
 
   const handleTourCallback = (data: CallBackProps) => {
     const { status } = data;
@@ -61,40 +84,45 @@ const Orders = () => {
     }
 
     try {
-      const cleaned = order.customer_phone.replace(/[^\d+]/g, '');
-      const phoneNumber = cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
+      const cleaned = order.customer_phone.replace(/[^\d+]/g, "");
+      const phoneNumber = cleaned.startsWith("+") ? cleaned : `+${cleaned}`;
 
-      const orderSummary = order.order_items?.map((item: any) =>
-        `• ${item.products?.name || 'Unknown Product'} x ${item.quantity} - ₦${(item.quantity * parseFloat(item.price || 0)).toLocaleString()}`
-      ).join('%0A') || 'No items';
+      const orderSummary =
+        order.order_items
+          ?.map(
+            (item: any) =>
+              `• ${item.products?.name || "Unknown Product"} x ${item.quantity} - ₦${(item.quantity * parseFloat(item.price || 0)).toLocaleString()}`,
+          )
+          .join("%0A") || "No items";
 
-      const message = `🛒 *ORDER UPDATE* 🛒%0A%0AHello ${order.customer_name || 'Valued Customer'},%0A%0AThis is an update regarding your order from ${shop?.shop_name || 'our store'}.%0A%0A` +
+      const message =
+        `🛒 *ORDER UPDATE* 🛒%0A%0AHello ${order.customer_name || "Valued Customer"},%0A%0AThis is an update regarding your order from ${shop?.shop_name || "our store"}.%0A%0A` +
         `*📦 ORDER DETAILS:*%0A` +
         `${orderSummary}%0A%0A` +
         `*💰 TOTAL AMOUNT:*%0A₦${parseFloat(order.total_amount || 0).toLocaleString()}%0A%0A` +
-        `*📋 CURRENT STATUS:*%0A${order.status?.replace(/_/g, ' ') || 'Processing'}%0A%0A` +
-        `Order ID: ${order.id?.slice(0, 8) || 'N/A'}%0A%0A` +
+        `*📋 CURRENT STATUS:*%0A${order.status?.replace(/_/g, " ") || "Processing"}%0A%0A` +
+        `Order ID: ${order.id?.slice(0, 8) || "N/A"}%0A%0A` +
         `Please let me know if you have any questions about your order!`;
 
-      const deepLink = `whatsapp://send?phone=${phoneNumber.replace('+', '')}&text=${message}`;
+      const deepLink = `whatsapp://send?phone=${phoneNumber.replace("+", "")}&text=${message}`;
       const webLink = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${message}`;
 
       const fallbackTimer = setTimeout(() => {
-        window.open(webLink, '_blank', 'noopener,noreferrer');
+        window.open(webLink, "_blank", "noopener,noreferrer");
       }, 1000);
 
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = deepLink;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
 
-      link.addEventListener('click', () => {
+      link.addEventListener("click", () => {
         clearTimeout(fallbackTimer);
       });
 
-      window.addEventListener('blur', function onBlur() {
+      window.addEventListener("blur", function onBlur() {
         clearTimeout(fallbackTimer);
-        window.removeEventListener('blur', onBlur);
+        window.removeEventListener("blur", onBlur);
       });
 
       link.click();
@@ -105,7 +133,7 @@ const Orders = () => {
 
       return true;
     } catch (error) {
-      console.error('Error opening WhatsApp:', error);
+      console.error("Error opening WhatsApp:", error);
       toast({
         title: "Error",
         description: "Failed to open WhatsApp",
@@ -117,29 +145,29 @@ const Orders = () => {
 
   const openSimpleWhatsApp = (phoneNumber: string, message: string) => {
     try {
-      const cleaned = phoneNumber.replace(/[^\d+]/g, '');
-      const formattedNumber = cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
+      const cleaned = phoneNumber.replace(/[^\d+]/g, "");
+      const formattedNumber = cleaned.startsWith("+") ? cleaned : `+${cleaned}`;
 
       const encodedMessage = encodeURIComponent(message);
-      const deepLink = `whatsapp://send?phone=${formattedNumber.replace('+', '')}&text=${encodedMessage}`;
+      const deepLink = `whatsapp://send?phone=${formattedNumber.replace("+", "")}&text=${encodedMessage}`;
       const webLink = `https://api.whatsapp.com/send?phone=${formattedNumber}&text=${encodedMessage}`;
 
       const fallbackTimer = setTimeout(() => {
-        window.open(webLink, '_blank', 'noopener,noreferrer');
+        window.open(webLink, "_blank", "noopener,noreferrer");
       }, 1000);
 
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = deepLink;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
 
-      link.addEventListener('click', () => {
+      link.addEventListener("click", () => {
         clearTimeout(fallbackTimer);
       });
 
-      window.addEventListener('blur', function onBlur() {
+      window.addEventListener("blur", function onBlur() {
         clearTimeout(fallbackTimer);
-        window.removeEventListener('blur', onBlur);
+        window.removeEventListener("blur", onBlur);
       });
 
       link.click();
@@ -150,7 +178,7 @@ const Orders = () => {
 
       return true;
     } catch (error) {
-      console.error('Error opening WhatsApp:', error);
+      console.error("Error opening WhatsApp:", error);
       return false;
     }
   };
@@ -169,14 +197,14 @@ const Orders = () => {
     try {
       if (!user) return; // Ensure user is available from context
 
-
-
       // Use shopService to fetch shop
       let shopData = null;
       try {
         const response = await shopService.getShopByOwner(user.id);
         // Handle potential array or single object response flexibly
-        shopData = Array.isArray(response.data) ? response.data[0] : response.data;
+        shopData = Array.isArray(response.data)
+          ? response.data[0]
+          : response.data;
       } catch (err) {
         // If shop not found or error
         console.error("Shop fetch error", err);
@@ -194,7 +222,7 @@ const Orders = () => {
       setShop(shopData);
       await loadOrders(shopData.id);
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error("Error loading data:", error);
       toast({
         title: "Error loading orders",
         description: "Please try again later",
@@ -210,22 +238,24 @@ const Orders = () => {
       const response: any = await orderService.getOrders({ shopId });
       const ordersData = response.data || [];
       setOrders(ordersData);
-      
+
       // Check delivery status for each order
       const statuses: Record<string, string | null> = {};
       await Promise.all(
         ordersData.map(async (order: any) => {
           try {
-            const delivery = await deliveryService.getDeliveryByOrderId(order.id);
+            const delivery = await deliveryService.getDeliveryByOrderId(
+              order.id,
+            );
             statuses[order.id] = delivery ? delivery.status : null;
           } catch {
             statuses[order.id] = null;
           }
-        })
+        }),
       );
       setDeliveryStatuses(statuses);
     } catch (error: any) {
-      console.error('Error in loadOrders:', error);
+      console.error("Error in loadOrders:", error);
       toast({
         title: "Failed to load orders",
         description: error.message || "Please check your network connection",
@@ -250,10 +280,10 @@ const Orders = () => {
       const order = orders.find(o => o.id === orderId);
       if (order?.customer_email) {
         try {
-          await supabase.functions.invoke('order-notifications', {
+          await supabase.functions.invoke("order-notifications", {
             body: {
               orderId,
-              eventType: 'status_update',
+              eventType: "status_update",
               shopName: shop?.shop_name,
               customerEmail: order.customer_email,
               customerName: order.customer_name,
@@ -262,23 +292,23 @@ const Orders = () => {
             },
           });
         } catch (e) {
-          console.error('Notification failed:', e);
+          console.error("Notification failed:", e);
           toast({
             title: "Status updated, notification not sent",
-            description: "We couldn't email the customer — they'll still see the new status.",
+            description:
+              "We couldn't email the customer — they'll still see the new status.",
           });
         }
       }
 
       toast({
         title: "Success!",
-        description: `Order status updated to ${status.replace(/_/g, ' ')}`,
+        description: `Order status updated to ${status.replace(/_/g, " ")}`,
       });
 
       await loadOrders(shop.id);
-
     } catch (error: any) {
-      console.error('Update order error:', error);
+      console.error("Update order error:", error);
       toast({
         title: "Update Failed",
         description: error.message || "Failed to update order status",
@@ -305,10 +335,10 @@ const Orders = () => {
         shop_id: shop.id,
         order_id: order.id,
         amount: parseFloat(order.total_amount),
-        currency: 'NGN',
+        currency: "NGN",
         payment_reference: `MANUAL_${order.id}_${Date.now()}`,
-        payment_method: 'manual',
-        transaction_type: 'order_payment',
+        payment_method: "manual",
+        transaction_type: "order_payment",
       });
 
       toast({
@@ -318,7 +348,7 @@ const Orders = () => {
 
       await loadOrders(shop.id);
     } catch (error: any) {
-      console.error('Mark as paid error:', error);
+      console.error("Mark as paid error:", error);
       toast({
         title: "Failed",
         description: error.message || "Could not mark order as paid",
@@ -398,7 +428,11 @@ const Orders = () => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
         <div className="animate-pulse flex flex-col items-center gap-4">
           <div className="w-16 h-16 rounded-xl overflow-hidden">
-            <img src={logo} alt="Loading" className="w-full h-full object-cover" />
+            <img
+              src={logo}
+              alt="Loading"
+              className="w-full h-full object-cover"
+            />
           </div>
           <p className="text-muted-foreground">Loading orders...</p>
         </div>
@@ -410,12 +444,20 @@ const Orders = () => {
     <PageWrapper patternVariant="dots" patternOpacity={0.5}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-28 md:pb-10">
         <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="hover:bg-primary/10 min-h-[44px] px-2 sm:px-4 self-start">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/dashboard")}
+            className="hover:bg-primary/10 min-h-[44px] px-2 sm:px-4 self-start"
+          >
             <ArrowLeft className="w-4 h-4 sm:mr-2" />
             <span className="hidden sm:inline">Back to Dashboard</span>
           </Button>
           <div className="flex items-center gap-2 sm:gap-3">
-            <Button variant="outline" onClick={() => navigate("/bookings")} className="border-purple-500/30 text-purple-600 hover:bg-purple-500/10 min-h-[44px] text-xs sm:text-sm">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/bookings")}
+              className="border-purple-500/30 text-purple-600 hover:bg-purple-500/10 min-h-[44px] text-xs sm:text-sm"
+            >
               <CalendarCheck className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">View Bookings</span>
             </Button>
@@ -431,7 +473,9 @@ const Orders = () => {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold mb-1 sm:mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Orders
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground">Track and manage customer orders</p>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Track and manage customer orders
+          </p>
         </div>
 
         {orders.length === 0 ? (
@@ -440,29 +484,54 @@ const Orders = () => {
               <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center">
                 <ShoppingCart className="w-10 h-10 text-primary" />
               </div>
-              <h3 className="text-xl font-heading font-semibold mb-2">No orders yet</h3>
-              <p className="text-muted-foreground">Orders will appear here when customers make purchases</p>
+              <h3 className="text-xl font-heading font-semibold mb-2">
+                No orders yet
+              </h3>
+              <p className="text-muted-foreground">
+                Orders will appear here when customers make purchases
+              </p>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-4">
             {orders.map((order, index) => (
-              <Card key={order.id} className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all group" data-tour={index === 0 ? "order-card" : undefined}>
+              <Card
+                key={order.id}
+                className="card-spotify hover:shadow-lg hover:shadow-primary/5 transition-all group"
+                data-tour={index === 0 ? "order-card" : undefined}
+              >
                 <CardHeader className="border-b border-border/50">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <CardTitle className="flex flex-wrap items-center gap-2 mb-2 font-heading text-base sm:text-lg">
-                        <span className="truncate">Order #{order.id?.slice(0, 8) || 'N/A'}</span>
-                        <Badge variant="outline" className={getStatusColor(order.status)} data-tour={index === 0 ? "order-status" : undefined}>
+                        <span className="truncate">
+                          Order #{order.id?.slice(0, 8) || "N/A"}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={getStatusColor(order.status)}
+                          data-tour={index === 0 ? "order-status" : undefined}
+                        >
                           {getStatusIcon(order.status)}
-                          <span className="ml-1 sm:ml-2 capitalize text-xs sm:text-sm">{order.status?.replace(/_/g, ' ') || 'unknown'}</span>
+                          <span className="ml-1 sm:ml-2 capitalize text-xs sm:text-sm">
+                            {order.status?.replace(/_/g, " ") || "unknown"}
+                          </span>
                         </Badge>
                       </CardTitle>
                       <CardDescription className="text-xs sm:text-sm">
-                        {order.profiles?.full_name || order.customer_name || 'Unknown Customer'} • {order.profiles?.email || order.customer_email || 'No email'}
+                        {order.profiles?.full_name ||
+                          order.customer_name ||
+                          "Unknown Customer"}{" "}
+                        •{" "}
+                        {order.profiles?.email ||
+                          order.customer_email ||
+                          "No email"}
                       </CardDescription>
                       {order.payment_status === "on_delivery" && (
-                        <Badge variant="secondary" className="mt-1 bg-gold/10 text-gold border-gold/20 text-xs">
+                        <Badge
+                          variant="secondary"
+                          className="mt-1 bg-gold/10 text-gold border-gold/20 text-xs"
+                        >
                           Pay on Delivery
                         </Badge>
                       )}
@@ -472,11 +541,17 @@ const Orders = () => {
                         ₦{parseFloat(order.total_amount || 0).toLocaleString()}
                       </p>
                       <p className="text-xs sm:text-sm text-muted-foreground">
-                        {order.created_at ? format(new Date(order.created_at), "MMM dd, yyyy • h:mm a") : 'Date unavailable'}
+                        {order.created_at
+                          ? format(
+                              new Date(order.created_at),
+                              "MMM dd, yyyy • h:mm a",
+                            )
+                          : "Date unavailable"}
                       </p>
                       {order.paid_at && (
                         <p className="text-xs text-green-600 dark:text-green-400">
-                          Paid: {format(new Date(order.paid_at), "MMM dd • h:mm a")}
+                          Paid:{" "}
+                          {format(new Date(order.paid_at), "MMM dd • h:mm a")}
                         </p>
                       )}
                     </div>
@@ -486,7 +561,10 @@ const Orders = () => {
                   <div className="space-y-4">
                     <div className="border border-border/50 rounded-lg divide-y divide-border/50">
                       {order.order_items?.map((item: any) => (
-                         <div key={item.id} className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/30 transition-colors">
+                        <div
+                          key={item.id}
+                          className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/30 transition-colors"
+                        >
                           {item.products?.image_url && (
                             <img
                               src={item.products.image_url}
@@ -495,13 +573,19 @@ const Orders = () => {
                             />
                           )}
                           <div className="flex-1">
-                            <p className="font-semibold">{item.products?.name || 'Unknown Product'}</p>
+                            <p className="font-semibold">
+                              {item.products?.name || "Unknown Product"}
+                            </p>
                             <p className="text-sm text-muted-foreground">
-                              Qty: {item.quantity} × ₦{parseFloat(item.price || 0).toLocaleString()}
+                              Qty: {item.quantity} × ₦
+                              {parseFloat(item.price || 0).toLocaleString()}
                             </p>
                           </div>
                           <p className="font-semibold text-primary">
-                            ₦{(item.quantity * parseFloat(item.price || 0)).toLocaleString()}
+                            ₦
+                            {(
+                              item.quantity * parseFloat(item.price || 0)
+                            ).toLocaleString()}
                           </p>
                         </div>
                       ))}
@@ -509,10 +593,15 @@ const Orders = () => {
 
                     {/* Delivery Section */}
                     <div className="border-t border-border/50 pt-4">
-                      {deliveryStatuses[order.id] !== undefined && deliveryStatuses[order.id] !== null ? (
-                        <DeliveryTracking orderId={order.id} isShopOwner={true} />
+                      {deliveryStatuses[order.id] !== undefined &&
+                      deliveryStatuses[order.id] !== null ? (
+                        <DeliveryTracking
+                          orderId={order.id}
+                          isShopOwner={true}
+                        />
                       ) : (
-                        order.status !== "cancelled" && order.status !== "awaiting_approval" && (
+                        order.status !== "cancelled" &&
+                        order.status !== "awaiting_approval" && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -527,60 +616,123 @@ const Orders = () => {
                     </div>
 
                     {/* Order Actions */}
-                    <div className="flex flex-wrap gap-2" data-tour={index === 0 ? "order-actions" : undefined}>
+                    <div
+                      className="flex flex-wrap gap-2"
+                      data-tour={index === 0 ? "order-actions" : undefined}
+                    >
                       {order.status === "awaiting_approval" && (
-                        <Button size="sm" onClick={() => handleReviewOrder(order)} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                        <Button
+                          size="sm"
+                          onClick={() => handleReviewOrder(order)}
+                          className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                        >
                           <ThumbsUp className="w-4 h-4 sm:mr-2" />
                           <span className="hidden sm:inline">Review Order</span>
                         </Button>
                       )}
 
                       {order.status === "confirmed" && (
-                        <Button size="sm" onClick={() => updateOrderStatus(order.id, "processing")} disabled={updatingOrderId === order.id}>
-                          {updatingOrderId === order.id ? <Loader2 className="w-4 h-4 animate-spin sm:mr-2" /> : <Package className="w-4 h-4 sm:mr-2" />}
-                          <span className="hidden sm:inline">Start Processing</span>
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            updateOrderStatus(order.id, "processing")
+                          }
+                          disabled={updatingOrderId === order.id}
+                        >
+                          {updatingOrderId === order.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin sm:mr-2" />
+                          ) : (
+                            <Package className="w-4 h-4 sm:mr-2" />
+                          )}
+                          <span className="hidden sm:inline">
+                            Start Processing
+                          </span>
                         </Button>
                       )}
 
                       {order.status === "processing" && (
-                        <Button size="sm" onClick={() => updateOrderStatus(order.id, "out_for_delivery")} disabled={updatingOrderId === order.id}>
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            updateOrderStatus(order.id, "out_for_delivery")
+                          }
+                          disabled={updatingOrderId === order.id}
+                        >
                           <Truck className="w-4 h-4 sm:mr-2" />
-                          <span className="hidden sm:inline">Out for Delivery</span>
+                          <span className="hidden sm:inline">
+                            Out for Delivery
+                          </span>
                         </Button>
                       )}
 
                       {order.status === "out_for_delivery" && (
-                        <Button size="sm" onClick={() => updateOrderStatus(order.id, "delivered")} disabled={updatingOrderId === order.id} className="bg-green-500 hover:bg-green-600">
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            updateOrderStatus(order.id, "delivered")
+                          }
+                          disabled={updatingOrderId === order.id}
+                          className="bg-green-500 hover:bg-green-600"
+                        >
                           <CheckCircle className="w-4 h-4 sm:mr-2" />
-                          <span className="hidden sm:inline">Mark Delivered</span>
+                          <span className="hidden sm:inline">
+                            Mark Delivered
+                          </span>
                         </Button>
                       )}
 
-                      {order.payment_status !== "paid" && order.status !== "cancelled" && (
-                        <Button size="sm" variant="outline" onClick={() => markAsPaid(order)} disabled={updatingOrderId === order.id}
-                          className="border-green-500/30 text-green-600 hover:bg-green-500/10" data-tour={index === 0 ? "mark-paid" : undefined}>
-                          <Banknote className="w-4 h-4 sm:mr-2" />
-                          <span className="hidden sm:inline">Mark as Paid</span>
-                        </Button>
-                      )}
+                      {order.payment_status !== "paid" &&
+                        order.status !== "cancelled" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => markAsPaid(order)}
+                            disabled={updatingOrderId === order.id}
+                            className="border-green-500/30 text-green-600 hover:bg-green-500/10"
+                            data-tour={index === 0 ? "mark-paid" : undefined}
+                          >
+                            <Banknote className="w-4 h-4 sm:mr-2" />
+                            <span className="hidden sm:inline">
+                              Mark as Paid
+                            </span>
+                          </Button>
+                        )}
 
-                      {order.status !== "cancelled" && order.status !== "delivered" && (
-                        <Button size="sm" variant="outline" onClick={() => updateOrderStatus(order.id, "cancelled")} disabled={updatingOrderId === order.id}
-                          className="border-destructive/30 text-destructive hover:bg-destructive/10">
-                          <XCircle className="w-4 h-4 sm:mr-2" />
-                          <span className="hidden sm:inline">Cancel</span>
-                        </Button>
-                      )}
+                      {order.status !== "cancelled" &&
+                        order.status !== "delivered" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              updateOrderStatus(order.id, "cancelled")
+                            }
+                            disabled={updatingOrderId === order.id}
+                            className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                          >
+                            <XCircle className="w-4 h-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Cancel</span>
+                          </Button>
+                        )}
 
                       {order.customer_phone && (
-                        <Button size="sm" variant="outline" onClick={() => openWhatsAppWithOrder(order)}
-                          className="border-green-500/30 text-green-600 hover:bg-green-500/10" data-tour={index === 0 ? "whatsapp-btn" : undefined}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openWhatsAppWithOrder(order)}
+                          className="border-green-500/30 text-green-600 hover:bg-green-500/10"
+                          data-tour={index === 0 ? "whatsapp-btn" : undefined}
+                        >
                           <MessageCircle className="w-4 h-4 sm:mr-2" />
                           <span className="hidden sm:inline">WhatsApp</span>
                         </Button>
                       )}
 
-                      <Button size="sm" variant="outline" onClick={() => setInvoiceOrder(order)} className="border-primary/30 text-primary hover:bg-primary/10">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setInvoiceOrder(order)}
+                        className="border-primary/30 text-primary hover:bg-primary/10"
+                      >
                         <FileText className="w-4 h-4 sm:mr-2" />
                         <span className="hidden sm:inline">Invoice</span>
                       </Button>
@@ -617,15 +769,15 @@ const Orders = () => {
       {deliveryDialogOrder && shop && (
         <UnifiedDeliveryForm
           open={!!deliveryDialogOrder}
-          onOpenChange={(open) => !open && setDeliveryDialogOrder(null)}
+          onOpenChange={open => !open && setDeliveryDialogOrder(null)}
           orderId={deliveryDialogOrder.id}
           shopId={shop.id}
           customerAddress={{
-            name: deliveryDialogOrder.customer_name || 'Customer',
-            phone: deliveryDialogOrder.customer_phone || '',
-            address: deliveryDialogOrder.delivery_address || '',
-            city: deliveryDialogOrder.delivery_city || '',
-            state: deliveryDialogOrder.delivery_state || '',
+            name: deliveryDialogOrder.customer_name || "Customer",
+            phone: deliveryDialogOrder.customer_phone || "",
+            address: deliveryDialogOrder.delivery_address || "",
+            city: deliveryDialogOrder.delivery_city || "",
+            state: deliveryDialogOrder.delivery_state || "",
           }}
           onSuccess={() => {
             setDeliveryDialogOrder(null);
@@ -646,8 +798,8 @@ const Orders = () => {
         styles={{
           options: {
             zIndex: 10000,
-            arrowColor: 'hsl(var(--card))',
-          }
+            arrowColor: "hsl(var(--card))",
+          },
         }}
       />
       <MobileBottomNav />

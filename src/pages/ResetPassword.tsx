@@ -3,7 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Lock, CheckCircle } from "lucide-react";
 import { z } from "zod";
@@ -12,13 +18,15 @@ import { supabase } from "@/integrations/supabase/client";
 import steersolologo from "@/assets/steersolo-logo.png";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 
-const passwordSchema = z.object({
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const passwordSchema = z
+  .object({
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -34,85 +42,89 @@ const ResetPassword = () => {
     const handleTokenExchange = async () => {
       try {
         // First, check for tokens in URL hash (Supabase recovery flow)
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        const type = hashParams.get('type');
-        
+        const hashParams = new URLSearchParams(
+          window.location.hash.substring(1),
+        );
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+        const type = hashParams.get("type");
+
         // Handle recovery type from email link
-        if (accessToken && refreshToken && type === 'recovery') {
+        if (accessToken && refreshToken && type === "recovery") {
           const { error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
-          
+
           if (!error) {
             // Clear the hash from URL for cleaner appearance
-            window.history.replaceState(null, '', window.location.pathname);
+            window.history.replaceState(null, "", window.location.pathname);
             setHasSession(true);
             setIsChecking(false);
             return;
           }
-          console.error('Session set error:', error);
+          console.error("Session set error:", error);
         }
-        
+
         // Also check URL query params (alternative flow)
         const urlParams = new URLSearchParams(window.location.search);
-        const tokenHash = urlParams.get('token_hash');
-        const typeParam = urlParams.get('type');
-        
-        if (tokenHash && typeParam === 'recovery') {
+        const tokenHash = urlParams.get("token_hash");
+        const typeParam = urlParams.get("type");
+
+        if (tokenHash && typeParam === "recovery") {
           // Verify the OTP token
           const { error } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
-            type: 'recovery',
+            type: "recovery",
           });
-          
+
           if (!error) {
             setHasSession(true);
             setIsChecking(false);
             return;
           }
-          console.error('OTP verify error:', error);
+          console.error("OTP verify error:", error);
         }
-        
+
         // Fallback: check existing session
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (session) {
           setHasSession(true);
           setIsChecking(false);
           return;
         }
-        
+
         // No valid session found
         toast({
           title: "Invalid or expired link",
           description: "Please request a new password reset link",
-          variant: "destructive"
+          variant: "destructive",
         });
         navigate("/auth/login");
       } catch (error) {
-        console.error('Token exchange error:', error);
+        console.error("Token exchange error:", error);
         toast({
           title: "Error",
           description: "Something went wrong. Please try again.",
-          variant: "destructive"
+          variant: "destructive",
         });
         navigate("/auth/login");
       }
     };
-    
+
     handleTokenExchange();
   }, [navigate, toast]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     setIsLoading(true);
 
     try {
       passwordSchema.parse({ password, confirmPassword });
-      
+
       const response = await authService.resetPassword(password);
 
       if (response.success) {
@@ -135,13 +147,13 @@ const ResetPassword = () => {
         toast({
           title: "Validation Error",
           description: error.errors[0].message,
-          variant: "destructive"
+          variant: "destructive",
         });
       } else {
         toast({
           title: "Error",
           description: error.message || "Failed to reset password",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     } finally {
@@ -152,7 +164,11 @@ const ResetPassword = () => {
   if (isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 relative overflow-hidden">
-        <AdirePattern variant="geometric" className="text-primary" opacity={0.05} />
+        <AdirePattern
+          variant="geometric"
+          className="text-primary"
+          opacity={0.05}
+        />
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-accent/20 to-transparent rounded-full blur-3xl pointer-events-none" />
         <div className="text-center space-y-4 relative z-10">
@@ -169,16 +185,20 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 flex items-center justify-center p-4 relative overflow-hidden">
-      <AdirePattern variant="geometric" className="text-primary" opacity={0.05} />
+      <AdirePattern
+        variant="geometric"
+        className="text-primary"
+        opacity={0.05}
+      />
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-accent/20 to-transparent rounded-full blur-3xl pointer-events-none" />
       <Card className="w-full max-w-md shadow-xl border-2 relative z-10">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg">
-              <img 
-                src={steersolologo} 
-                alt="SteerSolo" 
+              <img
+                src={steersolologo}
+                alt="SteerSolo"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -186,7 +206,9 @@ const ResetPassword = () => {
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
             Reset Password
           </CardTitle>
-          <CardDescription>Create a new secure password for your account</CardDescription>
+          <CardDescription>
+            Create a new secure password for your account
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {isSuccess ? (
@@ -196,7 +218,9 @@ const ResetPassword = () => {
                   <CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400" />
                 </div>
               </div>
-              <h3 className="text-lg font-semibold text-foreground">Password Reset Successful!</h3>
+              <h3 className="text-lg font-semibold text-foreground">
+                Password Reset Successful!
+              </h3>
               <p className="text-sm text-muted-foreground">
                 Redirecting you to login...
               </p>
@@ -214,14 +238,17 @@ const ResetPassword = () => {
                     type="password"
                     placeholder="At least 6 characters"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={e => setPassword(e.target.value)}
                     className="pl-10"
                     required
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-password" className="text-sm font-medium">
+                <Label
+                  htmlFor="confirm-password"
+                  className="text-sm font-medium"
+                >
                   Confirm Password
                 </Label>
                 <div className="relative">
@@ -231,15 +258,15 @@ const ResetPassword = () => {
                     type="password"
                     placeholder="Confirm your password"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={e => setConfirmPassword(e.target.value)}
                     className="pl-10"
                     required
                   />
                 </div>
               </div>
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-accent to-primary hover:opacity-90 text-white py-5" 
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-accent to-primary hover:opacity-90 text-white py-5"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -254,7 +281,7 @@ const ResetPassword = () => {
                   </>
                 )}
               </Button>
-              
+
               <p className="text-xs text-center text-muted-foreground pt-2">
                 Make sure to use a strong password with at least 6 characters
               </p>
