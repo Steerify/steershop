@@ -1001,7 +1001,7 @@ const ShopStorefront = () => {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-9 rounded-xl border-amber-500/40 text-amber-800 dark:text-amber-400 hover:bg-amber-500/10 transition-colors"
+                  className="h-12 rounded-xl border-amber-500/40 text-amber-800 dark:text-amber-400 hover:bg-amber-500/10 transition-colors"
                 >
                   Complete Setup
                 </Button>
@@ -1116,7 +1116,7 @@ const ShopStorefront = () => {
                                   shop.shop_name,
                                 )
                               }
-                              className="flex-1 rounded-full h-12 px-6 bg-accent text-primary hover:bg-accent/90 transition-all font-semibold gap-2"
+                              className="flex-1 rounded-xl h-12 px-6 bg-accent text-primary hover:bg-accent/90 transition-all font-semibold gap-2"
                             >
                               <MessageCircle className="w-5 h-5" />
                               <span>Chat on WhatsApp</span>
@@ -1125,7 +1125,7 @@ const ShopStorefront = () => {
                           <StoreFollowButton shopId={shop.id} size="md" />
                           <Button
                             onClick={() => setIsCheckoutOpen(true)}
-                            className={`flex-1 rounded-full h-12 px-6 font-semibold transition-all gap-2 hover:opacity-90 ${
+                            className={`flex-1 rounded-xl h-12 px-6 font-semibold transition-all gap-2 hover:opacity-90 ${
                               cartGlow
                                 ? "bg-accent text-primary shadow-lg shadow-accent/20 animate-pulse"
                                 : "bg-foreground text-background shadow-md"
@@ -1239,7 +1239,7 @@ const ShopStorefront = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="rounded-full text-xs h-9 px-4"
+                        className="rounded-xl text-xs h-12 px-4"
                         onClick={() => setCategoryFilter("all")}
                       >
                         View all
@@ -1307,7 +1307,7 @@ const ShopStorefront = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-xl h-9 px-3 text-muted-foreground hover:text-foreground gap-1.5"
+                    className="rounded-xl h-12 px-3 text-muted-foreground hover:text-foreground gap-1.5"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     <span className="hidden sm:inline text-sm">Shops</span>
@@ -1341,7 +1341,7 @@ const ShopStorefront = () => {
                     <button
                       type="button"
                       onClick={toggleSearch}
-                      className="flex items-center justify-center w-10 h-10 rounded-xl bg-card border border-border hover:border-accent/50 hover:bg-accent/5 transition-all duration-200"
+                      className="flex items-center justify-center w-12 h-12 rounded-xl bg-card border border-border hover:border-accent/50 hover:bg-accent/5 transition-all duration-200"
                     >
                       <Search className="w-4 h-4 text-muted-foreground" />
                     </button>
@@ -1357,7 +1357,7 @@ const ShopStorefront = () => {
                         placeholder="Search products…"
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
-                        className="h-10 rounded-xl bg-card border-border focus:border-accent pr-8 pl-3 text-sm"
+                        className="h-12 rounded-xl bg-card border-border focus:border-accent pr-8 pl-3 text-sm"
                         onBlur={() => {
                           if (searchQuery === "" && isSearchExpanded)
                             setTimeout(() => setIsSearchExpanded(false), 150);
@@ -1367,9 +1367,9 @@ const ShopStorefront = () => {
                         <button
                           type="button"
                           onClick={clearSearch}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
                         >
-                          <X className="w-3 h-3 text-muted-foreground" />
+                          <X className="w-4 h-4 text-muted-foreground" />
                         </button>
                       )}
                     </div>
@@ -1409,7 +1409,7 @@ const ShopStorefront = () => {
                     key={key}
                     onClick={() => setTypeFilter(key as any)}
                     className={`
-                    flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0
+                    flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0 h-12
                     ${
                       typeFilter === key
                         ? "bg-foreground text-background shadow-sm"
@@ -1436,7 +1436,7 @@ const ShopStorefront = () => {
                 </div>
                 <button
                   onClick={clearSearch}
-                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-destructive transition-colors font-medium"
+                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-destructive transition-colors font-medium h-12 px-3 rounded-xl"
                 >
                   <X className="w-3.5 h-3.5" /> Clear
                 </button>
@@ -1463,7 +1463,7 @@ const ShopStorefront = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="rounded-full px-4"
+                  className="rounded-xl px-4 h-12"
                   onClick={() => {
                     setCategoryFilter("all");
                     setTypeFilter("all");
@@ -1497,7 +1497,7 @@ const ShopStorefront = () => {
                   <Button
                     variant="outline"
                     onClick={clearSearch}
-                    className="rounded-xl gap-2 px-6"
+                    className="rounded-xl gap-2 px-6 h-12"
                   >
                     <X className="w-4 h-4" /> Clear Search
                   </Button>
@@ -1548,7 +1548,7 @@ const ShopStorefront = () => {
                           productId={product.id}
                           size="sm"
                           showLabel={false}
-                          className="h-9 w-9 rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-sm border border-black/5 dark:border-white/5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-foreground hover:scale-110"
+                          className="h-12 w-12 rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-sm border border-black/5 dark:border-white/5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-foreground hover:scale-110"
                         />
                       </div>
 
@@ -1584,7 +1584,7 @@ const ShopStorefront = () => {
                         {product.type === "service" &&
                         product.booking_required ? (
                           <Button
-                            className="w-full rounded-xl bg-foreground text-background hover:bg-foreground/90 font-semibold shadow-xl"
+                            className="w-full rounded-xl bg-foreground text-background hover:bg-foreground/90 font-semibold shadow-xl h-12"
                             onClick={e => {
                               e.preventDefault();
                               handleBookService(product);
@@ -1598,7 +1598,7 @@ const ShopStorefront = () => {
                           </Button>
                         ) : (
                           <Button
-                            className="w-full rounded-xl bg-foreground text-background hover:bg-foreground/90 font-semibold shadow-xl"
+                            className="w-full rounded-xl bg-foreground text-background hover:bg-foreground/90 font-semibold shadow-xl h-12"
                             onClick={e => {
                               e.preventDefault();
                               addToCart(product);
@@ -1695,7 +1695,7 @@ const ShopStorefront = () => {
                     onClick={() =>
                       openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)
                     }
-                    className="flex-1 h-13 rounded-2xl border-accent/40 text-primary dark:text-accent hover:bg-accent/10 dark:hover:bg-accent/20 font-semibold gap-2 transition-all"
+                    className="flex-1 h-14 rounded-2xl border-accent/40 text-primary dark:text-accent hover:bg-accent/10 dark:hover:bg-accent/20 font-semibold gap-2 transition-all"
                   >
                     <MessageCircle className="w-4.5 h-4.5" />
                     Contact
@@ -1704,7 +1704,7 @@ const ShopStorefront = () => {
                 {getTotalItems() > 0 && (
                   <Button
                     onClick={() => setIsCheckoutOpen(true)}
-                    className="flex-1 h-13 rounded-2xl text-primary bg-gradient-to-r from-accent to-accent-muted hover:brightness-110 font-bold shadow-lg shadow-accent/25 gap-3 transition-all border border-accent/30"
+                    className="flex-1 h-14 rounded-2xl text-primary bg-gradient-to-r from-accent to-accent-muted hover:brightness-110 font-bold shadow-lg shadow-accent/25 gap-3 transition-all border border-accent/30"
                   >
                     <ShoppingCart className="w-4.5 h-4.5" />
                     <span>View Cart</span>
