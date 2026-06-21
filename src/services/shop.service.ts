@@ -168,9 +168,6 @@ const shopService = {
       state?: string;
     },
   ) => {
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
     let query = supabase
       .from("shops")
       .select("*, safebeauty_tiers(tier)", { count: "exact" });
@@ -185,6 +182,18 @@ const shopService = {
       query = query.eq("is_verified", filters.verified);
     }
 
+    if (filters?.category) {
+      query = query.eq("category", filters.category);
+    }
+
+    if (filters?.state) {
+      query = query.eq("state", filters.state);
+    }
+
+    if (filters?.city) {
+      query = query.eq("city", filters.city);
+    }
+
     if (filters?.searchTerm) {
       const q = `"%${escapeForOrIlike(filters.searchTerm)}%"`;
       query = query.or(
@@ -192,14 +201,14 @@ const shopService = {
       );
     }
 
-    // When searching, don't order by created_at yet; we'll sort by relevance in JS
+    // Fetch ALL shops when searching, otherwise paginate
     const {
       data: shops,
       error,
       count,
     } = filters?.searchTerm
-      ? await query.range(from, to)
-      : await query.order("created_at", { ascending: false }).range(from, to);
+      ? await query // no range, fetch all
+      : await query.order("created_at", { ascending: false }).range((page - 1) * limit, (page - 1) * limit + limit - 1);
 
     if (error) {
       console.error("Get shops error:", error);
@@ -288,8 +297,16 @@ const shopService = {
       });
     }
 
+    // If searching, paginate after filtering/sorting
+    let finalShops = completeShops;
+    if (filters?.searchTerm) {
+      const from = (page - 1) * limit;
+      const to = from + limit;
+      finalShops = completeShops.slice(from, to);
+    }
+
     // Map database fields to API types
-    const mappedShops: Shop[] = completeShops.map((s: any) => ({
+    const mappedShops: Shop[] = finalShops.map((s: any) => ({
       id: s.id,
       name: s.shop_name,
       slug: s.shop_slug,
@@ -329,7 +346,9 @@ const shopService = {
         page,
         limit,
         total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
+        totalPages: filters?.searchTerm
+          ? Math.ceil(completeShops.length / limit)
+          : Math.ceil((count || 0) / limit),
       },
     };
   },

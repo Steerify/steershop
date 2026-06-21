@@ -177,7 +177,7 @@ export const MarketplaceFilters = ({
                   <ChevronDown className="w-3 h-3 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="rounded-xl w-44 p-1">
+              <DropdownMenuContent align="start" side="bottom" collisionPadding={10} className="rounded-xl w-44 p-1">
                 {SORT_OPTIONS.map(opt => (
                   <DropdownMenuItem
                     key={opt.value}
@@ -198,9 +198,9 @@ export const MarketplaceFilters = ({
                   size="sm"
                   className={cn(
                     "h-8 rounded-xl gap-1.5 text-xs font-medium",
-                    selectedState !== 'All Locations'
+                    selectedState !== "All Locations"
                       ? "border-primary/50 text-primary bg-primary/5"
-                      : "border-border/60"
+                      : "border-border/60",
                   )}
                 >
                   <MapPin className="w-3 h-3" />
@@ -208,7 +208,7 @@ export const MarketplaceFilters = ({
                   <ChevronDown className="w-3 h-3 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="rounded-xl w-44 p-1 max-h-60 overflow-y-auto">
+              <DropdownMenuContent align="start" side="bottom" collisionPadding={10} className="rounded-xl w-44 p-1 max-h-60 overflow-y-auto">
                 {NIGERIAN_STATES.map(state => (
                   <DropdownMenuItem
                     key={state}

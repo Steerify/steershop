@@ -520,6 +520,9 @@ const Shops = () => {
     } else {
       // No search query, use normal sorting
       switch (selectedSort) {
+        case "newest":
+          filtered.sort((a, b) => new Date(b.created_at || b.createdAt || 0).getTime() - new Date(a.created_at || a.createdAt || 0).getTime());
+          break;
         case "rating":
           filtered.sort(
             (a, b) => (b.average_rating || 0) - (a.average_rating || 0),

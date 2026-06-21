@@ -309,6 +309,33 @@ const adminService = {
 
     return response.data;
   },
+
+  /**
+   * Process merchant approval using our automated verification system
+   */
+  processMerchantApproval: async (
+    shopId: string,
+    userId: string,
+    applicationData: {
+      shop_name: string;
+      description: string;
+      logo_url: string;
+      banner_url?: string;
+      payment_method: string;
+      owner_name?: string;
+      owner_email: string;
+      phone_number?: string;
+      location?: string;
+    }
+  ) => {
+    const response = await invokeAdminMutation<any>('process-merchant-approval', {
+      shop_id: shopId,
+      user_id: userId,
+      application_data: applicationData,
+    });
+
+    return response;
+  },
 };
 
 export default adminService;
