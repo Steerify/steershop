@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Store, Package, ShoppingCart, Users, Bell, Loader2, CheckCircle,
   TrendingUp, DollarSign, Activity, Megaphone, Award, Sparkles,
-  ArrowRight, Tv, GraduationCap, Gift, UserPlus, BarChart2, Globe, MousePointerClick
+  ArrowRight, Tv, GraduationCap, Gift, UserPlus, BarChart2, Globe, MousePointerClick, Search
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
