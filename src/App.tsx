@@ -79,6 +79,9 @@ const AdminFeaturePhases = lazy(
 );
 const AdminConcierge = lazy(() => import("./pages/admin/AdminConcierge"));
 const AdminLogistics = lazy(() => import("./pages/admin/AdminLogistics"));
+const AdminSearchAnalytics = lazy(
+  () => import("./pages/admin/AdminSearchAnalytics"),
+);
 const GrowthPage = lazy(() => import("./pages/GrowthPage"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const DemoStoreFront = lazy(() => import("./pages/DemoStoreFront"));
@@ -644,6 +647,14 @@ const App = () => (
                   element={
                     <ProtectedRoute allowedRoles={["ADMIN"]}>
                       <AdminLogistics />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/search-analytics"
+                  element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                      <AdminSearchAnalytics />
                     </ProtectedRoute>
                   }
                 />

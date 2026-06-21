@@ -168,6 +168,7 @@ export default function AdminDashboard() {
     { title: "Manage Shops", description: "View, approve & feature shops", icon: Store, path: "/admin/shops", color: "from-primary/20 to-primary/10", textColor: "text-primary" },
     { title: "Platform Orders", description: "Review all customer orders", icon: ShoppingCart, path: "/admin/orders", color: "from-primary/15 to-primary/8", textColor: "text-primary" },
     { title: "User Management", description: "Manage accounts & roles", icon: Users, path: "/admin/users", color: "from-accent/20 to-accent/10", textColor: "text-accent" },
+    { title: "Search Analytics", description: "Track what users are searching for", icon: Search, path: "/admin/search-analytics", color: "from-primary/20 to-primary/10", textColor: "text-primary" },
     { title: "Ads Manager", description: "Generate AI ad copy for shops", icon: Tv, path: "/admin/ads", color: "from-primary/20 to-accent/10", textColor: "text-primary" },
     { title: "Featured Shops", description: "Spotlight top performers", icon: Sparkles, path: "/admin/featured-shops", color: "from-gold/20 to-gold/10", textColor: "text-[hsl(42,90%,40%)]" },
     { title: "Platform Earnings", description: "Revenue analytics & payouts", icon: DollarSign, path: "/admin/earnings", color: "from-accent/20 to-accent/10", textColor: "text-accent" },

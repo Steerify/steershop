@@ -7,21 +7,24 @@ const steps = [
   {
     number: "01",
     title: "Sign Up Free",
-    description: "Create your account in 60 seconds. No credit card required — free forever with up to 5 products.",
+    description:
+      "Create your account in 60 seconds. No credit card required — free forever with up to 5 products.",
     icon: UserPlus,
     color: "from-blue-500 to-cyan-500",
   },
   {
     number: "02",
     title: "Set Up Your Store",
-    description: "Add your products, customize your storefront, and connect your payment methods.",
+    description:
+      "Add your products, customize your storefront, and connect your payment methods.",
     icon: Palette,
     color: "from-primary to-accent",
   },
   {
     number: "03",
     title: "Start Selling",
-    description: "Share your store link on WhatsApp, Instagram, and start receiving orders.",
+    description:
+      "Share your store link on WhatsApp, Instagram, and start receiving orders.",
     icon: Rocket,
     color: "from-green-500 to-emerald-500",
   },
@@ -33,13 +36,16 @@ export const HowItWorks = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full mb-4">
-            <span className="text-sm font-semibold text-primary">SIMPLE 3-STEP PROCESS</span>
+            <span className="text-sm font-semibold text-primary">
+              SIMPLE 3-STEP PROCESS
+            </span>
           </div>
           <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
             Get Started in Minutes
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            No technical skills required. Launch your professional online store today.
+            No technical skills required. Launch your professional online store
+            today.
           </p>
         </div>
 
@@ -47,14 +53,16 @@ export const HowItWorks = () => {
           {steps.map((step, index) => (
             <div key={step.number} className="relative">
               <div className="card-spotify h-full p-6 md:p-8">
-                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-r ${step.color} text-white font-bold text-lg mb-4`}>
-                    {step.number}
-                  </div>
-                  <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mb-4">
-                    <step.icon className="w-8 h-8 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">{step.title}</h3>
-                  <p className="text-muted-foreground">{step.description}</p>
+                <div
+                  className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-r ${step.color} text-white font-bold text-lg mb-4`}
+                >
+                  {step.number}
+                </div>
+                <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mb-4">
+                  <step.icon className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">{step.title}</h3>
+                <p className="text-muted-foreground">{step.description}</p>
               </div>
               {index < steps.length - 1 && (
                 <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
@@ -67,7 +75,10 @@ export const HowItWorks = () => {
 
         <div className="text-center">
           <Link to="/auth/signup">
-            <Button size="lg" className="bg-gradient-to-r from-primary to-accent text-white px-8 py-6 text-lg">
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-primary to-accent text-white px-8 py-6 text-lg"
+            >
               Start Your Free Trial
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>

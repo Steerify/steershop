@@ -78,13 +78,15 @@ export const FeaturedStoresHeroCarousel = () => {
   const autoRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasScrolledIntoViewRef = useRef(false);
   const [isMobile, setIsMobile] = useState(false);
-  const brokenLogos = useRef<Set<string>>(new Set());
-  const brokenProductImgs = useRef<Set<string>>(new Set());
+  const [brokenLogos, setBrokenLogos] = useState<Set<string>>(new Set());
+  const [brokenProductImgs, setBrokenProductImgs] = useState<Set<string>>(
+    new Set(),
+  );
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
       loop: true,
-      duration: 30,
+      duration: 300,
       skipSnaps: false,
       align: "center",
     },
@@ -336,7 +338,7 @@ export const FeaturedStoresHeroCarousel = () => {
           ) : (
             slides.map((shop, idx) => {
               const logoUrl = resolveUrl(shop.logo_url);
-              const hasLogo = !!logoUrl && !brokenLogos.current.has(shop.id);
+              const hasLogo = !!logoUrl && !brokenLogos.has(shop.id);
 
               return (
                 <div
@@ -376,7 +378,9 @@ export const FeaturedStoresHeroCarousel = () => {
                               className="w-full h-full object-cover"
                               loading={idx === 0 ? "eager" : "lazy"}
                               onError={() => {
-                                brokenLogos.current.add(shop.id);
+                                setBrokenLogos(
+                                  prev => new Set([...prev, shop.id]),
+                                );
                               }}
                             />
                           ) : (
@@ -407,7 +411,7 @@ export const FeaturedStoresHeroCarousel = () => {
                           const p = shop.products[pIdx];
                           const imgUrl = resolveUrl(p.image_url);
                           const hasImg =
-                            !!imgUrl && !brokenProductImgs.current.has(p.id);
+                            !!imgUrl && !brokenProductImgs.has(p.id);
                           const showDots = shop.products.length >= 2;
                           return (
                             <div className="px-3.5 pb-3.5">
@@ -426,7 +430,9 @@ export const FeaturedStoresHeroCarousel = () => {
                                       className="w-full h-full object-cover animate-[fsh-fade-in_0.5s_ease]"
                                       loading={idx === 0 ? "eager" : "lazy"}
                                       onError={() => {
-                                        brokenProductImgs.current.add(p.id);
+                                        setBrokenProductImgs(
+                                          prev => new Set([...prev, p.id]),
+                                        );
                                       }}
                                     />
                                   ) : (

@@ -197,6 +197,24 @@ const Shops = () => {
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const ITEMS_PER_PAGE = 12;
 
+  // Track search analytics
+  useEffect(() => {
+    if (debouncedSearchQuery.trim()) {
+      const searches = JSON.parse(
+        localStorage.getItem("steersolo_search_analytics") || "[]",
+      );
+      searches.push({
+        query: debouncedSearchQuery,
+        timestamp: new Date().toISOString(),
+        searchType,
+      });
+      localStorage.setItem(
+        "steersolo_search_analytics",
+        JSON.stringify(searches),
+      );
+    }
+  }, [debouncedSearchQuery, searchType]);
+
   /* ─── Stats + Business Plans ─── */
   useEffect(() => {
     const fetchStats = async () => {
@@ -439,6 +457,7 @@ const Shops = () => {
 
   const sortedShops = useMemo(() => {
     let filtered = [...shops];
+
     if (selectedCategory !== "all") {
       if (selectedCategory === "beauty") {
         filtered = filtered.filter(s =>
@@ -450,25 +469,79 @@ const Shops = () => {
         );
       }
     }
-    switch (selectedSort) {
-      case "rating":
-        filtered.sort(
-          (a, b) => (b.average_rating || 0) - (a.average_rating || 0),
-        );
-        break;
-      case "name":
-        filtered.sort((a, b) =>
-          (a.name || a.shop_name || "").localeCompare(
-            b.name || b.shop_name || "",
-          ),
-        );
-        break;
+
+    // If there's a search query, apply weighted scoring
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase();
+
+      filtered = filtered
+        .map(shop => {
+          const name = (shop.name || shop.shop_name || "").toLowerCase();
+          const slug = (shop.slug || shop.shop_slug || "").toLowerCase();
+          const description = (shop.description || "").toLowerCase();
+
+          let score = 0;
+
+          // 100 points: exact match on name
+          if (name === query) score += 100;
+          // 75 points: exact match on slug
+          else if (slug === query) score += 75;
+          // 60 points: starts with query
+          else if (name.startsWith(query)) score += 60;
+          // 40 points: contains exact query
+          else if (name.includes(query)) score += 40;
+          // 25 points: contains partial (split by spaces)
+          else {
+            const queryParts = query.split(/\s+/).filter(q => q);
+            const nameParts = name.split(/\s+/).filter(n => n);
+            const matches = queryParts.some(qp =>
+              nameParts.some(np => np.includes(qp)),
+            );
+            if (matches) score += 25;
+          }
+
+          // 15 points: description contains query
+          if (description.includes(query)) score += 15;
+
+          // 10 points: is verified
+          if (shop.is_verified) score += 10;
+
+          // 5 points: is business plan
+          if (businessPlanShopIds.has(shop.id)) score += 5;
+
+          // Add rating boost
+          score += (shop.average_rating || 0) * 2;
+
+          return { shop, score };
+        })
+        // Sort by score descending
+        .sort((a, b) => b.score - a.score)
+        .map(item => item.shop);
+    } else {
+      // No search query, use normal sorting
+      switch (selectedSort) {
+        case "rating":
+          filtered.sort(
+            (a, b) => (b.average_rating || 0) - (a.average_rating || 0),
+          );
+          break;
+        case "name":
+          filtered.sort((a, b) =>
+            (a.name || a.shop_name || "").localeCompare(
+              b.name || b.shop_name || "",
+            ),
+          );
+          break;
+      }
+
+      // Business plan shops come first
+      filtered.sort(
+        (a, b) =>
+          (businessPlanShopIds.has(b.id) ? 1 : 0) -
+          (businessPlanShopIds.has(a.id) ? 1 : 0),
+      );
     }
-    filtered.sort(
-      (a, b) =>
-        (businessPlanShopIds.has(b.id) ? 1 : 0) -
-        (businessPlanShopIds.has(a.id) ? 1 : 0),
-    );
+
     return filtered;
   }, [
     shops,
@@ -476,6 +549,7 @@ const Shops = () => {
     businessPlanShopIds,
     selectedCategory,
     shopCategories,
+    debouncedSearchQuery,
   ]);
 
   // Scroll to top of results whenever a filter changes
