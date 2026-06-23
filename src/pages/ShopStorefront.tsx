@@ -336,19 +336,19 @@ const ShopStorefront = () => {
     const data: any = {
       "@context": "https://schema.org",
       "@type": schemaType,
-      name: shop.shop_name,
+      name: `${shop.shop_name} on SteerSolo`,
       alternateName: shop.shop_slug,
       description:
         shop.seo_description ||
         shop.description ||
-        `Shop ${shopCategoryLabel ? `${shopCategoryLabel} ` : ""}at ${shop.shop_name}${shop.city ? ` in ${shop.city}` : ""}${shop.state ? `, ${shop.state}` : ""} on SteerSolo - Nigeria's trusted social commerce marketplace`,
+        `Discover ${shop.shop_name} on SteerSolo - Nigeria's trusted social commerce marketplace. Shop ${shopCategoryLabel ? `${shopCategoryLabel} products` : "products"}${shop.city ? ` in ${shop.city},` : ""}${shop.state ? ` ${shop.state},` : ""} Nigeria. ${shop.shop_name} on SteerSolo offers verified shopping with secure checkout and excellent support.`,
       url: shopUrl,
       image: imageUrl || undefined,
       logo: shop.logo_url || undefined,
       category: shopCategoryLabel || undefined,
       keywords:
         shop.seo_keywords?.join(", ") ||
-        `${shop.shop_name}, ${shopCategoryLabel || "shop"}, ${shop.city || ""}, ${shop.state || "Nigeria"}, buy ${shop.shop_name} products, social commerce, steersolo, nigerian marketplace`,
+        `${shop.shop_name}, ${shop.shop_name} on steersolo, ${shopCategoryLabel || "shop"}, ${shop.city || ""}, ${shop.state || "Nigeria"}, buy ${shop.shop_name} products, social commerce, steersolo, nigerian marketplace`,
       numberOfEmployees: "1-10",
       address: {
         "@type": "PostalAddress",
@@ -378,6 +378,12 @@ const ShopStorefront = () => {
           target: "https://steersolo.com/shops?search={search_term}",
           "query-input": "required name=search_term",
         },
+      },
+      host: {
+        "@type": "WebSite",
+        name: "SteerSolo",
+        url: "https://steersolo.com",
+        description: "Nigeria's trusted social commerce marketplace",
       },
       potentialAction: {
         "@type": "SearchAction",
@@ -899,7 +905,7 @@ const ShopStorefront = () => {
     shop?.seo_description ||
     shop?.description ||
     (shop
-      ? `Discover ${shop.shop_name} on SteerSolo - Nigeria's trusted social commerce marketplace. Shop ${shopCategoryLabel ? `${shopCategoryLabel} products` : "products"}${shop.city ? ` in ${shop.city},` : ""}${shop.state ? ` ${shop.state},` : ""} Nigeria. Verified seller${shop.whatsapp_number ? " with WhatsApp support" : ""}.`
+      ? `Discover ${shop.shop_name} on SteerSolo - Nigeria's trusted social commerce marketplace. Shop ${shopCategoryLabel ? `${shopCategoryLabel} products` : "products"}${shop.city ? ` in ${shop.city},` : ""}${shop.state ? ` ${shop.state},` : ""} Nigeria. ${shop.shop_name} on SteerSolo offers verified shopping with secure checkout${shop.whatsapp_number ? " and WhatsApp support" : ""}.`
       : "");
 
   return (
@@ -914,21 +920,21 @@ const ShopStorefront = () => {
     >
       {shop && (
         <Helmet>
-          <title>{`${shop.shop_name} | ${shopCategoryLabel ? `${shopCategoryLabel} in ` : ""}${shop.city ? `${shop.city}, ` : ""}${shop.state || "Nigeria"} | SteerSolo`}</title>
+          <title>{`${shop.shop_name} on SteerSolo | ${shopCategoryLabel ? `${shopCategoryLabel} in ` : ""}${shop.city ? `${shop.city}, ` : ""}${shop.state || "Nigeria"}`}</title>
           <meta name="description" content={metaDescription} />
           <meta
             name="keywords"
             content={
               shop.seo_keywords?.length
-                ? shop.seo_keywords.join(", ")
-                : `${shop.shop_name}, ${shopCategoryLabel || "shop"}, ${shop.city || ""}, ${shop.state || "Nigeria"}, buy ${shop.shop_name} products, social commerce, steersolo, nigerian marketplace, online shop nigeria`
+                ? `${shop.seo_keywords.join(", ")}, ${shop.shop_name} on steersolo`
+                : `${shop.shop_name}, ${shop.shop_name} on steersolo, ${shopCategoryLabel || "shop"}, ${shop.city || ""}, ${shop.state || "Nigeria"}, buy ${shop.shop_name} products, social commerce, steersolo, nigerian marketplace, online shop nigeria`
             }
           />
 
           {/* Open Graph Tags for Social Media */}
           <meta
             property="og:title"
-            content={`${shop.shop_name} | ${shopCategoryLabel ? `${shopCategoryLabel} in ` : ""}${shop.city ? `${shop.city}, ` : ""}${shop.state || "Nigeria"}`}
+            content={`${shop.shop_name} on SteerSolo | ${shopCategoryLabel ? `${shopCategoryLabel} in ` : ""}${shop.city ? `${shop.city}, ` : ""}${shop.state || "Nigeria"}`}
           />
           <meta property="og:description" content={metaDescription} />
           <meta property="og:url" content={shopUrl} />
@@ -953,7 +959,7 @@ const ShopStorefront = () => {
           <meta property="og:image:height" content="630" />
           <meta
             property="og:image:alt"
-            content={`${shop.shop_name} official logo | SteerSolo`}
+            content={`${shop.shop_name} official logo on SteerSolo`}
           />
           <meta property="og:image:type" content="image/png" />
 
@@ -961,7 +967,7 @@ const ShopStorefront = () => {
           <meta name="twitter:card" content="summary_large_image" />
           <meta
             name="twitter:title"
-            content={`${shop.shop_name} | ${shopCategoryLabel ? `${shopCategoryLabel} in ` : ""}${shop.city ? `${shop.city}, ` : ""}${shop.state || "Nigeria"}`}
+            content={`${shop.shop_name} on SteerSolo | ${shopCategoryLabel ? `${shopCategoryLabel} in ` : ""}${shop.city ? `${shop.city}, ` : ""}${shop.state || "Nigeria"}`}
           />
           <meta name="twitter:description" content={metaDescription} />
           <meta name="twitter:site" content="@SteerifyGroup" />
@@ -974,7 +980,7 @@ const ShopStorefront = () => {
           />
           <meta
             name="twitter:image:alt"
-            content={`${shop.shop_name} official logo | SteerSolo`}
+            content={`${shop.shop_name} official logo on SteerSolo`}
           />
 
           {/* Additional SEO Tags */}
@@ -1038,31 +1044,31 @@ const ShopStorefront = () => {
           data-tour="shop-header"
         >
           {/* Banner — edge-to-edge on mobile per design system, contained on desktop */}
-          <div className="relative h-36 sm:h-48 md:h-56 overflow-hidden sm:container sm:mx-auto sm:px-4 sm:mt-2">
-            <div className="absolute inset-0 sm:rounded-3xl overflow-hidden bg-muted shadow-sm">
+          <div className="relative h-40 sm:h-52 md:h-64 overflow-hidden sm:container sm:mx-auto sm:px-4 sm:mt-2">
+            <div className="absolute inset-0 sm:rounded-[32px] overflow-hidden bg-muted shadow-lg">
               {shop.banner_url || shop.logo_url ? (
                 <img
                   src={shop.banner_url || shop.logo_url}
                   alt={`${shop.shop_name} banner`}
-                  className="w-full h-full object-cover opacity-95"
+                  className="w-full h-full object-cover opacity-100"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-r from-primary/10 to-accent/10" />
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-emerald-500/10" />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
             </div>
           </div>
 
           {/* Shop Identity Card */}
           <div className="container mx-auto px-4">
-            <div className="relative -mt-16 sm:-mt-20 md:-mt-28 pb-8">
+            <div className="relative -mt-20 sm:-mt-24 md:-mt-32 pb-8">
               <div className="relative z-10">
-                <div className="bg-card/98 backdrop-blur-xl rounded-3xl shadow-md border border-border/50 p-5 sm:p-7 md:p-9">
-                  <div className="flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-10 mb-8">
+                <div className="bg-card/98 backdrop-blur-2xl rounded-[32px] shadow-xl border border-border/30 p-6 sm:p-8 md:p-10">
+                  <div className="flex flex-col lg:flex-row lg:items-start gap-7 lg:gap-12 mb-8">
                     {/* Logo */}
                     <div className="flex-shrink-0">
-                      <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36">
-                        <div className="w-full h-full ring-6 ring-background shadow-xl rounded-3xl overflow-hidden">
+                      <div className="relative w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40">
+                        <div className="w-full h-full ring-8 ring-background shadow-2xl rounded-[32px] overflow-hidden">
                           <ShopAvatar
                             name={shop.shop_name}
                             logoUrl={shop.logo_url}
@@ -1071,56 +1077,69 @@ const ShopStorefront = () => {
                           />
                         </div>
                         {shop.is_verified && (
-                          <div className="absolute -bottom-3 -right-3 w-10 h-10 rounded-full bg-emerald-500 border-4 border-background flex items-center justify-center shadow-md">
-                            <BadgeCheck className="w-5 h-5 text-white" />
+                          <div className="absolute -bottom-4 -right-4 w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 border-4 border-background flex items-center justify-center shadow-lg">
+                            <BadgeCheck className="w-5.5 h-5.5 text-white" />
                           </div>
                         )}
                       </div>
                     </div>
 
                     {/* Shop Info */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-center pt-2">
-                      <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-6">
-                        <div className="min-w-0 max-w-2xl">
+                    <div className="flex-1 min-w-0 flex flex-col justify-center pt-3">
+                      <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-7">
+                        <div className="min-w-0 max-w-3xl">
                           <h1
-                            className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-3"
+                            className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4"
                             style={{ color: shop.primary_color || undefined }}
                           >
-                            {shop.shop_name}
+                            {shop.shop_name} on SteerSolo
                           </h1>
-                          <div className="flex flex-wrap items-center gap-3 mb-4">
+                          <div className="flex flex-wrap items-center gap-4 mb-5">
                             {shopCategoryLabel && (
                               <Badge
                                 variant="secondary"
-                                className="rounded-full text-xs font-semibold px-3 py-1"
+                                className="rounded-full text-xs font-semibold px-4 py-1.5 bg-accent/10 text-accent border-accent/20"
                               >
-                                <Tag className="w-3 h-3 mr-1" />
+                                <Tag className="w-3.5 h-3.5 mr-1.5" />
                                 {shopCategoryLabel}
                               </Badge>
                             )}
                             {shop.total_reviews > 0 && (
-                              <div className="flex items-center gap-2">
-                                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                                <span className="font-semibold text-sm">
+                              <div className="flex items-center gap-2.5 bg-amber-50/70 dark:bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-200/60 dark:border-amber-500/20">
+                                <Star className="w-4.5 h-4.5 fill-amber-400 text-amber-400" />
+                                <span className="font-semibold text-sm text-amber-700 dark:text-amber-300">
                                   {shop.average_rating.toFixed(1)}
                                 </span>
-                                <span className="text-sm text-muted-foreground">
+                                <span className="text-sm text-amber-600/80 dark:text-amber-400/80">
                                   ({shop.total_reviews} reviews)
                                 </span>
                               </div>
                             )}
                             {(publicLocationParts || fullPublicAddress) && (
-                              <div className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                <span className="text-sm font-medium text-muted-foreground">
+                              <div className="flex items-center gap-2.5 text-muted-foreground">
+                                <MapPin className="w-4.5 h-4.5 flex-shrink-0" />
+                                <span className="text-sm font-medium">
                                   {fullPublicAddress || publicLocationParts}
                                 </span>
                               </div>
                             )}
                           </div>
-                          {shop.description && (
+                          {(shop.description || (
                             <p className="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-2xl">
-                              {shop.description}
+                              Welcome to {shop.shop_name} on SteerSolo! Discover
+                              amazing products and services from this trusted
+                              seller on Nigeria's leading social commerce
+                              marketplace.
+                            </p>
+                          )) && (
+                            <p className="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-2xl">
+                              {shop.description}{" "}
+                              {shop.description &&
+                                shop.description.length > 0 &&
+                                !shop.description
+                                  .toLowerCase()
+                                  .includes("steersolo") &&
+                                ` Explore ${shop.shop_name} on SteerSolo for a seamless shopping experience with secure checkout and excellent customer support.`}
                             </p>
                           )}
                         </div>
@@ -1128,7 +1147,7 @@ const ShopStorefront = () => {
                         {/* Action Buttons */}
                         <div
                           ref={headerCartRef}
-                          className="w-full xl:w-auto flex flex-col sm:flex-row items-stretch gap-3 shrink-0"
+                          className="w-full xl:w-auto flex flex-col sm:flex-row items-stretch gap-3.5 shrink-0"
                         >
                           {shop.whatsapp_number && (
                             <Button
@@ -1138,7 +1157,7 @@ const ShopStorefront = () => {
                                   shop.shop_name,
                                 )
                               }
-                              className="flex-1 rounded-xl h-12 px-6 bg-accent text-primary hover:bg-accent/90 transition-all font-semibold gap-2"
+                              className="flex-1 rounded-2xl h-12 px-6 bg-gradient-to-r from-emerald-500 to-green-500 text-white hover:brightness-110 transition-all font-semibold gap-2 shadow-lg shadow-emerald-500/20"
                             >
                               <MessageCircle className="w-5 h-5" />
                               <span>Chat on WhatsApp</span>
@@ -1147,17 +1166,17 @@ const ShopStorefront = () => {
                           <StoreFollowButton shopId={shop.id} size="md" />
                           <Button
                             onClick={() => setIsCheckoutOpen(true)}
-                            className={`flex-1 rounded-xl h-12 px-6 font-semibold transition-all gap-2 hover:opacity-90 ${
+                            className={`flex-1 rounded-2xl h-12 px-6 font-semibold transition-all gap-2 hover:brightness-110 ${
                               cartGlow
-                                ? "bg-accent text-primary shadow-lg shadow-accent/20 animate-pulse"
-                                : "bg-foreground text-background shadow-md"
+                                ? "bg-gradient-to-r from-accent to-primary text-white shadow-lg shadow-accent/30 animate-pulse"
+                                : "bg-gradient-to-r from-accent to-primary text-white shadow-lg shadow-accent/20"
                             }`}
                             data-tour="cart-button"
                           >
                             <ShoppingCart className="w-5 h-5" />
                             <span>Cart</span>
                             {getTotalItems() > 0 && (
-                              <span className="bg-background/20 rounded-full px-3 py-1 text-xs font-bold tabular-nums ml-1">
+                              <span className="bg-white/20 rounded-2xl px-3.5 py-1 text-xs font-bold tabular-nums ml-1">
                                 {getTotalItems()}
                               </span>
                             )}
@@ -1168,8 +1187,8 @@ const ShopStorefront = () => {
                   </div>
 
                   {/* Trust & Share Row */}
-                  <div className="flex flex-wrap items-center gap-x-8 gap-y-4 pt-6 border-t border-border/40">
-                    <div className="flex items-center gap-4 ml-auto w-full md:w-auto">
+                  <div className="flex flex-wrap items-center gap-x-10 gap-y-4 pt-7 border-t border-border/30">
+                    <div className="flex items-center gap-5 ml-auto w-full md:w-auto">
                       <TrustBadges
                         isVerified={shop.is_verified}
                         hasWhatsApp={!!shop.whatsapp_number}
@@ -1178,7 +1197,7 @@ const ShopStorefront = () => {
                         completedOrders={completedOrders}
                         tier={shop.tier}
                       />
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2.5">
                         <ShareStorefront
                           shopName={shop.shop_name}
                           shopSlug={shop.shop_slug}
@@ -1315,13 +1334,13 @@ const ShopStorefront = () => {
             className="pointer-events-none absolute inset-0 rounded-3xl opacity-40 dark:opacity-15"
             style={{
               backgroundImage:
-                "radial-gradient(circle, hsl(var(--foreground) / 0.10) 1.5px, transparent 1.5px)",
+                "radial-gradient(circle, hsl(var(--foreground) / 0.08) 1.5px, transparent 1.5px)",
               backgroundSize: "24px 24px",
             }}
           />
 
           {/* Toolbar */}
-          <div className="relative z-10 flex flex-col gap-5 mb-10">
+          <div className="relative z-10 flex flex-col gap-6 mb-10">
             {/* Top Row: Back + Title + Search */}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
@@ -1329,27 +1348,35 @@ const ShopStorefront = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-xl h-12 px-3 text-muted-foreground hover:text-foreground gap-1.5"
+                    className="rounded-2xl h-12 px-4 text-muted-foreground hover:text-foreground gap-2 hover:bg-accent/5"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    <span className="hidden sm:inline text-sm">Shops</span>
+                    <span className="hidden sm:inline text-sm font-medium">
+                      Shops
+                    </span>
                   </Button>
                 </Link>
-                <div className="h-5 w-px bg-border" />
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-accent" />
+                <div className="h-6 w-px bg-border/60" />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-accent" />
                   </div>
-                  <h2
-                    className="hidden sm:block font-display text-xl md:text-2xl font-bold tracking-tight"
-                    style={{ color: shop.primary_color || undefined }}
-                  >
-                    {activeCategoryLabel}
-                  </h2>
+                  <div>
+                    <h2
+                      className="font-display text-xl md:text-2xl font-bold tracking-tight"
+                      style={{ color: shop.primary_color || undefined }}
+                    >
+                      {activeCategoryLabel}
+                    </h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {filteredProducts.length}{" "}
+                      {filteredProducts.length === 1 ? "item" : "items"}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              {/* Animated Search */}
+              {/* Search */}
               <div
                 ref={searchRef}
                 className="relative"
@@ -1357,42 +1384,49 @@ const ShopStorefront = () => {
               >
                 <form
                   onSubmit={handleSearchSubmit}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-3"
                 >
                   <div className="relative flex items-center">
-                    <button
-                      type="button"
-                      onClick={toggleSearch}
-                      className="flex items-center justify-center w-12 h-12 rounded-xl bg-card border border-border hover:border-accent/50 hover:bg-accent/5 transition-all duration-200"
-                    >
-                      <Search className="w-4 h-4 text-muted-foreground" />
-                    </button>
                     <div
-                      className={`
-                    relative overflow-hidden transition-all duration-300 ease-in-out
-                    ${isSearchExpanded ? "w-44 sm:w-60 ml-2 opacity-100" : "w-0 ml-0 opacity-0"}
-                  `}
+                      className={`relative transition-all duration-300 ${isSearchExpanded ? "w-full" : "w-12"}`}
                     >
-                      <Input
-                        ref={inputRef}
-                        type="text"
-                        placeholder="Search products…"
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        className="h-12 rounded-xl bg-card border-border focus:border-accent pr-8 pl-3 text-sm"
-                        onBlur={() => {
-                          if (searchQuery === "" && isSearchExpanded)
-                            setTimeout(() => setIsSearchExpanded(false), 150);
-                        }}
-                      />
-                      {searchQuery && (
+                      {!isSearchExpanded && (
                         <button
                           type="button"
-                          onClick={clearSearch}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
+                          onClick={toggleSearch}
+                          className="flex items-center justify-center w-12 h-12 rounded-2xl bg-card border border-border/60 hover:border-accent/50 hover:bg-accent/5 transition-all duration-200"
                         >
-                          <X className="w-4 h-4 text-muted-foreground" />
+                          <Search className="w-4.5 h-4.5 text-muted-foreground" />
                         </button>
+                      )}
+                      {isSearchExpanded && (
+                        <div className="relative w-full">
+                          <Search className="w-4.5 h-4.5 text-muted-foreground absolute left-4 top-1/2 -translate-y-1/2" />
+                          <Input
+                            ref={inputRef}
+                            type="text"
+                            placeholder="Search products…"
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            className="h-12 rounded-2xl bg-card border-border/60 focus:border-accent pl-11 pr-10 text-sm w-full"
+                            onBlur={() => {
+                              if (searchQuery === "")
+                                setTimeout(
+                                  () => setIsSearchExpanded(false),
+                                  150,
+                                );
+                            }}
+                          />
+                          {searchQuery && (
+                            <button
+                              type="button"
+                              onClick={clearSearch}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center hover:bg-muted/70 transition-colors"
+                            >
+                              <X className="w-4 h-4 text-muted-foreground" />
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1403,7 +1437,7 @@ const ShopStorefront = () => {
             {/* Filter Tabs */}
             {(productCount > 0 || serviceCount > 0) && (
               <div
-                className="flex gap-2 overflow-x-auto pb-1 scrollbar-none"
+                className="flex gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden"
                 data-tour="product-filters"
               >
                 {[
@@ -1413,7 +1447,7 @@ const ShopStorefront = () => {
                         {
                           key: "product",
                           label: `Products (${productCount})`,
-                          icon: <Package className="w-3.5 h-3.5" />,
+                          icon: <Package className="w-4 h-4" />,
                         },
                       ]
                     : []),
@@ -1422,7 +1456,7 @@ const ShopStorefront = () => {
                         {
                           key: "service",
                           label: `Services (${serviceCount})`,
-                          icon: <Briefcase className="w-3.5 h-3.5" />,
+                          icon: <Briefcase className="w-4 h-4" />,
                         },
                       ]
                     : []),
@@ -1431,11 +1465,11 @@ const ShopStorefront = () => {
                     key={key}
                     onClick={() => setTypeFilter(key as any)}
                     className={`
-                    flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0 h-12
+                    flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-medium whitespace-nowrap transition-all duration-300 flex-shrink-0 h-12
                     ${
                       typeFilter === key
-                        ? "bg-foreground text-background shadow-sm"
-                        : "bg-card border border-border text-muted-foreground hover:border-accent/40 hover:text-foreground hover:bg-accent/5"
+                        ? "bg-gradient-to-r from-accent to-primary text-white shadow-lg shadow-accent/20"
+                        : "bg-card border border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground hover:bg-accent/5"
                     }
                   `}
                   >
@@ -1448,17 +1482,21 @@ const ShopStorefront = () => {
 
             {/* Search Results Banner */}
             {searchQuery && (
-              <div className="flex items-center justify-between px-5 py-4 rounded-2xl bg-accent/5 border border-accent/20">
+              <div className="flex items-center justify-between px-6 py-4 rounded-2xl bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/20">
                 <div className="flex items-center gap-3 text-sm">
                   <Search className="w-4.5 h-4.5 text-accent flex-shrink-0" />
-                  <span className="text-muted-foreground">Results for</span>
-                  <span className="font-semibold text-accent-forest">
-                    "{searchQuery}"
-                  </span>
+                  <div>
+                    <span className="text-muted-foreground">
+                      Search results
+                    </span>
+                    <span className="font-semibold text-accent ml-1">
+                      "{searchQuery}"
+                    </span>
+                  </div>
                 </div>
                 <button
                   onClick={clearSearch}
-                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-destructive transition-colors font-medium h-12 px-3 rounded-xl"
+                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium h-11 px-4 rounded-xl hover:bg-accent/10"
                 >
                   <X className="w-3.5 h-3.5" /> Clear
                 </button>
@@ -1468,24 +1506,26 @@ const ShopStorefront = () => {
 
           {(categoryFilter !== "all" || typeFilter !== "all") &&
             !searchQuery && (
-              <div className="flex items-center justify-between px-5 py-4 rounded-2xl bg-primary/5 border border-primary/15 mb-8">
+              <div className="flex items-center justify-between px-6 py-4 rounded-2xl bg-primary/5 border border-primary/15 mb-8">
                 <div className="flex items-center gap-3 text-sm">
                   <Sparkles className="w-4.5 h-4.5 text-primary" />
-                  <span className="text-muted-foreground">Showing</span>
-                  <span className="font-semibold text-foreground">
-                    {categoryFilter !== "all"
-                      ? activeCategoryLabel
-                      : typeFilter === "product"
-                        ? "Products"
-                        : typeFilter === "service"
-                          ? "Services"
-                          : "Everything"}
-                  </span>
+                  <div>
+                    <span className="text-muted-foreground">Showing</span>
+                    <span className="font-semibold text-foreground ml-1">
+                      {categoryFilter !== "all"
+                        ? activeCategoryLabel
+                        : typeFilter === "product"
+                          ? "Products"
+                          : typeFilter === "service"
+                            ? "Services"
+                            : "Everything"}
+                    </span>
+                  </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="rounded-xl px-4 h-12"
+                  className="rounded-xl px-5 h-11 hover:bg-accent/10"
                   onClick={() => {
                     setCategoryFilter("all");
                     setTypeFilter("all");
@@ -1500,17 +1540,17 @@ const ShopStorefront = () => {
             {/* ── Empty State ── */}
             {filteredProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center">
-                <div className="w-24 h-24 rounded-3xl bg-muted flex items-center justify-center mb-6 shadow-inner">
+                <div className="w-28 h-28 rounded-[28px] bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center mb-7 shadow-inner">
                   {searchQuery ? (
-                    <Search className="w-11 h-11 text-muted-foreground" />
+                    <Search className="w-12 h-12 text-muted-foreground/70" />
                   ) : (
-                    <Package className="w-11 h-11 text-muted-foreground" />
+                    <Package className="w-12 h-12 text-muted-foreground/70" />
                   )}
                 </div>
-                <h3 className="font-display text-xl sm:text-2xl font-semibold mb-3">
+                <h3 className="font-display text-2xl sm:text-3xl font-bold mb-3">
                   {searchQuery ? "No Results Found" : "No Products Yet"}
                 </h3>
-                <p className="text-muted-foreground text-sm max-w-sm mb-8">
+                <p className="text-muted-foreground text-sm max-w-sm mb-9 leading-relaxed">
                   {searchQuery
                     ? `We couldn't find anything matching "${searchQuery}". Try different keywords.`
                     : "This shop hasn't added any products yet."}
@@ -1519,7 +1559,7 @@ const ShopStorefront = () => {
                   <Button
                     variant="outline"
                     onClick={clearSearch}
-                    className="rounded-xl gap-2 px-6 h-12"
+                    className="rounded-2xl gap-2 px-7 h-12 border-border/60 hover:border-accent/50"
                   >
                     <X className="w-4 h-4" /> Clear Search
                   </Button>
@@ -1527,20 +1567,20 @@ const ShopStorefront = () => {
               </div>
             ) : (
               /* ── Product Grid ── */
-              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 md:gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-7">
                 {filteredProducts.map((product, index) => (
                   <div
                     key={product.id}
                     className="group min-h-0 flex flex-col animate-fade-up"
                     style={{
-                      animationDelay: `${index * 0.05}s`,
+                      animationDelay: `${index * 0.06}s`,
                     }}
                     data-tour={index === 0 ? "product-card" : undefined}
                   >
                     {/* Product Image */}
                     <Link
                       to={`/shop/${slug}/product/${product.id}`}
-                      className="relative block overflow-hidden bg-muted/50 rounded-3xl aspect-[4/5] sm:aspect-square mb-4 group-hover:shadow-xl transition-all duration-300 border border-transparent hover:border-border/60"
+                      className="relative block overflow-hidden bg-muted/30 rounded-[28px] aspect-[3/4] mb-5 group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-400 border border-border/40 hover:border-accent/30"
                       onClick={() =>
                         window.scrollTo({ top: 0, behavior: "smooth" })
                       }
@@ -1552,33 +1592,33 @@ const ShopStorefront = () => {
                         className="w-full h-full"
                       >
                         {!product.image_url && !product.video_url && (
-                          <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-accent/5 to-primary/5">
                             {product.type === "service" ? (
-                              <Briefcase className="w-8 h-8 text-muted-foreground/30" />
+                              <Briefcase className="w-10 h-10 text-muted-foreground/40" />
                             ) : product.is_digital ? (
-                              <Download className="w-8 h-8 text-muted-foreground/30" />
+                              <Download className="w-10 h-10 text-muted-foreground/40" />
                             ) : (
-                              <Package className="w-8 h-8 text-muted-foreground/30" />
+                              <Package className="w-10 h-10 text-muted-foreground/40" />
                             )}
                           </div>
                         )}
                       </ProductMediaCard>
 
                       {/* Wishlist Button - Top Right Hover (or permanent on mobile) */}
-                      <div className="absolute top-3 right-3 z-20">
+                      <div className="absolute top-4 right-4 z-20">
                         <WishlistButton
                           productId={product.id}
                           size="sm"
                           showLabel={false}
-                          className="h-12 w-12 rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-sm border border-black/5 dark:border-white/5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-foreground hover:scale-110"
+                          className="h-11 w-11 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-lg border border-black/5 dark:border-white/5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 text-foreground hover:scale-110"
                         />
                       </div>
 
                       {/* Discount Badge */}
                       {product.compare_price &&
                         Number(product.compare_price) > product.price && (
-                          <div className="absolute top-3 left-3 z-10">
-                            <div className="bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+                          <div className="absolute top-4 left-4 z-10">
+                            <div className="bg-gradient-to-r from-red-500 to-rose-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-2xl shadow-md">
                               -
                               {Math.round(
                                 ((Number(product.compare_price) -
@@ -1593,20 +1633,20 @@ const ShopStorefront = () => {
 
                       {/* Digital Product Badge */}
                       {product.is_digital && (
-                        <div className="absolute top-3 right-14 z-10 sm:right-3 sm:group-hover:right-14 transition-all duration-300">
-                          <div className="bg-purple-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
-                            <Download className="w-3 h-3" />
+                        <div className="absolute top-4 right-16 z-10 sm:right-4 sm:group-hover:right-16 transition-all duration-300">
+                          <div className="bg-gradient-to-r from-purple-500 to-violet-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-2xl shadow-md flex items-center gap-1.5">
+                            <Download className="w-3.5 h-3.5" />
                             Digital
                           </div>
                         </div>
                       )}
 
                       {/* Quick Add Overlay */}
-                      <div className="absolute inset-x-3 bottom-3 z-20 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 translate-y-1 sm:group-hover:translate-y-0">
+                      <div className="absolute inset-x-4 bottom-4 z-20 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 translate-y-2 sm:group-hover:translate-y-0">
                         {product.type === "service" &&
                         product.booking_required ? (
                           <Button
-                            className="w-full rounded-xl bg-foreground text-background hover:bg-foreground/90 font-semibold shadow-xl h-12"
+                            className="w-full rounded-2xl bg-gradient-to-r from-foreground to-foreground/90 text-white hover:brightness-110 font-semibold shadow-2xl h-12"
                             onClick={e => {
                               e.preventDefault();
                               handleBookService(product);
@@ -1620,7 +1660,7 @@ const ShopStorefront = () => {
                           </Button>
                         ) : (
                           <Button
-                            className="w-full rounded-xl bg-foreground text-background hover:bg-foreground/90 font-semibold shadow-xl h-12"
+                            className="w-full rounded-2xl bg-gradient-to-r from-accent to-primary text-white hover:brightness-110 font-semibold shadow-2xl h-12"
                             onClick={e => {
                               e.preventDefault();
                               addToCart(product);
@@ -1630,7 +1670,7 @@ const ShopStorefront = () => {
                               (!product.is_available && !isOwner)
                             }
                           >
-                            <ShoppingCart className="w-4 h-4 mr-2" />
+                            <ShoppingCart className="w-4.5 h-4.5 mr-2" />
                             Add to Cart
                           </Button>
                         )}
@@ -1638,19 +1678,19 @@ const ShopStorefront = () => {
                     </Link>
 
                     {/* Product Info */}
-                    <div className="flex flex-col flex-1 px-1">
+                    <div className="flex flex-col flex-1 px-1.5">
                       <Link
                         to={`/shop/${slug}/product/${product.id}`}
                         onClick={() =>
                           window.scrollTo({ top: 0, behavior: "smooth" })
                         }
                       >
-                        <h3 className="font-medium text-sm sm:text-base leading-tight hover:underline underline-offset-4 decoration-muted-foreground/30 transition-all mb-1">
+                        <h3 className="font-semibold text-sm sm:text-base leading-snug hover:text-accent transition-colors mb-2">
                           {product.name}
                         </h3>
                       </Link>
 
-                      <div className="mt-1 mb-2">
+                      <div className="mb-3">
                         <ProductRating
                           rating={product.average_rating || 0}
                           totalReviews={product.total_reviews || 0}
@@ -1658,30 +1698,31 @@ const ShopStorefront = () => {
                       </div>
 
                       {/* Price Row */}
-                      <div className="flex items-baseline gap-2 mt-auto">
-                        <span className="text-base sm:text-lg font-bold tabular-nums">
+                      <div className="flex items-baseline gap-2.5 mt-auto">
+                        <span className="text-lg sm:text-xl font-bold tabular-nums tracking-tight">
                           ₦{product.price.toLocaleString()}
                         </span>
                         {product.compare_price &&
                           Number(product.compare_price) > product.price && (
-                            <span className="text-xs text-muted-foreground line-through tabular-nums">
+                            <span className="text-sm text-muted-foreground/70 line-through tabular-nums">
                               ₦{Number(product.compare_price).toLocaleString()}
                             </span>
                           )}
                       </div>
-                      <div className="flex justify-between items-center mt-2 pt-2 border-t border-border/50">
+                      <div className="flex justify-between items-center mt-3 pt-3 border-t border-border/30">
                         <div className="flex flex-col">
                           {product.is_digital ? (
-                            <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1">
-                              <Download className="w-3 h-3" /> Instant Access
+                            <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
+                              <Download className="w-3.5 h-3.5" /> Instant
+                              Access
                             </span>
                           ) : (
                             <span
                               className={`text-xs font-semibold ${
                                 product.stock_quantity > 0
-                                  ? "text-primary dark:text-accent"
+                                  ? "text-emerald-600 dark:text-emerald-400"
                                   : "text-destructive"
-                              }`}
+                              } flex items-center gap-1.5`}
                             >
                               {product.stock_quantity > 0
                                 ? "In Stock"
@@ -1689,7 +1730,7 @@ const ShopStorefront = () => {
                             </span>
                           )}
                           {!product.is_digital && (
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                            <span className="text-[11px] text-muted-foreground/70 uppercase tracking-wide mt-0.5">
                               {product.stock_quantity}{" "}
                               {product.stock_unit || "Units"}
                             </span>
@@ -1708,29 +1749,29 @@ const ShopStorefront = () => {
         {showFloatingBar && (getTotalItems() > 0 || shop.whatsapp_number) && (
           <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none">
             {/* Subtle gradient fade above bar */}
-            <div className="h-12 bg-gradient-to-t from-background/95 to-transparent" />
-            <div className="bg-card/98 backdrop-blur-2xl border-t border-border/50 px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pointer-events-auto shadow-lg">
-              <div className="container mx-auto flex items-center justify-center gap-4 max-w-lg">
+            <div className="h-14 bg-gradient-to-t from-background/98 to-transparent" />
+            <div className="bg-card/98 backdrop-blur-3xl border-t border-border/30 px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pointer-events-auto shadow-2xl">
+              <div className="container mx-auto flex items-center justify-center gap-4 max-w-xl">
                 {shop.whatsapp_number && (
                   <Button
                     variant="outline"
                     onClick={() =>
                       openWhatsAppContact(shop.whatsapp_number!, shop.shop_name)
                     }
-                    className="flex-1 h-14 rounded-2xl border-accent/40 text-primary dark:text-accent hover:bg-accent/10 dark:hover:bg-accent/20 font-semibold gap-2 transition-all"
+                    className="flex-1 h-14 rounded-[28px] border-accent/40 text-foreground hover:bg-accent/10 dark:hover:bg-accent/20 font-semibold gap-2.5 transition-all border"
                   >
-                    <MessageCircle className="w-4.5 h-4.5" />
+                    <MessageCircle className="w-5 h-5" />
                     Contact
                   </Button>
                 )}
                 {getTotalItems() > 0 && (
                   <Button
                     onClick={() => setIsCheckoutOpen(true)}
-                    className="flex-1 h-14 rounded-2xl text-primary bg-gradient-to-r from-accent to-accent-muted hover:brightness-110 font-bold shadow-lg shadow-accent/25 gap-3 transition-all border border-accent/30"
+                    className="flex-1 h-14 rounded-[28px] text-white bg-gradient-to-r from-accent to-primary hover:brightness-110 font-bold shadow-xl shadow-accent/30 gap-3 transition-all border border-accent/20"
                   >
-                    <ShoppingCart className="w-4.5 h-4.5" />
+                    <ShoppingCart className="w-5 h-5" />
                     <span>View Cart</span>
-                    <span className="bg-white/20 rounded-xl px-3 py-1.5 text-xs font-bold tabular-nums">
+                    <span className="bg-white/25 rounded-2xl px-4 py-1.5 text-xs font-bold tabular-nums">
                       {getTotalItems()} · ₦{getTotalAmount().toLocaleString()}
                     </span>
                   </Button>
@@ -1749,11 +1790,12 @@ const ShopStorefront = () => {
                 <Sparkles className="w-3.5 h-3.5" /> SteerSolo Marketplace
               </div>
               <h3 className="font-display text-xl sm:text-2xl font-bold">
-                Discover more verified stores
+                Discover {shop.shop_name} on SteerSolo and more verified stores
               </h3>
               <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
-                Connect with trusted Nigerian sellers across beauty, fashion,
-                gadgets, and more. Compare stores and shop safely.
+                Connect with trusted Nigerian sellers like {shop.shop_name} on
+                SteerSolo across beauty, fashion, gadgets, and more. Compare
+                stores and shop safely.
               </p>
             </div>
             <Link to="/shops" className="md:shrink-0 relative z-10">

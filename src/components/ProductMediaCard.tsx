@@ -49,11 +49,11 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
   const effectiveVideoUrl = videoFailed ? null : videoUrl;
 
   const fallback = (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-primary/10 via-accent/10 to-emerald-500/10 px-3 text-center">
-      <div className="rounded-2xl bg-background/70 p-3 shadow-sm ring-1 ring-border/50 backdrop-blur-sm">
-        <Package className="h-7 w-7 text-primary/70 sm:h-8 sm:w-8" />
+    <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-primary/15 via-accent/15 to-emerald-500/10 px-4 text-center">
+      <div className="rounded-3xl bg-background/80 p-4 shadow-lg ring-1 ring-border/40 backdrop-blur-md">
+        <Package className="h-9 w-9 text-primary/80 sm:h-10 sm:w-10" />
       </div>
-      <span className="text-[11px] font-medium leading-tight text-muted-foreground sm:text-xs">
+      <span className="text-[12px] font-semibold leading-tight text-muted-foreground sm:text-sm">
         Product image unavailable
       </span>
     </div>
@@ -71,7 +71,7 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
           src={effectiveImageUrl}
           alt={alt}
           data-testid="product-media-image"
-          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
           loading="lazy"
           decoding="async"
           onError={() => setImageFailed(true)}
@@ -80,7 +80,7 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
           ref={videoRef}
           src={effectiveVideoUrl}
           data-testid="product-media-video"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-out ${isHovered ? 'opacity-100 scale-105' : 'opacity-0 scale-100'}`}
           muted
           loop
           playsInline
@@ -88,8 +88,8 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
           onError={handleVideoError}
         />
         {!isHovered && (
-          <div className="absolute bottom-2 right-2 bg-black/60 rounded-full p-1.5 pointer-events-none">
-            <Play className="w-3.5 h-3.5 text-white fill-white" />
+          <div className="absolute bottom-3 right-3 bg-black/70 rounded-2xl p-2 pointer-events-none shadow-lg backdrop-blur-sm">
+            <Play className="w-4 h-4 text-white fill-white" />
           </div>
         )}
         {children}
@@ -109,7 +109,7 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
           ref={videoRef}
           src={effectiveVideoUrl}
           data-testid="product-media-video"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
           muted
           loop
           playsInline
@@ -117,8 +117,8 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
           onError={handleVideoError}
         />
         {!isHovered && (
-          <div className="absolute bottom-2 right-2 bg-black/60 rounded-full p-1.5 pointer-events-none">
-            <Play className="w-3.5 h-3.5 text-white fill-white" />
+          <div className="absolute bottom-3 right-3 bg-black/70 rounded-2xl p-2 pointer-events-none shadow-lg backdrop-blur-sm">
+            <Play className="w-4 h-4 text-white fill-white" />
           </div>
         )}
         {children}
@@ -134,7 +134,7 @@ export const ProductMediaCard = ({ imageUrl, videoUrl, alt, className = "", chil
           src={effectiveImageUrl}
           alt={alt}
           data-testid="product-media-image"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110"
           loading="lazy"
           decoding="async"
           onError={() => setImageFailed(true)}
