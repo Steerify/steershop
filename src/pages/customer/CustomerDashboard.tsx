@@ -10,7 +10,7 @@ import { rewardService } from "@/services/reward.service";
 import { courseService } from "@/services/course.service";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Package, Clock, CheckCircle2, Award, GraduationCap, ArrowRight, Store, ChevronDown, ChevronUp, Gift } from "lucide-react";
+import { ShoppingBag, Package, Clock, CheckCircle2, Award, GraduationCap, ArrowRight, Store, ChevronDown, ChevronUp, Gift, Heart, MapPin, ShieldCheck, Star, Users } from "lucide-react";
 import { AdirePattern } from "@/components/patterns/AdirePattern";
 import logo from "@/assets/steersolo-logo.png";
 import Joyride, { CallBackProps, STATUS } from "react-joyride";
@@ -22,6 +22,8 @@ import { ReferralCard } from "@/components/ReferralCard";
 import { WhatsAppCommunityBanner } from "@/components/WhatsAppCommunityBanner";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 const CustomerDashboard = () => {
   const navigate = useNavigate();
@@ -326,6 +328,32 @@ const CustomerDashboard = () => {
             {/* Contextual Recommendation Banner */}
             {getContextualRecommendation()}
 
+            {/* Buyer Trust Center */}
+            <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 via-card to-emerald-500/5">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                  Your Trust Center
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center p-3 rounded-lg bg-background/50 border border-border/30">
+                    <div className="text-2xl font-black text-emerald-600">{stats.completedOrders}</div>
+                    <p className="text-xs text-muted-foreground">Successful Orders</p>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-background/50 border border-border/30">
+                    <div className="text-2xl font-black text-primary">0</div>
+                    <p className="text-xs text-muted-foreground">Disputes</p>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-background/50 border border-border/30">
+                    <div className="text-2xl font-black text-amber-500">5</div>
+                    <p className="text-xs text-muted-foreground">Verified Vendors</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="border-primary/15 bg-primary/5">
               <CardContent className="p-4 sm:p-5">
                 <p className="text-xs uppercase tracking-wider font-semibold text-primary mb-1">Start here</p>
@@ -394,6 +422,128 @@ const CustomerDashboard = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Saved Vendors & Deals Near You */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* Saved Vendors */}
+              <Card className="border border-border/50 shadow-sm bg-gradient-to-br from-pink-500/5 via-card to-pink-500/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg font-bold flex items-center gap-2">
+                    <Heart className="w-5 h-5 text-pink-500" />
+                    Your Favorite Stores
+                  </CardTitle>
+                  <CardDescription>One-click access to your go-to vendors</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-3">
+                    {[
+                      { name: "Olu's Fashion Hub", category: "Fashion", badge: "Gold" },
+                      { name: "Ade's Electronics", category: "Electronics", badge: "Platinum" },
+                      { name: "Chioma's Skincare", category: "Beauty", badge: "Silver" }
+                    ].map((vendor, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/30 hover:bg-background/80 transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/20 text-primary">
+                              {vendor.name.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-sm">{vendor.name}</p>
+                            <p className="text-xs text-muted-foreground">{vendor.category}</p>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className={
+                          vendor.badge === "Gold" ? "border-gold/50 text-gold bg-gold/10" :
+                          vendor.badge === "Platinum" ? "border-purple-500/50 text-purple-500 bg-purple-500/10" :
+                          "border-gray-400/50 text-gray-500 bg-gray-400/10"
+                        }>
+                          {vendor.badge}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                  <Button variant="outline" className="w-full mt-4">
+                    View All Favorites
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Deals Near You */}
+              <Card className="border border-border/50 shadow-sm bg-gradient-to-br from-orange-500/5 via-card to-orange-500/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg font-bold flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-orange-500" />
+                    Deals Near You
+                  </CardTitle>
+                  <CardDescription>Location-based deals and trending shops</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-3">
+                    <div className="p-4 rounded-lg bg-gradient-to-r from-orange-500/10 to-orange-400/5 border border-orange-500/20">
+                      <p className="font-semibold flex items-center gap-2">
+                        <span className="text-orange-500">🔥</span>
+                        Trending in Lagos
+                      </p>
+                      <p className="text-xs text-muted-foreground">Fashion, Electronics & More</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-gradient-to-r from-blue-500/10 to-blue-400/5 border border-blue-500/20">
+                      <p className="font-semibold flex items-center gap-2">
+                        <span className="text-blue-500">⭐</span>
+                        Popular in Ilorin
+                      </p>
+                      <p className="text-xs text-muted-foreground">Local Food & Artisans</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" className="w-full mt-4">
+                    Explore Local Deals
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Trusted Vendor List */}
+            <Card className="border border-border/50 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <Users className="w-5 h-5 text-primary" />
+                  Top Trusted Vendors
+                </CardTitle>
+                <CardDescription>SteerSolo's most trusted merchants</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    { tier: "Platinum", name: "Premium Tech Store", rating: 4.9, reviews: 234 },
+                    { tier: "Gold", name: "Fashion Avenue", rating: 4.8, reviews: 189 },
+                    { tier: "Silver", name: "Home Essentials", rating: 4.7, reviews: 123 }
+                  ].map((vendor, i) => (
+                    <div key={i} className="p-4 rounded-lg border border-border/30 bg-background/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge className={
+                          vendor.tier === "Platinum" ? "bg-purple-500 hover:bg-purple-600" :
+                          vendor.tier === "Gold" ? "bg-gold hover:bg-gold/90" :
+                          "bg-gray-400 hover:bg-gray-500"
+                        }>
+                          {vendor.tier}
+                        </Badge>
+                        <div className="flex items-center gap-1 text-xs">
+                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                          <span>{vendor.rating}</span>
+                        </div>
+                      </div>
+                      <p className="font-medium">{vendor.name}</p>
+                      <p className="text-xs text-muted-foreground">{vendor.reviews} reviews</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
             <div className="lg:hidden space-y-4">
               <Collapsible open={isRecentOrdersOpen} onOpenChange={setIsRecentOrdersOpen}>

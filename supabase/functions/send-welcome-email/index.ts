@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
-import { getTransporter, getDefaultFromEmail } from "../_shared/smtp.ts";
+import { getDefaultFromEmail } from "../_shared/smtp.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,7 +57,6 @@ serve(async (req) => {
     const storeLink = `https://steersolo.com/shop/${shopSlug}`;
     const name = profile.full_name || 'there';
 
-    const transporter = await getTransporter();
     const fromEmail = getDefaultFromEmail();
 
     const emailHtml = `
@@ -252,12 +251,36 @@ serve(async (req) => {
 </body>
 </html>`;
 
-    await transporter.sendMail({
-      from: fromEmail,
-      to: profile.email,
-      subject: `Welcome to SteerSolo! Here's how to start selling 🚀`,
-      html: emailHtml,
-    });
+    // Enqueue welcome email
+    const message_id = crypto.randomUUID()
+    const { error: queueErr } = await (serviceClient as any).rpc('enqueue_email', {
+      queue_name: 'transactional_emails',
+      payload: {
+        message_id,
+        label: 'welcome-email',
+        to: profile.email,
+        from: fromEmail,
+        replyTo: 'mail@steersolo.com',
+        subject: `Welcome to SteerSolo! Here's how to start selling 🚀`,
+        html: emailHtml,
+        queued_at: new Date().toISOString(),
+      },
+    })
+    if (queueErr) {
+      console.error('Failed to enqueue welcome email:', queueErr)
+      throw new Error(queueErr.message || 'Failed to enqueue email')
+    }
+    try {
+      await (serviceClient as any).from('email_send_log').insert({
+        message_id,
+        template_name: 'welcome-email',
+        recipient_email: profile.email,
+        status: 'pending',
+      })
+    } catch (e) {
+      console.warn('email_send_log pending insert failed (non-fatal):', e)
+    }
+    console.log('Welcome email enqueued successfully:', message_id)
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

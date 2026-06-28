@@ -56,11 +56,19 @@ export const SignupEmail = ({
           <Link href={`mailto:${recipient}`} style={styles.link}>
             {recipient}
           </Link>
-          ) by entering the following 6-digit code:
+          ) by clicking the button below:
         </Text>
-        <Section style={styles.codeSection}>
-          <Text style={styles.codeText}>{token}</Text>
+        <Section style={{ ...styles.codeSection }>
+          <Link href={confirmationUrl} style={{
+            backgroundColor: '#2563eb', color: 'white', padding: '14px 28px', borderRadius: '28px', textDecoration: 'none', fontSize: '16px', fontWeight: 700, display: 'inline-block'
+          }}>
+            Verify Your Email
+          </Link>
         </Section>
+        <Text style={styles.mutedText}>
+          Or copy and paste this link into your browser:
+        </Text>
+        <Text style={styles.codeText}>{confirmationUrl}</Text>
         <Text style={styles.footer}>
           If you didn't create an account, you can safely ignore this email.
         </Text>

@@ -18,13 +18,13 @@ export interface DeliveryRate {
   estimated_days: number;
   rate_id: string;
   service_type?: string;
-  provider?: "terminal" | "sendbox";
+  provider?: "terminal" | "sendbox" | "shipbubble";
 }
 
 export interface CreateDeliveryRequest {
   order_id: string;
   shop_id: string;
-  provider: "terminal" | "sendbox" | "manual";
+  provider: "terminal" | "sendbox" | "manual" | "shipbubble";
   pickup_address: DeliveryAddress;
   delivery_address: DeliveryAddress;
   delivery_fee: number;
@@ -103,7 +103,7 @@ const deliveryService = {
     order_id: string;
     shop_id: string;
     rate_id?: string;
-    provider: "terminal" | "sendbox" | "manual";
+    provider: "terminal" | "sendbox" | "manual" | "shipbubble";
     pickup_address: DeliveryAddress;
     delivery_address: DeliveryAddress;
     delivery_fee: number;

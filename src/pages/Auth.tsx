@@ -966,7 +966,7 @@ const Auth = () => {
                 {/* OR Divider */}
                 <div className="relative py-2">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border/60"></div>
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-border/40 to-transparent"></div>
                   </div>
                   <div className="relative flex justify-center text-[11px] font-bold tracking-widest uppercase">
                     <span className="bg-background px-4 text-muted-foreground">

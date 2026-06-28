@@ -1125,6 +1125,19 @@ const Products = () => {
               >
                 Cancel
               </Button>
+              {!editingProduct && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 border-primary/30 text-primary hover:bg-primary/10"
+                  onClick={() => {
+                    toast({ title: "Draft Saved", description: "Your draft has been saved locally." });
+                    setShowDraftBanner(false);
+                  }}
+                >
+                  Save Draft
+                </Button>
+              )}
               <Button
                 type="submit"
                 className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90"

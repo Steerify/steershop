@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { getTransporter, getDefaultFromEmail } from "../_shared/smtp.ts";
+import { getDefaultFromEmail } from "../_shared/smtp.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -134,19 +135,43 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log(`Sending password reset email to: ${email}`);
 
-    const transporter = await getTransporter();
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const fromEmail = getDefaultFromEmail();
 
-    const emailResponse = await transporter.sendMail({
-      from: fromEmail,
-      to: [email],
-      subject: "Reset Your Password - SteerSolo",
-      html: generateEmailHtml(name || "", resetLink),
-    });
+    // Enqueue password reset email
+    const message_id = crypto.randomUUID()
+    const { error: queueErr } = await (supabase as any).rpc('enqueue_email', {
+      queue_name: 'transactional_emails',
+      payload: {
+        message_id,
+        label: 'password-reset',
+        to: email,
+        from: fromEmail,
+        replyTo: 'mail@steersolo.com',
+        subject: "Reset Your Password - SteerSolo",
+        html: generateEmailHtml(name || "", resetLink),
+        queued_at: new Date().toISOString(),
+      },
+    })
+    if (queueErr) {
+      console.error('Failed to enqueue password reset email:', queueErr)
+      throw new Error(queueErr.message || 'Failed to enqueue email')
+    }
+    try {
+      await (supabase as any).from('email_send_log').insert({
+        message_id,
+        template_name: 'password-reset',
+        recipient_email: email,
+        status: 'pending',
+      })
+    } catch (e) {
+      console.warn('email_send_log pending insert failed (non-fatal):', e)
+    }
+    console.log('Password reset email enqueued successfully:', message_id)
 
-    console.log("Password reset email sent successfully:", emailResponse);
-
-    return new Response(JSON.stringify({ success: true, ...emailResponse }), {
+    return new Response(JSON.stringify({ success: true, message_id }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",

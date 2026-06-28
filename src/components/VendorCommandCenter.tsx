@@ -41,6 +41,10 @@ import {
   AlertCircle,
   Eye,
   Filter,
+  Heart,
+  Phone,
+  Trophy,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -437,6 +441,47 @@ export const VendorCommandCenter = () => {
 
   return (
     <div className="space-y-4">
+      {/* Business Health Score */}
+      <Card className="border border-border/50 overflow-hidden shadow-sm bg-gradient-to-br from-primary/5 via-card to-accent/5">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-bold flex items-center gap-2">
+            <Activity className="w-5 h-5 text-primary" />
+            Business Health Score
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="flex items-end gap-6">
+            <div className="text-center">
+              <div className="text-5xl font-black text-primary mb-2">78%</div>
+              <Progress value={78} className="h-3 w-32" />
+            </div>
+            <div className="flex-1">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {[
+                  { label: "Profile Completed", icon: CheckCircle2 },
+                  { label: "Products Uploaded", icon: Package },
+                  { label: "Verification Status", icon: ShieldCheck },
+                  { label: "Store Link Shared", icon: Share2 },
+                  { label: "Reviews", icon: Star },
+                  { label: "Recent Activity", icon: Activity },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 p-2 rounded-lg bg-background/50 border border-border/30"
+                  >
+                    <item.icon className="w-4 h-4 text-emerald-500" />
+                    <span className="text-xs font-medium">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Complete your store to 100% and increase buyer trust!
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Header Card */}
       <div className="rounded-2xl border border-border/50 bg-card overflow-hidden shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 border-b border-border/40 bg-muted/20">
@@ -529,6 +574,184 @@ export const VendorCommandCenter = () => {
           ))}
         </div>
       </div>
+
+      {/* Visibility & Inquiry Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Visibility Metrics */}
+        <Card className="border border-border/50 overflow-hidden shadow-sm">
+          <CardHeader className="pb-2 border-b border-border/30">
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <Eye className="w-4 h-4 text-primary" />
+              Visibility Metrics
+            </CardTitle>
+            <CardDescription className="text-xs">This Week</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-lg bg-background/50 border border-border/30">
+                <div className="flex items-center gap-2 mb-1">
+                  <Eye className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Store Views
+                  </span>
+                </div>
+                <div className="text-2xl font-black">245</div>
+                <div className="flex items-center gap-1 text-xs text-emerald-600">
+                  <TrendingUp className="w-3 h-3" />
+                  <span>+18% from last week</span>
+                </div>
+              </div>
+              <div className="p-3 rounded-lg bg-background/50 border border-border/30">
+                <div className="flex items-center gap-2 mb-1">
+                  <Share2 className="w-4 h-4 text-accent" />
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Link Clicks
+                  </span>
+                </div>
+                <div className="text-2xl font-black">189</div>
+                <div className="flex items-center gap-1 text-xs text-emerald-600">
+                  <TrendingUp className="w-3 h-3" />
+                  <span>+12% from last week</span>
+                </div>
+              </div>
+              <div className="p-3 rounded-lg bg-background/50 border border-border/30">
+                <div className="flex items-center gap-2 mb-1">
+                  <Heart className="w-4 h-4 text-rose-500" />
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Product Views
+                  </span>
+                </div>
+                <div className="text-2xl font-black">542</div>
+                <div className="flex items-center gap-1 text-xs text-emerald-600">
+                  <TrendingUp className="w-3 h-3" />
+                  <span>+24% from last week</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Inquiry Metrics */}
+        <Card className="border border-border/50 overflow-hidden shadow-sm">
+          <CardHeader className="pb-2 border-b border-border/30">
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-accent" />
+              Inquiry Metrics
+            </CardTitle>
+            <CardDescription className="text-xs">This Week</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <MessageCircle className="w-4 h-4 text-emerald-600" />
+                  <span className="text-xs font-medium text-muted-foreground">
+                    WhatsApp Clicks
+                  </span>
+                </div>
+                <div className="text-2xl font-black">27</div>
+              </div>
+              <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <Phone className="w-4 h-4 text-blue-600" />
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Contact Clicks
+                  </span>
+                </div>
+                <div className="text-2xl font-black">14</div>
+              </div>
+              <div className="p-3 rounded-lg bg-purple-500/5 border border-purple-500/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <ShoppingCart className="w-4 h-4 text-purple-600" />
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Product Inquiries
+                  </span>
+                </div>
+                <div className="text-2xl font-black">8</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Trust Score & Marketplace Ranking */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Trust Score */}
+        <Card className="border border-amber-500/20 overflow-hidden shadow-sm bg-gradient-to-br from-amber-500/5 via-card to-amber-500/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-amber-500" />
+              Trust Score
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="text-center mb-3">
+              <Badge className="bg-amber-500/10 text-amber-700 border border-amber-500/30 mb-2">
+                Gold Trusted Merchant
+              </Badge>
+              <div className="text-5xl font-black text-amber-600">89/100</div>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: "Verified", icon: Check },
+                { label: "Reviews", icon: Star },
+                { label: "Response Rate", icon: MessageCircle },
+                { label: "Store Completeness", icon: Store },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm">
+                  <item.icon className="w-4 h-4 text-emerald-500" />
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Marketplace Ranking */}
+        <Card className="border border-border/50 overflow-hidden shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <Award className="w-5 h-5 text-primary" />
+              Marketplace Ranking
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="text-center py-4">
+              <div className="text-5xl font-black text-primary mb-2">#7</div>
+              <p className="text-sm text-muted-foreground">in Electronics</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Vendor Achievements */}
+      <Card className="border border-border/50 overflow-hidden shadow-sm">
+        <CardHeader className="pb-2 border-b border-border/30">
+          <CardTitle className="text-sm font-bold flex items-center gap-2">
+            <Award className="w-4 h-4 text-primary" />
+            Vendor Achievements
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="flex flex-wrap gap-2">
+            {[
+              { title: "Verified Merchant", icon: ShieldCheck },
+              { title: "First 100 Store Views", icon: Eye },
+              { title: "Top Vendor of the Week", icon: Trophy },
+              { title: "Trusted Seller", icon: Star },
+            ].map((item, i) => (
+              <Badge
+                key={i}
+                variant="outline"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-background/50"
+              >
+                <item.icon className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-xs font-medium">{item.title}</span>
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -760,6 +983,91 @@ export const VendorCommandCenter = () => {
 
         {/* Right Column - Quick Actions & Insights */}
         <div className="space-y-4">
+          {/* Revenue Metrics */}
+          <Card className="border border-emerald-500/20 overflow-hidden shadow-sm bg-gradient-to-br from-emerald-500/5 via-card to-emerald-500/5">
+            <CardHeader className="pb-2 border-b border-emerald-500/10">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-emerald-600" />
+                Revenue This Month
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="text-center mb-3">
+                <div className="text-4xl font-black text-emerald-600">
+                  ₦325,000
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-center">
+                <div className="p-2 rounded-lg bg-background/50 border border-border/30">
+                  <div className="text-xl font-bold">24</div>
+                  <div className="text-xs text-muted-foreground">Orders</div>
+                </div>
+                <div className="p-2 rounded-lg bg-background/50 border border-border/30">
+                  <div className="text-xl font-bold">₦13,500</div>
+                  <div className="text-xs text-muted-foreground">Avg Order</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tasks to Grow */}
+          <Card className="border border-border/50 overflow-hidden shadow-sm">
+            <CardHeader className="pb-2 border-b border-border/30">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <Target className="w-4 h-4 text-primary" />
+                Tasks to Grow
+              </CardTitle>
+              <CardDescription className="text-xs">
+                AI-powered recommendations
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="space-y-2">
+                {[
+                  "Add 5 more products",
+                  "Verify your identity",
+                  "Share your store link today",
+                  "Respond faster",
+                ].map((task, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 p-2 rounded-lg bg-background/50 border border-border/30"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <span className="text-sm">{task}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Marketing Center */}
+          <Card className="border border-border/50 overflow-hidden shadow-sm">
+            <CardHeader className="pb-2 border-b border-border/30">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <Megaphone className="w-4 h-4 text-accent" />
+                Marketing Center
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="text-center p-3 rounded-lg bg-primary/5 border border-primary/20 mb-3">
+                <div className="text-2xl font-black text-primary mb-1">3x</div>
+                <p className="text-xs text-muted-foreground">
+                  SteerSolo promoted your store this week
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-accent/5 border border-accent/20">
+                <Users className="w-5 h-5 text-accent" />
+                <div className="text-center">
+                  <div className="text-xl font-bold text-accent">1,850</div>
+                  <p className="text-xs text-muted-foreground">
+                    Estimated reach
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Quick Actions */}
           <Card className="border border-border/50 overflow-hidden shadow-sm">
             <CardHeader className="pb-2 border-b border-border/30">
@@ -833,52 +1141,6 @@ export const VendorCommandCenter = () => {
                     Referral
                   </Link>
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Insights Card */}
-          <Card className="border border-border/50 overflow-hidden shadow-sm bg-gradient-to-br from-primary/5 via-card to-accent/5">
-            <CardHeader className="pb-2 border-b border-border/30">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-accent" />
-                Insights
-              </CardTitle>
-              <CardDescription className="text-xs">
-                AI-powered tips for your store
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="space-y-3">
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-background/60 border border-border/30">
-                  <Info className="w-4 h-4 text-blue-500 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">Add more products</p>
-                    <p className="text-xs text-muted-foreground">
-                      Stores with 5+ products get 3x more views
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-background/60 border border-border/30">
-                  <Zap className="w-4 h-4 text-yellow-500 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">
-                      Run a marketing campaign
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Boost your sales by 2x with Steerify Ads
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-background/60 border border-border/30">
-                  <Target className="w-4 h-4 text-purple-500 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">Share on WhatsApp</p>
-                    <p className="text-xs text-muted-foreground">
-                      Share your store with your contacts for more visibility
-                    </p>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>

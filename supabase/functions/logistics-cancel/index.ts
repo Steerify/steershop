@@ -8,6 +8,8 @@ const corsHeaders = {
 
 const TERMINAL_API_KEY = Deno.env.get('TERMINAL_API_KEY');
 const TERMINAL_BASE_URL = 'https://api.terminal.africa/v1';
+const SHIPBUBBLE_API_KEY = Deno.env.get('SHIPBUBBLE_API_KEY');
+const SHIPBUBBLE_BASE_URL = 'https://api.shipbubble.com/v1';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -24,7 +26,6 @@ serve(async (req: Request) => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Require authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -49,7 +50,6 @@ serve(async (req: Request) => {
       });
     }
 
-    // Get delivery order and verify ownership
     const { data: deliveryOrder, error: fetchError } = await supabase
       .from('delivery_orders')
       .select(`
@@ -67,7 +67,6 @@ serve(async (req: Request) => {
       });
     }
 
-    // Verify ownership
     const shop = deliveryOrder.shops as any;
     if (shop?.owner_id !== authData.user.id) {
       return new Response(JSON.stringify({ error: 'Forbidden' }), {
@@ -75,7 +74,6 @@ serve(async (req: Request) => {
       });
     }
 
-    // Check if cancellation is allowed
     const cancellableStatuses = ['pending', 'confirmed'];
     if (!cancellableStatuses.includes(deliveryOrder.status)) {
       return new Response(JSON.stringify({ 
@@ -87,7 +85,6 @@ serve(async (req: Request) => {
       });
     }
 
-    // Check 1-hour rule for confirmed orders (if already picked up, cannot cancel)
     if (deliveryOrder.status === 'confirmed' && deliveryOrder.picked_up_at) {
       const pickedUpAt = new Date(deliveryOrder.picked_up_at);
       const now = new Date();
@@ -105,8 +102,8 @@ serve(async (req: Request) => {
     }
 
     let terminalCancelSuccess = false;
+    let shipbubbleCancelSuccess = false;
 
-    // Attempt to cancel with Terminal Africa if provider is terminal
     if (deliveryOrder.provider === 'terminal' && deliveryOrder.provider_shipment_id && TERMINAL_API_KEY) {
       try {
         const cancelResponse = await fetch(
@@ -128,15 +125,37 @@ serve(async (req: Request) => {
         } else {
           const errorText = await cancelResponse.text();
           console.warn('Terminal cancel API warning:', cancelResponse.status, errorText);
-          // Continue with local cancellation even if Terminal API fails
         }
       } catch (error) {
         console.error('Terminal cancel error:', error);
-        // Continue with local cancellation
+      }
+    } else if (deliveryOrder.provider === 'shipbubble' && deliveryOrder.provider_shipment_id && SHIPBUBBLE_API_KEY) {
+      try {
+        const cancelResponse = await fetch(
+          `${SHIPBUBBLE_BASE_URL}/shipping/labels/cancel/${deliveryOrder.provider_shipment_id}`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${SHIPBUBBLE_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              reason: reason || 'Customer/vendor cancellation',
+            }),
+          }
+        );
+
+        if (cancelResponse.ok) {
+          shipbubbleCancelSuccess = true;
+        } else {
+          const errorText = await cancelResponse.text();
+          console.warn('Shipbubble cancel API warning:', cancelResponse.status, errorText);
+        }
+      } catch (error) {
+        console.error('Shipbubble cancel error:', error);
       }
     }
 
-    // Update delivery order status
     const cancelReason = reason || 'Cancelled by vendor';
     const { error: updateError } = await supabase
       .from('delivery_orders')
@@ -149,6 +168,7 @@ serve(async (req: Request) => {
           cancelled_at: new Date().toISOString(),
           cancellation_reason: cancelReason,
           terminal_cancelled: terminalCancelSuccess,
+          shipbubble_cancelled: shipbubbleCancelSuccess,
         },
       })
       .eq('id', delivery_order_id);
@@ -157,7 +177,6 @@ serve(async (req: Request) => {
       throw updateError;
     }
 
-    // Create tracking event
     await supabase.from('delivery_tracking_events').insert({
       delivery_order_id,
       status: 'cancelled',
@@ -168,7 +187,6 @@ serve(async (req: Request) => {
       notification_sent_at: new Date().toISOString(),
     });
 
-    // Update related order status
     await supabase
       .from('orders')
       .update({
@@ -182,6 +200,7 @@ serve(async (req: Request) => {
         success: true,
         message: 'Delivery cancelled successfully',
         terminal_cancelled: terminalCancelSuccess,
+        shipbubble_cancelled: shipbubbleCancelSuccess,
         refund_eligible: deliveryOrder.status === 'pending' || 
           (deliveryOrder.status === 'confirmed' && !deliveryOrder.picked_up_at),
       }),

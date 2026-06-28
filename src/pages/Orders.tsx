@@ -423,6 +423,22 @@ const Orders = () => {
     }
   };
 
+  const statusSequence = [
+    "pending",
+    "awaiting_approval",
+    "confirmed",
+    "paid_awaiting_delivery",
+    "processing",
+    "out_for_delivery",
+    "delivered",
+  ];
+
+  const getStatusProgress = (status: string) => {
+    if (status === "cancelled") return 0;
+    const index = statusSequence.indexOf(status);
+    return ((index + 1) / statusSequence.length) * 100;
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -590,6 +606,27 @@ const Orders = () => {
                         </div>
                       ))}
                     </div>
+
+                    {/* Order Progress (Goal Gradient Effect) */}
+                    {order.status !== "cancelled" && (
+                      <div className="mt-4 space-y-2">
+                        <p className="text-xs text-muted-foreground font-semibold">
+                          Order Progress
+                        </p>
+                        <div className="relative w-full h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-700 ease-out"
+                            style={{
+                              width: `${getStatusProgress(order.status)}%`,
+                            }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-muted-foreground">
+                          <span>Order Placed</span>
+                          <span>Delivered</span>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Delivery Section */}
                     <div className="border-t border-border/50 pt-4">

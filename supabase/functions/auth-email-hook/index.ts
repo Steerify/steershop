@@ -1,6 +1,7 @@
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
-import { getTransporter, getDefaultFromEmail } from '../_shared/smtp.ts'
+import { getDefaultFromEmail } from '../_shared/smtp.ts'
+import { createClient } from 'npm:@supabase/supabase-js@2'
 
 // Import existing SteerSolo templates
 import { SignupEmail } from '../_shared/email-templates/signup.tsx'
@@ -127,28 +128,44 @@ async function handleWebhook(req: Request): Promise<Response> {
   const html = await renderAsync(React.createElement(EmailTemplate, templateProps))
   const text = await renderAsync(React.createElement(EmailTemplate, templateProps), { plainText: true })
 
-  const transporter = await getTransporter();
   const SENDER_EMAIL = getDefaultFromEmail();
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  // 1. Send the primary auth email to the user
-  try {
-    const info = await transporter.sendMail({
-      from: SENDER_EMAIL,
+  // 1. Enqueue the primary auth email to the user
+  const message_id = crypto.randomUUID()
+  const { error: queueErr } = await (supabase as any).rpc('enqueue_email', {
+    queue_name: 'auth_emails',
+    payload: {
+      message_id,
+      label: `auth:${emailType}`,
       to: recipientEmail,
+      from: SENDER_EMAIL,
+      replyTo: 'mail@steersolo.com',
       subject: EMAIL_SUBJECTS[emailType] || 'Notification',
       html,
       text,
-    })
-    console.log(`Auth email sent successfully: ${info.messageId}`)
-  } catch (sendError) {
-    console.error('Failed to send auth email', sendError)
-    return new Response(JSON.stringify({ error: 'Failed to send email' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+      queued_at: new Date().toISOString(),
+    },
+  })
+  if (queueErr) {
+    console.error('Failed to enqueue auth email:', queueErr)
+    throw new Error(queueErr.message || 'Failed to enqueue email')
   }
+  try {
+    await (supabase as any).from('email_send_log').insert({
+      message_id,
+      template_name: `auth:${emailType}`,
+      recipient_email: recipientEmail,
+      status: 'pending',
+    })
+  } catch (e) {
+    console.warn('email_send_log pending insert failed (non-fatal):', e)
+  }
+  console.log(`Auth email enqueued successfully: ${message_id}`)
 
-  // 2. Admin-only logic for 'signup'.
+  // 2. Admin-only logic for 'signup'
   if (emailType === 'signup') {
     try {
       const metadata = payload.user.user_metadata || {}
@@ -171,16 +188,38 @@ async function handleWebhook(req: Request): Promise<Response> {
         </div>
       `
       
-      await transporter.sendMail({
-        from: SENDER_EMAIL,
-        to: ADMIN_SIGNUP_EMAIL,
-        subject: adminSubject,
-        html: adminHtml,
-        text: `New Signup: ${recipientEmail} | Role: ${role}`,
+      const adminMessageId = crypto.randomUUID()
+      const { error: adminQueueErr } = await (supabase as any).rpc('enqueue_email', {
+        queue_name: 'transactional_emails',
+        payload: {
+          message_id: adminMessageId,
+          label: 'admin:signup-alert',
+          to: ADMIN_SIGNUP_EMAIL,
+          from: SENDER_EMAIL,
+          replyTo: 'mail@steersolo.com',
+          subject: adminSubject,
+          html: adminHtml,
+          text: `New Signup: ${recipientEmail} | Role: ${role}`,
+          queued_at: new Date().toISOString(),
+        },
       })
-      console.log('Admin signup alert sent successfully')
+      if (adminQueueErr) {
+        console.error('Failed to enqueue admin signup alert:', adminQueueErr)
+      } else {
+        try {
+          await (supabase as any).from('email_send_log').insert({
+            message_id: adminMessageId,
+            template_name: 'admin:signup-alert',
+            recipient_email: ADMIN_SIGNUP_EMAIL,
+            status: 'pending',
+          })
+        } catch (e) {
+          console.warn('admin email_send_log pending insert failed (non-fatal):', e)
+        }
+        console.log('Admin signup alert enqueued successfully')
+      }
     } catch (e) {
-      console.error('Non-blocking error sending admin signup alert:', e)
+      console.error('Non-blocking error enqueuing admin signup alert:', e)
     }
   }
 

@@ -8,8 +8,22 @@ const corsHeaders = {
 
 const TERMINAL_API_KEY = Deno.env.get('TERMINAL_API_KEY');
 const TERMINAL_BASE_URL = 'https://api.terminal.africa/v1';
+const SHIPBUBBLE_API_KEY = Deno.env.get('SHIPBUBBLE_API_KEY');
+const SHIPBUBBLE_BASE_URL = 'https://api.shipbubble.com/v1';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+// Map Shipbubble statuses to our internal statuses
+const SHIPBUBBLE_STATUS_MAP: Record<string, string> = {
+  'pending': 'pending',
+  'confirmed': 'confirmed',
+  'picked_up': 'picked_up',
+  'in_transit': 'in_transit',
+  'out_for_delivery': 'out_for_delivery',
+  'delivered': 'delivered',
+  'cancelled': 'cancelled',
+  'failed': 'failed'
+};
 
 serve(async (req: Request) => {
   // Handle CORS preflight
@@ -44,6 +58,65 @@ serve(async (req: Request) => {
       .select('*')
       .eq('delivery_order_id', deliveryOrderId)
       .order('created_at', { ascending: false });
+
+    // If using Shipbubble and we have a shipment ID, fetch latest tracking
+    if (deliveryOrder.provider === 'shipbubble' && deliveryOrder.provider_shipment_id && SHIPBUBBLE_API_KEY) {
+      try {
+        const trackingRes = await fetch(
+          `${SHIPBUBBLE_BASE_URL}/shipping/labels?order_id=${encodeURIComponent(deliveryOrder.provider_shipment_id)}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${SHIPBUBBLE_API_KEY}`,
+            },
+          }
+        );
+
+        const trackingData = await trackingRes.json();
+
+        if (trackingData.status === 'success' && trackingData.data?.results?.length > 0) {
+          const shipment = trackingData.data.results[0];
+          
+          // Sync new events
+          if (shipment.package_status) {
+            for (const event of shipment.package_status) {
+              const eventId = `${shipment.order_id}-${event.datetime}`;
+              const existingEvent = localEvents?.find(
+                (e: any) => e.provider_event_id === eventId
+              );
+              
+              if (!existingEvent) {
+                const mappedStatus = SHIPBUBBLE_STATUS_MAP[event.status] || event.status;
+                await supabase.from('delivery_tracking_events').insert({
+                  delivery_order_id: deliveryOrderId,
+                  status: mappedStatus,
+                  description: event.status,
+                  location: null,
+                  provider_event_id: eventId,
+                });
+              }
+            }
+          }
+          
+          // Update delivery order status if changed
+          const latestStatus = SHIPBUBBLE_STATUS_MAP[shipment.status] || shipment.status;
+          if (latestStatus && latestStatus !== deliveryOrder.status) {
+            const updates: Record<string, any> = { status: latestStatus };
+            
+            if (latestStatus === 'picked_up') updates.picked_up_at = new Date().toISOString();
+            if (latestStatus === 'delivered') updates.delivered_at = new Date().toISOString();
+            if (latestStatus === 'cancelled') updates.cancelled_at = new Date().toISOString();
+            
+            await supabase
+              .from('delivery_orders')
+              .update(updates)
+              .eq('id', deliveryOrderId);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching tracking from Shipbubble:', error);
+        // Continue with local events if API fails
+      }
+    }
 
     // If using Terminal Africa and we have a shipment ID, fetch latest tracking
     if (deliveryOrder.provider === 'terminal' && deliveryOrder.provider_shipment_id && TERMINAL_API_KEY) {

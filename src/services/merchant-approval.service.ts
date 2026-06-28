@@ -6,10 +6,14 @@ export interface MerchantApplicationData {
   logo_url: string;
   banner_url?: string;
   payment_method: string;
-  owner_name?: string;
+  owner_name: string;
   owner_email: string;
-  phone_number?: string;
-  location?: string;
+  phone_number: string;
+  location: string;
+  bvn?: string; // Bank Verification Number for Nigerian vendors
+  cac_number?: string; // Corporate Affairs Commission registration number
+  address_proof?: string; // URL to address proof document
+  id_proof?: string; // URL to government-issued ID
 }
 
 export interface ValidationResult {
@@ -47,13 +51,13 @@ export async function validateMerchantApplication(
   const errors: string[] = [];
 
   // Validate business name
-  if (!data.shop_name || data.shop_name.trim().length < 2) {
-    errors.push('Business name is required and must be at least 2 characters');
+  if (!data.shop_name || data.shop_name.trim().length < 3) {
+    errors.push('Business name is required and must be at least 3 characters');
   }
 
   // Validate description
-  if (!data.description || data.description.trim().length < 20) {
-    errors.push('Description is required and must be at least 20 characters');
+  if (!data.description || data.description.trim().length < 50) {
+    errors.push('Description is required and must be at least 50 characters');
   }
 
   // Validate payment method configuration
@@ -66,15 +70,39 @@ export async function validateMerchantApplication(
     errors.push('Official logo is required');
   }
 
-  // Validate banner (optional but recommended)
-  // if (!data.banner_url) {
-  //   errors.push('Banner image is recommended');
-  // }
+  // Validate owner name
+  if (!data.owner_name || data.owner_name.trim().length < 3) {
+    errors.push('Owner full name is required and must be at least 3 characters');
+  }
+
+  // Validate phone number (Nigerian format check: starts with 0, 11 digits)
+  const phoneRegex = /^0\d{10}$/;
+  if (!data.phone_number || !phoneRegex.test(data.phone_number)) {
+    errors.push('Valid Nigerian phone number (11 digits starting with 0) is required');
+  }
+
+  // Validate location
+  if (!data.location || data.location.trim().length < 5) {
+    errors.push('Location (city + state) is required and must be at least 5 characters');
+  }
 
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!data.owner_email || !emailRegex.test(data.owner_email)) {
     errors.push('Valid email address is required');
+  }
+
+  // Optional but recommended: BVN, CAC, address proof, ID proof
+  const recommendations: string[] = [];
+  if (!data.bvn) recommendations.push('BVN (Bank Verification Number) is recommended for full verification');
+  if (!data.cac_number && !data.shop_name.toLowerCase().includes('enterprise')) recommendations.push('CAC registration number is recommended for business verification');
+  if (!data.id_proof) recommendations.push('Government-issued ID proof is recommended');
+  if (!data.address_proof) recommendations.push('Address proof (utility bill, etc.) is recommended');
+
+  // Add recommendations as warnings (but don't fail validation for them)
+  if (recommendations.length > 0) {
+    // For now, just log, but we could add to a separate warnings array
+    console.log('Verification recommendations:', recommendations);
   }
 
   return {

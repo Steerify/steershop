@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import Confetti from "react-dom-confetti";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -115,6 +116,7 @@ export const VendorSetupWizard = ({
 }: VendorSetupWizardProps) => {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const { toast } = useToast();
   const wizardRef = useRef<HTMLDivElement>(null);
 
@@ -233,6 +235,15 @@ export const VendorSetupWizard = ({
   // Always scroll to top of wizard when step changes
   useEffect(() => {
     wizardRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
+
+  // Trigger confetti when reaching step 4 (success)
+  useEffect(() => {
+    if (step === 4) {
+      setShowConfetti(true);
+    } else {
+      setShowConfetti(false);
+    }
   }, [step]);
 
   const handleFileChange = (
@@ -1273,6 +1284,27 @@ export const VendorSetupWizard = ({
 
             {step === 4 && (
               <div className="flex flex-col items-center justify-center py-12 text-center relative z-10">
+                <Confetti
+                  active={showConfetti}
+                  config={{
+                    spread: 360,
+                    angle: 90,
+                    startVelocity: 40,
+                    elementCount: 200,
+                    dragFriction: 0.12,
+                    duration: 3000,
+                    stagger: 3,
+                    width: "10px",
+                    height: "10px",
+                    colors: [
+                      "#a864fd",
+                      "#29cdff",
+                      "#78ff44",
+                      "#ff718d",
+                      "#fdff6a",
+                    ],
+                  }}
+                />
                 <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mb-8 shadow-xl shadow-green-500/20 animate-in zoom-in duration-500">
                   <CheckCircle2 className="w-12 h-12 text-white" />
                 </div>

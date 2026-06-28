@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { getTransporter, getDefaultFromEmail } from "../_shared/smtp.ts";
+import { getDefaultFromEmail } from "../_shared/smtp.ts";
 import { buildEmailHtml } from "../_shared/email-html.ts";
 
 const corsHeaders = {
@@ -165,7 +165,6 @@ serve(async req => {
   }
 
   try {
-    const transporter = await getTransporter();
     const fromEmail = getDefaultFromEmail();
 
     const body = await req.json();
@@ -217,7 +216,7 @@ serve(async req => {
     // Prefer data from the request payload to bypass potential DB/RLS connection issues
     let isPaid = false;
     let digitalItemsHtml = "";
-    customerPhone = customerPhone || body.customerPhone || null;
+    let customerPhone = body.customerPhone || null;
 
     try {
       const { data: orderRow } = await supabase
@@ -442,17 +441,39 @@ serve(async req => {
     // Send to customer
     if (customerEmail && customerSubject) {
       try {
-        const info = await transporter.sendMail({
-          from: fromEmail,
-          to: customerEmail,
-          subject: customerSubject,
-          html: customerBodyHtml,
+        const messageId = crypto.randomUUID();
+        const { error: queueErr } = await (supabase as any).rpc('enqueue_email', {
+          queue_name: 'transactional_emails',
+          payload: {
+            message_id: messageId,
+            label: `order-${eventType}`,
+            to: customerEmail,
+            from: fromEmail,
+            reply_to: 'mail@steersolo.com',
+            subject: customerSubject,
+            html: customerBodyHtml,
+            queued_at: new Date().toISOString(),
+          },
         });
-        console.log("Customer email sent", {
-          orderId,
-          eventType,
-          messageId: info?.messageId,
-        });
+        if (queueErr) {
+          console.error("Failed to enqueue customer email:", queueErr);
+        } else {
+          console.log("Customer email enqueued", {
+            orderId,
+            eventType,
+            messageId,
+          });
+          try {
+            await (supabase as any).from("email_send_log").insert({
+              message_id: messageId,
+              template_name: `order-${eventType}`,
+              recipient_email: customerEmail,
+              status: "pending",
+            });
+          } catch (e) {
+            console.warn("email_send_log pending insert failed (non-fatal):", e);
+          }
+        }
       } catch (e) {
         console.error("Customer email failed:", e);
       }
@@ -461,17 +482,39 @@ serve(async req => {
     // Send to shop owner (resolved server-side)
     if (shopOwnerEmail && ownerSubject) {
       try {
-        const info = await transporter.sendMail({
-          from: fromEmail,
-          to: shopOwnerEmail,
-          subject: ownerSubject,
-          html: ownerBodyHtml,
+        const messageId = crypto.randomUUID();
+        const { error: queueErr } = await (supabase as any).rpc('enqueue_email', {
+          queue_name: 'transactional_emails',
+          payload: {
+            message_id: messageId,
+            label: `order-${eventType}-owner`,
+            to: shopOwnerEmail,
+            from: fromEmail,
+            reply_to: 'mail@steersolo.com',
+            subject: ownerSubject,
+            html: ownerBodyHtml,
+            queued_at: new Date().toISOString(),
+          },
         });
-        console.log("Owner email sent", {
-          orderId,
-          eventType,
-          messageId: info?.messageId,
-        });
+        if (queueErr) {
+          console.error("Failed to enqueue owner email:", queueErr);
+        } else {
+          console.log("Owner email enqueued", {
+            orderId,
+            eventType,
+            messageId,
+          });
+          try {
+            await (supabase as any).from("email_send_log").insert({
+              message_id: messageId,
+              template_name: `order-${eventType}-owner`,
+              recipient_email: shopOwnerEmail,
+              status: "pending",
+            });
+          } catch (e) {
+            console.warn("email_send_log pending insert failed (non-fatal):", e);
+          }
+        }
       } catch (e) {
         console.error("Owner email failed:", e);
       }

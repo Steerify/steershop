@@ -332,7 +332,7 @@ const CheckoutDialog = ({
   const [showPaymentMethodSelection, setShowPaymentMethodSelection] =
     useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
-    "paystack" | "bank_transfer" | null
+    "paystack" | "bank_transfer" | "mediuspay" | null
   >(null);
   const [couponCode, setCouponCode] = useState("");
   const [couponDiscount, setCouponDiscount] = useState(0);
@@ -706,6 +706,65 @@ const CheckoutDialog = ({
     }
   };
 
+  const handleMediusPayPayment = async (
+    orderId: string,
+    customerEmail: string,
+  ) => {
+    setIsInitializingPayment(true);
+
+    try {
+      if (!customerEmail?.trim()) {
+        throw new Error("Email is required for payment");
+      }
+
+      console.log("Initializing MediusPay payment via backend:", {
+        order_id: orderId,
+        shop_id: shop.id,
+        amount: effectiveTotal,
+        email: customerEmail,
+      });
+
+      // Call the backend edge function to initialize MediusPay payment
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "mediuspay-initialize-order",
+        {
+          body: {
+            order_id: orderId,
+            shop_id: shop.id,
+            amount_ngn: effectiveTotal,
+            customer_email: customerEmail,
+            customer_name: formData.customer_name,
+            redirect_url: window.location.origin + "/customer/orders",
+          },
+        },
+      );
+
+      if (fnError || !data?.success) {
+        const errorMsg =
+          data?.error || fnError?.message || "Failed to initialize payment";
+        throw new Error(errorMsg);
+      }
+
+      // Update order with payment reference
+      await supabase
+        .from("orders")
+        .update({ payment_reference: data.data.reference })
+        .eq("id", orderId);
+
+      // Redirect to MediusPay checkout page
+      window.location.href = data.data.checkout_url;
+    } catch (error: any) {
+      console.error("Payment initialization error:", error);
+      setIsInitializingPayment(false);
+      toast({
+        title: "Payment Failed",
+        description:
+          error.message || "Please try again or use another payment method",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDeliveryBeforeService = async (
     orderId: string,
     notificationResult?: {
@@ -813,7 +872,7 @@ const CheckoutDialog = ({
 
   // New function to handle order creation and payment
   const createOrderAndProcessPayment = async (
-    paymentMethod?: "paystack" | "bank_transfer",
+    paymentMethod?: "paystack" | "bank_transfer" | "mediuspay",
   ) => {
     setIsProcessing(true);
 
@@ -925,12 +984,16 @@ const CheckoutDialog = ({
       // Notify shop owner ONLY when the order is actionable right now:
       //  - delivery-before-payment (seller needs to approve/contact)
       //  - bank-transfer (seller awaits proof)
-      // For paystack, the paystack-webhook fires the notification on payment confirmation.
+      // For paystack/mediuspay, their webhooks fire the notification on payment confirmation.
       const willTriggerPaystack =
         paymentChoice === "pay_before" &&
         ((paymentMethod || shop.payment_method) === "paystack" ||
           (shop.payment_method === "both" && paymentMethod === "paystack"));
-      const notificationResult = !willTriggerPaystack
+      const willTriggerMediusPay =
+        paymentChoice === "pay_before" &&
+        ((paymentMethod || shop.payment_method) === "mediuspay" ||
+          (shop.payment_method === "both" && paymentMethod === "mediuspay"));
+      const notificationResult = !(willTriggerPaystack || willTriggerMediusPay)
         ? await sendOrderNotification(orderId, "order_placed")
         : null;
 
@@ -947,6 +1010,11 @@ const CheckoutDialog = ({
           (shop.payment_method === "both" && paymentMethod === "paystack")
         ) {
           await handlePaystackPayment(orderId, formData.customer_email);
+        } else if (
+          effectivePaymentMethod === "mediuspay" ||
+          (shop.payment_method === "both" && paymentMethod === "mediuspay")
+        ) {
+          await handleMediusPayPayment(orderId, formData.customer_email);
         }
         // For bank transfer, the UI will show bank details and require proof
       }
@@ -1548,9 +1616,11 @@ const CheckoutDialog = ({
                       <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                         {shop.payment_method === "paystack"
                           ? "Complete payment via Paystack before delivery"
-                          : shop.payment_method === "both"
-                            ? "Choose Paystack or Bank Transfer"
-                            : "Transfer to shop's bank account before delivery"}
+                          : shop.payment_method === "mediuspay"
+                            ? "Complete payment via MediusPay (secure escrow) before delivery"
+                            : shop.payment_method === "both"
+                              ? "Choose Paystack, MediusPay, or Bank Transfer"
+                              : "Transfer to shop's bank account before delivery"}
                       </p>
                     </div>
                   </div>
@@ -1606,6 +1676,31 @@ const CheckoutDialog = ({
                         </div>
                       </div>
 
+                      {/* MediusPay Option (Recommended) */}
+                      <div
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          selectedPaymentMethod === "mediuspay"
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                        onClick={() => setSelectedPaymentMethod("mediuspay")}
+                      >
+                        <div className="flex items-center gap-3">
+                          <CreditCard className="w-5 h-5" />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">Pay with MediusPay</p>
+                              <span className="text-xs text-green-600 font-semibold bg-green-100 px-2 py-0.5 rounded-full">
+                                Recommended
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              Secure escrow payment protection
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Bank Transfer Option */}
                       <div
                         className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
@@ -1640,7 +1735,7 @@ const CheckoutDialog = ({
                           Processing...
                         </>
                       ) : (
-                        `Continue with ${selectedPaymentMethod === "paystack" ? "Paystack" : selectedPaymentMethod === "bank_transfer" ? "Bank Transfer" : "..."}`
+                        `Continue with ${selectedPaymentMethod === "paystack" ? "Paystack" : selectedPaymentMethod === "mediuspay" ? "MediusPay" : selectedPaymentMethod === "bank_transfer" ? "Bank Transfer" : "..."}`
                       )}
                     </Button>
                   </div>

@@ -3,8 +3,13 @@ import { Shield, CreditCard, MessageCircle, CheckCircle, Lock, Award } from "luc
 const badges = [
   {
     icon: CreditCard,
-    title: "Secured by Paystack",
+    title: "Secured by MediusPay & Paystack",
     description: "Industry-leading payment security",
+  },
+  {
+    icon: Lock,
+    title: "Escrow Powered by MediusPay",
+    description: "Safe, trusted transactions",
   },
   {
     icon: Lock,
@@ -67,6 +72,14 @@ export const TrustBadgesSection = () => {
         <div className="mt-10 pt-8 border-t border-border/50">
           <p className="text-center text-sm text-muted-foreground mb-4">Payment Partners</p>
           <div className="flex items-center justify-center gap-8 flex-wrap">
+            {/* MediusPay Logo Placeholder */}
+            <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-lg border border-border/50">
+              <div className="w-8 h-8 bg-blue-600/20 rounded flex items-center justify-center">
+                <span className="text-blue-600 font-bold text-xs">MP</span>
+              </div>
+              <span className="text-sm font-medium">MediusPay</span>
+            </div>
+            
             {/* Paystack Logo Placeholder */}
             <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-lg border border-border/50">
               <div className="w-8 h-8 bg-[#00C3F7]/20 rounded flex items-center justify-center">

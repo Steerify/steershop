@@ -4,14 +4,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-terminal-signature, x-terminal-timestamp",
+    "authorization, x-client-info, apikey, content-type, x-terminal-signature, x-terminal-timestamp, x-ship-signature",
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const TERMINAL_WEBHOOK_SECRET = Deno.env.get("TERMINAL_WEBHOOK_SECRET");
+const SHIPBUBBLE_WEBHOOK_SECRET = Deno.env.get("SHIPBUBBLE_WEBHOOK_SECRET");
 
-// Status mapping from Terminal Africa to our statuses
+// Status mapping from providers to our statuses
 const STATUS_MAP: Record<string, string> = {
   pending: "pending",
   confirmed: "confirmed",
@@ -57,7 +58,6 @@ async function verifyTerminalSignature(
     const keyData = encoder.encode(TERMINAL_WEBHOOK_SECRET);
     const messageData = encoder.encode(`${timestamp}.${rawBody}`);
 
-    // Use Web Crypto API for HMAC
     const cryptoKey = await crypto.subtle.importKey(
       "raw",
       keyData,
@@ -72,7 +72,6 @@ async function verifyTerminalSignature(
       messageData,
     );
 
-    // Convert to hex string
     const signatureArray = new Uint8Array(signatureBuffer);
     const expectedSignature = Array.from(signatureArray)
       .map(b => b.toString(16).padStart(2, "0"))
@@ -80,7 +79,53 @@ async function verifyTerminalSignature(
 
     return signature === expectedSignature;
   } catch (error) {
-    console.error("Signature verification error:", error);
+    console.error("Terminal signature verification error:", error);
+    return false;
+  }
+}
+
+/**
+ * Verify Shipbubble webhook signature
+ * Shipbubble sends: x-ship-signature = HMAC-SHA512(rawBody, secret)
+ */
+async function verifyShipbubbleSignature(
+  signature: string,
+  rawBody: string,
+): Promise<boolean> {
+  if (!SHIPBUBBLE_WEBHOOK_SECRET) {
+    console.warn(
+      "SHIPBUBBLE_WEBHOOK_SECRET not configured - skipping signature verification",
+    );
+    return true; // Allow in development if no secret configured
+  }
+
+  try {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(SHIPBUBBLE_WEBHOOK_SECRET);
+    const messageData = encoder.encode(rawBody);
+
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-512" },
+      false,
+      ["sign"],
+    );
+
+    const signatureBuffer = await crypto.subtle.sign(
+      "HMAC",
+      cryptoKey,
+      messageData,
+    );
+
+    const signatureArray = new Uint8Array(signatureBuffer);
+    const expectedSignature = Array.from(signatureArray)
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    return signature === expectedSignature;
+  } catch (error) {
+    console.error("Shipbubble signature verification error:", error);
     return false;
   }
 }
@@ -92,19 +137,36 @@ serve(async (req: Request) => {
 
   try {
     const rawBody = await req.text();
-    const signature = req.headers.get("x-terminal-signature") || "";
-    const timestamp = req.headers.get("x-terminal-timestamp") || "";
+    const xTerminalSignature = req.headers.get("x-terminal-signature") || "";
+    const xTerminalTimestamp = req.headers.get("x-terminal-timestamp") || "";
+    const xShipSignature = req.headers.get("x-ship-signature") || "";
+    
+    let provider: 'terminal' | 'shipbubble' | null = null;
 
-    // Verify Terminal signature
-    if (
-      signature &&
-      !(await verifyTerminalSignature(timestamp, signature, rawBody))
-    ) {
-      console.error("Invalid Terminal webhook signature");
-      return new Response(JSON.stringify({ error: "Invalid signature" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Determine provider and verify signature
+    if (xTerminalSignature || xTerminalTimestamp) {
+      provider = 'terminal';
+      if (
+        xTerminalSignature &&
+        !(await verifyTerminalSignature(xTerminalTimestamp, xTerminalSignature, rawBody))
+      ) {
+        console.error("Invalid Terminal webhook signature");
+        return new Response(JSON.stringify({ error: "Invalid signature" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else if (xShipSignature) {
+      provider = 'shipbubble';
+      if (
+        !(await verifyShipbubbleSignature(xShipSignature, rawBody))
+      ) {
+        console.error("Invalid Shipbubble webhook signature");
+        return new Response(JSON.stringify({ error: "Invalid signature" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const body = JSON.parse(rawBody);
@@ -112,16 +174,23 @@ serve(async (req: Request) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Handle different webhook formats
-    const event = body.event || body.type;
-    const data = body.data || body;
+    let data: any;
+    let event: string;
+
+    if (provider === 'shipbubble') {
+      event = body.event || body.type;
+      data = body.data || body;
+    } else {
+      event = body.event || body.type;
+      data = body.data || body;
+    }
 
     // Find the delivery order
     let deliveryOrder = null;
 
-    // Try by provider_shipment_id first (most reliable for Terminal)
-    if (data.shipment_id || data.id) {
-      const shipmentId = data.shipment_id || data.id;
+    // Try by provider_shipment_id first (order_id for Shipbubble, shipment_id for Terminal)
+    if (data.order_id || data.shipment_id || data.id) {
+      const shipmentId = data.order_id || data.shipment_id || data.id;
       const { data: order } = await supabase
         .from("delivery_orders")
         .select("*")
@@ -130,7 +199,7 @@ serve(async (req: Request) => {
       deliveryOrder = order;
     }
 
-    // Try by order_id in metadata
+    // Try by order_id in metadata (for Terminal)
     if (!deliveryOrder && data.metadata?.order_id) {
       const { data: order } = await supabase
         .from("delivery_orders")
@@ -141,11 +210,12 @@ serve(async (req: Request) => {
     }
 
     // Try by provider_tracking_code
-    if (!deliveryOrder && data.tracking_number) {
+    if (!deliveryOrder && (data.tracking_number || data.courier?.tracking_code)) {
+      const trackingCode = data.tracking_number || data.courier?.tracking_code;
       const { data: order } = await supabase
         .from("delivery_orders")
         .select("*")
-        .eq("provider_tracking_code", data.tracking_number)
+        .eq("provider_tracking_code", trackingCode)
         .maybeSingle();
       deliveryOrder = order;
     }
@@ -159,7 +229,12 @@ serve(async (req: Request) => {
     }
 
     // Map status
-    const rawStatus = data.status || event?.replace("shipment.", "");
+    let rawStatus: string;
+    if (provider === 'shipbubble') {
+      rawStatus = data.status || event?.replace("shipment.", "");
+    } else {
+      rawStatus = data.status || event?.replace("shipment.", "");
+    }
     const mappedStatus = STATUS_MAP[rawStatus] || rawStatus;
 
     // Build updates
@@ -176,13 +251,15 @@ serve(async (req: Request) => {
     }
 
     // Update tracking code if provided
-    if (data.tracking_number && !deliveryOrder.provider_tracking_code) {
-      updates.provider_tracking_code = data.tracking_number;
+    const trackingCode = data.tracking_number || data.courier?.tracking_code;
+    if (trackingCode && !deliveryOrder.provider_tracking_code) {
+      updates.provider_tracking_code = trackingCode;
     }
 
     // Update label URL if provided
-    if (data.label_url && !deliveryOrder.label_url) {
-      updates.label_url = data.label_url;
+    const labelUrl = data.label_url || data.waybill_document;
+    if (labelUrl && !deliveryOrder.label_url) {
+      updates.label_url = labelUrl;
     }
 
     // Update delivery order
@@ -217,7 +294,6 @@ serve(async (req: Request) => {
         })
         .eq("id", deliveryOrder.order_id);
 
-      // Queue delivery confirmation notification
       await queueDeliveryNotification(
         supabase,
         deliveryOrder.order_id,
@@ -256,9 +332,7 @@ serve(async (req: Request) => {
       );
     }
 
-    // Queue notifications asynchronously
     if (shouldNotifyVendor || shouldNotifyCustomer) {
-      // Notifications are queued via the trigger, actual email sending handled by process-email-queue
       console.log(
         `Notification queued - vendor: ${shouldNotifyVendor}, customer: ${shouldNotifyCustomer}`,
       );
@@ -273,7 +347,7 @@ serve(async (req: Request) => {
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       {
-        status: 200, // Return 200 to prevent webhook retries for our own errors
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );
