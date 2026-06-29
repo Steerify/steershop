@@ -74,7 +74,7 @@ export default async function handler(req: Request) {
     const webhookSecret = process.env.WEBHOOK_SECRET;
     const reqSecret = req.headers.get('x-webhook-secret');
 
-    if (webhookSecret && reqSecret !== webhookSecret) {
+    if (!webhookSecret || !reqSecret || reqSecret !== webhookSecret) {
       console.error('Unauthorized: Invalid or missing x-webhook-secret');
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,

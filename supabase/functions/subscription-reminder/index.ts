@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
-import { Resend } from "npm:resend@2.0.0";
+import { enqueueTransactionalEmail } from "../_shared/queue-email.ts";
+import { getDefaultFromEmail } from "../_shared/smtp.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,8 +19,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
-    
-    const resend = new Resend(Deno.env.get('RESEND_API_KEY')!);
     
     // Find users whose subscription expires in 3 days
     const threeDaysFromNow = new Date();
@@ -83,14 +82,7 @@ serve(async (req) => {
         
         const subscriptionType = user.is_subscribed ? 'subscription' : 'trial';
         
-        // Send email
-        const fromEmail = Deno.env.get("SMTP_FROM_EMAIL") || "SteerSolo <no-reply@steersolo.com>";
-        const emailResponse = await resend.emails.send({
-          from: fromEmail,
-          replyTo: "no-reply@steersolo.com",
-          to: [user.email],
-          subject: `⏰ Your ${subscriptionType} expires in 3 days - ${shopName}`,
-          html: `
+        const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -144,16 +136,24 @@ serve(async (req) => {
   </div>
 </body>
 </html>
-          `,
+`;
+        
+        // Enqueue email
+        await enqueueTransactionalEmail(supabase, {
+          to: user.email,
+          subject: `⏰ Your ${subscriptionType} expires in 3 days - ${shopName}`,
+          html: htmlContent,
+          label: 'subscription-reminder-3-days'
         });
         
-        console.log(`Email sent to ${user.email}:`, emailResponse);
+        console.log(`Email queued for ${user.email}`);
         
         // Record the notification
         await supabase.from('subscription_notifications').insert({
           user_id: user.id,
           notification_type: 'expiring_3_days',
           subscription_expires_at: user.subscription_expires_at,
+          sent_at: new Date().toISOString()
         });
         
         notifiedCount.success++;

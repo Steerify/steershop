@@ -1092,7 +1092,7 @@ const ShopStorefront = () => {
                             className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4"
                             style={{ color: shop.primary_color || undefined }}
                           >
-                            {shop.shop_name} on SteerSolo
+                            {shop.shop_name}
                           </h1>
                           <div className="flex flex-wrap items-center gap-4 mb-5">
                             {shopCategoryLabel && (
@@ -1126,10 +1126,9 @@ const ShopStorefront = () => {
                           </div>
                           {(shop.description || (
                             <p className="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-2xl">
-                              Welcome to {shop.shop_name} on SteerSolo! Discover
-                              amazing products and services from this trusted
-                              seller on Nigeria's leading social commerce
-                              marketplace.
+                              Welcome to {shop.shop_name}! Discover amazing
+                              products and services from this trusted seller on
+                              Nigeria's leading social commerce marketplace.
                             </p>
                           )) && (
                             <p className="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-2xl">

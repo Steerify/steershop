@@ -22,10 +22,8 @@ export function getDefaultFromEmail(): string {
  * If RESEND_API_KEY is not provided, we fall back to standard SMTP if credentials exist.
  */
 export async function getTransporter() {
-  // Use environment variable if available, otherwise use the provided standard key
-  const resendApiKey = (
-    process.env.RESEND_API_KEY || "re_bn6nU67z_MpmejFcumyPi5eLzva2UKMG6"
-  ).trim();
+  // Use environment variable if available
+  const resendApiKey = process.env.RESEND_API_KEY?.trim();
 
   // 1. Professional Resend API Transport
   if (resendApiKey) {
